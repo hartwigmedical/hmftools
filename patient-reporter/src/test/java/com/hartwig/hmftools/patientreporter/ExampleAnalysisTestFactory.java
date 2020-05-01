@@ -18,8 +18,10 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordAnalyzer;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
+import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsStudy;
@@ -77,7 +79,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        ChordAnalyzer chordAnalyzer = createCOLO829ChordAnalysis();
         List<ViralInsertion> viralInsertions = null;
 
         String sampleId = "PNT00012345T";
@@ -107,8 +109,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoad(tumorMutationalLoad)
                 .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
-                .chordAnalysis(chordAnalysis)
-                .hrdStatus(ChordStatus.HRP)
+                .chordAnalyzer(chordAnalyzer)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -143,7 +144,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableVariant> reportableVariants = createAllSomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = createTestFusions();
-        ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        ChordAnalyzer chordAnalyzer = createHRDChordAnalysis();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = createTestViralInsertions();
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
@@ -167,8 +168,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoad(tumorMutationalLoad)
                 .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
-                .chordAnalysis(chordAnalysis)
-                .hrdStatus(ChordStatus.HRD)
+                .chordAnalyzer(chordAnalyzer)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -203,7 +203,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableVariant> reportableVariants = createAllSomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = createTestFusions();
-        ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        ChordAnalyzer chordAnalyzer = createHRDChordAnalysis();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
@@ -227,8 +227,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoad(tumorMutationalLoad)
                 .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
-                .chordAnalysis(chordAnalysis)
-                .hrdStatus(ChordStatus.HRD)
+                .chordAnalyzer(chordAnalyzer)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -754,17 +753,33 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static ChordAnalysis createCOLO829ChordAnalysis() {
+    private static ChordAnalyzer createCOLO829ChordAnalysis() {
         double brca1Value = 0D;
         double brca2Value = 0D;
 
-        return ImmutableChordAnalysis.builder()
+        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
                 .BRCA1Value(brca1Value)
                 .BRCA2Value(brca2Value)
                 .hrdValue(brca1Value + brca2Value)
                 .predictedResponseValue(brca1Value + brca2Value > 0.5)
                 .build();
+        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRP).build();
+    }
+
+    @NotNull
+    private static ChordAnalyzer createHRDChordAnalysis() {
+        double brca1Value = 0D;
+        double brca2Value = 0.8;
+
+        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
+                .noneValue(1 - (brca1Value + brca2Value))
+                .BRCA1Value(brca1Value)
+                .BRCA2Value(brca2Value)
+                .hrdValue(brca1Value + brca2Value)
+                .predictedResponseValue(brca1Value + brca2Value > 0.5)
+                .build();
+        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRD).build();
     }
 
     @NotNull

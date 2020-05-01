@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -23,7 +24,7 @@ public final class FilterGermlineVariants {
     public static List<ReportableGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<GermlineVariant> germlineVariants,
             @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport,
-            @NotNull ChordAnalysis chordAnalysis) {
+            @NotNull ChordAnalyzer chordAnalyzer) {
         List<ReportableGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
         Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
@@ -61,7 +62,7 @@ public final class FilterGermlineVariants {
 
                     if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
-                    } else if (filterMinCopyNumberTumor || chordAnalysis.predictedResponseValue()) {
+                    } else if (filterMinCopyNumberTumor || chordAnalyzer.chordAnalysis().predictedResponseValue()) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                     }
                 }

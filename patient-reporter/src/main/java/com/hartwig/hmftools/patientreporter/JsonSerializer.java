@@ -16,7 +16,10 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordAnalyzer;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
+import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -68,7 +71,7 @@ public class JsonSerializer {
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        ChordAnalyzer chordAnalyzer = createCOLO829ChordAnalysis();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         return ImmutableAnalysedPatientReport.builder()
@@ -85,7 +88,7 @@ public class JsonSerializer {
                 .microsatelliteIndelsPerMb(0.11)
                 .tumorMutationalLoad(180)
                 .tumorMutationalBurden(13.6)
-                .chordAnalysis(chordAnalysis)
+                .chordAnalyzer(chordAnalyzer)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -503,17 +506,19 @@ public class JsonSerializer {
     }
 
     @NotNull
-    private static ChordAnalysis createCOLO829ChordAnalysis() {
+    private static ChordAnalyzer createCOLO829ChordAnalysis() {
         double brca1Value = 0D;
         double brca2Value = 0D;
 
-        return ImmutableChordAnalysis.builder()
+        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
                 .BRCA1Value(brca1Value)
                 .BRCA2Value(brca2Value)
                 .hrdValue(brca1Value + brca2Value)
                 .predictedResponseValue(brca1Value + brca2Value > 0.5)
                 .build();
+        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRP).build();
+
     }
 
     @NotNull

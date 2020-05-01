@@ -56,8 +56,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         String microSatelliteStabilityString =
                 hasReliablePurity ? msiStatus.display() + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
 
-        double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        ChordStatus hrStatus = patientReport.hrdStatus();
+        double hrDeficiency = patientReport.chordAnalyzer().chordAnalysis().hrdValue();
+        ChordStatus hrStatus = patientReport.chordAnalyzer().hrdStatus();
         String hrDeficiencyLabel =
                 hasReliablePurity ? hrStatus.display() + " " + HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
 
