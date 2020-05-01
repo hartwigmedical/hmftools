@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.sin;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -14,11 +13,9 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalAcceptor;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalDonor;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.endDonorAcceptorBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.startDonorAcceptorBases;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
@@ -38,7 +35,6 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
-import com.hartwig.hmftools.isofox.common.RnaUtils;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import htsjdk.samtools.CigarOperator;
@@ -56,7 +52,7 @@ public class FusionFragment
     private final FusionJunctionType[] mJunctionTypes;
     private final String[] mJunctionBases; // the 10 bases leading up to the junction if it exists
     private boolean mJunctionBasesMatched;
-    private final String[] mJunctionBaseContext;
+    private final String[] mJunctionSpliceBases; // the 2 donor/acceptor bases
     private FusionFragmentType mType;
 
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
@@ -75,7 +71,7 @@ public class FusionFragment
         mJunctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
         mJunctionBases = new String[] {"", ""};
         mJunctionBasesMatched = false;
-        mJunctionBaseContext = new String[] {"", ""};
+        mJunctionSpliceBases = new String[] {"", ""};
 
         mTransExonRefs = new List[SE_PAIR];
         mTransExonRefs[SE_START] = Lists.newArrayList();
@@ -496,11 +492,6 @@ public class FusionFragment
         if(refGenome == null)
             return;
 
-        if(mType == MATCHED_JUNCTION)
-        {
-            RnaUtils.setJunctionBaseContext(refGenome, mChromosomes, mJunctionPositions, mJunctionBaseContext);
-        }
-
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if (exonBoundary(mRegionMatchTypes[se]))
@@ -509,7 +500,7 @@ public class FusionFragment
             }
             else if(mJunctionPositions[se] > 0)
             {
-                String daBases = se == SE_START ? startDonorAcceptorBases(mJunctionBaseContext[se]) : endDonorAcceptorBases(mJunctionBaseContext[se]);
+                String daBases = mJunctionSpliceBases[se];
 
                 if(junctionStrands != null)
                 {
@@ -546,13 +537,19 @@ public class FusionFragment
 
                 if (junctionOrientations()[se] == 1)
                 {
-                    mJunctionBases[se] = refGenome.getSubsequenceAt(
-                            mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH, junctionBase).getBaseString();
+                    String junctionBases = refGenome.getSubsequenceAt(
+                            mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH + 1, junctionBase + 2).getBaseString();
+
+                    mJunctionBases[se] = junctionBases.substring(0, JUNCTION_BASE_LENGTH);
+                    mJunctionSpliceBases[se] = junctionBases.substring(JUNCTION_BASE_LENGTH);
                 }
                 else
                 {
-                    mJunctionBases[se] = refGenome.getSubsequenceAt(
-                            mChromosomes[se], junctionBase, junctionBase + JUNCTION_BASE_LENGTH).getBaseString();
+                    String junctionBases = refGenome.getSubsequenceAt(
+                            mChromosomes[se], junctionBase - 2, junctionBase + JUNCTION_BASE_LENGTH - 1).getBaseString();
+
+                    mJunctionBases[se] = junctionBases.substring(2);
+                    mJunctionSpliceBases[se] = junctionBases.substring(0, 2);
                 }
             }
         }
@@ -563,20 +560,17 @@ public class FusionFragment
                 final int seIndex = se;
                 int junctionBase = mJunctionPositions[se];
 
+                ReadRecord read = mReads.stream()
+                        .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]))
+                        .filter(x -> x.getCoordsBoundary(junctionOrientations()[seIndex] == 1 ? SE_END : SE_START) == junctionBase)
+                        .findFirst().orElse(null);
+
                 if (junctionOrientations()[se] == 1)
                 {
-                    ReadRecord read = mReads.stream()
-                            .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]))
-                            .filter(x -> x.getCoordsBoundary(SE_END) == junctionBase).findFirst().orElse(null);
-
                     mJunctionBases[se] = read.ReadBases.substring(read.Length - JUNCTION_BASE_LENGTH, read.Length);
                 }
                 else
                 {
-                    ReadRecord read = mReads.stream()
-                            .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]))
-                            .filter(x -> x.getCoordsBoundary(SE_START) == junctionBase).findFirst().orElse(null);
-
                     mJunctionBases[se] = read.ReadBases.substring(0, JUNCTION_BASE_LENGTH);
                 }
             }

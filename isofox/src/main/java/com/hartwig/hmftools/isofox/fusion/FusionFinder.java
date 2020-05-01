@@ -59,7 +59,7 @@ public class FusionFinder
         mChrGeneDepthMap = Maps.newHashMap();
         mFusionTasks = Lists.newArrayList();
 
-        mPerfCounter = new PerformanceCounter("Fusions");
+        mPerfCounter = new PerformanceCounter("FusionTotal");
         mFusionWriter = new FusionWriter(mConfig);
     }
 

@@ -301,8 +301,6 @@ public class RnaUtils
     public static final String SP_SEQ_NEG_STRAND_DONOR_2 = "GC";
     public static final String SP_SEQ_NEG_STRAND_ACCEPTOR = "CT";
 
-    private static final String DA_DELIM = "-";
-
     public static boolean canonicalAcceptor(final String context, byte strand)
     {
         if(strand == 1)
@@ -317,26 +315,6 @@ public class RnaUtils
             return context.equals(SP_SEQ_DONOR_1) || context.equals(SP_SEQ_DONOR_2);
         else
             return context.equals(SP_SEQ_NEG_STRAND_DONOR_1) || context.equals(SP_SEQ_NEG_STRAND_DONOR_2);
-    }
-
-    public static final String SP_SEQ_POS_STRAND_1 = SP_SEQ_DONOR_1 + DA_DELIM + SP_SEQ_ACCEPTOR;// "GT-AG";
-    public static final String SP_SEQ_POS_STRAND_2 = SP_SEQ_DONOR_2 + DA_DELIM + SP_SEQ_ACCEPTOR; // "GC-AG";
-    public static final String SP_SEQ_NEG_STRAND_1 = SP_SEQ_NEG_STRAND_ACCEPTOR + DA_DELIM + SP_SEQ_NEG_STRAND_DONOR_1; // "CT-AC";
-    public static final String SP_SEQ_NEG_STRAND_2 = SP_SEQ_NEG_STRAND_ACCEPTOR + DA_DELIM + SP_SEQ_NEG_STRAND_DONOR_2; // "CT-GC";
-
-    public static String startDonorAcceptorBases(final String baseContext)
-    {
-        return baseContext.substring(2,4);
-    }
-
-    public static String endDonorAcceptorBases(final String baseContext)
-    {
-        return baseContext.substring(8,10);
-    }
-
-    public static String formDonorAcceptorBases(final String[] baseContext)
-    {
-        return startDonorAcceptorBases(baseContext[SE_START]) + DA_DELIM + endDonorAcceptorBases(baseContext[SE_END]);
     }
 
 }

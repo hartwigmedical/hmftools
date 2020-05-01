@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
@@ -146,10 +147,8 @@ public class FusionReadData
 
     public boolean hasJunctionFragments() { return mFragments.containsKey(MATCHED_JUNCTION); }
 
-    public boolean isKnownSpliced() { return getSampleFragment().isSpliced(); }
-    public boolean isUnspliced() { return getSampleFragment().isUnspliced() && getSampleFragment().type() == MATCHED_JUNCTION; }
-
-    public List<EnsemblGeneData>[] getCandidateGenes() { return mCandidateGenes; }
+    public boolean isKnownSpliced() { return getInitialFragment().isSpliced(); }
+    public boolean isUnspliced() { return getInitialFragment().isUnspliced() && getInitialFragment().type() == MATCHED_JUNCTION; }
 
     public boolean hasViableGenes() { return !mCandidateGenes[FS_UPSTREAM].isEmpty() && !mCandidateGenes[FS_DOWNSTREAM].isEmpty(); }
 
@@ -157,14 +156,29 @@ public class FusionReadData
 
     public void setStreamData(final List<EnsemblGeneData> upstreamGenes, final List<EnsemblGeneData> downstreamGenes, boolean startIsUpstream)
     {
-        mStreamIndices[FS_UPSTREAM] = startIsUpstream ? SE_START : SE_END;
-        mStreamIndices[FS_DOWNSTREAM] = startIsUpstream ? SE_END : SE_START;
-        mCandidateGenes[FS_UPSTREAM] = upstreamGenes;
-        mCandidateGenes[FS_DOWNSTREAM] = downstreamGenes;
+        if(!upstreamGenes.isEmpty())
+        {
+            mStreamIndices[FS_UPSTREAM] = startIsUpstream ? SE_START : SE_END;
 
-        // until a more informed decision can be made
-        mFusionGeneIds[FS_UPSTREAM] = upstreamGenes.get(0).GeneId;
-        mFusionGeneIds[FS_DOWNSTREAM] = downstreamGenes.get(0).GeneId;
+            if(downstreamGenes.isEmpty())
+                mStreamIndices[FS_DOWNSTREAM] = mStreamIndices[switchIndex(FS_UPSTREAM)];
+
+            mCandidateGenes[FS_UPSTREAM] = upstreamGenes;
+
+            // until a more informed decision can be made
+            mFusionGeneIds[FS_UPSTREAM] = upstreamGenes.get(0).GeneId;
+        }
+
+        if(!downstreamGenes.isEmpty())
+        {
+            mStreamIndices[FS_DOWNSTREAM] = startIsUpstream ? SE_END : SE_START;
+
+            if(upstreamGenes.isEmpty())
+                mStreamIndices[FS_UPSTREAM] = mStreamIndices[switchIndex(FS_DOWNSTREAM)];
+
+            mCandidateGenes[FS_DOWNSTREAM] = downstreamGenes;
+            mFusionGeneIds[FS_DOWNSTREAM] = downstreamGenes.get(0).GeneId;
+        }
     }
 
     public byte[] getGeneStrands()
@@ -194,30 +208,19 @@ public class FusionReadData
     public boolean junctionMatch(final FusionFragment fragment)
     {
         return fragment.type() == MATCHED_JUNCTION
-                && mJunctionPositions[SE_START] == fragment.junctionPositions()[SE_START] && mJunctionPositions[SE_END] == fragment.junctionPositions()[SE_END]
-                && mJunctionOrientations[SE_START] == fragment.junctionOrientations()[SE_START] && mJunctionOrientations[SE_END] == fragment.junctionOrientations()[SE_END];
+                && mJunctionPositions[SE_START] == fragment.junctionPositions()[SE_START]
+                && mJunctionPositions[SE_END] == fragment.junctionPositions()[SE_END]
+                && mJunctionOrientations[SE_START] == fragment.junctionOrientations()[SE_START]
+                && mJunctionOrientations[SE_END] == fragment.junctionOrientations()[SE_END];
     }
 
-    public FusionFragment getSampleFragment()
-    {
-        if(mFragments.containsKey(MATCHED_JUNCTION))
-        {
-            return mFragments.get(MATCHED_JUNCTION).get(0);
-        }
-        else
-        {
-            return mFragments.values().iterator().next().get(0);
-        }
-    }
+    public FusionFragment getInitialFragment() { return mFragment; }
 
     public void cacheTranscriptData()
     {
-        // select a sample fragment from which to extract transcript-exon data
-        final FusionFragment sampleFragment = getSampleFragment();
-
         for (int se = SE_START; se <= SE_END; ++se)
         {
-            mTransExonRefs[se].addAll(sampleFragment.getTransExonRefs()[se]);
+            mTransExonRefs[se].addAll(mFragment.getTransExonRefs()[se]);
         }
     }
 
@@ -407,7 +410,7 @@ public class FusionReadData
         csvData.add(fusionId(mId));
         csvData.add(String.valueOf(hasViableGenes() && !hasIncompleteData()));
 
-        final FusionFragment sampleFragment = getSampleFragment();
+        final FusionFragment sampleFragment = getInitialFragment();
 
         for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
         {
@@ -419,16 +422,16 @@ public class FusionReadData
             final EnsemblGeneData geneData = genes.stream()
                     .filter(x -> x.GeneId.equals(geneId)).findFirst().map(x -> x).orElse(null);
 
-            if(geneData != null)
-            {
-                csvData.add(geneData.GeneName);
+            csvData.add(geneData != null ? geneData.GeneName : "");
 
-                csvData.add(mChromosomes[mStreamIndices[fs]]);
-                csvData.add(String.valueOf(mJunctionPositions[mStreamIndices[fs]]));
-                csvData.add(String.valueOf(mJunctionOrientations[mStreamIndices[fs]]));
-                csvData.add(String.valueOf(geneData.Strand));
-                csvData.add(sampleFragment.junctionTypes()[mStreamIndices[fs]].toString());
-            }
+            csvData.add(mChromosomes[mStreamIndices[fs]]);
+            csvData.add(String.valueOf(mJunctionPositions[mStreamIndices[fs]]));
+            csvData.add(String.valueOf(mJunctionOrientations[mStreamIndices[fs]]));
+
+            csvData.add(geneData != null ? String.valueOf(geneData.Strand) : "0");
+            csvData.add(sampleFragment.junctionTypes()[mStreamIndices[fs]].toString());
+
+            /*
             else
             {
                 csvData.add("");
@@ -436,8 +439,9 @@ public class FusionReadData
                 csvData.add(String.valueOf(mJunctionPositions[fs]));
                 csvData.add(String.valueOf(mJunctionOrientations[fs]));
                 csvData.add("0");
-                csvData.add(FusionJunctionType.UNKNOWN.toString());
+                csvData.add(sampleFragment.junctionTypes()[mStreamIndices[fs]].toString());
             }
+            */
         }
 
         csvData.add(getImpliedSvType().toString());
@@ -452,8 +456,10 @@ public class FusionReadData
         csvData.add(String.valueOf(splitFragments));
         csvData.add(String.valueOf(realignedFragments));
         csvData.add(String.valueOf(discordantFragments));
-        csvData.add(String.valueOf(mReadDepth[mStreamIndices[FS_UPSTREAM]]));
-        csvData.add(String.valueOf(mReadDepth[mStreamIndices[FS_DOWNSTREAM]]));
+
+        // since depth of 1 may have been discarded from the BaseDepth, correct for this
+        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UPSTREAM]], 1)));
+        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_DOWNSTREAM]], 1)));
 
         for (int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
         {

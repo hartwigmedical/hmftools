@@ -205,13 +205,19 @@ public class FusionTask implements Callable
             if(fusionData.junctionMatch(fragment))
             {
                 fusionData.addFusionFragment(fragment);
+
+                // mark donor-acceptor types whether strands are known or not
+                fragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
                 return;
             }
         }
 
         int fusionId = mTaskId * 10000 + mNextFusionId++;
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
+
         setGeneData(fusionData);
+        fragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
+
         fusions.add(fusionData);
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -254,7 +260,7 @@ public class FusionTask implements Callable
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final List<String> spliceGeneIds = fusionData.getSampleFragment().getGeneIds(se);
+            final List<String> spliceGeneIds = fusionData.getInitialFragment().getGeneIds(se);
 
             if(!spliceGeneIds.isEmpty())
             {
@@ -276,7 +282,8 @@ public class FusionTask implements Callable
         // a positive orientation implies either an upstream +ve strand gene or a downstream -ve strand gene
         final byte[] sjOrientations = fusionData.junctionOrientations();
 
-        boolean foundCandidates = false;
+        boolean foundBothStreams = false;
+        boolean foundOneStream = false;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -294,7 +301,7 @@ public class FusionTask implements Callable
 
             if(!upstreamGenes.isEmpty() && !downstreamGenes.isEmpty())
             {
-                if(foundCandidates)
+                if(foundBothStreams)
                 {
                     // both combinations have possible gene-pairings
                     ISF_LOGGER.debug("fusion({}) has multiple gene pairings by strand and orientation", fusionData.toString());
@@ -302,17 +309,15 @@ public class FusionTask implements Callable
                     break;
                 }
 
-                foundCandidates = true;
+                foundBothStreams = true;
                 fusionData.setStreamData(upstreamGenes, downstreamGenes, se == SE_START);
             }
-        }
-
-        // mark donor-acceptor types whether strands are known or not
-        final byte[] geneStrands = fusionData.getGeneStrands();
-
-        for(FusionFragment fragment : fusionData.getAllFragments())
-        {
-            fragment.setJunctionTypes(mConfig.RefFastaSeqFile, geneStrands) ;
+            else if(!foundBothStreams && !foundOneStream && (!upstreamGenes.isEmpty() || !downstreamGenes.isEmpty()))
+            {
+                // take just one stream if clear
+                foundOneStream = true;
+                fusionData.setStreamData(upstreamGenes, downstreamGenes, se == SE_START);
+            }
         }
 
         fusionData.cacheTranscriptData();

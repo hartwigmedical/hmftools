@@ -4,16 +4,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_NEG_STRAND_1;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_NEG_STRAND_2;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_POS_STRAND_1;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_POS_STRAND_2;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.formDonorAcceptorBases;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_ACCEPTOR;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_DONOR_1;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_DONOR_2;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_NEG_STRAND_ACCEPTOR;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_NEG_STRAND_DONOR_1;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_NEG_STRAND_DONOR_2;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.setJunctionBaseContext;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.MIXED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -192,12 +192,38 @@ public class AltSpliceJunction
 
     public void setBaseContext(final IndexedFastaSequenceFile refGenome, final String chromosome)
     {
-        setJunctionBaseContext(refGenome, new String[] { chromosome, chromosome }, SpliceJunction, mBaseContext);
+        // get the 2 bases leading up to and including the splice junction base, and 10 bases into the unspliced region
+        // the donor/acceptor bases are the 2 bases leading up to the junction from the unspliced side
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            int startOffset = (se == SE_START) ? 1 : 10;
+            int endOffset = startOffset == 1 ? 10: 1;
+
+            mBaseContext[se] = refGenome.getSubsequenceAt(
+                    chromosome, SpliceJunction[se] - startOffset, SpliceJunction[se] + endOffset).getBaseString();
+        }
+    }
+
+    private static final String DA_DELIM = "-";
+
+    public static final String SP_SEQ_POS_STRAND_1 = SP_SEQ_DONOR_1 + DA_DELIM + SP_SEQ_ACCEPTOR;// "GT-AG";
+    public static final String SP_SEQ_POS_STRAND_2 = SP_SEQ_DONOR_2 + DA_DELIM + SP_SEQ_ACCEPTOR; // "GC-AG";
+    public static final String SP_SEQ_NEG_STRAND_1 = SP_SEQ_NEG_STRAND_ACCEPTOR + DA_DELIM + SP_SEQ_NEG_STRAND_DONOR_1; // "CT-AC";
+    public static final String SP_SEQ_NEG_STRAND_2 = SP_SEQ_NEG_STRAND_ACCEPTOR + DA_DELIM + SP_SEQ_NEG_STRAND_DONOR_2; // "CT-GC";
+
+    private static String startDonorAcceptorBases(final String baseContext)
+    {
+        return baseContext.length() == 12 ? baseContext.substring(2,4) : "";
+    }
+
+    private static String endDonorAcceptorBases(final String baseContext)
+    {
+        return baseContext.length() == 12 ? baseContext.substring(8,10) : "";
     }
 
     public void setDonorAcceptorBases(final String[] baseContext)
     {
-        mDonorAcceptorBases = formDonorAcceptorBases(baseContext);
+        mDonorAcceptorBases = startDonorAcceptorBases(baseContext[SE_START]) + DA_DELIM + endDonorAcceptorBases(baseContext[SE_END]);
     }
 
     public String getDonorAcceptorBases() { return mDonorAcceptorBases; }
