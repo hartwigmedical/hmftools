@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.viralInsertion;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ public class ViralInsertionAnalyzerTest {
     @Test
     public void canMergeViralInsertionsForReporting() throws IOException {
         List<ViralInsertion> viralInsertions = ViralInsertionAnalyzer.loadViralInsertions(LINX_VIRAL_INSERTIONS_TSV, true);
+        assertNotNull(viralInsertions);
         assertEquals(2, viralInsertions.size());
 
         ViralInsertion viralInsertion1 = viralInsertions.get(0);
