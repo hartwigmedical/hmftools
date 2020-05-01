@@ -36,7 +36,7 @@ public abstract class CopyNumberAnalysis {
 
     public abstract double tumorMutationalBurdenPerMb();
 
-    public abstract double tumorMutationalLoad();
+    public abstract int tumorMutationalLoad();
 
     @NotNull
     public abstract MicrosatelliteStatus microsatelliteStatus();

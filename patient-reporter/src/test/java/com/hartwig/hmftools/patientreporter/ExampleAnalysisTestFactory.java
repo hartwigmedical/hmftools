@@ -58,32 +58,32 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildCOLO829() {
-        final boolean hasReliablePurity = true;
-        final double impliedTumorPurity = 1D;
-        final double averageTumorPloidy = 3.1;
-        final int tumorMutationalLoad = 180;
-        final double tumorMutationalBurden = 13.6;
-        final double microsatelliteIndelsPerMb = 0.11;
-        final MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
-        final TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
+        boolean hasReliablePurity = true;
+        double impliedTumorPurity = 1D;
+        double averageTumorPloidy = 3.1;
+        int tumorMutationalLoad = 180;
+        double tumorMutationalBurden = 13.6;
+        double microsatelliteIndelsPerMb = 0.11;
+        MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
+        TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
 
-        final ReportData reportData = testReportData();
+        ReportData reportData = testReportData();
 
-        final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
-        final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
-        final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
-        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
-        final List<ReportableGeneFusion> fusions = Lists.newArrayList();
-        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
-        final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
-        final List<ViralInsertion> viralInsertions = null;
+        List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
+        List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
+        List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
+        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
+        List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
+        List<ReportableGeneFusion> fusions = Lists.newArrayList();
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
+        List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        List<ViralInsertion> viralInsertions = null;
 
-        final String sampleId = "PNT00012345T";
-        final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        String sampleId = "PNT00012345T";
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        final String clinicalSummary = "Melanoma sample showing:\n"
+        String clinicalSummary = "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
                 + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors\n"
                 + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
@@ -126,30 +126,30 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId) {
-        final boolean hasReliablePurity = true;
-        final double impliedTumorPurity = 1D;
-        final double averageTumorPloidy = 3.1;
-        final int tumorMutationalLoad = 182;
-        final double tumorMutationalBurden = 13.6;
-        final double microsatelliteIndelsPerMb = 0.1089;
-        final MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
-        final TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
+        boolean hasReliablePurity = true;
+        double impliedTumorPurity = 1D;
+        double averageTumorPloidy = 3.1;
+        int tumorMutationalLoad = 182;
+        double tumorMutationalBurden = 13.6;
+        double microsatelliteIndelsPerMb = 0.1089;
+        MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
+        TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
 
-        final ReportData reportData = testReportData();
+        ReportData reportData = testReportData();
 
-        final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
-        final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
-        final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
-        final List<ReportableGeneFusion> fusions = createTestFusions();
-        final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
-        final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        final List<ViralInsertion> viralInsertions = createTestViralInsertions();
-        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
+        List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
+        List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
+        List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
+        List<ReportableVariant> reportableVariants = createAllSomaticVariants();
+        List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
+        List<ReportableGeneFusion> fusions = createTestFusions();
+        ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        List<ViralInsertion> viralInsertions = createTestViralInsertions();
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
 
-        final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
-        final String clinicalSummary = Strings.EMPTY;
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        String clinicalSummary = Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -186,30 +186,30 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSample(@NotNull String sampleId) {
-        final boolean hasReliablePurity = false;
-        final double impliedTumorPurity = 1D;
-        final double averageTumorPloidy = 3.1;
-        final int tumorMutationalLoad = 182;
-        final double tumorMutationalBurden = 13.6;
-        final double microsatelliteIndelsPerMb = 0.1089;
-        final MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
-        final TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
+        boolean hasReliablePurity = false;
+        double impliedTumorPurity = 1D;
+        double averageTumorPloidy = 3.1;
+        int tumorMutationalLoad = 182;
+        double tumorMutationalBurden = 13.6;
+        double microsatelliteIndelsPerMb = 0.1089;
+        MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
+        TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
 
-        final ReportData reportData = testReportData();
+        ReportData reportData = testReportData();
 
-        final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
-        final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
-        final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
-        final List<ReportableGeneFusion> fusions = createTestFusions();
-        final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
-        final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        final List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
+        List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
+        List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
+        List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
+        List<ReportableVariant> reportableVariants = createAllSomaticVariants();
+        List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
+        List<ReportableGeneFusion> fusions = createTestFusions();
+        ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        List<ViralInsertion> viralInsertions = Lists.newArrayList();
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
 
-        final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
-        final String clinicalSummary = Strings.EMPTY;
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        String clinicalSummary = Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -263,7 +263,7 @@ public final class ExampleAnalysisTestFactory {
                 failStudy = QCFailStudy.CPCT;
         }
 
-        final ReportData reportData = testReportData();
+        ReportData reportData = testReportData();
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)

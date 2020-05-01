@@ -106,7 +106,7 @@ class AnalysedPatientReporter {
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv,
-                reportData.limsModel().viralInsertionChoice(sampleMetadata.tumorSampleBarcode(), sampleMetadata.tumorSampleId()));
+                reportData.limsModel().reportViralInsertions(sampleMetadata.tumorSampleBarcode()));
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
@@ -129,7 +129,7 @@ class AnalysedPatientReporter {
                 .reportableVariants(reportableVariantsAnalysis.variantsToReport())
                 .microsatelliteIndelsPerMb(copyNumberAnalysis.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(copyNumberAnalysis.microsatelliteStatus())
-                .tumorMutationalLoad((int) Math.round(copyNumberAnalysis.tumorMutationalLoad()))
+                .tumorMutationalLoad(copyNumberAnalysis.tumorMutationalLoad())
                 .tumorMutationalLoadStatus(copyNumberAnalysis.tumorMutationalLoadStatus())
                 .tumorMutationalBurden(copyNumberAnalysis.tumorMutationalBurdenPerMb())
                 .chordAnalysis(chordAnalysis)

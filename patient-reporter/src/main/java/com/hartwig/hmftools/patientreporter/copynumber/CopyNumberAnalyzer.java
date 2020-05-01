@@ -47,7 +47,7 @@ public final class CopyNumberAnalyzer {
                 .evidenceItems(filteredEvidenceItems)
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purityContext.microsatelliteStatus())
-                .tumorMutationalLoad(purityContext.tumorMutationalLoad())
+                .tumorMutationalLoad((int) Math.round(purityContext.tumorMutationalLoad()))
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .build();
