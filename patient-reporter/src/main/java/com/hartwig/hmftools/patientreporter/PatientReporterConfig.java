@@ -265,8 +265,9 @@ public interface PatientReporterConfig {
     static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
         QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
         if (qcFailReason == QCFailReason.UNDEFINED) {
-            LOGGER.warn("{} has to be 'low_dna_yield', 'post_analysis_fail', 'shallow_seq_low_purity' or 'insufficient_tissue_delivered'",
-                    QC_FAIL_REASON);
+            LOGGER.warn(
+                    "{} has to be 'low_dna_yield', 'post_analysis_fail', 'shallow_seq_low_purity', 'insufficient_tissue_delivered', "
+                            + "below_detection_threshold", QC_FAIL_REASON);
         } else {
             return true;
         }

@@ -108,6 +108,12 @@ public class QCFailChapter implements ReportChapter {
                 explanation = "The amount of isolated DNA was <50 ng, which is insufficient for sequencing. ";
                 break;
             }
+            case BELOW_DETECTION_THRESHOLD: {
+                title = "Notification tumor sample has too detectable tumor cells";
+                reason = "No calculation of tumor cell possible with none reportable variants";
+                explanation = "After sequencing we found too low tumor cells percentage without detectable genomic alterations. ";
+                break;
+            }
             default: {
                 title = "TITLE";
                 reason = "SUB_TITLE";
