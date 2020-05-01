@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -159,9 +160,20 @@ class AnalysedPatientReporter {
     }
 
     @Nullable
-    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean viralInsertionsChoice)
+    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean viralInsertionReportingChoice)
             throws IOException {
-        return ViralInsertionAnalyzer.loadViralInsertions(linxViralInsertionTsv, viralInsertionsChoice);
+        List<LinxViralInsertFile> viralInsertionList = LinxViralInsertFile.read(linxViralInsertionTsv);
+        LOGGER.info("Loaded {} viral insertions from {}", viralInsertionList.size(), linxViralInsertionTsv);
+
+        if (viralInsertionReportingChoice) {
+            List<ViralInsertion> reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
+            LOGGER.info(" Patient has given consent for viral insertion reporting. Found {} reportable viral insertions.",
+                    reportableViralInsertions.size());
+            return reportableViralInsertions;
+        } else {
+            LOGGER.info(" Patient has not given consent for viral insertion reporting. Skipping analysis!");
+            return null;
+        }
     }
 
     @NotNull
