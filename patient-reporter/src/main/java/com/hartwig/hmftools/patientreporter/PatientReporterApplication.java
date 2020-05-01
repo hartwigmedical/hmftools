@@ -86,10 +86,13 @@ public class PatientReporterApplication {
     private static final String LOG_DEBUG = "log_debug";
 
     public static void main(final String... args) throws ParseException, IOException {
-        Options options = createOptions();
-        CommandLine cmd = createCommandLine(options, args);
+        final Options options = PatientReporterConfig.createOptions();
 
-        if (!validInputForBaseReport(cmd)) {
+        CommandLine cmd = createCommandLine(options, args);
+        PatientReporterConfig config = PatientReporterConfig.createConfig(VERSION, cmd);
+
+
+        if (!PatientReporterConfig.validInputForBaseReport(cmd)) {
             printUsageAndExit(options);
         }
 
@@ -101,7 +104,7 @@ public class PatientReporterApplication {
         SampleMetadata sampleMetadata = buildSampleMetadata(cmd);
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
-        if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
+        if (cmd.hasOption(QC_FAIL) && PatientReporterConfig.validInputForQCFailReport(cmd)) {
             LOGGER.info("Generating qc-fail report");
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
@@ -110,7 +113,7 @@ public class PatientReporterApplication {
             reportWriter.writeQCFailReport(report, outputFilePath);
 
             ReportingDb.addQCFailReportToReportingDb(cmd.getOptionValue(REPORTING_DB_TSV), report);
-        } else if (validInputForAnalysedReport(cmd)) {
+        } else if (PatientReporterConfig.validInputForAnalysedReport(cmd)) {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
@@ -203,120 +206,6 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
                 cmd.getOptionValue(GERMLINE_GENES_CSV),
                 cmd.getOptionValue(SAMPLE_SUMMARY_TSV));
-    }
-
-    private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
-        return valueExists(cmd, REF_SAMPLE_ID) && valueExists(cmd, REF_SAMPLE_BARCODE) && valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(
-                cmd,
-                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY) && fileExists(cmd, REPORTING_DB_TSV) && fileExists(cmd,
-                TUMOR_LOCATION_CSV) && dirExists(cmd, LIMS_DIRECTORY) && dirExists(cmd, HOSPITAL_DIRECTORY) && fileExists(cmd, SIGNATURE)
-                && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO) && fileExists(cmd, CONTACT_WIDE_TSV);
-    }
-
-    private static boolean validInputForAnalysedReport(@NotNull CommandLine cmd) {
-        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC_FILE) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(
-                cmd,
-                SOMATIC_VARIANT_VCF) && fileExists(cmd, BACHELOR_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd,
-                LINX_DISRUPTION_TSV) && fileExists(cmd, LINX_VIRAL_INSERTION_TSV) && fileExists(cmd, LINX_DRIVERS_TSV) && fileExists(cmd,
-                CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
-                GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
-    }
-
-    private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
-        QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
-        if (qcFailReason == QCFailReason.UNDEFINED) {
-            LOGGER.warn("{} has to be 'low_dna_yield', 'post_analysis_fail', 'shallow_seq_low_purity' or 'insufficient_tissue_delivered'",
-                    QC_FAIL_REASON);
-        } else {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
-        if (value == null) {
-            LOGGER.warn("'{}' has to be provided", param);
-            return false;
-        }
-        return true;
-    }
-
-    private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
-
-        if (value == null || !pathExists(value)) {
-            LOGGER.warn("'{}' has to be an existing file: '{}'", param, value);
-            return false;
-        }
-
-        return true;
-    }
-
-    private static boolean dirExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
-
-        if (value == null || !pathExists(value) || !pathIsDirectory(value)) {
-            LOGGER.warn("'{}' has to be an existing directory: '{}'", param, value);
-            return false;
-        }
-
-        return true;
-    }
-
-    private static boolean pathExists(@NotNull String path) {
-        return Files.exists(new File(path).toPath());
-    }
-
-    private static boolean pathIsDirectory(@NotNull String path) {
-        return Files.isDirectory(new File(path).toPath());
-    }
-
-    @NotNull
-    private static Options createOptions() {
-        Options options = new Options();
-        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the sample for which we are generating a report.");
-        options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the sample for which we are generating a report.");
-        options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
-        options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
-        options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF report will be written to.");
-
-        options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
-        options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
-        options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
-        options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
-        options.addOption(CONTACT_WIDE_TSV, true, "Path towards the file of contact for WIDE TSV.");
-
-        options.addOption(RVA_LOGO, true, "Path towards a image file containing the RVA logo.");
-        options.addOption(COMPANY_LOGO, true, "Path towards a image file containing the company logo.");
-        options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
-
-        options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
-        options.addOption(QC_FAIL_REASON,
-                true,
-                "Either 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
-
-        options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
-        options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
-        options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
-        options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
-        options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
-        options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
-        options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
-        options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
-        options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
-        options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
-
-        options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
-        options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
-        options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
-
-        options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
-        options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
-        options.addOption(UNOFFICIAL_REPORT, false, "If provided, generates a report with potentially some sections removed.");
-        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
-        return options;
     }
 
     @NotNull
