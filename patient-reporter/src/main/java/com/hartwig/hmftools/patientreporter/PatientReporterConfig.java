@@ -8,8 +8,11 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -66,8 +69,10 @@ public interface PatientReporterConfig {
     @NotNull
     static Options createOptions() {
         Options options = new Options();
-        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the sample for which we are generating a report.");
-        options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the sample for which we are generating a report.");
+        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which we are generating a report.");
+        options.addOption(REF_SAMPLE_BARCODE,
+                true,
+                "The reference sample barcode for the tumor sample for which we are generating a report.");
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF report will be written to.");
@@ -78,9 +83,9 @@ public interface PatientReporterConfig {
         options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
         options.addOption(CONTACT_WIDE_TSV, true, "Path towards the file of contact for WIDE TSV.");
 
-        options.addOption(RVA_LOGO, true, "Path towards a image file containing the RVA logo.");
-        options.addOption(COMPANY_LOGO, true, "Path towards a image file containing the company logo.");
-        options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
+        options.addOption(RVA_LOGO, true, "Path towards an image file containing the RVA logo.");
+        options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
+        options.addOption(SIGNATURE, true, "Path towards an image file containing the signature to be appended at the end of the report.");
 
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON,
@@ -91,12 +96,12 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
-        options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
+        options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
         options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
         options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
-        options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
+        options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
@@ -105,13 +110,13 @@ public interface PatientReporterConfig {
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
-        options.addOption(UNOFFICIAL_REPORT, false, "If provided, generates a report with potentially some sections removed.");
+        options.addOption(UNOFFICIAL_REPORT, false, "If provided, generates a report with potentially some sections altered.");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
     }
 
     @NotNull
-    String refSampleID();
+    String refSampleId();
 
     @NotNull
     String refSampleBarcode();
@@ -152,7 +157,7 @@ public interface PatientReporterConfig {
     boolean qcFail();
 
     @NotNull
-    String qcFailReason();
+    QCFailReason qcFailReason();
 
     @NotNull
     String purplePurityTsv();
@@ -161,7 +166,7 @@ public interface PatientReporterConfig {
     String purpleQcFile();
 
     @NotNull
-    String PurpleGeneCnvTsv();
+    String purpleGeneCnvTsv();
 
     @NotNull
     String somaticVariantVcf();
@@ -196,113 +201,127 @@ public interface PatientReporterConfig {
     @NotNull
     String sampleSummaryTsv();
 
-    @NotNull
+    @Nullable
     String comments();
 
     boolean correctedReport();
 
     boolean unofficialReport();
 
-    boolean logDebug();
+    @NotNull
+    static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
+        if (cmd.hasOption(LOG_DEBUG)) {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        boolean isQCFail = cmd.hasOption(QC_FAIL);
+        QCFailReason qcFailReason = QCFailReason.UNDEFINED;
+        if (isQCFail) {
+            String qcFailReasonString = nonOptionalValue(cmd, QC_FAIL_REASON);
+            qcFailReason = QCFailReason.fromIdentifier(qcFailReasonString);
+            if (qcFailReason == QCFailReason.UNDEFINED) {
+                throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
+            }
+        }
+
+        String purplePurityTsv = Strings.EMPTY;
+        String purpleQCFile = Strings.EMPTY;
+        String purpleGeneCnvTsv = Strings.EMPTY;
+        String somaticVariantVcf = Strings.EMPTY;
+        String bachelorTsv = Strings.EMPTY;
+        String linxFusionTsv = Strings.EMPTY;
+        String linxDisruptionTsv = Strings.EMPTY;
+        String linxViralInsertionTsv = Strings.EMPTY;
+        String linxDriversTsv = Strings.EMPTY;
+        String chordPredictionTxt = Strings.EMPTY;
+        String circosFile = Strings.EMPTY;
+        String knowledgebaseDirectory = Strings.EMPTY;
+        String germlineGenesCsv = Strings.EMPTY;
+        String sampleSummaryTsv = Strings.EMPTY;
+
+        if (!isQCFail) {
+            purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
+            purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
+            purpleGeneCnvTsv = nonOptionalFile(cmd, PURPLE_GENE_CNV_TSV);
+            somaticVariantVcf = nonOptionalFile(cmd, SOMATIC_VARIANT_VCF);
+            bachelorTsv = nonOptionalFile(cmd, BACHELOR_TSV);
+            linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
+            linxDisruptionTsv = nonOptionalFile(cmd, LINX_DISRUPTION_TSV);
+            linxViralInsertionTsv = nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV);
+            linxDriversTsv = nonOptionalFile(cmd, LINX_DRIVERS_TSV);
+            chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
+            circosFile = nonOptionalFile(cmd, CIRCOS_FILE);
+            knowledgebaseDirectory = nonOptionalDir(cmd, KNOWLEDGEBASE_DIRECTORY);
+            germlineGenesCsv = nonOptionalFile(cmd, GERMLINE_GENES_CSV);
+            sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
+        }
+
+        return ImmutablePatientReporterConfig.builder()
+                .refSampleId(nonOptionalValue(cmd, REF_SAMPLE_ID))
+                .refSampleBarcode(nonOptionalValue(cmd, REF_SAMPLE_BARCODE))
+                .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
+                .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
+                .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
+                .reportingDbTsv(nonOptionalFile(cmd, REPORTING_DB_TSV))
+                .tumorLocationCsv(nonOptionalFile(cmd, TUMOR_LOCATION_CSV))
+                .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
+                .hospitalDir(nonOptionalDir(cmd, HOSPITAL_DIRECTORY))
+                .contactWideTsv(nonOptionalFile(cmd, CONTACT_WIDE_TSV))
+                .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
+                .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
+                .signature(nonOptionalFile(cmd, SIGNATURE))
+                .qcFail(isQCFail)
+                .qcFailReason(qcFailReason)
+                .purplePurityTsv(purplePurityTsv)
+                .purpleQcFile(purpleQCFile)
+                .purpleGeneCnvTsv(purpleGeneCnvTsv)
+                .somaticVariantVcf(somaticVariantVcf)
+                .bachelorTsv(bachelorTsv)
+                .linxFusionTsv(linxFusionTsv)
+                .linxDisruptionTsv(linxDisruptionTsv)
+                .linxViralInsertionTsv(linxViralInsertionTsv)
+                .linxDriversTsv(linxDriversTsv)
+                .chordPredictionTxt(chordPredictionTxt)
+                .circosFile(circosFile)
+                .knowledgebaseDir(knowledgebaseDirectory)
+                .germlineGenesCsv(germlineGenesCsv)
+                .sampleSummaryTsv(sampleSummaryTsv)
+                .comments(cmd.getOptionValue(COMMENTS))
+                .correctedReport(cmd.hasOption(CORRECTED_REPORT))
+                .unofficialReport(cmd.hasOption(UNOFFICIAL_REPORT))
+                .build();
+    }
 
     @NotNull
-    static PatientReporterConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
-        return ImmutablePatientReporterConfig.builder()
-                .refSampleID(cmd.getOptionValue(REF_SAMPLE_ID))
-                .refSampleBarcode(cmd.getOptionValue(REF_SAMPLE_BARCODE))
-                .tumorSampleId(cmd.getOptionValue(TUMOR_SAMPLE_ID))
-                .tumorSampleBarcode(cmd.getOptionValue(TUMOR_SAMPLE_BARCODE))
-                .outputDir(cmd.getOptionValue(OUTPUT_DIRECTORY))
-                .reportingDbTsv(cmd.getOptionValue(REPORTING_DB_TSV))
-                .tumorLocationCsv(cmd.getOptionValue(TUMOR_LOCATION_CSV))
-                .limsDir(cmd.getOptionValue(LIMS_DIRECTORY))
-                .hospitalDir(cmd.getOptionValue(HOSPITAL_DIRECTORY))
-                .contactWideTsv(cmd.getOptionValue(CONTACT_WIDE_TSV))
-                .rvaLogo(cmd.getOptionValue(RVA_LOGO))
-                .companyLogo(cmd.getOptionValue(COMPANY_LOGO))
-                .signature(cmd.getOptionValue(SIGNATURE))
-                .qcFail(Boolean.parseBoolean(cmd.getOptionValue(QC_FAIL)))
-                .qcFailReason(cmd.getOptionValue(QC_FAIL_REASON))
-                .purplePurityTsv(cmd.getOptionValue(PURPLE_PURITY_TSV))
-                .purpleQcFile(cmd.getOptionValue(PURPLE_QC_FILE))
-                .PurpleGeneCnvTsv(cmd.getOptionValue(PURPLE_GENE_CNV_TSV))
-                .somaticVariantVcf(cmd.getOptionValue(SOMATIC_VARIANT_VCF))
-                .bachelorTsv(cmd.getOptionValue(BACHELOR_TSV))
-                .linxFusionTsv(cmd.getOptionValue(LINX_FUSION_TSV))
-                .linxDisruptionTsv(cmd.getOptionValue(LINX_DISRUPTION_TSV))
-                .linxViralInsertionTsv(cmd.getOptionValue(LINX_VIRAL_INSERTION_TSV))
-                .linxDriversTsv(cmd.getOptionValue(LINX_DRIVERS_TSV))
-                .chordPredictionTxt(cmd.getOptionValue(CHORD_PREDICTION_TXT))
-                .circosFile(cmd.getOptionValue(CIRCOS_FILE))
-                .knowledgebaseDir(cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY))
-                .germlineGenesCsv(cmd.getOptionValue(GERMLINE_GENES_CSV))
-                .sampleSummaryTsv(cmd.getOptionValue(SAMPLE_SUMMARY_TSV))
-                .comments(cmd.getOptionValue(COMMENTS))
-                .correctedReport(Boolean.parseBoolean(cmd.getOptionValue(CORRECTED_REPORT)))
-                .unofficialReport(Boolean.parseBoolean(cmd.getOptionValue(UNOFFICIAL_REPORT)))
-                .logDebug(Boolean.parseBoolean(cmd.getOptionValue(LOG_DEBUG)))
-                .build();
-
-    }
-
-    static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
-        return valueExists(cmd, REF_SAMPLE_ID) && valueExists(cmd, REF_SAMPLE_BARCODE) && valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(
-                cmd,
-                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY) && fileExists(cmd, REPORTING_DB_TSV) && fileExists(cmd,
-                TUMOR_LOCATION_CSV) && dirExists(cmd, LIMS_DIRECTORY) && dirExists(cmd, HOSPITAL_DIRECTORY) && fileExists(cmd, SIGNATURE)
-                && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO) && fileExists(cmd, CONTACT_WIDE_TSV);
-    }
-
-    static boolean validInputForAnalysedReport(@NotNull CommandLine cmd) {
-        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC_FILE) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(
-                cmd,
-                SOMATIC_VARIANT_VCF) && fileExists(cmd, BACHELOR_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd,
-                LINX_DISRUPTION_TSV) && fileExists(cmd, LINX_VIRAL_INSERTION_TSV) && fileExists(cmd, LINX_DRIVERS_TSV) && fileExists(cmd,
-                CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
-                GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
-    }
-
-    static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
-        QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
-        if (qcFailReason == QCFailReason.UNDEFINED) {
-            LOGGER.warn(
-                    "{} has to be 'low_dna_yield', 'post_analysis_fail', 'shallow_seq_low_purity', 'insufficient_tissue_delivered', "
-                            + "below_detection_threshold", QC_FAIL_REASON);
-        } else {
-            return true;
-        }
-        return false;
-    }
-
-    static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
+    static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
         String value = cmd.getOptionValue(param);
         if (value == null) {
-            LOGGER.warn("'{}' has to be provided", param);
-            return false;
+            throw new ParseException("Parameter must be provided: " + param);
         }
-        return true;
+
+        return value;
     }
 
-    static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
+    @NotNull
+    static String nonOptionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = nonOptionalValue(cmd, param);
 
-        if (value == null || !pathExists(value)) {
-            LOGGER.warn("'{}' has to be an existing file: '{}'", param, value);
-            return false;
+        if (!pathExists(value) || !pathIsDirectory(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
         }
 
-        return true;
+        return value;
     }
 
-    static boolean dirExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
+    @NotNull
+    static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = nonOptionalValue(cmd, param);
 
-        if (value == null || !pathExists(value) || !pathIsDirectory(value)) {
-            LOGGER.warn("'{}' has to be an existing directory: '{}'", param, value);
-            return false;
+        if (!pathExists(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
         }
 
-        return true;
+        return value;
     }
 
     static boolean pathExists(@NotNull String path) {

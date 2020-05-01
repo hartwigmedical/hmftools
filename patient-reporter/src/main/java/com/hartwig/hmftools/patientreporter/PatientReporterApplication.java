@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.lims.LimsWide;
 import com.hartwig.hmftools.common.lims.LimsWideFile;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
@@ -22,13 +21,10 @@ import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReporterApplication {
@@ -41,41 +37,31 @@ public class PatientReporterApplication {
     //            public static final String VERSION = "7.11";
 
     public static void main(final String... args) throws ParseException, IOException {
-        final Options options = PatientReporterConfig.createOptions();
-
+        Options options = PatientReporterConfig.createOptions();
         CommandLine cmd = createCommandLine(options, args);
-        PatientReporterConfig config = PatientReporterConfig.createConfig(VERSION, cmd);
 
-
-        if (!PatientReporterConfig.validInputForBaseReport(cmd)) {
-            printUsageAndExit(options);
-        }
-
-        if (config.logDebug()) {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        PatientReporterConfig config = PatientReporterConfig.createConfig(cmd);
 
         LOGGER.info("Running patient reporter v{}", VERSION);
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
-        if (config.qcFail() && PatientReporterConfig.validInputForQCFailReport(cmd)) {
+        if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
-            QCFailReason reason = QCFailReason.fromIdentifier(config.qcFailReason());
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(config));
-            QCFailReport report = reporter.run(sampleMetadata, reason, config.comments(), config.correctedReport());
+            QCFailReport report = reporter.run(sampleMetadata, config.qcFailReason(), config.comments(), config.correctedReport());
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
             ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
-        } else if (PatientReporterConfig.validInputForAnalysedReport(cmd)) {
+        } else {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(config));
 
             AnalysedPatientReport report = reporter.run(sampleMetadata,
                     config.purplePurityTsv(),
                     config.purpleQcFile(),
-                    config.PurpleGeneCnvTsv(),
+                    config.purpleGeneCnvTsv(),
                     config.somaticVariantVcf(),
                     config.bachelorTsv(),
                     config.linxFusionTsv(),
@@ -91,8 +77,6 @@ public class PatientReporterApplication {
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
             ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
-        } else {
-            printUsageAndExit(options);
         }
     }
 
@@ -113,7 +97,7 @@ public class PatientReporterApplication {
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId(config.refSampleID())
+                .refSampleId(config.refSampleId())
                 .refSampleBarcode(config.refSampleBarcode())
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
@@ -166,11 +150,5 @@ public class PatientReporterApplication {
     @NotNull
     private static CommandLine createCommandLine(@NotNull Options options, @NotNull String... args) throws ParseException {
         return new DefaultParser().parse(options, args);
-    }
-
-    private static void printUsageAndExit(@NotNull Options options) {
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Patient-Reporter", options);
-        System.exit(1);
     }
 }
