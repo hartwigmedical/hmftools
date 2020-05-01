@@ -21,6 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
@@ -72,7 +74,8 @@ public class ReadContextEvidence {
             slicer.slice(tumorReader, samRecord -> {
 
                 if (samRecord.getMappingQuality() >= minQuality) {
-                    consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig));
+                    int numberOfEvents = numberOfEvents(samRecord);
+                    consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig, numberOfEvents));
                 }
 
             });
@@ -81,6 +84,24 @@ public class ReadContextEvidence {
         }
 
         return counters;
+    }
+
+    public int numberOfEvents(@NotNull final SAMRecord record) {
+        Object nm = record.getAttribute("NM");
+        if (!(nm instanceof Integer)) {
+            return 0;
+        }
+
+        int additionalIndels = 0;
+        for (CigarElement cigarElement : record.getCigar()) {
+            switch (cigarElement.getOperator()) {
+                case D:
+                case I:
+                    additionalIndels += (cigarElement.getLength() - 1);
+            }
+        }
+
+        return (Integer) nm - additionalIndels;
     }
 
 }

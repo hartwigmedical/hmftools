@@ -43,8 +43,6 @@ info_data_frame <- function(vcf) {
     localPhaseSet = vcf.info$LPS,
     microhomology = vcf.info$MH,
     readContext = vcf.info$RC,
-    readContextDistance = vcf.info$RC_DIS,
-    readContextDifference = vcf.info$RC_DIF,
     readContextMicrohomology = vcf.info$RC_MH,
     readContextRepeatSequence = vcf.info$RC_REPS,
     readContextRepeatCount = vcf.info$RC_REPC,

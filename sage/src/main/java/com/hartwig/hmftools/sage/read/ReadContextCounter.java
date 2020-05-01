@@ -182,7 +182,7 @@ public class ReadContextCounter implements VariantHotspot {
         return readContext.toString();
     }
 
-    public void accept(final SAMRecord record, final SageConfig sageConfig) {
+    public void accept(final SAMRecord record, final SageConfig sageConfig, final int numberOfEvents) {
         try {
             if (coverage >= maxCoverage) {
                 return;
@@ -216,7 +216,7 @@ public class ReadContextCounter implements VariantHotspot {
             }
 
             final QualityConfig qualityConfig = sageConfig.qualityConfig();
-            double quality = calculateQualityScore(readIndex, record, qualityConfig);
+            double quality = calculateQualityScore(readIndex, record, qualityConfig, mnvFriendlyNumberOfEvents(numberOfEvents));
 
             // Check if FULL, PARTIAL, OR CORE
             if (!baseDeleted) {
@@ -309,15 +309,31 @@ public class ReadContextCounter implements VariantHotspot {
                 Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE));
     }
 
-    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig) {
-        final int distanceFromRef = readContext.distance();
+    int mnvFriendlyNumberOfEvents(int rawNumberEvents) {
+        if (variant.isMNV()) {
+            // Number of events includes each SNV as an additional event. This unfairly penalises MNVs.
+            int differentBases = 0;
+            for (int i = 0; i < variant.alt().length(); i++) {
+                if (alt().charAt(i) != ref().charAt(i)) {
+                    differentBases++;
+                }
+            }
+
+            // We subtract one later when we actually use this value so we need to add one back in here to be consistent with SNVs and INDELs
+            return rawNumberEvents - differentBases + 1;
+        }
+
+        return rawNumberEvents;
+    }
+
+    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig, int numberOfEvents) {
 
         final double baseQuality = baseQuality(readBaseIndex, record);
         final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
 
-        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, distanceFromRef, record.getProperPairFlag());
+        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, numberOfEvents, record.getProperPairFlag());
         double modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));

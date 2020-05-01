@@ -49,10 +49,6 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_AF_DESCRIPTION =
             "Allelic frequency calculated from read context counts as (Full + Partial + Realigned) / Coverage";
 
-    public static final String READ_CONTEXT_DISTANCE = "RC_DIS";
-    private static final String READ_CONTEXT_DISTANCE_DESCRIPTION = "Distance from read context to ref sequence";
-    public static final String READ_CONTEXT_DIFFERENCE = "RC_DIF";
-    private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
 
@@ -128,14 +124,6 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_QUALITY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, READ_CONTEXT_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_DIFFERENCE,
-                1,
-                VCFHeaderLineType.String,
-                READ_CONTEXT_DIFFERENCE_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_DISTANCE,
-                1,
-                VCFHeaderLineType.Integer,
-                READ_CONTEXT_DISTANCE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_REPEAT_COUNT,
                 1,
                 VCFHeaderLineType.Integer,

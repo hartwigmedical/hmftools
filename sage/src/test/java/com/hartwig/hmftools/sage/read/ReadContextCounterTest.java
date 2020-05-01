@@ -20,8 +20,8 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextCounterTest {
 
     private final static String SAMPLE = "sample";
-    private final static int MAX_COVERAGE =  1000;
-    private final static SageVariantTier TIER =  SageVariantTier.PANEL;
+    private final static int MAX_COVERAGE = 1000;
+    private final static SageVariantTier TIER = SageVariantTier.PANEL;
     private final static SageConfig CONFIG = SageConfigTest.testConfig();
     private final static QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
 
@@ -33,7 +33,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
-        victim.accept(record, CONFIG);
+        victim.accept(record, CONFIG, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -47,12 +47,11 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
-        victim.accept(record, CONFIG);
+        victim.accept(record, CONFIG, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
     }
-
 
     @Test
     public void testSnvInLeftSoftClip() {
@@ -62,7 +61,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CAT", "#####");
-        victim.accept(record, CONFIG);
+        victim.accept(record, CONFIG, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -76,7 +75,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CGT", "#####");
-        victim.accept(record, CONFIG);
+        victim.accept(record, CONFIG, 1);
 
         assertEquals(0, victim.depth());
         assertEquals(0, victim.altSupport());
@@ -90,7 +89,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
-        victim.accept(record, CONFIG);
+        victim.accept(record, CONFIG, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -104,7 +103,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
-        victim.accept(record, CONFIG);
+        victim.accept(record, CONFIG, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -118,7 +117,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
-        victim.accept(record, CONFIG);
+        victim.accept(record, CONFIG, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -132,16 +131,23 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
-        victim.accept(record, CONFIG);
+        victim.accept(record, CONFIG, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
     }
 
-
     @NotNull
-    public static ReadContext readContext(int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases, String microhomology) {
-        return new ReadContext(Strings.EMPTY, refPosition, readIndex, leftCentreIndex, rightCentreIndex, 0, bases.getBytes(), microhomology);
+    public static ReadContext readContext(int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases,
+            String microhomology) {
+        return new ReadContext(Strings.EMPTY,
+                refPosition,
+                readIndex,
+                leftCentreIndex,
+                rightCentreIndex,
+                0,
+                bases.getBytes(),
+                microhomology);
     }
 
     @NotNull
