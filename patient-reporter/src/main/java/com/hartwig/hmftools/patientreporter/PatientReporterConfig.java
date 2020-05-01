@@ -149,8 +149,7 @@ public interface PatientReporterConfig {
     @NotNull
     String signature();
 
-    @NotNull
-    String qcFail();
+    boolean qcFail();
 
     @NotNull
     String qcFailReason();
@@ -200,14 +199,12 @@ public interface PatientReporterConfig {
     @NotNull
     String comments();
 
-    @NotNull
-    String correctedReport();
+    boolean correctedReport();
 
     @NotNull
     String unofficialReport();
 
-    @NotNull
-    String logDebug();
+    boolean logDebug();
 
     @NotNull
     static PatientReporterConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
@@ -225,7 +222,7 @@ public interface PatientReporterConfig {
                 .rvaLogo(cmd.getOptionValue(RVA_LOGO))
                 .companyLogo(cmd.getOptionValue(COMPANY_LOGO))
                 .signature(cmd.getOptionValue(SIGNATURE))
-                .qcFail(cmd.getOptionValue(QC_FAIL))
+                .qcFail(Boolean.parseBoolean(cmd.getOptionValue(QC_FAIL)))
                 .qcFailReason(cmd.getOptionValue(QC_FAIL_REASON))
                 .purplePurityTsv(cmd.getOptionValue(PURPLE_PURITY_TSV))
                 .purpleQcFile(cmd.getOptionValue(PURPLE_QC_FILE))
@@ -242,9 +239,9 @@ public interface PatientReporterConfig {
                 .germlineGenesCsv(cmd.getOptionValue(GERMLINE_GENES_CSV))
                 .sampleSummaryTsv(cmd.getOptionValue(SAMPLE_SUMMARY_TSV))
                 .comments(cmd.getOptionValue(COMMENTS))
-                .correctedReport(cmd.getOptionValue(CORRECTED_REPORT))
+                .correctedReport(Boolean.parseBoolean(cmd.getOptionValue(CORRECTED_REPORT)))
                 .unofficialReport(cmd.getOptionValue(UNOFFICIAL_REPORT))
-                .logDebug(cmd.getOptionValue(LOG_DEBUG))
+                .logDebug(Boolean.parseBoolean(cmd.getOptionValue(LOG_DEBUG)))
                 .build();
 
     }

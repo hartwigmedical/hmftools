@@ -96,7 +96,7 @@ public class PatientReporterApplication {
             printUsageAndExit(options);
         }
 
-        if (cmd.hasOption(LOG_DEBUG)) {
+        if (config.logDebug()) {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
@@ -104,15 +104,15 @@ public class PatientReporterApplication {
         SampleMetadata sampleMetadata = buildSampleMetadata(cmd);
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
-        if (cmd.hasOption(QC_FAIL) && PatientReporterConfig.validInputForQCFailReport(cmd)) {
+        if (config.qcFail() && PatientReporterConfig.validInputForQCFailReport(cmd)) {
             LOGGER.info("Generating qc-fail report");
-            QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
+            QCFailReason reason = QCFailReason.fromIdentifier(config.qcFailReason());
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
-            QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.hasOption(CORRECTED_REPORT));
-            String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
+            QCFailReport report = reporter.run(sampleMetadata, reason, config.comments(), config.correctedReport());
+            String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
-            ReportingDb.addQCFailReportToReportingDb(cmd.getOptionValue(REPORTING_DB_TSV), report);
+            ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
         } else if (PatientReporterConfig.validInputForAnalysedReport(cmd)) {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
