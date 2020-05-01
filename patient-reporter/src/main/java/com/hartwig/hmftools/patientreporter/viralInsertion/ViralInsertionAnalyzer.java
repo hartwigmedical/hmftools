@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViralInsertionAnalyzer {
 
@@ -26,7 +27,7 @@ public final class ViralInsertionAnalyzer {
 
     }
 
-    @NotNull
+    @Nullable
     public static List<ViralInsertion> loadViralInsertions(@NotNull String viralInsertTsv, boolean viralInsertionChoice) throws IOException {
         List<LinxViralInsertFile> viralInsertionList = LinxViralInsertFile.read(viralInsertTsv);
         LOGGER.info("Loaded {} viral insertions from {}", viralInsertionList.size(), viralInsertTsv);
@@ -59,7 +60,7 @@ public final class ViralInsertionAnalyzer {
             return viralInsertions;
         } else {
             LOGGER.info("Patient has given the following viral insertion consent: '{}'", viralInsertionChoice);
-            return Lists.newArrayList();
+            return null;
 
         }
 

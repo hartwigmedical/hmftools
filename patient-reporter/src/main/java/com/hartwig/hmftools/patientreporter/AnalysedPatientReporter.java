@@ -119,8 +119,6 @@ class AnalysedPatientReporter {
                 .impliedPurity(copyNumberAnalysis.purity())
                 .hasReliablePurity(copyNumberAnalysis.hasReliablePurity())
                 .hasReliableQuality(copyNumberAnalysis.hasReliableQuality())
-                .reportableViralInsertions(reportData.limsModel()
-                        .viralInsertionChoice(sampleMetadata.tumorSampleBarcode(), sampleMetadata.tumorSampleId()))
                 .averageTumorPloidy(copyNumberAnalysis.ploidy())
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
@@ -158,7 +156,7 @@ class AnalysedPatientReporter {
         return HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
     }
 
-    @NotNull
+    @Nullable
     private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean viralInsertionsChoice)
             throws IOException {
         return ViralInsertionAnalyzer.loadViralInsertions(linxViralInsertionTsv, viralInsertionsChoice);
