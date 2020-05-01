@@ -37,6 +37,14 @@ public final class CopyNumberAnalyzer {
 
         List<EvidenceItem> filteredEvidenceItems = ReportableEvidenceItemFactory.toReportableFlatList(filteredEvidenceItemMap);
 
+        PurpleSignatures purpleSignatures = ImmutablePurpleSignatures.builder()
+                .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
+                .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
+                .tumorMutationalLoad((int) Math.round(purityContext.tumorMutationalLoad()))
+                .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
+                .microsatelliteStatus(purityContext.microsatelliteStatus())
+                .build();
+
         return ImmutableCopyNumberAnalysis.builder()
                 .purity(bestFit.purity())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
@@ -45,11 +53,7 @@ public final class CopyNumberAnalyzer {
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)
                 .evidenceItems(filteredEvidenceItems)
-                .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
-                .microsatelliteStatus(purityContext.microsatelliteStatus())
-                .tumorMutationalLoad((int) Math.round(purityContext.tumorMutationalLoad()))
-                .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
-                .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
+                .purpleSignatures(purpleSignatures)
                 .build();
     }
 }

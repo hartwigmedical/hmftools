@@ -32,16 +32,7 @@ public abstract class CopyNumberAnalysis {
     @NotNull
     public abstract List<EvidenceItem> evidenceItems();
 
-    public abstract double microsatelliteIndelsPerMb();
-
-    public abstract double tumorMutationalBurdenPerMb();
-
-    public abstract int tumorMutationalLoad();
-
     @NotNull
-    public abstract MicrosatelliteStatus microsatelliteStatus();
-
-    @NotNull
-    public abstract TumorMutationalStatus tumorMutationalLoadStatus();
+    public abstract PurpleSignatures purpleSignatures();
 
 }
