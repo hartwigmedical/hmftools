@@ -239,20 +239,20 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNAReportTable(title);
         } else if (viralInsertions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
+        } else {
+            Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
+                    new Cell[] { TableUtil.createHeaderCell("Virus"),
+                            TableUtil.createHeaderCell("Number of viral breakpoints").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("") });
+
+            for (ViralInsertion viralInsert : viralInsertions) {
+                contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
+                contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount()))
+                        .setTextAlignment(TextAlignment.CENTER));
+                contentTable.addCell(TableUtil.createContentCell(""));
+            }
+
+            return TableUtil.createWrappingReportTable(title, contentTable);
         }
-
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
-                new Cell[] { TableUtil.createHeaderCell("Virus"),
-                        TableUtil.createHeaderCell("Number of viral breakpoints").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("") });
-
-        for (ViralInsertion viralInsert : viralInsertions) {
-            contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
-            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount()))
-                    .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(""));
-        }
-
-        return TableUtil.createWrappingReportTable(title, contentTable);
     }
 }
