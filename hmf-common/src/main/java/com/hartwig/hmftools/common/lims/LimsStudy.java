@@ -2,15 +2,15 @@ package com.hartwig.hmftools.common.lims;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum LimsSampleType {
+public enum LimsStudy {
     CORE,
     WIDE,
     CPCT,
     DRUP,
-    OTHER;
+    NON_CANCER_STUDY;
 
     @NotNull
-    public static LimsSampleType fromSampleId(@NotNull String sampleId) {
+    public static LimsStudy fromSampleId(@NotNull String sampleId) {
         if (sampleId.startsWith("CPCT")) {
             return CPCT;
         } else if (sampleId.startsWith("WIDE")) {
@@ -21,6 +21,6 @@ public enum LimsSampleType {
             return DRUP;
         }
 
-        return OTHER;
+        return NON_CANCER_STUDY;
     }
 }

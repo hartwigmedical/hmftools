@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.LimsCohortType;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsCoreCohort;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -43,7 +43,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     }
 
     @Override
-    public final void render(@NotNull Document reportDocument) throws IOException {
+    public void render(@NotNull Document reportDocument) throws IOException {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createSampleDetailsDiv(patientReport)));
@@ -56,12 +56,12 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Div createSampleDetailsDiv(@NotNull final AnalysedPatientReport patientReport) {
-        final SampleReport sampleReport = patientReport.sampleReport();
-        LimsSampleType type = LimsSampleType.fromSampleId(patientReport.sampleReport().tumorSampleId());
-        LimsCohortType typeCohort = LimsCohortType.fromSampleId(patientReport.sampleReport().tumorSampleId());
+    private static Div createSampleDetailsDiv(@NotNull AnalysedPatientReport patientReport) {
+        SampleReport sampleReport = patientReport.sampleReport();
+        LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
+        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
-        final String addressee;
+        String addressee;
         if (sampleReport.addressee() != null) {
             addressee = sampleReport.addressee();
             assert addressee != null;
@@ -70,8 +70,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
             addressee = DataUtil.NA_STRING;
         }
 
-        final Paragraph sampleIdentificationLineOnReport;
-        if (type == LimsSampleType.WIDE || typeCohort == LimsCohortType.CORELR11 || typeCohort == LimsCohortType.CORESC11) {
+        Paragraph sampleIdentificationLineOnReport;
+        if (study == LimsStudy.WIDE || coreCohort == LimsCoreCohort.CORELR11 || coreCohort == LimsCoreCohort.CORESC11) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
                     patientReport.sampleReport().tumorSampleId(),
                     " and the tissue ID of pathology is: ",
@@ -107,7 +107,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
         div.add(createContentParagraph("This report is addressed at: ", addressee));
 
-        if (type == LimsSampleType.CORE) {
+        if (study == LimsStudy.CORE) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
             div.add(createContentParagraphTwice("The project name of sample is: ",
                     sampleReport.projectName(),

@@ -65,7 +65,7 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @Override
-    public final void render(@NotNull Document reportDocument) {
+    public void render(@NotNull Document reportDocument) {
         reportDocument.add(new Paragraph("Summary").addStyle(ReportResources.chapterTitleStyle()));
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(patientReport.sampleReport().primaryTumorLocationString(),
                 patientReport.sampleReport().cancerSubTypeString(),
@@ -79,7 +79,7 @@ public class SummaryChapter implements ReportChapter {
         renderGenomicAlterations(reportDocument, patientReport);
     }
 
-    private void renderSummaryText(@NotNull final Document reportDocument, @Nullable final String text) {
+    private void renderSummaryText(@NotNull Document reportDocument, @Nullable String text) {
         if (text == null || text.isEmpty()) {
             return;
         }
@@ -145,18 +145,18 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.ploidyToCopiesString(patientReport.averageTumorPloidy(),
                 hasReliablePurity)).addStyle(dataStyle)));
 
-        String mutationalLoadString =
-                hasReliablePurity ? patientReport.tumorMutationalLoadStatus().display() : DataUtil.NA_STRING;
+        String mutationalLoadString = hasReliablePurity ? patientReport.tumorMutationalLoadStatus().display() : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(mutationalLoadString).addStyle(dataStyle)));
 
-        String microSatelliteStabilityString =
-                hasReliablePurity ? patientReport.microsatelliteStatus().display() : DataUtil.NA_STRING;
+        String microSatelliteStabilityString = hasReliablePurity ? patientReport.microsatelliteStatus().display() : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
 
-        String hrdString = hasReliablePurity ? HrDeficiency.interpretChordStatusToString(patientReport.chordAnalysis().hrdValue()) : DataUtil.NA_STRING;
+        String hrdString = hasReliablePurity
+                ? HrDeficiency.interpretChordStatusToString(patientReport.chordAnalysis().hrdValue())
+                : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));
 
@@ -165,7 +165,7 @@ public class SummaryChapter implements ReportChapter {
 
     private static void renderTumorPurity(boolean hasReliablePurity, @NotNull String valueLabel, double value, double min, double max,
             @NotNull Table table) {
-        final String label = "Tumor purity of biopsy";
+        String label = "Tumor purity of biopsy";
         table.addCell(createMiddleAlignedCell().add(new Paragraph(label).addStyle(ReportResources.bodyTextStyle())));
 
         if (hasReliablePurity) {

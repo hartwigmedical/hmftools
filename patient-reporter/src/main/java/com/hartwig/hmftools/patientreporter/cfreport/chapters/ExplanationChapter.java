@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.layout.Document;
@@ -12,7 +13,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class ExplanationChapter implements ReportChapter {
 
-    public ExplanationChapter() {
+    @NotNull
+    private final AnalysedPatientReport patientReport;
+
+    public ExplanationChapter(@NotNull AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
     }
 
     @NotNull
@@ -22,8 +27,8 @@ public class ExplanationChapter implements ReportChapter {
     }
 
     @Override
-    public final void render(@NotNull Document reportDocument) {
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
+    public void render(@NotNull Document reportDocument) {
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10, }));
         table.setWidth(contentWidth());
 
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on the report in general")));
@@ -92,8 +97,25 @@ public class ExplanationChapter implements ReportChapter {
                                 + "and the direction the disruption faces.",
                         "The type of disruption can be INV (inversion), DEL (deletion), DUP (duplication), INS "
                                 + "(insertion), SGL (single) or BND (translocation).",
-                        "A gene for which no wild type exists anymore in the tumor DNA due to disruption(s) " +
-                                "is reported in a separate section called 'homozygous disruptions'" })));
+                        "A gene for which no wild type exists anymore in the tumor DNA due to disruption(s) "
+                                + "is reported in a separate section called 'homozygous disruptions'" })));
+
+        table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
+
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported tumor specific viral insertions")));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
+
+        table.addCell(TableUtil.createLayoutCell()
+                .add(createContentDiv(new String[] { "The detection of ingerated viral DNA in the tumor's genome is reported. \n "
+                        + "The reported integrated viral DNA can be found on https://resources.hartwigmedicalfoundation.nl "
+                        + "in directory Patient-Reporting" })));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
 
         reportDocument.add(table);
     }

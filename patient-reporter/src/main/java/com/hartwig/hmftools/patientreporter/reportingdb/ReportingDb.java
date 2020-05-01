@@ -9,8 +9,8 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.lims.LimsCohortType;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsCoreCohort;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -34,6 +34,7 @@ public final class ReportingDb {
             throws IOException {
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String sampleId = report.sampleReport().tumorSampleId();
+        String cohort = !report.sampleReport().cohort().isEmpty() ? report.sampleReport().cohort() : NA_STRING;
         String reportDate = ReportResources.REPORT_DATE;
         String purity = new DecimalFormat("0.00").format(report.impliedPurity());
 
@@ -42,21 +43,37 @@ public final class ReportingDb {
 
         String reportType = report.isCorrectedReport() ? "sequence_report_corrected" : "sequence_report";
 
-        LimsCohortType cohortTypeCore = LimsCohortType.fromSampleId(sampleId);
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
-        if (type == LimsSampleType.WIDE && report.clinicalSummary().isEmpty()) {
-            LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
-        } else if (type == LimsSampleType.CORE && report.clinicalSummary().isEmpty() && cohortTypeCore != LimsCohortType.CORELR02
-                && cohortTypeCore != LimsCohortType.CORERI02) {
-            LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
-        } else if (type != LimsSampleType.OTHER) {
-            addToReportingDb(reportingDbTsv, tumorBarcode, sampleId, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
+
+        if (requiresSummary(sampleId, study) && report.clinicalSummary().isEmpty()) {
+            LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
+        } else if (study != LimsStudy.NON_CANCER_STUDY) {
+            addToReportingDb(reportingDbTsv,
+                    tumorBarcode,
+                    sampleId,
+                    cohort,
+                    reportType,
+                    reportDate,
+                    purity,
+                    hasReliableQuality,
+                    hasReliablePurity);
+        }
+    }
+
+    @VisibleForTesting
+    public static boolean requiresSummary(@NotNull String sampleId, @NotNull LimsStudy study) {
+        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(sampleId);
+
+        if (study == LimsStudy.WIDE) {
+            return true;
+        } else {
+            return study == LimsStudy.CORE && coreCohort != LimsCoreCohort.CORELR02 && coreCohort != LimsCoreCohort.CORERI02;
         }
     }
 
     private static void addToReportingDb(@NotNull String reportingDbTsv, @NotNull String tumorBarcode, @NotNull String sampleId,
-            @NotNull String reportType, @NotNull String reportDate, @NotNull String purity, boolean hasReliableQuality,
-            boolean hasReliablePurity) throws IOException {
+            @NotNull String cohort, @NotNull String reportType, @NotNull String reportDate, @NotNull String purity,
+            boolean hasReliableQuality, boolean hasReliablePurity) throws IOException {
         boolean present = false;
         for (ReportingEntry entry : read(reportingDbTsv)) {
             if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
@@ -69,37 +86,36 @@ public final class ReportingDb {
         if (!present) {
             LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
             String stringToAppend =
-                    tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t" + hasReliableQuality
-                            + "\t" + hasReliablePurity + "\n";
+                    tumorBarcode + "\t" + sampleId + "\t" + cohort + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t"
+                            + hasReliableQuality + "\t" + hasReliablePurity + "\n";
             appendToTsv(reportingDbTsv, stringToAppend);
         }
     }
 
     public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report) throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
+        String cohort = !report.sampleReport().cohort().isEmpty() ? report.sampleReport().cohort() : NA_STRING;
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
 
-        String reportType = report.reason().identifier();
-        String reportTypeInterpret = report.isCorrectedReport() ? reportType+"_corrected" : reportType;
+        String reportType = report.isCorrectedReport() ? report.reason().identifier() + "_corrected" : report.reason().identifier();
 
-
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
-        if (type != LimsSampleType.OTHER) {
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
+        if (study != LimsStudy.NON_CANCER_STUDY) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
-                        && reportTypeInterpret.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
-                    LOGGER.warn("Sample {} has already been reported with report type '{}' on {}!", sampleId, reportTypeInterpret, reportDate);
+                        && reportType.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
+                    LOGGER.warn("Sample {} has already been reported with report type '{}' on {}!", sampleId, reportType, reportDate);
                     present = true;
                 }
             }
 
             if (!present) {
-                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportTypeInterpret);
+                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
                 String stringToAppend =
-                        tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportTypeInterpret + "\t" + NA_STRING + "\t" + NA_STRING + "\t"
-                                + NA_STRING + "\n";
+                        tumorBarcode + "\t" + sampleId + "\t" + cohort + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING + "\t"
+                                + NA_STRING + "\t" + NA_STRING + "\n";
                 appendToTsv(reportingDbTsv, stringToAppend);
             }
         }
@@ -117,11 +133,12 @@ public final class ReportingDb {
             reportingEntryList.add(ImmutableReportingEntry.builder()
                     .tumorBarcode(values[0])
                     .sampleId(values[1])
-                    .reportDate(values[2])
-                    .reportType(values[3])
-                    .purity(values[4])
-                    .hasReliableQuality(values[5])
-                    .hasReliablePurity(values[6])
+                    .cohort(values[2])
+                    .reportDate(values[3])
+                    .reportType(values[4])
+                    .purity(values[5])
+                    .hasReliableQuality(values[6])
+                    .hasReliablePurity(values[7])
                     .build());
         }
         return reportingEntryList;

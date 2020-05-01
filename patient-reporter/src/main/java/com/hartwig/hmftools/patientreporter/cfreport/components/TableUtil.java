@@ -47,6 +47,20 @@ public final class TableUtil {
     }
 
     @NotNull
+    public static Table createNAReportTable(@NotNull String tableTitle) {
+        Cell headerCell = new Cell().setBorder(Border.NO_BORDER)
+                .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()
+                        .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
+
+        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
+        table.setKeepTogether(true);
+        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
+        table.addCell(TableUtil.createDisabledContentCell(new Paragraph(DataUtil.NA_STRING)));
+
+        return table;
+    }
+
+    @NotNull
     public static Table createWrappingReportTable(@NotNull String tableTitle, @NotNull Table contentTable) {
         contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
                 .setPaddingTop(5)

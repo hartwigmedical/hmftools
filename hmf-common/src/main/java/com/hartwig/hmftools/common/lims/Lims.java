@@ -56,21 +56,21 @@ public class Lims {
             @NotNull String tumorSampleId) {
         LimsJsonSampleData tumorSampleData = dataPerSampleBarcode.get(tumorBarcode);
         if (tumorSampleData == null) {
-            LOGGER.warn("Could not find entry for barcode {} in LIMS.", tumorBarcode);
+            LOGGER.warn("Could not find entry for barcode '{}' in LIMS.", tumorBarcode);
         } else {
             if (!tumorSampleData.sampleId().equals(tumorSampleId)) {
-                LOGGER.warn("Mismatching tumor sample name. Provided={}. LIMS={}", tumorSampleId, tumorSampleData.sampleId());
+                LOGGER.warn("Mismatching tumor sample name. Provided='{}'. LIMS='{}'", tumorSampleId, tumorSampleData.sampleId());
             }
 
             String limsRefBarcode = tumorSampleData.refBarcode();
             if (limsRefBarcode == null || !limsRefBarcode.equals(refBarcode)) {
-                LOGGER.warn("Mismatching ref sample barcode. Provided={}. LIMS={}", refBarcode, limsRefBarcode);
+                LOGGER.warn("Mismatching ref sample barcode. Provided='{}'. LIMS='{}'", refBarcode, limsRefBarcode);
             } else {
                 LimsJsonSampleData refSampleData = dataPerSampleBarcode.get(limsRefBarcode);
                 if (refSampleData == null) {
-                    LOGGER.warn("No ref sample data for sample with barcode {}", limsRefBarcode);
+                    LOGGER.warn("No ref sample data for sample with barcode '{}'", limsRefBarcode);
                 } else if (!refSampleData.sampleId().equals(refSampleId)) {
-                    LOGGER.warn("Mismatching ref sample name. Provided={}. LIMS={}", refSampleId, refSampleData.sampleId());
+                    LOGGER.warn("Mismatching ref sample name. Provided='{}'. LIMS='{}'", refSampleId, refSampleData.sampleId());
                 }
             }
         }
@@ -153,7 +153,7 @@ public class Lims {
             try {
                 // LIMS stores the amount of nanograms per micro liter.
                 return (int) Math.round(Double.parseDouble(sampleData.dnaConcentration()) * LimsConstants.DNA_MICRO_LITERS);
-            } catch (final NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 return null;
             }
         }
@@ -168,7 +168,7 @@ public class Lims {
             LimsShallowSeqData shallowSeq = shallowSeqPerSampleBarcode.get(sampleBarcode);
 
             if (purityShallowExecuted && shallowSeq == null) {
-                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample {}!", sampleBarcode);
+                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample '{}'!", sampleBarcode);
             } else {
                 if (purityShallowExecuted) {
                     if (!shallowSeq.hasReliablePurity()) {
@@ -176,8 +176,8 @@ public class Lims {
                     } else {
                         try {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
-                        } catch (final NumberFormatException e) {
-                            LOGGER.warn("Could not convert shallow seq to a percentage: {}", shallowSeq.purityShallowSeq());
+                        } catch (NumberFormatException e) {
+                            LOGGER.warn("Could not convert shallow seq to a percentage '{}'", shallowSeq.purityShallowSeq());
                             return NOT_AVAILABLE_STRING;
                         }
                     }
@@ -199,7 +199,7 @@ public class Lims {
             } else {
                 try {
                     return Math.round(Double.parseDouble(tumorPercentageString)) + "%";
-                } catch (final NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     return NOT_AVAILABLE_STRING;
                 }
             }
@@ -223,7 +223,7 @@ public class Lims {
         if (sampleData != null) {
             return sampleData.labProcedures();
         }
-        LOGGER.warn("Could not find lab SOP versions for sample: {} in LIMS", sampleBarcode);
+        LOGGER.warn("Could not find lab procedures for sample '{}' in LIMS", sampleBarcode);
         return NOT_AVAILABLE_STRING;
     }
 
@@ -258,6 +258,33 @@ public class Lims {
         } else {
             return LimsGermlineReportingChoice.NO_REPORTING;
         }
+    }
+
+    public boolean viralInsertionChoice(@NotNull String sampleBarcode, @NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+
+        if (sampleData != null) {
+            LimsStudy study = LimsStudy.fromSampleId(sampleId);
+            if (sampleData.reportViralInsertions()) {
+                if (study == LimsStudy.DRUP || study == LimsStudy.CPCT) {
+                    LOGGER.warn("Consent of viral insertions is true, but must be false for CPCT/DRUP!");
+                }
+                return true;
+            } else {
+                if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+                    LOGGER.warn("Consent of viral insertions is false, but must be true for WIDE/CORE!");
+                }
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    @NotNull
+    public String cohort(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        return sampleData != null ? sampleData.cohort() : NOT_AVAILABLE_STRING;
     }
 
     @Nullable

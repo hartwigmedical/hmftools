@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.LimsCohortType;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsCoreCohort;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
@@ -47,8 +47,7 @@ public class QCFailChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document reportDocument) {
         if (failReport.sampleReport().addressee() == null) {
-            throw new IllegalStateException(
-                    "No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
+            throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
         }
 
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
@@ -61,9 +60,9 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().tumorSampleId());
+        LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
 
-        switch (type) {
+        switch (study) {
             case CORE:
                 reportDocument.add(createCOREContentBody());
                 break;
@@ -80,9 +79,9 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Div createFailReasonDiv(@NotNull QCFailReason failReason) {
-        final String title;
-        final String reason;
-        final String explanation;
+        String title;
+        String reason;
+        String explanation;
 
         switch (failReason) {
             case LOW_DNA_YIELD: {
@@ -175,11 +174,11 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Div createCOREContentBodyColumn1() {
-        LimsCohortType type = LimsCohortType.fromSampleId(failReport.sampleReport().tumorSampleId());
+        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(failReport.sampleReport().tumorSampleId());
         Div divColumn = new Div();
         divColumn.add(sampleNotAdequateForWGS());
         divColumn.add(resubmitInSameDVOWithProjectName());
-        if (type == LimsCohortType.CORELR11 || type == LimsCohortType.CORESC11) {
+        if (coreCohort == LimsCoreCohort.CORELR11 || coreCohort == LimsCoreCohort.CORESC11) {
             divColumn.add(reportIsForPathologyTissueID());
         }
         divColumn.add(reportIsForHospitalPatientID());

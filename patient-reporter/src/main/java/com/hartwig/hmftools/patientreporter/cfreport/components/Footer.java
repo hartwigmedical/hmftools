@@ -20,7 +20,7 @@ public class Footer {
     private final List<PageNumberTemplate> pageNumberTemplates = Lists.newArrayList();
 
     public void renderFooter(@NotNull PdfPage page, boolean fullWidth) {
-        final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
+         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
         int pageNumber = page.getDocument().getPageNumber(page);
         PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 200, 20));

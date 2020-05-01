@@ -3,8 +3,8 @@ package com.hartwig.hmftools.patientreporter.summary;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.lims.LimsCohortType;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsCoreCohort;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,13 +25,13 @@ public class SummaryModel {
     @NotNull
     public String findSummaryForSample(@NotNull String sample) {
         boolean sampleHasSummary = samplePresentInSummaries(sample);
-        LimsCohortType cohortTypeCore = LimsCohortType.fromSampleId(sample);
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(sample);
+        LimsStudy study = LimsStudy.fromSampleId(sample);
 
-        if (!sampleHasSummary && LimsSampleType.fromSampleId(sample) == LimsSampleType.WIDE) {
+        if (!sampleHasSummary && LimsStudy.fromSampleId(sample) == LimsStudy.WIDE) {
             LOGGER.warn("Could not find a summary for WIDE sample: {}", sample);
-        } else if (type == LimsSampleType.CORE && !sampleHasSummary && cohortTypeCore != LimsCohortType.CORELR02
-                && cohortTypeCore != LimsCohortType.CORERI02) {
+        } else if (study == LimsStudy.CORE && !sampleHasSummary && coreCohort != LimsCoreCohort.CORELR02
+                && coreCohort != LimsCoreCohort.CORERI02) {
             LOGGER.warn("Could not find a summary for CORE sample: {}", sample);
         }
         return sampleHasSummary ? sampleToSummaryMap.get(sample) : Strings.EMPTY;

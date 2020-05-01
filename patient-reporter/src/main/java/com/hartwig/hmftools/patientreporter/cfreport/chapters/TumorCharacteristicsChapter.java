@@ -43,7 +43,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     @Override
-    public final void render(@NotNull final Document reportDocument) {
+    public void render(@NotNull Document reportDocument) {
         DecimalFormat noDecimalFormat = ReportResources.decimalFormat("#");
         DecimalFormat singleDecimalFormat = ReportResources.decimalFormat("#.#");
         DecimalFormat doubleDecimalFormat = ReportResources.decimalFormat("#.##");
@@ -58,7 +58,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         double hrDeficiency = patientReport.chordAnalysis().hrdValue();
         ChordStatus hrStatus = ChordStatus.fromHRD(hrDeficiency);
-        String hrDeficiencyLabel = hasReliablePurity ? hrStatus.display() + " " + HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
+        String hrDeficiencyLabel =
+                hasReliablePurity ? hrStatus.display() + " " + HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
 
         String hrFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
                 + "and is therefore not reported for this sample.";
@@ -71,13 +72,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
         hrChart.enabled(hasReliablePurity && msiStatus == MicrosatelliteStatus.MSS);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
-        hrChart.setIndicator(ChordStatus.HRD_THRESHOLD,
-                "HRD status (" + doubleDecimalFormat.format(ChordStatus.HRD_THRESHOLD) + ")");
+        hrChart.setIndicator(ChordStatus.HRD_THRESHOLD, "HRD status (" + doubleDecimalFormat.format(ChordStatus.HRD_THRESHOLD) + ")");
 
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
                 hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing "
-                        + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation.",
+                        + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation. \n"
+                        + "More information about the HRD cut-off can be found on paper",
                 hrChart,
                 hrFootnote,
                 displayFootNote));
@@ -105,9 +106,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         int mutationalLoad = patientReport.tumorMutationalLoad();
         TumorMutationalStatus tmlStatus = patientReport.tumorMutationalLoadStatus();
 
-        String mutationalLoadString = hasReliablePurity
-                ? tmlStatus + " " + noDecimalFormat.format(mutationalLoad)
-                : DataUtil.NA_STRING;
+        String mutationalLoadString = hasReliablePurity ? tmlStatus + " " + noDecimalFormat.format(mutationalLoad) : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =
                 new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", false);
         mutationalLoadChart.enabled(hasReliablePurity);

@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -96,6 +96,7 @@ public final class ExampleAnalysisTestFactory {
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
+                .reportableViralInsertions(false)
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
@@ -155,6 +156,7 @@ public final class ExampleAnalysisTestFactory {
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
+                .reportableViralInsertions(true)
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
@@ -214,6 +216,7 @@ public final class ExampleAnalysisTestFactory {
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
+                .reportableViralInsertions(true)
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
@@ -243,9 +246,9 @@ public final class ExampleAnalysisTestFactory {
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
         QCFailStudy failStudy;
-        switch (sampleType) {
+        switch (study) {
             case CORE:
                 failStudy = QCFailStudy.CORE;
                 break;
@@ -291,10 +294,11 @@ public final class ExampleAnalysisTestFactory {
                 .requesterName("C")
                 .requesterEmail("D")
                 .addressee("HMF Testing Center")
+                .cohort("A")
+                .projectName("TEST")
                 .hospitalName(Strings.EMPTY)
                 .hospitalPIName(Strings.EMPTY)
                 .hospitalPIEmail(Strings.EMPTY)
-                .projectName("TEST")
                 .submissionId("10")
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")

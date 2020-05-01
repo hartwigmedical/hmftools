@@ -80,11 +80,18 @@ abstract class LimsJsonSampleData {
     @SerializedName("lab_sop_versions")
     abstract String labSopVersions();
 
+    @SerializedName("report_viral")
+    public abstract boolean reportViralInsertions();
+
+    @NotNull
+    @SerializedName("cohort")
+    public abstract String cohort();
+
     @NotNull
     @Value.Derived
     public String labProcedures() {
-        final Pattern pattern = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");
-        final Matcher matcher = pattern.matcher(labSopVersions());
+        Pattern pattern = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");
+        Matcher matcher = pattern.matcher(labSopVersions());
         if (matcher.find()) {
             return labSopVersions();
         } else {

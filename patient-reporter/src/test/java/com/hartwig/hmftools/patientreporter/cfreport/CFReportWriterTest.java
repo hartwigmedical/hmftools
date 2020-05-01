@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -144,6 +144,7 @@ public class CFReportWriterTest {
                 .hospitalName(Strings.EMPTY)
                 .hospitalPIName(Strings.EMPTY)
                 .hospitalPIEmail(Strings.EMPTY)
+                .cohort("A")
                 .projectName("COLO-001-002")
                 .requesterName("ContactMe")
                 .requesterEmail("contact@me.com")
@@ -154,9 +155,9 @@ public class CFReportWriterTest {
                 .hospitalPathologySampleId("A")
                 .build();
 
-        LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
         QCFailStudy failStudy;
-        switch (sampleType) {
+        switch (study) {
             case CORE:
                 failStudy = QCFailStudy.CORE;
                 break;

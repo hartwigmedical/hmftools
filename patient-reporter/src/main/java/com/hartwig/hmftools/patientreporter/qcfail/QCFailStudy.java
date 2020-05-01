@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.qcfail;
 
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,9 +23,9 @@ public enum QCFailStudy {
 
     @Nullable
     public static QCFailStudy fromSample(@NotNull final String sample) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+        LimsStudy study = LimsStudy.fromSampleId(sample);
 
-        switch (type) {
+        switch (study) {
             case CPCT:
                 return CPCT;
             case DRUP:

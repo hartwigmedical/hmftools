@@ -17,7 +17,6 @@ final class BaseMarker {
             float redProbability, float filledProbability, @NotNull PdfCanvas canvas) {
         Random r = new Random();
         for (int row = 0; row < yCount; row++) {
-
             for (int col = 0; col < xCount; col++) {
                 float x = xStart + col * xSpacing;
                 float y = yStart + row * ySpacing;
@@ -30,7 +29,7 @@ final class BaseMarker {
     }
 
     private static void renderMarker(float x, float y, @NotNull DeviceRgb color, boolean filled, @NotNull PdfCanvas canvas) {
-        final float height = 1.9f;
+         float height = 1.9f;
         canvas.roundRectangle(x, y, 12.3f, height, height * .5f);
         canvas.setLineWidth(.25f);
 

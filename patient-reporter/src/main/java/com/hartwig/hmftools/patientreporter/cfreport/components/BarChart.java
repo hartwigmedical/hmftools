@@ -112,18 +112,18 @@ public class BarChart extends InlineBarChart {
         public void draw(final DrawContext drawContext) {
             super.draw(drawContext);
 
-            final PdfCanvas canvas = drawContext.getCanvas();
-            final Rectangle boundingBox = this.occupiedArea.getBBox();
-            final Canvas cv = new Canvas(canvas, canvas.getDocument(), boundingBox);
+            PdfCanvas canvas = drawContext.getCanvas();
+            Rectangle boundingBox = this.occupiedArea.getBBox();
+            Canvas cv = new Canvas(canvas, canvas.getDocument(), boundingBox);
 
-            final float barY = boundingBox.getTop() - 39;
-            final float tickY = barY - 21;
+            float barY = boundingBox.getTop() - 39;
+            float tickY = barY - 21;
 
-            final boolean hasUnderShoot = isEnabled() && underShootEnabled && value() < min();
-            final boolean hasOverShoot = isEnabled() && overshootEnabled && value() > max();
+            boolean hasUnderShoot = isEnabled() && underShootEnabled && value() < min();
+            boolean hasOverShoot = isEnabled() && overshootEnabled && value() > max();
 
-            final Color outlineColor = isEnabled() ? ReportResources.PALETTE_MID_BLUE : ReportResources.PALETTE_LIGHT_GREY;
-            final Color labelColor = isEnabled() ? ReportResources.PALETTE_BLACK : ReportResources.PALETTE_LIGHT_GREY;
+            Color outlineColor = isEnabled() ? ReportResources.PALETTE_MID_BLUE : ReportResources.PALETTE_LIGHT_GREY;
+            Color labelColor = isEnabled() ? ReportResources.PALETTE_BLACK : ReportResources.PALETTE_LIGHT_GREY;
 
             cv.showTextAligned(new Paragraph(lowLabel).addStyle(ReportResources.smallBodyHeadingStyle().setFontColor(labelColor)),
                     boundingBox.getLeft(),
@@ -135,14 +135,14 @@ public class BarChart extends InlineBarChart {
                     TextAlignment.RIGHT);
 
             if (hasUnderShoot) {
-                final float fillValue = isEnabled() ? (value() > min() ? 1 : 0.1f) : 0f;
+                float fillValue = isEnabled() ? (value() > min() ? 1 : 0.1f) : 0f;
 
-                final Rectangle outerBB =
+                Rectangle outerBB =
                         new Rectangle(boundingBox.getLeft(), barY, OVER_UNDER_SHOOT_WIDTH + BAR_OUTLINE_HEIGHT, BAR_OUTLINE_HEIGHT);
-                final Rectangle innerBB = getInnerRectangle(outerBB);
+                Rectangle innerBB = getInnerRectangle(outerBB);
                 drawRoundedRect(outerBB, innerBB, fillValue, outlineColor, ReportResources.PALETTE_BLUE, true, canvas);
 
-                final float outerRadius = getHeightRadius(outerBB);
+                float outerRadius = getHeightRadius(outerBB);
                 canvas.circle(outerBB.getRight() - outerRadius, outerBB.getY() + outerRadius, outerRadius + OVER_UNDERSHOOT_OVERLAP);
                 canvas.setFillColor(ReportResources.PALETTE_WHITE);
                 canvas.fill();
@@ -153,16 +153,16 @@ public class BarChart extends InlineBarChart {
             }
 
             if (hasOverShoot) {
-                final float fillValue = (isEnabled() && value() > max()) ? 1 : 0;
+                float fillValue = (isEnabled() && value() > max()) ? 1 : 0;
 
-                final Rectangle outerBB = new Rectangle(boundingBox.getRight() - OVER_UNDER_SHOOT_WIDTH - BAR_OUTLINE_HEIGHT,
+                Rectangle outerBB = new Rectangle(boundingBox.getRight() - OVER_UNDER_SHOOT_WIDTH - BAR_OUTLINE_HEIGHT,
                         barY,
                         OVER_UNDER_SHOOT_WIDTH + BAR_OUTLINE_HEIGHT,
                         BAR_OUTLINE_HEIGHT);
-                final Rectangle innerBB = getInnerRectangle(outerBB);
+                Rectangle innerBB = getInnerRectangle(outerBB);
                 drawRoundedRect(outerBB, innerBB, fillValue, outlineColor, ReportResources.PALETTE_BLUE, true, canvas);
 
-                final float outerRadius = getHeightRadius(outerBB);
+                float outerRadius = getHeightRadius(outerBB);
                 canvas.setFillColor(ReportResources.PALETTE_WHITE);
                 canvas.circle(outerBB.getLeft() + outerRadius, outerBB.getY() + outerRadius, outerRadius + OVER_UNDERSHOOT_OVERLAP);
                 canvas.fill();
@@ -172,13 +172,13 @@ public class BarChart extends InlineBarChart {
                         .setFontColor(labelColor)), outerBB.getRight() - OVER_UNDER_SHOOT_LABEL_OFFSET, tickY, TextAlignment.RIGHT);
             }
 
-            final float fillValue = isEnabled() ? (float) MathUtil.mapClamped(scaledValue(), scaledMin(), scaledMax(), 0, 1) : 0;
+            float fillValue = isEnabled() ? (float) MathUtil.mapClamped(scaledValue(), scaledMin(), scaledMax(), 0, 1) : 0;
 
-            final Rectangle mainOuterBB = new Rectangle(boundingBox.getLeft() + (hasUnderShoot ? OVER_UNDER_SHOOT_WIDTH : 0),
+            Rectangle mainOuterBB = new Rectangle(boundingBox.getLeft() + (hasUnderShoot ? OVER_UNDER_SHOOT_WIDTH : 0),
                     barY,
                     boundingBox.getWidth() - (hasUnderShoot ? OVER_UNDER_SHOOT_WIDTH : 0) - (hasOverShoot ? OVER_UNDER_SHOOT_WIDTH : 0),
                     BAR_OUTLINE_HEIGHT);
-            final Rectangle mainInnerBB = getInnerRectangle(mainOuterBB);
+            Rectangle mainInnerBB = getInnerRectangle(mainOuterBB);
             drawRoundedRect(mainOuterBB, mainInnerBB, fillValue, outlineColor, ReportResources.PALETTE_BLUE, false, canvas);
 
             for (Indicator tickMark : tickMarks) {
@@ -248,7 +248,7 @@ public class BarChart extends InlineBarChart {
             canvas.setLineDash(1f);
 
             if (filledPercentage > 0 || forceMarkerInRoundedRectangle) {
-                final float innerBarRadius = getHeightRadius(innerBoundingBox);
+                float innerBarRadius = getHeightRadius(innerBoundingBox);
                 canvas.setFillColor(fillColor);
                 canvas.roundRectangle(innerBoundingBox.getX(),
                         innerBoundingBox.getY(),

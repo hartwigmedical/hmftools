@@ -16,6 +16,9 @@ public abstract class ReportingEntry {
     public abstract String sampleId();
 
     @NotNull
+    public abstract String cohort();
+
+    @NotNull
     public abstract String reportDate();
 
     @NotNull
@@ -29,5 +32,4 @@ public abstract class ReportingEntry {
 
     @NotNull
     public abstract String hasReliablePurity();
-
 }

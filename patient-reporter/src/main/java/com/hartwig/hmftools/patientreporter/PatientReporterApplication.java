@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.lims.LimsWide;
 import com.hartwig.hmftools.common.lims.LimsWideFile;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
@@ -39,7 +39,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //            public static final String VERSION = "7.10";
+    //            public static final String VERSION = "7.11";
 
     // General params needed for every report
     private static final String REF_SAMPLE_ID = "ref_sample_id";
@@ -97,10 +97,8 @@ public class PatientReporterApplication {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        SampleMetadata sampleMetadata = buildSampleMetadata(cmd);
-
         LOGGER.info("Running patient reporter v{}", VERSION);
-        printSampleMetadata(sampleMetadata);
+        SampleMetadata sampleMetadata = buildSampleMetadata(cmd);
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
@@ -112,7 +110,7 @@ public class PatientReporterApplication {
             reportWriter.writeQCFailReport(report, outputFilePath);
 
             ReportingDb.addQCFailReportToReportingDb(cmd.getOptionValue(REPORTING_DB_TSV), report);
-        } else if (validInputForAnalysedSample(cmd)) {
+        } else if (validInputForAnalysedReport(cmd)) {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
@@ -143,9 +141,9 @@ public class PatientReporterApplication {
     @NotNull
     private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.tumorSampleId());
+        LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
-        String filePrefix = type == LimsSampleType.CORE
+        String filePrefix = study == LimsStudy.CORE
                 ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
                 : sampleReport.tumorSampleId();
 
@@ -156,19 +154,19 @@ public class PatientReporterApplication {
 
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull CommandLine cmd) {
-        return ImmutableSampleMetadata.builder()
+        SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(cmd.getOptionValue(REF_SAMPLE_ID))
                 .refSampleBarcode(cmd.getOptionValue(REF_SAMPLE_BARCODE))
                 .tumorSampleId(cmd.getOptionValue(TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(cmd.getOptionValue(TUMOR_SAMPLE_BARCODE))
                 .build();
-    }
 
-    private static void printSampleMetadata(@NotNull SampleMetadata sampleMetadata) {
         LOGGER.info("Printing sample meta data for {}", sampleMetadata.tumorSampleId());
         LOGGER.info(" Tumor sample barcode: {}", sampleMetadata.tumorSampleBarcode());
         LOGGER.info(" Ref sample: {}", sampleMetadata.refSampleId());
         LOGGER.info(" Ref sample barcode: {}", sampleMetadata.refSampleBarcode());
+
+        return sampleMetadata;
     }
 
     @NotNull
@@ -215,7 +213,7 @@ public class PatientReporterApplication {
                 && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO) && fileExists(cmd, CONTACT_WIDE_TSV);
     }
 
-    private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
+    private static boolean validInputForAnalysedReport(@NotNull CommandLine cmd) {
         return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC_FILE) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(
                 cmd,
                 SOMATIC_VARIANT_VCF) && fileExists(cmd, BACHELOR_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd,
@@ -238,7 +236,7 @@ public class PatientReporterApplication {
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
         String value = cmd.getOptionValue(param);
         if (value == null) {
-            LOGGER.warn("{} has to be provided", param);
+            LOGGER.warn("'{}' has to be provided", param);
             return false;
         }
         return true;
@@ -248,7 +246,7 @@ public class PatientReporterApplication {
         String value = cmd.getOptionValue(param);
 
         if (value == null || !pathExists(value)) {
-            LOGGER.warn("{} has to be an existing file: {}", param, value);
+            LOGGER.warn("'{}' has to be an existing file: '{}'", param, value);
             return false;
         }
 
@@ -259,7 +257,7 @@ public class PatientReporterApplication {
         String value = cmd.getOptionValue(param);
 
         if (value == null || !pathExists(value) || !pathIsDirectory(value)) {
-            LOGGER.warn("{} has to be an existing directory: {}", param, value);
+            LOGGER.warn("'{}' has to be an existing directory: '{}'", param, value);
             return false;
         }
 
@@ -281,7 +279,7 @@ public class PatientReporterApplication {
         options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the sample for which we are generating a report.");
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
-        options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF reports have to be written to.");
+        options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF report will be written to.");
 
         options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
