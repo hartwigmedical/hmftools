@@ -201,8 +201,7 @@ public interface PatientReporterConfig {
 
     boolean correctedReport();
 
-    @NotNull
-    String unofficialReport();
+    boolean unofficialReport();
 
     boolean logDebug();
 
@@ -240,7 +239,7 @@ public interface PatientReporterConfig {
                 .sampleSummaryTsv(cmd.getOptionValue(SAMPLE_SUMMARY_TSV))
                 .comments(cmd.getOptionValue(COMMENTS))
                 .correctedReport(Boolean.parseBoolean(cmd.getOptionValue(CORRECTED_REPORT)))
-                .unofficialReport(cmd.getOptionValue(UNOFFICIAL_REPORT))
+                .unofficialReport(Boolean.parseBoolean(cmd.getOptionValue(UNOFFICIAL_REPORT)))
                 .logDebug(Boolean.parseBoolean(cmd.getOptionValue(LOG_DEBUG)))
                 .build();
 

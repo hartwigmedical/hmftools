@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -41,45 +40,6 @@ public class PatientReporterApplication {
     // Uncomment this line when generating an example report using PDFWriterTest
     //            public static final String VERSION = "7.11";
 
-    // General params needed for every report
-    private static final String REF_SAMPLE_ID = "ref_sample_id";
-    private static final String REF_SAMPLE_BARCODE = "ref_sample_barcode";
-    private static final String TUMOR_SAMPLE_ID = "tumor_sample_id";
-    private static final String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
-    private static final String OUTPUT_DIRECTORY = "output_dir";
-
-    private static final String REPORTING_DB_TSV = "reporting_db_tsv";
-    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
-    private static final String LIMS_DIRECTORY = "lims_dir";
-    private static final String HOSPITAL_DIRECTORY = "hospital_dir";
-    private static final String CONTACT_WIDE_TSV = "contact_wide_tsv";
-
-    private static final String RVA_LOGO = "rva_logo";
-    private static final String COMPANY_LOGO = "company_logo";
-    private static final String SIGNATURE = "signature";
-
-    // Params specific for actual patient reports
-    private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
-    private static final String PURPLE_QC_FILE = "purple_qc_file";
-    private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
-    private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
-    private static final String BACHELOR_TSV = "bachelor_tsv";
-    private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
-    private static final String LINX_DISRUPTION_TSV = "linx_disruption_tsv";
-    private static final String LINX_VIRAL_INSERTION_TSV = "linx_viral_insertion_tsv";
-    private static final String LINX_DRIVERS_TSV = "linx_drivers_tsv";
-    private static final String CHORD_PREDICTION_TXT = "chord_prediction_txt";
-    private static final String CIRCOS_FILE = "circos_file";
-
-    private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
-    private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
-    private static final String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
-
-    // Some additional optional params and flags
-    private static final String COMMENTS = "comments";
-    private static final String CORRECTED_REPORT = "corrected_report";
-    private static final String UNOFFICIAL_REPORT = "unofficial_report";
-
     public static void main(final String... args) throws ParseException, IOException {
         final Options options = PatientReporterConfig.createOptions();
 
@@ -96,13 +56,13 @@ public class PatientReporterApplication {
         }
 
         LOGGER.info("Running patient reporter v{}", VERSION);
-        SampleMetadata sampleMetadata = buildSampleMetadata(cmd);
+        SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         if (config.qcFail() && PatientReporterConfig.validInputForQCFailReport(cmd)) {
             LOGGER.info("Generating qc-fail report");
             QCFailReason reason = QCFailReason.fromIdentifier(config.qcFailReason());
-            QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
+            QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(config));
             QCFailReport report = reporter.run(sampleMetadata, reason, config.comments(), config.correctedReport());
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
@@ -110,27 +70,27 @@ public class PatientReporterApplication {
             ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
         } else if (PatientReporterConfig.validInputForAnalysedReport(cmd)) {
             LOGGER.info("Generating patient report");
-            AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
+            AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(config));
 
             AnalysedPatientReport report = reporter.run(sampleMetadata,
-                    cmd.getOptionValue(PURPLE_PURITY_TSV),
-                    cmd.getOptionValue(PURPLE_QC_FILE),
-                    cmd.getOptionValue(PURPLE_GENE_CNV_TSV),
-                    cmd.getOptionValue(SOMATIC_VARIANT_VCF),
-                    cmd.getOptionValue(BACHELOR_TSV),
-                    cmd.getOptionValue(LINX_FUSION_TSV),
-                    cmd.getOptionValue(LINX_DISRUPTION_TSV),
-                    cmd.getOptionValue(LINX_VIRAL_INSERTION_TSV),
-                    cmd.getOptionValue(LINX_DRIVERS_TSV),
-                    cmd.getOptionValue(CHORD_PREDICTION_TXT),
-                    cmd.getOptionValue(CIRCOS_FILE),
-                    cmd.getOptionValue(COMMENTS),
-                    cmd.hasOption(CORRECTED_REPORT),
-                    cmd.hasOption(UNOFFICIAL_REPORT));
-            String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
+                    config.purplePurityTsv(),
+                    config.purpleQcFile(),
+                    config.PurpleGeneCnvTsv(),
+                    config.somaticVariantVcf(),
+                    config.bachelorTsv(),
+                    config.linxFusionTsv(),
+                    config.linxDisruptionTsv(),
+                    config.linxViralInsertionTsv(),
+                    config.linxDriversTsv(),
+                    config.chordPredictionTxt(),
+                    config.circosFile(),
+                    config.comments(),
+                    config.correctedReport(),
+                    config.unofficialReport());
+            String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
-            ReportingDb.addSequenceReportToReportingDb(cmd.getOptionValue(REPORTING_DB_TSV), report);
+            ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
         } else {
             printUsageAndExit(options);
         }
@@ -151,12 +111,12 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static SampleMetadata buildSampleMetadata(@NotNull CommandLine cmd) {
+    private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId(cmd.getOptionValue(REF_SAMPLE_ID))
-                .refSampleBarcode(cmd.getOptionValue(REF_SAMPLE_BARCODE))
-                .tumorSampleId(cmd.getOptionValue(TUMOR_SAMPLE_ID))
-                .tumorSampleBarcode(cmd.getOptionValue(TUMOR_SAMPLE_BARCODE))
+                .refSampleId(config.refSampleID())
+                .refSampleBarcode(config.refSampleBarcode())
+                .tumorSampleId(config.tumorSampleId())
+                .tumorSampleBarcode(config.tumorSampleBarcode())
                 .build();
 
         LOGGER.info("Printing sample meta data for {}", sampleMetadata.tumorSampleId());
@@ -168,39 +128,39 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static QCFailReportData buildQCFailReportData(@NotNull CommandLine cmd) throws IOException {
-        String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+    private static QCFailReportData buildQCFailReportData(@NotNull PatientReporterConfig config) throws IOException {
+        String tumorLocationCsv = config.tumorLocationCsv();
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
         LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
 
-        String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
+        String limsDirectory = config.limsDir();
         Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
 
-        String hospitalsDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
+        String hospitalsDirectory = config.hospitalDir();
         HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
         LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
 
-        LOGGER.info("Reading lims wide file {}", cmd.getOptionValue(CONTACT_WIDE_TSV));
-        LimsWide limsWide = LimsWideFile.read(cmd.getOptionValue(CONTACT_WIDE_TSV));
+        LOGGER.info("Reading lims wide file {}", config.contactWideTsv());
+        LimsWide limsWide = LimsWideFile.read(config.contactWideTsv());
 
         return ImmutableQCFailReportData.builder()
                 .patientTumorLocations(patientTumorLocations)
                 .limsModel(lims)
                 .limsWideModel(limsWide)
                 .hospitalModel(hospitalModel)
-                .signaturePath(cmd.getOptionValue(SIGNATURE))
-                .logoRVAPath(cmd.getOptionValue(RVA_LOGO))
-                .logoCompanyPath(cmd.getOptionValue(COMPANY_LOGO))
+                .signaturePath(config.signature())
+                .logoRVAPath(config.rvaLogo())
+                .logoCompanyPath(config.companyLogo())
                 .build();
     }
 
     @NotNull
-    private static AnalysedReportData buildAnalysedReportData(@NotNull CommandLine cmd) throws IOException {
-        return AnalysedReportDataLoader.buildFromFiles(buildQCFailReportData(cmd),
-                cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
-                cmd.getOptionValue(GERMLINE_GENES_CSV),
-                cmd.getOptionValue(SAMPLE_SUMMARY_TSV));
+    private static AnalysedReportData buildAnalysedReportData(@NotNull PatientReporterConfig config) throws IOException {
+        return AnalysedReportDataLoader.buildFromFiles(buildQCFailReportData(config),
+                config.knowledgebaseDir(),
+                config.germlineGenesCsv(),
+                config.sampleSummaryTsv());
     }
 
     @NotNull
