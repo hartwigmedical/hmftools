@@ -72,11 +72,13 @@ public final class SampleReportFactory {
         LimsStudy study = LimsStudy.fromSampleId(tumorSampleId);
 
         if (!hospitalPaId.equals("N/A")) {
+            LOGGER.info(hospitalPaId.substring(4, 9));
 
-            if (hospitalPaId.startsWith("T") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3,4).equals("-")) {
+            if (hospitalPaId.startsWith("T") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3, 4).equals("-")
+                    && hospitalPaId.substring(4, 9).matches("[0-9]+")) {
                 return true;
-            } else if (hospitalPaId.startsWith("C") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3,4)
-                    .equals("-")) {
+            } else if (hospitalPaId.startsWith("C") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3, 4)
+                    .equals("-") && hospitalPaId.substring(4, 9).matches("[0-9]+")) {
                 return true;
             } else {
                 if (study == LimsStudy.WIDE) {
