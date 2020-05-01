@@ -77,7 +77,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
-        final List<ViralInsertion> viralInsertions = Lists.newArrayList();
+        final List<ViralInsertion> viralInsertions = null;
 
         final String sampleId = "PNT00012345T";
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -202,7 +202,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        final List<ViralInsertion> viralInsertions = createTestViralInsertions();
+        final List<ViralInsertion> viralInsertions = Lists.newArrayList();
         final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
