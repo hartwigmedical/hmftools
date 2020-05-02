@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
-import static com.hartwig.hmftools.isofox.TestUtils.createMappedReadPair;
+import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 
@@ -31,14 +31,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 
 import org.junit.Test;
-
-import htsjdk.samtools.SAMFlag;
 
 public class FusionFragmentsTest
 {
@@ -59,7 +56,7 @@ public class FusionFragmentsTest
         int readId = 0;
         ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
-        ReadRecord[] readPair = createMappedReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0));
 
         readPair[1].setStrand(true, false);
@@ -92,7 +89,7 @@ public class FusionFragmentsTest
         // unspliced DEL - imagining an SV at 1150 to 10150
         read1 = createMappedRead(++readId, gc1, 1110, 1149, createCigar(0, 40, 0));
 
-        readPair = createMappedReadPair(readId, gc1, gc2, 1131, 1150, 10150, 10169,
+        readPair = createSupplementaryReadPair(readId, gc1, gc2, 1131, 1150, 10150, 10169,
                 createCigar(0, 20, 20), createCigar(20, 20, 0));
 
         readPair[1].setStrand(true, false);
@@ -144,7 +141,7 @@ public class FusionFragmentsTest
         // DUP
         read1 = createMappedRead(++readId, gc2, 10220, 10259, createCigar(0, 40, 0));
 
-        readPair = createMappedReadPair(readId, gc2, gc1, 10281, 10300, 1200, 1219,
+        readPair = createSupplementaryReadPair(readId, gc2, gc1, 10281, 10300, 1200, 1219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0));
 
         readPair[1].setStrand(true, false);
@@ -229,7 +226,7 @@ public class FusionFragmentsTest
         // BND being -1/-1
         final GeneCollection gc5 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
 
-        readPair = createMappedReadPair(readId, gc5, gc3, 10200, 10219, 20281, 20300,
+        readPair = createSupplementaryReadPair(readId, gc5, gc3, 10200, 10219, 20281, 20300,
                 createCigar(20, 20, 0), createCigar(0, 20, 20));
 
         read3 = createMappedRead(readId, gc3, 20220, 20259, createCigar(0, 40, 0));

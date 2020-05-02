@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_4;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_5;
+import static com.hartwig.hmftools.isofox.TestUtils.NEG_STRAND;
+import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
 import static com.hartwig.hmftools.isofox.TestUtils.TRANS_1;
 import static com.hartwig.hmftools.isofox.TestUtils.TRANS_2;
 import static com.hartwig.hmftools.isofox.TestUtils.TRANS_3;
@@ -16,13 +18,13 @@ import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
-import static com.hartwig.hmftools.isofox.TestUtils.createMappedReadPair;
+import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
+import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 
-import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -154,14 +156,14 @@ public class FusionDataTest
         int readId = 0;
         ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
-        ReadRecord[] readPair = createMappedReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0));
 
         readPair[1].setStrand(true, false);
 
         chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
 
-        readPair = createMappedReadPair(++readId, gc1, gc2, 1081, 1100, 10200, 10219,
+        readPair = createSupplementaryReadPair(++readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0));
 
         ReadRecord read3 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
@@ -174,7 +176,7 @@ public class FusionDataTest
         // 1 unspliced fragment - will remain its own fusion
         read1 = createMappedRead(++readId, gc1, 1110, 1149, createCigar(0, 40, 0));
 
-        readPair = createMappedReadPair(readId, gc1, gc2, 1131, 1150, 10150, 10169,
+        readPair = createSupplementaryReadPair(readId, gc1, gc2, 1131, 1150, 10150, 10169,
                 createCigar(0, 20, 20), createCigar(20, 20, 0));
 
         readPair[1].setStrand(true, false);
@@ -217,7 +219,7 @@ public class FusionDataTest
 
         read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
-        readPair = createMappedReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+        readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0));
 
         readPair[1].setStrand(true, false);
@@ -259,7 +261,7 @@ public class FusionDataTest
 
         read2 = createMappedRead(readId, gc5, 10210, 10249, createCigar(0, 40, 20));
 
-        readPair = createMappedReadPair(readId, gc5, gc3, 10200, 10219, 20281, 20300,
+        readPair = createSupplementaryReadPair(readId, gc5, gc3, 10200, 10219, 20281, 20300,
                 createCigar(20, 20, 0), createCigar(0, 20, 20));
 
         readPair[0].setStrand(true, false);
@@ -267,16 +269,16 @@ public class FusionDataTest
         chimericReadMap.put(read1.Id, Lists.newArrayList(readPair[0], read2, readPair[1]));
 
         // 1 intronic discordant read
-        read1 = createMappedRead(++readId, gc3, 20150, 20189, createCigar(0, 40, 0)); // between exons 1 & 2
-        read2 = createMappedRead(readId, gc5, 10320, 10359, createCigar(0, 40, 0));
-        read2.setStrand(true, false);
-        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+        ReadRecord[] discordantReads = createReadPair(++readId, gc3, gc5, 20150, 20189, 10320, 10359,
+                createCigar(0, 40, 0),  createCigar(0, 40, 0), POS_STRAND, NEG_STRAND);
+
+        chimericReadMap.put(discordantReads[0].Id, Lists.newArrayList(discordantReads[0], discordantReads[1]));
 
         // 1 exonic discordant read
-        read1 = createMappedRead(++readId, gc3, 20250, 20289, createCigar(0, 40, 0)); // between exons 1 & 2
-        read2 = createMappedRead(readId, gc5, 10210, 10249, createCigar(0, 40, 0));
-        read1.setStrand(true, false);
-        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+        discordantReads = createReadPair(++readId, gc3, gc5, 20250, 20289, 10210, 10249,
+                createCigar(0, 40, 0),  createCigar(0, 40, 0), POS_STRAND, NEG_STRAND);
+
+        chimericReadMap.put(discordantReads[0].Id, Lists.newArrayList(discordantReads[0], discordantReads[1]));
 
         finder.addChimericReads(chimericReadMap);
 
@@ -321,7 +323,7 @@ public class FusionDataTest
         int readId = 0;
         ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
-        ReadRecord[] readPair = createMappedReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0));
 
         readPair[1].setStrand(true, false);

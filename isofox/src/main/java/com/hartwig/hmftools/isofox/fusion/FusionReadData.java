@@ -243,7 +243,7 @@ public class FusionReadData
 
             // must match the orientations of the fusion junction
             if(fragment.orientations()[se] != mJunctionOrientations[se])
-                continue;
+                return false;
 
             boolean isUpstream = (mStreamIndices[FS_UPSTREAM] == se);
 
