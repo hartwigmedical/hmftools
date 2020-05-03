@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.cli.Configs.defaultBooleanValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.cli.Configs;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
@@ -21,11 +21,14 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface FilterConfig {
 
-    String DISABLE_SOFT_FILTER = "disable_soft_filter";
-    String HARD_FILTER = "hard_filter";
+    String SOFT_FILTER = "soft_filter_enabled";
+    String HARD_FILTER = "hard_filter_enabled";
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
     String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
+
+    boolean DEFAULT_SOFT_FILTER_ENABLED = true;
+    boolean DEFAULT_HARD_FILTER_ENABLED = false;
 
     int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
@@ -97,7 +100,7 @@ public interface FilterConfig {
         return 8;
     }
 
-    boolean disableSoftFilter();
+    boolean softFilter();
 
     @NotNull
     SoftFilterConfig softHotspotFilter();
@@ -115,8 +118,8 @@ public interface FilterConfig {
     static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(DISABLE_SOFT_FILTER, false, "Disable soft filters");
-        options.addOption(HARD_FILTER, false, "Soft filters become hard");
+        options.addOption(SOFT_FILTER, false, "Enable soft filters [" + DEFAULT_SOFT_FILTER_ENABLED + "]");
+        options.addOption(HARD_FILTER, false, "All filters are hard [" + DEFAULT_HARD_FILTER_ENABLED + "]");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true, "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true, "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
@@ -132,8 +135,8 @@ public interface FilterConfig {
     @NotNull
     static FilterConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         return ImmutableFilterConfig.builder()
-                .disableSoftFilter(Configs.containsFlag(cmd, DISABLE_SOFT_FILTER))
-                .hardFilter(Configs.containsFlag(cmd, HARD_FILTER))
+                .softFilter(defaultBooleanValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED))
+                .hardFilter(defaultBooleanValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED))
                 .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
                 .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
                 .hardMinTumorRawBaseQuality(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
