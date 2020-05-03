@@ -196,6 +196,14 @@ public interface SageConfig {
             }
         }
 
+        if (!cmd.hasOption(REF_GENOME)) {
+            throw new ParseException(REF_GENOME + " is a mandatory argument");
+        }
+
+        if (!cmd.hasOption(OUTPUT_VCF)) {
+            throw new ParseException(OUTPUT_VCF + " is a mandatory argument");
+        }
+
         final List<String> tumorList = Lists.newArrayList();
         if (cmd.hasOption(TUMOR)) {
             tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
