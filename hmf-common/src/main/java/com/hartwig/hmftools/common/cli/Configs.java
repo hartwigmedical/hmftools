@@ -71,6 +71,20 @@ public final class Configs {
         return defaultValue;
     }
 
+    @NotNull
+    public static String defaultStringValue(@NotNull final CommandLine cmd, @NotNull final String opt, final String defaultValue) {
+        if (cmd.hasOption(opt)) {
+            final String result = cmd.getOptionValue(opt);
+            if (!result.equals(defaultValue)) {
+                LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            }
+            return result;
+        }
+
+        return defaultValue;
+    }
+
+
     public static boolean containsFlag(@NotNull final CommandLine cmd, @NotNull final String opt) {
         if (cmd.hasOption(opt)) {
             LOGGER.info("Using non default {} flag", opt);

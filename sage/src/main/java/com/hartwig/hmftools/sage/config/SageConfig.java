@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultBooleanValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.cli.Configs.defaultStringValue;
 
 import java.io.File;
 import java.util.Arrays;
@@ -232,8 +233,8 @@ public interface SageConfig {
                 assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
         final Set<String> chromosomes = Sets.newHashSet();
-        final String chromosomeList = cmd.getOptionValue(CHR);
-        if (chromosomeList != null) {
+        final String chromosomeList = defaultStringValue(cmd, CHR, Strings.EMPTY);
+        if (!chromosomeList.isEmpty()) {
             chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
         }
 
