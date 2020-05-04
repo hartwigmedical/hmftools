@@ -46,7 +46,7 @@ public final class ReportableVariantAnalyzer {
 
     @NotNull
     private static Map<ReportableVariant, List<EvidenceItem>> filterHighDriverLikelihood(
-            final Map<? extends Variant, List<EvidenceItem>> evidenceForAllVariants) {
+            @NotNull Map<? extends Variant, List<EvidenceItem>> evidenceForAllVariants) {
         Map<ReportableVariant, List<EvidenceItem>> evidencePerHighDriverVariant = Maps.newHashMap();
         for (Map.Entry<? extends Variant, List<EvidenceItem>> entry : evidenceForAllVariants.entrySet()) {
             ReportableVariant variant = (ReportableVariant) entry.getKey();

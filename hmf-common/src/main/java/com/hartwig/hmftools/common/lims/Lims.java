@@ -260,11 +260,11 @@ public class Lims {
         }
     }
 
-    public boolean viralInsertionChoice(@NotNull String sampleBarcode, @NotNull String sampleId) {
+    public boolean reportViralInsertions(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
 
         if (sampleData != null) {
-            LimsStudy study = LimsStudy.fromSampleId(sampleId);
+            LimsStudy study = LimsStudy.fromSampleId(sampleId(sampleBarcode));
             if (sampleData.reportViralInsertions()) {
                 if (study == LimsStudy.DRUP || study == LimsStudy.CPCT) {
                     LOGGER.warn("Consent of viral insertions is true, but must be false for CPCT/DRUP!");

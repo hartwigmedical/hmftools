@@ -59,7 +59,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     private static Div createSampleDetailsDiv(@NotNull AnalysedPatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
-        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
         String addressee;
         if (sampleReport.addressee() != null) {
@@ -71,7 +70,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         }
 
         Paragraph sampleIdentificationLineOnReport;
-        if (study == LimsStudy.WIDE || coreCohort == LimsCoreCohort.CORELR11 || coreCohort == LimsCoreCohort.CORESC11) {
+        if (patientReport.sampleReport().hospitalPathologySampleId() != null) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
                     patientReport.sampleReport().tumorSampleId(),
                     " and the tissue ID of pathology is: ",

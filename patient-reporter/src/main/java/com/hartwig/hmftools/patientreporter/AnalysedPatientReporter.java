@@ -11,7 +11,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordAnalyzer;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
+import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
@@ -27,6 +30,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -84,12 +88,12 @@ class AnalysedPatientReporter {
         SomaticVariantAnalysis somaticVariantAnalysis =
                 analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, copyNumberAnalysis.exomeGeneCopyNumbers());
 
-        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
+        ChordAnalyzer chordAnalyzer = analyzeChord(chordPredictionTxt);
         List<ReportableGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
                 bachelorTsv,
                 copyNumberAnalysis,
                 somaticVariantAnalysis,
-                chordAnalysis);
+                chordAnalyzer);
 
         ReportVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
@@ -104,7 +108,7 @@ class AnalysedPatientReporter {
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv,
-                reportData.limsModel().viralInsertionChoice(sampleMetadata.tumorSampleBarcode(), sampleMetadata.tumorSampleId()));
+                reportData.limsModel().reportViralInsertions(sampleMetadata.tumorSampleBarcode()));
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
@@ -119,20 +123,18 @@ class AnalysedPatientReporter {
                 .impliedPurity(copyNumberAnalysis.purity())
                 .hasReliablePurity(copyNumberAnalysis.hasReliablePurity())
                 .hasReliableQuality(copyNumberAnalysis.hasReliableQuality())
-                .reportableViralInsertions(reportData.limsModel()
-                        .viralInsertionChoice(sampleMetadata.tumorSampleBarcode(), sampleMetadata.tumorSampleId()))
                 .averageTumorPloidy(copyNumberAnalysis.ploidy())
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
                 .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))
                 .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
                 .reportableVariants(reportableVariantsAnalysis.variantsToReport())
-                .microsatelliteIndelsPerMb(copyNumberAnalysis.microsatelliteIndelsPerMb())
-                .microsatelliteStatus(copyNumberAnalysis.microsatelliteStatus())
-                .tumorMutationalLoad((int) Math.round(copyNumberAnalysis.tumorMutationalLoad()))
-                .tumorMutationalLoadStatus(copyNumberAnalysis.tumorMutationalLoadStatus())
-                .tumorMutationalBurden(copyNumberAnalysis.tumorMutationalBurdenPerMb())
-                .chordAnalysis(chordAnalysis)
+                .microsatelliteIndelsPerMb(copyNumberAnalysis.purpleSignatures().microsatelliteIndelsPerMb())
+                .microsatelliteStatus(copyNumberAnalysis.purpleSignatures().microsatelliteStatus())
+                .tumorMutationalLoad(copyNumberAnalysis.purpleSignatures().tumorMutationalLoad())
+                .tumorMutationalLoadStatus(copyNumberAnalysis.purpleSignatures().tumorMutationalLoadStatus())
+                .tumorMutationalBurden(copyNumberAnalysis.purpleSignatures().tumorMutationalBurdenPerMb())
+                .chordAnalyzer(chordAnalyzer)
                 .gainsAndLosses(copyNumberAnalysis.reportableGainsAndLosses())
                 .geneFusions(svAnalysis.reportableFusions())
                 .geneDisruptions(svAnalysis.reportableDisruptions())
@@ -158,10 +160,21 @@ class AnalysedPatientReporter {
         return HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
     }
 
-    @NotNull
-    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean viralInsertionsChoice)
+    @Nullable
+    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean viralInsertionReportingChoice)
             throws IOException {
-        return ViralInsertionAnalyzer.loadViralInsertions(linxViralInsertionTsv, viralInsertionsChoice);
+        List<LinxViralInsertFile> viralInsertionList = LinxViralInsertFile.read(linxViralInsertionTsv);
+        LOGGER.info("Loaded {} viral insertions from {}", viralInsertionList.size(), linxViralInsertionTsv);
+
+        if (viralInsertionReportingChoice) {
+            List<ViralInsertion> reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
+            LOGGER.info(" Patient has given consent for viral insertion reporting. Found {} reportable viral insertions.",
+                    reportableViralInsertions.size());
+            return reportableViralInsertions;
+        } else {
+            LOGGER.info(" Patient has not given consent for viral insertion reporting. Skipping analysis!");
+            return null;
+        }
     }
 
     @NotNull
@@ -200,7 +213,7 @@ class AnalysedPatientReporter {
     @NotNull
     private List<ReportableGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
-            @NotNull ChordAnalysis chordAnalysis) throws IOException {
+            @NotNull ChordAnalyzer chordAnalyzer) throws IOException {
         List<GermlineVariant> variants =
                 BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
@@ -213,7 +226,7 @@ class AnalysedPatientReporter {
                     reportData.germlineReportingModel(),
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport(),
-                    chordAnalysis);
+                    chordAnalyzer);
         } else {
             LOGGER.info(" No consent has been given for germline reporting. No germline variants will be reported!");
             return Lists.newArrayList();
@@ -233,10 +246,10 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private static ChordAnalysis analyzeChord(@NotNull String chordPredictionTxt) throws IOException {
+    private static ChordAnalyzer analyzeChord(@NotNull String chordPredictionTxt) throws IOException {
         ChordAnalysis chord = ChordFileReader.read(chordPredictionTxt);
         LOGGER.info("Loaded CHORD analysis from {}", chordPredictionTxt);
-        return chord;
+        return ImmutableChordAnalyzer.builder().chordAnalysis(chord).hrdStatus(ChordStatus.fromHRD(chord.hrdValue())).build();
     }
 
     private static void printReportState(@NotNull AnalysedPatientReport report) {
@@ -263,7 +276,7 @@ class AnalysedPatientReporter {
         LOGGER.info(" Microsatellite Indels per Mb: {}", report.microsatelliteIndelsPerMb());
         LOGGER.info(" Tumor mutational load: {}", report.tumorMutationalLoad());
         LOGGER.info(" Tumor mutational burden: {}", report.tumorMutationalBurden());
-        LOGGER.info(" CHORD analysis HRD prediction: {}", report.chordAnalysis().hrdValue());
+        LOGGER.info(" CHORD analysis HRD prediction: {}", report.chordAnalyzer().chordAnalysis().hrdValue());
         LOGGER.info(" Number of gains and losses to report: {}", report.gainsAndLosses().size());
         LOGGER.info(" Gene fusions to report : {}", report.geneFusions().size());
         LOGGER.info(" Gene disruptions to report : {}", report.geneDisruptions().size());

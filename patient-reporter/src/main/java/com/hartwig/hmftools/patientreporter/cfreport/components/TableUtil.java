@@ -21,7 +21,7 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Table createReportContentTable(float[] columnPercentageWidths, Cell[] headerCells) {
+    public static Table createReportContentTable(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
         Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH_WIDE);
         table.setFixedLayout();
 

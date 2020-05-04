@@ -170,7 +170,6 @@ public interface SageConfig {
 
     @NotNull
     static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
-
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final String assembly = cmd.getOptionValue(ASSEMBLY, "UNKNOWN");
         if (!assembly.equals("hg19") && !assembly.equals("hg38")) {

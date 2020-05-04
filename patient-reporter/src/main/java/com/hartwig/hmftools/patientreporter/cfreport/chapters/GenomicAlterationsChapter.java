@@ -27,6 +27,7 @@ import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
@@ -55,7 +56,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createFusionsTable(patientReport.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
-        reportDocument.add(createViralInsertionTable(patientReport.viralInsertions(), patientReport.reportableViralInsertions()));
+        reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
 
     }
 
@@ -231,27 +232,27 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertions, boolean reportableViralInsertions) {
+    private static Table createViralInsertionTable(@Nullable List<ViralInsertion> viralInsertions) {
         String title = "Tumor specific viral insertions";
 
-        if (!reportableViralInsertions) {
+        if (viralInsertions == null) {
             return TableUtil.createNAReportTable(title);
         } else if (viralInsertions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
+        } else {
+            Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
+                    new Cell[] { TableUtil.createHeaderCell("Virus"),
+                            TableUtil.createHeaderCell("Number of viral breakpoints").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("") });
+
+            for (ViralInsertion viralInsert : viralInsertions) {
+                contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
+                contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount()))
+                        .setTextAlignment(TextAlignment.CENTER));
+                contentTable.addCell(TableUtil.createContentCell(""));
+            }
+
+            return TableUtil.createWrappingReportTable(title, contentTable);
         }
-
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
-                new Cell[] { TableUtil.createHeaderCell("Virus"),
-                        TableUtil.createHeaderCell("Number of viral breakpoints").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("") });
-
-        for (ViralInsertion viralInsert : viralInsertions) {
-            contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
-            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount()))
-                    .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(""));
-        }
-
-        return TableUtil.createWrappingReportTable(title, contentTable);
     }
 }

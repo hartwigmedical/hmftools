@@ -6,6 +6,8 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordAnalyzer;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -36,8 +38,6 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract double averageTumorPloidy();
 
-    public abstract boolean reportableViralInsertions();
-
     @NotNull
     public abstract String clinicalSummary();
 
@@ -66,7 +66,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract TumorMutationalStatus tumorMutationalLoadStatus();
 
     @NotNull
-    public abstract ChordAnalysis chordAnalysis();
+    public abstract ChordAnalyzer chordAnalyzer();
 
     @NotNull
     public abstract List<ReportableGainLoss> gainsAndLosses();
@@ -80,7 +80,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract List<ReportableHomozygousDisruption> reportableHomozygousDisruptions();
 
-    @NotNull
+    @Nullable
     public abstract List<ViralInsertion> viralInsertions();
 
     @NotNull

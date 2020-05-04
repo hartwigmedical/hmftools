@@ -6,7 +6,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordAnalyzer;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
+import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -161,30 +164,34 @@ public class FilterGermlineVariantsTest {
     }
 
     @NotNull
-    private static ChordAnalysis createChordAnalysisNoHRD() {
+    private static ChordAnalyzer createChordAnalysisNoHRD() {
         double brca1Value = 0.3;
         double brca2Value = 0.19;
 
-        return ImmutableChordAnalysis.builder()
+        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
                 .BRCA1Value(brca1Value)
                 .BRCA2Value(brca2Value)
                 .hrdValue(brca1Value + brca2Value)
                 .predictedResponseValue(brca1Value + brca2Value > 0.5)
                 .build();
+        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRP).build();
     }
 
     @NotNull
-    private static ChordAnalysis createChordAnalysisHRD() {
+    private static ChordAnalyzer createChordAnalysisHRD() {
         double brca1Value = 0.6;
         double brca2Value = 0.2;
 
-        return ImmutableChordAnalysis.builder()
+        ChordAnalysis chordAnalysis =  ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
                 .BRCA1Value(brca1Value)
                 .BRCA2Value(brca2Value)
                 .hrdValue(brca1Value + brca2Value)
                 .predictedResponseValue(brca1Value + brca2Value > 0.5)
                 .build();
+
+        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRD).build();
+
     }
 }

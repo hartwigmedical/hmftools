@@ -17,4 +17,5 @@ public abstract class ChordAnalysis {
     public abstract double hrdValue();
 
     public abstract boolean predictedResponseValue();
+
 }

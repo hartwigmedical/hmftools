@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.patientreporter.viralInsertion;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
 import org.junit.Test;
 
@@ -16,7 +18,9 @@ public class ViralInsertionAnalyzerTest {
 
     @Test
     public void canMergeViralInsertionsForReporting() throws IOException {
-        List<ViralInsertion> viralInsertions = ViralInsertionAnalyzer.loadViralInsertions(LINX_VIRAL_INSERTIONS_TSV, true);
+        List<LinxViralInsertFile> linxViralInsertions = LinxViralInsertFile.read(LINX_VIRAL_INSERTIONS_TSV);
+        List<ViralInsertion> viralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(linxViralInsertions);
+        assertNotNull(viralInsertions);
         assertEquals(2, viralInsertions.size());
 
         ViralInsertion viralInsertion1 = viralInsertions.get(0);
@@ -26,12 +30,5 @@ public class ViralInsertionAnalyzerTest {
         ViralInsertion viralInsertion2 = viralInsertions.get(1);
         assertEquals("Human papillomavirus type 16", viralInsertion2.virus());
         assertEquals(2, viralInsertion2.viralInsertionCount());
-    }
-
-    @Test
-    public void canMergeViralInsertionsNoneReporting() throws IOException {
-        List<ViralInsertion> viralInsertions = ViralInsertionAnalyzer.loadViralInsertions(LINX_VIRAL_INSERTIONS_TSV, false);
-        assertEquals(0, viralInsertions.size());
-        
     }
 }

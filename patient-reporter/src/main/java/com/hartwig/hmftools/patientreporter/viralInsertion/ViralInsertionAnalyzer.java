@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.viralInsertion;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -14,6 +13,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViralInsertionAnalyzer {
 
@@ -26,43 +26,33 @@ public final class ViralInsertionAnalyzer {
 
     }
 
-    @NotNull
-    public static List<ViralInsertion> loadViralInsertions(@NotNull String viralInsertTsv, boolean viralInsertionChoice) throws IOException {
-        List<LinxViralInsertFile> viralInsertionList = LinxViralInsertFile.read(viralInsertTsv);
-        LOGGER.info("Loaded {} viral insertions from {}", viralInsertionList.size(), viralInsertTsv);
+    @Nullable
+    public static List<ViralInsertion> analyzeViralInsertions(@NotNull List<LinxViralInsertFile> linxViralInsertions) {
+        Map<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
+        for (LinxViralInsertFile viralInsertion : linxViralInsertions) {
+            ViralInsertionAnalyzer.VirusKey key = new ViralInsertionAnalyzer.VirusKey(viralInsertion.VirusId);
+            List<LinxViralInsertFile> items = itemsPerKey.get(key);
 
-        if (viralInsertionChoice) {
-            LOGGER.info("Patient has given the following viral insertion consent: '{}'", viralInsertionChoice);
-            Map<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
-            for (LinxViralInsertFile viralInsertion : viralInsertionList) {
-                ViralInsertionAnalyzer.VirusKey key = new ViralInsertionAnalyzer.VirusKey(viralInsertion.VirusId);
-                List<LinxViralInsertFile> items = itemsPerKey.get(key);
-
-                if (items == null) {
-                    items = Lists.newArrayList();
-                }
-                items.add(viralInsertion);
-                itemsPerKey.put(key, items);
+            if (items == null) {
+                items = Lists.newArrayList();
             }
-
-            List<ViralInsertion> viralInsertions = Lists.newArrayList();
-            for (Map.Entry<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
-                List<LinxViralInsertFile> itemsForKey = entry.getValue();
-
-                int count = itemsForKey.size();
-                assert count > 0;
-                String virusName = itemsForKey.get(0).VirusName;
-                if (!EXCLUDED_VIRAL_INSERTIONS.contains(virusName)) {
-                    viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).viralInsertionCount(count).build());
-                }
-            }
-            return viralInsertions;
-        } else {
-            LOGGER.info("Patient has given the following viral insertion consent: '{}'", viralInsertionChoice);
-            return Lists.newArrayList();
-
+            items.add(viralInsertion);
+            itemsPerKey.put(key, items);
         }
 
+        List<ViralInsertion> viralInsertions = Lists.newArrayList();
+        for (Map.Entry<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
+            List<LinxViralInsertFile> itemsForKey = entry.getValue();
+
+            int count = itemsForKey.size();
+            assert count > 0;
+            String virusName = itemsForKey.get(0).VirusName;
+            if (!EXCLUDED_VIRAL_INSERTIONS.contains(virusName)) {
+                viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).viralInsertionCount(count).build());
+            }
+        }
+
+        return viralInsertions;
     }
 
     private static class VirusKey {

@@ -69,7 +69,7 @@ public abstract class SampleReport {
     @NotNull
     public abstract String hospitalPatientId();
 
-    @NotNull
+    @Nullable
     public abstract String hospitalPathologySampleId();
 
     @NotNull
