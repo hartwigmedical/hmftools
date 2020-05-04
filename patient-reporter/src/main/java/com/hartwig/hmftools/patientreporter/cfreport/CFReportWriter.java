@@ -98,7 +98,7 @@ public class CFReportWriter implements ReportWriter {
         pdfDocument.close();
 
         if (writeToFile) {
-            LOGGER.info("Created patient report at " + outputFilePath);
+            LOGGER.info("Created patient report at {}", outputFilePath);
         } else {
             LOGGER.info("Successfully generated in-memory patient report");
         }
