@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
@@ -381,6 +382,42 @@ public class FusionReadData
         }
     }
 
+    private int[] maxSplitMappedLength()
+    {
+        // find the longest section mapped across the junction
+        final List<FusionFragment> fragments = mFragments.get(MATCHED_JUNCTION);
+
+        int[] maxSplitLengths = new int[SE_PAIR];
+
+        if(fragments == null)
+            return maxSplitLengths;
+
+        for (int se = SE_START; se <= SE_END; ++se)
+        {
+            final int scSide = mJunctionOrientations[se] == 1 ? SE_END : SE_START;
+            final int junctPosition = mJunctionPositions[se];
+
+            for(final FusionFragment fragment : fragments)
+            {
+                for (ReadRecord read : fragment.getReads())
+                {
+                    if (!read.Chromosome.equals(mChromosomes[se]))
+                        continue;
+
+                    if(!read.isSoftClipped(scSide) || read.getCoordsBoundary(scSide) != junctPosition)
+                        continue;
+
+                    int scLength = scSide == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
+
+                    // note the switch of sides - a SC on the start is a mapped length on the other side
+                    maxSplitLengths[switchIndex(se)] = max(scLength, maxSplitLengths[switchIndex(se)]) ;
+                }
+            }
+        }
+
+        return maxSplitLengths;
+    }
+
     public int[] getReadDepth() { return mReadDepth; }
 
     public String getGeneName(int stream)
@@ -408,7 +445,7 @@ public class FusionReadData
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
                 + ",SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,JuncDepthUp,JuncDepthDown"
-                + ",TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
+                + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
     }
 
     public static String fusionId(int id) { return String.format("Id_%d", id); }
@@ -470,6 +507,10 @@ public class FusionReadData
         // since depth of 1 may have been discarded from the BaseDepth, correct for this
         csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UPSTREAM]], 1)));
         csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_DOWNSTREAM]], 1)));
+
+        final int[] maxSplitLengths = maxSplitMappedLength();
+        csvData.add(String.valueOf(maxSplitLengths[mStreamIndices[FS_UPSTREAM]]));
+        csvData.add(String.valueOf(maxSplitLengths[mStreamIndices[FS_DOWNSTREAM]]));
 
         for (int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
         {

@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
@@ -200,7 +201,7 @@ public class FusionFragment
                 int scLength =
                         se == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
 
-                if (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+                if (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
                     return true;
             }
         }
@@ -323,9 +324,9 @@ public class FusionFragment
             mJunctionOrientations[se] = sjOrientation;
             junctionValid[se] = true;
 
-            int baseLength = min(10, read.Length);
-
             /*  Junction bases will now be set from the ref genome, not the read, in case they contain SNVs and cause invalid realignments
+
+            int baseLength = min(10, read.Length);
 
             if(mJunctionOrientations[se] == 1)
             {
