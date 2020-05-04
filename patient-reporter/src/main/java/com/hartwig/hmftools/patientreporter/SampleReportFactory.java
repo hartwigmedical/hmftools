@@ -42,8 +42,6 @@ public final class SampleReportFactory {
             LOGGER.warn("Could not find arrival date for tumor sample: {}", tumorSampleId);
         }
 
-        HospitalQuery hospitalQuery = hospitalModel.queryHospitalDataForSample(tumorSampleId);
-
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(patientTumorLocation)

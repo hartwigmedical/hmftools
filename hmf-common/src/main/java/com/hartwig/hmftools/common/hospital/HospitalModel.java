@@ -36,33 +36,6 @@ public abstract class HospitalModel {
     }
 
     @NotNull
-    public HospitalQuery queryHospitalDataForSample(@NotNull String sampleId) {
-        LimsStudy study = LimsStudy.fromSampleId(sampleId);
-
-        if (study == LimsStudy.CORE) {
-            HospitalCore hospitalCore = findHospitalForSampleCore(sampleId);
-            return ImmutableHospitalQuery.builder()
-                    .hospitalPA(NA_STRING)
-                    .analyseRequestName(NA_STRING)
-                    .analyseRequestEmail(NA_STRING)
-                    .hospitalId(NA_STRING)
-                    .hospitalName(NA_STRING)
-                    .hospitalAdres(NA_STRING)
-                    .build();
-        } else {
-            HospitalData hospital = findHospitalForSample(sampleId);
-            return ImmutableHospitalQuery.builder()
-                    .hospitalPA(NA_STRING)
-                    .analyseRequestName(NA_STRING)
-                    .analyseRequestEmail(NA_STRING)
-                    .hospitalId(NA_STRING)
-                    .hospitalName(NA_STRING)
-                    .hospitalAdres(NA_STRING)
-                    .build();
-        }
-    }
-
-    @NotNull
     private static String fullAddresseeStringCore(@NotNull HospitalCore hospital) {
         return hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
     }
