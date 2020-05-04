@@ -28,7 +28,6 @@ public class ViccEventTypeExtractorTestApplication {
 
             List<EventType> eventTypes = EventTypeAnalyzer.determineEventTypes(viccEntry);
             LOGGER.info(" Extracted {} event types", eventTypes);
-
         }
     }
 }
