@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.hotspot;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.hotspot;
 
 import static org.junit.Assert.assertFalse;
 

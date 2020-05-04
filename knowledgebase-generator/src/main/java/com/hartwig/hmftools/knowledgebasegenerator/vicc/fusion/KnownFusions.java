@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.fusion;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.fusion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

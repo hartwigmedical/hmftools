@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.signatures;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.signatures;
 
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 

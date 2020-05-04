@@ -3,11 +3,11 @@ package com.hartwig.hmftools.knowledgebasegenerator;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
-import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
-import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
-import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.ActionableAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype.EventType;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.fusion.KnownFusions;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.signatures.Signatures;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

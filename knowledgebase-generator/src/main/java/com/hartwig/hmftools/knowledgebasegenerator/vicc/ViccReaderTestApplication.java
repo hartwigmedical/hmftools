@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc;
 
 import java.io.IOException;
 import java.util.List;

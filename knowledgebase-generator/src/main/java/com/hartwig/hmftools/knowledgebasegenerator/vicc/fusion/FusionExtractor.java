@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.fusion;
-
-import java.util.List;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.fusion;
 
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 

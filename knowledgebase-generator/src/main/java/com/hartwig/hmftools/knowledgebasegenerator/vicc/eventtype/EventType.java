@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype;
 
 import java.util.List;
 import java.util.Map;

@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
-
-import static org.junit.Assert.*;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype;
 
 import org.junit.Test;
 

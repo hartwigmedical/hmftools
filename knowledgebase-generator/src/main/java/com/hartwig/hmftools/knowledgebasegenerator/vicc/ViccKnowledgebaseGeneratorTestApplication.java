@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -9,13 +9,13 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
-import com.hartwig.hmftools.knowledgebasegenerator.eventtype.DetermineEventOfGenomicMutation;
-import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
-import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
-import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
-import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.ActionableAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype.DetermineEventOfGenomicMutation;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype.EventType;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype.EventTypeAnalyzer;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.fusion.KnownFusions;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.signatures.Signatures;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.cnv;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.signatures;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,10 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class KnownAmplificationDeletion {
-
-    @NotNull
-    public abstract String gene();
+public abstract class Signatures {
 
     @NotNull
     public abstract String eventType();
@@ -20,4 +17,5 @@ public abstract class KnownAmplificationDeletion {
 
     @NotNull
     public abstract String sourceLink();
+
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype;
 
 import java.util.List;
 import java.util.Set;
@@ -6,17 +6,17 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.knowledgebasegenerator.GenomicEvents;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.ImmutableActionableAmplificationDeletion;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.ImmutableKnownAmplificationDeletion;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
-import com.hartwig.hmftools.knowledgebasegenerator.fusion.FusionExtractor;
-import com.hartwig.hmftools.knowledgebasegenerator.fusion.ImmutableKnownFusions;
-import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
-import com.hartwig.hmftools.knowledgebasegenerator.signatures.ImmutableSignatures;
-import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
-import com.hartwig.hmftools.knowledgebasegenerator.signatures.SignaturesExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.ActionableAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.CnvExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.ImmutableActionableAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.ImmutableKnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.fusion.FusionExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.fusion.ImmutableKnownFusions;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.fusion.KnownFusions;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.signatures.ImmutableSignatures;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.signatures.Signatures;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.signatures.SignaturesExtractor;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;

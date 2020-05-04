@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc;
 
 import static org.junit.Assert.assertEquals;
 

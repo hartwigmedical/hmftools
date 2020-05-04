@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.knowledgebasegenerator;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc;
 
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
-import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype.EventType;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 

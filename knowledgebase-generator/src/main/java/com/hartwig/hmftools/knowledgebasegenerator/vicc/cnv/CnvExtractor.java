@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.cnv;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc.cnv;
 
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;

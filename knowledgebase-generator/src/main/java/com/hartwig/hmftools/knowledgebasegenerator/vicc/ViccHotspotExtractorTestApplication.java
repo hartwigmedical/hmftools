@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator;
+package com.hartwig.hmftools.knowledgebasegenerator.vicc;
 
 import java.io.IOException;
 import java.util.List;
@@ -7,7 +7,8 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.RefGenomeVersion;
+import com.hartwig.hmftools.knowledgebasegenerator.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
