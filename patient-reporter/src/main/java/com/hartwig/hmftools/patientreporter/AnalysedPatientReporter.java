@@ -137,7 +137,7 @@ class AnalysedPatientReporter {
                 .gainsAndLosses(purpleAnalysis.reportableGainsAndLosses())
                 .geneFusions(svAnalysis.reportableFusions())
                 .geneDisruptions(svAnalysis.reportableDisruptions())
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(reportableHomozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(circosFile)
                 .comments(Optional.ofNullable(comments))

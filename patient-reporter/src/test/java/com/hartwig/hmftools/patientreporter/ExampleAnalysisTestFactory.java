@@ -77,7 +77,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
+        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         ChordAnalyzer chordAnalyzer = createCOLO829ChordAnalysis();
         List<ViralInsertion> viralInsertions = null;
@@ -113,7 +113,7 @@ public final class ExampleAnalysisTestFactory {
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.of("This is a test report and is based off COLO829"))
@@ -147,7 +147,7 @@ public final class ExampleAnalysisTestFactory {
         ChordAnalyzer chordAnalyzer = createHRDChordAnalysis();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = createTestViralInsertions();
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
+        List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         String clinicalSummary = Strings.EMPTY;
@@ -172,7 +172,7 @@ public final class ExampleAnalysisTestFactory {
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.of("This is a test report and does not relate to any real patient"))
@@ -206,7 +206,7 @@ public final class ExampleAnalysisTestFactory {
         ChordAnalyzer chordAnalyzer = createHRDChordAnalysis();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
+        List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         String clinicalSummary = Strings.EMPTY;
@@ -231,7 +231,7 @@ public final class ExampleAnalysisTestFactory {
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.of("This is a test report and does not relate to any real patient"))

@@ -76,7 +76,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<ReportableGeneDisruption> geneDisruptions();
 
     @NotNull
-    public abstract List<ReportableHomozygousDisruption> reportableHomozygousDisruptions();
+    public abstract List<ReportableHomozygousDisruption> homozygousDisruptions();
 
     @Nullable
     public abstract List<ViralInsertion> viralInsertions();

@@ -39,10 +39,10 @@ public final class PurpleAnalyzer {
 
         PurpleSignatures purpleSignatures = ImmutablePurpleSignatures.builder()
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
+                .microsatelliteStatus(purityContext.microsatelliteStatus())
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .tumorMutationalLoad((int) Math.round(purityContext.tumorMutationalLoad()))
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
-                .microsatelliteStatus(purityContext.microsatelliteStatus())
                 .build();
 
         return ImmutablePurpleAnalysis.builder()

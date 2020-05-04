@@ -92,7 +92,7 @@ public class JsonSerializer {
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(reportableHomozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath("path/to/circos.jpg")
                 .signaturePath("path/to/signature.jpg")
