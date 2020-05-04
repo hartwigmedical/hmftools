@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.copynumber;
+package com.hartwig.hmftools.patientreporter.purple;
 
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 

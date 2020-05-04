@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.copynumber;
+package com.hartwig.hmftools.patientreporter.purple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

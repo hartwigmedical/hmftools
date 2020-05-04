@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
-import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
 
 import org.jetbrains.annotations.NotNull;
 
