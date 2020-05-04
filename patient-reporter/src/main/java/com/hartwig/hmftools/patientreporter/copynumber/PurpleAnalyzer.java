@@ -16,13 +16,13 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class CopyNumberAnalyzer {
+public final class PurpleAnalyzer {
 
-    private CopyNumberAnalyzer() {
+    private PurpleAnalyzer() {
     }
 
     @NotNull
-    public static CopyNumberAnalysis run(@NotNull PurityContext purityContext, @NotNull PurpleQC purpleQC,
+    public static PurpleAnalysis run(@NotNull PurityContext purityContext, @NotNull PurpleQC purpleQC,
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
         FittedPurity bestFit = purityContext.bestFit();
@@ -45,7 +45,7 @@ public final class CopyNumberAnalyzer {
                 .microsatelliteStatus(purityContext.microsatelliteStatus())
                 .build();
 
-        return ImmutableCopyNumberAnalysis.builder()
+        return ImmutablePurpleAnalysis.builder()
                 .purity(bestFit.purity())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
                 .hasReliableQuality(CheckPurpleQuality.checkHasReliableQuality(purpleQC))

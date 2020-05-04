@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.copynumber;
+package com.hartwig.hmftools.patientreporter.homozygousdisruption;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,8 +8,6 @@ import java.util.List;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
-import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisruptionAnalyzer;
-import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 
 import org.junit.Test;
 
