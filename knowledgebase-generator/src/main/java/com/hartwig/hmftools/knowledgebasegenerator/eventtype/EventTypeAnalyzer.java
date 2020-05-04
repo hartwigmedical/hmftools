@@ -14,16 +14,18 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.tools.StringUtils;
 
-public class EventTypeAnalyzer {
+public final class EventTypeAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(EventTypeAnalyzer.class);
     private static final String ONCOGENIC_MUTATION = "oncogenic mutation";
     private static final String FUSION_PAIR = "fusion pair";
     private static final String FUSION_PROMISCUOUS = "fusion promiscuous";
 
-    @NotNull
-    public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry) {
+    private EventTypeAnalyzer() {
+    }
 
+    @NotNull
+    public static List<EventType> determineEventTypes(@NotNull ViccEntry viccEntry) {
         boolean combinedEvent = false;
         String biomarkerType = Strings.EMPTY;
         String gene = Strings.EMPTY;

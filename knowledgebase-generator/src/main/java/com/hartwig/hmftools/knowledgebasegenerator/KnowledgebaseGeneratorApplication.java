@@ -3,7 +3,6 @@ package com.hartwig.hmftools.knowledgebasegenerator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class KnowledgebaseGeneratorApplication {
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws ParseException, IOException, InterruptedException {
+    public static void main(String[] args) throws ParseException, IOException {
         LOGGER.info("Running Knowledgebase Generator v{}", VERSION);
 
         Options options = createOptions();
@@ -98,7 +97,7 @@ public class KnowledgebaseGeneratorApplication {
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
 
-            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
+            List<EventType> eventType = EventTypeAnalyzer.determineEventTypes(viccEntry);
 
             for (EventType type : eventType) {
                 allEventType.add(type);
@@ -145,7 +144,7 @@ public class KnowledgebaseGeneratorApplication {
             }
         }
 
-        List<String> sortedUniqueAmps = new ArrayList<String>(uniqueAmps);
+        List<String> sortedUniqueAmps = Lists.newArrayList(uniqueAmps);
         Collections.sort(sortedUniqueAmps);
 
         for (KnownAmplificationDeletion dels : listKnownDeletion) {
@@ -154,7 +153,7 @@ public class KnowledgebaseGeneratorApplication {
                 uniqueDels.add(dels.gene());
             }
         }
-        List<String> sortedUniqueDels = new ArrayList<String>(uniqueDels);
+        List<String> sortedUniqueDels = Lists.newArrayList(uniqueDels);
         Collections.sort(sortedUniqueDels);
 
 
@@ -185,7 +184,7 @@ public class KnowledgebaseGeneratorApplication {
             }
         }
 
-        List<String> sortedUniqueKnownFusionPairs = new ArrayList<String>(uniqueKnownFusionPairs);
+        List<String> sortedUniqueKnownFusionPairs = Lists.newArrayList(uniqueKnownFusionPairs);
         Collections.sort(sortedUniqueKnownFusionPairs);
 
         Map<String, Integer> countsPromiscuousFive = Maps.newHashMap();

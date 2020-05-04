@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.knowledgebasegenerator;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +23,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ViccKnowledgebaseGeneratorTestApplication {
+
     private static final Logger LOGGER = LogManager.getLogger(ViccKnowledgebaseGeneratorTestApplication.class);
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
 
         String source = "oncokb";
@@ -49,7 +49,7 @@ public class ViccKnowledgebaseGeneratorTestApplication {
 
         for (ViccEntry viccEntry : viccEntries) {
 
-            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
+            List<EventType> eventType = EventTypeAnalyzer.determineEventTypes(viccEntry);
 
             for (EventType type : eventType) {
                 //  LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
@@ -87,7 +87,7 @@ public class ViccKnowledgebaseGeneratorTestApplication {
             }
         }
 
-        List<String> sortedUniqueAmps = new ArrayList<String>(uniqueAmps);
+        List<String> sortedUniqueAmps = Lists.newArrayList(uniqueAmps);
         Collections.sort(sortedUniqueAmps);
 
         for (KnownAmplificationDeletion dels : listKnownDeletion) {
@@ -96,7 +96,7 @@ public class ViccKnowledgebaseGeneratorTestApplication {
                 uniqueDels.add(dels.gene());
             }
         }
-        List<String> sortedUniqueDels = new ArrayList<String>(uniqueDels);
+        List<String> sortedUniqueDels = Lists.newArrayList(uniqueDels);
         Collections.sort(sortedUniqueDels);
 
         List<Signatures> listSignaturesFilter = Lists.newArrayList();
