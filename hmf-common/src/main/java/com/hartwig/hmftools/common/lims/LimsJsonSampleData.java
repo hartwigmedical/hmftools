@@ -66,12 +66,12 @@ abstract class LimsJsonSampleData {
     @SerializedName("hospital_patient_id")
     public abstract String hospitalPatientId();
 
-    // Pathology sample id is always used for WIDE project and is optioneel for CORE projects
+    // Pathology sample id is always used for WIDE project and is optional for CORE projects
     @Nullable
     @SerializedName("hospital_pa_sample_id")
     public abstract String hospitalPathologySampleId();
 
-    // Choice regarding reporting of germline findings is only used in WIDE project
+    // Choice regarding reporting of germline findings is only used in WIDE/CORE projects
     @Nullable
     @SerializedName("germline_findings")
     public abstract String germlineReportingChoice();
