@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -65,7 +64,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
             addressee = sampleReport.addressee();
             assert addressee != null;
         } else {
-            LOGGER.warn("No recipient address present for sample " + sampleReport.tumorSampleId());
+            LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
             addressee = DataUtil.NA_STRING;
         }
 
