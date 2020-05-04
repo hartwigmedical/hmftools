@@ -10,14 +10,20 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HospitalQuery {
 
     @NotNull
+    public abstract String hospitalPA();
+
+    @NotNull
+    public abstract String analyseRequestName();
+
+    @NotNull
+    public abstract String analyseRequestEmail();
+
+    @NotNull
+    public abstract String hospitalId();
+
+    @NotNull
     public abstract String hospitalName();
 
     @NotNull
-    public abstract String fullAddresseeString();
-
-    @NotNull
-    public abstract String principalInvestigatorName();
-
-    @NotNull
-    public abstract String principalInvestigatorEmail();
+    public abstract String hospitalAdres();
 }

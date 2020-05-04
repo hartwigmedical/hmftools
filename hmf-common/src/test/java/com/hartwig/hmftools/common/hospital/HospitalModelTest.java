@@ -49,20 +49,20 @@ public class HospitalModelTest {
     @Test
     public void extractHospitalName() {
         HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("ExtHosp1", hospitalModel.queryHospitalDataForSample("WIDE01010001").hospitalName());
-        assertEquals("ExtHosp2", hospitalModel.queryHospitalDataForSample("CORE01010001").hospitalName());
+        assertEquals("N/A", hospitalModel.queryHospitalDataForSample("WIDE01010001").hospitalName());
+        assertEquals("N/A", hospitalModel.queryHospitalDataForSample("CORE01010001").hospitalName());
     }
 
     @Test
     public void extractPIName() {
         HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("WidePI", hospitalModel.queryHospitalDataForSample("WIDE01010001").principalInvestigatorName());
+        assertEquals("N/A", hospitalModel.queryHospitalDataForSample("WIDE01010001").analyseRequestName());
     }
 
     @Test
     public void extractPIEmail() {
         HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("WIDE Recip", hospitalModel.queryHospitalDataForSample("WIDE01010001").principalInvestigatorEmail());
+        assertEquals("N/A", hospitalModel.queryHospitalDataForSample("WIDE01010001").analyseRequestEmail());
     }
 
     @Test
@@ -79,13 +79,13 @@ public class HospitalModelTest {
     @Test
     public void canLookupAddresseeForSample() {
         HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("CpctPI, ExtHosp1, Zip City", hospitalModel.queryHospitalDataForSample("CPCT02010001T").fullAddresseeString());
+        assertEquals("N/A", hospitalModel.queryHospitalDataForSample("CPCT02010001T").hospitalAdres());
     }
 
     @Test
     public void canLookupAddressForCORESample() {
         HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("ExtHosp2, Zip City", hospitalModel.queryHospitalDataForSample("CORE18001224T").fullAddresseeString());
+        assertEquals("N/A", hospitalModel.queryHospitalDataForSample("CORE18001224T").hospitalAdres());
     }
 
     @NotNull

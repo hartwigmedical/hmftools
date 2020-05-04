@@ -24,6 +24,8 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -276,6 +278,18 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
+    private static HospitalQuery hospitalQuery(){
+        return ImmutableHospitalQuery.builder()
+                .hospitalPA(Strings.EMPTY)
+                .analyseRequestName("Paul")
+                .analyseRequestEmail("paul@hartwig.com")
+                .hospitalId("88")
+                .hospitalName("HMF Testing Center")
+                .hospitalAdres(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
     private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(Strings.EMPTY)
@@ -291,19 +305,12 @@ public final class ExampleAnalysisTestFactory {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .requesterName("C")
-                .requesterEmail("D")
-                .addressee("HMF Testing Center")
+                .hospitalQuery(hospitalQuery())
                 .cohort("A")
                 .projectName("TEST")
-                .hospitalName(Strings.EMPTY)
-                .hospitalPIName(Strings.EMPTY)
-                .hospitalPIEmail(Strings.EMPTY)
                 .submissionId("10")
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")
-                .studyRequesterName("contact")
-                .studyRequesterEmail("contact@.nl")
                 .build();
     }
 

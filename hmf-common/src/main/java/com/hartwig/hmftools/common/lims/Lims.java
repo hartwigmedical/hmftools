@@ -5,6 +5,9 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -287,6 +290,17 @@ public class Lims {
         return sampleData != null ? sampleData.cohort() : NOT_AVAILABLE_STRING;
     }
 
+    @NotNull
+    public HospitalQuery hospitalQuery(@NotNull String sampleId) {
+        return ImmutableHospitalQuery.builder()
+                .hospitalPA(NOT_AVAILABLE_STRING)
+                .analyseRequestName(NOT_AVAILABLE_STRING)
+                .analyseRequestEmail(NOT_AVAILABLE_STRING)
+                .hospitalId(NOT_AVAILABLE_STRING)
+                .hospitalName(NOT_AVAILABLE_STRING)
+                .hospitalAdres(NOT_AVAILABLE_STRING)
+                .build();
+    }
     @Nullable
     private String submission(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);

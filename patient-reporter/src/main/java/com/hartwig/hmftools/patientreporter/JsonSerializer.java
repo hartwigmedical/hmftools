@@ -22,6 +22,8 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -105,6 +107,18 @@ public class JsonSerializer {
     }
 
     @NotNull
+    private static HospitalQuery hospitalQuery(){
+        return ImmutableHospitalQuery.builder()
+                .hospitalPA(Strings.EMPTY)
+                .analyseRequestName("Paul")
+                .analyseRequestEmail("paul@hartwig.com")
+                .hospitalId("88")
+                .hospitalName("HMF Testing Center")
+                .hospitalAdres(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
     private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(Strings.EMPTY)
@@ -120,12 +134,7 @@ public class JsonSerializer {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .requesterName("Paul")
-                .requesterEmail("paul@hartwig.com")
-                .addressee("HMF Testing Center")
-                .hospitalName(Strings.EMPTY)
-                .hospitalPIName(Strings.EMPTY)
-                .hospitalPIEmail(Strings.EMPTY)
+                .hospitalQuery(hospitalQuery())
                 .cohort("TEST")
                 .projectName("TEST")
                 .submissionId("10")

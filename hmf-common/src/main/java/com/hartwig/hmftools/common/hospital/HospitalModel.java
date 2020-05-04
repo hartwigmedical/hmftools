@@ -42,18 +42,22 @@ public abstract class HospitalModel {
         if (study == LimsStudy.CORE) {
             HospitalCore hospitalCore = findHospitalForSampleCore(sampleId);
             return ImmutableHospitalQuery.builder()
-                    .hospitalName(hospitalCore != null ? hospitalCore.externalHospitalName() : NA_STRING)
-                    .fullAddresseeString(hospitalCore != null ? fullAddresseeStringCore(hospitalCore) : NA_STRING)
-                    .principalInvestigatorName(NA_STRING)
-                    .principalInvestigatorEmail(NA_STRING)
+                    .hospitalPA(NA_STRING)
+                    .analyseRequestName(NA_STRING)
+                    .analyseRequestEmail(NA_STRING)
+                    .hospitalId(NA_STRING)
+                    .hospitalName(NA_STRING)
+                    .hospitalAdres(NA_STRING)
                     .build();
         } else {
             HospitalData hospital = findHospitalForSample(sampleId);
             return ImmutableHospitalQuery.builder()
-                    .hospitalName(hospital != null ? hospital.externalHospitalName() : NA_STRING)
-                    .fullAddresseeString(hospital != null ? fullAddresseeString(sampleId, hospital) : NA_STRING)
-                    .principalInvestigatorName(hospital != null ? determinePIName(sampleId, hospital) : NA_STRING)
-                    .principalInvestigatorEmail(hospital != null ? determinePIEmail(sampleId, hospital) : NA_STRING)
+                    .hospitalPA(NA_STRING)
+                    .analyseRequestName(NA_STRING)
+                    .analyseRequestEmail(NA_STRING)
+                    .hospitalId(NA_STRING)
+                    .hospitalName(NA_STRING)
+                    .hospitalAdres(NA_STRING)
                     .build();
         }
     }

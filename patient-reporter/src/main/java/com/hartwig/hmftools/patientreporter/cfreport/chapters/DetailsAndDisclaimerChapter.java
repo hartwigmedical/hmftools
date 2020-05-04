@@ -60,8 +60,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
         String addressee;
-        if (sampleReport.addressee() != null) {
-            addressee = sampleReport.addressee();
+        if (sampleReport.hospitalQuery().hospitalAdres() != null) {
+            addressee = sampleReport.hospitalQuery().hospitalAdres();
             assert addressee != null;
         } else {
             LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
@@ -167,9 +167,9 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The requester is: ").add(new Text(sampleReport.requesterName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+        return createContentParagraph("The requester is: ").add(new Text(sampleReport.hospitalQuery().analyseRequestName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add("(")
-                .add(new Text(sampleReport.requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(new Text(sampleReport.hospitalQuery().analyseRequestEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(")")
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
