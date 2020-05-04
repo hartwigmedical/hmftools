@@ -354,17 +354,10 @@ public class FusionDataTest
         List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
         assertEquals(1, fusions.size());
 
-        // finder.getFusionReadDepth().calcFusionReadDepth(fusions);
-        // finder.getFusionReadDepth().processReadDepthRecord(read4, read5);
-
         FusionReadData fusion = fusions.stream().filter(x -> x.isKnownSpliced()).findFirst().orElse(null);
         assertTrue(fusion != null);
         assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
         assertEquals(2, fusion.getFragments(REALIGNED).size());
-
-
-        // finder.getFusionReadDepth().processReadDepthRecord(read4, read5);
-        // assertEquals(2, fusion.getFragments(REALIGNED).size());
     }
 
 }

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
@@ -277,7 +278,8 @@ public class FusionReadData
                     return false;
             }
 
-            if(fragment.regionMatchTypes()[se] == INTRON)
+            // of the fusion is unspliced or the fragment is intronic, then measure the genomic distance vs permitted fragment length
+            if(fragment.regionMatchTypes()[se] == INTRON || mFragment.regionMatchTypes()[se] == INTRON)
             {
                 if (fragmentPosition < mJunctionPositions[se])
                     impliedFragmentLength += mJunctionPositions[se] - fragmentPosition;
@@ -294,24 +296,32 @@ public class FusionReadData
 
     public boolean isRelignedFragment(final FusionFragment fragment)
     {
+        boolean hasSupportingRead = false;
+
         for (int se = SE_START; se <= SE_END; ++se)
         {
             for (ReadRecord read : fragment.getReads())
             {
-                if (!read.Chromosome.equals(mChromosomes[se]))
+                if (!read.Chromosome.equals(mChromosomes[se]) || read.getGeneCollecton() != mGeneCollections[se])
                     continue;
 
                 if (softClippedReadSupportsJunction(read, se))
                 {
-                    if(fragment.geneCollections()[se] == 0 && fragment.getTransExonRefs()[se].isEmpty())
-                        fragment.setGeneData(mGeneCollections[se], getTransExonRefsByPos(se));
-
-                    return true;
+                    hasSupportingRead = true;
+                    // this was when reads where generated from the now-defunct read depth routine
+                    // if(fragment.geneCollections()[se] == 0 && fragment.getTransExonRefs()[se].isEmpty())
+                    //    fragment.setGeneData(mGeneCollections[se], getTransExonRefsByPos(se));
                 }
+
+                // check that none of the other reads are on the incorrect side of this fusion junction
+                if(mJunctionOrientations[se] == 1 && read.getCoordsBoundary(SE_END) > mJunctionPositions[se] + SOFT_CLIP_JUNC_BUFFER)
+                    return false;
+                else if(mJunctionOrientations[se] == -1 && read.getCoordsBoundary(SE_START) < mJunctionPositions[se] - SOFT_CLIP_JUNC_BUFFER)
+                    return false;
             }
         }
 
-        return false;
+        return hasSupportingRead;
     }
 
     private boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)
@@ -332,7 +342,7 @@ public class FusionReadData
             // test that soft-clipped bases match the other junction's bases
             int scLength = read.Cigar.getLastCigarElement().getLength();
 
-            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
                 return false;
 
             // if the junction is 1 base higher, then take 1 base off the soft-clipped bases
@@ -357,7 +367,7 @@ public class FusionReadData
 
             int scLength = read.Cigar.getFirstCigarElement().getLength();
 
-            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
                 return false;
 
             int posAdjust = readBoundary < mJunctionPositions[juncSeIndex] ? mJunctionPositions[juncSeIndex] - readBoundary : 0;
