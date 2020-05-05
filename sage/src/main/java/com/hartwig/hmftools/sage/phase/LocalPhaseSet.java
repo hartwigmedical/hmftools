@@ -19,20 +19,23 @@ class LocalPhaseSet extends BufferedPostProcessor {
 
     @Override
     protected void processSageVariant(@NotNull final SageVariant newEntry, @NotNull final Collection<SageVariant> buffer) {
+
         final ReadContext newReadContext = newEntry.readContext();
         for (final SageVariant oldEntry : buffer) {
             final ReadContext oldReadContext = oldEntry.readContext();
-            int offset = offset(oldEntry.variant(), newEntry.variant());
 
-            if (oldReadContext.phased(offset, newReadContext)) {
-                if (oldEntry.localPhaseSet() != 0) {
-                    newEntry.localPhaseSet(oldEntry.localPhaseSet());
-                } else if (newEntry.localPhaseSet() != 0) {
-                    oldEntry.localPhaseSet(newEntry.localPhaseSet());
-                } else {
-                    phase++;
-                    oldEntry.localPhaseSet(phase);
-                    newEntry.localPhaseSet(phase);
+            if (!rightInLeftDel(oldEntry.variant(), newEntry.variant())) {
+                int offset = adjustedOffset(oldEntry.variant(), newEntry.variant());
+                if (oldReadContext.phased(offset, newReadContext)) {
+                    if (oldEntry.localPhaseSet() != 0) {
+                        newEntry.localPhaseSet(oldEntry.localPhaseSet());
+                    } else if (newEntry.localPhaseSet() != 0) {
+                        oldEntry.localPhaseSet(newEntry.localPhaseSet());
+                    } else {
+                        phase++;
+                        oldEntry.localPhaseSet(phase);
+                        newEntry.localPhaseSet(phase);
+                    }
                 }
             }
         }
@@ -43,7 +46,7 @@ class LocalPhaseSet extends BufferedPostProcessor {
         return (int) (positionOffset);
     }
 
-    static int offset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
+    static int adjustedOffset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
 
         long positionOffset = positionOffset(left, right);
         if (positionOffset == 0) {
@@ -53,5 +56,15 @@ class LocalPhaseSet extends BufferedPostProcessor {
         return (int) (positionOffset + Math.max(0, left.ref().length() - left.alt().length()) - Math.max(0,
                 left.alt().length() - left.ref().length()));
     }
+
+    static boolean rightInLeftDel(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
+        if (left.ref().length() > left.alt().length()) {
+            long deleteEnd = left.position() + left.ref().length() - 1;
+            return right.position() > left.position() && right.position() <= deleteEnd;
+        }
+
+        return false;
+    }
+
 
 }

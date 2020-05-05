@@ -26,7 +26,7 @@ class LocalRealignSet extends BufferedPostProcessor {
             if (newIsIndel || oldIsIndel) {
                 final ReadContext oldReadContext = oldEntry.readContext();
                 int positionOffset = LocalPhaseSet.positionOffset(oldEntry.variant(), newEntry.variant());
-                int offset = LocalPhaseSet.offset(oldEntry.variant(), newEntry.variant());
+                int offset = LocalPhaseSet.adjustedOffset(oldEntry.variant(), newEntry.variant());
 
                 if (positionOffset != offset && oldReadContext.phased(positionOffset, newReadContext)) {
                     if (oldEntry.localRealignSet() != 0) {
