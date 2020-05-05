@@ -8,6 +8,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContext {
 
+    private static final int BONUS_FLANK = 10;
+
     private final int position;
     private final String repeat;
     private final int repeatCount;
@@ -97,6 +99,7 @@ public class ReadContext {
                 clone.refBases.leftCentreIndex(),
                 clone.refBases.rightCentreIndex(),
                 clone.refBases.flankSize(),
+                0,
                 clone.refBases.bases());
 
         this.readBases = IndexedBases.resize(position,
@@ -104,6 +107,7 @@ public class ReadContext {
                 clone.readBases.leftCentreIndex(),
                 clone.readBases.rightCentreIndex(),
                 clone.readBases.flankSize(),
+                BONUS_FLANK,
                 clone.readBases.bases());
 
     }
