@@ -41,6 +41,7 @@ info_data_frame <- function(vcf) {
     qual = qual(vcf),
     tier = vcf.info$TIER,
     localPhaseSet = vcf.info$LPS,
+    localRealignSet = vcf.info$LRS,
     microhomology = vcf.info$MH,
     readContext = vcf.info$RC,
     readContextMicrohomology = vcf.info$RC_MH,
@@ -136,3 +137,39 @@ geno_data_frame<- function(vcf, index, sample) {
 
   return (vcf.df)
 }
+
+##### GIAB
+sample = readVcf("/Users/jon/hmf/tmp/GIABvsSELFv004.sage.pon.filtered.vcf.gz")
+infoDf = info_data_frame(sample)
+normalDf = geno_data_frame(sample, 1, "normal")
+tumorDf = geno_data_frame(sample, 2, "tumor")
+giab = left_join(infoDf, normalDf, by = c("chromosome", "pos", "ref", "alt")) %>%
+  left_join(tumorDf, by = c("chromosome", "pos", "ref", "alt"))
+save(giab, file = "/Users/jon/hmf/tmp/GIABvsSELFv004.sage.RData")
+passing = giab %>% filter(filter == 'PASS')
+
+
+##### COLO829
+sample = readVcf("/Users/jon/hmf/tmp/COLO829v003.sage.pon.filtered.vcf.gz")
+infoDf = info_data_frame(sample)
+normalDf = geno_data_frame(sample, 1, "normal")
+tumorDf = geno_data_frame(sample, 2, "tumor")
+colo829 = left_join(infoDf, normalDf, by = c("chromosome", "pos", "ref", "alt")) %>%
+  left_join(tumorDf, by = c("chromosome", "pos", "ref", "alt"))
+save(colo829, file = "/Users/jon/hmf/tmp/COLO829v003.sage.RData")
+passing = colo829 %>% filter(filter == 'PASS')
+
+### COLO829 Multisample
+sample = readVcf("/Users/jon/hmf/tmp/COLO829.multisample.sage.pon.filtered.vcf.gz")
+info = info_data_frame(sample)
+normal = geno_data_frame(sample, 1, "COLO829v003R")
+tumor1 = geno_data_frame(sample, 2, "COLO829v001T")
+tumor2 = geno_data_frame(sample, 3, "COLO829v002T")
+tumor3 = geno_data_frame(sample, 4, "COLO829v003T")
+tumor4 = geno_data_frame(sample, 5, "COLO829v004T")
+multicolo829 = left_join(info, normal, by = c("chromosome", "pos", "ref", "alt")) %>%
+  left_join(tumor1, by = c("chromosome", "pos", "ref", "alt")) %>%
+  left_join(tumor2, by = c("chromosome", "pos", "ref", "alt")) %>%
+  left_join(tumor3, by = c("chromosome", "pos", "ref", "alt")) %>%
+  left_join(tumor4, by = c("chromosome", "pos", "ref", "alt"))
+save(multicolo829, file = "~/hmf/tmp/multicolo829.RData")
