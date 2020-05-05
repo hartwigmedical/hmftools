@@ -11,6 +11,9 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 import org.jetbrains.annotations.NotNull;
 
 public class Phase implements Consumer<SageVariant> {
+
+    static final int PHASE_BUFFER = 150;
+
     private final DedupRealign dedupRealign;
     private final DedupMnv dedupMnv;
     private final LocalPhaseSet localPhaseSet;
@@ -26,15 +29,15 @@ public class Phase implements Consumer<SageVariant> {
         final List<HmfTranscriptRegion> transcripts =
                 config.transcriptRegions().stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
 
-        dedupRealign = new DedupRealign(config.readContextFlankSize(), consumer);
+        dedupRealign = new DedupRealign(consumer);
         dedupIndel = new DedupIndel(dedupRealign);
         dedupMnv = new DedupMnv(dedupIndel);
         mixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(dedupMnv, transcripts);
         mixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mixedSomaticGermlineDedup);
         phasedInframeIndel = new PhasedInframeIndel(mixedSomaticGermlineIdentifier, transcripts);
         rightAlignMicrohomology = new RightAlignMicrohomology(phasedInframeIndel, transcripts);
-        localRealignSet = new LocalRealignSet(config.readContextFlankSize(), rightAlignMicrohomology);
-        localPhaseSet = new LocalPhaseSet(config.readContextFlankSize(), localRealignSet);
+        localRealignSet = new LocalRealignSet(rightAlignMicrohomology);
+        localPhaseSet = new LocalPhaseSet(localRealignSet);
     }
 
     @Override

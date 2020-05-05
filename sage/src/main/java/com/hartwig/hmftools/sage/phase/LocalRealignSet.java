@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.sage.phase.Phase.PHASE_BUFFER;
+
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -12,8 +14,8 @@ class LocalRealignSet extends BufferedPostProcessor {
 
     private int realign;
 
-    LocalRealignSet(int flankSize, @NotNull final Consumer<SageVariant> consumer) {
-        super(flankSize + 5, consumer);
+    LocalRealignSet(@NotNull final Consumer<SageVariant> consumer) {
+        super(PHASE_BUFFER, consumer);
     }
 
     @Override

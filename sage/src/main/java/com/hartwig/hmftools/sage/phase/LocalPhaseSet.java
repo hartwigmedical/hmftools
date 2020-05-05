@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.sage.phase.Phase.PHASE_BUFFER;
+
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -13,8 +15,8 @@ class LocalPhaseSet extends BufferedPostProcessor {
 
     private int phase;
 
-    LocalPhaseSet(int flankSize, @NotNull final Consumer<SageVariant> consumer) {
-        super(flankSize + 25, consumer);
+    LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer) {
+        super(PHASE_BUFFER, consumer);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.sage.phase.Phase.PHASE_BUFFER;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -13,8 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class DedupRealign extends BufferedPostProcessor {
 
-    public DedupRealign(int flankSize, final Consumer<SageVariant> consumer) {
-        super(flankSize + 25, consumer);
+    public DedupRealign(final Consumer<SageVariant> consumer) {
+        super(PHASE_BUFFER, consumer);
     }
 
     @Override
