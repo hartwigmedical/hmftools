@@ -3,7 +3,9 @@ package com.hartwig.hmftools.sage.context;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
@@ -104,7 +106,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 }
             }
 
-
             altReads.forEach(AltRead::updateRefContext);
         }
 
@@ -188,12 +189,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     result.add(new AltRead(refContext, ref, alt, baseQuality, readContext));
 
                     if (config.mnvEnabled()) {
-                        int mnvMaxLength = mnvLength(refPosition,
-                                refPositionStart + alignmentLength - 1,
-                                readBaseIndex,
-                                refBaseIndex,
-                                record.getReadBases(),
-                                refBases.bases());
+                        int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.bases());
                         for (int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++) {
 
                             final String mnvRef = new String(refBases.bases(), refBaseIndex, mnvLength);
@@ -225,23 +221,18 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         return readIndex >= config.readContextFlankSize() && readIndex < record.getReadLength() - config.readContextFlankSize();
     }
 
-    private int mnvLength(int alignment, int alignmentEnd, int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
-        int gap = 0;
-        for (int i = 1; alignment + i < alignmentEnd; i++) {
-            byte refByte = refBases[refIndex + i];
-            byte readByte = readBases[readIndex + i];
-            if (refByte == readByte) {
-                if (gap == 1) {
-                    return i - 1;
-                } else {
-                    gap++;
-                }
-            } else {
-                gap = 0;
-            }
+    @VisibleForTesting
+    static int mnvLength(int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
+
+        final Function<Integer, Boolean> isDifferent =
+                i -> refIndex + i < refBases.length && readIndex + i < readBases.length && refBases[refIndex + i] != readBases[readIndex
+                        + i];
+
+        if (isDifferent.apply(2)) {
+            return 3;
         }
 
-        return alignmentEnd - alignment + 1;
+        return isDifferent.apply((1)) ? 2 : 1;
     }
 
     private int baseQuality(int readIndex, SAMRecord record, int length) {
