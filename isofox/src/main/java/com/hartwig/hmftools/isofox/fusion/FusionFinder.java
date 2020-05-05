@@ -6,11 +6,13 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragment.isRealignedFragmentCandidate;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -31,9 +34,15 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
+
+import htsjdk.samtools.QueryInterval;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class FusionFinder
 {
@@ -47,6 +56,9 @@ public class FusionFinder
     private List<FusionTask> mFusionTasks;
     private final FusionWriter mFusionWriter;
 
+    private final SamReader mSamReader;
+    private final BamSlicer mBamSlicer;
+
     private final PerformanceCounter mPerfCounter;
 
     public FusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
@@ -58,6 +70,11 @@ public class FusionFinder
         mChrGeneCollectionMap = Maps.newHashMap();
         mChrGeneDepthMap = Maps.newHashMap();
         mFusionTasks = Lists.newArrayList();
+
+        mSamReader = mConfig.BamFile != null ?
+                SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
+
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
 
         mPerfCounter = new PerformanceCounter("FusionTotal");
         mFusionWriter = new FusionWriter(mConfig);
@@ -116,19 +133,16 @@ public class FusionFinder
                 continue;
             }
 
+            recoverSupplementaryReads(reads);
+
             String readGroupStatus = "";
 
             if(reads.size() == 1)
             {
-                if(skipUnpairedRead(reads.get(0)))
+                if(skipUnpairedRead(reads.get(0).mateChromosome(), reads.get(0).mateStartPosition()))
                 {
                     ++skipped;
                     continue;
-                }
-
-                if(reads.size() > 1)
-                {
-                    ISF_LOGGER.warn("read({}) found missing reads", reads.get(0).Id);
                 }
             }
 
@@ -260,6 +274,54 @@ public class FusionFinder
         return true;
     }
 
+    private void recoverSupplementaryReads(final List<ReadRecord> reads)
+    {
+        if(reads.size() >= 3)
+            return;
+
+        for(final ReadRecord read : reads)
+        {
+            if(read.getSuppAlignment() == null)
+                continue;
+
+            SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
+
+            if(suppData == null || skipUnpairedRead(suppData.Chromosome, suppData.Position))
+                return;
+
+            final List<ReadRecord> missingReads = findMissingReads(read.Id, suppData.Chromosome, suppData.Position, reads.size() == 1);
+
+            if(!missingReads.isEmpty())
+            {
+                ISF_LOGGER.debug("id({}) recovered {} missing read: {}", read.Id, missingReads.size());
+                reads.addAll(missingReads);
+            }
+
+            return;
+        }
+    }
+
+    private List<ReadRecord> findMissingReads(final String readId, final String chromosome, int position, boolean expectPair)
+    {
+        final QueryInterval[] queryIntervals = new QueryInterval[1];
+        int chrIndex = mSamReader.getFileHeader().getSequenceIndex(chromosome);
+
+        // build a buffer around this position to pick up a second read
+        if(expectPair)
+        {
+            int buffer = mConfig.MaxFragmentLength;
+            queryIntervals[0] = new QueryInterval(chrIndex, position - buffer, position + buffer);
+        }
+        else
+        {
+            queryIntervals[0] = new QueryInterval(chrIndex, position, position);
+        }
+
+        final List<SAMRecord> records = mBamSlicer.slice(mSamReader, queryIntervals);
+
+        return records.stream().filter(x -> x.getReadName().equals(readId)).map(x -> ReadRecord.from(x)).collect(Collectors.toList());
+    }
+
     private boolean isValidFragment(final List<ReadRecord> reads)
     {
         if(!mConfig.ExcludedGeneIds.isEmpty())
@@ -292,18 +354,18 @@ public class FusionFinder
         return false;
     }
 
-    private boolean skipUnpairedRead(final ReadRecord read)
+    private boolean skipUnpairedRead(final String otherChromosome, int otherPosition)
     {
-        if(!HumanChromosome.contains(read.mateChromosome()))
+        if(!HumanChromosome.contains(otherChromosome))
             return true;
 
-        if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(read.mateChromosome()))
+        if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(otherChromosome))
             return true;
 
         if(!mConfig.RestrictedGeneIds.isEmpty())
         {
-            final List<EnsemblGeneData> chrGenes = mGeneTransCache.getChrGeneDataMap().get(read.mateChromosome());
-            if(chrGenes == null || !chrGenes.stream().anyMatch(x -> positionWithin(read.mateStartPosition(), x.GeneStart, x.GeneEnd)))
+            final List<EnsemblGeneData> chrGenes = mGeneTransCache.getChrGeneDataMap().get(otherChromosome);
+            if(chrGenes == null || !chrGenes.stream().anyMatch(x -> positionWithin(otherPosition, x.GeneStart, x.GeneEnd)))
                 return true;
         }
 

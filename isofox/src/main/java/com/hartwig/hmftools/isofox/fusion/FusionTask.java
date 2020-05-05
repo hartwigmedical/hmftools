@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonM
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_UPSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
@@ -144,6 +144,9 @@ public class FusionTask implements Callable
             {
                 for (int se = SE_START; se <= SE_END; ++se)
                 {
+                    if(fusionData.geneCollections()[se] == -1)
+                        continue;
+
                     final Map<Integer,BaseDepth> baseDepthMap = mChrGeneDepthMap.get(fusionData.chromosomes()[se]);
 
                     if(baseDepthMap == null)

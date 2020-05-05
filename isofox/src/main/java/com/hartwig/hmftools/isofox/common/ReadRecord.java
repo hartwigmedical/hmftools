@@ -186,6 +186,22 @@ public class ReadRecord
 
     public List<int[]> getMappedRegionCoords() { return mMappedCoords; }
 
+    public List<int[]> getMappedRegionCoords(boolean includeInferred)
+    {
+        if(includeInferred || (!mLowerInferredAdded && !mUpperInferredAdded))
+            return mMappedCoords;
+
+        final List<int[]> regions = Lists.newArrayList(mMappedCoords);
+
+        if(mLowerInferredAdded)
+            regions.remove(0);
+
+        if(mUpperInferredAdded)
+            regions.remove(regions.size() - 1);
+
+        return regions;
+    }
+
     public boolean overlapsMappedReads(int posStart, int posEnd)
     {
         return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));

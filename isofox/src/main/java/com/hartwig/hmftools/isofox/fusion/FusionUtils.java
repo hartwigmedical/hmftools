@@ -14,6 +14,12 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 public class FusionUtils
 {
+    public static final int FS_UPSTREAM = 0;
+    public static final int FS_DOWNSTREAM = 1;
+    public static final int FS_PAIR = 2;
+
+    public static int switchStream(int iter) { return iter == FS_UPSTREAM ? FS_DOWNSTREAM : FS_UPSTREAM; }
+
     public static boolean lowerChromosome(final String chr, final String otherChr)
     {
         return chromosomeRank(chr) < chromosomeRank(otherChr);
@@ -69,6 +75,5 @@ public class FusionUtils
         }
 
         return candidateJunctions;
-
-    }
+        }
 }

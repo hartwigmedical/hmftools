@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -191,6 +192,14 @@ public class FusionFragment
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
 
     public String locationPair() { return formLocationPair(mChromosomes, mGeneCollections); }
+
+    public List<ReadRecord> readsInGene(final String chromosome, int geneCollection)
+    {
+        return mReads.stream()
+                .filter(x -> x.Chromosome.equals(chromosome))
+                .filter(x -> x.getGeneCollecton() == geneCollection)
+                .collect(Collectors.toList());
+    }
 
     public static boolean isRealignedFragmentCandidate(final ReadRecord read)
     {
