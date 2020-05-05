@@ -3,12 +3,14 @@ package com.hartwig.hmftools.sage.phase;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class BufferedPostProcessor implements Consumer<SageVariant> {
@@ -55,22 +57,35 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant> {
     }
 
     public void flush() {
+        preFlush(buffer);
         buffer.forEach(consumer);
         buffer.clear();
     }
 
     protected void flush(@NotNull final GenomePosition position) {
+        final List<SageVariant> flushed = Lists.newArrayList();
         final Iterator<SageVariant> iterator = buffer.iterator();
         while (iterator.hasNext()) {
             final SageVariant entry = iterator.next();
             long entryEnd = entry.position() + entry.ref().length() - 1;
             if (!entry.chromosome().equals(position.chromosome()) || entryEnd < position.position() - maxDistance) {
                 iterator.remove();
-                consumer.accept(entry);
+                flushed.add(entry);
             } else {
-                return;
+                break;
             }
         }
+
+        if (!flushed.isEmpty()) {
+            preFlush(flushed);
+        }
+
+        flushed.forEach(consumer);
+        flushed.clear();
+    }
+
+    protected void preFlush(@NotNull final Collection<SageVariant> variants) {
+
     }
 
 }

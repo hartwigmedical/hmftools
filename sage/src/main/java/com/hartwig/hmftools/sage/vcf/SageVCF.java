@@ -58,6 +58,8 @@ public class SageVCF implements AutoCloseable {
 
     public final static String PHASE = "LPS";
     private final static String PHASE_DESCRIPTION = "Local Phase Set";
+    public final static String REALIGN = "LRS";
+    private final static String REALIGN_DESCRIPTION = "Local Realign Set";
     public final static String MIXED_SOMATIC_GERMLINE = "MSG";
     public final static String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
     public final static String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";
@@ -138,6 +140,7 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(REALIGN, 1, VCFHeaderLineType.Integer, REALIGN_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_SOMATIC_GERMLINE,
                 1,
                 VCFHeaderLineType.Integer,

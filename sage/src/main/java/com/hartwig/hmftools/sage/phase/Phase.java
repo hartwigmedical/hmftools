@@ -11,8 +11,10 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 import org.jetbrains.annotations.NotNull;
 
 public class Phase implements Consumer<SageVariant> {
+    private final DedupRealign dedupRealign;
     private final DedupMnv dedupMnv;
     private final LocalPhaseSet localPhaseSet;
+    private final LocalRealignSet localRealignSet;
     private final DedupIndel dedupIndel;
     private final MixedSomaticGermlineIdentifier mixedSomaticGermlineIdentifier;
     private final MixedSomaticGermlineDedup mixedSomaticGermlineDedup;
@@ -24,13 +26,15 @@ public class Phase implements Consumer<SageVariant> {
         final List<HmfTranscriptRegion> transcripts =
                 config.transcriptRegions().stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
 
-        dedupIndel = new DedupIndel(consumer);
+        dedupRealign = new DedupRealign(config.readContextFlankSize(), consumer);
+        dedupIndel = new DedupIndel(dedupRealign);
         dedupMnv = new DedupMnv(dedupIndel);
         mixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(dedupMnv, transcripts);
         mixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mixedSomaticGermlineDedup);
         phasedInframeIndel = new PhasedInframeIndel(mixedSomaticGermlineIdentifier, transcripts);
         rightAlignMicrohomology = new RightAlignMicrohomology(phasedInframeIndel, transcripts);
-        localPhaseSet = new LocalPhaseSet(config.readContextFlankSize(), rightAlignMicrohomology);
+        localRealignSet = new LocalRealignSet(config.readContextFlankSize(), rightAlignMicrohomology);
+        localPhaseSet = new LocalPhaseSet(config.readContextFlankSize(), localRealignSet);
     }
 
     @Override
@@ -40,11 +44,13 @@ public class Phase implements Consumer<SageVariant> {
 
     public void flush() {
         localPhaseSet.flush();
+        localRealignSet.flush();
         rightAlignMicrohomology.flush();
         phasedInframeIndel.flush();
         mixedSomaticGermlineIdentifier.flush();
         mixedSomaticGermlineDedup.flush();
         dedupMnv.flush();
         dedupIndel.flush();
+        dedupRealign.flush();
     }
 }
