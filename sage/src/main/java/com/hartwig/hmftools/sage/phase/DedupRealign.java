@@ -48,7 +48,7 @@ public class DedupRealign extends BufferedPostProcessor {
 
             SageVariant keeper = localRealigned.get(0);
             for (SageVariant sageVariant : localRealigned) {
-                if (sageVariant.tumorQualityExcludingRealigned() > keeper.tumorQualityExcludingRealigned()) {
+                if (sageVariant.totalQuality() > keeper.totalQuality()) {
                     keeper = sageVariant;
                 }
             }
