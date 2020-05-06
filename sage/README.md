@@ -156,7 +156,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
  
  A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments.
  
- The complete read context is the core read context flanked on either side by an additional 25 bases. 
+ The complete read context is the core read context flanked on either side by an additional 10 bases. 
  
 The following example illustrate how we construct and use a read context for a simple T > A SNV.  
 
@@ -267,8 +267,7 @@ A match can be:
   - `CORE` - Core matches read but neither flank does.
   - `REALIGNED` - Core and both flanks match read exactly but offset from the expected position.
 
-Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted. 
-Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
+Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
 If the variant is not found and instead matches the ref genome at that location, the `REFERENCE` tally is incremented.
 
@@ -352,7 +351,7 @@ The specific filters and default settings for each tier are:
 
 Filter  | Hotspot | Panel | High Confidence | Low Confidence | Field
 ---|---|---|---|---|---
-min_tumor_qual|70**|100|150|225|`QUAL`
+min_tumor_qual|70**|100|160|240|`QUAL`
 min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
 min_germline_depth|0|0|10 | 10 | Normal `RC_CNT[6]`
 min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
