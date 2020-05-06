@@ -39,7 +39,7 @@ public class Lims {
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode,
             @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesIdsWithoutSamplingDate,
-            @NotNull final Set<String> blacklistedPatients) {
+            @NotNull final Set<String> blacklistedPatients, @NotNull final HospitalModel hospitalModel) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
@@ -47,7 +47,7 @@ public class Lims {
         this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
         this.blacklistedPatients = blacklistedPatients;
         // TODO -> Fill hospital model
-        this.hospitalModel = null;
+        this.hospitalModel = hospitalModel;
     }
 
     public int sampleBarcodeCount() {

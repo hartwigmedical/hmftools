@@ -21,6 +21,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,11 +46,28 @@ public final class LimsFactory {
     }
 
     @NotNull
-    public static Lims fromLimsDirectoryAndHospitalDirectory(@NotNull String limsDirectory, @NotNull String hospitalDirectory) {
-        // Make HospitalModel
-        // Make Lims with an instance of HospitalModel included.
+    public static Lims fromLimsDirectoryAndHospitalDirectory(@NotNull String limsDirectory, @NotNull String hospitalDirectory)
+            throws IOException {
+        String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
+        Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
+        Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
+        Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode =
+                readLimsShallowSeqTsv(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_TSV);
 
-        return null;
+        Map<String, LocalDate> preLimsArrivalDates = readPreLimsArrivalDateTsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_TSV);
+        Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
+        Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
+
+        HospitalModel model = HospitalModelFactory.fromHospitalDirectory(hospitalDirectory);
+
+        return new Lims(dataPerSampleBarcode,
+                dataPerSubmission,
+                shallowSeqPerSampleBarcode,
+                preLimsArrivalDates,
+                sampleIdsWithoutSamplingDate,
+                blacklistedPatients,
+                model);
+
     }
 
     @NotNull
@@ -59,22 +79,27 @@ public final class LimsFactory {
                 readLimsShallowSeqTsv(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_TSV);
 
         Map<String, LocalDate> preLimsArrivalDates = readPreLimsArrivalDateTsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_TSV);
-        Set<String> sampleIdsWithoutSamplingDate =
-                readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
-        Set<String> blacklistedPatients =
-                readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
+        Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
+        Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
                 shallowSeqPerSampleBarcode,
                 preLimsArrivalDates,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients);
+                blacklistedPatients,
+                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
     }
 
     @NotNull
     public static Lims empty() {
-        return new Lims(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(),  Maps.newHashMap(), Sets.newHashSet(), Sets.newHashSet());
+        return new Lims(Maps.newHashMap(),
+                Maps.newHashMap(),
+                Maps.newHashMap(),
+                Maps.newHashMap(),
+                Sets.newHashSet(),
+                Sets.newHashSet(),
+                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
     }
 
     @NotNull

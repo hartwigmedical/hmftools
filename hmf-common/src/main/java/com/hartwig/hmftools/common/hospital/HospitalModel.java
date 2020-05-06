@@ -199,18 +199,11 @@ public abstract class HospitalModel {
     @NotNull
     public HospitalQuery generateHospitalQuery(@NotNull String sampleId) {
         return ImmutableHospitalQuery.builder()
-                .hospitalPI(Strings.EMPTY)
-                .analyseRequestName(Strings.EMPTY)
-                .analyseRequestEmail(Strings.EMPTY)
-                .hospital(Strings.EMPTY)
+                .hospitalPI(extractHospitalPI(sampleId))
+                .analyseRequestName(extractRequestName(sampleId))
+                .analyseRequestEmail(extractRequestEmail(sampleId))
+                .hospital(extractHospital(sampleId))
                 .build();
-
-//        return ImmutableHospitalQuery.builder()
-//                .hospitalPI(extractHospitalPI(sampleId))
-//                .analyseRequestName(extractRequestName(sampleId))
-//                .analyseRequestEmail(extractRequestEmail(sampleId))
-//                .hospital(extractHospital(sampleId))
-//                .build();
     }
 
 }

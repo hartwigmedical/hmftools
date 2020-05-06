@@ -269,7 +269,7 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDates,
-                blacklistedPatients);
+                blacklistedPatients, null);
     }
 
     @NotNull
@@ -287,7 +287,7 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients);
+                blacklistedPatients, null);
     }
 
     @NotNull
@@ -310,7 +310,7 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients);
+                blacklistedPatients, null);
     }
 
     @NotNull
@@ -330,6 +330,6 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients);
+                blacklistedPatients, null);
     }
 }
