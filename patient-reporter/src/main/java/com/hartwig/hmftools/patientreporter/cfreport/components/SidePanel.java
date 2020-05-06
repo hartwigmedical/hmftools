@@ -50,7 +50,7 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
             }
 
-            String hospitalName = sampleReport.hospitalQuery().hospitalName();
+            String hospitalName = sampleReport.hospitalQuery().hospital();
             if (!hospitalName.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", hospitalName));
             }

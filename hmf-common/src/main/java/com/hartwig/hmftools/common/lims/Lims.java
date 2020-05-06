@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -292,15 +293,8 @@ public class Lims {
     }
 
     @NotNull
-    public HospitalQuery hospitalQuery(@NotNull String sampleId) {
-        return ImmutableHospitalQuery.builder()
-                .hospitalPA(HospitalModel.extractHospitalPI())
-                .analyseRequestName(HospitalModel.extractRequestName())
-                .analyseRequestEmail(HospitalModel.extractRequestEmail())
-                .hospitalId(HospitalModel.extractHospitalId())
-                .hospitalName(HospitalModel.extractHospitalName())
-                .hospitalAdres(HospitalModel.extractHospitalAdres())
-                .build();
+    public static HospitalQuery hospitalQuery(@NotNull String sampleId) {
+        return HospitalModel.generateHospitalQuery(sampleId);
     }
     @Nullable
     private String submission(@NotNull String sampleBarcode) {

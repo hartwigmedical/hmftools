@@ -35,116 +35,129 @@ public abstract class HospitalModel {
         return hospitalPerId().values().size();
     }
 
-    @Nullable
-    public static String extractHospitalPI() {
-        return Strings.EMPTY;
-    }
-
-    @Nullable
-    public static String extractRequestName() {
-        return Strings.EMPTY;
-    }
-
-    @Nullable
-    public static String extractRequestEmail() {
-        return Strings.EMPTY;
-    }
-
-    @Nullable
-    public static String extractHospitalId() {
-        return Strings.EMPTY;
-    }
-
-    @Nullable
-    public static String extractHospitalName() {
-        return Strings.EMPTY;
-    }
-
-    @Nullable
-    public static String extractHospitalAdres() {
-        return Strings.EMPTY;
-    }
+    @NotNull
+    abstract Map<String, HospitalDataNew> hospitalData();
 
     @NotNull
-    private static String fullAddresseeStringCore(@NotNull HospitalCore hospital) {
-        return hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
-    }
-
-    @NotNull
-    private static String fullAddresseeString(@NotNull String sample, @NotNull HospitalData hospital) {
-        checkAddresseeFields(sample, hospital);
-
-        String hospitalPI = determinePIName(sample, hospital);
-        String hospitalAddress = hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
-        return hospitalPI.isEmpty() ? hospitalAddress : hospitalPI + ", " + hospitalAddress;
-    }
+    abstract Map<String, HospitalAdress> hospitalAdress();
 
     @Nullable
-    @VisibleForTesting
-    HospitalData hospitalPerId(@Nullable String hospitalId) {
-        return hospitalPerId().get(hospitalId);
-    }
+    public String extractHospitalPI(@NotNull String sampleId) {
+        HospitalDataNew hospitalData;
+        String hospitalID = extractHospitalIdFromSample(sampleId);
 
-    @Nullable
-    private HospitalCore findHospitalForSampleCore(@NotNull String sample) {
-        HospitalCore hospital;
-        if (sample.startsWith("CORE19") || sample.contains("CORE18")) {
-            // These are the old core names, we need to manually map them.
-            HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sample);
-            if (hospitalSampleMapping == null) {
-                LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sample);
-                return null;
-            } else {
-                hospital = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
-                if (hospital == null) {
-                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
-                            sample,
-                            hospitalSampleMapping.internalHospitalName());
-                    return null;
-                }
-            }
+        hospitalData = hospitalData().get(hospitalID);
+
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
+        if (study == LimsStudy.CPCT) {
+            return hospitalData.hospitalPI();
+        } else if (study == LimsStudy.DRUP) {
+            return hospitalData.hospitalPI();
+        } else if (study == LimsStudy.WIDE) {
+            return hospitalData.hospitalId();
+        } else if (study == LimsStudy.CORE) {
+            return null;
+        } else if (study == LimsStudy.NON_CANCER_STUDY) {
+            return null;
         } else {
-            String hospitalId = extractHospitalIdFromSample(sample);
-            if (hospitalId == null) {
-                LOGGER.warn("Could not find hospital for sample '{}'", sample);
-                return null;
-            }
-
-            hospital = hospitalCoreMap().get(hospitalId);
-            if (hospital == null) {
-                LOGGER.warn("Hospital model does not contain id '{}'", hospitalId);
-                return null;
-            }
+            return null;
         }
-
-        return hospital;
     }
 
     @Nullable
-    private HospitalCore findByHospitalCore(@NotNull String hospital) {
-        for (HospitalCore hospitalCore : hospitalCoreMap().values()) {
-            if (hospitalCore.internalHospitalName().equals(hospital)) {
-                return hospitalCore;
+    public String extractRequestName(@NotNull String sampleId) {
+        HospitalDataNew hospitalData;
+        String hospitalID = extractHospitalIdFromSample(sampleId);
+
+        hospitalData = hospitalData().get(hospitalID);
+
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
+        if (study == LimsStudy.CPCT) {
+            return null;
+        } else if (study == LimsStudy.DRUP) {
+            return null;
+        } else if (study == LimsStudy.WIDE) {
+            return hospitalData.requestName();
+        } else if (study == LimsStudy.CORE) {
+            return null;
+        } else if (study == LimsStudy.NON_CANCER_STUDY) {
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    public String extractRequestEmail(@NotNull String sampleId) {
+        HospitalDataNew hospitalData;
+        String hospitalID = extractHospitalIdFromSample(sampleId);
+
+        hospitalData = hospitalData().get(hospitalID);
+
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
+        if (study == LimsStudy.CPCT) {
+            return null;
+        } else if (study == LimsStudy.DRUP) {
+            return null;
+        } else if (study == LimsStudy.WIDE) {
+            return hospitalData.requestEmail();
+        } else if (study == LimsStudy.CORE) {
+            return null;
+        } else if (study == LimsStudy.NON_CANCER_STUDY) {
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    private HospitalAdress findByHospitalCore(@NotNull String hospital) {
+        for (HospitalAdress hospitalAdress : hospitalAdress().values()) {
+            if (hospitalAdress.hospitalName().equals(hospital)) {
+                return hospitalAdress;
             }
         }
         return null;
     }
 
     @Nullable
-    private HospitalData findHospitalForSample(@NotNull String sample) {
-        HospitalData hospital;
-        String hospitalId = extractHospitalIdFromSample(sample);
-        if (hospitalId == null) {
-            LOGGER.warn("Could not find hospital for sample '{}'", sample);
-            return null;
-        }
+    public String extractHospital(@NotNull String sampleId) {
+        HospitalAdress hospitalAdress;
+        String hospitalID = extractHospitalIdFromSample(sampleId);
 
-        hospital = hospitalPerId().get(hospitalId);
-        if (hospital == null) {
-            LOGGER.warn("Hospital model does not contain id '{}'", hospitalId);
-            return null;
+        if (sampleId.startsWith("CORE19") || sampleId.contains("CORE18")) {
+            // These are the old core names, we need to manually map them.
+            HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
+            if (hospitalSampleMapping == null) {
+                LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
+                return null;
+            } else {
+                hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
+                if (hospitalAdress == null) {
+                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
+                            sampleId,
+                            hospitalSampleMapping.internalHospitalName());
+                    return null;
+                }
+            }
+            checkAddresseeFields(hospitalAdress);
+            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
+
+        } else {
+            if (hospitalID == null) {
+                LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
+                return null;
+            }
+
+            hospitalAdress = hospitalAdress().get(hospitalID);
+            if (hospitalAdress == null) {
+                LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
+                return null;
+            }
+            checkAddresseeFields(hospitalAdress);
+
+            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
         }
-        return hospital;
     }
 
     @Nullable
@@ -159,20 +172,16 @@ public abstract class HospitalModel {
         return null;
     }
 
-    private static void checkAddresseeFields(@NotNull String sample, @NotNull HospitalData hospital) {
+    private static void checkAddresseeFields(@NotNull HospitalAdress hospital) {
         List<String> missingFields = Lists.newArrayList();
 
-        LimsStudy type = LimsStudy.fromSampleId(sample);
-        if (type != LimsStudy.CORE && determinePIName(sample, hospital).isEmpty()) {
-            missingFields.add("requester");
-        }
-        if (hospital.externalHospitalName().isEmpty()) {
+        if (hospital.hospitalName().isEmpty()) {
             missingFields.add("name");
         }
-        if (hospital.addressZip().isEmpty()) {
+        if (hospital.hospitalZip().isEmpty()) {
             missingFields.add("zip");
         }
-        if (hospital.addressCity().isEmpty()) {
+        if (hospital.hospitalCity().isEmpty()) {
             missingFields.add("city");
         }
 
@@ -181,50 +190,27 @@ public abstract class HospitalModel {
         }
     }
 
-    @NotNull
+    @Nullable
     @VisibleForTesting
-    static String determinePIName(@NotNull String sample, @NotNull HospitalData hospital) {
-        LimsStudy type = LimsStudy.fromSampleId(sample);
-
-        if (type == LimsStudy.CPCT) {
-            return hospital.cpctPI();
-        } else if (type == LimsStudy.DRUP) {
-            String drupPi = hospital.drupPI();
-            if (drupPi.trim().equals("*")) {
-                return hospital.cpctPI();
-            }
-            return hospital.drupPI();
-        } else if (type == LimsStudy.WIDE) {
-            return hospital.widePI();
-        } else if (type == LimsStudy.CORE || type == LimsStudy.NON_CANCER_STUDY) {
-            return Strings.EMPTY;
-        }
-
-        return NA_STRING;
+    HospitalData hospitalPerId(@Nullable String hospitalId) {
+        return hospitalPerId().get(hospitalId);
     }
 
     @NotNull
-    @VisibleForTesting
-    static String determinePIEmail(@NotNull String sample, @NotNull HospitalData hospital) {
-        LimsStudy type = LimsStudy.fromSampleId(sample);
+    public static HospitalQuery generateHospitalQuery(@NotNull String sampleId) {
+        return ImmutableHospitalQuery.builder()
+                .hospitalPI(Strings.EMPTY)
+                .analyseRequestName(Strings.EMPTY)
+                .analyseRequestEmail(Strings.EMPTY)
+                .hospital(Strings.EMPTY)
+                .build();
 
-        if (type == LimsStudy.CPCT) {
-            return extractPIEmailFromRecipientList(hospital.cpctRecipients());
-        } else if (type == LimsStudy.DRUP) {
-            if (hospital.drupPI().trim().equals("*")) {
-                return extractPIEmailFromRecipientList(hospital.cpctRecipients());
-            }
-            return extractPIEmailFromRecipientList(hospital.drupRecipients());
-        } else if (type == LimsStudy.WIDE) {
-            return extractPIEmailFromRecipientList(hospital.wideRecipients());
-        }
-
-        return Strings.EMPTY;
+//        return ImmutableHospitalQuery.builder()
+//                .hospitalPI(extractHospitalPI(sampleId))
+//                .analyseRequestName(extractRequestName(sampleId))
+//                .analyseRequestEmail(extractRequestEmail(sampleId))
+//                .hospital(extractHospital(sampleId))
+//                .build();
     }
 
-    @NotNull
-    private static String extractPIEmailFromRecipientList(@NotNull String recipients) {
-        // We assume the first email in a list separated with ";" is the PI email.
-        return recipients.split(";")[0];
-    }
 }
