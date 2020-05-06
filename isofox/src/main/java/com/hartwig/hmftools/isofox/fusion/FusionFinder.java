@@ -109,6 +109,8 @@ public class FusionFinder
         mChrGeneDepthMap.put(chromosome, geneDepthMap);
     }
 
+    private static final int LOG_COUNT = 10000;
+
     public void findFusions()
     {
         ISF_LOGGER.info("processing {} chimeric read groups", mReadsMap.size());
@@ -120,11 +122,22 @@ public class FusionFinder
         int duplicates = 0;
         int skipped = 0;
         int fragments = 0;
+        int recovered = 0;
+        int readGroupCount = 0;
+        int nextLog = LOG_COUNT;
 
         Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
 
         for(Map.Entry<String,List<ReadRecord>> entry : mReadsMap.entrySet())
         {
+            ++readGroupCount;
+
+            if(readGroupCount >= nextLog)
+            {
+                nextLog += LOG_COUNT;
+                ISF_LOGGER.info("processed {} chimeric read groups", readGroupCount);
+            }
+
             final List<ReadRecord> reads = entry.getValue();
 
             if(reads.stream().anyMatch(x -> x.isDuplicate()))
@@ -133,7 +146,8 @@ public class FusionFinder
                 continue;
             }
 
-            recoverSupplementaryReads(reads);
+            if(recoverSupplementaryReads(reads))
+                ++recovered;
 
             String readGroupStatus = "";
 
@@ -200,8 +214,8 @@ public class FusionFinder
             }
         }
 
-        ISF_LOGGER.info("chimeric fragments({} unpaired={} dups={} skip={} filtered={} candidates={}) chrPairs({}) tasks({})",
-                mReadsMap.size(), unpairedReads, skipped, duplicates, filteredFragments, fragments,
+        ISF_LOGGER.info("chimeric fragments({} unpaired={} dups={} skip={} filtered={} recov={} candidates={}) chrPairs({}) tasks({})",
+                mReadsMap.size(), unpairedReads, skipped, duplicates, filteredFragments, recovered, fragments,
                 chrPairFragments.size(), mFusionTasks.size());
 
         if(mFusionTasks.isEmpty())
@@ -274,11 +288,12 @@ public class FusionFinder
         return true;
     }
 
-    private void recoverSupplementaryReads(final List<ReadRecord> reads)
+    private boolean recoverSupplementaryReads(final List<ReadRecord> reads)
     {
         if(reads.size() >= 3)
-            return;
+            return false;
 
+        boolean found = false;
         for(final ReadRecord read : reads)
         {
             if(read.getSuppAlignment() == null)
@@ -287,18 +302,21 @@ public class FusionFinder
             SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
 
             if(suppData == null || skipUnpairedRead(suppData.Chromosome, suppData.Position))
-                return;
+                return false;
 
             final List<ReadRecord> missingReads = findMissingReads(read.Id, suppData.Chromosome, suppData.Position, reads.size() == 1);
 
             if(!missingReads.isEmpty())
             {
-                ISF_LOGGER.debug("id({}) recovered {} missing read: {}", read.Id, missingReads.size());
+                ISF_LOGGER.warn("id({}) recovered {} missing reads", read.Id, missingReads.size());
                 reads.addAll(missingReads);
+                found = true;
             }
 
-            return;
+            break;
         }
+
+        return found;
     }
 
     private List<ReadRecord> findMissingReads(final String readId, final String chromosome, int position, boolean expectPair)

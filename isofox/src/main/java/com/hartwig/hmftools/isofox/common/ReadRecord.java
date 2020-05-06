@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
@@ -64,6 +65,8 @@ public class ReadRecord
     private final int[] mSoftClipRegionsMatched;
     private int mFragmentInsertSize;
     private String mSupplementaryAlignment;
+    private boolean mNonGenic;
+    private int mSecondaryReadCount;
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
 
@@ -98,7 +101,7 @@ public class ReadRecord
         mMateChromosome = mateChromosome;
         mMatePosStart = matePosStart;
 
-        mGeneCollectionId = -1;
+        mGeneCollectionId = NON_GENIC_ID;
 
         List<int[]> mappedCoords = generateMappedCoords(Cigar, PosStart);
         mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
@@ -112,6 +115,8 @@ public class ReadRecord
         mSoftClipRegionsMatched = new int[] {0, 0};
         mFragmentInsertSize = insertSize;
         mSupplementaryAlignment = null;
+        mNonGenic = false;
+        mSecondaryReadCount = 0;
     }
 
     public int range() { return PosEnd - PosStart; }
@@ -135,7 +140,13 @@ public class ReadRecord
     public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
     public boolean isProperPair() { return (mFlags & SAMFlag.PROPER_PAIR.intValue()) != 0; }
     public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
-    public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.NOT_PRIMARY_ALIGNMENT.intValue()) != 0; }
+    public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.SECONDARY_ALIGNMENT.intValue()) != 0; }
+
+    public boolean isNonGenic() { return mNonGenic; }
+    public void setNonGenic() { mNonGenic = true; }
+
+    public int getSecondaryReadCount() { return mSecondaryReadCount; }
+    public void setSecondaryReadCount(int count) { mSecondaryReadCount = count; }
 
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
@@ -178,7 +189,7 @@ public class ReadRecord
         if(isTranslocation() || isInversion())
             return true;
 
-        if(!isProperPair() && isSecondaryAlignment() || isSupplementaryAlignment() || mSupplementaryAlignment != null)
+        if(!isProperPair() || isSupplementaryAlignment() || mSupplementaryAlignment != null) // && isSecondaryAlignment()
             return true;
 
         return false;

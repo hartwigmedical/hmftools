@@ -51,7 +51,7 @@ public class AltSpliceJunctionFinder
         mConfig = config;
         mAltSpliceJunctions = Lists.newArrayList();
         mWriter = writer;
-        // mGene = null;
+        mGenes = null;
     }
 
     public List<AltSpliceJunction> getAltSpliceJunctions() { return mAltSpliceJunctions; }

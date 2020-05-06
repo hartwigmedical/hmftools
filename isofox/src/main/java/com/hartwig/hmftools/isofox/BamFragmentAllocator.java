@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
+import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
@@ -95,6 +96,7 @@ public class BamFragmentAllocator
     private final RetainedIntronFinder mRetainedIntronFinder;
     private final Map<String,List<ReadRecord>> mChimericReadMap;
     private final Map<String,List<ReadRecord>> mCandidateRealignedReadMap;
+    private final Map<String,Integer> mSecondaryReadMap;
 
     private final boolean mRunFusions;
     private final boolean mFusionsOnly;
@@ -114,6 +116,7 @@ public class BamFragmentAllocator
 
         mChimericReadMap = Maps.newHashMap();
         mCandidateRealignedReadMap = Maps.newHashMap();
+        mSecondaryReadMap = Maps.newHashMap();
 
         mRunFusions = mConfig.Functions.contains(FUSIONS);
         mFusionsOnly = mRunFusions && mConfig.Functions.size() == 1;
@@ -154,19 +157,33 @@ public class BamFragmentAllocator
 
     private static int GENE_LOG_COUNT = 100000;
 
-    public void produceBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
+    public void clearCache()
     {
         mFragmentReads.clear();
+        mTransComboData.clear();
+        mChimericReadMap.clear();
+        mCandidateRealignedReadMap.clear();
+        mSecondaryReadMap.clear();
 
+        if(mGeneGcRatioCounts != null)
+            mGeneGcRatioCounts.clearCounts();
+
+        if(mAltSpliceJunctionFinder != null)
+            mAltSpliceJunctionFinder.setGeneData(null);
+
+        if(mRetainedIntronFinder != null)
+            mRetainedIntronFinder.setGeneData(null);
+    }
+
+    public void produceBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
+    {
+        clearCache();
         clearDuplicates();
 
         mCurrentGenes = geneCollection;
         mGeneReadCount = 0;
         mNextGeneCountLog = GENE_LOG_COUNT;
         mEnrichedGeneFragments = 0;
-        mTransComboData.clear();
-        mChimericReadMap.clear();
-        mCandidateRealignedReadMap.clear();
 
         if(mConfig.runFunction(NOVEL_LOCATIONS))
         {
@@ -174,15 +191,12 @@ public class BamFragmentAllocator
             mRetainedIntronFinder.setGeneData(mCurrentGenes);
         }
 
-        if(mGeneGcRatioCounts != null)
-            mGeneGcRatioCounts.clearCounts();
-
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
         if(mEnrichedGeneFragments > 0)
             processEnrichedGeneFragments();
 
-        if(!mChimericReadMap.isEmpty())
+        if(mRunFusions)
             postProcessChimericReads();
 
         ISF_LOGGER.debug("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
@@ -200,6 +214,21 @@ public class BamFragmentAllocator
 
     private void processSamRecord(@NotNull final SAMRecord record)
     {
+        if(record.isSecondaryAlignment())
+        {
+            if(mRunFusions && record.getFirstOfPairFlag())
+            {
+                // used for filtering fusions
+                Integer count = mSecondaryReadMap.get(record.getReadName());
+                if(count == null)
+                    mSecondaryReadMap.put(record.getReadName(), 1);
+                else
+                    mSecondaryReadMap.put(record.getReadName(), count + 1);
+            }
+
+            return;
+        }
+
         if(checkDuplicates(record))
         {
             if(mConfig.DropDuplicates)
@@ -226,7 +255,7 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:23504:2674:13472";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:1:12202:20173:18020";
 
     private void processRead(ReadRecord read)
     {
@@ -267,9 +296,11 @@ public class BamFragmentAllocator
             mCurrentGenes.getBaseDepth().processRead(read);
         }
 
+        if(!positionsOverlap(read.PosStart, read.PosEnd, mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]))
+            read.setNonGenic();
+
         checkFragmentRead(read);
     }
-
 
     private boolean checkFragmentRead(ReadRecord read)
     {
@@ -301,26 +332,15 @@ public class BamFragmentAllocator
         if(read1.isDuplicate() || read2.isDuplicate())
             mCurrentGenes.addCount(DUPLICATE, 1);
 
-        final int[] genesRange = mCurrentGenes.regionBounds();
-        boolean r1OutsideGene = !positionsOverlap(read1.PosStart, read1.PosEnd, genesRange[SE_START], genesRange[SE_END]);
-        boolean r2OutsideGene = !positionsOverlap(read2.PosStart, read2.PosEnd, genesRange[SE_START], genesRange[SE_END]);;
-
-        // if either read is chimeric then handle them both as such
-        if(read1.isChimeric() || read2.isChimeric() || r1OutsideGene || r2OutsideGene)
+        // if either read is chimeric (including one outside the genic region) then handle them both as such
+        if(read1.isChimeric() || read2.isChimeric() || (read1.isNonGenic() != read2.isNonGenic()))
         {
-            // candidate chimeric reads
-            if(mRunFusions)
-            {
-                addChimericReadPair(read1, read2);
-            }
-            else
-            {
-                processChimericRead(read1);
-                processChimericRead(read2);
-            }
-
+            processChimericReadPair(read1, read2);
             return;
         }
+
+        if(read1.isNonGenic() && read2.isNonGenic()) // could tally these up for stats
+            return;
 
         if(mRunFusions)
         {
@@ -739,55 +759,63 @@ public class BamFragmentAllocator
         mRetainedIntronFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
     }
 
-    private void processChimericRead(ReadRecord read)
+    private void processChimericReadPair(final ReadRecord read1, final ReadRecord read2)
     {
         if(!mRunFusions)
         {
             // avoid double-counting fragment reads
-            if(read.isFirstOfPair())
-            {
-                mCurrentGenes.addCount(TOTAL, 1);
-                mCurrentGenes.addCount(CHIMERIC, 1);
-            }
+            mCurrentGenes.addCount(TOTAL, 1);
+            mCurrentGenes.addCount(CHIMERIC, 1);
         }
         else
         {
             // populate transcript info for intronic reads since it will be used in fusion matching
-            if(read.getMappedRegions().isEmpty())
-                read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
+            addIntronicTranscriptData(read1);
+            addIntronicTranscriptData(read2);
 
-            addChimericReads(mChimericReadMap, read);
+            // add the pair when it's clear there aren't others with the same ID in the map
+            if(mConfig.RunValidations && mChimericReadMap.containsKey(read1.Id))
+            {
+                // shouldn't occur
+                ISF_LOGGER.error("overriding chimeric read({})", read1.Id);
+
+                final List<ReadRecord> existingReads = mChimericReadMap.get(read1.Id);
+
+                for(ReadRecord read : existingReads)
+                {
+                    ISF_LOGGER.error("existing read: {}", read);
+                }
+
+                ISF_LOGGER.error("new read: {}", read1);
+                ISF_LOGGER.error("new read: {}", read2);
+
+                existingReads.add(read1);
+                existingReads.add(read2);
+            }
+            else
+            {
+                mChimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+            }
         }
     }
 
-    private void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
+    private void addIntronicTranscriptData(final ReadRecord read)
     {
-        // add the pair when it's clear there aren't others with the same ID in the map
-        if(mChimericReadMap.containsKey(read1.Id))
-        {
-            ISF_LOGGER.error("overriding chimeric read({})", read1.Id);
-        }
-
-        if(read1.getMappedRegions().isEmpty())
-            read1.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
-
-        if(read2.getMappedRegions().isEmpty())
-            read2.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
-
-        mChimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+        if(!read.isNonGenic() && read.getMappedRegions().isEmpty())
+            read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
     }
+
     private void postProcessChimericReads()
     {
-        // check any lone reads where the other read is chimeric
+        // check any lone reads - this cannot be one of a pair of non-genic reads since they will have already been dismissed
+        // so will either be a supplementary or a read linked to another gene collection
         for(Object object : mFragmentReads.getValues())
         {
             final ReadRecord read = (ReadRecord)object;
 
             if(!read.isMateUnmapped())
             {
-                if(read.getMappedRegions().isEmpty())
-                    read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
-
+                addIntronicTranscriptData(read);
                 addChimericReads(mChimericReadMap, read);
             }
         }
@@ -839,7 +867,29 @@ public class BamFragmentAllocator
             }
         }
 
-        mChimericReadMap.values().forEach(x -> x.stream().forEach(y -> y.captureGeneInfo(mCurrentGenes.id())));
+        // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
+        // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
+        for(Map.Entry<String,List<ReadRecord>> entry : mChimericReadMap.entrySet())
+        {
+            final List<ReadRecord> reads = entry.getValue();
+
+            Integer secondaryCount = mSecondaryReadMap.get(entry.getKey());
+
+            for (ReadRecord read : reads)
+            {
+                if (!read.isNonGenic())
+                {
+                    read.captureGeneInfo(mCurrentGenes.id());
+
+                    if (secondaryCount != null)
+                        read.setSecondaryReadCount(secondaryCount);
+                }
+                else
+                {
+                    read.captureGeneInfo(NON_GENIC_ID);
+                }
+            }
+        }
     }
 
     private static final int DUP_DATA_SECOND_START = 0;

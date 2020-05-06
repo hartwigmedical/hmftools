@@ -14,9 +14,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.mergeChimericReadMaps;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.collectCandidateJunctions;
 
-import static org.apache.logging.log4j.Level.DEBUG;
-import static org.apache.logging.log4j.Level.INFO;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,8 +45,6 @@ import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
-
-import org.apache.logging.log4j.Level;
 
 public class ChromosomeGeneTask implements Callable
 {
@@ -248,6 +243,7 @@ public class ChromosomeGeneTask implements Callable
         mCurrentGeneIndex = 0;
         final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
         int nextLogCount = 100;
+        int lastGeneCollectionEndPosition = -1;
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
@@ -256,6 +252,9 @@ public class ChromosomeGeneTask implements Callable
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
             mGeneCollectionMap.put(geneCollection.id(), Lists.newArrayList(overlappingGenes));
+
+            if(lastGeneCollectionEndPosition != -1)
+                geneCollection.setPreGenicPosition(lastGeneCollectionEndPosition);
 
             for(GeneReadData geneReadData : geneReadDataList)
             {
@@ -276,6 +275,8 @@ public class ChromosomeGeneTask implements Callable
                     mChromosome, geneCollection.geneNames(10), mCurrentGeneIndex, mGeneDataList.size());
 
             ++mGenesProcessed;
+
+            lastGeneCollectionEndPosition = geneCollection.regionBounds()[SE_END] + 1;
 
             if (mGenesProcessed >= nextLogCount)
             {
@@ -364,14 +365,32 @@ public class ChromosomeGeneTask implements Callable
             findUniqueBases(geneCollection.getExonRegions());
         }
 
-        // use a buffer around the gene to pick up reads which span outside its transcripts
-        long regionStart = geneCollection.regionBounds()[SE_START] - GENE_FRAGMENT_BUFFER;
-        long regionEnd = geneCollection.regionBounds()[SE_END] + GENE_FRAGMENT_BUFFER;
+        // start the read region at the previous gene collection's end if known
+        long regionStart;
+
+        if(mConfig.runFunction(FUSIONS) && geneCollection.getPreGenicPosition() > 0)
+        {
+            regionStart = geneCollection.getPreGenicPosition();
+
+            int distance = geneCollection.regionBounds()[SE_START] - geneCollection.getPreGenicPosition();
+            if(distance > 1000000)
+            {
+                ISF_LOGGER.debug("geneCollection(genes={}) region({} -> {}) vs prevGeneEnd({} dist={})",
+                        geneCollection.geneNames(), geneCollection.regionBounds()[SE_START], geneCollection.regionBounds()[SE_END],
+                        geneCollection.getPreGenicPosition(), distance);
+            }
+        }
+        else
+        {
+            regionStart = geneCollection.regionBounds()[SE_START] - GENE_FRAGMENT_BUFFER;
+        }
+
+        long regionEnd = geneCollection.regionBounds()[SE_END];
 
         if(regionStart >= regionEnd)
         {
-            ISF_LOGGER.warn("invalid geneCollection(first={} genes={}) region({} -> {})",
-                    geneCollection.genes().get(0).name(), regionStart, regionEnd);
+            ISF_LOGGER.warn("invalid geneCollection({}) region({} -> {})",
+                    geneCollection.geneNames(), regionStart, regionEnd);
             return;
         }
 
@@ -389,27 +408,28 @@ public class ChromosomeGeneTask implements Callable
             mPerfCounters[PERF_NOVEL_LOCATIONS].stop();
         }
 
-        if(mConfig.runFunction(FUSIONS))
+        if(mConfig.runFunction(FUSIONS) && !mBamFragmentAllocator.getChimericReadMap().isEmpty())
         {
-            if(!mBamFragmentAllocator.getChimericReadMap().isEmpty())
+            final Set<Integer> candidateJunctions = collectCandidateJunctions(mBamFragmentAllocator.getChimericReadMap(), mChromosome);
+
+            mergeChimericReadMaps(mChimericReadMap, mBamFragmentAllocator.getChimericReadMap());
+
+            final Map<Integer,Integer> depthMap = geneCollection.getBaseDepth().createPositionMap(candidateJunctions);
+
+            mGeneDepthMap.put(geneCollection.id(), new BaseDepth(geneCollection.getBaseDepth(), depthMap));
+
+            if(mBamFragmentAllocator.getChimericReadMap().size() > 50)
             {
-                final Set<Integer> candidateJunctions = collectCandidateJunctions(mBamFragmentAllocator.getChimericReadMap(), mChromosome);
-
-                mergeChimericReadMaps(mChimericReadMap, mBamFragmentAllocator.getChimericReadMap());
-
-                geneCollection.getBaseDepth().cullToPositions(candidateJunctions);
-
-                mGeneDepthMap.put(geneCollection.id(), geneCollection.getBaseDepth());
-
-                if(mBamFragmentAllocator.getChimericReadMap().size() > 50)
-                {
-                    ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={})",
-                            mChromosome, geneCollection.geneNames(), mBamFragmentAllocator.getChimericReadMap()
-                                    .size(), mChimericReadMap.size(),
-                            candidateJunctions.size(), geneCollection.getBaseDepth().basesWithDepth(),
-                            mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum());
-                }
+                ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={})",
+                        mChromosome, geneCollection.geneNames(), mBamFragmentAllocator.getChimericReadMap()
+                                .size(), mChimericReadMap.size(),
+                        candidateJunctions.size(), geneCollection.getBaseDepth().basesWithDepth(),
+                        mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum());
             }
+        }
+        else
+        {
+            geneCollection.getBaseDepth().clearDepth();
         }
 
         GeneCollectionSummary geneCollectionSummary = new GeneCollectionSummary(
@@ -475,14 +495,6 @@ public class ChromosomeGeneTask implements Callable
             {
                 geneReadData.getTranscripts().forEach(x -> mResultsWriter.writeExonData(geneReadData, x));
             }
-
-            /* no longer write per-gene GC ratio counts, may make configurable later on
-            if(mConfig.WriteReadGcRatios)
-            {
-                writeReadGcRatioCounts(
-                        mResultsWriter.getReadGcRatioWriter(), geneReadData.GeneData, mBamReader.getGcRatioCounts().getGeneRatioCounts());
-            }
-            */
         }
 
         if(!mConfig.EnrichedGeneIds.isEmpty())
@@ -514,6 +526,8 @@ public class ChromosomeGeneTask implements Callable
 
         geneCollectionSummary.allocateResidualsToGenes();
         mResultsWriter.writeGeneCollectionData(geneCollection);
+
+        mBamFragmentAllocator.clearCache(); // free up resources for this gene collection
     }
 
     private void calcTranscriptGcRatios()

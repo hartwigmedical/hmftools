@@ -33,6 +33,7 @@ public class GeneCollection
     private final List<String> mGeneIds;
     private final String mChromosome;
     private final int[] mRegionBounds;
+    private int mPreGenicPosition; // position prior to this region beginning and since the last gene collection
 
     private final Map<Integer,GeneReadData> mTransIdsGeneMap;
 
@@ -49,6 +50,8 @@ public class GeneCollection
 
     private final BaseDepth mBaseDepth;
 
+    public static final int NON_GENIC_ID = -1;
+
     public GeneCollection(int id, final List<GeneReadData> genes)
     {
         mId = id;
@@ -58,6 +61,7 @@ public class GeneCollection
         mGenes.forEach(x -> mGeneIds.add(x.GeneData.GeneId));
 
         mRegionBounds = new int[SE_PAIR];
+        mPreGenicPosition = -1;
 
         mChromosome = genes.get(0).GeneData.Chromosome;
 
@@ -84,6 +88,8 @@ public class GeneCollection
     public final List<GeneReadData> genes() { return mGenes; }
     public final List<String> geneIds() { return mGeneIds; }
     public final int[] regionBounds() { return mRegionBounds; }
+    public void setPreGenicPosition(int position) { mPreGenicPosition = position; }
+    public int getPreGenicPosition() { return mPreGenicPosition; }
 
     public final List<TranscriptData> getTranscripts() { return mTranscripts; }
 

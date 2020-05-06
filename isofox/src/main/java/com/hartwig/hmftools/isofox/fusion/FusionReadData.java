@@ -440,7 +440,7 @@ public class FusionReadData
     {
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
-                + ",SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,JuncDepthUp,JuncDepthDown"
+                + ",SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,MultiMapFrags,CoverageUp,CoverageDown"
                 + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
     }
 
@@ -477,9 +477,23 @@ public class FusionReadData
 
         csvData.add(getImpliedSvType().toString());
 
-        int splitFragments = mFragments.containsKey(MATCHED_JUNCTION) ? mFragments.get(MATCHED_JUNCTION).size() : 0;
-        int realignedFragments = mFragments.containsKey(REALIGNED) ? mFragments.get(REALIGNED).size() : 0;
-        int discordantFragments = mFragments.containsKey(DISCORDANT) ? mFragments.get(DISCORDANT).size() : 0;
+        int splitFragments = 0;
+        int realignedFragments = 0;
+        int discordantFragments = 0;
+        int readsWithSecondaries = 0;
+
+        for(Map.Entry<FusionFragmentType,List<FusionFragment>> entry : mFragments.entrySet())
+        {
+            if(entry.getKey() == MATCHED_JUNCTION)
+                splitFragments = entry.getValue().size();
+            else if(entry.getKey() == DISCORDANT)
+                discordantFragments = entry.getValue().size();
+            else if(entry.getKey() == REALIGNED)
+                realignedFragments = entry.getValue().size();
+
+            readsWithSecondaries += (int)entry.getValue().stream()
+                    .filter(x -> x.getReads().stream().anyMatch(y -> y.getSecondaryReadCount() > 0)).count();
+        }
 
         int totalFragments = splitFragments + realignedFragments + discordantFragments;
 
@@ -487,6 +501,7 @@ public class FusionReadData
         csvData.add(String.valueOf(splitFragments));
         csvData.add(String.valueOf(realignedFragments));
         csvData.add(String.valueOf(discordantFragments));
+        csvData.add(String.valueOf(readsWithSecondaries));
 
         // since depth of 1 may have been discarded from the BaseDepth, correct for this
         csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UPSTREAM]], 1)));

@@ -164,7 +164,7 @@ public class IsofoxConfig
             for(final String functionStr : functionsStr)
             {
                 Functions.add(IsofoxFunction.valueOf(functionStr));
-                ISF_LOGGER.info("running function: {}", functionStr);
+                ISF_LOGGER.info("running function(s): {}", functionStr);
             }
         }
         else

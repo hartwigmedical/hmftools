@@ -18,14 +18,14 @@ public class BamSlicer
 {
     private final int mMinMappingQuality;
     private boolean mDropDuplicates;
-    private boolean mDropSecondarySupplementaries;
+    private boolean mDropSupplementaries;
     private boolean mConsumerHalt; // allow consumer to halt processing
 
     public BamSlicer(int minMappingQuality, boolean dropDuplicates, boolean dropSecondSupps)
     {
         mMinMappingQuality = minMappingQuality;
         mDropDuplicates = dropDuplicates;
-        mDropSecondarySupplementaries = dropSecondSupps;
+        mDropSupplementaries = dropSecondSupps;
         mConsumerHalt = false;
     }
 
@@ -113,7 +113,7 @@ public class BamSlicer
         if(record.getMappingQuality() < mMinMappingQuality || record.getReadUnmappedFlag())
             return false;
 
-        if(mDropSecondarySupplementaries && record.isSecondaryOrSupplementary())
+        if(mDropSupplementaries && (record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment()))
             return false;
 
         if(mDropDuplicates && record.getDuplicateReadFlag())

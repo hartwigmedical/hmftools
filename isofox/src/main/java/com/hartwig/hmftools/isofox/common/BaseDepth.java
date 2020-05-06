@@ -35,8 +35,20 @@ public class BaseDepth
         mDepthMap = null;
     }
 
+    public BaseDepth(final BaseDepth other, final Map<Integer,Integer> depthMap)
+    {
+        GeneCollection = other.GeneCollection;
+        Chromosome = other.Chromosome;
+        BaseRange = other.BaseRange;
+        mDepthMap = depthMap;
+        mDepth = null;
+    }
+
     public void processRead(final ReadRecord read)
     {
+        if(mDepth == null)
+            return;
+
         for(final int[] readSection : read.getMappedRegionCoords())
         {
             int readStartPos = readSection[SE_START];
@@ -63,9 +75,14 @@ public class BaseDepth
         }
     }
 
-    public void cullToPositions(final Set<Integer> candidateJunctions)
+    public void clearDepth()
     {
-        mDepthMap = Maps.newHashMap();
+        mDepth = null;
+    }
+
+    public Map<Integer,Integer> createPositionMap(final Set<Integer> candidateJunctions)
+    {
+        final Map<Integer,Integer> depthMap = Maps.newHashMap();
 
         for(final Integer position : candidateJunctions)
         {
@@ -75,33 +92,10 @@ public class BaseDepth
             int index = position - BaseRange[SE_START];
 
             if(mDepth[index] > MIN_DEPTH_COUNT)
-                mDepthMap.put(position, mDepth[index]);
+                depthMap.put(position, mDepth[index]);
         }
 
-        mDepth = null;
-    }
-
-    public void collapse()
-    {
-        // move depth into a map if the coverage is relatively small over a large range
-        mDepthMap = Maps.newHashMap();
-
-        int index = 0;
-        for(int pos = BaseRange[SE_START]; pos <= BaseRange[SE_END]; ++pos)
-        {
-            if(mDepth[index] > MIN_DEPTH_COUNT)
-                mDepthMap.put(pos, mDepth[index]);
-
-            ++index;
-        }
-
-        if(mDepthMap.size() > MAX_MAP_SIZE)
-        {
-            ISF_LOGGER.warn("large map({} len={} perc={}) for baseDepth({})",
-                    mDepthMap.size(), length(), String.format("%.2f", mDepthMap.size()/(double)length()), toString());
-        }
-
-        mDepth = null;
+        return depthMap;
     }
 
     public int depthAtBase(int position)
@@ -147,5 +141,26 @@ public class BaseDepth
         return String.format("gc(%d) region(%s:%d-%d)", GeneCollection, Chromosome, BaseRange[SE_START], BaseRange[SE_END]);
     }
 
+    public void collapse()
+    {
+        // move depth into a map if the coverage is relatively small over a large range
+        mDepthMap = Maps.newHashMap();
 
+        int index = 0;
+        for(int pos = BaseRange[SE_START]; pos <= BaseRange[SE_END]; ++pos)
+        {
+            if(mDepth[index] > MIN_DEPTH_COUNT)
+                mDepthMap.put(pos, mDepth[index]);
+
+            ++index;
+        }
+
+        if(mDepthMap.size() > MAX_MAP_SIZE)
+        {
+            ISF_LOGGER.warn("large map({} len={} perc={}) for baseDepth({})",
+                    mDepthMap.size(), length(), String.format("%.2f", mDepthMap.size()/(double)length()), toString());
+        }
+
+        mDepth = null;
+    }
 }

@@ -128,7 +128,7 @@ public class FusionTask implements Callable
             }
         }
 
-        ISF_LOGGER.info("{}: chimeric fragments({} disc={} canRealgn={} junc={}) fusions(loc={} gene={} total={})",
+        ISF_LOGGER.info("{}: chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mSingleGeneFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());

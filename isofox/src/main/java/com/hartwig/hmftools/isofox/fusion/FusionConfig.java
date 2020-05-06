@@ -8,6 +8,7 @@ public class FusionConfig
     public final boolean WriteChimericReads;
     public final String ReadsFile;
     public final boolean PerformanceStats;
+    public final boolean ProcessSecondaryReads;
 
     private static final String WRITE_CHIMERIC_READS = "write_chimeric_reads";
     private static final String CHIMERIC_READS_FILE = "chimeric_reads_file";
@@ -16,6 +17,7 @@ public class FusionConfig
     {
         WriteChimericReads = cmd.hasOption(WRITE_CHIMERIC_READS);
         ReadsFile = cmd.getOptionValue(CHIMERIC_READS_FILE);
+        ProcessSecondaryReads = false;
         PerformanceStats = true;
     }
 
@@ -23,6 +25,7 @@ public class FusionConfig
     {
         WriteChimericReads = false;
         ReadsFile = null;
+        ProcessSecondaryReads = false;
         PerformanceStats = false;
     }
 

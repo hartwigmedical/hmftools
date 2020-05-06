@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
@@ -64,7 +65,7 @@ public class FusionFragment
     {
         mReads = reads;
 
-        mGeneCollections = new int[SE_PAIR];
+        mGeneCollections = new int[] {NON_GENIC_ID, NON_GENIC_ID};
         mJunctionPositions = new int[] {-1, -1};
         mChromosomes = new String[] {"", ""};
         mJunctionOrientations = new byte[] {0, 0};
