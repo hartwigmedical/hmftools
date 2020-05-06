@@ -197,7 +197,7 @@ public abstract class HospitalModel {
     }
 
     @NotNull
-    public static HospitalQuery generateHospitalQuery(@NotNull String sampleId) {
+    public HospitalQuery generateHospitalQuery(@NotNull String sampleId) {
         return ImmutableHospitalQuery.builder()
                 .hospitalPI(Strings.EMPTY)
                 .analyseRequestName(Strings.EMPTY)
