@@ -296,6 +296,7 @@ public class Lims {
     public static HospitalQuery hospitalQuery(@NotNull String sampleId) {
         return HospitalModel.generateHospitalQuery(sampleId);
     }
+
     @Nullable
     private String submission(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
