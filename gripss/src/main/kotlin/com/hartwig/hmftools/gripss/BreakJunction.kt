@@ -29,7 +29,7 @@ sealed class BreakJunction() {
             val (chromosome, position) = location.split(":")
 
             val startOrientation: Byte = if (initialSequence.isNotEmpty()) 1 else -1
-            val endOrientation: Byte = if (bracket == "[") 1 else -1
+            val endOrientation: Byte = if (bracket == "]") 1 else -1
 
             return BreakPoint(startOrientation, chromosome, position.toInt(), endOrientation);
         }
