@@ -109,9 +109,10 @@ public class QCFailChapter implements ReportChapter {
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
-                title = "Notification tumor sample has too detectable tumor cells";
-                reason = "No calculation of tumor cell possible with none reportable variants";
-                explanation = "After sequencing we found too low tumor cells percentage without detectable genomic alterations. ";
+                title = "Notification sample with insufficient tumor content";
+                reason = "Insuffient tumor purity for reliable variant detection";
+                explanation = "Sequencing was performed but analysis indicated a too low tumor purity for reliable \n "
+                        + "identification of possible aberrations.";
                 break;
             }
             default: {
