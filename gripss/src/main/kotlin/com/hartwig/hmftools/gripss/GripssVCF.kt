@@ -12,6 +12,7 @@ const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
 const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
 const val MIN_TUMOR_AF = "minTumorAF";
 const val SHORT_STRAND_BIAS = "shortStrandBias";
+const val MIN_QUAL = "minQual";
 const val TAF = "TAF";
 
 class GripssVCF(outputVCF: String) : AutoCloseable {
@@ -23,6 +24,7 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_NORMAL_SUPPORT, "Filter variants with more than ${config.maxNormalSupport * 100}% of the supporting reads originating from the normal"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_NORMAL_COVERAGE, "Filter variants with breakend coverage of less than ${config.minNormalCoverage} fragments coverage"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_STRAND_BIAS, "Filter deletion or duplication breakpoints under 1000bp with a split read strand bias of more than ${config.maxShortStrandBias}"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MIN_QUAL, "Filter breakend and breakpoint variants with qual less than  ${config.minQualBreakEnd} and ${config.minQualBreakPoint} respectively"))
         header.addMetaDataLine(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Description"))
         writer.writeHeader(header)
     }

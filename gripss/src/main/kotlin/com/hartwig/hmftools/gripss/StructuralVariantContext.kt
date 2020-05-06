@@ -13,6 +13,9 @@ class StructuralVariantContext(normalOrdinal: Int, tumorOrdinal: Int, private va
             && context.contig == breakJunction.chromosome
             && breakJunction.startOrientation != breakJunction.endOrientation
             && abs(context.start - breakJunction.position) < 1000
+
+
+
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
     private val mateId: String? = context.mateId();
@@ -30,10 +33,23 @@ class StructuralVariantContext(normalOrdinal: Int, tumorOrdinal: Int, private va
             builder.filter(MIN_TUMOR_AF)
         }
 
+        if (strandBiasFilter(config.maxShortStrandBias)) {
+            builder.filter(SHORT_STRAND_BIAS)
+        }
+
+        if (qualFilter(config.minQualBreakEnd, config.minQualBreakPoint)) {
+            builder.filter(MIN_QUAL)
+        }
+
         return builder.attribute(TAF, tumorAF).make()
     }
 
     fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupport)
+
+    fun qualFilter(minQualBreakEnd: Int, minQualBreakPoint: Int): Boolean {
+        val minQual = if (isSingleBreakend) minQualBreakEnd else minQualBreakPoint
+        return context.phredScaledQual < minQual.toDouble()
+    }
 
     fun strandBiasFilter(maxShortStrandBias: Double): Boolean  {
         return isShortDelDup && context.strandBias() > maxShortStrandBias
