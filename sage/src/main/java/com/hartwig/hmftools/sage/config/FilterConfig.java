@@ -23,6 +23,7 @@ public interface FilterConfig {
 
     String SOFT_FILTER = "soft_filter_enabled";
     String HARD_FILTER = "hard_filter_enabled";
+
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
     String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
@@ -33,7 +34,7 @@ public interface FilterConfig {
     int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
     int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
-    int DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT = 3;
+    int DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT = 3;
 
     SoftFilterConfig NO_FILTER = ImmutableSoftFilterConfig.builder()
             .minTumorQual(0)
@@ -87,9 +88,8 @@ public interface FilterConfig {
 
     int hardMinTumorRawBaseQuality();
 
-    //TODO: Rename this... it isn't a hard filter
-    default int hardMaxNormalAltSupport() {
-        return DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT;
+    default int filteredMaxNormalAltSupport() {
+        return DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
     }
 
     default double hotspotMinTumorVafToSkipQualCheck() {

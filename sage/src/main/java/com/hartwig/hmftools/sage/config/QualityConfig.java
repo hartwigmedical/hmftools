@@ -19,7 +19,7 @@ public interface QualityConfig {
     String READ_EDGE_FIXED_PENALTY = "read_edge_fixed_penalty";
     String MAP_QUAL_FIXED_PENALTY = "map_qual_fixed_penalty";
     String MAP_QUAL_IMPROPER_PAIR_PENALTY = "map_qual_improper_pair_penalty";
-    String MAP_QUAL_DISTANCE_FROM_REF = "map_qual_distance_from_ref_penalty";
+    String MAP_QUAL_READ_EVENTS_PENALTY = "map_qual_read_events_penalty";
 
     double DEFAULT_JITTER_PENALTY = 0.25;
     int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -27,7 +27,7 @@ public interface QualityConfig {
     int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
     int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    int DEFAULT_MAP_QUAL_DISTANCE_FROM_REF = 10;
+    int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 8;
 
     double jitterPenalty();
 
@@ -39,13 +39,13 @@ public interface QualityConfig {
 
     int mapQualityFixedPenalty();
 
-    int mapQualityAdditionalDistanceFromRefPenalty();
+    int mapQualityReadEventsPenalty();
 
     int mapQualityImproperPairPenalty();
 
-    default int modifiedMapQuality(int mapQuality, int distance, boolean properPairFlag) {
+    default int modifiedMapQuality(int mapQuality, int readEvents, boolean properPairFlag) {
         int improperPairPenalty = mapQualityImproperPairPenalty() * (properPairFlag ? 0 : 1);
-        int distancePenalty = (distance - 1) * mapQualityAdditionalDistanceFromRefPenalty();
+        int distancePenalty = (readEvents - 1) * mapQualityReadEventsPenalty();
         return mapQuality - mapQualityFixedPenalty() - improperPairPenalty - distancePenalty;
     }
 
@@ -78,9 +78,9 @@ public interface QualityConfig {
                 true,
                 "Penalty to apply to map qual when SAM record does not have the ProperPair flag [" + DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY
                         + "]");
-        options.addOption(MAP_QUAL_DISTANCE_FROM_REF,
+        options.addOption(MAP_QUAL_READ_EVENTS_PENALTY,
                 true,
-                "Penalty to apply to map qual for additional distance from ref [" + DEFAULT_MAP_QUAL_DISTANCE_FROM_REF + "]");
+                "Penalty to apply to map qual for additional distance from ref [" + DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY + "]");
 
         return options;
     }
@@ -94,9 +94,8 @@ public interface QualityConfig {
                 .baseQualityFixedPenalty(defaultIntValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY))
                 .distanceFromReadEdgeFixedPenalty(defaultIntValue(cmd, READ_EDGE_FIXED_PENALTY, DEFAULT_READ_EDGE_FIXED_PENALTY))
                 .mapQualityFixedPenalty(defaultIntValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY))
-                .mapQualityAdditionalDistanceFromRefPenalty(defaultIntValue(cmd,
-                        MAP_QUAL_DISTANCE_FROM_REF,
-                        DEFAULT_MAP_QUAL_DISTANCE_FROM_REF))
+                .mapQualityReadEventsPenalty(defaultIntValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY,
+                        DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY))
                 .mapQualityImproperPairPenalty(defaultIntValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY))
                 .build();
 

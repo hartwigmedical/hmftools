@@ -152,7 +152,7 @@ public class ChromosomePipeline implements AutoCloseable {
 
         if (!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())) {
             final ReadContextCounter normal = entry.normalAltContexts().get(0);
-            if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
+            if (normal.altSupport() > config.filter().filteredMaxNormalAltSupport()) {
                 return false;
             }
         }
