@@ -2,6 +2,7 @@ package com.hartwig.hmftools.gripss
 
 import com.google.common.collect.Sets
 import htsjdk.variant.variantcontext.GenotypeBuilder
+import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import htsjdk.variant.vcf.VCFCodec
 import htsjdk.variant.vcf.VCFHeader
@@ -21,30 +22,32 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportFilter() {
-        assertTrue(createVariant().addFragmentSupport(3, 9).normalSupportFilter(0.03))
-        assertFalse(createVariant().addFragmentSupport(3, 100).normalSupportFilter(0.03))
-        assertTrue(createVariant().addFragmentSupport(3, 100).normalSupportFilter(0.0299))
+        assertTrue(createSingleBreakEnd().addFragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
+        assertFalse(createSingleBreakEnd().addFragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
+        assertTrue(createSingleBreakEnd().addFragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
     }
 
-    fun createVariant(): StructuralVariantContext {
+    private fun createSingleBreakEnd(): VariantContext {
         val line = "1\t1\tid1\tC\tA\t100\tPASS\tinfo\tGT\t./.\t./."
-        return StructuralVariantContext(codec.decode(line));
+        return codec.decode(line);
     }
 
-    private fun StructuralVariantContext.addFragmentSupport(normal: Int, tumor: Int): StructuralVariantContext {
+    private fun VariantContext.toSv(): StructuralVariantContext = StructuralVariantContext(this)
+
+    private fun VariantContext.addFragmentSupport(normal: Int, tumor: Int): VariantContext {
         return this.addGenotypeAttribute("BVF", normal, tumor).addGenotypeAttribute("VF", normal, tumor);
     }
 
-    private fun StructuralVariantContext.addGenotypeAttribute(attribute: String, normal: Int, tumor: Int): StructuralVariantContext {
-        val normalBuilder = GenotypeBuilder(this.context().getGenotype(0))
+    private fun VariantContext.addGenotypeAttribute(attribute: String, normal: Int, tumor: Int): VariantContext {
+        val normalBuilder = GenotypeBuilder(this.getGenotype(0))
         normalBuilder.attribute(attribute, normal)
 
-        val tumorBuilder = GenotypeBuilder(this.context().getGenotype(1))
+        val tumorBuilder = GenotypeBuilder(this.getGenotype(1))
         tumorBuilder.attribute(attribute, tumor)
 
-        val builder = VariantContextBuilder(this.context())
+        val builder = VariantContextBuilder(this)
         builder.genotypes(listOf(normalBuilder.make(), tumorBuilder.make()))
-        return StructuralVariantContext(builder.make());
+        return builder.make();
     }
 
 }
