@@ -9,7 +9,7 @@ public enum QCFailReason {
     POST_ANALYSIS_FAIL("post_analysis_fail", "Failed Post DNA Isolation Report"),
     SHALLOW_SEQ_LOW_PURITY("shallow_seq_low_purity", "Low Molecular Tumor Percentage Report"),
     INSUFFICIENT_TISSUE("insufficient_tissue_delivered", "Insufficient Tissue Report"),
-    BELOW_DETECTION_THRESHOLD("below_detection_threshold", "No Observed Variants Report"),
+    BELOW_DETECTION_THRESHOLD("below_detection_threshold", "No Observed Genomic Aberrations Report"),
     UNDEFINED(Strings.EMPTY, Strings.EMPTY);
 
     @NotNull
