@@ -43,6 +43,14 @@ public final class LimsFactory {
     }
 
     @NotNull
+    public static Lims fromLimsDirectoryAndHospitalDirectory(@NotNull String limsDirectory, @NotNull String hospitalDirectory) {
+        // Make HospitalModel
+        // Make Lims with an instance of HospitalModel included.
+
+        return null;
+    }
+
+    @NotNull
     public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
