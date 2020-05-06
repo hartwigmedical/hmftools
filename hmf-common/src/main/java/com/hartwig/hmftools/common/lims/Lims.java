@@ -46,7 +46,6 @@ public class Lims {
         this.preLimsArrivalDatesPerSampleId = preLimsArrivalDatesPerSampleId;
         this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
         this.blacklistedPatients = blacklistedPatients;
-        // TODO -> Fill hospital model
         this.hospitalModel = hospitalModel;
     }
 
