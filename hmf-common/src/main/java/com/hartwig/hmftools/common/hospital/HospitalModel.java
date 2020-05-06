@@ -35,6 +35,36 @@ public abstract class HospitalModel {
         return hospitalPerId().values().size();
     }
 
+    @Nullable
+    public static String extractHospitalPI() {
+        return Strings.EMPTY;
+    }
+
+    @Nullable
+    public static String extractRequestName() {
+        return Strings.EMPTY;
+    }
+
+    @Nullable
+    public static String extractRequestEmail() {
+        return Strings.EMPTY;
+    }
+
+    @Nullable
+    public static String extractHospitalId() {
+        return Strings.EMPTY;
+    }
+
+    @Nullable
+    public static String extractHospitalName() {
+        return Strings.EMPTY;
+    }
+
+    @Nullable
+    public static String extractHospitalAdres() {
+        return Strings.EMPTY;
+    }
+
     @NotNull
     private static String fullAddresseeStringCore(@NotNull HospitalCore hospital) {
         return hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();

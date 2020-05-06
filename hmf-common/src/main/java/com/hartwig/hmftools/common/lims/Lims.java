@@ -5,6 +5,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalQuery;
 import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 
@@ -293,12 +294,12 @@ public class Lims {
     @NotNull
     public HospitalQuery hospitalQuery(@NotNull String sampleId) {
         return ImmutableHospitalQuery.builder()
-                .hospitalPA(NOT_AVAILABLE_STRING)
-                .analyseRequestName(NOT_AVAILABLE_STRING)
-                .analyseRequestEmail(NOT_AVAILABLE_STRING)
-                .hospitalId(NOT_AVAILABLE_STRING)
-                .hospitalName(NOT_AVAILABLE_STRING)
-                .hospitalAdres(NOT_AVAILABLE_STRING)
+                .hospitalPA(HospitalModel.extractHospitalPI())
+                .analyseRequestName(HospitalModel.extractRequestName())
+                .analyseRequestEmail(HospitalModel.extractRequestEmail())
+                .hospitalId(HospitalModel.extractHospitalId())
+                .hospitalName(HospitalModel.extractHospitalName())
+                .hospitalAdres(HospitalModel.extractHospitalAdres())
                 .build();
     }
     @Nullable
