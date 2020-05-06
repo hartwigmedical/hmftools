@@ -21,9 +21,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
 import com.hartwig.hmftools.protect.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.common.BachelorFile;
@@ -125,8 +123,8 @@ public class ProtectActionability {
         }
 
         LOGGER.info("Reading knowledgebase generator v2 from {}", knowledgebaseDirectory_v2);
-        com.hartwig.hmftools.knowledgebasegenerator.actionability.ActionabilityAnalyzer actionabilityAnalyzer_v2 =
-                com.hartwig.hmftools.knowledgebasegenerator.actionability.ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory_v2);
+        com.hartwig.hmftools.serve.actionability.ActionabilityAnalyzer actionabilityAnalyzer_v2 =
+                com.hartwig.hmftools.serve.actionability.ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory_v2);
 
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
@@ -433,9 +431,7 @@ public class ProtectActionability {
 
     @NotNull
     private static Options createBasicOptions() {
-        final Options options = new Options();
-
-        return options;
+        return new Options();
     }
 
     private static void printUsageAndExit(@NotNull Options options) {
@@ -443,5 +439,4 @@ public class ProtectActionability {
         formatter.printHelp("Protect", options);
         System.exit(1);
     }
-
 }
