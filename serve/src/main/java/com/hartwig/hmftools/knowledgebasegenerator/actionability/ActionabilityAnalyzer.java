@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.fusion.FusionEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.GeneEvidenceAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.GeneEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.range.RangeEvidenceAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.range.RangeEvidenceAnalyzerFactory;
@@ -12,8 +14,6 @@ import com.hartwig.hmftools.knowledgebasegenerator.actionability.signature.Signa
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.signature.SignatureEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.variant.VariantEvidenceAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.variant.VariantEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.fusion.FusionEvidenceAnalyzer;
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.GeneEvidenceAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.knowledgebasegenerator.actionability.variant;
 
 import java.util.List;
 
-
 import org.jetbrains.annotations.NotNull;
 
 public class VariantEvidenceAnalyzer {

@@ -8,10 +8,10 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>knowledgebase-generator</artifactId>
+    <artifactId>serve</artifactId>
     <packaging>jar</packaging>
-    <version>${knowledgebase-generator.version}</version>
-    <name>HMF Tools - Knowledgebase Generator</name>
+    <version>${serve.version}</version>
+    <name>HMF Tools - SERVE</name>
 
     <dependencies>
         <dependency>

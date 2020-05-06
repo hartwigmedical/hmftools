@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>knowledgebase-generator</artifactId>
+            <artifactId>serve</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
