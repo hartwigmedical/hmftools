@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.hospital;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 
@@ -20,26 +19,25 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HospitalModel {
 
     private static final Logger LOGGER = LogManager.getLogger(HospitalModel.class);
-    private static final String NA_STRING = "N/A";
 
     @NotNull
     abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @NotNull
-    abstract Map<String, HospitalDataNew> hospitalDataCPCT();
+    abstract Map<String, HospitalData> hospitalDataCPCT();
 
     @NotNull
-    abstract Map<String, HospitalDataNew> hospitalDataDRUP();
+    abstract Map<String, HospitalData> hospitalDataDRUP();
 
     @NotNull
-    abstract Map<String, HospitalDataNew> hospitalDataWIDE();
+    abstract Map<String, HospitalData> hospitalDataWIDE();
 
     @NotNull
     abstract Map<String, HospitalAdress> hospitalAdress();
 
     @Nullable
     public String extractHospitalPI(@NotNull String sampleId) {
-        HospitalDataNew hospitalData;
+        HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
 
@@ -64,7 +62,7 @@ public abstract class HospitalModel {
 
     @Nullable
     public String extractRequestName(@NotNull String sampleId) {
-        HospitalDataNew hospitalData;
+        HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
@@ -86,7 +84,7 @@ public abstract class HospitalModel {
 
     @Nullable
     public String extractRequestEmail(@NotNull String sampleId) {
-        HospitalDataNew hospitalData;
+        HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);

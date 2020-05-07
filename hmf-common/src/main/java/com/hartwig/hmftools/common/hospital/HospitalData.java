@@ -10,32 +10,15 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HospitalData {
 
     @NotNull
-    public abstract String internalHospitalName();
-    
-    @NotNull
-    public abstract String cpctRecipients();
+    public abstract String hospitalId();
 
     @NotNull
-    public abstract String drupRecipients();
+    public abstract String hospitalPI();
 
     @NotNull
-    public abstract String wideRecipients();
+    public abstract String requestName();
 
     @NotNull
-    public abstract String externalHospitalName();
+    public abstract String requestEmail();
 
-    @NotNull
-    public abstract String addressZip();
-
-    @NotNull
-    public abstract String addressCity();
-
-    @NotNull
-    public abstract String cpctPI();
-
-    @NotNull
-    public abstract String drupPI();
-
-    @NotNull
-    public abstract String widePI();
 }

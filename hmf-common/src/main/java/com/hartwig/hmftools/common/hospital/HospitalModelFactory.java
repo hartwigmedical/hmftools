@@ -54,9 +54,9 @@ public final class HospitalModelFactory {
 
         Map<String, HospitalSampleMapping> sampleHospitalMapping = readFromSampleHospitalMapping(sampleHospitalMappingCsv);
 
-        Map<String, HospitalDataNew> hospitalDataCPCT = readFromHospitalDataCPCT(hospitalDataCPCTCsv);
-        Map<String, HospitalDataNew> hospitalDataDRUP = readFromHospitalDataDRUP(hospitalDataDRUPCsv);
-        Map<String, HospitalDataNew> hospitalDataWIDE = readFromHospitalDataWIDE(hospitalDataWIDECsv);
+        Map<String, HospitalData> hospitalDataCPCT = readFromHospitalDataCPCT(hospitalDataCPCTCsv);
+        Map<String, HospitalData> hospitalDataDRUP = readFromHospitalDataDRUP(hospitalDataDRUPCsv);
+        Map<String, HospitalData> hospitalDataWIDE = readFromHospitalDataWIDE(hospitalDataWIDECsv);
 
         Map<String, HospitalAdress> hospitalAdress = readFromHospitalAdress(hospitalAdressCsv);
 
@@ -98,13 +98,13 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    private static Map<String, HospitalDataNew> readFromHospitalDataCPCT(@NotNull String hospitalDataCsv) throws IOException {
-        Map<String, HospitalDataNew> hospitalData = Maps.newHashMap();
+    private static Map<String, HospitalData> readFromHospitalDataCPCT(@NotNull String hospitalDataCsv) throws IOException {
+        Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
-                HospitalDataNew hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
+                HospitalData hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
@@ -118,13 +118,13 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    private static Map<String, HospitalDataNew> readFromHospitalDataDRUP(@NotNull String hospitalDataCsv) throws IOException {
-        Map<String, HospitalDataNew> hospitalData = Maps.newHashMap();
+    private static Map<String, HospitalData> readFromHospitalDataDRUP(@NotNull String hospitalDataCsv) throws IOException {
+        Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
-                HospitalDataNew hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
+                HospitalData hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
@@ -138,13 +138,13 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    private static Map<String, HospitalDataNew> readFromHospitalDataWIDE(@NotNull String hospitalDataCsv) throws IOException {
-        Map<String, HospitalDataNew> hospitalData = Maps.newHashMap();
+    private static Map<String, HospitalData> readFromHospitalDataWIDE(@NotNull String hospitalDataCsv) throws IOException {
+        Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
-                HospitalDataNew hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
+                HospitalData hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
