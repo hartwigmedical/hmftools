@@ -330,8 +330,8 @@ RealignedFragments | # of fragments which overlap the breakpoint at either end b
 DiscordantPairs | Number of fragments supporting the break junction with a read at either side of the breakjunction but without 
 CoverageUp | # of fragments overlapping the last base prior to the up breakend
 CoverageDown | # of fragments overlapping the last base prior to the down breakend
-MaxAnchorLengthUp |
-MaxAnchorLengthDown | 
+MaxAnchorLengthUp | maximum number of distinct matched bases by any 1 junction supporting fragment at the up breakend
+MaxAnchorLengthDown | maximum number of distinct matched bases by any 1 junction supporting fragment at the down breakend
 TransDataUp | Transcript ids which contain a splice junction which includes matches the up breakpoint
 TransDataDown | Transcript ids which contain a splice junction which includes matches the down breakpoint
 OtherGenesUp | Other genes which match the up breakpoint
