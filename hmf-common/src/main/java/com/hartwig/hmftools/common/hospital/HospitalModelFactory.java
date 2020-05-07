@@ -104,7 +104,7 @@ public final class HospitalModelFactory {
         for (String line : lines) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
-                HospitalData hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
+                HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
@@ -124,7 +124,7 @@ public final class HospitalModelFactory {
         for (String line : lines) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
-                HospitalData hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
+                HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
@@ -144,7 +144,7 @@ public final class HospitalModelFactory {
         for (String line : lines) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
-                HospitalData hospital = ImmutableHospitalDataNew.of(parts[HOSPITAL_DATA_ID_COLUMN],
+                HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
