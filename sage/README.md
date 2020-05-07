@@ -443,10 +443,11 @@ If two phased frameshift variant in a single coding exon together form an infram
 
 ## 7. De-duplication
 
-### INDEL
+### Realigned Indels
 
-While the read context is designed to capture a unique sequence of bases, it it sometimes possible that repeat sequences in the flanks of the read context coupled with an aligners alternate view on the same event can cause duplicate INDELs. 
-If SAGE finds two phased INDELs of the same type at the same position where one is a subset of the other, then the longer is filtered with `dedup`.
+While the read context is designed to capture a unique sequence of bases, it it sometimes possible that repeat sequences in the flanks of the read context coupled with an aligners alternate view on the same event can cause duplicate calls of the same event.    If SAGE finds two phased INDELs of the same type at the same position where one is a subset of the other, then the longer is filtered with `dedup`.
+
+Alternative alignments near read edges can also cause INDELs to be mistaken for MNVs.  For example, in the local realignment set example above, the read could be represented by a either a single SNV, or a phased INDEL and SNV.  In such cases, we keep the variant with the highest individual quality as well as any variants also phased with it and filter any others with `dedup`.
 
 ### SNV / MNV
 
@@ -469,10 +470,7 @@ If the MNV is comprised of only germline SNVs but does not appear itself at all 
  
 Any MNVs that have a germline component and all associated SNVs (including somatic) are given a shared `MSG` (mixed somatic germline) identifier.
 
-## Realignment
-In the local realignment set example above, the read could is represented by a either a single SNV, or a phased INDEL and SNV.
 
-We keep the variant with the highest individual quality as well as any variants also phased with it and filter any others with `dedup`.
 
 ## 8. Realignment
 
