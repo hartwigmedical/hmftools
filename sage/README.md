@@ -216,6 +216,7 @@ There are 8 key steps in the SAGE algorithm described in detail below:
 
 SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
 This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
+The recalibration is unique per sample.
 
 The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.   This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
 Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
@@ -226,7 +227,7 @@ For all SNV and MNV calls the base quality is adjusted to the empirically observ
 SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.
 These files are written into the same directory as the output file.
 
-A typical example of the chart is shown below: 
+A typical example of the chart is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score: 
 
 ![Base Quality Adjustment](src/main/resources/readme/COLO829v003T.bqr.png)
 
@@ -272,7 +273,7 @@ SAGE examines every read overlapping the variant tallying matches of the read co
 A match can be:
   - `FULL` - Core and both flanks match read at same reference location.
   - `PARTIAL` - Core and at least one flank match read fully at same position. Remaining flank matches but is truncated. 
-  - `CORE` - Core matches read but neither flank does.
+  - `CORE` - Core matches read but either flank doesn't.
   - `REALIGNED` - Core and both flanks match read exactly but offset from the expected position.
 
 Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
@@ -285,10 +286,10 @@ Any read which spans the core read context increments the `TOTAL` tally.
 
 If a `FULL` or `PARTIAL` match is made, we update the quality of the variant. 
 No other match contributes to quality.  
-There are a number of constraints to penalise the quality if it:
-  1. approaches the edge of a read,
-  2. encompasses more than one variant, or
-  3. has the ImproperPair flag set 
+There are a number of constraints to penalise the quality:
+  1. as the variant approaches the edge of a read,
+  2. if the read encompasses more than one variant, or
+  3. if the ProperPair flag (0x02) is not set 
 
 The quality is incremented as follows:
 
@@ -297,7 +298,8 @@ baseQuality (SNV/MNV) = BASEQ at variant location(s)
 baseQuality (Indel) = min BASEQ over core read context  
 modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty (12)` , 3 * distanceFromReadEdge) 
 
-improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if improper pair flag set else 0  
+readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs count as only 1 event
+improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if proper pair flag not set else 0  
 distanceFromReference = number of somatic alterations to get to reference from the complete read context  
 distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)` 
 modifiedMapQuality = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty  
