@@ -50,34 +50,66 @@ class StructuralVariantContextTest {
 
     @Test
     fun testPolyGFilters() {
-        assertFalse(createVariant("A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter())
+        assertFalse(createVariant(100, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter())
 
-        assertTrue(createVariant("A", "A" + "G".repeat(16) + ".").toSv().polyGCFilter())
-        assertTrue(createVariant("A", "A" + "C".repeat(16) + ".").toSv().polyGCFilter())
-        assertFalse(createVariant("A", "A" + "G".repeat(15) + ".").toSv().polyGCFilter())
-        assertFalse(createVariant("A", "A" + "C".repeat(15) + ".").toSv().polyGCFilter())
-        assertFalse(createVariant("A", "A" + "A".repeat(16) + ".").toSv().polyGCFilter())
-        assertFalse(createVariant("A", "A" + "T".repeat(16) + ".").toSv().polyGCFilter())
+        assertTrue(createVariant(100, "A", "A" + "G".repeat(16) + ".").toSv().polyGCFilter())
+        assertTrue(createVariant(100, "A", "A" + "C".repeat(16) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant(100, "A", "A" + "G".repeat(15) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant(100, "A", "A" + "C".repeat(15) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant(100, "A", "A" + "A".repeat(16) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant(100, "A", "A" + "T".repeat(16) + ".").toSv().polyGCFilter())
     }
 
     @Test
-    fun testHomLengthFilter() {
-        assertFalse(createBreakEnd().setAttribute("HOMLEN", 1000).toSv().homLengthFilter(1))
+    fun testHomologyLengthFilter() {
+        val attribute = "HOMLEN"
+        assertFalse(createBreakEnd().setAttribute(attribute, 1000).toSv().homologyLengthFilter(1))
 
-        assertFalse(createBreakPoint().setAttribute("HOMLEN", 50).toSv().homLengthFilter(50))
-        assertTrue(createBreakPoint().setAttribute("HOMLEN", 50).toSv().homLengthFilter(49))
+        assertFalse(createBreakPoint().setAttribute(attribute, 50).toSv().homologyLengthFilter(50))
+        assertTrue(createBreakPoint().setAttribute(attribute, 50).toSv().homologyLengthFilter(49))
     }
 
+    @Test
+    fun testInexactHomologyLengthFilter() {
+        val attribute = "IHOMPOS"
+        assertFalse(createBreakEnd().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(1))
+
+        assertFalse(shortDel().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(50))
+        assertTrue(shortDel().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(49))
+
+        val shortDup = shortDup().setAttribute(attribute, listOf(1, 51)).toSv()
+        assertFalse(shortDup.inexactHomologyLengthFilter(1))
+    }
+
+
+    @Test
+    fun testVariantCreationFunctions() {
+        val shortDup = shortDup().toSv()
+        assertTrue(shortDup.isShortDelDup)
+        assertTrue(shortDup.isShortDup)
+
+        val shortDel = shortDel().toSv()
+        assertTrue(shortDel.isShortDelDup)
+        assertFalse(shortDel.isShortDup)
+
+        assertTrue(createBreakEnd().toSv().breakJunction is BreakEnd)
+        assertTrue(createBreakPoint().toSv().breakJunction is BreakPoint)
+    }
+
+    private fun shortDel(): VariantContext = createVariant(80, "A", "ATACTGCTACA[1:100[")
+
+    private fun shortDup(): VariantContext = createVariant(110, "A", "ATACTGCTACA[1:100[")
+
     private fun createBreakEnd(): VariantContext {
-        return createVariant("C", ".A")
+        return createVariant(1, "C", ".A")
     }
 
     private fun createBreakPoint(): VariantContext {
-        return createVariant("C", "A[2:1000[")
+        return createVariant(1, "C", "A[2:1000[")
     }
 
-    private fun createVariant(ref: String, alt: String): VariantContext {
-        val line = "1\t1\tid1\t${ref}\t${alt}\t100\tPASS\tinfo\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
+    private fun createVariant(pos: Int, ref: String, alt: String): VariantContext {
+        val line = "1\t${pos}\tid1\t${ref}\t${alt}\t100\tPASS\tinfo\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
         return codec.decode(line);
     }
 

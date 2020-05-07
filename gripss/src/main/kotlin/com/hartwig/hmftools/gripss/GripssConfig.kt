@@ -13,4 +13,5 @@ data class GripssFilterConfig(
         val maxShortStrandBias: Double,
         val minQualBreakEnd: Int,
         val minQualBreakPoint: Int,
-        val maxHomLength: Int)
+        val maxHomLength: Int,
+        val maxInexactHomLength: Int)

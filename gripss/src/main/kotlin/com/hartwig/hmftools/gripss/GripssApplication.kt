@@ -11,7 +11,7 @@ fun main(args: Array<String>) {
     val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
 //    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.gridss.somatic.full.vcf.gz"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
-    val filterConfig = GripssFilterConfig(0.03, 8, 0.005, 0.95, 350, 1000, 50)
+    val filterConfig = GripssFilterConfig(0.03, 8, 0.005, 0.95, 350, 1000, 50, 50)
     val config = GripssConfig(inputVCF, outputVCF, filterConfig)
 
     GripssApplication(config).use { x -> x.run() }

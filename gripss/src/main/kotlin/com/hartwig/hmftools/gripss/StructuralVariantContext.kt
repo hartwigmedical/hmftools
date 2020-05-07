@@ -12,13 +12,13 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     private val POLY_G = "G".repeat(16);
     private val POLY_C = "C".repeat(16);
 
-    private val breakJunction: BreakJunction = BreakJunction.create(context.alleles[0].displayString, context.alleles[1].displayString)
-    private val isShortDelDup = breakJunction is BreakPoint
+    val breakJunction: BreakJunction = BreakJunction.create(context.alleles[0].displayString, context.alleles[1].displayString)
+    val isShortDelDup = breakJunction is BreakPoint
             && context.contig == breakJunction.chromosome
             && breakJunction.startOrientation != breakJunction.endOrientation
             && abs(context.start - breakJunction.position) < SHORT_EVENT_SIZE
 
-    private val isShortDup = breakJunction is BreakPoint && isShortDelDup &&
+    val isShortDup = breakJunction is BreakPoint && isShortDelDup &&
             (context.start <= breakJunction.position && breakJunction.startOrientation == (-1).toByte()
                     || context.start >= breakJunction.position && breakJunction.startOrientation == 1.toByte())
 
@@ -56,8 +56,12 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(MAX_POLY_G_LENGTH)
         }
 
-        if (homLengthFilter(config.maxHomLength)) {
+        if (homologyLengthFilter(config.maxHomLength)) {
             builder.filter(MAX_HOM_LENGTH)
+        }
+
+        if (inexactHomologyLengthFilter(config.maxInexactHomLength)) {
+            builder.filter(MAX_INEXACT_HOM_LENGTH)
         }
 
         return builder.attribute(TAF, tumorAF).make()
@@ -74,8 +78,11 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return breakJunction is BreakEnd && breakJunction.insertSequence.contains(POLY_G) || breakJunction.insertSequence.contains(POLY_C)
     }
 
-    fun homLengthFilter(maxHomLength: Int): Boolean {
-        return breakJunction is BreakPoint && context.homLength() > maxHomLength
+    fun homologyLengthFilter(maxHomLength: Int): Boolean {
+        return breakJunction is BreakPoint && context.homologyLength() > maxHomLength
+    }
+    fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
+        return breakJunction is BreakPoint && !isShortDup &&  context.inexactHomologyLength() > maxInexactHomLength
     }
 
     fun impreciseFilter(): Boolean {

@@ -12,6 +12,15 @@ fun VariantContext.imprecise(): Boolean {
     return this.getAttributeAsBoolean("IMPRECISE", false)
 }
 
-fun VariantContext.homLength(): Int {
+fun VariantContext.homologyLength(): Int {
     return this.getAttributeAsInt("HOMLEN", 0)
+}
+
+fun VariantContext.inexactHomologyLength(): Int {
+    if (!this.hasAttribute("IHOMPOS")) {
+        return 0
+    }
+
+    val (iHom1, iHom2) = this.getAttributeAsIntList("IHOMPOS", 0)
+    return max(0, iHom2 - iHom1)
 }
