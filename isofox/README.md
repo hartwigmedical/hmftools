@@ -153,18 +153,18 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 #### A. Identify candidate chimeric junctions
 
-Any junction supported by at least one read with either a supplementary alignment or a  splice alignment which either links 2 known splice sites in different genes or extends beyond the range of a single gene is treated as a candidated chimeric junction.     For a list of known pathogenic fusions only, ISOFOX also looks for candidate locations without split alignments but supported by discordant pairs.
+Any junction supported by at least one read with either a supplementary alignment or a spliced alignment which either links 2 known splice sites in different genes OR extends beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, ISOFOX also searches for candidate locations without split alignments  supported only by discordant read pairs.
 
-The chimeric junction is oriented by the splice site type of the up and down partners (donor = up, acceptor = down).   If no splice site exists, then the direction is infered by looking for canonical donor and acceptor sequences.
+The chimeric junction is oriented by the splice site type of the 2 breakends:  a location matching a donor splice site is set to be the 'up' breakend and a location matching the acceptor site is set to be the down breakend.   If no splice site exists at either breakend, then the direction is infered by looking for canonical donor and acceptor sequences.
 
 #### B. Count support
 
-ISOFOX counts 3 categories of discordant reads:
+ISOFOX counts 3 categories all fragments supporting the break junction broken into 3 categories:
 * Split - any fragment with a supplementary alignment or splice juction at the exact break junction
 * Realigned - any fragment that has both reads mapped on one end of the chimeric junction, without a supplementary but exactly matches the reference at the other side of the candidate junction and overlaps the breakpoint by at least 3 bases.  If the overlapping bases are consistent with multiple candidate junctions they may be double counted.						
-* discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript.   If the discordant pairs are consistent with multiple junctions they may be double counted	
+* Discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript.   If the discordant pairs are consistent with multiple junctions they may be double counted	
 
-Isofox also determines the coverage at both breakends and the max anchor length on either side of the breakpoint (ie. the maximum number of distinct matched bases by any 1 junction supporting fragment on that side of the chimeric junction).  An allelic frequency at each breakpoint is calculated as (split + realigned) / coverage.
+Isofox also determines the coverage at both breakends and the max anchor length on either side of the break junction (ie. the maximum number of distinct matched bases by any 1 junction supporting fragment on that side of the chimeric junction).  An allelic frequency at each breakend is calculated as (split + realigned) / coverage.
 
 #### C. Filtering
 
