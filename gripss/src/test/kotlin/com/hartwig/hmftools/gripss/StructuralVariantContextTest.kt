@@ -22,17 +22,40 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportFilter() {
-        assertTrue(createSingleBreakEnd().addFragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
-        assertFalse(createSingleBreakEnd().addFragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
-        assertTrue(createSingleBreakEnd().addFragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
+        assertTrue(createBreakEnd().addFragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
+        assertFalse(createBreakEnd().addFragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
+        assertTrue(createBreakEnd().addFragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
     }
 
-    private fun createSingleBreakEnd(): VariantContext {
-        val line = "1\t1\tid1\tC\tA\t100\tPASS\tinfo\tGT\t./.\t./."
+    @Test
+    fun testBreakEndQual() {
+        val breakEnd = createBreakEnd().addQual(200).toSv();
+        assertTrue(breakEnd.qualFilter(1000, 201))
+//        assertFalse(breakEnd.qualFilter(1000, 200))
+//        assertFalse(breakEnd.qualFilter(1000, 199))
+
+
+        val breakPoint = createBreakPoint().addQual(200).toSv();
+
+    }
+
+    private fun createBreakEnd(): VariantContext {
+        val line = "1\t1\tid1\tC\t.A\t100\tPASS\tinfo\tGT:BVF:REF:REFPAIR\t./.:1:1:1\t./.:10:1:1"
+        return codec.decode(line);
+    }
+
+    private fun createBreakPoint(): VariantContext {
+        val line = "1\t1\tid1\tC\tA[2:1000[\t100\tPASS\tinfo\tGT:VF:REF:REFPAIR\t./.:1:1:1\t./.:10:1:1"
         return codec.decode(line);
     }
 
     private fun VariantContext.toSv(): StructuralVariantContext = StructuralVariantContext(this)
+
+    private fun VariantContext.addQual(qual: Int): VariantContext {
+        val builder = VariantContextBuilder(this)
+        builder.log10PError(qual.toDouble() / -10.0)
+        return builder.make()
+    }
 
     private fun VariantContext.addFragmentSupport(normal: Int, tumor: Int): VariantContext {
         return this.addGenotypeAttribute("BVF", normal, tumor).addGenotypeAttribute("VF", normal, tumor);
