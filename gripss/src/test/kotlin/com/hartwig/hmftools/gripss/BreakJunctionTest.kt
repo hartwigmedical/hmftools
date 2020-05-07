@@ -7,20 +7,26 @@ class BreakJunctionTest {
 
     @Test
     fun testBreakPoint() {
-        val victim = BreakJunction.create("ACTACCCCAACCTCCCCCAT[1:811432[")
+        var victim = BreakJunction.create("ACTACCCCAACCTCCCCCAT[1:811432[")
         assertEquals(BreakPoint(1, "1", 811432, -1), victim)
+
+        victim = BreakJunction.create("ACTACCCCAACCTCCCCCAT]1:811432]")
+        assertEquals(BreakPoint(1, "1", 811432, 1), victim)
+
+        victim = BreakJunction.create("[1:811432[ACTACCCCAACCTCCCCCAT")
+        assertEquals(BreakPoint(-1, "1", 811432, -1), victim)
+
+        victim = BreakJunction.create("]1:811432]ACTACCCCAACCTCCCCCAT")
+        assertEquals(BreakPoint(-1, "1", 811432, 1), victim)
     }
 
 
     @Test
-    fun testAltPartner() {
-//        val alt = PartnerAlt.create("[1:10178[GGTAGGG")
-//        println(alt)
+    fun testBreakEnd() {
+        var victim = BreakJunction.create("ACTACCCCAACCTCCCCCAT.")
+        assertEquals(BreakEnd(1), victim)
 
-        val alt2 = BreakJunction.create("ACTACCCCAACCTCCCCCAT]1:811432]")
-        println(alt2)
-
-        val alt3 = BreakJunction.create("AAA.")
-        println(alt3)
+        victim = BreakJunction.create(".ACTACCCCAACCTCCCCCAT")
+        assertEquals(BreakEnd(-1), victim)
     }
 }
