@@ -416,7 +416,7 @@ If multiple tumors are supplied, phasing is evaluated only on the primary tumor,
 
 ### Local Realignment Set
 Local realignment implies that two (or more) variants are equivalent. 
-As the aligned assesses each read independently, small changes in the position of a variant within a read can lead to different interpretations.
+As the aligner assesses each read independently, small changes in the position of a variant within a read can lead to different interpretations.
 The following example illustrates this:
 
 <pre>
@@ -447,7 +447,7 @@ If two phased frameshift variant in a single coding exon together form an infram
 
 While the read context is designed to capture a unique sequence of bases, it it sometimes possible that repeat sequences in the flanks of the read context coupled with an aligners alternate view on the same event can cause duplicate calls of the same event.    If SAGE finds two phased INDELs of the same type at the same position where one is a subset of the other, then the longer is filtered with `dedup`.
 
-Alternative alignments near read edges can also cause INDELs to be mistaken for MNVs.  For example, in the local realignment set example above, the read could be represented by a either a single SNV, or a phased INDEL and SNV.  In such cases, we keep the variant with the highest individual quality as well as any variants also phased with it and filter any others with `dedup`.
+Alternative alignments near read edges can also cause INDELs to be mistaken for SNV.  For example, in the local realignment set example above, the read could be represented by a either a single SNV, or a phased INDEL and SNV.  In such cases, we keep the variant with the highest individual quality as well as any variants also phased with it and filter any others with `dedup`.
 
 ### SNV / MNV
 
