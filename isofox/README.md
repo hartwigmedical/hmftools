@@ -170,7 +170,7 @@ Isofox also determines the coverage at both breakends and the max anchor length 
 
 4 filters are applied in ISOFOX to remove likely artefacts from our chimeric junctions output.    The filters are tiered such that we achieve maximum senstivity for fusions with highest prior likelihood whilst still containing.   Known pathogenic fusion partners are given the highest sensitivity followed by known splice site to known splice site, follow by canonical splice pairings (GT-AG) and lastly any other non-canoncial splice pairing.
 
-The filters and values are as follows:
+The filters and thresholds per tier are as follows:
 
 Filter | definition |Known pathogenic fusion partners | Splice Site-Splice Site* | Splice Site-Canonical | Canonical-Canonical | Other
 ---|---|---|---|---|---|---
@@ -180,6 +180,7 @@ min_anchor | min(maxAnchorLengthUp, maxAnchorLengthDown) | 0 | 25 | 25 | 25 | 25
 cohort_frequency** | Cohort Count > XX | FALSE | TRUE | TRUE | TRUE | TRUE
 
 '* 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs
+
 '** seee below for cohort frequency calculation
 
 ### 10. Cohort frequency <TO DO>
@@ -307,4 +308,32 @@ ISOFOX outputs 2 chimeric junctions outputs - passing fusions and all fusions
 
 Field | Description 
 ---|---
-TODO | 
+FusionId | Unique id for fusion
+Valid | Both up and down gene strands match breakpoint orientation to make a potentially viable orientaiton
+GeneIdUp | Ensembl Id for gene at up breakend
+GeneNameUp | Gene at up breakend
+ChrUp | Chromosome of up breakend
+PosUp | Position of up breakend
+OrientUp | Orientation of up breakend
+StrandUp | Strand of gene at up breakend (0 if no gene annotated)
+JuncTypeUp | Either 'KNOWN' (matches an ensembl splice site), 'CANONICAL' (GT on forward stand or AC on reverse strand) or 'UNKNOWN'
+GeneIdDown | Ensembl Id for gene at down breakend
+GeneNameDown | Gene at down breakend
+ChrDown | Chromosome of down breakend
+PosDown | Position of down breakend
+OrientDown | Orientation of down breakend
+StrandDown | Strand of gene at down breakend (0 if no gene annotated)
+JuncTypeDown |  Either 'KNOWN' (matches an ensembl splice site), 'CANONICAL' (AG on forward stand or CT on reverse strand) or 'UNKNOWN'
+TotalFragments | # of fragments supporting the transcript = spliced + realigned + discordant
+SplitFragments | # of fragments with supplementary or spliced alignments that match the chimeric junction
+RealignedFragments | # of fragments which overlap the breakpoint at either end by at least 3 bases and exactly match the reference sequence at the other breakend but do are not split or spliced at the break junction by the aligner
+DiscordantPairs | Number of fragments supporting the break junction with a read at either side of the breakjunction but without 
+CoverageUp | # of fragments overlapping the last base prior to the up breakend
+CoverageDown | # of fragments overlapping the last base prior to the down breakend
+MaxAnchorLengthUp |
+MaxAnchorLengthDown | 
+TransDataUp | Transcript ids which contain a splice junction which includes matches the up breakpoint
+TransDataDown | Transcript ids which contain a splice junction which includes matches the down breakpoint
+OtherGenesUp | Other genes which match the up breakpoint
+OtherGenesDown | Other genes which match the down breakpoint
+RelatedFusions | Ids of other fusions in the same gene which may be caused by the same structural variant breakpoints
