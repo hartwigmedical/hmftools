@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragment.isRealignedFragmentCandidate;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
@@ -32,6 +33,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
@@ -59,6 +62,9 @@ public class FusionFinder
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
+    private final List<GenomeRegion> mRestrictedGeneRegions;
+    private final List<GenomeRegion> mExcludedGeneRegions;
+
     private final PerformanceCounter mPerfCounter;
 
     public FusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
@@ -75,6 +81,9 @@ public class FusionFinder
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
         mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
+        mExcludedGeneRegions = Lists.newArrayList();
+        mRestrictedGeneRegions = Lists.newArrayList();
+        buildGeneRegions();
 
         mPerfCounter = new PerformanceCounter("FusionTotal");
         mFusionWriter = new FusionWriter(mConfig);
@@ -117,16 +126,17 @@ public class FusionFinder
 
         mPerfCounter.start();
 
-        int unpairedReads = 0;
-        int filteredFragments = 0;
+        int invalidFragments = 0;
         int duplicates = 0;
         int skipped = 0;
         int fragments = 0;
-        int recovered = 0;
+        int missingSuppReads = 0;
+        int recoveredSuppReads = 0;
         int readGroupCount = 0;
         int nextLog = LOG_COUNT;
+        final boolean[] recoveryStatus = new boolean[SKIP+1];
 
-        Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
+        final Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
 
         for(Map.Entry<String,List<ReadRecord>> entry : mReadsMap.entrySet())
         {
@@ -146,29 +156,30 @@ public class FusionFinder
                 continue;
             }
 
-            if(recoverSupplementaryReads(reads))
-                ++recovered;
-
-            String readGroupStatus = "";
-
-            if(reads.size() == 1)
+            if(reads.stream().anyMatch(x -> skipRead(x.mateChromosome(), x.mateStartPosition())))
             {
-                if(skipUnpairedRead(reads.get(0).mateChromosome(), reads.get(0).mateStartPosition()))
-                {
-                    ++skipped;
-                    continue;
-                }
+                ++skipped;
+                continue;
             }
 
-            if(reads.size() == 1)
+            // chimeric supplementary reads may be missed - attempt to find them
+            recoverSupplementaryReads(reads, recoveryStatus);
+
+            if(recoveryStatus[SKIP])
             {
-                ++unpairedReads;
-                readGroupStatus = "UNPAIRED";
+                ++skipped;
+                continue;
             }
-            else if(!isValidFragment(reads))
+
+            if(recoveryStatus[RECOVERED])
+                ++recoveredSuppReads;
+            else if(recoveryStatus[MISSING])
+                ++missingSuppReads;
+
+            if(!isValidFragment(reads))
             {
-                ++filteredFragments;
-                readGroupStatus = "INVALID";
+                ++invalidFragments;
+                mFusionWriter.writeReadData(reads, "INVALID");
             }
             else
             {
@@ -188,10 +199,7 @@ public class FusionFinder
                 }
 
                 // will write read data after further evaluation of fusions
-                continue;
             }
-
-            mFusionWriter.writeReadData(reads, readGroupStatus);
         }
 
         int chrPairCount = 0;
@@ -214,8 +222,8 @@ public class FusionFinder
             }
         }
 
-        ISF_LOGGER.info("chimeric fragments({} unpaired={} dups={} skip={} filtered={} recov={} candidates={}) chrPairs({}) tasks({})",
-                mReadsMap.size(), unpairedReads, skipped, duplicates, filteredFragments, recovered, fragments,
+        ISF_LOGGER.info("chimeric groups({} skipped={} dups={} invalid={} recov={} miss={} candidates={}) chrPairs({}) tasks({})",
+                mReadsMap.size(), skipped, duplicates, invalidFragments, recoveredSuppReads, missingSuppReads, fragments,
                 chrPairFragments.size(), mFusionTasks.size());
 
         if(mFusionTasks.isEmpty())
@@ -288,12 +296,19 @@ public class FusionFinder
         return true;
     }
 
-    private boolean recoverSupplementaryReads(final List<ReadRecord> reads)
-    {
-        if(reads.size() >= 3)
-            return false;
+    private static final int RECOVERED = 0;
+    private static final int MISSING = 1;
+    private static final int SKIP = 2;
 
-        boolean found = false;
+    private void recoverSupplementaryReads(final List<ReadRecord> reads, final boolean[] status)
+    {
+        status[RECOVERED] = false;
+        status[MISSING] = false;
+        status[SKIP] = false;
+
+        if(reads.size() >= 3 || !reads.stream().anyMatch(x -> x.getSuppAlignment() != null))
+            return;
+
         for(final ReadRecord read : reads)
         {
             if(read.getSuppAlignment() == null)
@@ -301,22 +316,41 @@ public class FusionFinder
 
             SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
 
-            if(suppData == null || skipUnpairedRead(suppData.Chromosome, suppData.Position))
-                return false;
+            if(skipRead(suppData.Chromosome, suppData.Position))
+            {
+                status[SKIP] = true;
+                return;
+            }
+
+            if(!mConfig.Fusions.RecoverMissingReads)
+            {
+                ISF_LOGGER.info("read({}) missing supp({}), recovery disabled", read, suppData);
+                status[MISSING] = true;
+                return;
+            }
 
             final List<ReadRecord> missingReads = findMissingReads(read.Id, suppData.Chromosome, suppData.Position, reads.size() == 1);
 
             if(!missingReads.isEmpty())
             {
-                ISF_LOGGER.warn("id({}) recovered {} missing reads", read.Id, missingReads.size());
+                ISF_LOGGER.info("id({}) recovered {} missing reads", read.Id, missingReads.size());
+
+                if(ISF_LOGGER.isDebugEnabled())
+                {
+                    missingReads.stream().forEach(x -> ISF_LOGGER.info("recovered read: {}", x));
+                }
+
                 reads.addAll(missingReads);
-                found = true;
+                status[RECOVERED] = true;
+            }
+            else
+            {
+                ISF_LOGGER.info("read({}) missing supp({}) not found", read, suppData);
+                status[MISSING] = true;
             }
 
             break;
         }
-
-        return found;
     }
 
     private List<ReadRecord> findMissingReads(final String readId, final String chromosome, int position, boolean expectPair)
@@ -342,17 +376,8 @@ public class FusionFinder
 
     private boolean isValidFragment(final List<ReadRecord> reads)
     {
-        if(!mConfig.ExcludedGeneIds.isEmpty())
-        {
-            for(ReadRecord read : reads)
-            {
-                for(List<TransExonRef> transExonList : read.getTransExonRefs().values())
-                {
-                    if(transExonList.stream().anyMatch(x -> mConfig.ExcludedGeneIds.contains(x.GeneId)))
-                        return false;
-                }
-            }
-        }
+        if(reads.size() <= 1)
+            return false;
 
         Set<String> chrGeneSet = Sets.newHashSetWithExpectedSize(3);
 
@@ -372,7 +397,7 @@ public class FusionFinder
         return false;
     }
 
-    private boolean skipUnpairedRead(final String otherChromosome, int otherPosition)
+    private boolean skipRead(final String otherChromosome, int otherPosition)
     {
         if(!HumanChromosome.contains(otherChromosome))
             return true;
@@ -380,14 +405,40 @@ public class FusionFinder
         if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(otherChromosome))
             return true;
 
-        if(!mConfig.RestrictedGeneIds.isEmpty())
+        if(!mRestrictedGeneRegions.isEmpty() && !mRestrictedGeneRegions.stream().filter(x -> x.chromosome().equals(otherChromosome))
+                .anyMatch(x -> positionWithin(otherPosition, (int)x.start(), (int)x.end())))
         {
-            final List<EnsemblGeneData> chrGenes = mGeneTransCache.getChrGeneDataMap().get(otherChromosome);
-            if(chrGenes == null || !chrGenes.stream().anyMatch(x -> positionWithin(otherPosition, x.GeneStart, x.GeneEnd)))
-                return true;
+            return true;
+        }
+
+        if(mExcludedGeneRegions.stream().filter(x -> x.chromosome().equals(otherChromosome))
+                .anyMatch(x -> positionWithin(otherPosition, (int)x.start(), (int)x.end())))
+        {
+            return true;
         }
 
         return false;
+    }
+
+    private void buildGeneRegions()
+    {
+        mConfig.EnrichedGeneIds.stream()
+                .map(x -> mGeneTransCache.getGeneDataById(x))
+                .filter(x -> x != null)
+                .forEach(x -> mExcludedGeneRegions.add(GenomeRegions.create(
+                        x.Chromosome, x.GeneStart - ENRICHED_GENE_BUFFER, x.GeneEnd + ENRICHED_GENE_BUFFER)));
+
+        mConfig.ExcludedGeneIds.stream()
+                .map(x -> mGeneTransCache.getGeneDataById(x))
+                .filter(x -> x != null)
+                .forEach(x -> mExcludedGeneRegions.add(GenomeRegions.create(
+                        x.Chromosome, x.GeneStart, x.GeneEnd)));
+
+        mConfig.RestrictedGeneIds.stream()
+                .map(x -> mGeneTransCache.getGeneDataById(x))
+                .filter(x -> x != null)
+                .forEach(x -> mRestrictedGeneRegions.add(GenomeRegions.create(
+                        x.Chromosome, x.GeneStart, x.GeneEnd)));
     }
 
     private List<EnsemblGeneData> findGeneCollection(final String chromosome, int geneCollectionId)

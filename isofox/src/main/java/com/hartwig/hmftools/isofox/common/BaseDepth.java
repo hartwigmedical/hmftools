@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
@@ -16,33 +17,46 @@ import com.google.common.collect.Maps;
 
 public class BaseDepth
 {
-    public final int GeneCollection;
-    public final String Chromosome;
-    public final int[] BaseRange;
+    private final int[] mBaseRange;
 
     private int[] mDepth;
     private Map<Integer,Integer> mDepthMap;
 
     private static final int MIN_DEPTH_COUNT = 2;
     private static final int MAX_MAP_SIZE = 100000;
+    private static final int DEFAULT_SIZE = 3000000; // largest observed gene collection range
 
-    public BaseDepth(final int geneCollection, final String chromosome, final int[] baseRange)
+    public BaseDepth()
     {
-        GeneCollection = geneCollection;
-        Chromosome = chromosome;
-        BaseRange = baseRange;
-        mDepth = new int[BaseRange[SE_END] - BaseRange[SE_START] + 1];
+        mBaseRange = new int[SE_PAIR];
+        mDepth = new int[DEFAULT_SIZE];
         mDepthMap = null;
+    }
+
+    public void initialise(final int[] baseRange)
+    {
+        mBaseRange[SE_START] = baseRange[SE_START];
+        mBaseRange[SE_END] = baseRange[SE_END];
+
+        if(length() > mDepth.length)
+        {
+            mDepth = new int[length()];
+        }
+        else
+        {
+            for(int i = 0; i < mDepth.length; ++i)
+                mDepth[i] = 0;
+        }
     }
 
     public BaseDepth(final BaseDepth other, final Map<Integer,Integer> depthMap)
     {
-        GeneCollection = other.GeneCollection;
-        Chromosome = other.Chromosome;
-        BaseRange = other.BaseRange;
+        mBaseRange = new int[] { other.mBaseRange[SE_START], other.mBaseRange[SE_END] };
         mDepthMap = depthMap;
         mDepth = null;
     }
+
+    public int length() { return mBaseRange[SE_END] - mBaseRange[SE_START] + 1; }
 
     public void processRead(final ReadRecord read)
     {
@@ -54,12 +68,12 @@ public class BaseDepth
             int readStartPos = readSection[SE_START];
             int readEndPos = readSection[SE_END];
 
-            if (readStartPos > BaseRange[SE_END] || readEndPos < BaseRange[SE_START])
+            if (readStartPos > mBaseRange[SE_END] || readEndPos < mBaseRange[SE_START])
                 continue;
 
             // process this overlap
-            int regionBaseIndex = readStartPos > BaseRange[SE_START] ? readStartPos - BaseRange[SE_START] : 0;
-            int overlap = min(readEndPos, BaseRange[SE_END]) - max(readStartPos, BaseRange[SE_START]) + 1;
+            int regionBaseIndex = readStartPos > mBaseRange[SE_START] ? readStartPos - mBaseRange[SE_START] : 0;
+            int overlap = min(readEndPos, mBaseRange[SE_END]) - max(readStartPos, mBaseRange[SE_START]) + 1;
 
             if(regionBaseIndex + overlap > length())
             {
@@ -75,23 +89,18 @@ public class BaseDepth
         }
     }
 
-    public void clearDepth()
-    {
-        mDepth = null;
-    }
-
     public Map<Integer,Integer> createPositionMap(final Set<Integer> candidateJunctions)
     {
         final Map<Integer,Integer> depthMap = Maps.newHashMap();
 
         for(final Integer position : candidateJunctions)
         {
-            if(!positionWithin(position, BaseRange[SE_START], BaseRange[SE_END]))
+            if(!positionWithin(position, mBaseRange[SE_START], mBaseRange[SE_END]))
                 continue;
 
-            int index = position - BaseRange[SE_START];
+            int index = position - mBaseRange[SE_START];
 
-            if(mDepth[index] > MIN_DEPTH_COUNT)
+            if(mDepth[index] >= MIN_DEPTH_COUNT)
                 depthMap.put(position, mDepth[index]);
         }
 
@@ -100,7 +109,7 @@ public class BaseDepth
 
     public int depthAtBase(int position)
     {
-        if(!positionWithin(position, BaseRange[SE_START], BaseRange[SE_END]))
+        if(!positionWithin(position, mBaseRange[SE_START], mBaseRange[SE_END]))
             return 0;
 
         if(mDepthMap != null)
@@ -109,18 +118,16 @@ public class BaseDepth
             return depth != null ? depth : 0;
         }
 
-        int index = position - BaseRange[SE_START];
+        int index = position - mBaseRange[SE_START];
         return mDepth[index];
     }
-
-    public int length() { return BaseRange[SE_END] - BaseRange[SE_START] + 1; }
 
     public int basesWithDepth()
     {
         if(mDepth != null)
-            return (int)Arrays.stream(mDepth).filter(x -> x > MIN_DEPTH_COUNT).count();
+            return (int)Arrays.stream(mDepth).filter(x -> x >= MIN_DEPTH_COUNT).count();
         else
-            return (int)mDepthMap.values().stream().filter(x -> x > MIN_DEPTH_COUNT).count();
+            return mDepthMap.size();
     }
 
     public double basesWithDepthPerc()
@@ -138,7 +145,7 @@ public class BaseDepth
 
     public String toString()
     {
-        return String.format("gc(%d) region(%s:%d-%d)", GeneCollection, Chromosome, BaseRange[SE_START], BaseRange[SE_END]);
+        return String.format("region(%d-%d)", mBaseRange[SE_START], mBaseRange[SE_END]);
     }
 
     public void collapse()
@@ -147,9 +154,9 @@ public class BaseDepth
         mDepthMap = Maps.newHashMap();
 
         int index = 0;
-        for(int pos = BaseRange[SE_START]; pos <= BaseRange[SE_END]; ++pos)
+        for(int pos = mBaseRange[SE_START]; pos <= mBaseRange[SE_END]; ++pos)
         {
-            if(mDepth[index] > MIN_DEPTH_COUNT)
+            if(mDepth[index] >= MIN_DEPTH_COUNT)
                 mDepthMap.put(pos, mDepth[index]);
 
             ++index;

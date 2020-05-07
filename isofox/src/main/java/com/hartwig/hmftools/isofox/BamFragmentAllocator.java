@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
@@ -51,6 +52,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -97,6 +99,8 @@ public class BamFragmentAllocator
     private final Map<String,List<ReadRecord>> mChimericReadMap;
     private final Map<String,List<ReadRecord>> mCandidateRealignedReadMap;
     private final Map<String,Integer> mSecondaryReadMap;
+    private final int[] mValidReadStartRegion;
+    private final BaseDepth mBaseDepth;
 
     private final boolean mRunFusions;
     private final boolean mFusionsOnly;
@@ -125,6 +129,7 @@ public class BamFragmentAllocator
         mTotalBamReadCount = 0;
         mNextGeneCountLog = 0;
         mEnrichedGeneFragments = 0;
+        mValidReadStartRegion = new int[SE_PAIR];
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
@@ -137,6 +142,7 @@ public class BamFragmentAllocator
         mReadDataWriter = resultsWriter.getReadDataWriter();
         mGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
         mGeneGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
+        mBaseDepth = new BaseDepth();
 
         if(mConfig.runFunction(NOVEL_LOCATIONS))
         {
@@ -154,6 +160,7 @@ public class BamFragmentAllocator
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
     public final Map<String,List<ReadRecord>> getChimericReadMap() { return mChimericReadMap; }
+    public BaseDepth getBaseDepth() { return mBaseDepth; }
 
     private static int GENE_LOG_COUNT = 100000;
 
@@ -185,11 +192,16 @@ public class BamFragmentAllocator
         mNextGeneCountLog = GENE_LOG_COUNT;
         mEnrichedGeneFragments = 0;
 
+        mBaseDepth.initialise(geneCollection.regionBounds());
+
         if(mConfig.runFunction(NOVEL_LOCATIONS))
         {
             mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
             mRetainedIntronFinder.setGeneData(mCurrentGenes);
         }
+
+        mValidReadStartRegion[SE_START] = (int)genomeRegion.start();
+        mValidReadStartRegion[SE_END] = (int)genomeRegion.end();
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
@@ -200,8 +212,8 @@ public class BamFragmentAllocator
             postProcessChimericReads();
 
         ISF_LOGGER.debug("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
-                mCurrentGenes.geneNames(), mGeneReadCount, mCurrentGenes.getBaseDepth().basesWithDepth(),
-                String.format("%.3f", mCurrentGenes.getBaseDepth().basesWithDepthPerc()), mCurrentGenes.getBaseDepth().maxDepth());
+                mCurrentGenes.geneNames(), mGeneReadCount, mBaseDepth.basesWithDepth(),
+                String.format("%.3f", mBaseDepth.basesWithDepthPerc()), mBaseDepth.maxDepth());
     }
 
     public void annotateNovelLocations()
@@ -214,6 +226,11 @@ public class BamFragmentAllocator
 
     private void processSamRecord(@NotNull final SAMRecord record)
     {
+        // to avoid double-processing of reads overlapping 2 (or more) gene collections, only process them if they start in this
+        // gene collection
+        if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
+            return;
+
         if(record.isSecondaryAlignment())
         {
             if(mRunFusions && record.getFirstOfPairFlag())
@@ -255,7 +272,7 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:1:12202:20173:18020";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:22608:10139:18289";
 
     private void processRead(ReadRecord read)
     {
@@ -293,7 +310,7 @@ public class BamFragmentAllocator
 
         if(!read.isDuplicate())
         {
-            mCurrentGenes.getBaseDepth().processRead(read);
+            mBaseDepth.processRead(read);
         }
 
         if(!positionsOverlap(read.PosStart, read.PosEnd, mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]))
@@ -563,12 +580,17 @@ public class BamFragmentAllocator
         }
     }
 
+    private boolean inEnrichedRegion(int posStart, int posEnd)
+    {
+        if(mCurrentGenes.getEnrichedRegion() == null)
+            return false;
+
+        return positionsOverlap(posStart, posEnd, mCurrentGenes.getEnrichedRegion()[SE_START], mCurrentGenes.getEnrichedRegion()[SE_END]);
+    }
+
     private boolean checkDuplicateEnrichedReads(final SAMRecord record)
     {
-        // returns true if both this read and its pair are handled by the optimised routine, and NOT by normal fragment processing
-        final int[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
-
-        if(enrichedRegion == null || !positionsOverlap(record.getStart(), record.getEnd(), enrichedRegion[SE_START], enrichedRegion[SE_END]))
+        if(!inEnrichedRegion(record.getStart(), record.getEnd()))
             return false;
 
         if(!record.getFirstOfPairFlag())
@@ -576,7 +598,7 @@ public class BamFragmentAllocator
 
         mCurrentGenes.addCount(DUPLICATE, 1);
 
-        if(positionsWithin(record.getStart(), record.getEnd(), enrichedRegion[SE_START], enrichedRegion[SE_END]))
+        if(positionsWithin(record.getStart(), record.getEnd(), mCurrentGenes.getEnrichedRegion()[SE_START], mCurrentGenes.getEnrichedRegion()[SE_END]))
         {
             // ignore read-through fragments for enriched genes
             ++mEnrichedGeneFragments;
@@ -755,8 +777,8 @@ public class BamFragmentAllocator
         if(mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && mRetainedIntronFinder.getRetainedIntrons().isEmpty())
             return;
 
-        mAltSpliceJunctionFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
-        mRetainedIntronFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
+        mAltSpliceJunctionFinder.setPositionDepth(mBaseDepth);
+        mRetainedIntronFinder.setPositionDepth(mBaseDepth);
     }
 
     private void processChimericReadPair(final ReadRecord read1, final ReadRecord read2)
@@ -769,6 +791,9 @@ public class BamFragmentAllocator
         }
         else
         {
+            if(inEnrichedRegion(read1.PosStart, read1.PosEnd) || inEnrichedRegion(read2.PosStart, read2.PosEnd))
+                return;
+
             // populate transcript info for intronic reads since it will be used in fusion matching
             addIntronicTranscriptData(read1);
             addIntronicTranscriptData(read2);
@@ -813,7 +838,7 @@ public class BamFragmentAllocator
         {
             final ReadRecord read = (ReadRecord)object;
 
-            if(!read.isMateUnmapped())
+            if(!read.isMateUnmapped() && !inEnrichedRegion(read.PosStart, read.PosEnd))
             {
                 addIntronicTranscriptData(read);
                 addChimericReads(mChimericReadMap, read);
@@ -821,7 +846,7 @@ public class BamFragmentAllocator
         }
 
         // find any split chimeric reads and use this to select from the candidates for realignment
-        Set<Integer> chimericJunctions = Sets.newHashSet();
+        final Set<Integer> chimericJunctions = Sets.newHashSet();
         for(List<ReadRecord> reads : mChimericReadMap.values())
         {
             for(ReadRecord read : reads)
@@ -1018,6 +1043,13 @@ public class BamFragmentAllocator
     public void processReadRecords(final GeneCollection geneCollection, final List<ReadRecord> readRecords)
     {
         mCurrentGenes = geneCollection;
+        mBaseDepth.initialise(geneCollection.regionBounds());
+
+        mValidReadStartRegion[SE_START] = mCurrentGenes.getPreGenicPosition() >= 0
+                ? mCurrentGenes.getPreGenicPosition() : mCurrentGenes.regionBounds()[SE_START];
+
+        mValidReadStartRegion[SE_END] = mCurrentGenes.regionBounds()[SE_END];
+
         mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
 

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ChromosomeGeneTask.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 
@@ -199,9 +200,7 @@ public class FragmentSizeCalcs
 
     private List<int[]> generateExcludedRegions(final String chromosome)
     {
-        // create a buffer around the enriched gene to avoid excessive reads in this vacinity
-        int buffer = 100000;
-
+        // create a buffer around the enriched gene to avoid excessive reads in this vicinity
         final List<int[]> excludedRegions = Lists.newArrayList();
         for(final String geneId : mConfig.EnrichedGeneIds)
         {
@@ -211,7 +210,7 @@ public class FragmentSizeCalcs
 
             if(geneData.Chromosome.equals(chromosome))
             {
-                excludedRegions.add(new int[] { geneData.GeneStart - buffer, geneData.GeneEnd + buffer});
+                excludedRegions.add(new int[] { geneData.GeneStart - ENRICHED_GENE_BUFFER, geneData.GeneEnd + ENRICHED_GENE_BUFFER});
             }
         }
 

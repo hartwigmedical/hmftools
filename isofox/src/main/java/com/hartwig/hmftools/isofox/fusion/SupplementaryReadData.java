@@ -29,4 +29,10 @@ public class SupplementaryReadData
         Cigar = cigar;
         MapQuality = mapQuality;
     }
+
+    public String toString()
+    {
+        return String.format("location(%s:%d) strand(%c) cigar(%s) mq(%d)",
+            Chromosome, Position, Strand, Cigar, MapQuality);
+    }
 }

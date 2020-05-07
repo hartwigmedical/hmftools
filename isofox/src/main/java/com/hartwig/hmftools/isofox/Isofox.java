@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -230,6 +231,7 @@ public class Isofox
         chrTasks.forEach(x -> setTranscriptsPerMillion(x.getGeneCollectionSummaryData(), tmpFactors));
 
         chrTasks.forEach(x -> x.writeResults());
+        mResultsWriter.close();
 
         if(mConfig.runFunction(FUSIONS))
         {
@@ -239,13 +241,17 @@ public class Isofox
                 mFusionFinder.addChromosomeGeneCollections(chrTask.chromosome(), chrTask.getGeneCollectionMap());
                 mFusionFinder.addChromosomeGeneDepth(chrTask.chromosome(), chrTask.getGeneDepthMap());
             }
+        }
 
+        final List<PerformanceCounter[]> perfCounters = chrTasks.stream().map(x -> x.getPerfCounters()).collect(Collectors.toList());
+        chrTasks.clear();
+
+        if(mConfig.runFunction(FUSIONS))
+        {
             mFusionFinder.findFusions();
         }
 
-        mResultsWriter.close();
-
-        logPerformanceStats(chrTasks);
+        logPerformanceStats(perfCounters);
         return true;
     }
 
@@ -432,27 +438,27 @@ public class Isofox
         return parser.parse(options, args);
     }
 
-    private void logPerformanceStats(final List<ChromosomeGeneTask> chrTasks)
+    private void logPerformanceStats(final List<PerformanceCounter[]> perfCounters)
     {
-        final PerformanceCounter[] perfCounters = chrTasks.get(0).getPerfCounters();
+        final PerformanceCounter[] combinedPc = perfCounters.get(0);
 
-        for(int i = 1; i < chrTasks.size(); ++i)
+        for(int i = 1; i < perfCounters.size(); ++i)
         {
-            final PerformanceCounter[] chrPCs = chrTasks.get(i).getPerfCounters();
+            final PerformanceCounter[] chrPCs = perfCounters.get(i);
 
-            for(int j = 0; j < perfCounters.length; ++j)
+            for(int j = 0; j < combinedPc.length; ++j)
             {
-                perfCounters[j].merge(chrPCs[j]);
+                combinedPc[j].merge(chrPCs[j]);
             }
         }
 
-        Arrays.stream(perfCounters).forEach(x -> x.logStats());
+        Arrays.stream(combinedPc).forEach(x -> x.logStats());
 
         if(mConfig.RunPerfChecks)
         {
             // log 10 slowest times and their interval names
-            final List<Double> fitTimes = perfCounters[PERF_FIT].getTimes();
-            final List<String> fitGenes = perfCounters[PERF_FIT].getTimeNames();
+            final List<Double> fitTimes = combinedPc[PERF_FIT].getTimes();
+            final List<String> fitGenes = combinedPc[PERF_FIT].getTimeNames();
 
             if(fitTimes.size() >= 10 && fitGenes.size() == fitTimes.size())
             {

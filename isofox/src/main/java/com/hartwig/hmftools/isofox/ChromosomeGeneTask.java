@@ -414,22 +414,17 @@ public class ChromosomeGeneTask implements Callable
 
             mergeChimericReadMaps(mChimericReadMap, mBamFragmentAllocator.getChimericReadMap());
 
-            final Map<Integer,Integer> depthMap = geneCollection.getBaseDepth().createPositionMap(candidateJunctions);
+            final Map<Integer,Integer> depthMap = mBamFragmentAllocator.getBaseDepth().createPositionMap(candidateJunctions);
 
-            mGeneDepthMap.put(geneCollection.id(), new BaseDepth(geneCollection.getBaseDepth(), depthMap));
+            mGeneDepthMap.put(geneCollection.id(), new BaseDepth(mBamFragmentAllocator.getBaseDepth(), depthMap));
 
             if(mBamFragmentAllocator.getChimericReadMap().size() > 50)
             {
                 ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={})",
-                        mChromosome, geneCollection.geneNames(), mBamFragmentAllocator.getChimericReadMap()
-                                .size(), mChimericReadMap.size(),
-                        candidateJunctions.size(), geneCollection.getBaseDepth().basesWithDepth(),
+                        mChromosome, geneCollection.geneNames(), mBamFragmentAllocator.getChimericReadMap().size(),
+                        mChimericReadMap.size(), candidateJunctions.size(), depthMap.size(),
                         mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum());
             }
-        }
-        else
-        {
-            geneCollection.getBaseDepth().clearDepth();
         }
 
         GeneCollectionSummary geneCollectionSummary = new GeneCollectionSummary(

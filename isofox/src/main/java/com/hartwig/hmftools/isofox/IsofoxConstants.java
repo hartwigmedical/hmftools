@@ -13,4 +13,6 @@ public class IsofoxConstants
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
+    public static final int ENRICHED_GENE_BUFFER = 100000;
+
 }
