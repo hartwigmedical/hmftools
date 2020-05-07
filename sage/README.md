@@ -15,7 +15,7 @@ Key features include:
   - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
   - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.  One potential case is to have a paired RNA sample as an additional reference to measure RNA support for candidate variants
   - Mitochondrial calling
-  - An internal [base quality recalibration](#1-base-quality-recalibration) method
+  - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
 
 ## Installation
 
@@ -60,7 +60,7 @@ The cardinality of `reference` must match `reference_bams`.
 
 ## Optional Base Quality Recalibration Arguments
 
-The following arguments control the [base quality recalibration](#1-base-quality-recalibration) process described below.
+The following arguments control the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) logic.
 
 Argument | Default | Description 
 ---|---|---
@@ -116,24 +116,62 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
  # Read context 
  
  SAGE defines a core read context around each candidate point mutation position which uniquely identifies the variant from both the reference and other possible variants at that location regardless of local alignment. 
- This read context is used to search for evidence supporting the variant and also to calculate the allelic depth and frequency.
+ SAGE uses the read context to search for evidence supporting the variant and calculate the allelic depth and frequency.
  
  The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in either the read or ref genome.
  A 'repeat' in this context, is defined as having 1 - 10 bases repeated at least 2 times. 
  The core is a minimum of 5 bases long.  
  
  For a SNV/MNV in a non-repeat sequence this will just be the alternate base(s) with 2 bases either side. 
- For a SNV/MNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAC'.
+ For a SNV/MNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAAC'.
  
  A DEL always includes the bases on either side of the deleted sequence. 
  If the delete is part of a microhomology or repeat sequence, this will also be included in the core read context.
  
  An INSERT always includes the base to the left of the insert as well as the new sequence. 
  As with a DEL, the core read context will be extended to include any repeats and/or microhomology.
+
+The complete read context is the core read context flanked on either side by an additional 10 bases. 
  
- The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases in a AAAC microhomology is nominally left aligned as 7: AAAAC > A but can equally be represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
+The following example illustrate how we construct and use a read context for a simple T > A SNV.  
+
+The read context core is the variant itself expanded to cover at least 5 bases. 
+Typically we use 10 bases for the flank, but for this illustration we then use an additional 5 bases on either side to get the complete read context. 
+  
+<pre>
+Reference:                ...ACCATGGATACCATCATCACATACGA...
+Variant:                                  <b>A</b>
+Core read context:                      <b>CAACA</b>
+Flanked read context:              <b>GATACCAACATAACA</b>
+</pre>
+
+In the following table we match the read context against bam reads in numerous ways. 
+A `FULL` match includes both flanks, a `PARTIAL` match is if the read is truncated over one of the flanks but matches what is remaining, and a `CORE` match is only the core. 
+A `REALIGNED` match must include both flanks but just be offset. All types of matches contribute to the VAF but only `FULL` and `PARTIAL` matches contribute to the `QUAL` score.
+
+<pre>
+Reference:                   ...ACCATGGATACCATCATAACATACGA...
+Read context:                      <b>GATACCAACATAACA</b>
+Full Match:               ...ACCATG<b>GATACCAACATAACA</b>TACGA...
+Partial Match:                       <b>TACCAACATAACA</b>TACGA...
+Core Match:               ...ACCATGGAC<b>ACCAACATAACA</b>TAACATACGA...
+Realigned Match:          ...ACCCATG<b>GATACCAACATAACA</b>TACG...
+</pre>
+
+If the core does not match a read it does not add support for the variant. If the variant itself is the ref (regardless of whatever else happens in the core), the read supports the ref.
  
- Using a (bolded) read context of `CAAAAACAAACAAACAAT` spanning the microhomology matches every alt but not the ref:
+<pre>
+Reference:                   ...ACCATGGATACCATCATAACATACGA...
+Read context:                      <b>GATACCAACATAACA</b>
+No Match:                 ...ACCATGGATACAA<b>A</b>CATAACATACGA...
+No Match:                 ...ACCATGGATACCAA<b>G</b>ATAACATACGA...
+Ref Match:                ...ACCATGGATACCA<b>T</b>CATAACATACGA...
+Ref Match:                ...ACCATGGATACCA<b>T</b>GATAACATACGA...
+</pre>
+
+The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases in a AAAC microhomology is nominally left aligned as 7: AAAAC > A but can equally be represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
+ 
+Using a (bolded) read context of `CAAAAACAAACAAACAAT` spanning the microhomology matches every alt but not the ref:
  
  <pre>
  REF:   GTCTCAAAAACAAACAAACAAACAATAAAAAAC 
@@ -154,43 +192,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
  ALT:   GTCT<b>CAAAAACAAACAAACAA    T</b>AAAAAAC
  </pre>
  
- A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments.
- 
- The complete read context is the core read context flanked on either side by an additional 10 bases. 
- 
-The following example illustrate how we construct and use a read context for a simple T > A SNV.  
-
-The read context core is the variant itself expanded to cover at least 5 bases. 
-We then flank with an additional 5 bases on either side (SAGE uses 25 bases) to get the complete read context. 
- 
-<pre>
-Reference:             ...ACCATGGATACCATCA<b>T</b>AACATACGA...
-Variant:                                  <b>A</b>
-Core read context:                      <b>CAACA</b>
-Flanked read context:              <b>GATACCAACATAACA</b>
-</pre>
-
-In the following table we match the read context against bam reads in numerous ways. 
-A `FULL` match includes both flanks, a `PARTIAL` match is if the read is truncated over one of the flanks but matches what is remaining, and a `CORE` match is only the core. 
-A `REALIGNED` match must include both flanks but just be offset. All types of matches contribute to the VAF but only `FULL` and `PARTIAL` matches contribute to the `QUAL` score.
-
-<pre>
-Read context:                      <b>GATACCAACATAACA</b>
-Full Match:               ...ACCATG<b>GATACCAACATAACA</b>TACGA...
-Partial Match:                       <b>TACCAACATAACA</b>TACGA...
-Core Match:               ...ACCATGGAC<b>ACCAACATAACA</b>TAACATACGA...
-Realigned Match:          ...ACCCATG<b>GATACCAACATAACA</b>TACG...
-</pre>
-
-If the core does not match a read it does not add support for the variant. If the variant itself is the ref (regardless of whatever else happens in the core), the read supports the ref.
- 
-<pre>
-Read context:                      <b>GATACCAACATAACA</b>
-No Match:                 ...ACCATGGATACAA<b>A</b>CATAACATACGA...
-No Match:                 ...ACCATGGATACCAA<b>G</b>ATAACATACGA...
-Ref Match:                ...ACCATGGATACCA<b>T</b>CATAACATACGA...
-Ref Match:                ...ACCATGGATACCA<b>T</b>GATAACATACGA...
-</pre>
+A similar principle applies to any repeat sequences. Spanning them in the read context permits matching with alternate alignments.
  
 # Algorithm
 
