@@ -40,8 +40,26 @@ public class RnaUtils
 
     public static List<int[]> deriveCommonRegions(final List<int[]> regions1, final List<int[]> regions2)
     {
-        // merges any overlapping regoins to create a combined set without overlaps
+        if(regions1.isEmpty() || regions2.isEmpty())
+            return regions1.isEmpty() ? regions2 : regions1;
+
         List<int[]> newRegions = Lists.newArrayList();
+
+        // early exit for non-overlapping regions
+        if(regions1.get(regions1.size() - 1)[SE_END] < regions2.get(0)[SE_START])
+        {
+            newRegions.addAll(regions1);
+            newRegions.addAll(regions2);
+            return newRegions;
+        }
+        else if(regions2.get(regions2.size() - 1)[SE_END] < regions1.get(0)[SE_START])
+        {
+            newRegions.addAll(regions2);
+            newRegions.addAll(regions1);
+            return newRegions;
+        }
+
+        // merges any overlapping regoins to create a combined set without overlaps
 
         int index1 = 0;
         int index2 = 0;

@@ -192,7 +192,9 @@ public class BamFragmentAllocator
         mNextGeneCountLog = GENE_LOG_COUNT;
         mEnrichedGeneFragments = 0;
 
-        mBaseDepth.initialise(geneCollection.regionBounds());
+        // and some width around the base depth region to pick up junctions just outside the gene
+        int[] baseDepthRange = {geneCollection.regionBounds()[SE_START] - 10, geneCollection.regionBounds()[SE_END] + 10};
+        mBaseDepth.initialise(baseDepthRange);
 
         if(mConfig.runFunction(NOVEL_LOCATIONS))
         {
@@ -308,11 +310,6 @@ public class BamFragmentAllocator
             read.processOverlappingRegions(overlappingRegions);
         }
 
-        if(!read.isDuplicate())
-        {
-            mBaseDepth.processRead(read);
-        }
-
         if(!positionsOverlap(read.PosStart, read.PosEnd, mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]))
             read.setNonGenic();
 
@@ -346,8 +343,16 @@ public class BamFragmentAllocator
             - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
+        final List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+
         if(read1.isDuplicate() || read2.isDuplicate())
+        {
             mCurrentGenes.addCount(DUPLICATE, 1);
+        }
+        else
+        {
+            mBaseDepth.processRead(commonMappings);
+        }
 
         // if either read is chimeric (including one outside the genic region) then handle them both as such
         if(read1.isChimeric() || read2.isChimeric() || (read1.isNonGenic() != read2.isNonGenic()))
@@ -488,7 +493,6 @@ public class BamFragmentAllocator
                 List<String> unsplicedGeneIds = overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
                 CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-                final List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
                 addGcCounts(catCounts, commonMappings);
             }
         }
@@ -507,9 +511,6 @@ public class BamFragmentAllocator
                     .filter(x -> validTranscriptType(x.getValue()))
                     .filter(x -> !validTranscripts.contains(x.getKey()))
                     .forEach(x -> x.setValue(OTHER_TRANS));
-
-            // now record the bases covered by the read in these matched regions
-            final List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
             if(mConfig.RunValidations)
             {
@@ -840,6 +841,7 @@ public class BamFragmentAllocator
 
             if(!read.isMateUnmapped() && !inEnrichedRegion(read.PosStart, read.PosEnd))
             {
+                mBaseDepth.processRead(read.getMappedRegionCoords());
                 addIntronicTranscriptData(read);
                 addChimericReads(mChimericReadMap, read);
             }

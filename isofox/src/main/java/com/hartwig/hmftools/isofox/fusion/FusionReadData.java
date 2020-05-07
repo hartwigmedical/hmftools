@@ -504,8 +504,8 @@ public class FusionReadData
         csvData.add(String.valueOf(readsWithSecondaries));
 
         // since depth of 1 may have been discarded from the BaseDepth, correct for this
-        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UPSTREAM]], 1)));
-        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_DOWNSTREAM]], 1)));
+        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UPSTREAM]], splitFragments)));
+        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_DOWNSTREAM]], splitFragments)));
 
         final int[] maxSplitLengths = maxSplitMappedLength();
         csvData.add(String.valueOf(maxSplitLengths[mStreamIndices[FS_UPSTREAM]]));

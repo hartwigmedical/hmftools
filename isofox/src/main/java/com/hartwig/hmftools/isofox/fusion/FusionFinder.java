@@ -438,7 +438,7 @@ public class FusionFinder
                 .map(x -> mGeneTransCache.getGeneDataById(x))
                 .filter(x -> x != null)
                 .forEach(x -> mRestrictedGeneRegions.add(GenomeRegions.create(
-                        x.Chromosome, x.GeneStart, x.GeneEnd)));
+                        x.Chromosome, x.GeneStart - 1000, x.GeneEnd + 1000)));
     }
 
     private List<EnsemblGeneData> findGeneCollection(final String chromosome, int geneCollectionId)

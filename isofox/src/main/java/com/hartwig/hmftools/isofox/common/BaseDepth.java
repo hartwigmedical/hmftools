@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,12 +59,12 @@ public class BaseDepth
 
     public int length() { return mBaseRange[SE_END] - mBaseRange[SE_START] + 1; }
 
-    public void processRead(final ReadRecord read)
+    public void processRead(final List<int[]> readCoords)
     {
         if(mDepth == null)
             return;
 
-        for(final int[] readSection : read.getMappedRegionCoords())
+        for(final int[] readSection : readCoords)
         {
             int readStartPos = readSection[SE_START];
             int readEndPos = readSection[SE_END];

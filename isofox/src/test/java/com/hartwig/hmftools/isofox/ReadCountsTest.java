@@ -428,18 +428,32 @@ public class ReadCountsTest
     {
         List<int[]> mappings1 = Lists.newArrayList();
 
+        // no overlaps
+        mappings1.add(new int[] { 10, 20 });
+        mappings1.add(new int[] { 40, 50 });
+
+        List<int[]> mappings2 = Lists.newArrayList();
+
+        mappings2.add(new int[] { 60, 70 });
+        mappings2.add(new int[] { 80, 90 });
+
+        List<int[]> commonMappings = deriveCommonRegions(mappings1, mappings2);
+        assertEquals(4, commonMappings.size());
+
+        mappings1.clear();
+        mappings2.clear();
+
+        // widening of all regions only
         mappings1.add(new int[] { 10, 20 });
         mappings1.add(new int[] { 40, 50 });
         mappings1.add(new int[] { 70, 80 });
-
-        List<int[]> mappings2 = Lists.newArrayList();
 
         // no overlaps
         mappings2.add(new int[] { 25, 35 });
         mappings2.add(new int[] { 55, 65 });
         mappings2.add(new int[] { 85, 95 });
 
-        List<int[]> commonMappings = deriveCommonRegions(mappings1, mappings2);
+        commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(6, commonMappings.size());
         assertTrue(commonMappings.contains(mappings1.get(0)));
         assertTrue(commonMappings.contains(mappings1.get(1)));
