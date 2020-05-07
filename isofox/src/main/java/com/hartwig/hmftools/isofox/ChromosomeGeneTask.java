@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.getChromosomeLength;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -243,7 +245,9 @@ public class ChromosomeGeneTask implements Callable
         mCurrentGeneIndex = 0;
         final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
         int nextLogCount = 100;
-        int lastGeneCollectionEndPosition = -1;
+        int lastGeneCollectionEndPosition = 1;
+
+        boolean genesFiltered = !mConfig.RestrictedGeneIds.isEmpty();
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
@@ -253,7 +257,7 @@ public class ChromosomeGeneTask implements Callable
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
             mGeneCollectionMap.put(geneCollection.id(), Lists.newArrayList(overlappingGenes));
 
-            if(lastGeneCollectionEndPosition != -1)
+            if(!genesFiltered) // reads will be taken from the previous gene collection's end
                 geneCollection.setPreGenicPosition(lastGeneCollectionEndPosition);
 
             for(GeneReadData geneReadData : geneReadDataList)
@@ -367,6 +371,7 @@ public class ChromosomeGeneTask implements Callable
 
         // start the read region at the previous gene collection's end if known
         long regionStart;
+        long regionEnd;
 
         if(mConfig.runFunction(FUSIONS) && geneCollection.getPreGenicPosition() > 0)
         {
@@ -385,7 +390,11 @@ public class ChromosomeGeneTask implements Callable
             regionStart = geneCollection.regionBounds()[SE_START] - GENE_FRAGMENT_BUFFER;
         }
 
-        long regionEnd = geneCollection.regionBounds()[SE_END];
+
+        if(mConfig.runFunction(FUSIONS) && mConfig.RestrictedGeneIds.isEmpty() && mCurrentGeneIndex == mGeneDataList.size())
+            regionEnd = (int)getChromosomeLength(mChromosome);
+        else
+            regionEnd = geneCollection.regionBounds()[SE_END];
 
         if(regionStart >= regionEnd)
         {
