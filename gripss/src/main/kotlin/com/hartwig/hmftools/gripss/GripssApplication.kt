@@ -26,7 +26,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileWriter = GripssVCF(config.outputVcf)
 
     override fun run() {
-        fileWriter.writeHeader(fileReader.fileHeader, config.filterConfig)
+        fileWriter.writeHeader(fileReader.fileHeader)
         for (variantContext in fileReader) {
 
             val structuralVariant = StructuralVariantContext(variantContext)
