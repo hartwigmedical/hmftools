@@ -59,7 +59,10 @@ public final class HospitalModelFactory {
         Map<String, HospitalSampleMapping> sampleHospitalMapping = readFromSampleHospitalMapping(sampleHospitalMappingCsv);
         Map<String, HospitalCore> hospitalCoreMap = readFromCoreHospitalMapping(hospitalCoreCsv);
 
-        return ImmutableHospitalModel.of(hospitalPerId, sampleHospitalMapping, hospitalCoreMap, Maps.newHashMap(), Maps.newHashMap());
+        Map<String, HospitalDataNew> hospitalData = readFromHospitalData();
+        Map<String, HospitalAdress> hospitalAdress = readFromHospitalAdress();
+
+        return ImmutableHospitalModel.of(hospitalPerId, sampleHospitalMapping, hospitalCoreMap, hospitalData, hospitalAdress);
     }
 
     @NotNull
@@ -134,5 +137,17 @@ public final class HospitalModelFactory {
             }
         }
         return hospitalPerSampleMap;
+    }
+
+    @NotNull
+    private static Map<String, HospitalDataNew> readFromHospitalData() {
+        Map<String, HospitalDataNew> hospitalData = Maps.newHashMap();
+        return hospitalData;
+    }
+
+    @NotNull
+    private static Map<String, HospitalAdress> readFromHospitalAdress() {
+        Map<String, HospitalAdress> hospitalAdress = Maps.newHashMap();
+        return hospitalAdress;
     }
 }
