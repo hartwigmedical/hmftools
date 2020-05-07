@@ -172,14 +172,15 @@ Isofox also determines the coverage at both breakends and the max anchor length 
 
 The filters and values are as follows:
 
-Filter | definition |Known pathogenic fusion partners | Splice Site-SpliceSite | SpliceSite-Canonical | Canonical-Canonical | Other
+Filter | definition |Known pathogenic fusion partners | Splice Site-Splice Site* | Splice Site-Canonical | Canonical-Canonical | Other
 ---|---|---|---|---|---|---
 min_fragment_support | total fragments supporting fusion | 1 | 2 | 3 | 4 | 10
 min_af | min(AFUp,AFDown) | 0 | 0.005 | 0.005 | 0.005 | 0.05
 min_anchor | min(maxAnchorLengthUp,maxAnchorLengthDown) | 0 | 25 | 25 | 25 | 25 
-cohort_frequency* | Cohort Count > XX | FALSE | TRUE | TRUE | TRUE | TRUE
+cohort_frequency** | Cohort Count > XX | FALSE | TRUE | TRUE | TRUE | TRUE
 
-* seee below for cohort frequency calculation
+* 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs
+** seee below for cohort frequency calculation
 
 ### 10. Cohort frequency <TO DO>
 
