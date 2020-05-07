@@ -22,21 +22,22 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportFilter() {
-        assertTrue(createBreakEnd().addFragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
-        assertFalse(createBreakEnd().addFragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
-        assertTrue(createBreakEnd().addFragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
+        assertTrue(createBreakEnd().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
+        assertFalse(createBreakEnd().fragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
+        assertTrue(createBreakEnd().fragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
     }
 
     @Test
-    fun testBreakEndQual() {
-        val breakEnd = createBreakEnd().addQual(200).toSv();
-        assertTrue(breakEnd.qualFilter(1000, 201))
-//        assertFalse(breakEnd.qualFilter(1000, 200))
-//        assertFalse(breakEnd.qualFilter(1000, 199))
+    fun testQualFilter() {
+        val breakEnd = createBreakEnd().qual(200).toSv();
+        assertTrue(breakEnd.qualFilter(201, 1000))
+        assertFalse(breakEnd.qualFilter(200, 1000))
+        assertFalse(breakEnd.qualFilter(199, 1000))
 
-
-        val breakPoint = createBreakPoint().addQual(200).toSv();
-
+        val breakPoint = createBreakPoint().qual(200).toSv();
+        assertTrue(breakPoint.qualFilter(1000, 201))
+        assertFalse(breakPoint.qualFilter(1000, 200))
+        assertFalse(breakPoint.qualFilter(1000, 199))
     }
 
     private fun createBreakEnd(): VariantContext {
@@ -51,13 +52,13 @@ class StructuralVariantContextTest {
 
     private fun VariantContext.toSv(): StructuralVariantContext = StructuralVariantContext(this)
 
-    private fun VariantContext.addQual(qual: Int): VariantContext {
+    private fun VariantContext.qual(qual: Int): VariantContext {
         val builder = VariantContextBuilder(this)
         builder.log10PError(qual.toDouble() / -10.0)
         return builder.make()
     }
 
-    private fun VariantContext.addFragmentSupport(normal: Int, tumor: Int): VariantContext {
+    private fun VariantContext.fragmentSupport(normal: Int, tumor: Int): VariantContext {
         return this.addGenotypeAttribute("BVF", normal, tumor).addGenotypeAttribute("VF", normal, tumor);
     }
 
