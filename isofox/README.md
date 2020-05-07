@@ -122,7 +122,7 @@ The calculated biases are applied as a weighting to each raw fragment based on i
 
 ### 7. Counting and characterisation of novel splice junctions
 
-A novel splice junction is considered to be a splicing event called by the aligner which is not part of any annotated event.  For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.    Each novel splice junction is classified as one of the following types of events
+A novel splice junction in ISOFOX is considered to be a novel splicing event within the bounds of a single annotated gene called by the aligner which is not part of any annotated gene in ensembl.  For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.    Each novel splice junction is classified as one of the following types of events
 
 * SKIPPED_EXON - both splice sites are splice sites on a single existing transcript but the interim exon(s) are skipped.
 * MIXED_TRANSCRIPT - both splice sites are splice sites on different existing transcripts but not the same one
@@ -149,16 +149,43 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 <TO DO - Combine intron retention and novel splice site information>
  
- 
-### 9. Counting and characterisation of chimeric and read through junctions
+### 9. Counting and characterisation of chimeric junctions and gene fusions
 
-<TO DO>
+#### A. Identify candidate chimeric junctions
+
+Any junction supported by at least one read with either a supplementary alignment or a  splice alignment which either links 2 known splice sites in different genes or extends beyond the range of a single gene is treated as a candidated chimeric junction.     For a list of known pathogenic fusions only, ISOFOX also looks for candidate locations without split alignments but supported by discordant pairs.
+
+The chimeric junction is oriented by the splice site type of the up and down partners (donor = up, acceptor = down).   If no splice site exists, then the direction is infered by looking for canonical donor and acceptor sequences.
+
+#### B. Count support
+
+ISOFOX counts 3 categories of discordant reads:
+* Split - any fragment with a supplementary alignment or splice juction at the exact break junction
+* Realigned - any fragment that has both reads mapped on one end of the chimeric junction, without a supplementary but exactly matches the reference at the other side of the candidate junction and overlaps the breakpoint by at least 3 bases.  If the overlapping bases are consistent with multiple candidate junctions they may be double counted.						
+* discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript.   If the discordant pairs are consistent with multiple junctions they may be double counted	
+
+Isofox also determines the coverage at both breakends and the max anchor length on either side of the breakpoint (ie. the maximum number of distinct matched bases by any 1 junction supporting fragment on that side of the chimeric junction).  An allelic frequency at each breakpoint is calculated as (split + realigned) / coverage.
+
+#### C. Filtering
+
+4 filters are applied in ISOFOX to remove likely artefacts from our chimeric junctions output.    The filters are tiered such that we achieve maximum senstivity for fusions with highest prior likelihood whilst still containing.   Known pathogenic fusion partners are given the highest sensitivity followed by known splice site to known splice site, follow by canonical splice pairings (GT-AG) and lastly any other non-canoncial splice pairing.
+
+The filters and values are as follows:
+
+Filter | definition |Known pathogenic fusion partners | Splice Site-SpliceSite | SpliceSite-Canonical | Canonical-Canonical | Other
+---|---|---|---|---|---|---
+min_fragment_support | total fragments supporting fusion | 1 | 2 | 3 | 4 | 10
+min_af | min(AFUp,AFDown) | 0 | 0.005 | 0.005 | 0.005 | 0.05
+min_anchor | min(maxAnchorLengthUp,maxAnchorLengthDown) | 0 | 25 | 25 | 25 | 25 
+cohort_frequency* | Cohort Count > XX | FALSE | TRUE | TRUE | TRUE | TRUE
+
+* seee below for cohort frequency calculation
 
 ### 10. Cohort frequency <TO DO>
 
-We have determined a cohort frequency for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The purpose of this is created to estimate population level frequencies of each of the 'novel' features.   
+We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 1700 samples.  The purpose of this is created to estimate population level frequencies of each of the 'novel' features.   
 
-For each novel splice junction  we count
+For each chimeric junction and novel splice junction  we count
 * Number of unique samples with novel splice junction
 * Total # of fragments supporting novel splice junction across all the unique samples
 
@@ -167,7 +194,7 @@ For intron retention cases we count
 * Total # of fragments supporting intron retention from those unique samples
 * Total # of fragments supporting intron retention from those unique samples which also have splicing.
 
-Each novel splice junction and retained intron for each sample is annotated with the population level frequencies
+Each chimeric junction, novel splice junction and retained intron for each sample is annotated with the population level frequencies
 
 ## Outputs
 
@@ -272,3 +299,11 @@ FragmentCount | Count of all fragments which overlap splice site boundary
 SplicedFragmentCount | Count of fragments which overlap splice site boundary which contain another splice site (ie. evidence of being part of a spliced transcript)
 TotalDepth | Depth at splice boundary
 TranscriptInfo | Transcript id and exon rank of all transcripts that match splice site boundary
+
+### Chimeric junctions
+
+ISOFOX outputs 2 chimeric junctions outputs - passing fusions and all fusions
+
+Field | Description 
+---|---
+TODO | 
