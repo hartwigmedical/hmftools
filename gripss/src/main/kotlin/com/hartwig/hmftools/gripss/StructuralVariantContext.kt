@@ -40,6 +40,10 @@ class StructuralVariantContext( private val context: VariantContext, normalOrdin
             builder.filter(MIN_QUAL)
         }
 
+        if (impreciseFilter()) {
+            builder.filter(IMPRECISE)
+        }
+
         return builder.attribute(TAF, tumorAF).make()
     }
 
@@ -48,6 +52,10 @@ class StructuralVariantContext( private val context: VariantContext, normalOrdin
     fun qualFilter(minQualBreakEnd: Int, minQualBreakPoint: Int): Boolean {
         val minQual = if (isSingleBreakend) minQualBreakEnd else minQualBreakPoint
         return context.phredScaledQual < minQual.toDouble()
+    }
+
+    fun impreciseFilter(): Boolean  {
+        return context.imprecise();
     }
 
     fun strandBiasFilter(maxShortStrandBias: Double): Boolean  {

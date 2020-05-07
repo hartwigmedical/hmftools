@@ -21,6 +21,14 @@ class StructuralVariantContextTest {
     }
 
     @Test
+    fun testImpreciseFilter() {
+        val victim = createBreakEnd()
+        assertFalse(victim.toSv().impreciseFilter())
+        assertFalse(victim.setAttribute("IMPRECISE", false).toSv().impreciseFilter())
+        assertTrue(victim.setAttribute("IMPRECISE", true).toSv().impreciseFilter())
+    }
+
+    @Test
     fun testNormalSupportFilter() {
         assertTrue(createBreakEnd().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
         assertFalse(createBreakEnd().fragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
@@ -60,6 +68,12 @@ class StructuralVariantContextTest {
 
     private fun VariantContext.fragmentSupport(normal: Int, tumor: Int): VariantContext {
         return this.addGenotypeAttribute("BVF", normal, tumor).addGenotypeAttribute("VF", normal, tumor);
+    }
+
+    private fun VariantContext.setAttribute(attribute: String, value: Any): VariantContext {
+        val builder = VariantContextBuilder(this)
+        builder.attribute(attribute, value)
+        return builder.make();
     }
 
     private fun VariantContext.addGenotypeAttribute(attribute: String, normal: Int, tumor: Int): VariantContext {
