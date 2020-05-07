@@ -5,8 +5,7 @@ import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import kotlin.math.abs
 
-class StructuralVariantContext(normalOrdinal: Int, tumorOrdinal: Int, private val context: VariantContext) {
-    constructor(context: VariantContext) : this(0, 1, context)
+class StructuralVariantContext( private val context: VariantContext, normalOrdinal: Int = 0, tumorOrdinal: Int = 1) {
 
     private val breakJunction: BreakJunction = BreakJunction.create(context.alternateAlleles[0].displayString)
     private val isShortDelDup = breakJunction is BreakPoint
