@@ -81,6 +81,24 @@ class StructuralVariantContextTest {
         assertFalse(shortDup.inexactHomologyLengthFilter(1))
     }
 
+    @Test
+    fun testShortSRSupportFilter() {
+        val bnd = bnd().splitReads(1, 0).toSv()
+        assertFalse(bnd.shortSplitReadTumorFilter())
+
+        assertFalse(shortDel().splitReads(0, 1).toSv().shortSplitReadTumorFilter())
+        assertTrue(shortDel().splitReads(0, 0).toSv().shortSplitReadTumorFilter())
+    }
+
+    @Test
+    fun testShortSRNormalFilter() {
+        val bnd = bnd().splitReads(1, 0).toSv()
+        assertFalse(bnd.shortSplitReadNormalFilter())
+
+        assertFalse(shortDel().splitReads(0, 1).toSv().shortSplitReadNormalFilter())
+        assertTrue(shortDel().splitReads(1, 1).toSv().shortSplitReadNormalFilter())
+    }
+
 
     @Test
     fun testVariantCreationFunctions() {
@@ -92,9 +110,16 @@ class StructuralVariantContextTest {
         assertTrue(shortDel.isShortDelDup)
         assertFalse(shortDel.isShortDup)
 
+        val bnd = bnd().toSv()
+        assertFalse(bnd.isShortDelDup)
+        assertFalse(bnd.isShortDup)
+        assertTrue(bnd.breakJunction is BreakPoint)
+
         assertTrue(createBreakEnd().toSv().breakJunction is BreakEnd)
         assertTrue(createBreakPoint().toSv().breakJunction is BreakPoint)
     }
+
+    private fun bnd(): VariantContext = createVariant(80, "A", "ATACTGCTACA[2:100[")
 
     private fun shortDel(): VariantContext = createVariant(80, "A", "ATACTGCTACA[1:100[")
 
@@ -119,6 +144,10 @@ class StructuralVariantContextTest {
         val builder = VariantContextBuilder(this)
         builder.log10PError(qual.toDouble() / -10.0)
         return builder.make()
+    }
+
+    private fun VariantContext.splitReads(normal: Int, tumor: Int): VariantContext {
+        return this.addGenotypeAttribute("SR", normal, tumor);
     }
 
     private fun VariantContext.fragmentSupport(normal: Int, tumor: Int): VariantContext {

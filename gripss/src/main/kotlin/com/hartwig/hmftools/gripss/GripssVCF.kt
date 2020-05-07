@@ -8,20 +8,20 @@ import htsjdk.variant.vcf.VCFHeader
 import htsjdk.variant.vcf.VCFHeaderLineType
 import htsjdk.variant.vcf.VCFInfoHeaderLine
 
-const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
-const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
-const val SHORT_STRAND_BIAS = "shortStrandBias";
-const val MAX_POLY_G_LENGTH = "maxPolyGLength";
-const val MAX_HOM_LENGTH = "maxHomLength"
-const val MIN_TUMOR_AF = "minTumorAF";
-const val IMPRECISE = "imprecise";
-const val MIN_QUAL = "minQual";
 const val TAF = "TAF";
-
-
-const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
-const val MAX_SHORT_DEL_HOM_LENGTH = "maxShortDelHomLength"
+const val MIN_QUAL = "minQual";
+const val IMPRECISE = "imprecise";
+const val MIN_TUMOR_AF = "minTumorAF";
+const val MAX_HOM_LENGTH = "maxHomLength"
+const val SHORT_SR_NORMAL = "shortSRNormal"
 const val SHORT_SR_SUPPORT = "shortSRSupport"
+const val MAX_POLY_G_LENGTH = "maxPolyGLength";
+const val SHORT_STRAND_BIAS = "shortStrandBias";
+const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
+const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
+const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
+
+const val MAX_SHORT_DEL_HOM_LENGTH = "maxShortDelHomLength"
 const val LONG_DP_SUPPORT = "longDPSupport"
 const val MAX_SHORT_INV_HOM_LENGTH = "maxShortInvHomLength"
 const val PON = "PON"
@@ -34,7 +34,6 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
 
         //TODO:
         //        ##FILTER=<ID=small.replacement.fp,Description="Deletion with insertion of the same length that is not a simple inversion.">
-        //        ##FILTER=<ID=SRNormalSupport,Description="Short event with split reads support in the normal sample">
         //        ##FILTER=<ID=NO_ASRP,Description="Breakend supported by 0 assembled read pairs">
         //        ##FILTER=<ID=cohortMinSize,Description="Variant is smaller than the minimum event size considered for this cohort">
 
@@ -43,6 +42,7 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_SHORT_DEL_HOM_LENGTH, "Short deletion that appears to be a ligation artifact"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_SHORT_INV_HOM_LENGTH, "Short inversion with significant sequence homology"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_SUPPORT, "Short event not supported by any split reads either directly or via assembly"))
+        header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_NORMAL, "Short event with split reads support in the normal sample"))
         header.addMetaDataLine(VCFFilterHeaderLine(LONG_DP_SUPPORT, "Large event not supported by any read pairs either directly or via assembly"))
         header.addMetaDataLine(VCFFilterHeaderLine(PON, "Found in panel of normals"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_TUMOR_AF, "Variant allele fraction too low"))

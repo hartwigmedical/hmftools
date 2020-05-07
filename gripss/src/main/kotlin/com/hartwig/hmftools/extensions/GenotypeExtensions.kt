@@ -10,6 +10,8 @@ fun Genotype.allelicFrequency(isSingleBreakEnd: Boolean, isShortDelDup: Boolean)
     return fragmentSupport.toDouble() / totalSupport.toDouble();
 }
 
+fun Genotype.splitRead(): Int = requireAttributeAsInt("SR");
+
 fun Genotype.refSupportRead(): Int = requireAttributeAsInt("REF");
 
 fun Genotype.refSupportReadPair(): Int = requireAttributeAsInt("REFPAIR");

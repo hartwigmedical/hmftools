@@ -64,6 +64,14 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(MAX_INEXACT_HOM_LENGTH)
         }
 
+        if (shortSplitReadTumorFilter()) {
+            builder.filter(SHORT_SR_SUPPORT)
+        }
+
+        if (shortSplitReadNormalFilter()) {
+            builder.filter(SHORT_SR_NORMAL)
+        }
+
         return builder.attribute(TAF, tumorAF).make()
     }
 
@@ -81,8 +89,17 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     fun homologyLengthFilter(maxHomLength: Int): Boolean {
         return breakJunction is BreakPoint && context.homologyLength() > maxHomLength
     }
+
     fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
-        return breakJunction is BreakPoint && !isShortDup &&  context.inexactHomologyLength() > maxInexactHomLength
+        return breakJunction is BreakPoint && !isShortDup && context.inexactHomologyLength() > maxInexactHomLength
+    }
+
+    fun shortSplitReadTumorFilter(): Boolean {
+        return isShortDelDup && tumorGenotype.splitRead() == 0
+    }
+
+    fun shortSplitReadNormalFilter(): Boolean {
+        return isShortDelDup && normalGenotype.splitRead() > 0
     }
 
     fun impreciseFilter(): Boolean {
