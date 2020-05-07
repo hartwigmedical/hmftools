@@ -124,7 +124,7 @@ public class PatientReporterApplication {
         LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
 
         HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
-        LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
+      //  LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
 
         LOGGER.info("Reading lims wide file {}", config.contactWideTsv());
         LimsWide limsWide = LimsWideFile.read(config.contactWideTsv());

@@ -88,7 +88,11 @@ public final class LimsFactory {
                 preLimsArrivalDates,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
+                ImmutableHospitalModel.of(Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap()));
     }
 
     @NotNull
@@ -99,7 +103,11 @@ public final class LimsFactory {
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 Sets.newHashSet(),
-                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
+                ImmutableHospitalModel.of(Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap()));
     }
 
     @NotNull
