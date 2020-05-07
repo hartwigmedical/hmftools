@@ -12,4 +12,5 @@ data class GripssFilterConfig(
         val minTumorAF: Double,
         val maxShortStrandBias: Double,
         val minQualBreakEnd: Int,
-        val minQualBreakPoint: Int)
+        val minQualBreakPoint: Int,
+        val maxHomLength: Int)

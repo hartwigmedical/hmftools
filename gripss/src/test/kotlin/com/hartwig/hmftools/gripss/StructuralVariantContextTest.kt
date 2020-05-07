@@ -50,13 +50,22 @@ class StructuralVariantContextTest {
 
     @Test
     fun testPolyGFilters() {
-        assertFalse(createVariant("A", "A" + "G".repeat(16) + "[1:123[").toSv().polyGCFilter())
+        assertFalse(createVariant("A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter())
+
         assertTrue(createVariant("A", "A" + "G".repeat(16) + ".").toSv().polyGCFilter())
         assertTrue(createVariant("A", "A" + "C".repeat(16) + ".").toSv().polyGCFilter())
         assertFalse(createVariant("A", "A" + "G".repeat(15) + ".").toSv().polyGCFilter())
         assertFalse(createVariant("A", "A" + "C".repeat(15) + ".").toSv().polyGCFilter())
         assertFalse(createVariant("A", "A" + "A".repeat(16) + ".").toSv().polyGCFilter())
         assertFalse(createVariant("A", "A" + "T".repeat(16) + ".").toSv().polyGCFilter())
+    }
+
+    @Test
+    fun testHomLengthFilter() {
+        assertFalse(createBreakEnd().setAttribute("HOMLEN", 1000).toSv().homLengthFilter(1))
+
+        assertFalse(createBreakPoint().setAttribute("HOMLEN", 50).toSv().homLengthFilter(50))
+        assertTrue(createBreakPoint().setAttribute("HOMLEN", 50).toSv().homLengthFilter(49))
     }
 
     private fun createBreakEnd(): VariantContext {

@@ -5,16 +5,22 @@ import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import kotlin.math.abs
 
+const val SHORT_EVENT_SIZE = 1000
+
 class StructuralVariantContext(private val context: VariantContext, normalOrdinal: Int = 0, tumorOrdinal: Int = 1) {
 
     private val POLY_G = "G".repeat(16);
     private val POLY_C = "C".repeat(16);
 
-    val breakJunction: BreakJunction = BreakJunction.create(context.alleles[0].displayString, context.alleles[1].displayString)
+    private val breakJunction: BreakJunction = BreakJunction.create(context.alleles[0].displayString, context.alleles[1].displayString)
     private val isShortDelDup = breakJunction is BreakPoint
             && context.contig == breakJunction.chromosome
             && breakJunction.startOrientation != breakJunction.endOrientation
-            && abs(context.start - breakJunction.position) < 1000
+            && abs(context.start - breakJunction.position) < SHORT_EVENT_SIZE
+
+    private val isShortDup = breakJunction is BreakPoint && isShortDelDup &&
+            (context.start <= breakJunction.position && breakJunction.startOrientation == (-1).toByte()
+                    || context.start >= breakJunction.position && breakJunction.startOrientation == 1.toByte())
 
 
     private val normalGenotype = context.getGenotype(normalOrdinal);
@@ -50,6 +56,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(MAX_POLY_G_LENGTH)
         }
 
+        if (homLengthFilter(config.maxHomLength)) {
+            builder.filter(MAX_HOM_LENGTH)
+        }
+
         return builder.attribute(TAF, tumorAF).make()
     }
 
@@ -61,7 +71,11 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     }
 
     fun polyGCFilter(): Boolean {
-        return breakJunction is BreakEnd &&  breakJunction.insertSequence.contains(POLY_G) || breakJunction.insertSequence.contains(POLY_C)
+        return breakJunction is BreakEnd && breakJunction.insertSequence.contains(POLY_G) || breakJunction.insertSequence.contains(POLY_C)
+    }
+
+    fun homLengthFilter(maxHomLength: Int): Boolean {
+        return breakJunction is BreakPoint && context.homLength() > maxHomLength
     }
 
     fun impreciseFilter(): Boolean {

@@ -11,3 +11,7 @@ fun VariantContext.strandBias(): Double {
 fun VariantContext.imprecise(): Boolean {
     return this.getAttributeAsBoolean("IMPRECISE", false)
 }
+
+fun VariantContext.homLength(): Int {
+    return this.getAttributeAsInt("HOMLEN", 0)
+}
