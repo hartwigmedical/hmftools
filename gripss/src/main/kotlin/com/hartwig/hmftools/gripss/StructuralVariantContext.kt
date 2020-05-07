@@ -7,7 +7,7 @@ import kotlin.math.abs
 
 class StructuralVariantContext( private val context: VariantContext, normalOrdinal: Int = 0, tumorOrdinal: Int = 1) {
 
-    private val breakJunction: BreakJunction = BreakJunction.create(context.alternateAlleles[0].displayString)
+    private val breakJunction: BreakJunction = BreakJunction.create(context.alleles[0].displayString, context.alleles[1].displayString)
     private val isShortDelDup = breakJunction is BreakPoint
             && context.contig == breakJunction.chromosome
             && breakJunction.startOrientation != breakJunction.endOrientation
