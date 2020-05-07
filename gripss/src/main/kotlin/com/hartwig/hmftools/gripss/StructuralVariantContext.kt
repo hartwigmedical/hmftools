@@ -5,14 +5,16 @@ import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import kotlin.math.abs
 
-class StructuralVariantContext( private val context: VariantContext, normalOrdinal: Int = 0, tumorOrdinal: Int = 1) {
+class StructuralVariantContext(private val context: VariantContext, normalOrdinal: Int = 0, tumorOrdinal: Int = 1) {
 
-    private val breakJunction: BreakJunction = BreakJunction.create(context.alleles[0].displayString, context.alleles[1].displayString)
+    private val POLY_G = "G".repeat(16);
+    private val POLY_C = "C".repeat(16);
+
+    val breakJunction: BreakJunction = BreakJunction.create(context.alleles[0].displayString, context.alleles[1].displayString)
     private val isShortDelDup = breakJunction is BreakPoint
             && context.contig == breakJunction.chromosome
             && breakJunction.startOrientation != breakJunction.endOrientation
             && abs(context.start - breakJunction.position) < 1000
-
 
 
     private val normalGenotype = context.getGenotype(normalOrdinal);
@@ -44,6 +46,10 @@ class StructuralVariantContext( private val context: VariantContext, normalOrdin
             builder.filter(IMPRECISE)
         }
 
+        if (polyGCFilter()) {
+            builder.filter(MAX_POLY_G_LENGTH)
+        }
+
         return builder.attribute(TAF, tumorAF).make()
     }
 
@@ -54,11 +60,15 @@ class StructuralVariantContext( private val context: VariantContext, normalOrdin
         return context.phredScaledQual < minQual.toDouble()
     }
 
-    fun impreciseFilter(): Boolean  {
+    fun polyGCFilter(): Boolean {
+        return breakJunction is BreakEnd &&  breakJunction.insertSequence.contains(POLY_G) || breakJunction.insertSequence.contains(POLY_C)
+    }
+
+    fun impreciseFilter(): Boolean {
         return context.imprecise();
     }
 
-    fun strandBiasFilter(maxShortStrandBias: Double): Boolean  {
+    fun strandBiasFilter(maxShortStrandBias: Double): Boolean {
         return isShortDelDup && context.strandBias() > maxShortStrandBias
     }
 

@@ -48,13 +48,27 @@ class StructuralVariantContextTest {
         assertFalse(breakPoint.qualFilter(1000, 199))
     }
 
+    @Test
+    fun testPolyGFilters() {
+        assertFalse(createVariant("A", "A" + "G".repeat(16) + "[1:123[").toSv().polyGCFilter())
+        assertTrue(createVariant("A", "A" + "G".repeat(16) + ".").toSv().polyGCFilter())
+        assertTrue(createVariant("A", "A" + "C".repeat(16) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant("A", "A" + "G".repeat(15) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant("A", "A" + "C".repeat(15) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant("A", "A" + "A".repeat(16) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant("A", "A" + "T".repeat(16) + ".").toSv().polyGCFilter())
+    }
+
     private fun createBreakEnd(): VariantContext {
-        val line = "1\t1\tid1\tC\t.A\t100\tPASS\tinfo\tGT:BVF:REF:REFPAIR\t./.:1:1:1\t./.:10:1:1"
-        return codec.decode(line);
+        return createVariant("C", ".A")
     }
 
     private fun createBreakPoint(): VariantContext {
-        val line = "1\t1\tid1\tC\tA[2:1000[\t100\tPASS\tinfo\tGT:VF:REF:REFPAIR\t./.:1:1:1\t./.:10:1:1"
+        return createVariant("C", "A[2:1000[")
+    }
+
+    private fun createVariant(ref: String, alt: String): VariantContext {
+        val line = "1\t1\tid1\t${ref}\t${alt}\t100\tPASS\tinfo\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
         return codec.decode(line);
     }
 

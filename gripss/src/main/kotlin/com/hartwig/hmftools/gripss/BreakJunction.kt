@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.gripss
 
-data class BreakEnd(val insertSequence: String, val startOrientation: Byte)
+data class BreakEnd(override val insertSequence: String, val startOrientation: Byte)
     : BreakJunction()
 
-data class BreakPoint(val insertSequence: String, val startOrientation: Byte, val chromosome: String, val position: Int, val endOrientation: Byte)
+data class BreakPoint(override val insertSequence: String, val startOrientation: Byte, val chromosome: String, val position: Int, val endOrientation: Byte)
     : BreakJunction()
 
 sealed class BreakJunction() {
+    abstract val insertSequence: String
 
     companion object Factory {
         private const val BREAKPOINT_REGEX = "^(.*)([\\[\\]])(.+)[\\[\\]](.*)\$"
