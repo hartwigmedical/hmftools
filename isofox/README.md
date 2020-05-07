@@ -304,7 +304,7 @@ TranscriptInfo | Transcript id and exon rank of all transcripts that match splic
 
 ### Chimeric junctions
 
-ISOFOX outputs 2 chimeric junctions outputs - passing fusions and all fusions
+ISOFOX outputs 2 chimeric junctions output files - one for passing fusions and one for all fusions
 
 Field | Description 
 ---|---
