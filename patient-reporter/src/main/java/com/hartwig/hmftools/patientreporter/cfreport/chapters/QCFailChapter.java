@@ -85,34 +85,38 @@ public class QCFailChapter implements ReportChapter {
 
         switch (failReason) {
             case LOW_DNA_YIELD: {
-                title = "Notification tumor sample on hold for sequencing";
-                reason = "Insufficient amount of DNA";
-                explanation = "The amount of isolated DNA was <50 ng, which is insufficient for sequencing. ";
+                title = "Notification failed sample";
+                reason = "Failed or insufficient biopsy/tissue";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
                 break;
             }
             case POST_ANALYSIS_FAIL: {
-                title = "Notification of inadequate tumor sample";
-                reason = "Analysis has failed post DNA isolation";
-                explanation = "This sample could not be processed to completion successfully.";
+                title = "Notification failed sample";
+                reason = "Failed or low quality sequencing";
+                explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy or is \n insufficient "
+                        + "quality for analysis";
                 break;
             }
             case SHALLOW_SEQ_LOW_PURITY: {
-                title = "Notification of inadequate tumor sample";
-                reason = "Not enough tumor DNA detected based on molecular estimate.";
-                explanation = "For sequencing we require a minimum of 20% tumor cells.";
+                title = "Notification failed sample";
+                reason = "Failed or insufficient biopsy/tissue";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
                 break;
             }
             case INSUFFICIENT_TISSUE: {
-                title = "Notification tumor sample on hold for sequencing";
-                reason = "Insufficient tissue";
-                explanation = "The amount of isolated DNA was <50 ng, which is insufficient for sequencing. ";
+                title = "Notification failed sample";
+                reason = "Failed or insufficient biopsy/tissue";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
-                title = "Notification sample with insufficient tumor content";
-                reason = "Insuffient tumor purity for reliable variant detection";
-                explanation = "Sequencing was performed but analysis indicated a too low tumor purity for reliable \n "
-                        + "identification of possible aberrations.";
+                title = "Notification failed sample";
+                reason = "Failed or low quality sequencing";
+                explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy or is \n insufficient "
+                        + "quality for analysis";
                 break;
             }
             default: {

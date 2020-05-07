@@ -5,11 +5,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum QCFailReason {
-    LOW_DNA_YIELD("low_dna_yield", "Low DNA Yield Report"),
-    POST_ANALYSIS_FAIL("post_analysis_fail", "Failed Post DNA Isolation Report"),
-    SHALLOW_SEQ_LOW_PURITY("shallow_seq_low_purity", "Low Molecular Tumor Percentage Report"),
-    INSUFFICIENT_TISSUE("insufficient_tissue_delivered", "Insufficient Tissue Report"),
-    BELOW_DETECTION_THRESHOLD("below_detection_threshold", "No Observed Genomic Aberrations Report"),
+    LOW_DNA_YIELD("low_dna_yield", "Failed Sample Report"),
+    POST_ANALYSIS_FAIL("post_analysis_fail", "Failed Sample Report"),
+    SHALLOW_SEQ_LOW_PURITY("shallow_seq_low_purity", "Failed Sample Report"),
+    INSUFFICIENT_TISSUE("insufficient_tissue_delivered", "Failed Sample Report"),
+    BELOW_DETECTION_THRESHOLD("below_detection_threshold", "Failed Sample Report"),
     UNDEFINED(Strings.EMPTY, Strings.EMPTY);
 
     @NotNull
