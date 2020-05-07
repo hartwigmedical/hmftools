@@ -59,7 +59,7 @@ public class SageVCF implements AutoCloseable {
     public final static String PHASE = "LPS";
     private final static String PHASE_DESCRIPTION = "Local Phase Set";
     public final static String REALIGN = "LRS";
-    private final static String REALIGN_DESCRIPTION = "Local Realign Set";
+    private final static String REALIGN_DESCRIPTION = "Local Realignment Set";
     public final static String MIXED_SOMATIC_GERMLINE = "MSG";
     public final static String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
     public final static String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";

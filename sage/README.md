@@ -204,7 +204,7 @@ There are 8 key steps in the SAGE algorithm described in detail below:
   5. [Soft Filter](#5-soft-filters)
   6. [Phasing](#6-phasing)
   7. [De-duplication](#7-de-duplication)
-  8. [Re-alignment](#8-re-alignment)
+  8. [Realignment](#8-realignment)
 
 ## 1. Alt Specific Base Quality Recalibration
 
@@ -377,6 +377,8 @@ To set the parameters at the command line append the tier to the filter eg `hots
 
 ## 6. Phasing
 
+### Local Phase Set
+Local phasing implies that two or more variants co-exist on the same read. 
 Somatic variants can be phased using the complete read context with nearby germline variants or other somatic variants.
 
 Phasing is interesting for somatic calling from 2 perspectives: 
@@ -403,6 +405,29 @@ T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
 Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are phased together are given a shared `LPS` (local phase set) identifier.
 
 If multiple tumors are supplied, phasing is evaluated only on the primary tumor, ie, the first in the supplied tumor list.
+
+### Local Realignment Set
+Local realignment implies that two (or more) variants are equivalent. 
+As the aligned assesses each read independently, small changes in the position of a variant within a read can lead to different interpretations.
+The following example illustrates this:
+
+<pre>
+POS: 123456789...
+REF: AAATGATTT...
+ALT: AAAT<b>A</b>ATTTT...
+</pre>
+
+This is show above as and SNV 5:G>A but can equally be represented as the following phased INDEL 4:TG>T and SNV 7:T>A so long as the subsequent bases match:
+
+<pre>
+POS: 123456789...
+REF: AAATGATTT...
+ALT: AAAT A<b>A</b>T...
+</pre>
+
+We can detect local realigned variants using a similiar process to phasing but without adjusting the relative position by the INDEL insert/delete sequence.
+
+Any variants that are can be locally realigned are given a shared `LRS` (local realigned set) identifier.
 
 ### Phased Inframe Indels
 
@@ -436,7 +461,12 @@ If the MNV is comprised of only germline SNVs but does not appear itself at all 
  
 Any MNVs that have a germline component and all associated SNVs (including somatic) are given a shared `MSG` (mixed somatic germline) identifier.
 
-## 8. Re-alignment
+## Realignment
+In the local realignment set example above a variant could either by represented by a single SNV or a phased INDEL combined with a SNV.
+
+We keep the variant with the highest individual quality as well as any variants also phased with it.
+
+## 8. Realignment
 
 Inframe deletes with microhomology are re-aligned to the right if the left-aligned variant is not in a coding region but the right-aligned variant is.
 
