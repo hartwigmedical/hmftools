@@ -46,7 +46,7 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        if (failReport.sampleReport().addressee() == null) {
+        if (failReport.sampleReport().hospitalQuery().hospital() == null) {
             throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
         }
 
@@ -109,9 +109,10 @@ public class QCFailChapter implements ReportChapter {
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
-                title = "Notification tumor sample has too detectable tumor cells";
-                reason = "No calculation of tumor cell possible with none reportable variants";
-                explanation = "After sequencing we found too low tumor cells percentage without detectable genomic alterations. ";
+                title = "Notification sample with insufficient tumor content";
+                reason = "Insuffient tumor purity for reliable variant detection";
+                explanation = "Sequencing was performed but analysis indicated a too low tumor purity for reliable \n "
+                        + "identification of possible aberrations.";
                 break;
             }
             default: {
@@ -312,8 +313,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsRequestedBy() {
-        String requesterName = failReport.sampleReport().requesterName();
-        String requesterEmail = failReport.sampleReport().requesterEmail();
+        String requesterName = failReport.sampleReport().hospitalQuery().analyseRequestName();
+        String requesterEmail = failReport.sampleReport().hospitalQuery().analyseRequestEmail();
         return createContentParagraph("The requester is : ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
@@ -350,7 +351,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsVerifiedByAndAddressedAt() {
-        String addressee = failReport.sampleReport().addressee();
+        String addressee = failReport.sampleReport().hospitalQuery().hospital();
         assert addressee != null; // Has been checked prior to calling this function.
         return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
                 addressee);

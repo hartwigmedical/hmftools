@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.sage.context;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
@@ -11,9 +15,11 @@ import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
 import com.hartwig.hmftools.sage.sam.CigarTraversal;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -21,46 +27,6 @@ import htsjdk.samtools.SAMRecord;
 public class RefContextConsumer implements Consumer<SAMRecord> {
 
     private static final Logger LOGGER = LogManager.getLogger(RefContextConsumer.class);
-
-    /*
-
-    bcftools filter -i 'FORMAT/QUAL[1:0]>99 && FORMAT/AD[0:1] < 4' GIABvsSELFv004.sage.vcf.gz -O z -o GIABvsSELFv004.sage.filtered.vcf.gz
-    bcftools filter -i 'FORMAT/QUAL[1:0]>99 && FORMAT/AD[0:1] < 4' COLO829v003.sage.vcf.gz -O z -o COLO829v003.sage.filtered.vcf.gz
-
-
-
-    bgzip colo829.sage.vcf
-    bcftools index colo829.sage.vcf.gz
-
-    input=$1
-
-    bcftools annotate -a /Users/jon/hmf/resources/GERMLINE_PON.vcf.gz -c GERMLINE_PON_COUNT ${input}.vcf.gz -O z -o ${input}.germline.vcf.gz
-    bcftools index ${input}.germline.vcf.gz
-
-    bcftools annotate -a /Users/jon/hmf/resources/SOMATIC_PON.vcf.gz -c SOMATIC_PON_COUNT ${input}.germline.vcf.gz -O z -o ${input}.somatic.vcf.gz
-    bcftools index ${input}.somatic.vcf.gz
-
-    bcftools annotate -a /Users/jon/hmf/resources/SageGermlinePon.hg19.vcf.gz -c PON_COUNT ${input}.somatic.vcf.gz -O z -o ${input}.pon.vcf.gz
-    bcftools index ${input}.pon.vcf.gz
-
-    bcftools annotate -a /Users/jon/hmf/resources/out_150_hg19.mappability.bed.gz -h /Users/jon/hmf/resources/mappability.hdr -c CHROM,FROM,TO,-,MAPPABILITY ${input}.pon.vcf.gz -O z -o ${input}.map.vcf.gz
-    bcftools index ${input}.map.vcf.gz
-
-
-    bcftools annotate -a all.somatic.snvs.vcf.gz -m PRE_STRELKA -c FILTER colo829.sage.map.vcf.gz -O z -o colo829.sage.pre.vcf.gz
-    bcftools index colo829.sage.pre.vcf.gz
-    bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m POST_STRELKA -c FILTER colo829.sage.pre.vcf.gz -O z -o colo829.sage.final.vcf.gz
-
-
-    bcftools annotate -a all.somatic.snvs.vcf.gz -m PRE_STRELKA COLO829v003.sage.map.vcf.gz -O z -o COLO829v003.sage.pre.vcf.gz
-    bcftools index COLO829v003.sage.pre.vcf.gz
-    bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m POST_STRELKA COLO829v003.sage.pre.vcf.gz -O z -o COLO829v003.sage.final.vcf.gz
-
-
-    bcftools filter -e 'PON_COUNT!= "." && (MIN(PON_COUNT) > 9 || (MIN(PON_COUNT) > 2 && INFO/TIER!="HOTSPOT"))' -s SAGE_PON -m+ COLO829v003.sage.final.vcf.gz -O v -o COLO829v003.sage.filtered.vcf
-    bcftools filter -e 'PON_COUNT!= "." && (MIN(PON_COUNT) > 9 || (MIN(PON_COUNT) > 2 && INFO/TIER!="HOTSPOT"))' -s SAGE_PON -m+ GIABvsSELFv004.sage.map.vcf.gz -O v -o GIABvsSELFv004.sage.filtered.vcf
-
-    */
 
     private final SageConfig config;
     private final GenomeRegion bounds;
@@ -83,32 +49,70 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
         if (inBounds(record) && !reachedDepthLimit(record)) {
 
+            final List<AltRead> altReads = Lists.newArrayList();
             final IndexedBases refBases = refGenome.alignment();
 
             final CigarHandler handler = new CigarHandler() {
                 @Override
                 public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    processAlignment(record, readIndex, refPosition, element.getLength(), refBases);
+                    altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases));
+
                 }
 
                 @Override
                 public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    processInsert(element, record, readIndex, refPosition, refBases);
+                    Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases)).ifPresent(altReads::add);
                 }
 
                 @Override
                 public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    processDel(element, record, readIndex, refPosition, refBases);
+                    Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases)).ifPresent(altReads::add);
                 }
             };
             CigarTraversal.traverseCigar(record, handler);
+
+            // If an snv core overlaps an indel core, then extend the cores of both.
+            for (int i = 0; i < altReads.size(); i++) {
+                final AltRead snv = altReads.get(i);
+                if (!snv.isIndel() && snv.containsReadContext()) {
+                    for (int j = altReads.size() - 1; j > i; j--) {
+                        final AltRead nextIndel = altReads.get(j);
+                        if (nextIndel != null && nextIndel.isIndel() && nextIndel.containsReadContext()) {
+                            if (nextIndel.leftCoreIndex() - nextIndel.length() <= snv.rightCoreIndex()) {
+                                snv.extend(nextIndel);
+                                nextIndel.extend(snv);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = altReads.size() - 1; i >= 0; i--) {
+                final AltRead snv = altReads.get(i);
+                if (!snv.isIndel() && snv.containsReadContext()) {
+                    for (int j = 0; j < i; j++) {
+                        final AltRead previousIndel = altReads.get(j);
+                        if (previousIndel != null && previousIndel.isIndel() && previousIndel.containsReadContext()) {
+                            if (previousIndel.rightCoreIndex() + previousIndel.length() >= snv.leftCoreIndex()) {
+                                previousIndel.extend(snv);
+                                snv.extend(previousIndel);
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            altReads.forEach(AltRead::updateRefContext);
         }
+
     }
 
-    private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+    @Nullable
+    private AltRead processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases) {
         int refIndex = refBases.index(refPosition);
 
@@ -122,12 +126,15 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 final int baseQuality = baseQuality(readIndex, record, alt.length());
                 final ReadContext readContext =
                         findReadContext ? readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases) : null;
-                refContext.altRead(ref, alt, baseQuality, readContext);
+                return new AltRead(refContext, ref, alt, baseQuality, readContext);
             }
         }
+
+        return null;
     }
 
-    private void processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+    @Nullable
+    private AltRead processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases) {
         int refIndex = refBases.index(refPosition);
 
@@ -141,13 +148,18 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 final int baseQuality = baseQuality(readIndex, record, 2);
                 final ReadContext readContext =
                         findReadContext ? readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases) : null;
-                refContext.altRead(ref, alt, baseQuality, readContext);
+                return new AltRead(refContext, ref, alt, baseQuality, readContext);
             }
         }
+
+        return null;
     }
 
-    private void processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
-            final IndexedBases refBases) {
+    @NotNull
+    private List<AltRead> processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart,
+            int alignmentLength, final IndexedBases refBases) {
+
+        final List<AltRead> result = Lists.newArrayList();
 
         int refIndex = refBases.index(refPositionStart);
 
@@ -168,21 +180,16 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (!refContext.reachedLimit()) {
-
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     final ReadContext readContext =
                             findReadContext ? readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
-                    refContext.altRead(ref, alt, baseQuality, readContext);
+
+                    result.add(new AltRead(refContext, ref, alt, baseQuality, readContext));
 
                     if (config.mnvEnabled()) {
-                        int mnvMaxLength = mnvLength(refPosition,
-                                refPositionStart + alignmentLength - 1,
-                                readBaseIndex,
-                                refBaseIndex,
-                                record.getReadBases(),
-                                refBases.bases());
+                        int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.bases());
                         for (int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++) {
 
                             final String mnvRef = new String(refBases.bases(), refBaseIndex, mnvLength);
@@ -197,7 +204,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                                         record,
                                         refBases) : null;
 
-                                refContext.altRead(mnvRef, mnvAlt, baseQuality, mnvReadContext);
+                                result.add(new AltRead(refContext, mnvRef, mnvAlt, baseQuality, mnvReadContext));
                             }
                         }
                     }
@@ -206,29 +213,26 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 }
             }
         }
+
+        return result;
     }
 
     private boolean findReadContext(int readIndex, @NotNull final SAMRecord record) {
         return readIndex >= config.readContextFlankSize() && readIndex < record.getReadLength() - config.readContextFlankSize();
     }
 
-    private int mnvLength(int alignment, int alignmentEnd, int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
-        int gap = 0;
-        for (int i = 1; alignment + i < alignmentEnd; i++) {
-            byte refByte = refBases[refIndex + i];
-            byte readByte = readBases[readIndex + i];
-            if (refByte == readByte) {
-                if (gap == 1) {
-                    return i - 1;
-                } else {
-                    gap++;
-                }
-            } else {
-                gap = 0;
-            }
+    @VisibleForTesting
+    static int mnvLength(int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
+
+        final Function<Integer, Boolean> isDifferent =
+                i -> refIndex + i < refBases.length && readIndex + i < readBases.length && refBases[refIndex + i] != readBases[readIndex
+                        + i];
+
+        if (isDifferent.apply(2)) {
+            return 3;
         }
 
-        return alignmentEnd - alignment + 1;
+        return isDifferent.apply((1)) ? 2 : 1;
     }
 
     private int baseQuality(int readIndex, SAMRecord record, int length) {

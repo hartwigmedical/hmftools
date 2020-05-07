@@ -34,7 +34,7 @@ public class SageVariantFactory {
         final SageVariantTier tier = variant.tier();
         final SoftFilterConfig softConfig = config.softConfig(tier);
 
-        if (config.disableSoftFilter()) {
+        if (!config.softFilter()) {
             return new SageVariant(tier, variant, filters, normal, tumor);
         }
 

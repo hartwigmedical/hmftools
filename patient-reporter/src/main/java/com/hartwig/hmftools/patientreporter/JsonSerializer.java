@@ -22,13 +22,15 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
-import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.patientreporter.purple.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
@@ -92,7 +94,7 @@ public class JsonSerializer {
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(reportableHomozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath("path/to/circos.jpg")
                 .signaturePath("path/to/signature.jpg")
@@ -101,6 +103,15 @@ public class JsonSerializer {
                 .isCorrectedReport(false)
                 .isUnofficialReport(false)
                 .comments(Optional.of("This is a test report and is based off COLO829"))
+                .build();
+    }
+
+    @NotNull
+    private static HospitalQuery hospitalQuery(){
+        return ImmutableHospitalQuery.builder()
+                .hospitalPI(Strings.EMPTY)
+                .analyseRequestName("Paul")
+                .analyseRequestEmail("paul@hartwig.com")
                 .build();
     }
 
@@ -120,12 +131,7 @@ public class JsonSerializer {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .requesterName("Paul")
-                .requesterEmail("paul@hartwig.com")
-                .addressee("HMF Testing Center")
-                .hospitalName(Strings.EMPTY)
-                .hospitalPIName(Strings.EMPTY)
-                .hospitalPIEmail(Strings.EMPTY)
+                .hospitalQuery(hospitalQuery())
                 .cohort("TEST")
                 .projectName("TEST")
                 .submissionId("10")

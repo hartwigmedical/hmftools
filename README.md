@@ -1,7 +1,7 @@
-# hmftools
-Various utility tools for working with genomics data
+# HMF Tools
+This repository contains various algorithms for analyzing genomic sequencing data
 
-Resources used by HMF pipeline can be downloaded from https://resources.hartwigmedicalfoundation.nl
+Resources used by the HMF algorithms can be downloaded from https://resources.hartwigmedicalfoundation.nl
 
 More detailed descriptions of the following algorithms are available from the links below:
 - [BACHELOR](./bachelor/README.md)
@@ -12,8 +12,11 @@ More detailed descriptions of the following algorithms are available from the li
 - [LINX](./sv-linx/README.md)
 - [ISOFOX](./isofox/README.md)
 
+In progress:
+ - [SERVE](./serve/README.md)
+ - [PROTECT](./protect/README.md)
 
-## Acknowledgement
+## Acknowledgements
 
 Hartwig Medical Foundation uses the YourKit Java Profiler for Performance Tuning.
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultBooleanValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.cli.Configs.defaultStringValue;
 
 import java.io.File;
 import java.util.Arrays;
@@ -57,7 +58,7 @@ public interface SageConfig {
     int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
     int DEFAULT_SLICE_SIZE = 100_000;
-    int DEFAULT_READ_CONTEXT_FLANK_SIZE = 25;
+    int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     boolean DEFAULT_MNV = true;
 
     @NotNull
@@ -196,6 +197,14 @@ public interface SageConfig {
             }
         }
 
+        if (!cmd.hasOption(REF_GENOME)) {
+            throw new ParseException(REF_GENOME + " is a mandatory argument");
+        }
+
+        if (!cmd.hasOption(OUTPUT_VCF)) {
+            throw new ParseException(OUTPUT_VCF + " is a mandatory argument");
+        }
+
         final List<String> tumorList = Lists.newArrayList();
         if (cmd.hasOption(TUMOR)) {
             tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
@@ -224,8 +233,8 @@ public interface SageConfig {
                 assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
         final Set<String> chromosomes = Sets.newHashSet();
-        final String chromosomeList = cmd.getOptionValue(CHR);
-        if (chromosomeList != null) {
+        final String chromosomeList = defaultStringValue(cmd, CHR, Strings.EMPTY);
+        if (!chromosomeList.isEmpty()) {
             chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
         }
 

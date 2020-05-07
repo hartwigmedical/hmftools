@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.lims.LimsWide;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,8 +42,6 @@ public final class SampleReportFactory {
             LOGGER.warn("Could not find arrival date for tumor sample: {}", tumorSampleId);
         }
 
-        HospitalQuery hospitalQuery = hospitalModel.queryHospitalDataForSample(tumorSampleId);
-
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(patientTumorLocation)
@@ -52,14 +51,7 @@ public final class SampleReportFactory {
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
                 .cohort(lims.cohort(tumorSampleBarcode))
                 .projectName(lims.projectName(tumorSampleBarcode))
-                .requesterName(lims.requesterName(tumorSampleBarcode))
-                .requesterEmail(lims.requesterEmail(tumorSampleBarcode))
-                .addressee(hospitalQuery.fullAddresseeString())
-                .hospitalName(hospitalQuery.hospitalName())
-                .hospitalPIName(hospitalQuery.principalInvestigatorName())
-                .hospitalPIEmail(hospitalQuery.principalInvestigatorEmail())
-                .studyRequesterName(limsWide.reportReceiverName())
-                .studyRequesterEmail(limsWide.reportReceiverEmail())
+                .hospitalQuery(lims.hospitalQuery(tumorSampleId))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode))
                 .hospitalPathologySampleId(reportHospitalTissueIdPA(lims.hospitalPathologySampleId(tumorSampleBarcode), tumorSampleId)

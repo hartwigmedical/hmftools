@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -61,11 +60,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
         String addressee;
-        if (sampleReport.addressee() != null) {
-            addressee = sampleReport.addressee();
+        if (sampleReport.hospitalQuery().hospital() != null) {
+            addressee = sampleReport.hospitalQuery().hospital();
             assert addressee != null;
         } else {
-            LOGGER.warn("No recipient address present for sample " + sampleReport.tumorSampleId());
+            LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
             addressee = DataUtil.NA_STRING;
         }
 
@@ -168,9 +167,9 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The requester is: ").add(new Text(sampleReport.requesterName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+        return createContentParagraph("The requester is: ").add(new Text(sampleReport.hospitalQuery().analyseRequestName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add("(")
-                .add(new Text(sampleReport.requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(new Text(sampleReport.hospitalQuery().analyseRequestEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(")")
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }

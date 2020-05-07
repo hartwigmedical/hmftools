@@ -62,7 +62,7 @@ public final class RExecutor {
         LOGGER.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         int result = new ProcessBuilder(command).redirectError(errorFile).redirectOutput(outputFile).start().waitFor();
         if (result != 0) {
-            LOGGER.fatal("Error executing R script. Examine error file " + errorFile.toString() + " for details.");
+            LOGGER.fatal("Error executing R script. Examine error file {} for details.", errorFile.toString());
         }
 
         return result;

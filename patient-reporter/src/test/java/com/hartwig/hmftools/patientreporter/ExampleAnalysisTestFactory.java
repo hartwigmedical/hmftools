@@ -24,6 +24,8 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -32,10 +34,10 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.patientreporter.purple.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -77,7 +79,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
+        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         ChordAnalyzer chordAnalyzer = createCOLO829ChordAnalysis();
         List<ViralInsertion> viralInsertions = null;
@@ -113,7 +115,7 @@ public final class ExampleAnalysisTestFactory {
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.of("This is a test report and is based off COLO829"))
@@ -147,7 +149,7 @@ public final class ExampleAnalysisTestFactory {
         ChordAnalyzer chordAnalyzer = createHRDChordAnalysis();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = createTestViralInsertions();
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
+        List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         String clinicalSummary = Strings.EMPTY;
@@ -172,7 +174,7 @@ public final class ExampleAnalysisTestFactory {
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.of("This is a test report and does not relate to any real patient"))
@@ -206,7 +208,7 @@ public final class ExampleAnalysisTestFactory {
         ChordAnalyzer chordAnalyzer = createHRDChordAnalysis();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
+        List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         String clinicalSummary = Strings.EMPTY;
@@ -231,7 +233,7 @@ public final class ExampleAnalysisTestFactory {
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.of("This is a test report and does not relate to any real patient"))
@@ -276,6 +278,16 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
+    private static HospitalQuery hospitalQuery(){
+        return ImmutableHospitalQuery.builder()
+                .hospitalPI(Strings.EMPTY)
+                .analyseRequestName("Paul")
+                .analyseRequestEmail("paul@hartwig.com")
+                .hospital("HMF Testing Center")
+                .build();
+    }
+
+    @NotNull
     private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(Strings.EMPTY)
@@ -291,19 +303,12 @@ public final class ExampleAnalysisTestFactory {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .requesterName("C")
-                .requesterEmail("D")
-                .addressee("HMF Testing Center")
+                .hospitalQuery(hospitalQuery())
                 .cohort("A")
                 .projectName("TEST")
-                .hospitalName(Strings.EMPTY)
-                .hospitalPIName(Strings.EMPTY)
-                .hospitalPIEmail(Strings.EMPTY)
                 .submissionId("10")
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")
-                .studyRequesterName("contact")
-                .studyRequesterEmail("contact@.nl")
                 .build();
     }
 

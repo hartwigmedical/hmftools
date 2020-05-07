@@ -33,10 +33,10 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneF
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.purple.PurpleAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;
@@ -84,14 +84,13 @@ class AnalysedPatientReporter {
                 reportData.hospitalModel(),
                 patientTumorLocation);
 
-        CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation);
+        PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation);
         SomaticVariantAnalysis somaticVariantAnalysis =
-                analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, copyNumberAnalysis.exomeGeneCopyNumbers());
+                analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, purpleAnalysis.exomeGeneCopyNumbers());
 
         ChordAnalyzer chordAnalyzer = analyzeChord(chordPredictionTxt);
         List<ReportableGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
-                bachelorTsv,
-                copyNumberAnalysis,
+                bachelorTsv, purpleAnalysis,
                 somaticVariantAnalysis,
                 chordAnalyzer);
 
@@ -114,31 +113,31 @@ class AnalysedPatientReporter {
 
         List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
         allEvidenceItems.addAll(reportableVariantsAnalysis.evidenceItems());
-        allEvidenceItems.addAll(copyNumberAnalysis.evidenceItems());
+        allEvidenceItems.addAll(purpleAnalysis.evidenceItems());
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
         List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .impliedPurity(copyNumberAnalysis.purity())
-                .hasReliablePurity(copyNumberAnalysis.hasReliablePurity())
-                .hasReliableQuality(copyNumberAnalysis.hasReliableQuality())
-                .averageTumorPloidy(copyNumberAnalysis.ploidy())
+                .impliedPurity(purpleAnalysis.purity())
+                .hasReliablePurity(purpleAnalysis.hasReliablePurity())
+                .hasReliableQuality(purpleAnalysis.hasReliableQuality())
+                .averageTumorPloidy(purpleAnalysis.ploidy())
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
                 .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))
                 .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
                 .reportableVariants(reportableVariantsAnalysis.variantsToReport())
-                .microsatelliteIndelsPerMb(copyNumberAnalysis.purpleSignatures().microsatelliteIndelsPerMb())
-                .microsatelliteStatus(copyNumberAnalysis.purpleSignatures().microsatelliteStatus())
-                .tumorMutationalLoad(copyNumberAnalysis.purpleSignatures().tumorMutationalLoad())
-                .tumorMutationalLoadStatus(copyNumberAnalysis.purpleSignatures().tumorMutationalLoadStatus())
-                .tumorMutationalBurden(copyNumberAnalysis.purpleSignatures().tumorMutationalBurdenPerMb())
+                .microsatelliteIndelsPerMb(purpleAnalysis.purpleSignatures().microsatelliteIndelsPerMb())
+                .microsatelliteStatus(purpleAnalysis.purpleSignatures().microsatelliteStatus())
+                .tumorMutationalLoad(purpleAnalysis.purpleSignatures().tumorMutationalLoad())
+                .tumorMutationalLoadStatus(purpleAnalysis.purpleSignatures().tumorMutationalLoadStatus())
+                .tumorMutationalBurden(purpleAnalysis.purpleSignatures().tumorMutationalBurdenPerMb())
                 .chordAnalyzer(chordAnalyzer)
-                .gainsAndLosses(copyNumberAnalysis.reportableGainsAndLosses())
+                .gainsAndLosses(purpleAnalysis.reportableGainsAndLosses())
                 .geneFusions(svAnalysis.reportableFusions())
                 .geneDisruptions(svAnalysis.reportableDisruptions())
-                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .homozygousDisruptions(reportableHomozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(circosFile)
                 .comments(Optional.ofNullable(comments))
@@ -178,23 +177,23 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private CopyNumberAnalysis analyzeCopyNumbers(@NotNull String purplePurityTsv, @NotNull String purpleQCFile,
+    private PurpleAnalysis analyzePurple(@NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleGeneCnvTsv, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
-
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
         LOGGER.info(" Purple status: {}", purityContext.status());
         LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
+
+        PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
         LOGGER.info("Loaded purple QC data from {}", purpleQCFile);
         LOGGER.info(" Purple QC status: {}", purpleQC.status());
 
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        return CopyNumberAnalyzer.run(purityContext,
+        return PurpleAnalyzer.run(purityContext,
                 purpleQC,
                 exomeGeneCopyNumbers,
                 reportData.actionabilityAnalyzer(),
@@ -212,7 +211,7 @@ class AnalysedPatientReporter {
 
     @NotNull
     private List<ReportableGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTsv,
-            @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
+            @NotNull PurpleAnalysis purpleAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
             @NotNull ChordAnalyzer chordAnalyzer) throws IOException {
         List<GermlineVariant> variants =
                 BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
@@ -224,7 +223,7 @@ class AnalysedPatientReporter {
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
                     reportData.driverGeneView(),
                     reportData.germlineReportingModel(),
-                    copyNumberAnalysis.exomeGeneCopyNumbers(),
+                    purpleAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport(),
                     chordAnalyzer);
         } else {

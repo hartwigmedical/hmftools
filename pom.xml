@@ -16,6 +16,7 @@
         <module>ensembl-db</module>
         <module>hmf-id-generator</module>
         <module>bam-slicer</module>
+        <module>gripss</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
         <module>patient-db</module>
@@ -33,7 +34,7 @@
         <module>knowledgebase-importer</module>
         <module>vicc-knowledgebase-importer</module>
         <module>iclusion-importer</module>
-        <module>knowledgebase-generator</module>
+        <module>serve</module>
         <module>protect</module>
         <module>patient-reporter</module>
     </modules>
@@ -69,10 +70,11 @@
         <health-checker.version>3.1</health-checker.version>
         <patient-reporter.version>7.11</patient-reporter.version>
         <patient-db.version>3.42</patient-db.version>
+        <gripss.version>1.0</gripss.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
         <iclusion-importer.version>1.1</iclusion-importer.version>
-        <knowledgebase-generator.version>0.1</knowledgebase-generator.version>
+        <serve.version>0.1</serve.version>
         <protect.version>0.1</protect.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
@@ -171,8 +173,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>knowledgebase-generator</artifactId>
-                <version>${knowledgebase-generator.version}</version>
+                <artifactId>serve</artifactId>
+                <version>${serve.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

@@ -5,7 +5,7 @@ SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller.
 
 Key features include:
   - 4 tiered (`HOTSPOT`,`PANEL`, `HIGH_CONFIDENCE`, `LOW_CONFIDENCE`) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
-  - kmer based model which determines a unique [read context](#read-context) for the variant + 25 bases of anchoring flanks and rigorously checks for partial or full evidence in tumor and normal regardless of local mapping alignment
+  - kmer based model which determines a unique [read context](#read-context) for the variant + 10 bases of anchoring flanks and rigorously checks for partial or full evidence in tumor and normal regardless of local mapping alignment
   - Modified [quality score](#modified-tumor-quality-score) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, repeat sequencing errors) without hard cutoffs
   - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatellites while ignoring common sequencing errors
   - No cutoff for homopolymer repeat length for improved INDEL handling 
@@ -15,7 +15,13 @@ Key features include:
   - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
   - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.  One potential case is to have a paired RNA sample as an additional reference to measure RNA support for candidate variants
   - Mitochondrial calling
-  - An internal [base quality recalibration](#1-base-quality-recalibration) method
+  - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
+
+## BAM Requirements
+BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
+
+Optional NM tag (edit distance to the reference) is used in the quality calculation. 
+More information about the tag available [here](https://samtools.github.io/hts-specs/SAMtags.pdf).
 
 ## Installation
 
@@ -51,8 +57,8 @@ threads | 2 | Number of threads to use
 reference | NA | Comma separated names of the reference sample
 reference_bam | NA | Comma separated paths to indexed reference BAM file
 chr | NA | Limit sage to comma separated list of chromosomes
-max_read_depth | 1000 | Maximum depth to examine for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant.  only first 1000 reads are considered for genomic segments with greater depth.
-max_read_depth_panel | 100,000 | Maximum depth to examine for evidence of any `HOTSPOT` or `PANEL` variant
+max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this at ignored.  
+max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this at ignored.  
 max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
 
@@ -60,7 +66,7 @@ The cardinality of `reference` must match `reference_bams`.
 
 ## Optional Base Quality Recalibration Arguments
 
-The following arguments control the [base quality recalibration](#1-base-quality-recalibration) process described below.
+The following arguments control the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) logic.
 
 Argument | Default | Description 
 ---|---|---
@@ -81,7 +87,7 @@ jitter_min_repeat_count | 3 | Minimum repeat count before applying jitter penalt
 base_qual_fixed_penalty | 12 | Fixed penalty to apply to base quality
 map_qual_fixed_penalty | 15 | Fixed penalty to apply to map quality
 map_qual_improper_pair_penalty | 15 | Penalty to apply to map qual when SAM record does not have the ProperPair flag
-map_qual_distance_from_ref_penalty | 10 | Penalty to apply to map qual for additional distance from ref
+map_qual_read_events_penalty | 8 | Penalty to apply to map qual for additional events in read
 
 ## Example Usage
 
@@ -114,26 +120,64 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
 ```
 
  # Read context 
- 
- SAGE defines a core read context around each candidate point mutation position which uniquely identifies the variant from both the reference and other possible variants at that location regardless of local alignment. 
- This read context is used to search for evidence supporting the variant and also to calculate the allelic depth and frequency.
+ The read context of a variant is the region surrounding it in the read where it was found.
+ It must be sufficiently large to uniquely identify the variant from both the reference and other possible variants at that location regardless of local alignment.
+ SAGE uses the read context to search for evidence supporting the variant and calculate the allelic depth and frequency.
  
  The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in either the read or ref genome.
  A 'repeat' in this context, is defined as having 1 - 10 bases repeated at least 2 times. 
  The core is a minimum of 5 bases long.  
  
  For a SNV/MNV in a non-repeat sequence this will just be the alternate base(s) with 2 bases either side. 
- For a SNV/MNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAC'.
+ For a SNV/MNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAAC'.
  
  A DEL always includes the bases on either side of the deleted sequence. 
  If the delete is part of a microhomology or repeat sequence, this will also be included in the core read context.
  
  An INSERT always includes the base to the left of the insert as well as the new sequence. 
  As with a DEL, the core read context will be extended to include any repeats and/or microhomology.
+
+The complete read context is the core read context flanked on either side by an additional 10 bases. 
  
- The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases in a AAAC microhomology is nominally left aligned as 7: AAAAC > A but can equally be represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
+The following example illustrate how we construct and use a read context for a simple T > A SNV.  
+
+The read context core is the variant itself expanded to cover at least 5 bases. 
+Typically we use 10 bases for the flank, but for this illustration we then use an additional 5 bases on either side to get the complete read context. 
+  
+<pre>
+Reference:                ...ACCATGGATACCATCATCACATACGA...
+Variant:                                  <b>A</b>
+Core read context:                      <b>CAACA</b>
+Flanked read context:              <b>GATACCAACATAACA</b>
+</pre>
+
+In the following table we match the read context against bam reads in numerous ways. 
+A `FULL` match includes both flanks, a `PARTIAL` match is if the read is truncated over one of the flanks but matches what is remaining, and a `CORE` match is only the core. 
+A `REALIGNED` match must include both flanks but just be offset. All types of matches contribute to the VAF but only `FULL` and `PARTIAL` matches contribute to the `QUAL` score.
+
+<pre>
+Reference:                   ...ACCATGGATACCATCATAACATACGA...
+Read context:                      <b>GATACCAACATAACA</b>
+Full Match:               ...ACCATG<b>GATACCAACATAACA</b>TACGA...
+Partial Match:                       <b>TACCAACATAACA</b>TACGA...
+Core Match:               ...ACCATGGAC<b>ACCAACATAACA</b>TAACATACGA...
+Realigned Match:          ...ACCCATG<b>GATACCAACATAACA</b>TACG...
+</pre>
+
+If the core does not match a read it does not add support for the variant. If the variant itself is the ref (regardless of whatever else happens in the core), the read supports the ref.
  
- Using a (bolded) read context of `CAAAAACAAACAAACAAT` spanning the microhomology matches every alt but not the ref:
+<pre>
+Reference:                   ...ACCATGGATACCATCATAACATACGA...
+Read context:                      <b>GATACCAACATAACA</b>
+No Match:                 ...ACCATGGATACAA<b>A</b>CATAACATACGA...
+No Match:                 ...ACCATGGATACCAA<b>G</b>ATAACATACGA...
+Ref Match:                ...ACCATGGATACCA<b>T</b>CATAACATACGA...
+Ref Match:                ...ACCATGGATACCA<b>T</b>GATAACATACGA...
+</pre>
+
+The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases in a AAAC microhomology is nominally left aligned as 7: AAAAC > A but can equally be represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
+ 
+Using a (bolded) read context of `CAAAAACAAACAAACAAT` spanning the microhomology matches every alt but not the ref:
  
  <pre>
  REF:   GTCTCAAAAACAAACAAACAAACAATAAAAAAC 
@@ -154,60 +198,25 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
  ALT:   GTCT<b>CAAAAACAAACAAACAA    T</b>AAAAAAC
  </pre>
  
- A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments.
- 
- The complete read context is the core read context flanked on either side by an additional 25 bases. 
- 
-The following example illustrate how we construct and use a read context for a simple T > A SNV.  
-
-The read context core is the variant itself expanded to cover at least 5 bases. 
-We then flank with an additional 5 bases on either side (SAGE uses 25 bases) to get the complete read context. 
- 
-<pre>
-Reference:             ...ACCATGGATACCATCA<b>T</b>AACATACGA...
-Variant:                                  <b>A</b>
-Core read context:                      <b>CAACA</b>
-Flanked read context:              <b>GATACCAACATAACA</b>
-</pre>
-
-In the following table we match the read context against bam reads in numerous ways. 
-A `FULL` match includes both flanks, a `PARTIAL` match is if the read is truncated over one of the flanks but matches what is remaining, and a `CORE` match is only the core. 
-A `REALIGNED` match must include both flanks but just be offset. All types of matches contribute to the VAF but only `FULL` and `PARTIAL` matches contribute to the `QUAL` score.
-
-<pre>
-Read context:                      <b>GATACCAACATAACA</b>
-Full Match:               ...ACCATG<b>GATACCAACATAACA</b>TACGA...
-Partial Match:                       <b>TACCAACATAACA</b>TACGA...
-Core Match:               ...ACCATGGAC<b>ACCAACATAACA</b>TAACATACGA...
-Realigned Match:          ...ACCCATG<b>GATACCAACATAACA</b>TACG...
-</pre>
-
-If the core does not match a read it does not add support for the variant. If the variant itself is the ref (regardless of whatever else happens in the core), the read supports the ref.
- 
-<pre>
-Read context:                      <b>GATACCAACATAACA</b>
-No Match:                 ...ACCATGGATACAA<b>A</b>CATAACATACGA...
-No Match:                 ...ACCATGGATACCAA<b>G</b>ATAACATACGA...
-Ref Match:                ...ACCATGGATACCA<b>T</b>CATAACATACGA...
-Ref Match:                ...ACCATGGATACCA<b>T</b>GATAACATACGA...
-</pre>
+A similar principle applies to any repeat sequences. Spanning them in the read context permits matching with alternate alignments.
  
 # Algorithm
 
 There are 8 key steps in the SAGE algorithm described in detail below:
   1. [Alt Specific Base Quality Recalibration](#1-alt-specific-base-quality-recalibration)
-  2. [Candidate Variants And Read Contexts](#2-candidate-variants-and-read-contexts)
+  2. [Candidate Variants](#2-candidate-variants)
   3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
   4. [Normal Counts and Quality](#4-normal-counts-and-quality)
   5. [Soft Filter](#5-soft-filters)
   6. [Phasing](#6-phasing)
   7. [De-duplication](#7-de-duplication)
-  8. [Re-alignment](#8-re-alignment)
+  8. [Realignment](#8-realignment)
 
 ## 1. Alt Specific Base Quality Recalibration
 
 SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
 This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
+The recalibration is unique per sample.
 
 The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.   This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
 Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
@@ -218,7 +227,7 @@ For all SNV and MNV calls the base quality is adjusted to the empirically observ
 SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.
 These files are written into the same directory as the output file.
 
-A typical example of the chart is shown below: 
+A typical example of the chart is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score: 
 
 ![Base Quality Adjustment](src/main/resources/readme/COLO829v003T.bqr.png)
 
@@ -226,19 +235,19 @@ Base quality recalibration is enabled by default but can be disabled by supplyin
 
 The base quality recalibration chart can be independently disabled by including the `-bqr_plot false` argument.
  
-## 2. Candidate Variants And Read Contexts
+## 2. Candidate Variants
+In this first pass of the tumor BAM(s), SAGE looks for candidate variants.
+Valid candidates include a complete read context in addition to raw counts of ref and alt support (`RAD`) and their respective base quality contributions (`BABQ`).  
+The raw values are calculated directly from the aligner without any filters or quality requirements.
 
-In this first pass of the tumor BAM(s), SAGE looks for candidate variants. 
 INDELS are located using the `I` and `D` flag in the CIGAR.
 SNVs and MNVs are located by comparing the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome.
-MNVs can be of any length but with no more than one matching base between un-matching bases, ie, MNVs with CIGARs `1X1M1X` and `3X` are both considered valid MNVs of length 3.  
+MNVs can be of up to 3 bases but with no more than one matching base between un-matching bases, ie, MNVs with CIGARs `1X1M1X` and `3X` are both considered valid MNVs of length 3.  
 
-Note that there are no base quality or mapping quality requirements when looking for candidates.
-
-SAGE tallies the raw ref/alt support and base quality and collects the read contexts of each variant.
-Once finished, each variant is assigned its most frequently found read context as its primary one. 
+SAGE tallies the raw ref/alt support and base quality and selects a single read context of each variant. 
+As each variant can potentially have multiple read contexts due to sequencing errors or sub-clonal populations, SAGE selects the most frequently found one as the candidate read context.
 If a variant does not have at least one complete read context (including flanks) it is discarded.
-All remaining variants are then considered candidates for processing in the second pass. 
+All remaining variants are candidates for processing in the second pass. 
 
 The variants at this stage have the following properties available in the VCF:
 
@@ -264,11 +273,10 @@ SAGE examines every read overlapping the variant tallying matches of the read co
 A match can be:
   - `FULL` - Core and both flanks match read at same reference location.
   - `PARTIAL` - Core and at least one flank match read fully at same position. Remaining flank matches but is truncated. 
-  - `CORE` - Core matches read but neither flank does.
+  - `CORE` - Core matches read but either flank doesn't.
   - `REALIGNED` - Core and both flanks match read exactly but offset from the expected position.
 
-Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted. 
-Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
+Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
 If the variant is not found and instead matches the ref genome at that location, the `REFERENCE` tally is incremented.
 
@@ -278,10 +286,10 @@ Any read which spans the core read context increments the `TOTAL` tally.
 
 If a `FULL` or `PARTIAL` match is made, we update the quality of the variant. 
 No other match contributes to quality.  
-There are a number of constraints to penalise the quality if it:
-  1. approaches the edge of a read,
-  2. encompasses more than one variant, or
-  3. has the ImproperPair flag set 
+There are a number of constraints to penalise the quality:
+  1. as the variant approaches the edge of a read,
+  2. if the read encompasses more than one variant, or
+  3. if the ProperPair flag (0x02) is not set 
 
 The quality is incremented as follows:
 
@@ -290,9 +298,10 @@ baseQuality (SNV/MNV) = BASEQ at variant location(s)
 baseQuality (Indel) = min BASEQ over core read context  
 modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty (12)` , 3 * distanceFromReadEdge) 
 
-improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if improper pair flag set else 0  
+readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs count as only 1 event
+improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if proper pair flag not set else 0  
 distanceFromReference = number of somatic alterations to get to reference from the complete read context  
-distanceFromReferencePenalty =  (distanceFromReference - 1) * `mapQualityAdditionalDistanceFromRefPenalty (10)` 
+distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)` 
 modifiedMapQuality = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty  
 
 matchQuality += max(0, min(modifiedMapQuality, modifiedBaseQuality))
@@ -352,7 +361,7 @@ The specific filters and default settings for each tier are:
 
 Filter  | Hotspot | Panel | High Confidence | Low Confidence | Field
 ---|---|---|---|---|---
-min_tumor_qual|70**|100|150|225|`QUAL`
+min_tumor_qual|70**|100|160|240|`QUAL`
 min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
 min_germline_depth|0|0|10 | 10 | Normal `RC_CNT[6]`
 min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
@@ -376,6 +385,8 @@ To set the parameters at the command line append the tier to the filter eg `hots
 
 ## 6. Phasing
 
+### Local Phase Set
+Local phasing implies that two or more variants co-exist on the same read. 
 Somatic variants can be phased using the complete read context with nearby germline variants or other somatic variants.
 
 Phasing is interesting for somatic calling from 2 perspectives: 
@@ -403,16 +414,40 @@ Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are p
 
 If multiple tumors are supplied, phasing is evaluated only on the primary tumor, ie, the first in the supplied tumor list.
 
+### Local Realignment Set
+Local realignment implies that two (or more) variants are equivalent. 
+As the aligner assesses each read independently, small changes in the position of a variant within a read can lead to different interpretations.
+The following example illustrates this:
+
+<pre>
+POS: 123456789...
+REF: AAATGATTT...
+ALT: AAAT<b>A</b>ATTT...
+</pre>
+
+This is show above as and SNV 5:G>A but can equally be represented as the following phased INDEL 4:TG>T and SNV 7:T>A so long as the subsequent bases match:
+
+<pre>
+POS: 123456789...
+REF: AAATGATTT...
+ALT: AAAT A<b>A</b>T...
+</pre>
+
+We can detect local realigned variants using a similiar process to phasing but without adjusting the relative position by the INDEL insert/delete sequence.
+
+Any variants that are can be locally realigned are given a shared `LRS` (local realigned set) identifier.
+
 ### Phased Inframe Indels
 
 If two phased frameshift variant in a single coding exon together form an inframe INDEL, then both are given a shared `PII` (phased inframe indel) identifier.
 
 ## 7. De-duplication
 
-### INDEL
+### Realigned Indels
 
-While the read context is designed to capture a unique sequence of bases, it it sometimes possible that repeat sequences in the flanks of the read context coupled with an aligners alternate view on the same event can cause duplicate INDELs. 
-If SAGE finds two phased INDELs of the same type at the same position where one is a subset of the other, then the longer is filtered with `dedup`.
+While the read context is designed to capture a unique sequence of bases, it it sometimes possible that repeat sequences in the flanks of the read context coupled with an aligners alternate view on the same event can cause duplicate calls of the same event.    If SAGE finds two phased INDELs of the same type at the same position where one is a subset of the other, then the longer is filtered with `dedup`.
+
+Alternative alignments near read edges can also cause INDELs to be mistaken for SNV.  For example, in the local realignment set example above, the read could be represented by a either a single SNV, or a phased INDEL and SNV.  In such cases, we keep the variant with the highest individual quality as well as any variants also phased with it and filter any others with `dedup`.
 
 ### SNV / MNV
 
@@ -435,7 +470,9 @@ If the MNV is comprised of only germline SNVs but does not appear itself at all 
  
 Any MNVs that have a germline component and all associated SNVs (including somatic) are given a shared `MSG` (mixed somatic germline) identifier.
 
-## 8. Re-alignment
+
+
+## 8. Realignment
 
 Inframe deletes with microhomology are re-aligned to the right if the left-aligned variant is not in a coding region but the right-aligned variant is.
 

@@ -5,6 +5,9 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -29,18 +32,21 @@ public class Lims {
     private final Set<String> samplesIdsWithoutSamplingDate;
     @NotNull
     private final Set<String> blacklistedPatients;
+    @NotNull
+    private final HospitalModel hospitalModel;
 
     public Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode,
             @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesIdsWithoutSamplingDate,
-            @NotNull final Set<String> blacklistedPatients) {
+            @NotNull final Set<String> blacklistedPatients, @NotNull final HospitalModel hospitalModel) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
         this.preLimsArrivalDatesPerSampleId = preLimsArrivalDatesPerSampleId;
         this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
         this.blacklistedPatients = blacklistedPatients;
+        this.hospitalModel = hospitalModel;
     }
 
     public int sampleBarcodeCount() {
@@ -285,6 +291,11 @@ public class Lims {
     public String cohort(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         return sampleData != null ? sampleData.cohort() : NOT_AVAILABLE_STRING;
+    }
+
+    @NotNull
+    public HospitalQuery hospitalQuery(@NotNull String sampleId) {
+        return hospitalModel.generateHospitalQuery(sampleId);
     }
 
     @Nullable

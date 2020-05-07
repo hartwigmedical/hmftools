@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 
 import org.apache.logging.log4j.util.Strings;
@@ -40,28 +41,7 @@ public abstract class SampleReport {
     public abstract String projectName();
 
     @NotNull
-    public abstract String requesterName();
-
-    @NotNull
-    public abstract String requesterEmail();
-
-    @Nullable
-    public abstract String addressee();
-
-    @NotNull
-    public abstract String hospitalName();
-
-    @NotNull
-    public abstract String hospitalPIName();
-
-    @NotNull
-    public abstract String hospitalPIEmail();
-
-    @NotNull
-    public abstract String studyRequesterName();
-
-    @NotNull
-    public abstract String studyRequesterEmail();
+    public abstract HospitalQuery hospitalQuery();
 
     @NotNull
     public abstract String submissionId();

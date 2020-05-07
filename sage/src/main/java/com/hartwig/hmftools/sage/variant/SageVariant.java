@@ -20,6 +20,7 @@ public class SageVariant implements GenomePosition {
     private final List<ReadContextCounter> tumorAltContexts;
 
     private int localPhaseSet;
+    private int localRealignSet;
     private int mixedImpact;
     private int phasedInframeIndel;
     private boolean realigned;
@@ -90,6 +91,14 @@ public class SageVariant implements GenomePosition {
 
     public void localPhaseSet(int localPhaseSet) {
         this.localPhaseSet = localPhaseSet;
+    }
+
+    public int localRealignSet() {
+        return localRealignSet;
+    }
+
+    public void localRealignSet(int localRealignSet) {
+        this.localRealignSet = localRealignSet;
     }
 
     public int mixedGermlineImpact() {

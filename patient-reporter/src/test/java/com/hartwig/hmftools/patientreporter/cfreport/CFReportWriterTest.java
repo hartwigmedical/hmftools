@@ -10,6 +10,8 @@ import java.util.Locale;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
@@ -132,6 +134,16 @@ public class CFReportWriterTest {
                 testReportFilePath("hmf_low_molecular_tumor_percentage_cpct_report.pdf"));
     }
 
+    @NotNull
+    private static HospitalQuery hospitalQuery(){
+        return ImmutableHospitalQuery.builder()
+                .hospitalPI(Strings.EMPTY)
+                .analyseRequestName("Paul")
+                .analyseRequestEmail("paul@hartwig.com")
+                .hospital("HMF Testing Center")
+                .build();
+    }
+
     private static void generateQCFailCPCTReport(@NotNull String sampleId, @Nullable String shallowSeqPurity, @NotNull QCFailReason reason,
             @NotNull String filename) throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
@@ -148,16 +160,9 @@ public class CFReportWriterTest {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(shallowSeqPurity != null ? shallowSeqPurity : "not determined")
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .addressee("HMF Testing Center")
-                .hospitalName(Strings.EMPTY)
-                .hospitalPIName(Strings.EMPTY)
-                .hospitalPIEmail(Strings.EMPTY)
                 .cohort("A")
                 .projectName("COLO-001-002")
-                .requesterName("ContactMe")
-                .requesterEmail("contact@me.com")
-                .studyRequesterName("contact")
-                .studyRequesterEmail("contact@.com")
+                .hospitalQuery(hospitalQuery())
                 .submissionId("ABC")
                 .hospitalPatientId("123456")
                 .hospitalPathologySampleId("A")

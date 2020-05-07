@@ -2,16 +2,15 @@ package com.hartwig.hmftools.sage.read;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContext {
 
+    private static final int BONUS_FLANK = 10;
+
     private final int position;
-    private final int distance;
-    private final String distanceCigar;
     private final String repeat;
     private final int repeatCount;
     private final String microhomology;
@@ -29,8 +28,6 @@ public class ReadContext {
         this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
         this.position = refPosition;
-        this.distance = 0;
-        this.distanceCigar = Strings.EMPTY;
         this.repeat = repeat;
         this.microhomology = microhomology;
         this.repeatCount = 0;
@@ -49,14 +46,6 @@ public class ReadContext {
         this.repeat = repeat;
         this.repeatCount = repeatCount;
         this.microhomology = microhomology;
-
-        int recordLeftFlankStartIndex = Math.max(0, adjLeftCentreIndex - flankSize);
-        int recordRightFlankEndIndex = Math.min(record.getReadBases().length - 1, adjRightCentreIndex + flankSize);
-
-        ReadContextDistance distance = new ReadContextDistance(recordLeftFlankStartIndex, recordRightFlankEndIndex, record, refSequence);
-        this.distance = distance.distance();
-        this.distanceCigar = distance.cigar();
-
         this.readBases = new IndexedBases(position, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, record.getReadBases());
 
         int refIndex = refSequence.index(position);
@@ -70,13 +59,39 @@ public class ReadContext {
         this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
 
+    private ReadContext(int leftCentreIndex, int rightCentreIndex, @NotNull final ReadContext readContext) {
+        this.position = readContext.position;
+        this.repeat = readContext.repeat;
+        this.repeatCount = readContext.repeatCount;
+        this.microhomology = readContext.microhomology;
+
+        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
+        int adjRightCentreIndex = Math.min(rightCentreIndex, readContext.readBases.bases().length - 1);
+        int readIndex = readContext.readBases.index();
+        this.readBases = new IndexedBases(position,
+                readIndex,
+                adjLeftCentreIndex,
+                adjRightCentreIndex,
+                readContext.readBases.flankSize(),
+                readContext.readBases());
+
+        int refIndex = readContext.refBases.index(position);
+        this.refBases = new IndexedBases(position,
+                refIndex,
+                refIndex + adjLeftCentreIndex - readIndex,
+                refIndex + adjRightCentreIndex - readIndex,
+                0,
+                readContext.refBases.bases());
+
+        this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
+
+    }
+
     private ReadContext(@NotNull final ReadContext clone) {
         this.position = clone.position;
         this.repeat = clone.repeat;
         this.repeatCount = clone.repeatCount;
         this.microhomology = clone.microhomology;
-        this.distance = clone.distance;
-        this.distanceCigar = clone.distanceCigar;
         this.incompleteCore = clone.incompleteCore;
 
         this.refBases = IndexedBases.resize(position,
@@ -84,6 +99,7 @@ public class ReadContext {
                 clone.refBases.leftCentreIndex(),
                 clone.refBases.rightCentreIndex(),
                 clone.refBases.flankSize(),
+                0,
                 clone.refBases.bases());
 
         this.readBases = IndexedBases.resize(position,
@@ -91,8 +107,14 @@ public class ReadContext {
                 clone.readBases.leftCentreIndex(),
                 clone.readBases.rightCentreIndex(),
                 clone.readBases.flankSize(),
+                BONUS_FLANK,
                 clone.readBases.bases());
 
+    }
+
+    @NotNull
+    public ReadContext extend(int leftCentreIndex, int rightCentreIndex) {
+        return new ReadContext(leftCentreIndex, rightCentreIndex, this);
     }
 
     @NotNull
@@ -181,14 +203,6 @@ public class ReadContext {
     @Override
     public String toString() {
         return readBases.centerString();
-    }
-
-    public int distance() {
-        return distance;
-    }
-
-    public String distanceCigar() {
-        return distanceCigar;
     }
 
     @VisibleForTesting

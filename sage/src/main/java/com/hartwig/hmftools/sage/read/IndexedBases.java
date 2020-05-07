@@ -14,16 +14,17 @@ public class IndexedBases {
 
     @NotNull
     public static IndexedBases resize(final int position, final int recordIndex, final int recordLeftCoreIndex,
-            final int recordRightCoreIndex, final int flankSize, final byte[] recordBases) {
-        int recordLeftFlankIndex = Math.max(0, recordLeftCoreIndex - flankSize);
+            final int recordRightCoreIndex, final int flankSize, final int additionalFlank, final byte[] recordBases) {
+        int recordLeftFlankIndex = Math.max(0, recordLeftCoreIndex - flankSize - additionalFlank);
         int recordLeftFlankLength = recordLeftCoreIndex - recordLeftFlankIndex;
-        int recordRightFlankIndex = Math.min(recordBases.length - 1, recordRightCoreIndex + flankSize);
+        int recordRightFlankIndex = Math.min(recordBases.length - 1, recordRightCoreIndex + flankSize + additionalFlank);
 
         int rightCentreIndex = recordLeftFlankLength + recordRightCoreIndex - recordLeftCoreIndex;
         int index = recordLeftFlankLength + recordIndex - recordLeftCoreIndex;
         byte[] bases = Arrays.copyOfRange(recordBases, recordLeftFlankIndex, recordRightFlankIndex + 1);
         return new IndexedBases(position, index, recordLeftFlankLength, rightCentreIndex, flankSize, bases);
     }
+
 
     private final int position;
     private final int index;

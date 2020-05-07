@@ -13,8 +13,8 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
-import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
@@ -54,7 +54,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurity));
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurity));
         reportDocument.add(createFusionsTable(patientReport.geneFusions(), hasReliablePurity));
-        reportDocument.add(createHomozygousDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
+        reportDocument.add(createHomozygousDisruptionsTable(patientReport.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
 

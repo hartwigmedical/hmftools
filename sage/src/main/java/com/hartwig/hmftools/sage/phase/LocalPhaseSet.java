@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.sage.phase;
 
-import java.util.ArrayDeque;
-import java.util.Iterator;
+import static com.hartwig.hmftools.sage.phase.Phase.PHASE_BUFFER;
+
+import java.util.Collection;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -10,57 +11,46 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-class LocalPhaseSet implements Consumer<SageVariant> {
+class LocalPhaseSet extends BufferedPostProcessor {
 
     private int phase;
-    private final int maxDistance;
-    private final Consumer<SageVariant> consumer;
-    private final ArrayDeque<SageVariant> deque = new ArrayDeque<>();
 
-    LocalPhaseSet(int flankSize, @NotNull final Consumer<SageVariant> consumer) {
-        this.maxDistance = flankSize + 5;
-        this.consumer = consumer;
+    LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer) {
+        super(PHASE_BUFFER, consumer);
     }
 
     @Override
-    public void accept(@NotNull final SageVariant newEntry) {
+    protected void processSageVariant(@NotNull final SageVariant newEntry, @NotNull final Collection<SageVariant> buffer) {
+
         final ReadContext newReadContext = newEntry.readContext();
-
-        Iterator<SageVariant> iterator = deque.iterator();
-        while (iterator.hasNext()) {
-            final SageVariant oldEntry = iterator.next();
-
+        for (final SageVariant oldEntry : buffer) {
             final ReadContext oldReadContext = oldEntry.readContext();
-            long distance = newEntry.position() - oldEntry.position();
-            int offset = offset(oldEntry.variant(), newEntry.variant());
 
-            if (distance > maxDistance || distance < 0) {
-                iterator.remove();
-                consumer.accept(oldEntry);
-            } else if (oldReadContext.phased(offset, newReadContext)) {
-                if (oldEntry.localPhaseSet() != 0) {
-                    newEntry.localPhaseSet(oldEntry.localPhaseSet());
-                } else if (newEntry.localPhaseSet() != 0) {
-                    oldEntry.localPhaseSet(newEntry.localPhaseSet());
-                } else {
-                    phase++;
-                    oldEntry.localPhaseSet(phase);
-                    newEntry.localPhaseSet(phase);
+            if (!rightInLeftDel(oldEntry.variant(), newEntry.variant())) {
+                int offset = adjustedOffset(oldEntry.variant(), newEntry.variant());
+                if (oldReadContext.phased(offset, newReadContext)) {
+                    if (oldEntry.localPhaseSet() != 0) {
+                        newEntry.localPhaseSet(oldEntry.localPhaseSet());
+                    } else if (newEntry.localPhaseSet() != 0) {
+                        oldEntry.localPhaseSet(newEntry.localPhaseSet());
+                    } else {
+                        phase++;
+                        oldEntry.localPhaseSet(phase);
+                        newEntry.localPhaseSet(phase);
+                    }
                 }
             }
         }
-
-        deque.add(newEntry);
     }
 
-    public void flush() {
-        deque.forEach(consumer);
-        deque.clear();
-    }
-
-    static int offset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
-
+    static int positionOffset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
         long positionOffset = left.position() - right.position();
+        return (int) (positionOffset);
+    }
+
+    static int adjustedOffset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
+
+        long positionOffset = positionOffset(left, right);
         if (positionOffset == 0) {
             return 0;
         }
@@ -68,5 +58,15 @@ class LocalPhaseSet implements Consumer<SageVariant> {
         return (int) (positionOffset + Math.max(0, left.ref().length() - left.alt().length()) - Math.max(0,
                 left.alt().length() - left.ref().length()));
     }
+
+    static boolean rightInLeftDel(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
+        if (left.ref().length() > left.alt().length()) {
+            long deleteEnd = left.position() + left.ref().length() - 1;
+            return right.position() > left.position() && right.position() <= deleteEnd;
+        }
+
+        return false;
+    }
+
 
 }

@@ -13,9 +13,9 @@ import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_PANEL_FILTER
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_JITTER_MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_JITTER_PENALTY;
-import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_MAP_QUAL_DISTANCE_FROM_REF;
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_MAP_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
+import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_READ_EDGE_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH_PANEL;
@@ -81,7 +81,7 @@ public class SageConfigTest {
                 .baseQualityFixedPenalty(DEFAULT_BASE_QUAL_FIXED_PENALTY)
                 .distanceFromReadEdgeFixedPenalty(DEFAULT_READ_EDGE_FIXED_PENALTY)
                 .mapQualityFixedPenalty(DEFAULT_MAP_QUAL_FIXED_PENALTY)
-                .mapQualityAdditionalDistanceFromRefPenalty(DEFAULT_MAP_QUAL_DISTANCE_FROM_REF)
+                .mapQualityReadEventsPenalty(DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY)
                 .mapQualityImproperPairPenalty(DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY)
                 .build();
     }
@@ -89,7 +89,7 @@ public class SageConfigTest {
     public static FilterConfig defaultFilterConfig() {
         return ImmutableFilterConfig.builder()
                 .hardFilter(false)
-                .disableSoftFilter(false)
+                .softFilter(true)
                 .hardMinTumorQual(DEFAULT_HARD_MIN_TUMOR_QUAL)
                 .hardMinTumorRawAltSupport(DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT)
                 .hardMinTumorRawBaseQuality(DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY)
