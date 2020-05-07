@@ -332,8 +332,8 @@ CoverageUp | # of fragments overlapping the last base prior to the up breakend
 CoverageDown | # of fragments overlapping the last base prior to the down breakend
 MaxAnchorLengthUp | maximum number of distinct matched bases by any 1 junction supporting fragment at the up breakend
 MaxAnchorLengthDown | maximum number of distinct matched bases by any 1 junction supporting fragment at the down breakend
-TransDataUp | Transcript ids which contain a splice junction which includes matches the up breakpoint
-TransDataDown | Transcript ids which contain a splice junction which includes matches the down breakpoint
+TransDataUp | Transcript ids which contain a splice junction which includes matches the up breakend
+TransDataDown | Transcript ids which contain a splice junction which includes matches the down breakend
 OtherGenesUp | Other genes which match the up breakpoint
 OtherGenesDown | Other genes which match the down breakpoint
-RelatedFusions | Ids of other fusions in the same gene which may be caused by the same structural variant breakpoints
+RelatedFusions | Ids of other fusions in the same gene which may be caused by the same structural variant
