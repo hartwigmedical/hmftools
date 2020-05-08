@@ -197,8 +197,6 @@ public class FusionFinder
                 {
                     fragmentList.add(fragment);
                 }
-
-                // will write read data after further evaluation of fusions
             }
         }
 
@@ -390,6 +388,8 @@ public class FusionFinder
 
         if(chrGeneSet.size() == 2)
             return true;
+
+        // INVs within the same gene will be dismissed at this point
 
         if(reads.stream().anyMatch(x -> isRealignedFragmentCandidate(x)))
             return true;

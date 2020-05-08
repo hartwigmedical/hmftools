@@ -189,7 +189,7 @@ public class ReadRecord
         if(isTranslocation() || isInversion())
             return true;
 
-        if(!isProperPair() || isSupplementaryAlignment() || mSupplementaryAlignment != null) // && isSecondaryAlignment()
+        if(!isProperPair() || isSupplementaryAlignment() || mSupplementaryAlignment != null)
             return true;
 
         return false;

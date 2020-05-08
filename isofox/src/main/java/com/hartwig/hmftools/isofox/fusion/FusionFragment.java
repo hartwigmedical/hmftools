@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
@@ -147,7 +149,7 @@ public class FusionFragment
                     mOrientations[se] = readGroup.get(0).orientation();
             }
 
-            if(mReads.stream().anyMatch(x -> x.getSuppAlignment() != null))
+            if(mReads.stream().anyMatch(x -> x.getSuppAlignment() != null) || (mReads.size() == 2 && hasLocalKnownJunction(readGroups)))
                 setJunctionData(readGroups, chrGeneCollections, lowerIndex);
 
             extractTranscriptExonData(true);
@@ -176,6 +178,7 @@ public class FusionFragment
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
     public final byte[] orientations() { return mOrientations; }
+    public boolean hasSuppAlignment() { return mReads.stream().anyMatch(x -> x.getSuppAlignment() != null); }
 
     public boolean isSingleGene()
     {
@@ -242,13 +245,33 @@ public class FusionFragment
         return false;
     }
 
+    private boolean hasLocalKnownJunction(final Map<String,List<ReadRecord>> readGroups)
+    {
+        if (readGroups.size() != 2)
+            return false;
+
+        for (Map.Entry<String, List<ReadRecord>> entry : readGroups.entrySet())
+        {
+            if (entry.getValue().size() != 1)
+                return false;
+
+            final ReadRecord read = entry.getValue().get(0);
+
+            if (read.getTransExonRefs().containsKey(EXON_BOUNDARY) || read.getTransExonRefs().containsKey(EXON_MATCH))
+                return true;
+        }
+
+        return false;
+    }
+
     private void setJunctionData(final Map<String,List<ReadRecord>> readGroups, final List<String> chrGeneCollections, int lowerIndex)
     {
         // find the reads with supplementary read info and use this to set
-        final String[] softClipBases = new String[] {"", ""};
+        // final String[] softClipBases = new String[] {"", ""};
         boolean[] junctionValid = { false, false };
 
         boolean isSingleGene = readGroups.size() == 1;
+        boolean isLocalSplit = !isSingleGene && readGroups.values().stream().mapToInt(x -> x.size()).sum() == 2;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -272,7 +295,7 @@ public class FusionFragment
                 if(!rgRead.Cigar.containsOperator(CigarOperator.S))
                     continue;
 
-                if(!isSingleGene)
+                if(!isSingleGene && !isLocalSplit)
                 {
                     if(rgRead.getSuppAlignment() != null)
                         read = rgRead;
@@ -381,15 +404,6 @@ public class FusionFragment
         else
         {
             return DISCORDANT;
-        }
-    }
-
-    public void setGeneData(int geneCollection, final List<TransExonRef> transExonRefs)
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            mGeneCollections[se] = geneCollection;
-            mTransExonRefs[se].addAll(transExonRefs);
         }
     }
 

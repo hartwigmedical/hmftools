@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
@@ -41,10 +44,12 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
+import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 import com.hartwig.hmftools.isofox.fusion.FusionReadData;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class FusionDataTest
@@ -303,7 +308,6 @@ public class FusionDataTest
         addTestTranscripts(geneTransCache);
 
         IsofoxConfig config = new IsofoxConfig();
-
         FusionFinder finder = new FusionFinder(config, geneTransCache);
 
         int gcId = 0;
@@ -358,6 +362,77 @@ public class FusionDataTest
         assertTrue(fusion != null);
         assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
         assertEquals(2, fusion.getFragments(REALIGNED).size());
+    }
+
+    @Test
+    public void testLocalFusions()
+    {
+        // split reads at known junctions but too short to have supplementary data
+        final EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = new IsofoxConfig();
+        FusionFinder finder = new FusionFinder(config, geneTransCache);
+
+        int gcId = 0;
+
+        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        final Map<String,List<ReadRecord>> chimericReadMap = Maps.newHashMap();
+
+        // a simple DEL, supported by 2 split fragments
+        int readId = 0;
+        ReadRecord read1 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        ReadRecord read2 = createMappedRead(readId, gc2, 10200, 10219, createCigar(20, 20, 0));
+        read2.setStrand(true, false);
+
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+
+        // a second one
+        read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        read2 = createMappedRead(readId, gc2, 10200, 10219, createCigar(20, 20, 0));
+        read2.setStrand(true, false);
+
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+
+        // realigned and discordant reads which support it
+
+        // 2 soft-clipped fragments matching the other side of the fusion junction
+        String junctionBases = read1.ReadBases.substring(10, 40) + read2.ReadBases.substring(0, 10);
+        ReadRecord read3 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+        ReadRecord read4 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
+        read4.setStrand(true, false);
+        chimericReadMap.put(read3.Id, Lists.newArrayList(read3, read4));
+
+        junctionBases = read1.ReadBases.substring(30, 40) + read2.ReadBases.substring(0, 30);
+        ReadRecord read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
+        ReadRecord read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        read6.setStrand(true, false);
+        chimericReadMap.put(read5.Id, Lists.newArrayList(read5, read6));
+
+        // and a discordant fragment
+        read3 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        read4 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        read4.setStrand(true, false);
+        chimericReadMap.put(read3.Id, Lists.newArrayList(read3, read4));
+
+        finder.addChimericReads(chimericReadMap);
+
+        finder.findFusions();
+
+        assertEquals(1, finder.getFusionCandidates().size());
+        List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
+        assertEquals(1, fusions.size());
+
+        FusionReadData fusion = fusions.stream().filter(x -> x.isKnownSpliced()).findFirst().orElse(null);
+        assertTrue(fusion != null);
+        assertEquals(2, fusion.getFragments(MATCHED_JUNCTION).size());
+        assertEquals(2, fusion.getFragments(REALIGNED).size());
+        assertEquals(1, fusion.getFragments(DISCORDANT).size());
+
     }
 
 }

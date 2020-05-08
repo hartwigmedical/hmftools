@@ -257,4 +257,53 @@ public class FusionFragmentsTest
         assertEquals(1, spliceGeneIds[SE_END].size());
         assertEquals(GENE_ID_5, spliceGeneIds[SE_END].get(0));
     }
+
+    @Test
+    public void testLocalSplitReads()
+    {
+        // split reads at know junctions but too short to have supplementary data
+        final EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        int gcId = 0;
+
+        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        // a simple DEL
+        int readId = 0;
+        ReadRecord read1 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        ReadRecord read2 = createMappedRead(readId, gc2, 10200, 10219, createCigar(20, 20, 0));
+
+        read2.setStrand(true, false);
+
+        List<ReadRecord> reads = Lists.newArrayList(read1, read2);
+        FusionFragment fragment = new FusionFragment(reads);
+
+        assertEquals(MATCHED_JUNCTION, fragment.type());
+        assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
+        assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
+        assertEquals(1, fragment.orientations()[SE_START]);
+        assertEquals(-1, fragment.orientations()[SE_END]);
+        assertEquals(1100, fragment.junctionPositions()[SE_START]);
+        assertEquals(10200, fragment.junctionPositions()[SE_END]);
+        assertEquals(1, fragment.junctionOrientations()[SE_START]);
+        assertEquals(-1, fragment.junctionOrientations()[SE_END]);
+        assertEquals(DEL, fragment.getImpliedSvType());
+
+        final List<String>[] spliceGeneIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            spliceGeneIds[se].addAll(fragment.getGeneIds(se));
+        }
+
+        assertTrue(fragment.isSpliced());
+        assertEquals(1, spliceGeneIds[SE_START].size());
+        assertEquals(GENE_ID_1, spliceGeneIds[SE_START].get(0));
+        assertEquals(1, spliceGeneIds[SE_END].size());
+        assertEquals(GENE_ID_2, spliceGeneIds[SE_END].get(0));
+    }
 }

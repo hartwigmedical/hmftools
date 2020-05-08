@@ -114,9 +114,18 @@ public class FusionTask implements Callable
 
             if (fragment.type() == MATCHED_JUNCTION)
             {
-                ++junctioned;
                 fragment.setJunctionBases(mConfig.RefFastaSeqFile);
-                createOrUpdateFusion(fragment);
+
+                if(fragment.hasSuppAlignment())
+                {
+                    ++junctioned;
+                    createOrUpdateFusion(fragment);
+                }
+                else
+                {
+                    // may be a local fusion candidate, or just supporting another fusion but without supp alignment data
+                    cacheDiscordantFragment(fragment);
+                }
             }
             else if(fragment.isSingleGene())
             {
@@ -177,6 +186,7 @@ public class FusionTask implements Callable
         // assign any discordant reads
         ISF_LOGGER.debug("{}: assigning unfused fragments", mTaskId);
         assignDiscordantFragments();
+        createLocalFusions();
         assignRealignedFragments();
 
         mPerfCounters[PC_ANNOTATE].stop();
@@ -190,7 +200,7 @@ public class FusionTask implements Callable
         mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
     }
 
-    private void createOrUpdateFusion(final FusionFragment fragment)
+    private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
     {
         // scenarios:
         // 1. New fusion with correct splice-junction support - may or may not match a known transcript and exon
@@ -204,20 +214,22 @@ public class FusionTask implements Callable
             fusions = Lists.newArrayList();
             mFusionCandidates.put(fragment.locationPair(), fusions);
         }
-
-        for(final FusionReadData fusionData : fusions)
+        else
         {
-            if(fusionData.junctionMatch(fragment))
+            for (final FusionReadData fusionData : fusions)
             {
-                fusionData.addFusionFragment(fragment);
+                if (fusionData.junctionMatch(fragment))
+                {
+                    fusionData.addFusionFragment(fragment);
 
-                // mark donor-acceptor types whether strands are known or not
-                fragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
-                return;
+                    // mark donor-acceptor types whether strands are known or not
+                    fragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
+                    return fusionData;
+                }
             }
         }
 
-        int fusionId = mTaskId * 10000 + mNextFusionId++;
+        int fusionId = mTaskId * 1000000 + mNextFusionId++; // keep unique across threaded tasks
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
         setGeneData(fusionData);
@@ -235,6 +247,8 @@ public class FusionTask implements Callable
             else
                 fusionsByGene.add(fusionData);
         }
+
+        return fusionData;
     }
 
     private void cacheDiscordantFragment(final FusionFragment fragment)
@@ -400,6 +414,7 @@ public class FusionTask implements Callable
 
     private void assignDiscordantFragments()
     {
+        // attempt to allocate discordant fragments to fusions
         for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
         {
             final List<FusionReadData> fusions = mFusionCandidates.get(entry.getKey());
@@ -413,6 +428,7 @@ public class FusionTask implements Callable
 
             for (FusionFragment fragment : fragments)
             {
+                // only allocate discordant fragments if they support a gene & transcript at both ends
                 if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
                     continue;
 
@@ -420,6 +436,76 @@ public class FusionTask implements Callable
                 {
                     if(fusionData.canAddUnfusedFragment(fragment, mConfig.MaxFragmentLength))
                     {
+                        // check if one of the split read ends can be realigned to support the fusion junction
+                        if(fusionData.isRelignedFragment(fragment))
+                        {
+                            fragment.setType(REALIGNED);
+                        }
+                        else
+                        {
+                            fragment.setType(DISCORDANT);
+                        }
+
+                        fusionData.addFusionFragment(fragment);
+                        allocatedFragments.add(fragment);
+                    }
+                }
+            }
+
+            allocatedFragments.forEach(x -> fragments.remove(x));
+        }
+    }
+
+    private void createLocalFusions()
+    {
+        // create fusions from fragments with 1 or both junctions matching known splice sites between genes without supp alignment
+        // and then reassign any other fragments to these new fusions
+
+        final Set<FusionReadData> newFusions = Sets.newHashSet();
+
+        for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
+        {
+            final List<FusionFragment> fragments = entry.getValue();
+
+            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
+
+            for (FusionFragment fragment : fragments)
+            {
+                if(fragment.type() == MATCHED_JUNCTION)
+                {
+                    FusionReadData fusionData = createOrUpdateFusion(fragment);
+                    newFusions.add(fusionData);
+                    allocatedFragments.add(fragment);
+                }
+            }
+
+            allocatedFragments.forEach(x -> fragments.remove(x));
+        }
+
+        // now re-check remaining non-split-junction against the new fusions only
+        for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
+        {
+            final List<FusionReadData> fusions = newFusions.stream()
+                    .filter(x -> x.locationId().equals(entry.getKey())).collect(Collectors.toList());
+
+            if(fusions.isEmpty())
+                continue;
+
+            final List<FusionFragment> fragments = entry.getValue();
+
+            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
+
+            for (FusionFragment fragment : fragments)
+            {
+                // only allocate discordant fragments if they support a gene & transcript at both ends
+                if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
+                    continue;
+
+                for(FusionReadData fusionData : fusions)
+                {
+                    if(fusionData.canAddUnfusedFragment(fragment, mConfig.MaxFragmentLength))
+                    {
+                        // check if one of the split read ends can be realigned to support the fusion junction
                         if(fusionData.isRelignedFragment(fragment))
                         {
                             fragment.setType(REALIGNED);
