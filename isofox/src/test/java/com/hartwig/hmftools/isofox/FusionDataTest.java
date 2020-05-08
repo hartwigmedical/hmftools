@@ -432,7 +432,5 @@ public class FusionDataTest
         assertEquals(2, fusion.getFragments(MATCHED_JUNCTION).size());
         assertEquals(2, fusion.getFragments(REALIGNED).size());
         assertEquals(1, fusion.getFragments(DISCORDANT).size());
-
     }
-
 }

@@ -87,11 +87,23 @@ public class FusionTask implements Callable
     {
         ISF_LOGGER.info("{}: processing {} chimeric fragments", mTaskId, mAllFragments.size());
 
+        mPerfCounters[PC_DISCOVERY].start();;
+
         formInitialFusions();
 
-        calculateReadDepth();
+        // assign any discordant reads
+        ISF_LOGGER.debug("{}: assigning unfused fragments", mTaskId);
+        assignDiscordantFragments();
+        createLocalFusions();
+        assignRealignedFragments();
+
+        mPerfCounters[PC_DISCOVERY].stop();
+
+        mPerfCounters[PC_ANNOTATE].start();
 
         annotateFusions();
+
+        mPerfCounters[PC_ANNOTATE].stop();
 
         writeData();
 
@@ -105,8 +117,6 @@ public class FusionTask implements Callable
 
     private void formInitialFusions()
     {
-        mPerfCounters[PC_DISCOVERY].start();;
-
         int junctioned = 0;
         for (FusionFragment fragment : mAllFragments)
         {
@@ -141,8 +151,6 @@ public class FusionTask implements Callable
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mSingleGeneFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
-
-        mPerfCounters[PC_DISCOVERY].stop();
     }
 
     private void calculateReadDepth()
@@ -178,18 +186,10 @@ public class FusionTask implements Callable
 
     private void annotateFusions()
     {
-        mPerfCounters[PC_ANNOTATE].start();
-
         ISF_LOGGER.debug("{}: marking related fusions", mTaskId);
         markRelatedFusions();
 
-        // assign any discordant reads
-        ISF_LOGGER.debug("{}: assigning unfused fragments", mTaskId);
-        assignDiscordantFragments();
-        createLocalFusions();
-        assignRealignedFragments();
-
-        mPerfCounters[PC_ANNOTATE].stop();
+        calculateReadDepth();
     }
 
     private void writeData()

@@ -85,7 +85,7 @@ public class FusionFinder
         mRestrictedGeneRegions = Lists.newArrayList();
         buildGeneRegions();
 
-        mPerfCounter = new PerformanceCounter("FusionTotal");
+        mPerfCounter = new PerformanceCounter("Fusions");
         mFusionWriter = new FusionWriter(mConfig);
     }
 

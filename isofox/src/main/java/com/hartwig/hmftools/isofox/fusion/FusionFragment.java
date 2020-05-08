@@ -149,7 +149,7 @@ public class FusionFragment
                     mOrientations[se] = readGroup.get(0).orientation();
             }
 
-            if(mReads.stream().anyMatch(x -> x.getSuppAlignment() != null) || (mReads.size() == 2 && hasLocalKnownJunction(readGroups)))
+            if(mReads.stream().anyMatch(x -> x.getSuppAlignment() != null) || hasLocalJunction(readGroups))
                 setJunctionData(readGroups, chrGeneCollections, lowerIndex);
 
             extractTranscriptExonData(true);
@@ -245,23 +245,30 @@ public class FusionFragment
         return false;
     }
 
-    private boolean hasLocalKnownJunction(final Map<String,List<ReadRecord>> readGroups)
+    private boolean hasLocalJunction(final Map<String,List<ReadRecord>> readGroups)
     {
-        if (readGroups.size() != 2)
+        if(mReads.size() != 2 || readGroups.size() != 2)
             return false;
 
-        for (Map.Entry<String, List<ReadRecord>> entry : readGroups.entrySet())
+        // only permit DELs and DUPs
+        if(mOrientations[SE_START] == mOrientations[SE_END] || !mChromosomes[SE_START].equals(mChromosomes[SE_END]))
+            return false;
+
+        for(int se = SE_START; se <= SE_END; ++se)
         {
-            if (entry.getValue().size() != 1)
+            final int seIndex = se;
+            final ReadRecord read = mReads.stream().filter(x -> x.getGeneCollecton() == mGeneCollections[seIndex]).findFirst().orElse(null);
+
+            if(read == null)
                 return false;
 
-            final ReadRecord read = entry.getValue().get(0);
-
-            if (read.getTransExonRefs().containsKey(EXON_BOUNDARY) || read.getTransExonRefs().containsKey(EXON_MATCH))
-                return true;
+            if(mOrientations[se] == 1 && !read.isSoftClipped(SE_END))
+                return false;
+            if(mOrientations[se] == -1 && !read.isSoftClipped(SE_START))
+                return false;
         }
 
-        return false;
+        return true;
     }
 
     private void setJunctionData(final Map<String,List<ReadRecord>> readGroups, final List<String> chrGeneCollections, int lowerIndex)
