@@ -192,7 +192,7 @@ For each chimeric junction and novel splice junction  we count
 * Total # of fragments supporting novel splice junction across all the unique samples
 
 For intron retention cases we count
-* Number of unique samples with at least 3 fragments or at least one fragment with a known splice event supporting intron retention
+* Number of unique samples with at least 3 fragments supporting intron retention
 * Total # of fragments supporting intron retention from those unique samples
 * Total # of fragments supporting intron retention from those unique samples which also have splicing.
 
