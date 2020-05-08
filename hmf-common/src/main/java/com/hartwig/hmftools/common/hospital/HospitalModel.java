@@ -115,7 +115,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    public String extractHospital(@NotNull String sampleId) {
+    public String extractHospitalAdress(@NotNull String sampleId) {
         HospitalAdress hospitalAdress;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
@@ -155,6 +155,46 @@ public abstract class HospitalModel {
     }
 
     @Nullable
+    public String extractHospitalName(@NotNull String sampleId) {
+        HospitalAdress hospitalAdress;
+        String hospitalID = extractHospitalIdFromSample(sampleId);
+
+        if (sampleId.startsWith("CORE19") || sampleId.contains("CORE18")) {
+            // These are the old core names, we need to manually map them.
+            HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
+            if (hospitalSampleMapping == null) {
+                LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
+                return null;
+            } else {
+                hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
+                if (hospitalAdress == null) {
+                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
+                            sampleId,
+                            hospitalSampleMapping.internalHospitalName());
+                    return null;
+                }
+            }
+            checkAddresseeFields(hospitalAdress);
+            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
+
+        } else {
+            if (hospitalID == null) {
+                LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
+                return null;
+            }
+
+            hospitalAdress = hospitalAdress().get(hospitalID);
+            if (hospitalAdress == null) {
+                LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
+                return null;
+            }
+            checkAddresseeFields(hospitalAdress);
+
+            return hospitalAdress.hospitalName();
+        }
+    }
+
+    @Nullable
     private static String extractHospitalIdFromSample(@NotNull String sample) {
         LimsStudy type = LimsStudy.fromSampleId(sample);
 
@@ -190,7 +230,8 @@ public abstract class HospitalModel {
                 .hospitalPI(extractHospitalPI(sampleId))
                 .analyseRequestName(extractRequestName(sampleId))
                 .analyseRequestEmail(extractRequestEmail(sampleId))
-                .hospital(extractHospital(sampleId))
+                .fullHospitalString(extractHospitalAdress(sampleId))
+                .hospital(extractHospitalName(sampleId))
                 .build();
     }
 

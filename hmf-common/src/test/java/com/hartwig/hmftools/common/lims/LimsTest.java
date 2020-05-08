@@ -14,6 +14,10 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.hospital.HospitalSampleMapping;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalModel;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalSampleMapping;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -269,7 +273,7 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDates,
-                blacklistedPatients, null);
+                blacklistedPatients, hospitalModel());
     }
 
     @NotNull
@@ -287,7 +291,7 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, null);
+                blacklistedPatients, hospitalModel());
     }
 
     @NotNull
@@ -310,7 +314,20 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, null);
+                blacklistedPatients, hospitalModel());
+    }
+
+    @NotNull
+    private static HospitalModel hospitalModel() {
+        Map<String, HospitalSampleMapping> hospitalPerIdManual = Maps.newHashMap();
+
+        hospitalPerIdManual.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
+        return ImmutableHospitalModel.of(
+                hospitalPerIdManual,
+                Maps.newHashMap(),
+                Maps.newHashMap(),
+                Maps.newHashMap(),
+                Maps.newHashMap());
     }
 
     @NotNull
@@ -330,6 +347,6 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, null);
+                blacklistedPatients, hospitalModel());
     }
 }

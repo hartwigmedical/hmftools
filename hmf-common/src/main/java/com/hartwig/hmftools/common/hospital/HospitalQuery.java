@@ -21,4 +21,7 @@ public abstract class HospitalQuery {
     @Nullable
     public abstract String hospital();
 
+    @Nullable
+    public abstract String fullHospitalString();
+
 }

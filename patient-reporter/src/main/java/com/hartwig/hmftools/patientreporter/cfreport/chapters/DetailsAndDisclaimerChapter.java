@@ -60,8 +60,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
         String addressee;
-        if (sampleReport.hospitalQuery().hospital() != null) {
-            addressee = sampleReport.hospitalQuery().hospital();
+        if (sampleReport.hospitalQuery().fullHospitalString() != null) {
+            addressee = sampleReport.hospitalQuery().fullHospitalString();
             assert addressee != null;
         } else {
             LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());

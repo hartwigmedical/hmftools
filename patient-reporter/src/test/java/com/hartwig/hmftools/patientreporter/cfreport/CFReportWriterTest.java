@@ -141,6 +141,7 @@ public class CFReportWriterTest {
                 .analyseRequestName("Paul")
                 .analyseRequestEmail("paul@hartwig.com")
                 .hospital("HMF Testing Center")
+                .fullHospitalString("HMF Testing Center, Zip, City")
                 .build();
     }
 
