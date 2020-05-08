@@ -20,7 +20,8 @@ data class Inversion(
         override val otherChromosome: String,
         override val otherPosition: Int,
         override val startOrientation: Byte,
-        override val endOrientation: Byte)
+        override val endOrientation: Byte,
+        val length: Int)
     : Paired()
 
 data class Deletion(
@@ -95,11 +96,10 @@ sealed class VariantType {
                 return Translocation(insertSequence, otherChromosome, otherPosition, startOrientation, endOrientation)
             }
 
-            if (startOrientation == endOrientation) {
-                return Inversion(insertSequence, otherChromosome, otherPosition, startOrientation, endOrientation)
-            }
-
             val length = abs(position - otherPosition)
+            if (startOrientation == endOrientation) {
+                return Inversion(insertSequence, otherChromosome, otherPosition, startOrientation, endOrientation, length)
+            }
 
             if ((position <= otherPosition && startOrientation == (-1).toByte()) || (position >= otherPosition && startOrientation == (1).toByte())) {
                 return Duplication(insertSequence, otherChromosome, otherPosition, startOrientation, endOrientation, length)

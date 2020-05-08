@@ -12,7 +12,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         private val polyC = "C".repeat(16);
     }
 
-    private val variantType = context.toVariantType()
+    val variantType = context.toVariantType()
     val isSingle = variantType is Single
     val isShortDup = variantType is Duplication && variantType.length < SHORT_EVENT_SIZE
     val isShortDel = variantType is Deletion && variantType.length < SHORT_EVENT_SIZE
@@ -55,6 +55,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(MAX_HOM_LENGTH)
         }
 
+        if (homologyLengthFilterShortInversion(config.maxHomLengthShortInversion)) {
+            builder.filter(MAX_HOM_LENGTH_SHORT_INV)
+        }
+
         if (inexactHomologyLengthFilter(config.maxInexactHomLength)) {
             builder.filter(MAX_INEXACT_HOM_LENGTH)
         }
@@ -95,6 +99,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     fun homologyLengthFilter(maxHomLength: Int): Boolean {
         return !isSingle && context.homologyLength() > maxHomLength
+    }
+
+    fun homologyLengthFilterShortInversion(maxHomLength: Int, maxInversionLength: Int = 40): Boolean {
+        return variantType is Inversion && variantType.length <= maxInversionLength && context.homologyLength() > maxHomLength
     }
 
     fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {

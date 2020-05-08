@@ -22,7 +22,7 @@ class StructuralVariantContextTest {
 
     @Test
     fun testImpreciseFilter() {
-        val victim = createBreakEnd()
+        val victim = createSingle()
         assertFalse(victim.toSv().impreciseFilter())
         assertFalse(victim.setAttribute("IMPRECISE", false).toSv().impreciseFilter())
         assertTrue(victim.setAttribute("IMPRECISE", true).toSv().impreciseFilter())
@@ -30,14 +30,14 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportFilter() {
-        assertTrue(createBreakEnd().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
-        assertFalse(createBreakEnd().fragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
-        assertTrue(createBreakEnd().fragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
+        assertTrue(createSingle().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
+        assertFalse(createSingle().fragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
+        assertTrue(createSingle().fragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
     }
 
     @Test
     fun testQualFilter() {
-        val breakEnd = createBreakEnd().qual(200).toSv();
+        val breakEnd = createSingle().qual(200).toSv();
         assertTrue(breakEnd.qualFilter(201, 1000))
         assertFalse(breakEnd.qualFilter(200, 1000))
         assertFalse(breakEnd.qualFilter(199, 1000))
@@ -63,16 +63,26 @@ class StructuralVariantContextTest {
     @Test
     fun testHomologyLengthFilter() {
         val attribute = "HOMLEN"
-        assertFalse(createBreakEnd().setAttribute(attribute, 1000).toSv().homologyLengthFilter(1))
+        val single = createSingle().setAttribute(attribute, 1000).toSv()
+        assertFalse(single.homologyLengthFilter(1))
 
-        assertFalse(createBreakPoint().setAttribute(attribute, 50).toSv().homologyLengthFilter(50))
-        assertTrue(createBreakPoint().setAttribute(attribute, 50).toSv().homologyLengthFilter(49))
+        val dup = shortDup().setAttribute(attribute, 50).toSv()
+        assertFalse(dup.homologyLengthFilter(50))
+        assertTrue(dup.homologyLengthFilter(49))
+        assertFalse(dup.homologyLengthFilterShortInversion(50))
+        assertFalse(dup.homologyLengthFilterShortInversion(49))
+
+        val inv = shortInv().setAttribute(attribute, 50).toSv()
+        assertFalse(inv.homologyLengthFilter(50))
+        assertTrue(inv.homologyLengthFilter(49))
+        assertFalse(inv.homologyLengthFilterShortInversion(50))
+        assertTrue(inv.homologyLengthFilterShortInversion(49))
     }
 
     @Test
     fun testInexactHomologyLengthFilter() {
         val attribute = "IHOMPOS"
-        assertFalse(createBreakEnd().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(1))
+        assertFalse(createSingle().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(1))
 
         val bnd = bnd().setAttribute(attribute, listOf(1, 51)).toSv()
         assertFalse(bnd.inexactHomologyLengthFilter(50))
@@ -148,17 +158,22 @@ class StructuralVariantContextTest {
         assertFalse(bnd.isShortDel)
         assertFalse(bnd.isShortIns)
 
-        assertTrue(createBreakEnd().toSv().isSingle)
+        val shortInv = shortInv().toSv()
+        assertTrue(shortInv.variantType is Inversion)
+
+        assertTrue(createSingle().toSv().isSingle)
         assertFalse(createBreakPoint().toSv().isSingle)
     }
 
     private fun bnd(): VariantContext = createVariant(80, "A", "ATACTGCTACA[2:100[")
 
+    private fun shortInv(position: Int = 100, otherPosition: Int = 110): VariantContext = createVariant(position, "A", "ATT]1:$otherPosition]")
+
     private fun shortDel(position: Int = 80, otherPosition: Int = 100): VariantContext = createVariant(position, "A", "ATACTGCTACA[1:${otherPosition}[")
 
     private fun shortDup(position: Int = 110, otherPosition: Int = 100): VariantContext = createVariant(position, "A", "ATACTGCTACA[1:${otherPosition}[")
 
-    private fun createBreakEnd(): VariantContext {
+    private fun createSingle(): VariantContext {
         return createVariant(1, "C", ".A")
     }
 

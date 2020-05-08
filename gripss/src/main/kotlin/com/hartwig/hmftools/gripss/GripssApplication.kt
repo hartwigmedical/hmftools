@@ -19,6 +19,7 @@ fun main(args: Array<String>) {
             350,
             1000,
             50,
+            6,
             50,
             6)
     val config = GripssConfig(inputVCF, outputVCF, filterConfig)
