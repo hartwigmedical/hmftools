@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.isofox.data_loaders;
-
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+package com.hartwig.hmftools.isofox.cohort;
 
 import java.util.Map;
 

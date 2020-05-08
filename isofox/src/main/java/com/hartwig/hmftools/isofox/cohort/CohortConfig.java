@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.data_loaders;
+package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.EXCLUDED_GENE_ID_FILE;
@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.getFileId;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.getFileId;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -16,18 +16,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-import jdk.nashorn.internal.ir.EmptyNode;
-
-public class DataLoaderConfig
+public class CohortConfig
 {
     public static final String ROOT_DATA_DIRECTORY = "root_data_dir";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
@@ -49,6 +45,8 @@ public class DataLoaderConfig
     public static final String COHORT_TRANS_FILE = "cohort_trans_file";
     public static final String CANCER_TRANS_FILE = "cancer_trans_file";
 
+    public static final String SAMPLE_MUT_FILE = "sample_mut_file";
+
     public final String RootDataDir;
     public final String OutputDir;
     public final String OutputIdentifier;
@@ -57,9 +55,12 @@ public class DataLoaderConfig
     public final boolean AllAvailableFiles;
     public final List<String> RestrictedGeneIds;
     public final List<String> ExcludedGeneIds;
+    public final boolean FailOnMissingSample;
+    public final boolean ConvertUnmatchedCancerToOther;
 
-    public final List<DataLoadType> LoadTypes;
+    public final List<CohortAnalysisType> LoadTypes;
 
+    // routine specifics
     public final int AltSJMinSampleThreshold;
     public final int AltSJMinFragsUnrequiredGenes;
     public final double AltSJProbabilityThreshold;
@@ -70,12 +71,13 @@ public class DataLoaderConfig
 
     public final String CohortTransFile;
     public final String CancerTransFile;
+    public final String SampleMutationsFile;
 
     public final String CancerGeneFiles;
     public final double TpmLogThreshold;
     public final double TpmRounding;
 
-    public DataLoaderConfig(final CommandLine cmd)
+    public CohortConfig(final CommandLine cmd)
     {
         RootDataDir = cmd.getOptionValue(ROOT_DATA_DIRECTORY);
         UseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRS);
@@ -97,20 +99,7 @@ public class DataLoaderConfig
         }
 
         LoadTypes = Arrays.stream(cmd.getOptionValue(LOAD_TYPES).split(";"))
-                .map(x -> DataLoadType.valueOf(x)).collect(Collectors.toList());
-
-        AltSJMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
-        AltSJMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
-        AltSJProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
-        SpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
-        EnsemblDataCache = cmd.getOptionValue(GENE_TRANSCRIPTS_DIR);
-
-        TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
-        TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
-
-        WriteSampleGeneDistributionData = cmd.hasOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
-        CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
-        CancerTransFile = cmd.getOptionValue(CANCER_TRANS_FILE);
+                .map(x -> CohortAnalysisType.valueOf(x)).collect(Collectors.toList());
 
         CancerGeneFiles = cmd.getOptionValue(CANCER_GENE_FILES);
         RestrictedGeneIds = Lists.newArrayList();
@@ -129,6 +118,23 @@ public class DataLoaderConfig
             loadGeneIdsFile(inputFile, ExcludedGeneIds);
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
+
+        AltSJMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
+        AltSJMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
+        AltSJProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
+        SpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
+        EnsemblDataCache = cmd.getOptionValue(GENE_TRANSCRIPTS_DIR);
+
+        FailOnMissingSample = true;
+        ConvertUnmatchedCancerToOther = true;
+
+        TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
+        TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
+
+        WriteSampleGeneDistributionData = cmd.hasOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
+        CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
+        CancerTransFile = cmd.getOptionValue(CANCER_TRANS_FILE);
+        SampleMutationsFile = cmd.getOptionValue(SAMPLE_MUT_FILE);
     }
 
     public static boolean isValid(final CommandLine cmd)
@@ -145,7 +151,7 @@ public class DataLoaderConfig
             return OutputDir + "isofox_" + fileId;
     }
 
-    public static boolean formSampleFilenames(final DataLoaderConfig config, final DataLoadType dataType, final List<Path> filenames)
+    public static boolean formSampleFilenames(final CohortConfig config, final CohortAnalysisType dataType, final List<Path> filenames)
     {
         String rootDir = config.RootDataDir;
 
@@ -201,6 +207,7 @@ public class DataLoaderConfig
         options.addOption(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
         options.addOption(COHORT_TRANS_FILE, true, "Cohort transcript distribution file");
         options.addOption(CANCER_TRANS_FILE, true, "Cancer transcript distribution file");
+        options.addOption(SAMPLE_MUT_FILE, true, "Sample mutations by gene and cancer type");
         options.addOption(TPM_ROUNDING, true, "TPM/FPM rounding factor, base-10 integer (default=2, ie 1%)");
         options.addOption(TPM_LOG_THRESHOLD, true, "Only write transcripts with TPM greater than this");
 

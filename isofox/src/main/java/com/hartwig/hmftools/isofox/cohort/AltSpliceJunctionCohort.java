@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.data_loaders;
+package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.ALT_SPLICE_JUNCTION;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.ALT_SPLICE_JUNCTION;
+import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.fromCsv;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -27,7 +27,7 @@ import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class AltSpliceJunctionCohort
 {
-    private final DataLoaderConfig mConfig;
+    private final CohortConfig mConfig;
 
     private final Map<String,Integer> mFieldsMap;
 
@@ -38,7 +38,7 @@ public class AltSpliceJunctionCohort
 
     private final FisherExactTest mFisherET;
 
-    public AltSpliceJunctionCohort(final DataLoaderConfig config)
+    public AltSpliceJunctionCohort(final CohortConfig config)
     {
         mConfig = config;
         mAltSpliceJunctions = Maps.newHashMap();

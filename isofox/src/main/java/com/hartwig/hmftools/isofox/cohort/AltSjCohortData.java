@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.data_loaders;
+package com.hartwig.hmftools.isofox.cohort;
 
 import static java.lang.Math.max;
 

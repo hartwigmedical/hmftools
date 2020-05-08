@@ -1,14 +1,14 @@
-package com.hartwig.hmftools.isofox.data_loaders;
+package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.DISTRIBUTION_SIZE;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.convertDistribution;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.roundTPM;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.DISTRIBUTION_SIZE;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.convertDistribution;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.roundTPM;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -27,7 +27,7 @@ import com.google.common.collect.Maps;
 
 public class GeneExpressionDistribution
 {
-    private final DataLoaderConfig mConfig;
+    private final CohortConfig mConfig;
 
     private final String mGeneRateType;
 
@@ -38,7 +38,7 @@ public class GeneExpressionDistribution
     public static final String GENE_RATE_TPM = "TPM";
     public static final String GENE_RATE_FPM = "FPM";
 
-    public GeneExpressionDistribution(final DataLoaderConfig config)
+    public GeneExpressionDistribution(final CohortConfig config)
     {
         mConfig = config;
         mGeneCohortDataMap = Maps.newHashMap();
@@ -51,7 +51,7 @@ public class GeneExpressionDistribution
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, DataLoadType.GENE_DISTRIBUTION, filenames))
+        if(!formSampleFilenames(mConfig, CohortAnalysisType.GENE_DISTRIBUTION, filenames))
             return;
 
         initialiseWriter();
@@ -81,8 +81,6 @@ public class GeneExpressionDistribution
             mWriter = createBufferedWriter(outputFileName, false);
 
             mWriter.write("GeneId,GeneName");
-
-            double distributionSize = DISTRIBUTION_SIZE;
 
             for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
             {

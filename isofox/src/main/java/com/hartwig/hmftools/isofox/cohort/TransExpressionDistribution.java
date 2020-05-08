@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.data_loaders;
+package com.hartwig.hmftools.isofox.cohort;
 
 import static java.lang.Math.log10;
 import static java.lang.Math.min;
@@ -10,10 +10,10 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.TRANSCRIPT_DISTRIBUTION;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.RATE_COUNT;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.RATE_VALUE;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_DISTRIBUTION;
+import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionData.RATE_COUNT;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionData.RATE_VALUE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
@@ -34,7 +34,7 @@ import com.google.common.collect.Maps;
 
 public class TransExpressionDistribution
 {
-    private final DataLoaderConfig mConfig;
+    private final CohortConfig mConfig;
 
     private final Map<Integer,TransExpressionData> mTranscriptExpressionData;
 
@@ -45,7 +45,7 @@ public class TransExpressionDistribution
 
     public static final int DISTRIBUTION_SIZE = 101; // percentiles from 0 to 100
 
-    public TransExpressionDistribution(final DataLoaderConfig config)
+    public TransExpressionDistribution(final CohortConfig config)
     {
         mConfig = config;
         mTranscriptExpressionData = Maps.newHashMap();

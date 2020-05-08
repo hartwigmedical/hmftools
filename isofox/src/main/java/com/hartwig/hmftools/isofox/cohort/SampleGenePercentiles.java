@@ -1,14 +1,14 @@
-package com.hartwig.hmftools.isofox.data_loaders;
+package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.DISTRIBUTION_SIZE;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.getTpmMedian;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.getTpmPercentile;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.loadCohortDistribution;
+import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.DISTRIBUTION_SIZE;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.getTpmMedian;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.getTpmPercentile;
+import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.loadCohortDistribution;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
@@ -20,17 +20,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class SampleGenePercentiles
 {
-    private final DataLoaderConfig mConfig;
+    private final CohortConfig mConfig;
 
     private final Map<String,Map<String,double[]>> mCancerTypesGeneDistribution;
 
@@ -40,7 +38,7 @@ public class SampleGenePercentiles
     private static final int FLD_CANCER_TYPE = 0;
     private static final int FLD_FILENAME = 1;
 
-    public SampleGenePercentiles(final DataLoaderConfig config)
+    public SampleGenePercentiles(final CohortConfig config)
     {
         mConfig = config;
         mCancerTypesGeneDistribution = Maps.newHashMap();
@@ -69,7 +67,7 @@ public class SampleGenePercentiles
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, DataLoadType.GENE_DISTRIBUTION, filenames))
+        if(!formSampleFilenames(mConfig, CohortAnalysisType.GENE_DISTRIBUTION, filenames))
             return;
 
         initialiseWriter();

@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.isofox.data_loaders;
+package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.SUMMARY;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.isValid;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.SUMMARY;
+import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.cohort.CohortConfig.isValid;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.loadFile;
 
@@ -28,18 +28,18 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-public class DataLoader
+public class CohortAnalyser
 {
-    private final DataLoaderConfig mConfig;
+    private final CohortConfig mConfig;
 
-    public DataLoader(final DataLoaderConfig config)
+    public CohortAnalyser(final CohortConfig config)
     {
         mConfig = config;
     }
 
     public boolean load()
     {
-        for(DataLoadType type : mConfig.LoadTypes)
+        for(CohortAnalysisType type : mConfig.LoadTypes)
         {
             switch(type)
             {
@@ -72,6 +72,13 @@ public class DataLoader
                 {
                     SampleGenePercentiles sampleGenePerc = new SampleGenePercentiles(mConfig);
                     sampleGenePerc.processSampleFiles();
+                    break;
+                }
+
+                case SAMPLE_ROUTINES:
+                {
+                    SampleRoutines sampleRoutines = new SampleRoutines(mConfig);
+                    sampleRoutines.convertMutationCohortFile(mConfig.SampleMutationsFile);
                     break;
                 }
 
@@ -123,7 +130,7 @@ public class DataLoader
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = DataLoaderConfig.createCmdLineOptions();
+        final Options options = CohortConfig.createCmdLineOptions();
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
 
@@ -138,17 +145,17 @@ public class DataLoader
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        DataLoaderConfig config = new DataLoaderConfig(cmd);
+        CohortConfig config = new CohortConfig(cmd);
 
-        DataLoader dataLoader = new DataLoader(config);
+        CohortAnalyser cohortAnalyser = new CohortAnalyser(config);
 
-        if(!dataLoader.load())
+        if(!cohortAnalyser.load())
         {
-            ISF_LOGGER.info("Isofox data loader failed");
+            ISF_LOGGER.info("Isofox cohort analyser failed");
             return;
         }
 
-        ISF_LOGGER.info("Isofox data loading complete");
+        ISF_LOGGER.info("Isofox cohort analyser complete");
     }
 
 }

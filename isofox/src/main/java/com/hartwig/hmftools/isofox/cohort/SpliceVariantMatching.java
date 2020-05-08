@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.data_loaders;
+package com.hartwig.hmftools.isofox.cohort;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
@@ -31,7 +31,7 @@ import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class SpliceVariantMatching
 {
-    private final DataLoaderConfig mConfig;
+    private final CohortConfig mConfig;
     private final Map<String,Integer> mFieldsMap;
     private final EnsemblDataCache mGeneTransCache;
 
@@ -39,7 +39,7 @@ public class SpliceVariantMatching
 
     private BufferedWriter mWriter;
 
-    public SpliceVariantMatching(final DataLoaderConfig config)
+    public SpliceVariantMatching(final CohortConfig config)
     {
         mConfig = config;
         mFieldsMap = Maps.newHashMap();
