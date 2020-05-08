@@ -9,19 +9,19 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HospitalQuery {
 
-    @Nullable
+    @NotNull
     public abstract String hospitalPI();
 
-    @Nullable
+    @NotNull
     public abstract String analyseRequestName();
 
-    @Nullable
+    @NotNull
     public abstract String analyseRequestEmail();
 
-    @Nullable
+    @NotNull
     public abstract String hospital();
 
-    @Nullable
+    @NotNull
     public abstract String fullHospitalString();
 
 }

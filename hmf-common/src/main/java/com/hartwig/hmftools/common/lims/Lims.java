@@ -294,8 +294,8 @@ public class Lims {
     }
 
     @NotNull
-    public HospitalQuery hospitalQuery(@NotNull String sampleId) {
-        return hospitalModel.generateHospitalQuery(sampleId);
+    public HospitalQuery hospitalQuery(@NotNull String sampleId, @NotNull String tumorBarcode) {
+        return hospitalModel.generateHospitalQuery(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
     }
 
     @Nullable
