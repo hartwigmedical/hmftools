@@ -59,6 +59,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(MAX_INEXACT_HOM_LENGTH)
         }
 
+        if (inexactHomologyLengthShortDelFilter(config.maxInexactHomLengthShortDel)) {
+            builder.filter(MAX_INEXACT_HOM_LENGTH_SHORT_DEL)
+        }
+
         if (shortSplitReadTumorFilter()) {
             builder.filter(SHORT_SR_SUPPORT)
         }
@@ -83,6 +87,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     fun polyGCFilter(): Boolean {
         return isSingle && variantType.insertSequence.contains(polyG) || variantType.insertSequence.contains(polyC)
+    }
+
+    fun inexactHomologyLengthShortDelFilter(maxInexactHomLength: Int, minDelLength: Int = 100, maxDelLength: Int = 800): Boolean {
+        return variantType is Deletion && variantType.length >= minDelLength && variantType.length <= maxDelLength && context.inexactHomologyLength() > maxInexactHomLength;
     }
 
     fun homologyLengthFilter(maxHomLength: Int): Boolean {
@@ -136,6 +144,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
         return normalSupport > maxNormalSupport * tumorSupport;
     }
+
 
     private fun VariantContext.mateId(): String? {
         if (this.hasAttribute("MATE_ID")) {

@@ -74,8 +74,23 @@ class StructuralVariantContextTest {
         val attribute = "IHOMPOS"
         assertFalse(createBreakEnd().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(1))
 
-        assertFalse(shortDel().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(50))
-        assertTrue(shortDel().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(49))
+        val bnd = bnd().setAttribute(attribute, listOf(1, 51)).toSv()
+        assertFalse(bnd.inexactHomologyLengthFilter(50))
+        assertTrue(bnd.inexactHomologyLengthFilter(49))
+        assertFalse(bnd.inexactHomologyLengthShortDelFilter(50))
+        assertFalse(bnd.inexactHomologyLengthShortDelFilter(49))
+
+        val tinyDel = shortDel(100, 110).setAttribute(attribute, listOf(1, 51)).toSv()
+        assertFalse(tinyDel.inexactHomologyLengthFilter(50))
+        assertTrue(tinyDel.inexactHomologyLengthFilter(49))
+        assertFalse(tinyDel.inexactHomologyLengthShortDelFilter(50))
+        assertFalse(tinyDel.inexactHomologyLengthShortDelFilter(49))
+
+        val shortDel = shortDel(100, 310).setAttribute(attribute, listOf(1, 51)).toSv()
+        assertFalse(shortDel.inexactHomologyLengthFilter(50))
+        assertTrue(shortDel.inexactHomologyLengthFilter(49))
+        assertFalse(shortDel.inexactHomologyLengthShortDelFilter(50))
+        assertTrue(shortDel.inexactHomologyLengthShortDelFilter(49))
 
         val shortDup = shortDup().setAttribute(attribute, listOf(1, 51)).toSv()
         assertFalse(shortDup.inexactHomologyLengthFilter(1))
@@ -87,7 +102,7 @@ class StructuralVariantContextTest {
         assertTrue(bnd().toSv().longDPSupportFilter())
         assertFalse(bnd().addGenotypeAttribute("RP", 1, 0).toSv().longDPSupportFilter())
         assertFalse(bnd().addGenotypeAttribute("RP", 0, 1).toSv().longDPSupportFilter())
-        assertFalse (bnd().addGenotypeAttribute("ASRP", 1, 0).toSv().longDPSupportFilter())
+        assertFalse(bnd().addGenotypeAttribute("ASRP", 1, 0).toSv().longDPSupportFilter())
         assertFalse(bnd().addGenotypeAttribute("ASRP", 0, 1).toSv().longDPSupportFilter())
     }
 
@@ -139,9 +154,9 @@ class StructuralVariantContextTest {
 
     private fun bnd(): VariantContext = createVariant(80, "A", "ATACTGCTACA[2:100[")
 
-    private fun shortDel(): VariantContext = createVariant(80, "A", "ATACTGCTACA[1:100[")
+    private fun shortDel(position: Int = 80, otherPosition: Int = 100): VariantContext = createVariant(position, "A", "ATACTGCTACA[1:${otherPosition}[")
 
-    private fun shortDup(): VariantContext = createVariant(110, "A", "ATACTGCTACA[1:100[")
+    private fun shortDup(position: Int = 110, otherPosition: Int = 100): VariantContext = createVariant(position, "A", "ATACTGCTACA[1:${otherPosition}[")
 
     private fun createBreakEnd(): VariantContext {
         return createVariant(1, "C", ".A")

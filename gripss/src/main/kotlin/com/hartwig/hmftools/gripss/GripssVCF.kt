@@ -21,8 +21,7 @@ const val SHORT_STRAND_BIAS = "shortStrandBias"
 const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
 const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
 const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
-
-const val MAX_SHORT_DEL_HOM_LENGTH = "maxShortDelHomLength"
+const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
 
 const val MAX_SHORT_INV_HOM_LENGTH = "maxShortInvHomLength"
 const val PON = "PON"
@@ -40,7 +39,7 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
 
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_HOM_LENGTH, "Breakpoint homology length too long"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH, "Inexact breakpoint homology length too long"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MAX_SHORT_DEL_HOM_LENGTH, "Short deletion that appears to be a ligation artifact"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH_SHORT_DEL, "Short deletion that appears to be a ligation artifact"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_SHORT_INV_HOM_LENGTH, "Short inversion with significant sequence homology"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_SUPPORT, "Short event not supported by any split reads either directly or via assembly"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_NORMAL, "Short event with split reads support in the normal sample"))
