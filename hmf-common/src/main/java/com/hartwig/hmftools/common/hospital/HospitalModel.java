@@ -49,7 +49,7 @@ public abstract class HospitalModel {
             return hospitalData.hospitalPI();
         } else if (study == LimsStudy.WIDE) {
             hospitalData = hospitalDataWIDE().get(hospitalID);
-            return hospitalData.hospitalId();
+            return hospitalData.hospitalPI();
         } else if (study == LimsStudy.CORE) {
             return Strings.EMPTY;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -117,6 +117,7 @@ public abstract class HospitalModel {
     public String extractHospitalAdress(@NotNull String sampleId) {
         HospitalAdress hospitalAdress;
         String hospitalID = extractHospitalIdFromSample(sampleId);
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
         if (sampleId.startsWith("CORE19") || sampleId.contains("CORE18")) {
             // These are the old core names, we need to manually map them.
@@ -134,7 +135,7 @@ public abstract class HospitalModel {
                 }
             }
             checkAddresseeFields(hospitalAdress);
-            return extractHospitalPI(sampleId) + ", " + hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
+            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
                     + hospitalAdress.hospitalCity();
 
         } else {
@@ -149,9 +150,13 @@ public abstract class HospitalModel {
                 return Strings.EMPTY;
             }
             checkAddresseeFields(hospitalAdress);
-
-            return extractHospitalPI(sampleId) + ", " + hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
-                    + hospitalAdress.hospitalCity();
+            if (study == LimsStudy.CORE) {
+                return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
+                        + hospitalAdress.hospitalCity();
+            } else {
+                return extractHospitalPI(sampleId) + ", " + hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
+                        + hospitalAdress.hospitalCity();
+            }
         }
     }
 
