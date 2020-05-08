@@ -14,6 +14,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.hospital.HospitalAdress;
+import com.hartwig.hmftools.common.hospital.HospitalData;
+import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 
 import org.junit.Test;
 

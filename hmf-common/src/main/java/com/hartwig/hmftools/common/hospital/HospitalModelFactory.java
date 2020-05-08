@@ -79,7 +79,7 @@ public final class HospitalModelFactory {
 
 
     @NotNull
-    private static Map<String, HospitalSampleMapping> readFromSampleHospitalMapping(@NotNull String sampleHospitalMappingCsv)
+    public static Map<String, HospitalSampleMapping> readFromSampleHospitalMapping(@NotNull String sampleHospitalMappingCsv)
             throws IOException {
         Map<String, HospitalSampleMapping> hospitalPerSampleMap = Maps.newHashMap();
 
@@ -98,7 +98,7 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    private static Map<String, HospitalData> readFromHospitalDataCPCT(@NotNull String hospitalDataCsv) throws IOException {
+    public static Map<String, HospitalData> readFromHospitalDataCPCT(@NotNull String hospitalDataCsv) throws IOException {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
@@ -118,7 +118,7 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    private static Map<String, HospitalData> readFromHospitalDataDRUP(@NotNull String hospitalDataCsv) throws IOException {
+    public static Map<String, HospitalData> readFromHospitalDataDRUP(@NotNull String hospitalDataCsv) throws IOException {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
@@ -138,7 +138,7 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    private static Map<String, HospitalData> readFromHospitalDataWIDE(@NotNull String hospitalDataCsv) throws IOException {
+    public static Map<String, HospitalData> readFromHospitalDataWIDE(@NotNull String hospitalDataCsv) throws IOException {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
@@ -158,7 +158,7 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    private static Map<String, HospitalAdress> readFromHospitalAdress(@NotNull String hospitalAdressCsv) throws IOException {
+    public static Map<String, HospitalAdress> readFromHospitalAdress(@NotNull String hospitalAdressCsv) throws IOException {
         Map<String, HospitalAdress> hospitalAdress = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalAdressCsv).toPath());
         for (String line : lines) {
