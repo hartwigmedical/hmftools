@@ -33,9 +33,9 @@ public final class HospitalModelFactory {
     private static final int HOSPITAL_ADRESS_FIELD_COUNT = 4;
 
     private static final int HOSPITAL_DATA_ID_COLUMN = 0;
-    private static final int HOSPITAL_DATA_PI_COLUMN = 0;
-    private static final int HOSPITAL_DATA_REQUEST_NAME_COLUMN = 0;
-    private static final int HOSPITAL_DATA_REQUEST_EMAIL_COLUMN = 0;
+    private static final int HOSPITAL_DATA_PI_COLUMN = 1;
+    private static final int HOSPITAL_DATA_REQUEST_NAME_COLUMN = 2;
+    private static final int HOSPITAL_DATA_REQUEST_EMAIL_COLUMN = 3;
     private static final int HOSPITAL_DATA_FIELD_COUNT = 4;
 
     private static final String FIELD_SEPARATOR = ",";

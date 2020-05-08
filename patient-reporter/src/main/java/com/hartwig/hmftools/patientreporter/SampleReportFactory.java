@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,7 +61,6 @@ public final class SampleReportFactory {
         LimsStudy study = LimsStudy.fromSampleId(tumorSampleId);
 
         if (!hospitalPaId.equals("N/A")) {
-            LOGGER.info(hospitalPaId.substring(4, 9));
 
             if (hospitalPaId.startsWith("T") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3, 4).equals("-")
                     && hospitalPaId.substring(4, 9).matches("[0-9]+")) {
