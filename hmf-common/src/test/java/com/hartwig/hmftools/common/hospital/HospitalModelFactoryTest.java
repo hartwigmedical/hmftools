@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class HospitalModelFactoryTest {
 
-    private static final String HOSPITAL_RESOURCE = Resources.getResource("hospital").getPath();
+    private static final String HOSPITAL_RESOURCE = Resources.getResource("lims").getPath();
 
     @Test
     public void canReadFromHospitalDirectory() throws IOException {
