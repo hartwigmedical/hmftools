@@ -58,7 +58,7 @@ public class HospitalModelTest {
     }
 
     @NotNull
-    private static HospitalModel buildTestHospitalModel() {
+    public static HospitalModel buildTestHospitalModel() {
 
         Map<String, HospitalSampleMapping> sampleHospitalMapping = Maps.newHashMap();
         Map<String, HospitalData> hospitalDataCPCT = Maps.newHashMap();
