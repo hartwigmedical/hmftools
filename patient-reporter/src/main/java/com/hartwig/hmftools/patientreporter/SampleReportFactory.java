@@ -63,6 +63,7 @@ public final class SampleReportFactory {
         if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
             if (!hospitalPaId.equals("N/A")) {
                 if (hospitalPaId.equals("")) {
+                    LOGGER.info("No hospital ID");
                     return false;
                 } else if (hospitalPaId.startsWith("T") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3, 4).equals("-")
                         && hospitalPaId.substring(4, 9).matches("[0-9]+")) {
