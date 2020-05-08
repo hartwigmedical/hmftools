@@ -188,7 +188,7 @@ cohort_frequency** | Cohort Count > XX | FALSE | TRUE | TRUE | TRUE | TRUE
 We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 1700 samples.  The purpose of this is created to estimate population level frequencies of each of the 'novel' features.   
 
 For each chimeric junction and novel splice junction  we count
-* Number of unique samples with novel splice junction
+* Number of unique samples with 2 or more supporting fragments at that novel splice junction
 * Total # of fragments supporting novel splice junction across all the unique samples
 
 For intron retention cases we count
