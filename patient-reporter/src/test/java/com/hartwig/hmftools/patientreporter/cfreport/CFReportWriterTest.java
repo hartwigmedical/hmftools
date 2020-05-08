@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -137,11 +137,11 @@ public class CFReportWriterTest {
     @NotNull
     private static HospitalQuery hospitalQuery(){
         return ImmutableHospitalQuery.builder()
-                .hospitalPI(Strings.EMPTY)
+                .hospitalPI("AB")
                 .analyseRequestName("Paul")
                 .analyseRequestEmail("paul@hartwig.com")
                 .hospital("HMF Testing Center")
-                .fullHospitalString("HMF Testing Center, Zip, City")
+                .fullHospitalString("AB, HMF Testing Center, Zip, City")
                 .build();
     }
 

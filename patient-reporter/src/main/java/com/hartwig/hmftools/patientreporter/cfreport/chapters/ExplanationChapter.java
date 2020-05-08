@@ -13,12 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ExplanationChapter implements ReportChapter {
 
-    @NotNull
-    private final AnalysedPatientReport patientReport;
-
-    public ExplanationChapter(@NotNull AnalysedPatientReport patientReport) {
-        this.patientReport = patientReport;
-    }
+    public ExplanationChapter() { }
 
     @NotNull
     @Override

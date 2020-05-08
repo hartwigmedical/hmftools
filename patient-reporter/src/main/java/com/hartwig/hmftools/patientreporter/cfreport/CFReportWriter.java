@@ -54,13 +54,13 @@ public class CFReportWriter implements ReportWriter {
         if (!report.isUnofficialReport()) {
             chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
                     new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
-                    new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(report),
+                    new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                     new DetailsAndDisclaimerChapter(report) };
         } else {
             // For unofficial reports we don't want to render the details and disclaimers.
             chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
                     new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
-                    new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(report) };
+                    new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter() };
         }
 
         writeReport(report, chapters, outputFilePath);
