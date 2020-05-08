@@ -35,7 +35,7 @@ public abstract class HospitalModel {
     @NotNull
     abstract Map<String, HospitalAdress> hospitalAdress();
 
-    @NotNull
+    @Nullable
     public String extractHospitalPI(@NotNull String sampleId) {
         HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
@@ -51,55 +51,55 @@ public abstract class HospitalModel {
             hospitalData = hospitalDataWIDE().get(hospitalID);
             return hospitalData.hospitalPI();
         } else if (study == LimsStudy.CORE) {
-            return Strings.EMPTY;
+            return null;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
-            return Strings.EMPTY;
+            return null;
         } else {
-            return Strings.EMPTY;
+            return null;
         }
     }
 
-    @NotNull
+    @Nullable
     public String extractRequestName(@NotNull String sampleId, @NotNull String requestNameCore) {
         HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         if (study == LimsStudy.CPCT) {
-            return Strings.EMPTY;
+            return null;
         } else if (study == LimsStudy.DRUP) {
-            return Strings.EMPTY;
+            return null;
         } else if (study == LimsStudy.WIDE) {
             hospitalData = hospitalDataWIDE().get(hospitalID);
             return hospitalData.requestName();
         } else if (study == LimsStudy.CORE) {
             return requestNameCore;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
-            return Strings.EMPTY;
+            return null;
         } else {
-            return Strings.EMPTY;
+            return null;
         }
     }
 
-    @NotNull
+    @Nullable
     public String extractRequestEmail(@NotNull String sampleId, @NotNull String requestEmailCore) {
         HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         if (study == LimsStudy.CPCT) {
-            return Strings.EMPTY;
+            return null;
         } else if (study == LimsStudy.DRUP) {
-            return Strings.EMPTY;
+            return null;
         } else if (study == LimsStudy.WIDE) {
             hospitalData = hospitalDataWIDE().get(hospitalID);
             return hospitalData.requestEmail();
         } else if (study == LimsStudy.CORE) {
             return requestEmailCore;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
-            return Strings.EMPTY;
+            return null;
         } else {
-            return Strings.EMPTY;
+            return null;
         }
     }
 
@@ -113,7 +113,7 @@ public abstract class HospitalModel {
         return null;
     }
 
-    @NotNull
+    @Nullable
     public String extractHospitalAdress(@NotNull String sampleId) {
         HospitalAdress hospitalAdress;
         String hospitalID = extractHospitalIdFromSample(sampleId);
@@ -124,14 +124,14 @@ public abstract class HospitalModel {
             HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
             if (hospitalSampleMapping == null) {
                 LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
-                return Strings.EMPTY;
+                return null;
             } else {
                 hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
                 if (hospitalAdress == null) {
                     LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
                             sampleId,
                             hospitalSampleMapping.internalHospitalName());
-                    return Strings.EMPTY;
+                    return null;
                 }
             }
             checkAddresseeFields(hospitalAdress);
@@ -141,13 +141,13 @@ public abstract class HospitalModel {
         } else {
             if (hospitalID == null) {
                 LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
-                return Strings.EMPTY;
+                return null;
             }
 
             hospitalAdress = hospitalAdress().get(hospitalID);
             if (hospitalAdress == null) {
                 LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
-                return Strings.EMPTY;
+                return null;
             }
             checkAddresseeFields(hospitalAdress);
             if (study == LimsStudy.CORE) {
@@ -160,7 +160,7 @@ public abstract class HospitalModel {
         }
     }
 
-    @NotNull
+    @Nullable
     public String extractHospitalName(@NotNull String sampleId) {
         HospitalAdress hospitalAdress;
         String hospitalID = extractHospitalIdFromSample(sampleId);
@@ -170,14 +170,14 @@ public abstract class HospitalModel {
             HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
             if (hospitalSampleMapping == null) {
                 LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
-                return Strings.EMPTY;
+                return null;
             } else {
                 hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
                 if (hospitalAdress == null) {
                     LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
                             sampleId,
                             hospitalSampleMapping.internalHospitalName());
-                    return Strings.EMPTY;
+                    return null;
                 }
             }
             checkAddresseeFields(hospitalAdress);
@@ -186,13 +186,13 @@ public abstract class HospitalModel {
         } else {
             if (hospitalID == null) {
                 LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
-                return Strings.EMPTY;
+                return null;
             }
 
             hospitalAdress = hospitalAdress().get(hospitalID);
             if (hospitalAdress == null) {
                 LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
-                return Strings.EMPTY;
+                return null;
             }
             checkAddresseeFields(hospitalAdress);
 

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.hospital;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.Map;
 
@@ -24,8 +26,8 @@ public class HospitalModelTest {
     public void extractRequestName() {
         HospitalModel hospitalModel = buildTestHospitalModel();
         assertEquals("Someone1", hospitalModel.extractRequestName("WIDE01010001", "BB"));
-        assertEquals(Strings.EMPTY, hospitalModel.extractRequestName("DRUP01010001", "BB"));
-        assertEquals(Strings.EMPTY, hospitalModel.extractRequestName("CPCT01010001", "BB"));
+        assertNull(hospitalModel.extractRequestName("DRUP01010001", "BB"));
+        assertNull(hospitalModel.extractRequestName("CPCT01010001", "BB"));
         assertEquals("BB", hospitalModel.extractRequestName("CORE01010001", "BB"));
     }
 
@@ -33,8 +35,8 @@ public class HospitalModelTest {
     public void extractRequestEmail() {
         HospitalModel hospitalModel = buildTestHospitalModel();
         assertEquals("my@email.com", hospitalModel.extractRequestEmail("WIDE01010001", "AA"));
-        assertEquals(Strings.EMPTY, hospitalModel.extractRequestEmail("CPCT01010001", "AA"));
-        assertEquals(Strings.EMPTY, hospitalModel.extractRequestEmail("DRUP01010001", "AA"));
+        assertNull(hospitalModel.extractRequestEmail("CPCT01010001", "AA"));
+        assertNull(hospitalModel.extractRequestEmail("DRUP01010001", "AA"));
         assertEquals("AA", hospitalModel.extractRequestEmail("CORE01010001", "AA"));
     }
 
