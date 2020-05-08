@@ -113,20 +113,28 @@ class StructuralVariantContextTest {
     @Test
     fun testVariantCreationFunctions() {
         val shortDup = shortDup().toSv()
-        assertTrue(shortDup.isShortDelDup)
+        assertFalse(shortDup.isSingle)
+        assertTrue(shortDup.isShort)
         assertTrue(shortDup.isShortDup)
+        assertFalse(shortDup.isShortDel)
+        assertFalse(shortDup.isShortIns)
 
         val shortDel = shortDel().toSv()
-        assertTrue(shortDel.isShortDelDup)
+        assertFalse(shortDup.isSingle)
+        assertTrue(shortDel.isShort)
         assertFalse(shortDel.isShortDup)
+        assertTrue(shortDel.isShortDel)
+        assertFalse(shortDel.isShortIns)
 
         val bnd = bnd().toSv()
-        assertFalse(bnd.isShortDelDup)
+        assertFalse(bnd.isSingle)
+        assertFalse(bnd.isShort)
         assertFalse(bnd.isShortDup)
-        assertTrue(bnd.breakJunction is BreakPoint)
+        assertFalse(bnd.isShortDel)
+        assertFalse(bnd.isShortIns)
 
-        assertTrue(createBreakEnd().toSv().breakJunction is BreakEnd)
-        assertTrue(createBreakPoint().toSv().breakJunction is BreakPoint)
+        assertTrue(createBreakEnd().toSv().isSingle)
+        assertFalse(createBreakPoint().toSv().isSingle)
     }
 
     private fun bnd(): VariantContext = createVariant(80, "A", "ATACTGCTACA[2:100[")

@@ -2,9 +2,9 @@ package com.hartwig.hmftools.extensions
 
 import htsjdk.variant.variantcontext.Genotype
 
-fun Genotype.allelicFrequency(isSingleBreakEnd: Boolean, isShortDelDup: Boolean): Double {
+fun Genotype.allelicFrequency(isSingleBreakEnd: Boolean, isShort: Boolean): Double {
     val fragmentSupport = fragmentSupport(isSingleBreakEnd)
-    val readPairSupport = if (isSingleBreakEnd || !isShortDelDup) this.refSupportReadPair() else 0
+    val readPairSupport = if (isSingleBreakEnd || !isShort) this.refSupportReadPair() else 0
     val totalSupport = fragmentSupport + this.refSupportRead() + readPairSupport
 
     return fragmentSupport.toDouble() / totalSupport.toDouble();
