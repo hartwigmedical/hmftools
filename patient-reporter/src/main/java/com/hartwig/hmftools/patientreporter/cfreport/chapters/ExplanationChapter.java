@@ -104,9 +104,9 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "The detection of ingerated viral DNA in the tumor's genome is reported. \n "
-                        + "The reported integrated viral DNA can be found on https://resources.hartwigmedicalfoundation.nl "
-                        + "in directory Patient-Reporting" })));
+                .add(createContentDiv(new String[] { "OncoAct accurately identifies viral DNA insertions in the tumor’s DNA."
+                        + " Currently only integrated virus DNA can be detected. Viral detection has been validated against PCR "
+                        + "based high-risk HPV detection with a accuracy of 95.8% (Cohen’s kappa 0.915)." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
         table.addCell(TableUtil.createLayoutCell());
