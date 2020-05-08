@@ -40,7 +40,6 @@ public abstract class HospitalModel {
         HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
-
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         if (study == LimsStudy.CPCT) {
             hospitalData = hospitalDataCPCT().get(hospitalID);
@@ -135,7 +134,8 @@ public abstract class HospitalModel {
                 }
             }
             checkAddresseeFields(hospitalAdress);
-            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
+            return extractHospitalPI(sampleId) + ", " + hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
+                    + hospitalAdress.hospitalCity();
 
         } else {
             if (hospitalID == null) {
@@ -150,7 +150,8 @@ public abstract class HospitalModel {
             }
             checkAddresseeFields(hospitalAdress);
 
-            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
+            return extractHospitalPI(sampleId) + ", " + hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
+                    + hospitalAdress.hospitalCity();
         }
     }
 
