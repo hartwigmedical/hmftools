@@ -3,15 +3,11 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.HospitalModel;
-import com.hartwig.hmftools.common.hospital.HospitalQuery;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.lims.LimsWide;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +20,7 @@ public final class SampleReportFactory {
 
     @NotNull
     public static SampleReport fromLimsAndHospitalModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
-            @NotNull LimsWide limsWide, @NotNull HospitalModel hospitalModel, @Nullable PatientTumorLocation patientTumorLocation) {
+            @Nullable PatientTumorLocation patientTumorLocation) {
         String refSampleBarcode = sampleMetadata.refSampleBarcode();
         String refSampleId = sampleMetadata.refSampleId();
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();

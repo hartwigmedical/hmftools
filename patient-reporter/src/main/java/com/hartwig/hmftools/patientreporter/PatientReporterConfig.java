@@ -33,7 +33,6 @@ public interface PatientReporterConfig {
     String TUMOR_LOCATION_CSV = "tumor_location_csv";
     String LIMS_DIRECTORY = "lims_dir";
     String HOSPITAL_DIRECTORY = "hospital_dir";
-    String CONTACT_WIDE_TSV = "contact_wide_tsv";
 
     String RVA_LOGO = "rva_logo";
     String COMPANY_LOGO = "company_logo";
@@ -81,7 +80,6 @@ public interface PatientReporterConfig {
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
         options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
-        options.addOption(CONTACT_WIDE_TSV, true, "Path towards the file of contact for WIDE TSV.");
 
         options.addOption(RVA_LOGO, true, "Path towards an image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
@@ -141,9 +139,6 @@ public interface PatientReporterConfig {
 
     @NotNull
     String hospitalDir();
-
-    @NotNull
-    String contactWideTsv();
 
     @NotNull
     String rvaLogo();
@@ -266,7 +261,6 @@ public interface PatientReporterConfig {
                 .tumorLocationCsv(nonOptionalFile(cmd, TUMOR_LOCATION_CSV))
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
                 .hospitalDir(nonOptionalDir(cmd, HOSPITAL_DIRECTORY))
-                .contactWideTsv(nonOptionalFile(cmd, CONTACT_WIDE_TSV))
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
