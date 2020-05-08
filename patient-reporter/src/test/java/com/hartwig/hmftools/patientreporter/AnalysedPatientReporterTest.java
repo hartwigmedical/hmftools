@@ -9,6 +9,7 @@ import java.io.IOException;
 import com.google.common.io.Resources;
 
 import org.apache.logging.log4j.util.Strings;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
@@ -30,6 +31,7 @@ public class AnalysedPatientReporterTest {
     private static final String CIRCOS_FILE = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
 
     @Test
+    @Ignore
     public void canRunOnRunDirectory() throws IOException {
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(testAnalysedReportData());
 
