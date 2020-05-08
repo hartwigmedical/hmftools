@@ -10,6 +10,10 @@ fun Genotype.allelicFrequency(isSingleBreakEnd: Boolean, isShortDelDup: Boolean)
     return fragmentSupport.toDouble() / totalSupport.toDouble();
 }
 
+fun Genotype.assemblyReadPairs(): Int = attributeAsInt("ASRP", 0);
+
+fun Genotype.readPairs(): Int = attributeAsInt("RP", 0);
+
 fun Genotype.splitRead(): Int = requireAttributeAsInt("SR");
 
 fun Genotype.refSupportRead(): Int = requireAttributeAsInt("REF");
@@ -26,9 +30,13 @@ fun Genotype.fragmentSupport(isSingleBreakEnd: Boolean): Int {
 
 fun Genotype.requireAttributeAsInt(attribute: String): Int {
     this.checkAttribute(attribute)
+    return attributeAsInt(attribute, 0);
+}
 
+fun Genotype.attributeAsInt(attribute: String, defaultValue: Int): Int {
     val value = this.extendedAttributes[attribute]
     when (value) {
+        null -> return defaultValue
         is Int -> return value
         is String -> return value.toInt()
     }

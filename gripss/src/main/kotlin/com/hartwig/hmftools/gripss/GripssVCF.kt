@@ -14,15 +14,16 @@ const val IMPRECISE = "imprecise";
 const val MIN_TUMOR_AF = "minTumorAF";
 const val MAX_HOM_LENGTH = "maxHomLength"
 const val SHORT_SR_NORMAL = "shortSRNormal"
+const val LONG_DP_SUPPORT = "longDPSupport"
 const val SHORT_SR_SUPPORT = "shortSRSupport"
-const val MAX_POLY_G_LENGTH = "maxPolyGLength";
-const val SHORT_STRAND_BIAS = "shortStrandBias";
+const val MAX_POLY_G_LENGTH = "maxPolyGLength"
+const val SHORT_STRAND_BIAS = "shortStrandBias"
 const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
 const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
 const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
 
 const val MAX_SHORT_DEL_HOM_LENGTH = "maxShortDelHomLength"
-const val LONG_DP_SUPPORT = "longDPSupport"
+
 const val MAX_SHORT_INV_HOM_LENGTH = "maxShortInvHomLength"
 const val PON = "PON"
 

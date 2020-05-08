@@ -82,6 +82,16 @@ class StructuralVariantContextTest {
     }
 
     @Test
+    fun testLongDPSupport() {
+        assertFalse(shortDel().toSv().longDPSupportFilter())
+        assertTrue(bnd().toSv().longDPSupportFilter())
+        assertFalse(bnd().addGenotypeAttribute("RP", 1, 0).toSv().longDPSupportFilter())
+        assertFalse(bnd().addGenotypeAttribute("RP", 0, 1).toSv().longDPSupportFilter())
+        assertFalse (bnd().addGenotypeAttribute("ASRP", 1, 0).toSv().longDPSupportFilter())
+        assertFalse(bnd().addGenotypeAttribute("ASRP", 0, 1).toSv().longDPSupportFilter())
+    }
+
+    @Test
     fun testShortSRSupportFilter() {
         val bnd = bnd().splitReads(1, 0).toSv()
         assertFalse(bnd.shortSplitReadTumorFilter())

@@ -72,6 +72,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(SHORT_SR_NORMAL)
         }
 
+        if (longDPSupportFilter()) {
+            builder.filter(LONG_DP_SUPPORT)
+        }
+
         return builder.attribute(TAF, tumorAF).make()
     }
 
@@ -100,6 +104,14 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     fun shortSplitReadNormalFilter(): Boolean {
         return isShortDelDup && normalGenotype.splitRead() > 0
+    }
+
+    fun longDPSupportFilter(): Boolean {
+        return !isShortDelDup
+                && normalGenotype.readPairs() == 0
+                && normalGenotype.assemblyReadPairs() == 0
+                && tumorGenotype.readPairs() == 0
+                && tumorGenotype.assemblyReadPairs() == 0
     }
 
     fun impreciseFilter(): Boolean {
