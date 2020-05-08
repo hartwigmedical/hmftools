@@ -21,6 +21,17 @@ class StructuralVariantContextTest {
     }
 
     @Test
+    fun testBreakendAssemblyReadPair() {
+        val single = createSingle();
+        assertTrue(single.toSv().breakendAssemblyReadPairsFilter())
+        assertFalse(single.setAttribute("BASRP", 1).toSv().breakendAssemblyReadPairsFilter())
+
+        val shortDel = shortDel();
+        assertFalse(shortDel.toSv().breakendAssemblyReadPairsFilter())
+        assertFalse(shortDel.setAttribute("BASRP", 1).toSv().breakendAssemblyReadPairsFilter())
+    }
+
+    @Test
     fun testImpreciseFilter() {
         val victim = createSingle()
         assertFalse(victim.toSv().impreciseFilter())

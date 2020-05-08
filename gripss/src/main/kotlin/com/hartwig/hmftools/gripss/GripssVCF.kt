@@ -24,6 +24,7 @@ const val MAX_HOM_LENGTH = "maxHomLength"
 const val MAX_HOM_LENGTH_SHORT_INV = "maxHomLengthShortInv"
 const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
 const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
+const val BREAK_END_ASSEMBLY_READ_PAIR = "breakendAssemblyReadPair"
 
 const val PON = "PON"
 
@@ -38,6 +39,7 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         //        ##FILTER=<ID=NO_ASRP,Description="Breakend supported by 0 assembled read pairs">
         //        ##FILTER=<ID=cohortMinSize,Description="Variant is smaller than the minimum event size considered for this cohort">
 
+        header.addMetaDataLine(VCFFilterHeaderLine(BREAK_END_ASSEMBLY_READ_PAIR, "Breakend supported by 0 assembled read pairs"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_HOM_LENGTH, "Breakpoint homology length too long"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH, "Inexact breakpoint homology length too long"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH_SHORT_DEL, "Short deletion that appears to be a ligation artifact"))

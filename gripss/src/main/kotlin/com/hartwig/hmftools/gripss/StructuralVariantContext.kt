@@ -79,6 +79,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(LONG_DP_SUPPORT)
         }
 
+        if (breakendAssemblyReadPairsFilter()) {
+            builder.filter(BREAK_END_ASSEMBLY_READ_PAIR)
+        }
+
         return builder.attribute(TAF, tumorAF).make()
     }
 
@@ -95,6 +99,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     fun inexactHomologyLengthShortDelFilter(maxInexactHomLength: Int, minDelLength: Int = 100, maxDelLength: Int = 800): Boolean {
         return variantType is Deletion && variantType.length >= minDelLength && variantType.length <= maxDelLength && context.inexactHomologyLength() > maxInexactHomLength;
+    }
+
+    fun breakendAssemblyReadPairsFilter(): Boolean {
+        return isSingle && context.breakendAssemblyReadPairs() == 0
     }
 
     fun homologyLengthFilter(maxHomLength: Int): Boolean {
