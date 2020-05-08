@@ -46,7 +46,7 @@ public final class LimsFactory {
     }
 
     @NotNull
-    public static Lims fromLimsDirectoryAndHospitalDirectory(@NotNull String limsDirectory, @NotNull String hospitalDirectory)
+    public static Lims fromLimsDirectoryAndHospitalDirectory(@NotNull String limsDirectory)
             throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
@@ -58,7 +58,7 @@ public final class LimsFactory {
         Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
         Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
 
-        HospitalModel model = HospitalModelFactory.fromHospitalDirectory(hospitalDirectory);
+        HospitalModel model = HospitalModelFactory.fromHospitalDirectory(limsDirectory);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,

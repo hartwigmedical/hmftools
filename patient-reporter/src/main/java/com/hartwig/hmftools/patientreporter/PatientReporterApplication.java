@@ -112,17 +112,13 @@ public class PatientReporterApplication {
     @NotNull
     private static QCFailReportData buildQCFailReportData(@NotNull PatientReporterConfig config) throws IOException {
         String tumorLocationCsv = config.tumorLocationCsv();
-        String hospitalsDirectory = config.hospitalDir();
 
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
         LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
 
         String limsDirectory = config.limsDir();
-        Lims lims = LimsFactory.fromLimsDirectoryAndHospitalDirectory(limsDirectory, hospitalsDirectory);
+        Lims lims = LimsFactory.fromLimsDirectoryAndHospitalDirectory(limsDirectory);
         LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
-
-        HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
-      //  LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
 
         return ImmutableQCFailReportData.builder()
                 .patientTumorLocations(patientTumorLocations)

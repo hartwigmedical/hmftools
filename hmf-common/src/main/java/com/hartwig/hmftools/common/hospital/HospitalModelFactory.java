@@ -44,13 +44,13 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    public static HospitalModel fromHospitalDirectory(@NotNull String hospitalDirectory) throws IOException {
-        String sampleHospitalMappingCsv = hospitalDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_CSV;
-        String hospitalDataCPCTCsv = hospitalDirectory + File.separator + HOSPITAL_CPCT_CSV;
-        String hospitalDataDRUPCsv = hospitalDirectory + File.separator + HOSPITAL_DRUP_CSV;
-        String hospitalDataWIDECsv = hospitalDirectory + File.separator + HOSPITAL_WIDE_CSV;
+    public static HospitalModel fromHospitalDirectory(@NotNull String limsDirectory) throws IOException {
+        String sampleHospitalMappingCsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_CSV;
+        String hospitalDataCPCTCsv = limsDirectory + File.separator + HOSPITAL_CPCT_CSV;
+        String hospitalDataDRUPCsv = limsDirectory + File.separator + HOSPITAL_DRUP_CSV;
+        String hospitalDataWIDECsv = limsDirectory + File.separator + HOSPITAL_WIDE_CSV;
 
-        String hospitalAdressCsv = hospitalDirectory + File.separator + HOSPITALS_ADRESS_CSV;
+        String hospitalAdressCsv = limsDirectory + File.separator + HOSPITALS_ADRESS_CSV;
 
         Map<String, HospitalSampleMapping> sampleHospitalMapping = readFromSampleHospitalMapping(sampleHospitalMappingCsv);
 
