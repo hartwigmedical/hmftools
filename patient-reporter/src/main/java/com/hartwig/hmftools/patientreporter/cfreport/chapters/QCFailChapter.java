@@ -82,6 +82,7 @@ public class QCFailChapter implements ReportChapter {
         String title;
         String reason;
         String explanation;
+        String qcFailReason;
 
         switch (failReason) {
             case LOW_DNA_YIELD: {
@@ -89,6 +90,7 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Failed or insufficient biopsy/tissue";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                qcFailReason = "Reason qc Fail";
                 break;
             }
             case POST_ANALYSIS_FAIL: {
@@ -96,6 +98,7 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Failed or low quality sequencing";
                 explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy or is \n insufficient "
                         + "quality for analysis";
+                qcFailReason = "Reason qc Fail";
                 break;
             }
             case SHALLOW_SEQ_LOW_PURITY: {
@@ -103,6 +106,7 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Failed or insufficient biopsy/tissue";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                qcFailReason = "Reason qc Fail";
                 break;
             }
             case INSUFFICIENT_TISSUE: {
@@ -110,6 +114,7 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Failed or insufficient biopsy/tissue";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                qcFailReason = "Reason qc Fail";
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
@@ -117,12 +122,14 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Failed or low quality sequencing";
                 explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy or is \n insufficient "
                         + "quality for analysis";
+                qcFailReason = "Reason qc Fail";
                 break;
             }
             default: {
                 title = "TITLE";
                 reason = "SUB_TITLE";
                 explanation = "MESSAGE";
+                qcFailReason = "QC FAIL REASON";
             }
         }
 
@@ -132,6 +139,7 @@ public class QCFailChapter implements ReportChapter {
         div.add(new Paragraph(title.toUpperCase()).addStyle(ReportResources.subTextStyle()));
         div.add(new Paragraph(reason).addStyle(ReportResources.dataHighlightStyle()));
         div.add(new Paragraph(explanation).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
+        div.add(new Paragraph(qcFailReason).addStyle(ReportResources.subTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
 
         return div;
     }
