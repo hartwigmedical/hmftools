@@ -9,16 +9,14 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragment.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.isValidFragment;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -28,7 +26,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
@@ -40,7 +37,6 @@ import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
@@ -184,6 +180,7 @@ public class FusionFinder
             else
             {
                 FusionFragment fragment = new FusionFragment(reads);
+
                 ++fragments;
 
                 final String chrPair = formChromosomePair(fragment.chromosomes()[SE_START], fragment.chromosomes()[SE_END]);
@@ -370,31 +367,6 @@ public class FusionFinder
         final List<SAMRecord> records = mBamSlicer.slice(mSamReader, queryIntervals);
 
         return records.stream().filter(x -> x.getReadName().equals(readId)).map(x -> ReadRecord.from(x)).collect(Collectors.toList());
-    }
-
-    private boolean isValidFragment(final List<ReadRecord> reads)
-    {
-        if(reads.size() <= 1)
-            return false;
-
-        Set<String> chrGeneSet = Sets.newHashSetWithExpectedSize(3);
-
-        for(ReadRecord read : reads)
-        {
-            chrGeneSet.add(formLocation(read.Chromosome, read.getGeneCollecton()));
-            if(chrGeneSet.size() == 3)
-                return false;
-        }
-
-        if(chrGeneSet.size() == 2)
-            return true;
-
-        // INVs within the same gene will be dismissed at this point
-
-        if(reads.stream().anyMatch(x -> isRealignedFragmentCandidate(x)))
-            return true;
-
-        return false;
     }
 
     private boolean skipRead(final String otherChromosome, int otherPosition)

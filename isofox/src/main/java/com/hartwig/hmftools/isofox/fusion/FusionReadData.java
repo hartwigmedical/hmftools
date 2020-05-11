@@ -237,7 +237,7 @@ public class FusionReadData
         // the 2 reads' bounds need to fall within 2 or less exons away
         // apply max fragment distance criteria
 
-        int impliedFragmentLength = fragment.getReads().get(0).Length * 2;
+        int impliedFragmentLength = fragment.reads().get(0).Length * 2;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -262,7 +262,7 @@ public class FusionReadData
             if(!hasTranscriptExonMatch(fusionRefs, fragmentRefs, permittedExonDiff))
                 return false;
 
-            final List<ReadRecord> reads = fragment.readsInGene(mChromosomes[se], mGeneCollections[se]);
+            final List<ReadRecord> reads = fragment.readsByLocation(se);
 
             if(reads.isEmpty())
                 return false;
@@ -301,7 +301,13 @@ public class FusionReadData
 
         for (int se = SE_START; se <= SE_END; ++se)
         {
-            for (ReadRecord read : fragment.readsInGene(mChromosomes[se], mGeneCollections[se]))
+            final int seIndex = se;
+            List<ReadRecord> reads = fragment.reads().stream()
+                    .filter(x -> mChromosomes[seIndex].equals(x.Chromosome))
+                    .filter(x -> mGeneCollections[seIndex] == x.getGeneCollectons()[seIndex])
+                    .collect(Collectors.toList());
+
+            for (ReadRecord read : reads)
             {
                 if (softClippedReadSupportsJunction(read, se))
                 {
@@ -393,7 +399,7 @@ public class FusionReadData
         {
             for(final FusionFragment fragment : fragments)
             {
-                final List<ReadRecord> reads = fragment.readsInGene(mChromosomes[se], mGeneCollections[se]);
+                final List<ReadRecord> reads = fragment.readsByLocation(se);
 
                 int mappedBases;
                 if(reads.size() == 1)
@@ -493,7 +499,7 @@ public class FusionReadData
                 realignedFragments = entry.getValue().size();
 
             readsWithSecondaries += (int)entry.getValue().stream()
-                    .filter(x -> x.getReads().stream().anyMatch(y -> y.getSecondaryReadCount() > 0)).count();
+                    .filter(x -> x.reads().stream().anyMatch(y -> y.getSecondaryReadCount() > 0)).count();
         }
 
         int totalFragments = splitFragments + realignedFragments + discordantFragments;

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsem
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExonStarts;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 
@@ -223,7 +225,7 @@ public class TestUtils
     }
 
     public static ReadRecord[] createSupplementaryReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
-            int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2)
+            int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2, boolean firstInPair)
     {
         int readBaseLength = cigar1.getCigarElements().stream()
                 .filter(x -> x.getOperator() != N && x.getOperator() != D)
@@ -233,8 +235,8 @@ public class TestUtils
 
         ReadRecord read1 = createMappedRead(id, gc1, posStart1, posEnd1, cigar1, readBases);
         ReadRecord read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
-        read1.setFlag(FIRST_OF_PAIR, true);
-        read2.setFlag(SECOND_OF_PAIR, true);
+        read1.setFlag(FIRST_OF_PAIR, firstInPair);
+        read2.setFlag(SECOND_OF_PAIR, !firstInPair);
         read1.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
         read2.setSuppAlignment(String.format("%s;%d;%s", read1.Chromosome, read1.PosStart, read1.Cigar.toString()));
 
@@ -282,7 +284,9 @@ public class TestUtils
         if(read.getMappedRegions().isEmpty())
             read.addIntronicTranscriptRefs(geneCollection.getTranscripts());
 
-        read.captureGeneInfo(geneCollection.id());
+        read.captureGeneInfo();
+        read.setGeneCollection(SE_START, geneCollection.id(), true);
+        read.setGeneCollection(SE_END, geneCollection.id(), true);
 
         return read;
     }

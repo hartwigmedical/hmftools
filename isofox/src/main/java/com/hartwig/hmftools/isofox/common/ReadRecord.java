@@ -21,17 +21,18 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.UNKNOWN;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import static htsjdk.samtools.CigarOperator.D;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
@@ -58,14 +59,14 @@ public class ReadRecord
     private String mMateChromosome;
     private int mMatePosStart;
 
-    private int mGeneCollectionId;
+    private final int[] mGeneCollections;
+    private final boolean[] mIsGenicRegion;
     private final List<int[]> mMappedCoords;
     private boolean mLowerInferredAdded;
     private boolean mUpperInferredAdded;
     private final int[] mSoftClipRegionsMatched;
     private int mFragmentInsertSize;
     private String mSupplementaryAlignment;
-    private boolean mNonGenic;
     private int mSecondaryReadCount;
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
@@ -73,6 +74,7 @@ public class ReadRecord
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
     private final Map<Integer,TransMatchType> mTranscriptClassification;
     private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
+    public final List<List<TransExonRef>> mCoordTranExonRefs; // trans-exon refs per coord if more than 1 coord
 
     public static ReadRecord from(final SAMRecord record)
     {
@@ -101,7 +103,8 @@ public class ReadRecord
         mMateChromosome = mateChromosome;
         mMatePosStart = matePosStart;
 
-        mGeneCollectionId = NON_GENIC_ID;
+        mGeneCollections = new int[] { NON_GENIC_ID, NON_GENIC_ID };
+        mIsGenicRegion = new boolean[] { false, false };
 
         List<int[]> mappedCoords = generateMappedCoords(Cigar, PosStart);
         mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
@@ -109,13 +112,13 @@ public class ReadRecord
 
         mMappedRegions = Maps.newHashMap();
         mTransExonRefs = Maps.newHashMap();
+        mCoordTranExonRefs = Lists.newArrayList();
         mTranscriptClassification = Maps.newHashMap();
         mLowerInferredAdded = false;
         mUpperInferredAdded = false;
         mSoftClipRegionsMatched = new int[] {0, 0};
         mFragmentInsertSize = insertSize;
         mSupplementaryAlignment = null;
-        mNonGenic = false;
         mSecondaryReadCount = 0;
     }
 
@@ -142,9 +145,6 @@ public class ReadRecord
     public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
     public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.SECONDARY_ALIGNMENT.intValue()) != 0; }
 
-    public boolean isNonGenic() { return mNonGenic; }
-    public void setNonGenic() { mNonGenic = true; }
-
     public int getSecondaryReadCount() { return mSecondaryReadCount; }
     public void setSecondaryReadCount(int count) { mSecondaryReadCount = count; }
 
@@ -156,7 +156,26 @@ public class ReadRecord
     public String mateChromosome() { return mMateChromosome; }
     public int mateStartPosition() { return mMatePosStart; }
 
-    public int getGeneCollecton() { return mGeneCollectionId; }
+    // public int getGeneCollecton() { return mGeneCollections[SE_START]; }
+    public int[] getGeneCollectons() { return mGeneCollections; }
+    public final boolean[] getIsGenicRegion() { return mIsGenicRegion; }
+
+    public void setGeneCollection(int seIndex, int gc, boolean isGeneic)
+    {
+        mGeneCollections[seIndex] = gc;
+        mIsGenicRegion[seIndex] = isGeneic;
+    }
+
+    public boolean withinGeneCollection() { return mIsGenicRegion[SE_START] && mIsGenicRegion[SE_END]; }
+    public boolean overlapsGeneCollection() { return mIsGenicRegion[SE_START] || mIsGenicRegion[SE_END]; }
+
+    // public boolean outsideGeneCollection() { return mGeneCollections[SE_START] == NON_GENIC_ID && mGeneCollections[SE_END] == NON_GENIC_ID; }
+    // public boolean withinGeneCollection(int seIndex) { return mGeneCollections[seIndex] != NON_GENIC_ID; }
+
+    public boolean spansGeneCollections()
+    {
+        return mGeneCollections[SE_START] != mGeneCollections[SE_END];
+    }
 
     public void setFlag(SAMFlag flag, boolean toggle)
     {
@@ -166,13 +185,21 @@ public class ReadRecord
             mFlags &= ~flag.intValue();
     }
 
-    public void setStrand(boolean isNeg, boolean mateIsNeg)
+    public void setStrand(boolean readReversed, boolean mateReadReversed)
     {
-        setFlag(SAMFlag.READ_REVERSE_STRAND, isNeg);
-        setFlag(SAMFlag.MATE_REVERSE_STRAND, mateIsNeg);
+        setFlag(SAMFlag.READ_REVERSE_STRAND, readReversed);
+        setFlag(SAMFlag.MATE_REVERSE_STRAND, mateReadReversed);
     }
 
     public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs() { return mTransExonRefs; }
+
+    public final List<List<TransExonRef>> getCoordTransExonRefs()
+    {
+        if(mCoordTranExonRefs.isEmpty())
+            return mTransExonRefs.values().stream().collect(Collectors.toList());
+        else
+            return mCoordTranExonRefs;
+    }
 
     public static boolean isTranslocation(@NotNull final SAMRecord record)
     {
@@ -193,6 +220,12 @@ public class ReadRecord
             return true;
 
         return false;
+    }
+
+    public static boolean isDupPair(final ReadRecord read1, final ReadRecord read2)
+    {
+        return (read1.isFirstOfPair() && read1.isReadReversed() && !read2.isReadReversed())
+            || (read2.isFirstOfPair() && read2.isReadReversed() && !read1.isReadReversed());
     }
 
     public List<int[]> getMappedRegionCoords() { return mMappedCoords; }
@@ -278,17 +311,16 @@ public class ReadRecord
     public void processOverlappingRegions(final List<RegionReadData> regions)
     {
         // process all regions for each transcript as a group to look for inconsistencies with the transcript definition
-        List<Integer> transcripts = Lists.newArrayList();
+        Set<Integer> transcripts = Sets.newHashSet();
 
         for(RegionReadData region : regions)
         {
             for(final TransExonRef ref : region.getTransExonRefs())
             {
-                if (!transcripts.contains(ref.TransId))
-                    transcripts.add(ref.TransId);
+                transcripts.add(ref.TransId);
             }
 
-            RegionMatchType matchType = getRegionMatchType(region);
+            RegionMatchType matchType = setRegionMatchType(region);
             mMappedRegions.put(region, matchType);
 
             boolean checkMissedJunctions = matchType == EXON_INTRON || (Cigar.containsOperator(CigarOperator.S) && exonBoundary(matchType));
@@ -416,7 +448,7 @@ public class ReadRecord
         }
     }
 
-    public void captureGeneInfo(int geneCollectionId)
+    public void captureGeneInfo()
     {
         for(Map.Entry<RegionReadData,RegionMatchType> entry : mMappedRegions.entrySet())
         {
@@ -434,7 +466,6 @@ public class ReadRecord
 
         mMappedRegions.clear();
         mTranscriptClassification.clear();
-        mGeneCollectionId = geneCollectionId;
     }
 
     public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)
@@ -493,14 +524,35 @@ public class ReadRecord
         for(int i = 0; i < mMappedCoords.size(); ++i)
         {
             final int[] readSection = mMappedCoords.get(i);
-            int readStartPos = readSection[SE_START];
-            int readEndPos = readSection[SE_END];
 
-            if (!(readStartPos > region.end() || readEndPos < region.start()))
+            if(positionsOverlap(readSection[SE_START], readSection[SE_END], region.PosStart, region.PosEnd))
                 return i;
         }
 
         return -1;
+    }
+
+    private RegionMatchType setRegionMatchType(final RegionReadData region)
+    {
+        int mappingIndex = getRegionMappingIndex(region);
+        if (mappingIndex < 0)
+            return RegionMatchType.NONE;
+
+        RegionMatchType matchType = getRegionMatchType(region, mappingIndex);
+        mMappedRegions.put(region, matchType);
+
+        if(mMappedCoords.size() > 1)
+        {
+            if(mCoordTranExonRefs.isEmpty())
+            {
+                for(int i = 0; i < mMappedCoords.size(); ++i)
+                    mCoordTranExonRefs.add(Lists.newArrayList());
+            }
+
+            mCoordTranExonRefs.get(mappingIndex).addAll(region.getTransExonRefs());
+        }
+
+        return matchType;
     }
 
     public RegionMatchType getRegionMatchType(final RegionReadData region)
@@ -791,7 +843,7 @@ public class ReadRecord
 
         for(final TranscriptData transData : transDataList)
         {
-            if(!positionsWithin(PosStart, PosEnd, transData.TransStart, transData.TransEnd))
+            if(!mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], transData.TransStart, transData.TransEnd)))
                 continue;
 
             for(int i = 0; i < transData.exons().size() - 1; ++i)
@@ -799,7 +851,7 @@ public class ReadRecord
                 final ExonData exon = transData.exons().get(i);
                 final ExonData nextExon = transData.exons().get(i + 1);
 
-                if(exon.ExonEnd < PosStart && PosEnd < nextExon.ExonStart)
+                if(mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], exon.ExonEnd, nextExon.ExonStart)))
                 {
                     int minExonRank = min(exon.ExonRank, nextExon.ExonRank);
                     transRefList.add(new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, minExonRank));

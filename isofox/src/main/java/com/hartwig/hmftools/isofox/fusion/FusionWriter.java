@@ -18,7 +18,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -111,7 +110,7 @@ public class FusionWriter
                             for (FusionFragment fragment : entry.getValue())
                             {
                                 writeFragmentData(fragment, fusionId(fusion.id()), entry.getKey());
-                                writeReadData(fragment.getReads(), fusionId(fusion.id()));
+                                writeReadData(fragment.reads(), fusionId(fusion.id()));
                             }
                         }
                     }
@@ -138,7 +137,7 @@ public class FusionWriter
                 mReadWriter = createBufferedWriter(outputFileName, false);
                 mReadWriter.write("ReadSetCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Orientation,Cigar,InsertSize");
                 mReadWriter.write(",FirstInPair,Supplementary,ReadReversed,ProperPair,SuppAlign");
-                mReadWriter.write(",Bases,Flags,MateChr,MatePosStart,GeneSet,TransExons,BestMatch,TransExonData");
+                mReadWriter.write(",Bases,Flags,MateChr,MatePosStart,GeneSetStart,GeneSetEnd,TransExons,BestMatch,TransExonData");
                 mReadWriter.newLine();
             }
         }
@@ -183,8 +182,9 @@ public class FusionWriter
                     }
                 }
 
-                mReadWriter.write(String.format(",%d,%d,%s,%s",
-                        read.getGeneCollecton(), transExonRefCount, highestTransMatchType, transExonRefCount == 0 ? "NONE" : transExonData));
+                mReadWriter.write(String.format(",%d,%d,%d,%s,%s",
+                        read.getGeneCollectons()[SE_START], read.getGeneCollectons()[SE_END],
+                        transExonRefCount, highestTransMatchType, transExonRefCount == 0 ? "NONE" : transExonData));
                 mReadWriter.newLine();
             }
 
@@ -206,7 +206,7 @@ public class FusionWriter
             for(FusionFragment fragment : fragments)
             {
                 writeFragmentData(fragment, "UNFUSED", fragment.type());
-                writeReadData(fragment.getReads(), "UNFUSED");
+                writeReadData(fragment.reads(), "UNFUSED");
             }
         }
     }
@@ -252,8 +252,8 @@ public class FusionWriter
         try
         {
             mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d",
-                    fragment.readId(), fragment.getReads().size(), fusionId, type,
-                    fragment.isSingleGene(), fragment.getReads().stream().filter(x -> x.containsSoftClipping()).count()));
+                    fragment.readId(), fragment.reads().size(), fusionId, type,
+                    fragment.isSingleGene(), fragment.reads().stream().filter(x -> x.containsSoftClipping()).count()));
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -336,7 +336,9 @@ public class FusionWriter
                 if(!saData.equals("NONE"))
                     read.setSuppAlignment(saData);
 
-                read.captureGeneInfo(Integer.parseInt(items[geneSet]));
+                read.captureGeneInfo();
+                read.setGeneCollection(SE_START,Integer.parseInt(items[geneSet]), true);
+                read.setGeneCollection(SE_END,Integer.parseInt(items[geneSet]), true);
 
                 RegionMatchType matchType = RegionMatchType.valueOf(items[bestMatch]);
 

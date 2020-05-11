@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.setLocationData;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
@@ -31,10 +32,12 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -48,6 +51,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class FusionFragment
 {
     private final List<ReadRecord> mReads;
+    private final List<ReadRecord>[] mReadsByLocation;
+    private final boolean mHasSupplementaryAlignment;
 
     private final int[] mGeneCollections;
     private final String[] mChromosomes;
@@ -66,6 +71,11 @@ public class FusionFragment
     public FusionFragment(final List<ReadRecord> reads)
     {
         mReads = reads;
+        mHasSupplementaryAlignment = FusionFragmentBuilder.hasSuppAlignment(mReads);
+
+        mReadsByLocation = new List[SE_PAIR];
+        mReadsByLocation[SE_START] = Lists.newArrayList();
+        mReadsByLocation[SE_END] = Lists.newArrayList();
 
         mGeneCollections = new int[] {NON_GENIC_ID, NON_GENIC_ID};
         mJunctionPositions = new int[] {-1, -1};
@@ -82,11 +92,19 @@ public class FusionFragment
         mTransExonRefs[SE_START] = Lists.newArrayList();
         mTransExonRefs[SE_END] = Lists.newArrayList();
 
+        mType = UNKNOWN;
+
+        FusionFragmentBuilder.setLocationData(this);
+
+        FusionFragmentBuilder.setJunctionData(this);
+
+        extractTranscriptExonData();
+
+        /*
         // divide reads into the 2 gene collections
         final List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
         final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
         final List<Integer> positions = Lists.newArrayListWithCapacity(2);
-        final List<Byte> orientations = Lists.newArrayListWithCapacity(2);
         final Map<String,List<ReadRecord>> readGroups = Maps.newHashMap();
 
         for(final ReadRecord read : reads)
@@ -102,7 +120,6 @@ public class FusionFragment
                 chrGeneCollections.add(chrGeneId);
                 chromosomes.add(read.Chromosome);
                 positions.add(read.PosStart); // no overlap in gene collections so doesn't matter which position is used
-                orientations.add(read.orientation());
             }
             else
             {
@@ -149,7 +166,7 @@ public class FusionFragment
                     mOrientations[se] = readGroup.get(0).orientation();
             }
 
-            if(mReads.stream().anyMatch(x -> x.getSuppAlignment() != null) || hasLocalJunction(readGroups))
+            if(hasSuppAlignment() || hasLocalJunction(readGroups))
                 setJunctionData(readGroups, chrGeneCollections, lowerIndex);
 
             extractTranscriptExonData(true);
@@ -169,16 +186,21 @@ public class FusionFragment
 
             mType = UNKNOWN;
         }
+
+        */
     }
 
     public String readId() { return mReads.get(0).Id; }
 
-    public final List<ReadRecord> getReads() { return mReads; }
+    public final List<ReadRecord> readsByLocation(int se) { return mReadsByLocation[se]; }
+    public final List<ReadRecord> reads() { return mReads; }
+
     public FusionFragmentType type() { return mType; }
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
     public final byte[] orientations() { return mOrientations; }
-    public boolean hasSuppAlignment() { return mReads.stream().anyMatch(x -> x.getSuppAlignment() != null); }
+
+    public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 
     public boolean isSingleGene()
     {
@@ -196,31 +218,6 @@ public class FusionFragment
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
 
     public String locationPair() { return formLocationPair(mChromosomes, mGeneCollections); }
-
-    public List<ReadRecord> readsInGene(final String chromosome, int geneCollection)
-    {
-        return mReads.stream()
-                .filter(x -> x.Chromosome.equals(chromosome))
-                .filter(x -> x.getGeneCollecton() == geneCollection)
-                .collect(Collectors.toList());
-    }
-
-    public static boolean isRealignedFragmentCandidate(final ReadRecord read)
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if (read.isSoftClipped(se))
-            {
-                int scLength =
-                        se == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
-
-                if (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
-                    return true;
-            }
-        }
-
-        return false;
-    }
 
     private boolean hasOverlappingReadGroups(final Map<String,List<ReadRecord>> readGroups)
     {
@@ -245,32 +242,7 @@ public class FusionFragment
         return false;
     }
 
-    private boolean hasLocalJunction(final Map<String,List<ReadRecord>> readGroups)
-    {
-        if(mReads.size() != 2 || readGroups.size() != 2)
-            return false;
-
-        // only permit DELs and DUPs
-        if(mOrientations[SE_START] == mOrientations[SE_END] || !mChromosomes[SE_START].equals(mChromosomes[SE_END]))
-            return false;
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            final int seIndex = se;
-            final ReadRecord read = mReads.stream().filter(x -> x.getGeneCollecton() == mGeneCollections[seIndex]).findFirst().orElse(null);
-
-            if(read == null)
-                return false;
-
-            if(mOrientations[se] == 1 && !read.isSoftClipped(SE_END))
-                return false;
-            if(mOrientations[se] == -1 && !read.isSoftClipped(SE_START))
-                return false;
-        }
-
-        return true;
-    }
-
+    /*
     private void setJunctionData(final Map<String,List<ReadRecord>> readGroups, final List<String> chrGeneCollections, int lowerIndex)
     {
         // find the reads with supplementary read info and use this to set
@@ -363,42 +335,12 @@ public class FusionFragment
             mJunctionPositions[se] = sjPosition;
             mJunctionOrientations[se] = sjOrientation;
             junctionValid[se] = true;
-
-            /*  Junction bases will now be set from the ref genome, not the read, in case they contain SNVs and cause invalid realignments
-
-            int baseLength = min(10, read.Length);
-
-            if(mJunctionOrientations[se] == 1)
-            {
-                int scLength = read.Cigar.getLastCigarElement().getLength();
-                int readEndPos = read.Length - scLength;
-                mJunctionBases[se] = read.ReadBases.substring(readEndPos - baseLength, readEndPos);
-                // softClipBases[se] = read.ReadBases.substring(readEndPos, readEndPos + baseLength);
-            }
-            else
-            {
-                int scLength = read.Cigar.getFirstCigarElement().getLength();
-                int readStartPos = scLength;
-                mJunctionBases[se] = read.ReadBases.substring(readStartPos, readStartPos + baseLength);
-                // softClipBases[se] = read.ReadBases.substring(readStartPos - baseLength, readStartPos);
-            }
-            */
         }
 
         if(junctionValid[SE_START] && junctionValid[SE_END])
             mJunctionBasesMatched = true;
-
-        /*
-        if(!mJunctionBases[SE_START].isEmpty() && !mJunctionBases[SE_END].isEmpty())
-        {
-            if(mJunctionBases[SE_START].equals(softClipBases[SE_END]) && mJunctionBases[SE_END].equals(softClipBases[SE_START]))
-            {
-                mJunctionBasesMatched = true;
-            }
-        }
-
-\       */
     }
+    */
 
     public void setType(FusionFragmentType type) { mType = type; }
 
@@ -434,17 +376,15 @@ public class FusionFragment
         return geneIds;
     }
 
-    private void extractTranscriptExonData(boolean checkJunction)
+    private void extractTranscriptExonData()
     {
-        // take the transcript & exon refs from each read
+        // set transcript & exon info for each junction from each applicable read
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            for (final ReadRecord read : mReads)
+            final List<ReadRecord> reads = isSingleGene() ? mReads : readsByLocation(se);
+            for (final ReadRecord read : reads)
             {
-                if (!read.Chromosome.equals(mChromosomes[se]) || read.getGeneCollecton() != mGeneCollections[se])
-                    continue;
-
-                if(checkJunction && mJunctionPositions[se] > 0 && !positionWithin(mJunctionPositions[se], read.PosStart, read.PosEnd))
+                if(mJunctionPositions[se] > 0 && !positionWithin(mJunctionPositions[se], read.PosStart, read.PosEnd))
                     continue;
 
                 for (Map.Entry<RegionMatchType, List<TransExonRef>> entry : read.getTransExonRefs().entrySet())
@@ -594,16 +534,47 @@ public class FusionFragment
 
                 ReadRecord read = mReads.stream()
                         .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]))
-                        .filter(x -> x.getCoordsBoundary(junctionOrientations()[seIndex] == 1 ? SE_END : SE_START) == junctionBase)
+                        .filter(x -> x.getMappedRegionCoords().stream().anyMatch(y -> positionWithin(junctionBase, y[SE_START], y[SE_END])))
+                        // .filter(x -> x.getCoordsBoundary(junctionOrientations()[seIndex] == 1 ? SE_END : SE_START) == junctionBase)
                         .findFirst().orElse(null);
 
-                if (junctionOrientations()[se] == 1)
+                if(read.getCoordsBoundary(junctionOrientations()[seIndex] == 1 ? SE_END : SE_START) == junctionBase)
                 {
-                    mJunctionBases[se] = read.ReadBases.substring(read.Length - JUNCTION_BASE_LENGTH, read.Length);
+                    if (junctionOrientations()[se] == 1)
+                    {
+                        mJunctionBases[se] = read.ReadBases.substring(read.Length - JUNCTION_BASE_LENGTH, read.Length);
+                    }
+                    else
+                    {
+                        mJunctionBases[se] = read.ReadBases.substring(0, JUNCTION_BASE_LENGTH);
+                    }
                 }
                 else
                 {
-                    mJunctionBases[se] = read.ReadBases.substring(0, JUNCTION_BASE_LENGTH);
+                    // find the read bases around the junction manually
+                    int baseIndex = 0;
+                    for(int[] coord : read.getMappedRegionCoords())
+                    {
+                        if(junctionBase > coord[SE_END])
+                        {
+                            baseIndex += coord[SE_END] - coord[SE_START] + 1;
+                        }
+                        else
+                        {
+                            baseIndex += junctionBase - coord[SE_START];
+                            break;
+                        }
+                    }
+
+                    if (junctionOrientations()[se] == 1)
+                    {
+                        ++baseIndex;
+                        mJunctionBases[se] = read.ReadBases.substring(baseIndex - JUNCTION_BASE_LENGTH, baseIndex);
+                    }
+                    else
+                    {
+                        mJunctionBases[se] = read.ReadBases.substring(baseIndex, baseIndex + JUNCTION_BASE_LENGTH);
+                    }
                 }
             }
         }

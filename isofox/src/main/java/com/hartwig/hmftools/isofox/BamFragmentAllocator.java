@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.hasSkippedExons;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.isDupPair;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
@@ -36,7 +37,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragment.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.isRealignedFragmentCandidate;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -274,7 +275,7 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:22608:10139:18289";
+    // private static final String LOG_READ_ID = "NB500901:49:HKGW7BGX7:1:13302:3789:11369";
 
     private void processRead(ReadRecord read)
     {
@@ -310,8 +311,14 @@ public class BamFragmentAllocator
             read.processOverlappingRegions(overlappingRegions);
         }
 
-        if(!positionsOverlap(read.PosStart, read.PosEnd, mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]))
-            read.setNonGenic();
+        // mark any read extending beyond this gene collection's bounds in part or full
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            boolean withinGeneCollection = positionWithin(
+                    read.getCoordsBoundary(se), mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]);
+
+            read.setGeneCollection(se, mCurrentGenes.id(), withinGeneCollection);
+        }
 
         checkFragmentRead(read);
     }
@@ -355,14 +362,11 @@ public class BamFragmentAllocator
         }
 
         // if either read is chimeric (including one outside the genic region) then handle them both as such
-        if(read1.isChimeric() || read2.isChimeric() || (read1.isNonGenic() != read2.isNonGenic()))
+        if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection() || isDupPair(read1, read2))
         {
             processChimericReadPair(read1, read2);
             return;
         }
-
-        if(read1.isNonGenic() && read2.isNonGenic()) // could tally these up for stats
-            return;
 
         if(mRunFusions)
         {
@@ -827,7 +831,7 @@ public class BamFragmentAllocator
 
     private void addIntronicTranscriptData(final ReadRecord read)
     {
-        if(!read.isNonGenic() && read.getMappedRegions().isEmpty())
+        if(read.overlapsGeneCollection() && read.getMappedRegions().isEmpty())
             read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
     }
 
@@ -904,17 +908,10 @@ public class BamFragmentAllocator
 
             for (ReadRecord read : reads)
             {
-                if (!read.isNonGenic())
-                {
-                    read.captureGeneInfo(mCurrentGenes.id());
+                read.captureGeneInfo();
 
-                    if (secondaryCount != null)
-                        read.setSecondaryReadCount(secondaryCount);
-                }
-                else
-                {
-                    read.captureGeneInfo(NON_GENIC_ID);
-                }
+                if (secondaryCount != null)
+                    read.setSecondaryReadCount(secondaryCount);
             }
         }
     }
@@ -986,7 +983,8 @@ public class BamFragmentAllocator
             final String outputFileName = config.formOutputFile("read_data.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar,InsertSize,FragLength");
+            writer.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar");
+            writer.write(",InsertSize,FragLength,MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData");
             writer.write(",GeneClass,TransId,TransClass,ValidTrans,ExonRank,ExonStart,ExonEnd,RegionClass");
             writer.newLine();
             return writer;
@@ -1027,7 +1025,11 @@ public class BamFragmentAllocator
                             read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(),
                             read.fragmentInsertSize(), calcFragmentLength));
 
-                    writer.write(String.format(",%s,%d,%s,%s,%d,%d,%d,%s",
+                    writer.write(String.format(",%s,%d,%s,%s,%s",
+                            read.mateChromosome(), read.mateStartPosition(), read.isFirstOfPair(), read.isReadReversed(),
+                            read.getSuppAlignment() != null ? read.getSuppAlignment() : "NONE"));
+
+                            writer.write(String.format(",%s,%d,%s,%s,%d,%d,%d,%s",
                             geneReadType, transId, transType, validTranscripts,
                             region.getExonRank(transId), region.start(), region.end(), matchType));
 

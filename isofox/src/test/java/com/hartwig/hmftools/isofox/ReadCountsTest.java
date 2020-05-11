@@ -391,7 +391,7 @@ public class ReadCountsTest
         bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(FragmentType.ALT)]);
+        assertEquals(1, geneCounts[typeAsInt(CHIMERIC)]);
 
         int longInsertSize = config.MaxFragmentLength + 100;
 
