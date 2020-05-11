@@ -43,13 +43,14 @@ public class RefContext implements GenomePosition {
         this.rawDepth++;
     }
 
-    public void altRead(@NotNull final String ref, @NotNull final String alt, int baseQuality, @Nullable final ReadContext readContext) {
+    public void altRead(@NotNull final String ref, @NotNull final String alt, int baseQuality, int numberOfEvents,
+            @Nullable final ReadContext readContext) {
         final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
         this.rawDepth++;
 
         if (readContext != null && !readContext.incompleteCore()) {
-            altContext.addReadContext(readContext);
+            altContext.addReadContext(numberOfEvents, readContext);
         }
     }
 

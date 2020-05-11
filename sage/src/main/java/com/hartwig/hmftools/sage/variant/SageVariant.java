@@ -45,6 +45,10 @@ public class SageVariant implements GenomePosition {
         return variant.alt();
     }
 
+    public int minNumberOfEvents() {
+        return tumorAltContexts.get(0).minNumberOfEvents();
+    }
+
     public boolean isRealigned() {
         return realigned;
     }

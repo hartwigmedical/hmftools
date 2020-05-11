@@ -35,7 +35,7 @@ public class AltContext implements VariantHotspot {
         this.rawBaseQualityAlt += baseQuality;
     }
 
-    public void addReadContext(@NotNull final ReadContext newReadContext) {
+    public void addReadContext(int numberOfEvents, @NotNull final ReadContext newReadContext) {
         if (candidate != null) {
             throw new IllegalStateException();
         }
@@ -47,7 +47,7 @@ public class AltContext implements VariantHotspot {
             final ReadContextMatch match = candidate.readContext().matchAtPosition(newReadContext);
             switch (match) {
                 case FULL:
-                    candidate.incrementFull(1);
+                    candidate.incrementFull(1, numberOfEvents);
                     fullMatch++;
                     break;
                 case PARTIAL:
@@ -62,7 +62,7 @@ public class AltContext implements VariantHotspot {
         }
 
         if (fullMatch == 0) {
-            final ReadContextCandidate candidate = new ReadContextCandidate(newReadContext);
+            final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
             candidate.incrementCore(coreMatch);
             candidate.incrementPartial(partialMatch);
             interimReadContexts.add(candidate);
@@ -72,6 +72,10 @@ public class AltContext implements VariantHotspot {
 
     public int readContextSupport() {
         return candidate.count();
+    }
+
+    public int minNumberOfEvents() {
+        return candidate.minNumberOfEvents();
     }
 
     public boolean finaliseAndValidate() {
@@ -157,13 +161,16 @@ public class AltContext implements VariantHotspot {
         private int fullMatch;
         private int partialMatch;
         private int coreMatch;
+        private int minNumberOfEvents;
 
-        ReadContextCandidate(@NotNull final ReadContext readContext) {
+        ReadContextCandidate(int numberOfEvents, @NotNull final ReadContext readContext) {
             this.readContext = readContext.minimiseFootprint();
+            this.minNumberOfEvents = numberOfEvents;
         }
 
-        public void incrementFull(int count) {
+        public void incrementFull(int count, int numberOfEvents) {
             fullMatch += count;
+            minNumberOfEvents = Math.min(minNumberOfEvents, numberOfEvents);
         }
 
         public void incrementPartial(int count) {
@@ -176,6 +183,10 @@ public class AltContext implements VariantHotspot {
 
         public int count() {
             return fullMatch + partialMatch;
+        }
+
+        public int minNumberOfEvents() {
+            return minNumberOfEvents;
         }
 
         @NotNull

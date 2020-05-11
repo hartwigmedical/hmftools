@@ -15,6 +15,7 @@ public class Candidate implements GenomePosition {
     private final VariantHotspot variant;
 
     private int maxDepth;
+    private int minNumberOfEvents;
     private int readContextSupport;
     private ReadContext readContext;
 
@@ -24,6 +25,7 @@ public class Candidate implements GenomePosition {
         this.maxDepth = altContext.rawDepth();
         this.readContext = altContext.readContext();
         this.readContextSupport = altContext.readContextSupport();
+        this.minNumberOfEvents = altContext.minNumberOfEvents();
     }
 
     public void update(final AltContext altContext) {
@@ -31,6 +33,7 @@ public class Candidate implements GenomePosition {
         if (altContextSupport > readContextSupport) {
             readContextSupport = altContextSupport;
             readContext = altContext.readContext();
+            minNumberOfEvents = Math.min(minNumberOfEvents, altContext.minNumberOfEvents());
         }
         maxDepth = Math.max(maxDepth, altContext.rawDepth());
     }
@@ -52,6 +55,10 @@ public class Candidate implements GenomePosition {
     @NotNull
     public ReadContext readContext() {
         return readContext;
+    }
+
+    public int minNumberOfEvents() {
+        return minNumberOfEvents;
     }
 
     @NotNull

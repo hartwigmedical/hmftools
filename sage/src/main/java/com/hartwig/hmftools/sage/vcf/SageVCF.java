@@ -35,6 +35,9 @@ public class SageVCF implements AutoCloseable {
     public final static String READ_CONTEXT_JITTER = "RC_JIT";
     private final static String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
 
+    public final static String READ_CONTEXT_EVENTS = "RC_NM";
+    private final static String READ_CONTEXT_EVENTS_DESCRIPTION = "Minimum number of events in read";
+
     public final static String READ_CONTEXT_COUNT = "RC_CNT";
     private final static String READ_CONTEXT_COUNT_DESCRIPTION = "Read context counts [Full, Partial, Core, Realigned, Reference, Total]";
     public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
@@ -125,6 +128,7 @@ public class SageVCF implements AutoCloseable {
                 VCFHeaderLineType.Integer,
                 READ_CONTEXT_QUALITY_DESCRIPTION));
 
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_EVENTS, 1, VCFHeaderLineType.Integer, READ_CONTEXT_EVENTS_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, READ_CONTEXT_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_REPEAT_COUNT,
                 1,

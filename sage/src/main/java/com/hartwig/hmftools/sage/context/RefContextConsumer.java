@@ -14,6 +14,7 @@ import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
 import com.hartwig.hmftools.sage.sam.CigarTraversal;
+import com.hartwig.hmftools.sage.samtools.NumberEvents;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -52,24 +53,28 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final List<AltRead> altReads = Lists.newArrayList();
             final IndexedBases refBases = refGenome.alignment();
 
+            int numberOfEvents = NumberEvents.numberOfEvents(record);
+
             final CigarHandler handler = new CigarHandler() {
                 @Override
                 public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases));
+                    altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents));
 
                 }
 
                 @Override
                 public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases)).ifPresent(altReads::add);
+                    Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases, numberOfEvents))
+                            .ifPresent(altReads::add);
                 }
 
                 @Override
                 public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases)).ifPresent(altReads::add);
+                    Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases, numberOfEvents))
+                            .ifPresent(altReads::add);
                 }
             };
             CigarTraversal.traverseCigar(record, handler);
@@ -113,7 +118,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     @Nullable
     private AltRead processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
-            final IndexedBases refBases) {
+            final IndexedBases refBases, int numberOfEvents) {
         int refIndex = refBases.index(refPosition);
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
@@ -126,7 +131,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 final int baseQuality = baseQuality(readIndex, record, alt.length());
                 final ReadContext readContext =
                         findReadContext ? readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases) : null;
-                return new AltRead(refContext, ref, alt, baseQuality, readContext);
+                return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, readContext);
             }
         }
 
@@ -135,7 +140,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     @Nullable
     private AltRead processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
-            final IndexedBases refBases) {
+            final IndexedBases refBases, int numberOfEvents) {
         int refIndex = refBases.index(refPosition);
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
@@ -148,7 +153,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 final int baseQuality = baseQuality(readIndex, record, 2);
                 final ReadContext readContext =
                         findReadContext ? readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases) : null;
-                return new AltRead(refContext, ref, alt, baseQuality, readContext);
+                return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, readContext);
             }
         }
 
@@ -157,7 +162,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     @NotNull
     private List<AltRead> processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart,
-            int alignmentLength, final IndexedBases refBases) {
+            int alignmentLength, final IndexedBases refBases, int numberOfEvents) {
 
         final List<AltRead> result = Lists.newArrayList();
 
@@ -186,7 +191,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     final ReadContext readContext =
                             findReadContext ? readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
 
-                    result.add(new AltRead(refContext, ref, alt, baseQuality, readContext));
+                    result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, readContext));
 
                     if (config.mnvEnabled()) {
                         int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.bases());
@@ -204,7 +209,12 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                                         record,
                                         refBases) : null;
 
-                                result.add(new AltRead(refContext, mnvRef, mnvAlt, baseQuality, mnvReadContext));
+                                result.add(new AltRead(refContext,
+                                        mnvRef,
+                                        mnvAlt,
+                                        baseQuality,
+                                        NumberEvents.numberOfEventsWithMNV(numberOfEvents, mnvRef, mnvAlt),
+                                        mnvReadContext));
                             }
                         }
                     }

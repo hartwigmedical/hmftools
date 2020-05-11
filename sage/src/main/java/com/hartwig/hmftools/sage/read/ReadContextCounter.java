@@ -7,6 +7,7 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
+import com.hartwig.hmftools.sage.samtools.NumberEvents;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +28,7 @@ public class ReadContextCounter implements VariantHotspot {
     private final SageVariantTier tier;
     private final boolean realign;
     private final int maxCoverage;
+    private final int minNumberOfEvents;
 
     private int full;
     private int partial;
@@ -55,7 +57,8 @@ public class ReadContextCounter implements VariantHotspot {
     private int rawRefBaseQuality;
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
-            final QualityRecalibrationMap recalibrationMap, final SageVariantTier tier, final int maxCoverage, boolean realign) {
+            final QualityRecalibrationMap recalibrationMap, final SageVariantTier tier, final int maxCoverage, final int minNumberOfEvents,
+            boolean realign) {
         this.sample = sample;
         this.tier = tier;
         this.variant = variant;
@@ -64,6 +67,7 @@ public class ReadContextCounter implements VariantHotspot {
         this.realign = realign;
         this.maxCoverage = maxCoverage;
         this.qualityRecalibrationMap = recalibrationMap;
+        this.minNumberOfEvents = minNumberOfEvents;
     }
 
     @NotNull
@@ -172,6 +176,10 @@ public class ReadContextCounter implements VariantHotspot {
         return rawRefBaseQuality;
     }
 
+    public int minNumberOfEvents() {
+        return minNumberOfEvents;
+    }
+
     @NotNull
     public ReadContext readContext() {
         return readContext;
@@ -182,7 +190,7 @@ public class ReadContextCounter implements VariantHotspot {
         return readContext.toString();
     }
 
-    public void accept(final SAMRecord record, final SageConfig sageConfig, final int numberOfEvents) {
+    public void accept(final SAMRecord record, final SageConfig sageConfig, final int rawNumberOfEvents) {
         try {
             if (coverage >= maxCoverage) {
                 return;
@@ -216,7 +224,9 @@ public class ReadContextCounter implements VariantHotspot {
             }
 
             final QualityConfig qualityConfig = sageConfig.qualityConfig();
-            double quality = calculateQualityScore(readIndex, record, qualityConfig, mnvFriendlyNumberOfEvents(numberOfEvents));
+            int numberOfEvents =
+                    Math.max(minNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, variant.ref(), variant.alt()));
+            double quality = calculateQualityScore(readIndex, record, qualityConfig, numberOfEvents);
 
             // Check if FULL, PARTIAL, OR CORE
             if (!baseDeleted) {
@@ -307,23 +317,6 @@ public class ReadContextCounter implements VariantHotspot {
                 readIndex,
                 record.getReadBases(),
                 Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE));
-    }
-
-    int mnvFriendlyNumberOfEvents(int rawNumberEvents) {
-        if (variant.isMNV()) {
-            // Number of events includes each SNV as an additional event. This unfairly penalises MNVs.
-            int differentBases = 0;
-            for (int i = 0; i < variant.alt().length(); i++) {
-                if (alt().charAt(i) != ref().charAt(i)) {
-                    differentBases++;
-                }
-            }
-
-            // We subtract one later when we actually use this value so we need to add one back in here to be consistent with SNVs and INDELs
-            return rawNumberEvents - differentBases + 1;
-        }
-
-        return rawNumberEvents;
     }
 
     private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig, int numberOfEvents) {

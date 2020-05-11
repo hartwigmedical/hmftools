@@ -108,8 +108,7 @@ public class MixedGermlineTest {
                 dummyReadContext,
                 new QualityRecalibrationMap(Collections.emptyList()),
                 SageVariantTier.PANEL,
-                1000,
-                false);
+                1000, 0, false);
     }
 
 }
