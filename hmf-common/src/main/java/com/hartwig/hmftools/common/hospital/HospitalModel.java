@@ -113,42 +113,6 @@ public abstract class HospitalModel {
         return null;
     }
 
-    @NotNull
-    private HospitalAdress extractHospitalAdressDataOldCoreNames(@NotNull String sampleId) {
-        HospitalAdress hospitalAdress;
-        // These are the old core names, we need to manually map them.
-        HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
-        if (hospitalSampleMapping == null) {
-            LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
-            return null;
-        } else {
-            hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
-            if (hospitalAdress == null) {
-                LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
-                        sampleId,
-                        hospitalSampleMapping.internalHospitalName());
-                return null;
-            }
-        }
-        return hospitalAdress;
-    }
-
-    @Nullable
-    private HospitalAdress checkInputHospital(@Nullable String hospitalID, @NotNull String sampleId) {
-        HospitalAdress hospitalAdress;
-        if (hospitalID == null) {
-            LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
-            return null;
-        }
-
-        hospitalAdress = hospitalAdress().get(hospitalID);
-        if (hospitalAdress == null) {
-            LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
-            return null;
-        }
-        return hospitalAdress;
-    }
-
     @Nullable
     public String extractHospitalAdress(@NotNull String sampleId) {
         HospitalAdress hospitalAdress;
@@ -156,14 +120,36 @@ public abstract class HospitalModel {
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
         if (sampleId.startsWith("CORE19") || sampleId.contains("CORE18")) {
-            hospitalAdress = extractHospitalAdressDataOldCoreNames(sampleId);
+            // These are the old core names, we need to manually map them.
+            HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
+            if (hospitalSampleMapping == null) {
+                LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
+                return null;
+            } else {
+                hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
+                if (hospitalAdress == null) {
+                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
+                            sampleId,
+                            hospitalSampleMapping.internalHospitalName());
+                    return null;
+                }
+            }
 
             checkAddresseeFields(hospitalAdress);
             return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
                     + hospitalAdress.hospitalCity();
 
         } else {
-            hospitalAdress = checkInputHospital(hospitalID, sampleId);
+            if (hospitalID == null) {
+                LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
+                return null;
+            }
+
+            hospitalAdress = hospitalAdress().get(hospitalID);
+            if (hospitalAdress == null) {
+                LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
+                return null;
+            }
             checkAddresseeFields(hospitalAdress);
             if (study == LimsStudy.CORE) {
                 return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
@@ -181,13 +167,35 @@ public abstract class HospitalModel {
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         if (sampleId.startsWith("CORE19") || sampleId.contains("CORE18")) {
-            hospitalAdress = extractHospitalAdressDataOldCoreNames(sampleId);
+            // These are the old core names, we need to manually map them.
+            HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
+            if (hospitalSampleMapping == null) {
+                LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
+                return null;
+            } else {
+                hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
+                if (hospitalAdress == null) {
+                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
+                            sampleId,
+                            hospitalSampleMapping.internalHospitalName());
+                    return null;
+                }
+            }
 
             checkAddresseeFields(hospitalAdress);
             return hospitalAdress.hospitalName();
 
         } else {
-            hospitalAdress = checkInputHospital(hospitalID, sampleId);
+            if (hospitalID == null) {
+                LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
+                return null;
+            }
+
+            hospitalAdress = hospitalAdress().get(hospitalID);
+            if (hospitalAdress == null) {
+                LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
+                return null;
+            }
 
             checkAddresseeFields(hospitalAdress);
 
