@@ -74,7 +74,7 @@ public class ReadRecord
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
     private final Map<Integer,TransMatchType> mTranscriptClassification;
     private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
-    public final List<List<TransExonRef>> mCoordTranExonRefs; // trans-exon refs per coord if more than 1 coord
+    private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
 
     public static ReadRecord from(final SAMRecord record)
     {
@@ -112,7 +112,7 @@ public class ReadRecord
 
         mMappedRegions = Maps.newHashMap();
         mTransExonRefs = Maps.newHashMap();
-        mCoordTranExonRefs = Lists.newArrayList();
+        mUpperTransExonRefs = Maps.newHashMap();
         mTranscriptClassification = Maps.newHashMap();
         mLowerInferredAdded = false;
         mUpperInferredAdded = false;
@@ -156,7 +156,6 @@ public class ReadRecord
     public String mateChromosome() { return mMateChromosome; }
     public int mateStartPosition() { return mMatePosStart; }
 
-    // public int getGeneCollecton() { return mGeneCollections[SE_START]; }
     public int[] getGeneCollectons() { return mGeneCollections; }
     public final boolean[] getIsGenicRegion() { return mIsGenicRegion; }
 
@@ -192,13 +191,12 @@ public class ReadRecord
     }
 
     public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs() { return mTransExonRefs; }
-
-    public final List<List<TransExonRef>> getCoordTransExonRefs()
+    public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs(int se)
     {
-        if(mCoordTranExonRefs.isEmpty())
-            return mTransExonRefs.values().stream().collect(Collectors.toList());
+        if(spansGeneCollections())
+            return se == SE_START ? mTransExonRefs : mUpperTransExonRefs;
         else
-            return mCoordTranExonRefs;
+            return mTransExonRefs;
     }
 
     public static boolean isTranslocation(@NotNull final SAMRecord record)
@@ -540,18 +538,6 @@ public class ReadRecord
 
         RegionMatchType matchType = getRegionMatchType(region, mappingIndex);
         mMappedRegions.put(region, matchType);
-
-        if(mMappedCoords.size() > 1)
-        {
-            if(mCoordTranExonRefs.isEmpty())
-            {
-                for(int i = 0; i < mMappedCoords.size(); ++i)
-                    mCoordTranExonRefs.add(Lists.newArrayList());
-            }
-
-            mCoordTranExonRefs.get(mappingIndex).addAll(region.getTransExonRefs());
-        }
-
         return matchType;
     }
 

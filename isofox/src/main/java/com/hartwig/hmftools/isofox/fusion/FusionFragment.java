@@ -61,7 +61,6 @@ public class FusionFragment
     private final byte[] mJunctionOrientations; // orientation at junction if exists
     private final FusionJunctionType[] mJunctionTypes;
     private final String[] mJunctionBases; // the 10 bases leading up to the junction if it exists
-    private boolean mJunctionBasesMatched;
     private final String[] mJunctionSpliceBases; // the 2 donor/acceptor bases
     private FusionFragmentType mType;
 
@@ -85,7 +84,6 @@ public class FusionFragment
         mRegionMatchTypes = new RegionMatchType[] { RegionMatchType.NONE, RegionMatchType.NONE };
         mJunctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
         mJunctionBases = new String[] {"", ""};
-        mJunctionBasesMatched = false;
         mJunctionSpliceBases = new String[] {"", ""};
 
         mTransExonRefs = new List[SE_PAIR];
@@ -344,18 +342,6 @@ public class FusionFragment
 
     public void setType(FusionFragmentType type) { mType = type; }
 
-    private FusionFragmentType calcType()
-    {
-        if(mJunctionBasesMatched)
-        {
-            return MATCHED_JUNCTION;
-        }
-        else
-        {
-            return DISCORDANT;
-        }
-    }
-
     public StructuralVariantType getImpliedSvType()
     {
         return impliedSvType(mChromosomes, mJunctionOrientations);
@@ -379,20 +365,26 @@ public class FusionFragment
     private void extractTranscriptExonData()
     {
         // set transcript & exon info for each junction from each applicable read
+        // only take the highest matches
         for(int se = SE_START; se <= SE_END; ++se)
         {
             final List<ReadRecord> reads = isSingleGene() ? mReads : readsByLocation(se);
+
             for (final ReadRecord read : reads)
             {
                 if(mJunctionPositions[se] > 0 && !positionWithin(mJunctionPositions[se], read.PosStart, read.PosEnd))
                     continue;
 
-                for (Map.Entry<RegionMatchType, List<TransExonRef>> entry : read.getTransExonRefs().entrySet())
+                final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(se);
+
+                for (Map.Entry<RegionMatchType, List<TransExonRef>> entry : transExonRefMap.entrySet())
                 {
                     RegionMatchType matchType = entry.getKey();
 
-                    if(matchRank(matchType) > matchRank(mRegionMatchTypes[se]))
+                    if(matchRank(matchType) >= matchRank(mRegionMatchTypes[se]))
                         mRegionMatchTypes[se] = matchType;
+                    else
+                        continue;
 
                     for(TransExonRef readTransExonRef : entry.getValue())
                     {

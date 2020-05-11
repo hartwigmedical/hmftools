@@ -438,7 +438,7 @@ public class FusionDataTest
     @Test
     public void testLocalSplitReadDelFusions()
     {
-        // a split read without any supplementary data
+        // a split read (DEL) spanning 2 genes
         final EnsemblDataCache geneTransCache = createGeneDataCache();
 
         addTestGenes(geneTransCache);
@@ -487,6 +487,12 @@ public class FusionDataTest
 
         finder.addChimericReads(chimericReadMap);
 
+        // populate the chr-gene-collection map
+        Map<Integer,List<EnsemblGeneData>> gcGeneMap = Maps.newHashMap();
+        gcGeneMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
+        gcGeneMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
+        finder.addChromosomeGeneCollections(CHR_1, gcGeneMap);
+
         finder.findFusions();
 
         assertEquals(1, finder.getFusionCandidates().size());
@@ -497,6 +503,6 @@ public class FusionDataTest
         assertTrue(fusion != null);
         assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
         assertEquals(2, fusion.getFragments(REALIGNED).size());
-        // assertEquals(1, fusion.getFragments(DISCORDANT).size());
+        assertEquals(1, fusion.getFragments(DISCORDANT).size());
     }
 }

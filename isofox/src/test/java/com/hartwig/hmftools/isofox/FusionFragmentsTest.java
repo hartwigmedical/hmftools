@@ -154,7 +154,7 @@ public class FusionFragmentsTest
         assertEquals(GENE_ID_2, spliceGeneIds[SE_END].get(0));
 
         // DEL spanning 2 gene collections but without a supplementary read or soft-clipping, but with the N-split in the reads representing the junction
-        read1 = createMappedRead(readId, gc1, 1080, 10168, createCigar(0, 21, 9099, 19, 0));
+        read1 = createMappedRead(readId, gc1, 1080, 10218, createCigar(0, 21, 9099, 19, 0));
         read2 = createMappedRead(++readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
         read1.setFlag(FIRST_OF_PAIR, true);
         read2.setStrand(true, false);

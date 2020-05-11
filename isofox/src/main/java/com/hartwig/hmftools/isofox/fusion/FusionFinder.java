@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.isValidFragment;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 
@@ -29,6 +31,8 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -37,6 +41,8 @@ import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.RegionMatchType;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
@@ -179,6 +185,8 @@ public class FusionFinder
             }
             else
             {
+                reads.forEach(x -> checkMissingGeneData(x));
+
                 FusionFragment fragment = new FusionFragment(reads);
 
                 ++fragments;
@@ -240,6 +248,66 @@ public class FusionFinder
             mPerfCounter.logStats();
 
         ISF_LOGGER.info("fusion calling complete");
+    }
+
+    private void checkMissingGeneData(final ReadRecord read)
+    {
+        if(!read.spansGeneCollections())
+            return;
+
+        // due to the way the BAM fragment allocator processes reads per gene collection, the upper gene collection will have missed its
+        // transcript exon data, so populate this now
+
+        final List<EnsemblGeneData> geneDataList = findGeneCollection(read.Chromosome, read.getGeneCollectons()[SE_END]);
+
+        if(geneDataList == null)
+            return;
+
+        int upperCoordIndex = read.getMappedRegionCoords().size() - 1;
+        final int[] upperCoords = read.getMappedRegionCoords().get(upperCoordIndex);
+        final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(SE_END);
+
+        for(EnsemblGeneData geneData : geneDataList)
+        {
+            final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
+
+            for(TranscriptData transData : transDataList)
+            {
+                if(!positionsWithin(upperCoords[SE_START], upperCoords[SE_END], transData.TransStart, transData.TransEnd))
+                    continue;
+
+                for(ExonData exonData : transData.exons())
+                {
+                    if(!positionsOverlap(upperCoords[SE_START], upperCoords[SE_END], exonData.ExonStart, exonData.ExonEnd))
+                        continue;
+
+                    RegionMatchType matchType;
+                    if(upperCoords[SE_START] == exonData.ExonStart || upperCoords[SE_END] == exonData.ExonEnd)
+                    {
+                        matchType = RegionMatchType.EXON_BOUNDARY;
+                    }
+                    else if(positionsWithin(upperCoords[SE_START], upperCoords[SE_END], exonData.ExonStart, exonData.ExonEnd))
+                    {
+                        matchType = RegionMatchType.WITHIN_EXON;
+                    }
+                    else
+                    {
+                        matchType = RegionMatchType.EXON_INTRON;
+                    }
+
+                    TransExonRef teRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exonData.ExonRank);
+
+                    final List<TransExonRef> transExonRefs = transExonRefMap.get(matchType);
+
+                    if(transExonRefs == null)
+                        transExonRefMap.put(matchType, Lists.newArrayList(teRef));
+                    else
+                        transExonRefs.add(teRef);
+
+                    break;
+                }
+            }
+        }
     }
 
     private boolean executeFusionTasks()
