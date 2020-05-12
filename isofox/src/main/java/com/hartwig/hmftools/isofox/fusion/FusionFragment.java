@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
@@ -122,6 +123,17 @@ public class FusionFragment
     }
 
     public final List<TransExonRef>[] getTransExonRefs() { return mTransExonRefs; }
+
+    /*
+    public final List<ReadRecord> readsByLocation(final String chromosome, int geneCollection, boolean isGenic)
+    {
+        return mReads.stream()
+                .filter(x -> chromosome.equals(x.Chromosome))
+                .filter(x -> geneCollection == x.getGeneCollectons()[seIndex])
+                .filter(x -> isGenic == x.getIsGenicRegion()[seIndex])
+                .collect(Collectors.toList());
+    }
+    */
 
     public List<String> getGeneIds(int seIndex)
     {
@@ -269,26 +281,33 @@ public class FusionFragment
 
         if(refGenome != null)
         {
-            for (int se = SE_START; se <= SE_END; ++se)
+            try
             {
-                int junctionBase = mJunctionPositions[se];
-
-                if (junctionOrientations()[se] == 1)
+                for (int se = SE_START; se <= SE_END; ++se)
                 {
-                    String junctionBases = refGenome.getSubsequenceAt(
-                            mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH + 1, junctionBase + 2).getBaseString();
+                    int junctionBase = mJunctionPositions[se];
 
-                    mJunctionBases[se] = junctionBases.substring(0, JUNCTION_BASE_LENGTH);
-                    mJunctionSpliceBases[se] = junctionBases.substring(JUNCTION_BASE_LENGTH);
-                }
-                else
-                {
-                    String junctionBases = refGenome.getSubsequenceAt(
-                            mChromosomes[se], junctionBase - 2, junctionBase + JUNCTION_BASE_LENGTH - 1).getBaseString();
+                    if (junctionOrientations()[se] == 1)
+                    {
+                        String junctionBases = refGenome.getSubsequenceAt(
+                                mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH + 1, junctionBase + 2).getBaseString();
 
-                    mJunctionBases[se] = junctionBases.substring(2);
-                    mJunctionSpliceBases[se] = junctionBases.substring(0, 2);
+                        mJunctionBases[se] = junctionBases.substring(0, JUNCTION_BASE_LENGTH);
+                        mJunctionSpliceBases[se] = junctionBases.substring(JUNCTION_BASE_LENGTH);
+                    }
+                    else
+                    {
+                        String junctionBases = refGenome.getSubsequenceAt(
+                                mChromosomes[se], junctionBase - 2, junctionBase + JUNCTION_BASE_LENGTH - 1).getBaseString();
+
+                        mJunctionBases[se] = junctionBases.substring(2);
+                        mJunctionSpliceBases[se] = junctionBases.substring(0, 2);
+                    }
                 }
+            }
+            catch(Exception e)
+            {
+                // junction may be in an invalid region, just ignore these
             }
         }
         else

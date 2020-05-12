@@ -168,6 +168,12 @@ public class ReadRecord
     public boolean withinGeneCollection() { return mIsGenicRegion[SE_START] && mIsGenicRegion[SE_END]; }
     public boolean overlapsGeneCollection() { return mIsGenicRegion[SE_START] || mIsGenicRegion[SE_END]; }
 
+    public boolean preGeneCollection()
+    {
+        return !mIsGenicRegion[SE_START] && !mIsGenicRegion[SE_END]
+                && mGeneCollections[SE_START] != NON_GENIC_ID && mGeneCollections[SE_END] != NON_GENIC_ID;
+    }
+
     // public boolean outsideGeneCollection() { return mGeneCollections[SE_START] == NON_GENIC_ID && mGeneCollections[SE_END] == NON_GENIC_ID; }
     // public boolean withinGeneCollection(int seIndex) { return mGeneCollections[seIndex] != NON_GENIC_ID; }
 

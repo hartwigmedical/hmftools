@@ -9,10 +9,12 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
@@ -395,9 +397,18 @@ public class FusionReadData
 
         for (int se = SE_START; se <= SE_END; ++se)
         {
+            final int seIndex = se;
             for(final FusionFragment fragment : fragments)
             {
-                final List<ReadRecord> reads = fragment.readsByLocation(se);
+                final List<ReadRecord> reads = !fragment.isSingleGene() ? fragment.readsByLocation(se) :
+                        fragment.reads().stream()
+                                .filter(x -> positionWithin(mJunctionPositions[seIndex], x.PosStart, x.PosEnd)).collect(Collectors.toList());
+
+                if(reads.isEmpty())
+                {
+                    ISF_LOGGER.error("fusion({}) fragment has not reads on side", toString());
+                    continue;
+                }
 
                 int mappedBases;
                 if(reads.size() == 1)

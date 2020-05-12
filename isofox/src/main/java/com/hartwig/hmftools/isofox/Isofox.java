@@ -49,6 +49,7 @@ import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummary;
+import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
@@ -235,12 +236,16 @@ public class Isofox
 
         if(mConfig.runFunction(FUSIONS))
         {
+            ChimericStats chimericStats = new ChimericStats();
             for(ChromosomeGeneTask chrTask : chrTasks)
             {
                 mFusionFinder.addChimericReads(chrTask.getChimericReadMap());
                 mFusionFinder.addChromosomeGeneCollections(chrTask.chromosome(), chrTask.getGeneCollectionMap());
                 mFusionFinder.addChromosomeGeneDepth(chrTask.chromosome(), chrTask.getGeneDepthMap());
+                chimericStats.merge(chrTask.getChimericStats());
             }
+
+            ISF_LOGGER.info("chimeric stats: {}", chimericStats);
         }
 
         final List<PerformanceCounter[]> perfCounters = chrTasks.stream().map(x -> x.getPerfCounters()).collect(Collectors.toList());

@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -44,6 +43,7 @@ import com.hartwig.hmftools.isofox.exp_rates.TranscriptExpression;
 import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
+import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -69,6 +69,7 @@ public class ChromosomeGeneTask implements Callable
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
     private final Map<String,List<ReadRecord>> mChimericReadMap;
+    private final ChimericStats mChimericStats;
 
     // cache of results
     private final List<GeneCollectionSummary> mGeneCollectionSummaryData;
@@ -123,6 +124,7 @@ public class ChromosomeGeneTask implements Callable
         mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
         mChimericReadMap = Maps.newHashMap();
+        mChimericStats = new ChimericStats();
 
         mPerfCounters = new PerformanceCounter[PERF_MAX];
         mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
@@ -145,6 +147,7 @@ public class ChromosomeGeneTask implements Callable
     public final Map<String,List<ReadRecord>> getChimericReadMap() { return mChimericReadMap; }
     public final Map<Integer,List<EnsemblGeneData>> getGeneCollectionMap() { return mGeneCollectionMap; }
     public final Map<Integer,BaseDepth> getGeneDepthMap() { return mGeneDepthMap; }
+    public final ChimericStats getChimericStats() { return mChimericStats; }
     public boolean isValid() { return mIsValid; }
 
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
@@ -286,11 +289,17 @@ public class ChromosomeGeneTask implements Callable
             {
                 nextLogCount += 100;
                 ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
+
+                if(mConfig.runFunction(FUSIONS))
+                    ISF_LOGGER.debug("chr({}) chimeric data: {}", mChromosome, mChimericStats);
             }
         }
 
         if(nextLogCount > 100)
+        {
             ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
+            ISF_LOGGER.info("chr({}) chimeric data: {}", mChromosome, mChimericStats);
+        }
     }
 
     public void calcFragmentLengths()
@@ -530,6 +539,7 @@ public class ChromosomeGeneTask implements Callable
 
         geneCollectionSummary.allocateResidualsToGenes();
         mResultsWriter.writeGeneCollectionData(geneCollection);
+        mChimericStats.merge(mBamFragmentAllocator.getChimericStats());
 
         mBamFragmentAllocator.clearCache(); // free up resources for this gene collection
     }
