@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 public class GeneCollection
 {
@@ -33,7 +31,7 @@ public class GeneCollection
     private final List<String> mGeneIds;
     private final String mChromosome;
     private final int[] mRegionBounds;
-    private int mPreGenicPosition; // position prior to this region beginning and since the last gene collection
+    private final int[] mNonGenicPositions; // position prior to this region beginning and since the last gene collection
 
     private final Map<Integer,GeneReadData> mTransIdsGeneMap;
 
@@ -59,7 +57,7 @@ public class GeneCollection
         mGenes.forEach(x -> mGeneIds.add(x.GeneData.GeneId));
 
         mRegionBounds = new int[SE_PAIR];
-        mPreGenicPosition = -1;
+        mNonGenicPositions = new int[SE_PAIR];
 
         mChromosome = genes.get(0).GeneData.Chromosome;
 
@@ -84,8 +82,8 @@ public class GeneCollection
     public final List<GeneReadData> genes() { return mGenes; }
     public final List<String> geneIds() { return mGeneIds; }
     public final int[] regionBounds() { return mRegionBounds; }
-    public void setPreGenicPosition(int position) { mPreGenicPosition = position; }
-    public int getPreGenicPosition() { return mPreGenicPosition; }
+    public void setNonGenicPosition(int se, int position) { mNonGenicPositions[se] = position; }
+    public int[] getNonGenicPositions() { return mNonGenicPositions; }
 
     public final List<TranscriptData> getTranscripts() { return mTranscripts; }
 

@@ -11,10 +11,12 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOF
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.hasSuppAlignment;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -30,8 +32,11 @@ public class ChimericReadTracker
     private final IsofoxConfig mConfig;
 
     private final Map<String, List<ReadRecord>> mChimericReadMap;
+    private final Set<Integer> mJunctionPositions;
+    private final List<List<ReadRecord>> mLocalChimericReads;
     private final Map<String,List<ReadRecord>> mCandidateRealignedReadMap;
     private final Map<String,Integer> mSecondaryReadMap;
+    private final Map<String,Integer> mPostGeneReadMap; // to avoid double-processing reads falling after a gene collection
     private GeneCollection mGeneCollection;
     private final ChimericStats mChimericStats;
 
@@ -40,12 +45,17 @@ public class ChimericReadTracker
         mConfig = config;
         mChimericStats = new ChimericStats();
         mChimericReadMap = Maps.newHashMap();
+        mJunctionPositions = Sets.newHashSet();
+        mLocalChimericReads = Lists.newArrayList();
         mCandidateRealignedReadMap = Maps.newHashMap();
         mSecondaryReadMap = Maps.newHashMap();
+        mPostGeneReadMap = Maps.newHashMap();
         mGeneCollection = null;
     }
 
     public final Map<String,List<ReadRecord>> getReadMap() { return mChimericReadMap; }
+    public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
+    public final List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
 
     public void initialise(final GeneCollection geneCollection)
@@ -59,6 +69,8 @@ public class ChimericReadTracker
         mCandidateRealignedReadMap.clear();
         mChimericStats.clear();
         mSecondaryReadMap.clear();
+        mLocalChimericReads.clear();
+        mJunctionPositions.clear();
     }
 
     public static boolean isRealignedFragmentCandidate(final ReadRecord read)
@@ -149,24 +161,33 @@ public class ChimericReadTracker
             addChimericReads(mChimericReadMap, read);
         }
 
-        // find any split chimeric reads and use this to select from the candidates for realignment
-        final Set<Integer> chimericJunctions = Sets.newHashSet();
+        // migrate any local chimeric fragments for analysis as alternate splice junctions
+        final List<String> fragsToRemove = Lists.newArrayList();
+
         for(List<ReadRecord> reads : mChimericReadMap.values())
         {
-            for(ReadRecord read : reads)
+            // skip reads if all will be processed later or have been already
+            final String readId = reads.get(0).Id;
+
+            if(skipNonGenicReads(reads))
             {
-                if(read.getSuppAlignment() == null)
-                    continue;
-
-                int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
-                int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
-
-                int junctionSeIndex = scLeft > scRight ? SE_START : SE_END;
-                chimericJunctions.add(read.getCoordsBoundary(junctionSeIndex));
+                fragsToRemove.add(readId);
+                continue;
             }
+
+            if(!keepChimericGroup(reads))
+            {
+                fragsToRemove.add(readId);
+                continue;
+            }
+
+            collectCandidateJunctions(reads, mJunctionPositions);
         }
 
-        mChimericStats.ChimericJunctions += chimericJunctions.size();
+        if(!fragsToRemove.isEmpty())
+            fragsToRemove.forEach(x -> mChimericReadMap.remove(x));
+
+        mChimericStats.ChimericJunctions += mJunctionPositions.size();
 
         int chimericCount = mChimericReadMap.size();
         mGeneCollection.addCount(TOTAL, chimericCount);
@@ -183,7 +204,7 @@ public class ChimericReadTracker
                     final int seIndex = se;
                     if(read.isSoftClipped(se))
                     {
-                        if(chimericJunctions.stream().anyMatch(x -> positionWithin(read.getCoordsBoundary(seIndex),
+                        if(mJunctionPositions.stream().anyMatch(x -> positionWithin(read.getCoordsBoundary(seIndex),
                                 x - SOFT_CLIP_JUNC_BUFFER, x + SOFT_CLIP_JUNC_BUFFER)))
                         {
                             addRead = true;
@@ -201,7 +222,6 @@ public class ChimericReadTracker
 
         // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
         // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
-        List<String> nonGenicFrags = Lists.newArrayList();
         for(Map.Entry<String,List<ReadRecord>> entry : mChimericReadMap.entrySet())
         {
             final List<ReadRecord> reads = entry.getValue();
@@ -212,40 +232,192 @@ public class ChimericReadTracker
 
             if(secondaryCount != null)
                 reads.forEach(x -> x.setSecondaryReadCount(secondaryCount));
+        }
+    }
 
-            boolean hasSuppData = hasSuppAlignment(reads);
-            boolean isTranslocation = reads.stream().anyMatch(x -> x.isTranslocation());
-            boolean spanGenes = reads.stream().anyMatch(x -> x.spansGeneCollections());
-            boolean isInversion = reads.stream().anyMatch(x -> x.isInversion());
+    private static final int MAX_NOVEL_SJ_DISTANCE = 500000;
 
-            if(!isTranslocation && !spanGenes && reads.stream().anyMatch(x -> x.preGeneCollection()))
-            {
-                int preGeneReads = (int)reads.stream().filter(x -> x.preGeneCollection()).count();
-
-                if(preGeneReads == reads.size() && (reads.size() == 3 || reads.size() == 2 && !hasSuppData))
-                {
-                    nonGenicFrags.add(entry.getKey());
-                    continue;
-                }
-
-                ++mChimericStats.LocalPreGeneFrags;
-            }
-
-            if(hasSuppData)
-                ++mChimericStats.SupplementaryFrags;
-
-            if(isTranslocation)
-                ++mChimericStats.Translocations;
-            else if(isInversion)
-                ++mChimericStats.Inversions;
-            else if(spanGenes)
-                ++mChimericStats.LocalInterGeneFrags;
-
+    private boolean keepChimericGroup(final List<ReadRecord> reads)
+    {
+        if(reads.stream().anyMatch(x -> x.isTranslocation()))
+        {
+            ++mChimericStats.Translocations;
+            return true;
         }
 
-        if(!nonGenicFrags.isEmpty())
-            nonGenicFrags.forEach(x -> mChimericReadMap.remove(x));
+        if(reads.stream().anyMatch(x -> x.spansGeneCollections()))
+        {
+            // may turn out to just end in the next pre-gene section but cannot say at this time
+            ++mChimericStats.LocalInterGeneFrags;
+            return true;
+        }
+
+        if(reads.stream().anyMatch(x -> x.isInversion()))
+        {
+            ++mChimericStats.Inversions;
+            return true;
+        }
+
+        boolean readGroupComplete = (reads.size() == 3 || (!hasSuppAlignment(reads) && reads.size() == 2));
+
+        if(!readGroupComplete)
+            return true;
+
+        if(reads.stream().anyMatch(x -> !x.withinGeneCollection()))
+        {
+            // some reads are non-genic in full or part
+            if(reads.stream().filter(x -> x.fullyNonGenic()).count() == reads.size())
+            {
+                // all reads non-genic - drop these entirely
+                return false;
+            }
+
+            int minPosition = reads.stream().mapToInt(x -> x.getCoordsBoundary(SE_START)).min().orElse(0);
+            int maxPosition = reads.stream().mapToInt(x -> x.getCoordsBoundary(SE_END)).max().orElse(0);
+
+            if(mGeneCollection.regionBounds()[SE_START] - minPosition > MAX_NOVEL_SJ_DISTANCE
+                    || maxPosition - mGeneCollection.regionBounds()[SE_END] > MAX_NOVEL_SJ_DISTANCE)
+            {
+                // too far from the gene boundaries so consider these chimeric
+                return true;
+            }
+        }
+
+        // check whether 2 genes must be involved, or whether just one gene can explain the junction
+        if(hasMultipleKnownSpliceGenes(reads))
+        {
+            ++mChimericStats.LocalInterGeneFrags;
+            return true;
+        }
+
+        // all reads within the gene - treat as alternative SJ candidates
+        mLocalChimericReads.add(reads);
+        return false;
     }
+
+    private boolean hasMultipleKnownSpliceGenes(final List<ReadRecord> reads)
+    {
+        Set<Integer> junctionPositions = Sets.newHashSet();
+
+        collectCandidateJunctions(reads, junctionPositions);
+
+        if(junctionPositions.size() < 2)
+            return false;
+
+        List<Set<String>> positionGeneLists = Lists.newArrayList();
+
+        for(int juncPosition : junctionPositions)
+        {
+            Set<String> geneIds = Sets.newHashSet();
+
+            /* the exact match case
+
+            reads.stream().forEach(x -> x.getMappedRegions().entrySet().stream()
+                    .filter(y -> y.getKey().PosStart == juncPosition || y.getKey().PosEnd == juncPosition)
+                    .forEach(y -> y.getKey().getTransExonRefs().stream().forEach(z -> geneIds.add(z.GeneId))));
+            */
+
+            reads.stream().forEach(x -> x.getMappedRegions().entrySet().stream()
+                    .filter(y -> y.getKey().PosStart == juncPosition || y.getKey().PosEnd == juncPosition)
+                    .forEach(y -> y.getKey().getTransExonRefs().stream().forEach(z -> geneIds.add(z.GeneId))));
+
+            positionGeneLists.add(geneIds);
+        }
+
+        for(int i = 0; i < positionGeneLists.size() - 1; ++i)
+        {
+            Set<String> geneIds1 = positionGeneLists.get(i);
+
+            if(geneIds1.isEmpty())
+                continue;
+
+            for(int j = i + 1; j < positionGeneLists.size(); ++j)
+            {
+                Set<String> geneIds2 = positionGeneLists.get(j);
+
+                if(geneIds2.isEmpty())
+                    continue;
+
+                if(!geneIds1.stream().anyMatch(x -> geneIds2.contains(x)))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean skipNonGenicReads(final List<ReadRecord> reads)
+    {
+        List<ReadRecord> postGeneReads = reads.stream()
+                .filter(x -> x.PosStart > mGeneCollection.regionBounds()[SE_END])
+                .collect(Collectors.toList());
+
+        // if all reads are past this gene collection's boundaries, leave them for the next one to handle
+        if(postGeneReads.size() == reads.size())
+            return true;
+
+        // make note of these post-gene reads to avoid re-processing them the next time they come up
+        if(!postGeneReads.isEmpty())
+            mPostGeneReadMap.put(reads.get(0).Id, postGeneReads.size());
+
+        List<ReadRecord> preGeneReads = reads.stream()
+                .filter(x -> x.PosStart < mGeneCollection.regionBounds()[SE_START])
+                .collect(Collectors.toList());
+
+        if(!preGeneReads.isEmpty())
+        {
+            final String readId = preGeneReads.get(0).Id;
+            Integer expectedPreGeneCount = mPostGeneReadMap.get(readId);
+
+            if(expectedPreGeneCount != null)
+            {
+                if(expectedPreGeneCount != preGeneReads.size())
+                {
+                    ISF_LOGGER.warn("read({} {}:{}-{}) processed pre-gene count mismatch(exp={} vs act={})",
+                            readId, preGeneReads.get(0).Chromosome, preGeneReads.get(0).PosStart, preGeneReads.get(0).PosEnd,
+                            expectedPreGeneCount, preGeneReads.size());
+                }
+
+                // remove these already handled reads
+                mPostGeneReadMap.remove(readId);
+                preGeneReads.forEach(x -> reads.remove(x));
+
+                if(reads.isEmpty())
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void collectCandidateJunctions(final List<ReadRecord> reads, final Set<Integer> junctionPositions)
+    {
+        for(ReadRecord read : reads)
+        {
+            if(read.spansGeneCollections() && read.containsSplit())
+            {
+                // find the largest N-split to mark the junction
+                final int[] splitJunction = findSplitReadJunction(read);
+
+                if(splitJunction != null)
+                {
+                    junctionPositions.add(splitJunction[SE_START]);
+                    junctionPositions.add(splitJunction[SE_END]);
+                }
+
+                break;
+            }
+
+            if(read.isSoftClipped(SE_START) && read.Cigar.getFirstCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+                junctionPositions.add(read.getCoordsBoundary(SE_START));
+
+            if(read.isSoftClipped(SE_END) && read.Cigar.getLastCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+                junctionPositions.add(read.getCoordsBoundary(SE_END));
+        }
+    }
+
 
 
 }

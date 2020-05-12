@@ -108,9 +108,11 @@ public class BaseDepth
         return depthMap;
     }
 
+    public boolean hasPosition(int position) { return positionWithin(position, mBaseRange[SE_START], mBaseRange[SE_END]); }
+
     public int depthAtBase(int position)
     {
-        if(!positionWithin(position, mBaseRange[SE_START], mBaseRange[SE_END]))
+        if(!hasPosition(position))
             return 0;
 
         if(mDepthMap != null)

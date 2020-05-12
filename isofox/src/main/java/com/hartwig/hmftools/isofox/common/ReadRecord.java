@@ -76,6 +76,8 @@ public class ReadRecord
     private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
     private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
 
+    private final static int NO_GENE_ID = -1;
+
     public static ReadRecord from(final SAMRecord record)
     {
         ReadRecord read = new ReadRecord(
@@ -103,7 +105,7 @@ public class ReadRecord
         mMateChromosome = mateChromosome;
         mMatePosStart = matePosStart;
 
-        mGeneCollections = new int[] { NON_GENIC_ID, NON_GENIC_ID };
+        mGeneCollections = new int[] { NO_GENE_ID, NO_GENE_ID };
         mIsGenicRegion = new boolean[] { false, false };
 
         List<int[]> mappedCoords = generateMappedCoords(Cigar, PosStart);
@@ -168,14 +170,14 @@ public class ReadRecord
     public boolean withinGeneCollection() { return mIsGenicRegion[SE_START] && mIsGenicRegion[SE_END]; }
     public boolean overlapsGeneCollection() { return mIsGenicRegion[SE_START] || mIsGenicRegion[SE_END]; }
 
-    public boolean preGeneCollection()
+    public boolean fullyNonGenic()
     {
         return !mIsGenicRegion[SE_START] && !mIsGenicRegion[SE_END]
-                && mGeneCollections[SE_START] != NON_GENIC_ID && mGeneCollections[SE_END] != NON_GENIC_ID;
+                && mGeneCollections[SE_START] != NO_GENE_ID && mGeneCollections[SE_END] != NO_GENE_ID;
     }
 
-    // public boolean outsideGeneCollection() { return mGeneCollections[SE_START] == NON_GENIC_ID && mGeneCollections[SE_END] == NON_GENIC_ID; }
-    // public boolean withinGeneCollection(int seIndex) { return mGeneCollections[seIndex] != NON_GENIC_ID; }
+    // public boolean outsideGeneCollection() { return mGeneCollections[SE_START] == NO_GENE_ID && mGeneCollections[SE_END] == NO_GENE_ID; }
+    // public boolean withinGeneCollection(int seIndex) { return mGeneCollections[seIndex] != NO_GENE_ID; }
 
     public boolean spansGeneCollections()
     {

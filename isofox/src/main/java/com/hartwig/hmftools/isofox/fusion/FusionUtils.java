@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,8 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+
+import htsjdk.samtools.CigarOperator;
 
 public class FusionUtils
 {
@@ -69,6 +72,20 @@ public class FusionUtils
                 if(!read.Chromosome.equals(chromosome))
                     continue;
 
+                if(read.spansGeneCollections() && read.containsSplit())
+                {
+                    // find the largest N-split to mark the junction
+                    final int[] splitJunction = findSplitReadJunction(read);
+
+                    if(splitJunction != null)
+                    {
+                        candidateJunctions.add(splitJunction[SE_START]);
+                        candidateJunctions.add(splitJunction[SE_END]);
+                    }
+
+                    break;
+                }
+
                 if(read.isSoftClipped(SE_START) && read.Cigar.getFirstCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
                     candidateJunctions.add(read.getCoordsBoundary(SE_START));
 
@@ -78,5 +95,29 @@ public class FusionUtils
         }
 
         return candidateJunctions;
+    }
+
+    public static int[] findSplitReadJunction(final ReadRecord read)
+    {
+        if(!read.spansGeneCollections() || !read.containsSplit())
+            return null;
+
+        final int maxSplitLength = read.Cigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() == CigarOperator.N)
+                .mapToInt(x -> x.getLength()).max().orElse(0);
+
+        final List<int[]> mappedCoords = read.getMappedRegionCoords();
+        for(int i = 0; i < mappedCoords.size() - 1; ++i)
+        {
+            final int[] lowerCoords = mappedCoords.get(i);
+            final int[] upperCoords = mappedCoords.get(i + 1);
+
+            if(upperCoords[SE_START] - lowerCoords[SE_END] - 1 == maxSplitLength)
+            {
+                return new int[] { lowerCoords[SE_END], upperCoords[SE_START] };
+            }
         }
+
+        return null;
+    }
 }

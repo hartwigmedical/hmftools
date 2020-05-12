@@ -34,22 +34,17 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.fusion.ChimericReadTracker.isRealignedFragmentCandidate;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
-import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.hasSuppAlignment;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
@@ -157,8 +152,7 @@ public class BamFragmentAllocator
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
     public BaseDepth getBaseDepth() { return mBaseDepth; }
-    public final Map<String,List<ReadRecord>> getChimericReadMap() { return mChimericReads.getReadMap(); }
-    public ChimericStats getChimericStats() { return mChimericReads.getStats(); }
+    public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
 
     private static int GENE_LOG_COUNT = 100000;
 
@@ -226,7 +220,7 @@ public class BamFragmentAllocator
     private void processSamRecord(@NotNull final SAMRecord record)
     {
         // to avoid double-processing of reads overlapping 2 (or more) gene collections, only process them if they start in this
-        // gene collection
+        // gene collection or its preceding non-genic region
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
             return;
 
@@ -264,7 +258,7 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:49:HKGW7BGX7:1:13302:3789:11369";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:13501:12022:13350"; //
 
     private void processRead(ReadRecord read)
     {
@@ -366,7 +360,8 @@ public class BamFragmentAllocator
         }
 
         // if either read is chimeric (including one outside the genic region) then handle them both as such
-        if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection()) // isDupPair(read1, read2)
+        // some of these may be re-processed as alternative SJ candidates if they are within a single gene
+        if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection())
         {
             processChimericReadPair(read1, read2);
             return;
@@ -796,122 +791,6 @@ public class BamFragmentAllocator
         }
     }
 
-    /*
-    private void postProcessChimericReads()
-    {
-        // check any lone reads - this cannot be one of a pair of non-genic reads since they will have already been dismissed
-        // so will either be a supplementary or a read linked to another gene collection
-        for(Object object : mFragmentReads.getValues())
-        {
-            final ReadRecord read = (ReadRecord)object;
-
-            if(read.isMateUnmapped() || inEnrichedRegion(read.PosStart, read.PosEnd))
-                continue;
-
-            mBaseDepth.processRead(read.getMappedRegionCoords());
-            addIntronicTranscriptData(read);
-            addChimericReads(mChimericReadMap, read);
-        }
-
-        // find any split chimeric reads and use this to select from the candidates for realignment
-        final Set<Integer> chimericJunctions = Sets.newHashSet();
-        for(List<ReadRecord> reads : mChimericReadMap.values())
-        {
-            for(ReadRecord read : reads)
-            {
-                if(read.getSuppAlignment() == null)
-                    continue;
-
-                int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
-                int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
-
-                int junctionSeIndex = scLeft > scRight ? SE_START : SE_END;
-                chimericJunctions.add(read.getCoordsBoundary(junctionSeIndex));
-            }
-        }
-
-        mChimericStats.ChimericJunctions += chimericJunctions.size();
-
-        int chimericCount = mChimericReadMap.size();
-        mCurrentGenes.addCount(TOTAL, chimericCount);
-        mCurrentGenes.addCount(CHIMERIC, chimericCount);
-
-        for(List<ReadRecord> reads : mCandidateRealignedReadMap.values())
-        {
-            boolean addRead = false;
-
-            for(ReadRecord read : reads)
-            {
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    final int seIndex = se;
-                    if(read.isSoftClipped(se))
-                    {
-                        if(chimericJunctions.stream().anyMatch(x -> positionWithin(read.getCoordsBoundary(seIndex),
-                                x - SOFT_CLIP_JUNC_BUFFER, x + SOFT_CLIP_JUNC_BUFFER)))
-                        {
-                            addRead = true;
-                            mChimericReadMap.put(read.Id, reads);
-                            ++mChimericStats.CandidateRealignFrags;
-                            break;
-                        }
-                    }
-                }
-
-                if(addRead)
-                    break;
-            }
-        }
-
-        // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
-        // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
-        List<String> nonGenicFrags = Lists.newArrayList();
-        for(Map.Entry<String,List<ReadRecord>> entry : mChimericReadMap.entrySet())
-        {
-            final List<ReadRecord> reads = entry.getValue();
-
-            Integer secondaryCount = mSecondaryReadMap.get(entry.getKey());
-
-            reads.forEach(x -> x.captureGeneInfo());
-
-            if(secondaryCount != null)
-                reads.forEach(x -> x.setSecondaryReadCount(secondaryCount));
-
-            boolean hasSuppData = hasSuppAlignment(reads);
-            boolean isTranslocation = reads.stream().anyMatch(x -> x.isTranslocation());
-            boolean spanGenes = reads.stream().anyMatch(x -> x.spansGeneCollections());
-            boolean isInversion = reads.stream().anyMatch(x -> x.isInversion());
-
-            if(!isTranslocation && !spanGenes && reads.stream().anyMatch(x -> x.preGeneCollection()))
-            {
-                int preGeneReads = (int)reads.stream().filter(x -> x.preGeneCollection()).count();
-
-                if(preGeneReads == reads.size() && (reads.size() == 3 || reads.size() == 2 && !hasSuppData))
-                {
-                    nonGenicFrags.add(entry.getKey());
-                    continue;
-                }
-
-                ++mChimericStats.LocalPreGeneFrags;
-            }
-
-            if(hasSuppData)
-                ++mChimericStats.SupplementaryFrags;
-
-            if(isTranslocation)
-                ++mChimericStats.Translocations;
-            else if(isInversion)
-                ++mChimericStats.Inversions;
-            else if(spanGenes)
-                ++mChimericStats.LocalInterGeneFrags;
-
-        }
-
-        if(!nonGenicFrags.isEmpty())
-            nonGenicFrags.forEach(x -> mChimericReadMap.remove(x));
-    }
-    */
-
     private static final int DUP_DATA_SECOND_START = 0;
     private static final int DUP_DATA_READ_LEN = 1;
     private static final int DUP_DATA_INSERT_SIZE = 2;
@@ -1045,8 +924,8 @@ public class BamFragmentAllocator
         mCurrentGenes = geneCollection;
         mBaseDepth.initialise(geneCollection.regionBounds());
 
-        mValidReadStartRegion[SE_START] = mCurrentGenes.getPreGenicPosition() >= 0
-                ? mCurrentGenes.getPreGenicPosition() : mCurrentGenes.regionBounds()[SE_START];
+        mValidReadStartRegion[SE_START] = mCurrentGenes.getNonGenicPositions()[SE_START] >= 0
+                ? mCurrentGenes.getNonGenicPositions()[SE_START] : mCurrentGenes.regionBounds()[SE_START];
 
         mValidReadStartRegion[SE_END] = mCurrentGenes.regionBounds()[SE_END];
 

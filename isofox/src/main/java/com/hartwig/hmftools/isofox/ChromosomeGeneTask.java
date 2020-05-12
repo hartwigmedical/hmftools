@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
@@ -13,7 +12,6 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.mergeChimericReadMaps;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.collectCandidateJunctions;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -70,6 +69,7 @@ public class ChromosomeGeneTask implements Callable
     private int mGenesProcessed;
     private final Map<String,List<ReadRecord>> mChimericReadMap;
     private final ChimericStats mChimericStats;
+    private final Set<Integer> mMissingJunctionPositions;
 
     // cache of results
     private final List<GeneCollectionSummary> mGeneCollectionSummaryData;
@@ -124,6 +124,7 @@ public class ChromosomeGeneTask implements Callable
         mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
         mChimericReadMap = Maps.newHashMap();
+        mMissingJunctionPositions = Sets.newHashSet();
         mChimericStats = new ChimericStats();
 
         mPerfCounters = new PerformanceCounter[PERF_MAX];
@@ -261,7 +262,24 @@ public class ChromosomeGeneTask implements Callable
             mGeneCollectionMap.put(geneCollection.id(), Lists.newArrayList(overlappingGenes));
 
             if(!genesFiltered) // reads will be taken from the previous gene collection's end
-                geneCollection.setPreGenicPosition(lastGeneCollectionEndPosition);
+            {
+                geneCollection.setNonGenicPosition(SE_START, lastGeneCollectionEndPosition);
+
+                if(mCurrentGeneIndex < mGeneDataList.size())
+                {
+                    final EnsemblGeneData nextGeneData = mGeneDataList.get(mCurrentGeneIndex);
+                    geneCollection.setNonGenicPosition(SE_END, nextGeneData.GeneStart - 1);
+                }
+                else
+                {
+                    geneCollection.setNonGenicPosition(SE_END, (int)getChromosomeLength(mChromosome) - 1000);
+                }
+            }
+            else
+            {
+                geneCollection.setNonGenicPosition(SE_START, geneCollection.regionBounds()[SE_START] - 10000);
+                geneCollection.setNonGenicPosition(SE_END, geneCollection.regionBounds()[SE_END] + 10000);
+            }
 
             for(GeneReadData geneReadData : geneReadDataList)
             {
@@ -382,28 +400,16 @@ public class ChromosomeGeneTask implements Callable
         long regionStart;
         long regionEnd;
 
-        if(mConfig.runFunction(FUSIONS) && geneCollection.getPreGenicPosition() > 0)
+        if(mConfig.runFunction(FUSIONS))
         {
-            regionStart = geneCollection.getPreGenicPosition();
-
-            int distance = geneCollection.regionBounds()[SE_START] - geneCollection.getPreGenicPosition();
-            if(distance > 1000000)
-            {
-                ISF_LOGGER.debug("geneCollection(genes={}) region({} -> {}) vs prevGeneEnd({} dist={})",
-                        geneCollection.geneNames(), geneCollection.regionBounds()[SE_START], geneCollection.regionBounds()[SE_END],
-                        geneCollection.getPreGenicPosition(), distance);
-            }
+            regionStart = geneCollection.getNonGenicPositions()[SE_START];
+            regionEnd = geneCollection.getNonGenicPositions()[SE_END];
         }
         else
         {
-            regionStart = geneCollection.regionBounds()[SE_START] - GENE_FRAGMENT_BUFFER;
+            regionStart = geneCollection.regionBounds()[SE_START] - 100;
+            regionEnd = geneCollection.regionBounds()[SE_END] + 100;
         }
-
-
-        if(mConfig.runFunction(FUSIONS) && mConfig.RestrictedGeneIds.isEmpty() && mCurrentGeneIndex == mGeneDataList.size())
-            regionEnd = (int)getChromosomeLength(mChromosome);
-        else
-            regionEnd = geneCollection.regionBounds()[SE_END];
 
         if(regionStart >= regionEnd)
         {
@@ -426,20 +432,46 @@ public class ChromosomeGeneTask implements Callable
             mPerfCounters[PERF_NOVEL_LOCATIONS].stop();
         }
 
-        if(mConfig.runFunction(FUSIONS) && !mBamFragmentAllocator.getChimericReadMap().isEmpty())
+        if(mConfig.runFunction(FUSIONS))
         {
-            final Set<Integer> candidateJunctions = collectCandidateJunctions(mBamFragmentAllocator.getChimericReadMap(), mChromosome);
+            final Map<String, List<ReadRecord>> readMap = mBamFragmentAllocator.getChimericReadTracker().getReadMap();
+            final Set<Integer> candidateJunctions = mBamFragmentAllocator.getChimericReadTracker().getJunctionPositions();
 
-            mergeChimericReadMaps(mChimericReadMap, mBamFragmentAllocator.getChimericReadMap());
+            mergeChimericReadMaps(mChimericReadMap, readMap);
 
-            final Map<Integer,Integer> depthMap = mBamFragmentAllocator.getBaseDepth().createPositionMap(candidateJunctions);
+            final BaseDepth baseDepth = mBamFragmentAllocator.getBaseDepth();
+            final Map<Integer,Integer> depthMap = baseDepth.createPositionMap(candidateJunctions);
+            List<Integer> missingJuncPositions = candidateJunctions.stream().filter(x -> !baseDepth.hasPosition(x)).collect(Collectors.toList());
 
-            mGeneDepthMap.put(geneCollection.id(), new BaseDepth(mBamFragmentAllocator.getBaseDepth(), depthMap));
+            // some junction positions (eg from long N-split reads) won't be present in this depth, so hold them back until later
+            // or check if they've now been processed
 
-            if(mBamFragmentAllocator.getChimericReadMap().size() > 50)
+            // first purge positions now processed and missed for whatever reason
+            List<Integer> passedPositions = mMissingJunctionPositions.stream()
+                    .filter(x -> x < geneCollection.getNonGenicPositions()[SE_START]).collect(Collectors.toList());
+            passedPositions.forEach(x -> mMissingJunctionPositions.remove(x));
+
+            List<Integer> foundPositions = Lists.newArrayList();
+            for(Integer missingPos : mMissingJunctionPositions)
+            {
+                int depthAtPos = baseDepth.depthAtBase(missingPos);
+
+                if(depthAtPos > 0)
+                {
+                    depthMap.put(missingPos, depthAtPos);
+                    foundPositions.add(missingPos);
+                }
+            }
+
+            foundPositions.forEach(x -> mMissingJunctionPositions.remove(x)); // remove those just found
+            missingJuncPositions.forEach(x -> mMissingJunctionPositions.add(x)); // add the new ones
+
+            mGeneDepthMap.put(geneCollection.id(), new BaseDepth(baseDepth, depthMap));
+
+            if(ISF_LOGGER.isDebugEnabled() && readMap.size() > 50)
             {
                 ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={})",
-                        mChromosome, geneCollection.geneNames(), mBamFragmentAllocator.getChimericReadMap().size(),
+                        mChromosome, geneCollection.geneNames(), readMap.size(),
                         mChimericReadMap.size(), candidateJunctions.size(), depthMap.size(),
                         mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum());
             }
@@ -539,7 +571,7 @@ public class ChromosomeGeneTask implements Callable
 
         geneCollectionSummary.allocateResidualsToGenes();
         mResultsWriter.writeGeneCollectionData(geneCollection);
-        mChimericStats.merge(mBamFragmentAllocator.getChimericStats());
+        mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
 
         mBamFragmentAllocator.clearCache(); // free up resources for this gene collection
     }

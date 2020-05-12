@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOF
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
@@ -172,25 +173,16 @@ public class FusionFragmentBuilder
         // set the junction data around the spanning N-split
         final ReadRecord splitRead = fragment.reads().stream().filter(x -> x.spansGeneCollections()).findFirst().orElse(null);
 
-        final int maxSplitLength = splitRead.Cigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.N)
-                .mapToInt(x -> x.getLength()).max().orElse(0);
+        final int[] splitJunction = findSplitReadJunction(splitRead);
 
-        final List<int[]> mappedCoords = splitRead.getMappedRegionCoords();
-        for(int i = 0; i < mappedCoords.size() - 1; ++i)
+        if(splitJunction != null)
         {
-            final int[] lowerCoords = mappedCoords.get(i);
-            final int[] upperCoords = mappedCoords.get(i + 1);
-
-            if(upperCoords[SE_START] - lowerCoords[SE_END] - 1 == maxSplitLength)
-            {
-                fragment.junctionOrientations()[SE_START] = 1;
-                fragment.junctionOrientations()[SE_END] = -1;
-                fragment.junctionPositions()[SE_START] = lowerCoords[SE_END];
-                fragment.junctionPositions()[SE_END] = upperCoords[SE_START];
-                fragment.setType(MATCHED_JUNCTION);
-                return;
-            }
+            fragment.junctionOrientations()[SE_START] = 1;
+            fragment.junctionOrientations()[SE_END] = -1;
+            fragment.junctionPositions()[SE_START] = splitJunction[SE_START];
+            fragment.junctionPositions()[SE_END] = splitJunction[SE_END];
+            fragment.setType(MATCHED_JUNCTION);
+            return;
         }
     }
 

@@ -7,8 +7,6 @@ public class IsofoxConstants
     // min number of fragments to sample when calculating fragment length distribution for calculation of expected fragment counts
     public static final int DEFAULT_FRAG_LENGTH_MIN_COUNT = 1000000;
 
-    public static final int GENE_FRAGMENT_BUFFER = 10; // width around a gene within which to search for reads
-
     public static final double DEFAULT_GC_RATIO_BUCKET = 0.01;
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
