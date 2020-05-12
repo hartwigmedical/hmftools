@@ -40,16 +40,19 @@ public class FusionUtils
             return Integer.parseInt(chromosome);
     }
 
-    public static String formLocationPair(final String[] chromosomes, final int[] geneCollectionIds)
+    public static String formLocationPair(final String[] chromosomes, final int[] geneCollectionIds, final boolean[] isGenic)
     {
         return String.format("%s_%s",
-                formLocation(chromosomes[SE_START], geneCollectionIds[SE_START]),
-                formLocation(chromosomes[SE_END], geneCollectionIds[SE_END]));
+                formLocation(chromosomes[SE_START], geneCollectionIds[SE_START], isGenic[SE_START]),
+                formLocation(chromosomes[SE_END], geneCollectionIds[SE_END], isGenic[SE_END]));
     }
 
-    public static String formLocation(final String chromosome, final int geneCollectionId)
+    public static String formLocation(final String chromosome, final int geneCollectionId, boolean isGenic)
     {
-        return String.format("%s:%d", chromosome, geneCollectionId);
+        if(isGenic)
+            return String.format("%s:%d", chromosome, geneCollectionId);
+        else
+            return String.format("%s:pre_%d", chromosome, geneCollectionId);
     }
 
     public static String formChromosomePair(final String chr1, final String chr2) { return chr1 + "_" + chr2; }

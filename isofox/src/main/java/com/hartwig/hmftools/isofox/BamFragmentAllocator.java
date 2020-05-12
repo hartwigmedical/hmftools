@@ -15,12 +15,10 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.hasSkippedExons;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.isDupPair;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
@@ -311,13 +309,21 @@ public class BamFragmentAllocator
             read.processOverlappingRegions(overlappingRegions);
         }
 
-        // mark any read extending beyond this gene collection's bounds in part or full
-        for(int se = SE_START; se <= SE_END; ++se)
+        if(positionsWithin(read.PosStart, read.PosEnd, mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]))
         {
-            boolean withinGeneCollection = positionWithin(
-                    read.getCoordsBoundary(se), mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]);
+            read.setGeneCollection(SE_START, mCurrentGenes.id(), true);
+            read.setGeneCollection(SE_END, mCurrentGenes.id(), true);
+        }
+        else
+        {
+            // mark any read extending beyond this gene collection's bounds in part or full
+            for (int se = SE_START; se <= SE_END; ++se)
+            {
+                boolean withinGeneCollection = positionWithin(
+                        read.getCoordsBoundary(se), mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]);
 
-            read.setGeneCollection(se, mCurrentGenes.id(), withinGeneCollection);
+                read.setGeneCollection(se, mCurrentGenes.id(), withinGeneCollection);
+            }
         }
 
         checkFragmentRead(read);
@@ -362,7 +368,7 @@ public class BamFragmentAllocator
         }
 
         // if either read is chimeric (including one outside the genic region) then handle them both as such
-        if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection() || isDupPair(read1, read2))
+        if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection()) // isDupPair(read1, read2)
         {
             processChimericReadPair(read1, read2);
             return;

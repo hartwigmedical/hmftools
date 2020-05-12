@@ -252,7 +252,7 @@ public class FusionFinder
 
     private void checkMissingGeneData(final ReadRecord read)
     {
-        if(!read.spansGeneCollections())
+        if(!read.spansGeneCollections() || !read.getIsGenicRegion()[SE_END])
             return;
 
         // due to the way the BAM fragment allocator processes reads per gene collection, the upper gene collection will have missed its

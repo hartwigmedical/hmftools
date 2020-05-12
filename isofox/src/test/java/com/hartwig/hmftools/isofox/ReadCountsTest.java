@@ -382,7 +382,7 @@ public class ReadCountsTest
         // alternative splicing - first from reads with splits
         geneSet.clearCounts();
 
-        read1 = createReadRecord(1, "1", 1050, 1100, REF_BASE_STR_1, createCigar(0, 50, 5000, 100, 0));
+        read1 = createReadRecord(1, "1", 1050, 6100, REF_BASE_STR_1, createCigar(0, 50, 5000, 100, 0));
         read1.setFragmentInsertSize(500);
         read2 = createReadRecord(1, "1", 3100, 3300, REF_BASE_STR_1, createCigar(0, 100, 0));
         read2.setFragmentInsertSize(-500);

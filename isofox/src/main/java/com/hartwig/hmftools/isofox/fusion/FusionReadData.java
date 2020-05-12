@@ -79,7 +79,7 @@ public class FusionReadData
         mFragments = Maps.newHashMap();
         addFusionFragment(fragment);
 
-        mLocationId = formLocationPair(mChromosomes, mGeneCollections);
+        mLocationId = formLocationPair(mChromosomes, mGeneCollections, fragment.inGenicRegions());
 
         mRelatedFusions = Lists.newArrayList();
         mFusionGeneIds = new String[] {"", ""};
@@ -305,6 +305,7 @@ public class FusionReadData
             List<ReadRecord> reads = fragment.reads().stream()
                     .filter(x -> mChromosomes[seIndex].equals(x.Chromosome))
                     .filter(x -> mGeneCollections[seIndex] == x.getGeneCollectons()[seIndex])
+                    .filter(x -> mFragment.inGenicRegions()[seIndex] == x.getIsGenicRegion()[seIndex])
                     .collect(Collectors.toList());
 
             for (ReadRecord read : reads)
@@ -312,9 +313,6 @@ public class FusionReadData
                 if (softClippedReadSupportsJunction(read, se))
                 {
                     hasSupportingRead = true;
-                    // this was when reads where generated from the now-defunct read depth routine
-                    // if(fragment.geneCollections()[se] == 0 && fragment.getTransExonRefs()[se].isEmpty())
-                    //    fragment.setGeneData(mGeneCollections[se], getTransExonRefsByPos(se));
                 }
 
                 // check that none of the other reads are on the incorrect side of this fusion junction

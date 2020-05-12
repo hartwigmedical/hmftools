@@ -220,11 +220,13 @@ public class ReadRecord
         return false;
     }
 
+    /*
     public static boolean isDupPair(final ReadRecord read1, final ReadRecord read2)
     {
         return (read1.isFirstOfPair() && read1.isReadReversed() && !read2.isReadReversed())
             || (read2.isFirstOfPair() && read2.isReadReversed() && !read1.isReadReversed());
     }
+    */
 
     public List<int[]> getMappedRegionCoords() { return mMappedCoords; }
 

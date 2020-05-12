@@ -1,16 +1,10 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
@@ -18,26 +12,15 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalAcceptor;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalDonor;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.setLocationData;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -45,7 +28,6 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class FusionFragment
@@ -55,6 +37,7 @@ public class FusionFragment
     private final boolean mHasSupplementaryAlignment;
 
     private final int[] mGeneCollections;
+    private final boolean[] mInGenicRegions;
     private final String[] mChromosomes;
     private final byte[] mOrientations;
     private final int[] mJunctionPositions; // fusion junction if exists
@@ -77,6 +60,7 @@ public class FusionFragment
         mReadsByLocation[SE_END] = Lists.newArrayList();
 
         mGeneCollections = new int[] {NON_GENIC_ID, NON_GENIC_ID};
+        mInGenicRegions = new boolean[] {true, true};
         mJunctionPositions = new int[] {-1, -1};
         mChromosomes = new String[] {"", ""};
         mJunctionOrientations = new byte[] {0, 0};
@@ -97,95 +81,6 @@ public class FusionFragment
         FusionFragmentBuilder.setJunctionData(this);
 
         extractTranscriptExonData();
-
-        /*
-        // divide reads into the 2 gene collections
-        final List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
-        final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
-        final List<Integer> positions = Lists.newArrayListWithCapacity(2);
-        final Map<String,List<ReadRecord>> readGroups = Maps.newHashMap();
-
-        for(final ReadRecord read : reads)
-        {
-            final String chrGeneId = formLocation(read.Chromosome, read.getGeneCollecton());
-
-            List<ReadRecord> readGroup = readGroups.get(chrGeneId);
-
-            if(readGroup == null)
-            {
-                readGroups.put(chrGeneId, Lists.newArrayList(read));
-
-                chrGeneCollections.add(chrGeneId);
-                chromosomes.add(read.Chromosome);
-                positions.add(read.PosStart); // no overlap in gene collections so doesn't matter which position is used
-            }
-            else
-            {
-                readGroup.add(read);
-            }
-        }
-
-        boolean overlappingReads = hasOverlappingReadGroups(readGroups);
-
-        if(overlappingReads || readGroups.size() > 2)
-        {
-            mChromosomes[SE_START] = mChromosomes[SE_END] = chromosomes.get(0);
-
-            mGeneCollections[SE_START] = reads.stream().mapToInt(x -> x.getGeneCollecton()).min().orElse(-1);
-            mGeneCollections[SE_END] = reads.stream().mapToInt(x -> x.getGeneCollecton()).max().orElse(-1);
-            mType = UNKNOWN;
-            return;
-        }
-
-        // first determine which is the start and end chromosome & position as for SVs
-        if(readGroups.size() > 1)
-        {
-            int lowerIndex;
-
-            if (chromosomes.get(0).equals(chromosomes.get(1)))
-                lowerIndex = positions.get(0) <= positions.get(1) ? 0 : 1;
-            else
-                lowerIndex = lowerChromosome(chromosomes.get(0), chromosomes.get(1)) ? 0 : 1;
-
-            for (int se = SE_START; se <= SE_END; ++se)
-            {
-                int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
-                final String chrGeneId = chrGeneCollections.get(index);
-
-                final List<ReadRecord> readGroup = readGroups.get(chrGeneId);
-
-                mChromosomes[se] = chromosomes.get(index);
-                mGeneCollections[se] = readGroup.get(0).getGeneCollecton();
-
-                if(readGroup.size() == 2)
-                    mOrientations[se] = readGroup.stream()
-                            .filter(x -> x.getSuppAlignment() == null).findFirst().map(x -> x.orientation()).orElse((byte)0);
-                else
-                    mOrientations[se] = readGroup.get(0).orientation();
-            }
-
-            if(hasSuppAlignment() || hasLocalJunction(readGroups))
-                setJunctionData(readGroups, chrGeneCollections, lowerIndex);
-
-            extractTranscriptExonData(true);
-
-            mType = calcType();
-        }
-        else
-        {
-            // these fragments are from secondary searches for one-side support of the fusion, and so will only have one gene collection
-            // and will be missing transcript and exon information
-            mChromosomes[SE_START] = mChromosomes[SE_END] = chromosomes.get(0);
-            mGeneCollections[SE_START] = mGeneCollections[SE_END] = reads.get(0).getGeneCollecton();
-            mOrientations[SE_START] = mOrientations[SE_END] = reads.get(0).orientation();
-
-            setJunctionData(readGroups, chrGeneCollections, 0);
-            extractTranscriptExonData(false);
-
-            mType = UNKNOWN;
-        }
-
-        */
     }
 
     public String readId() { return mReads.get(0).Id; }
@@ -196,13 +91,15 @@ public class FusionFragment
     public FusionFragmentType type() { return mType; }
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
+    public final boolean[] inGenicRegions() { return mInGenicRegions; }
     public final byte[] orientations() { return mOrientations; }
 
     public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 
     public boolean isSingleGene()
     {
-        return mChromosomes[SE_START].equals(mChromosomes[SE_END]) && mGeneCollections[SE_START] == mGeneCollections[SE_END];
+        return mChromosomes[SE_START].equals(mChromosomes[SE_END]) && mGeneCollections[SE_START] == mGeneCollections[SE_END]
+                && mInGenicRegions[SE_START] == mInGenicRegions[SE_END];
     }
 
     public final int[] junctionPositions() { return mJunctionPositions; }
@@ -215,130 +112,7 @@ public class FusionFragment
     public boolean isUnspliced() { return mRegionMatchTypes[SE_START] == INTRON && mRegionMatchTypes[SE_END] == INTRON; }
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
 
-    public String locationPair() { return formLocationPair(mChromosomes, mGeneCollections); }
-
-    private boolean hasOverlappingReadGroups(final Map<String,List<ReadRecord>> readGroups)
-    {
-        if(readGroups.size() == 1)
-            return false;
-
-        for(Map.Entry<String,List<ReadRecord>> entry1 : readGroups.entrySet())
-        {
-            for(Map.Entry<String,List<ReadRecord>> entry2 : readGroups.entrySet())
-            {
-                if(entry1.getKey().equals(entry2.getKey()))
-                    continue;
-
-                if(entry1.getValue().stream().anyMatch(x -> entry2.getValue().stream()
-                        .anyMatch(y -> positionsOverlap(x.PosStart, x.PosEnd, y.PosStart, y.PosEnd))))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /*
-    private void setJunctionData(final Map<String,List<ReadRecord>> readGroups, final List<String> chrGeneCollections, int lowerIndex)
-    {
-        // find the reads with supplementary read info and use this to set
-        // final String[] softClipBases = new String[] {"", ""};
-        boolean[] junctionValid = { false, false };
-
-        boolean isSingleGene = readGroups.size() == 1;
-        boolean isLocalSplit = !isSingleGene && readGroups.values().stream().mapToInt(x -> x.size()).sum() == 2;
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if(isSingleGene && se == SE_END)
-                return;
-
-            int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
-            final String chrGeneId = chrGeneCollections.get(index);
-
-            // find the outermost soft-clipped read to use for the splice junction position
-            int sjPosition = 0;
-            byte sjOrientation = 0;
-
-            final List<ReadRecord> readGroup = readGroups.get(chrGeneId);
-
-            ReadRecord read = null;
-            int maxScLength = 0;
-
-            for(ReadRecord rgRead : readGroup)
-            {
-                if(!rgRead.Cigar.containsOperator(CigarOperator.S))
-                    continue;
-
-                if(!isSingleGene && !isLocalSplit)
-                {
-                    if(rgRead.getSuppAlignment() != null)
-                        read = rgRead;
-                }
-                else
-                {
-                    int scLeft = rgRead.isSoftClipped(SE_START) ? rgRead.Cigar.getFirstCigarElement().getLength() : 0;
-                    int scRight = rgRead.isSoftClipped(SE_END) ? rgRead.Cigar.getLastCigarElement().getLength() : 0;
-
-                    if(max(scLeft, scRight) > maxScLength)
-                    {
-                        maxScLength = max(scLeft, scRight);
-                        read = rgRead;
-                    }
-                }
-            }
-
-            if(read == null)
-                continue;
-
-            int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
-            int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
-
-            boolean useLeft = false;
-
-            if(scLeft > 0 && scRight > 0)
-            {
-                // should be very unlikely since implies a very short exon and even then would expect it to be mapped
-                if(scLeft >= scRight)
-                {
-                    useLeft = true;
-                }
-                else if(scRight > scLeft)
-                {
-                    useLeft = false;
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            else
-            {
-                useLeft = scLeft > 0;
-            }
-
-            if(useLeft)
-            {
-                sjPosition = read.getCoordsBoundary(SE_START);
-                sjOrientation = -1;
-            }
-            else
-            {
-                sjPosition = read.getCoordsBoundary(SE_END);
-                sjOrientation = 1;
-            }
-
-            mJunctionPositions[se] = sjPosition;
-            mJunctionOrientations[se] = sjOrientation;
-            junctionValid[se] = true;
-        }
-
-        if(junctionValid[SE_START] && junctionValid[SE_END])
-            mJunctionBasesMatched = true;
-    }
-    */
+    public String locationPair() { return formLocationPair(mChromosomes, mGeneCollections, mInGenicRegions); }
 
     public void setType(FusionFragmentType type) { mType = type; }
 

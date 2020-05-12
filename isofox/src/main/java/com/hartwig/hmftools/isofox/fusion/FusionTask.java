@@ -239,7 +239,7 @@ public class FusionTask implements Callable
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final String chrGene = formLocation(fragment.chromosomes()[se], fragment.geneCollections()[se]);
+            final String chrGene = formLocation(fragment.chromosomes()[se], fragment.geneCollections()[se], fragment.inGenicRegions()[se]);
             List<FusionReadData> fusionsByGene = mFusionsByGene.get(chrGene);
 
             if(fusionsByGene == null)
@@ -263,7 +263,9 @@ public class FusionTask implements Callable
 
     private void cacheSingleGeneFragment(final FusionFragment fragment)
     {
-        final String locationId = formLocation(fragment.chromosomes()[SE_START], fragment.geneCollections()[SE_START]);
+        final String locationId = formLocation(
+                fragment.chromosomes()[SE_START], fragment.geneCollections()[SE_START], fragment.inGenicRegions()[SE_START]);
+
         List<FusionFragment> fragments = mSingleGeneFragments.get(locationId);
 
         if(fragments == null)
@@ -540,14 +542,12 @@ public class FusionTask implements Callable
 
             for (FusionFragment fragment : fragments)
             {
-                if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
-                    continue;
+                // no need to check trans-exon matches since will look after covering the exact base of the junction instead
+                // if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
+                //    continue;
 
                 for(FusionReadData fusionData : fusions)
                 {
-                    if(!fusionData.isValid())
-                        continue;
-
                     if(fusionData.isRelignedFragment(fragment))
                     {
                         fragment.setType(REALIGNED);

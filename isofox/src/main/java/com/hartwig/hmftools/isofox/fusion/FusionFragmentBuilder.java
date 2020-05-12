@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
@@ -15,7 +14,6 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -110,6 +108,7 @@ public class FusionFragmentBuilder
         final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
         final List<Integer> positions = Lists.newArrayListWithCapacity(2);
         final List<Integer> geneCollections = Lists.newArrayListWithCapacity(2);
+        final List<Boolean> inGenicRegions = Lists.newArrayListWithCapacity(2);
 
         final Map<String,List<ReadRecord>> readGroups = Maps.newHashMapWithExpectedSize(2);
 
@@ -122,12 +121,7 @@ public class FusionFragmentBuilder
 
                 int geneId = read.getGeneCollectons()[se];
 
-                // by convention convert pre-genic region into a -ve gene collection id so they remain distinct from each other
-                // and their neighbouring gene collections
-                if(!read.getIsGenicRegion()[se])
-                    geneId *= -1;
-
-                final String chrGeneId = formLocation(read.Chromosome, geneId);
+                final String chrGeneId = formLocation(read.Chromosome, geneId, read.getIsGenicRegion()[se]);
 
                 List<ReadRecord> readGroup = readGroups.get(chrGeneId);
 
@@ -138,6 +132,7 @@ public class FusionFragmentBuilder
                     chrGeneCollections.add(chrGeneId);
                     chromosomes.add(read.Chromosome);
                     geneCollections.add(read.getGeneCollectons()[se]);
+                    inGenicRegions.add(read.getIsGenicRegion()[se]);
                     positions.add(read.getCoordsBoundary(se)); // no overlap in gene collections so doesn't matter which position is used
                 }
                 else
@@ -152,6 +147,7 @@ public class FusionFragmentBuilder
         {
             fragment.chromosomes()[SE_START] = fragment.chromosomes()[SE_END] = chromosomes.get(0);
             fragment.geneCollections()[SE_START] = fragment.geneCollections()[SE_END] = geneCollections.get(0);
+            fragment.inGenicRegions()[SE_START] = fragment.inGenicRegions()[SE_END] = inGenicRegions.get(0);
             fragment.readsByLocation(SE_START).addAll(fragment.reads());
 
             // orientation could be set based on the orientations and positions of the reads.. do this when the junction data is set
@@ -178,6 +174,7 @@ public class FusionFragmentBuilder
             fragment.readsByLocation(se).addAll(readGroup);
             fragment.chromosomes()[se] = chromosomes.get(index);
             fragment.geneCollections()[se] = geneCollections.get(index);
+            fragment.inGenicRegions()[se] = inGenicRegions.get(index);
 
             if(readGroup.size() == 2)
                 fragment.orientations()[se] = readGroup.stream()
