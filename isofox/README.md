@@ -122,7 +122,9 @@ The calculated biases are applied as a weighting to each raw fragment based on i
 
 ### 7. Counting and characterisation of novel splice junctions
 
-A novel splice junction in ISOFOX is considered to be a novel splicing event within the bounds of a single annotated gene called by the aligner which is not part of any annotated gene in ensembl.  For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.    Each novel splice junction is classified as one of the following types of events
+A novel splice junction in ISOFOX is considered to be a novel splicing event which is not part of any annotated gene in ensembl.   To be treated as a novel splicing event in a particular gene, at least 1 of the splicing ends must fall within the gene, the other splice end must be within 500k bases upstream or downstream of the gene and the splicing must not link 2 annotated splice sites that are not both present in a single ensembl gene.  Circular RNAs (typically formed by backsplicing) are also treated as novel splice junctions when they fall wholly within a gene and are marked as orientation "CIRCULAR".  Inversion oriented events are not considered to be novel splice junctions and are instead treated as chimeric.
+
+For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.    Each novel splice junction is classified as one of the following types of events
 
 * SKIPPED_EXON - both splice sites are splice sites on a single existing transcript but the interim exon(s) are skipped.
 * MIXED_TRANSCRIPT - both splice sites are splice sites on different existing transcripts but not the same one
@@ -285,6 +287,7 @@ SJStartBases | 2 previous and 10 next ref genome bases from SJStart position
 SJEndBases | 10 previous and 2 next ref genome bases from SJStart position
 SJStartTranscripts | Transcript ids which contain a splice junction which includes the SJStart splice site
 SJEndTranscripts | Transcript ids which contain a splice junction which includes the SJEnd splice site
+SJOrientation | "NORMAL" or "CIRCULAR"
 OverlappingGenes | List of all genes which overlap the novel splice junction
 
 ### Novel retained introns
