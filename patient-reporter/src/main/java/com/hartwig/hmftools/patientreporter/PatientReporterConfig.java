@@ -86,7 +86,8 @@ public interface PatientReporterConfig {
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON,
                 true,
-                "Either 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
+                "Either 'low_dna_yield', 'post_analysis_fail', 'shallow_seq_low_purity', 'insufficient_tissue_delivered',"
+                        + "'below_detection_threshold', 'lab_failure'");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");

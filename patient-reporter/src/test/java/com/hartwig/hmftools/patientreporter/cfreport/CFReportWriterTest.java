@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -92,6 +92,14 @@ public class CFReportWriterTest {
                 "60%",
                 QCFailReason.BELOW_DETECTION_THRESHOLD,
                 testReportFilePath("hmf_below_detection_without_genomic_alteration_report.pdf"));
+    }
+
+    @Test
+    public void canGenerateLabFailureReport() throws IOException {
+        generateQCFailCPCTReport("CPCT01000001T",
+                "60%",
+                QCFailReason.LAB_FAILURE,
+                testReportFilePath("hmf_lab_failure_report.pdf"));
     }
 
     @Test

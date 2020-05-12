@@ -10,6 +10,7 @@ public enum QCFailReason {
     SHALLOW_SEQ_LOW_PURITY("shallow_seq_low_purity", "Failed Sample Report"),
     INSUFFICIENT_TISSUE("insufficient_tissue_delivered", "Failed Sample Report"),
     BELOW_DETECTION_THRESHOLD("below_detection_threshold", "Failed Sample Report"),
+    LAB_FAILURE("lab_failure", "Failed Sample Report"),
     UNDEFINED(Strings.EMPTY, Strings.EMPTY);
 
     @NotNull
