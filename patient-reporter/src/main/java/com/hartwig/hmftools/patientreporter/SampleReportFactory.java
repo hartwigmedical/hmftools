@@ -3,11 +3,8 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.HospitalModel;
-import com.hartwig.hmftools.common.hospital.HospitalQuery;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.lims.LimsWide;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +21,7 @@ public final class SampleReportFactory {
 
     @NotNull
     public static SampleReport fromLimsAndHospitalModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
-            @NotNull LimsWide limsWide, @NotNull HospitalModel hospitalModel, @Nullable PatientTumorLocation patientTumorLocation) {
+            @Nullable PatientTumorLocation patientTumorLocation) {
         String refSampleBarcode = sampleMetadata.refSampleBarcode();
         String refSampleId = sampleMetadata.refSampleId();
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
@@ -51,7 +48,7 @@ public final class SampleReportFactory {
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
                 .cohort(lims.cohort(tumorSampleBarcode))
                 .projectName(lims.projectName(tumorSampleBarcode))
-                .hospitalQuery(lims.hospitalQuery(tumorSampleId))
+                .hospitalQuery(lims.hospitalQuery(tumorSampleId, tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode))
                 .hospitalPathologySampleId(reportHospitalTissueIdPA(lims.hospitalPathologySampleId(tumorSampleBarcode), tumorSampleId)
@@ -63,27 +60,33 @@ public final class SampleReportFactory {
     public static boolean reportHospitalTissueIdPA(@NotNull String hospitalPaId, @NotNull String tumorSampleId) {
         LimsStudy study = LimsStudy.fromSampleId(tumorSampleId);
 
-        if (!hospitalPaId.equals("N/A")) {
-            LOGGER.info(hospitalPaId.substring(4, 9));
-
-            if (hospitalPaId.startsWith("T") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3, 4).equals("-")
-                    && hospitalPaId.substring(4, 9).matches("[0-9]+")) {
-                return true;
-            } else if (hospitalPaId.startsWith("C") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3, 4)
-                    .equals("-") && hospitalPaId.substring(4, 9).matches("[0-9]+")) {
-                return true;
+        if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+            if (!hospitalPaId.equals("N/A")) {
+                if (hospitalPaId.equals("")) {
+                    LOGGER.info("No hospital ID");
+                    return false;
+                } else if (hospitalPaId.startsWith("T") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3, 4).equals("-")
+                        && hospitalPaId.substring(4, 9).matches("[0-9]+")) {
+                    return true;
+                } else if (hospitalPaId.startsWith("C") && hospitalPaId.substring(1, 3).matches("[0-9]+") && hospitalPaId.substring(3, 4)
+                        .equals("-") && hospitalPaId.substring(4, 9).matches("[0-9]+")) {
+                    return true;
+                } else {
+                    if (study == LimsStudy.WIDE) {
+                        LOGGER.warn("This is a WIDE sample. Solve pathology tissue ID");
+                    }
+                    LOGGER.warn("Wrong hospital tissue ID");
+                    return false;
+                }
             } else {
                 if (study == LimsStudy.WIDE) {
                     LOGGER.warn("This is a WIDE sample. Solve pathology tissue ID");
                 }
-                LOGGER.warn("Wrong hospital tissue ID");
+                LOGGER.warn("No hospital tissue ID");
                 return false;
             }
         } else {
-            if (study == LimsStudy.WIDE) {
-                LOGGER.warn("This is a WIDE sample. Solve pathology tissue ID");
-            }
-            LOGGER.warn("No hospital tissue ID");
+            LOGGER.info("Hospital ID is not needed");
             return false;
         }
     }

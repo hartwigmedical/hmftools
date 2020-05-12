@@ -14,6 +14,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.hospital.HospitalModelTest;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -269,7 +270,7 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDates,
-                blacklistedPatients, null);
+                blacklistedPatients, HospitalModelTest.buildTestHospitalModel());
     }
 
     @NotNull
@@ -287,7 +288,7 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, null);
+                blacklistedPatients, HospitalModelTest.buildTestHospitalModel());
     }
 
     @NotNull
@@ -310,8 +311,9 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, null);
+                blacklistedPatients, HospitalModelTest.buildTestHospitalModel());
     }
+
 
     @NotNull
     private static Lims buildTestLimsWithPreLimsArrivalDateForSampleId(@NotNull String sampleId, @NotNull LocalDate date) {
@@ -330,6 +332,6 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, null);
+                blacklistedPatients, HospitalModelTest.buildTestHospitalModel());
     }
 }

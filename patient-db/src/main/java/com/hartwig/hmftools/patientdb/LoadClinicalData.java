@@ -111,7 +111,7 @@ public final class LoadClinicalData {
                 toUniqueSampleIds(sequencedSamplesPerPatient).size());
 
         LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
-        Lims lims = LimsFactory.fromLimsDirectoryAndHospitalDirectory(cmd.getOptionValue(LIMS_DIRECTORY), "");
+        Lims lims = LimsFactory.fromLimsDirectoryAndHospitalDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
         Map<String, List<SampleData>> sampleDataPerPatient =
                 extractAllSamplesFromLims(lims, sampleToSetNameMap, sequencedSamplesPerPatient);
         LOGGER.info(" Loaded samples for {} patient IDs ({} samples)",

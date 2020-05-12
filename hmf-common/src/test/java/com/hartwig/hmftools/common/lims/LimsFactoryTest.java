@@ -14,14 +14,15 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.hospital.HospitalAdress;
+import com.hartwig.hmftools.common.hospital.HospitalData;
+import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 
 import org.junit.Test;
 
 public class LimsFactoryTest {
 
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
-    private static final String HOSPITAL_DIRECTORY = Resources.getResource("hospital").getPath();
-
 
     @Test
     public void canCreateEmptyLims() {
@@ -30,12 +31,12 @@ public class LimsFactoryTest {
 
     @Test
     public void canBuildLimsFromTestData() throws IOException {
-        assertNotNull(LimsFactory.fromLimsDirectoryAndHospitalDirectory(LIMS_DIRECTORY, HOSPITAL_DIRECTORY));
+        assertNotNull(LimsFactory.fromLimsDirectoryAndHospitalDirectory(LIMS_DIRECTORY));
     }
 
     @Test(expected = IOException.class)
     public void exceptionWhenJsonFileDoesNotExist() throws IOException {
-        LimsFactory.fromLimsDirectoryAndHospitalDirectory("Does not exist", "");
+        LimsFactory.fromLimsDirectoryAndHospitalDirectory("Does not exist");
     }
 
     @Test

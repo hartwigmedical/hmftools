@@ -5,13 +5,9 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.HospitalModel;
-import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.lims.LimsWide;
-import com.hartwig.hmftools.common.lims.LimsWideFile;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -114,26 +110,17 @@ public class PatientReporterApplication {
     @NotNull
     private static QCFailReportData buildQCFailReportData(@NotNull PatientReporterConfig config) throws IOException {
         String tumorLocationCsv = config.tumorLocationCsv();
-        String hospitalsDirectory = config.hospitalDir();
 
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
         LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
 
         String limsDirectory = config.limsDir();
-        Lims lims = LimsFactory.fromLimsDirectoryAndHospitalDirectory(limsDirectory, hospitalsDirectory);
+        Lims lims = LimsFactory.fromLimsDirectoryAndHospitalDirectory(limsDirectory);
         LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
-
-        HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
-        LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
-
-        LOGGER.info("Reading lims wide file {}", config.contactWideTsv());
-        LimsWide limsWide = LimsWideFile.read(config.contactWideTsv());
 
         return ImmutableQCFailReportData.builder()
                 .patientTumorLocations(patientTumorLocations)
                 .limsModel(lims)
-                .limsWideModel(limsWide)
-                .hospitalModel(hospitalModel)
                 .signaturePath(config.signature())
                 .logoRVAPath(config.rvaLogo())
                 .logoCompanyPath(config.companyLogo())

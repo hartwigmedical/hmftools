@@ -80,8 +80,6 @@ class AnalysedPatientReporter {
 
         SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(sampleMetadata,
                 reportData.limsModel(),
-                reportData.limsWideModel(),
-                reportData.hospitalModel(),
                 patientTumorLocation);
 
         PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation);

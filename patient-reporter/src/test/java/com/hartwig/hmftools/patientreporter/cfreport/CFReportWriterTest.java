@@ -95,6 +95,14 @@ public class CFReportWriterTest {
     }
 
     @Test
+    public void canGenerateLabFailureReport() throws IOException {
+        generateQCFailCPCTReport("CPCT01000001T",
+                "60%",
+                QCFailReason.LAB_FAILURE,
+                testReportFilePath("hmf_lab_failure_report.pdf"));
+    }
+
+    @Test
     public void canGenerateInsufficientTissue() throws IOException {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",
@@ -137,10 +145,11 @@ public class CFReportWriterTest {
     @NotNull
     private static HospitalQuery hospitalQuery(){
         return ImmutableHospitalQuery.builder()
-                .hospitalPI(Strings.EMPTY)
+                .hospitalPI("AB")
                 .analyseRequestName("Paul")
                 .analyseRequestEmail("paul@hartwig.com")
                 .hospital("HMF Testing Center")
+                .fullHospitalString("AB, HMF Testing Center, Zip, City")
                 .build();
     }
 

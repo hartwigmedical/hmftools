@@ -9,6 +9,7 @@ import java.io.IOException;
 import com.google.common.io.Resources;
 
 import org.apache.logging.log4j.util.Strings;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnalysedPatientReporterTest {

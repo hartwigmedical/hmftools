@@ -8,27 +8,53 @@ import htsjdk.variant.vcf.VCFHeader
 import htsjdk.variant.vcf.VCFHeaderLineType
 import htsjdk.variant.vcf.VCFInfoHeaderLine
 
+const val TAF = "TAF";
+const val MIN_QUAL = "minQual";
+const val IMPRECISE = "imprecise";
+const val MIN_TUMOR_AF = "minTumorAF";
+const val SHORT_SR_NORMAL = "shortSRNormal"
+const val LONG_DP_SUPPORT = "longDPSupport"
+const val SHORT_SR_SUPPORT = "shortSRSupport"
+const val MAX_POLY_G_LENGTH = "maxPolyGLength"
+const val SHORT_STRAND_BIAS = "shortStrandBias"
 const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
 const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
-const val SHORT_STRAND_BIAS = "shortStrandBias";
-const val MAX_POLY_G_LENGTH = "maxPolyGLength";
-const val MIN_TUMOR_AF = "minTumorAF";
-const val IMPRECISE = "imprecise";
-const val MIN_QUAL = "minQual";
-const val TAF = "TAF";
+
+const val MAX_HOM_LENGTH = "maxHomLength"
+const val MAX_HOM_LENGTH_SHORT_INV = "maxHomLengthShortInv"
+const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
+const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
+const val BREAK_END_ASSEMBLY_READ_PAIR = "breakendAssemblyReadPair"
+
+const val PON = "PON"
 
 class GripssVCF(outputVCF: String) : AutoCloseable {
     val writer = VariantContextWriterBuilder().setOutputFile(outputVCF).unsetOption(Options.INDEX_ON_THE_FLY).build()
 
 
-    fun writeHeader(header: VCFHeader, config: GripssFilterConfig) {
-        header.addMetaDataLine(VCFFilterHeaderLine(MIN_TUMOR_AF, "Filter variants with less than ${config.minTumorAF * 100}% tumor allelic frequency"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MAX_NORMAL_SUPPORT, "Filter variants with more than ${config.maxNormalSupport * 100}% of the supporting reads originating from the normal"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MIN_NORMAL_COVERAGE, "Filter variants with breakend coverage of less than ${config.minNormalCoverage} fragments coverage"))
-        header.addMetaDataLine(VCFFilterHeaderLine(SHORT_STRAND_BIAS, "Filter deletion or duplication breakpoints under 1000bp with a split read strand bias of more than ${config.maxShortStrandBias}"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MIN_QUAL, "Filter breakend and breakpoint variants with qual less than  ${config.minQualBreakEnd} and ${config.minQualBreakPoint} respectively"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Insert sequence contains polyG or polyC"))
-        header.addMetaDataLine(VCFFilterHeaderLine(IMPRECISE, "Variant is imprecise"))
+    fun writeHeader(header: VCFHeader) {
+
+        //TODO:
+        //        ##FILTER=<ID=small.replacement.fp,Description="Deletion with insertion of the same length that is not a simple inversion.">
+        //        ##FILTER=<ID=NO_ASRP,Description="Breakend supported by 0 assembled read pairs">
+        //        ##FILTER=<ID=cohortMinSize,Description="Variant is smaller than the minimum event size considered for this cohort">
+
+        header.addMetaDataLine(VCFFilterHeaderLine(BREAK_END_ASSEMBLY_READ_PAIR, "Breakend supported by 0 assembled read pairs"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_HOM_LENGTH, "Breakpoint homology length too long"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH, "Inexact breakpoint homology length too long"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH_SHORT_DEL, "Short deletion that appears to be a ligation artifact"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_HOM_LENGTH_SHORT_INV, "Short inversion with significant sequence homology"))
+        header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_SUPPORT, "Short event not supported by any split reads either directly or via assembly"))
+        header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_NORMAL, "Short event with split reads support in the normal sample"))
+        header.addMetaDataLine(VCFFilterHeaderLine(LONG_DP_SUPPORT, "Large event not supported by any read pairs either directly or via assembly"))
+        header.addMetaDataLine(VCFFilterHeaderLine(PON, "Found in panel of normals"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MIN_TUMOR_AF, "Variant allele fraction too low"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_NORMAL_SUPPORT, "Too many support reads from the normal sample"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MIN_NORMAL_COVERAGE, "Insufficient normal coverage to determine somatic status"))
+        header.addMetaDataLine(VCFFilterHeaderLine(SHORT_STRAND_BIAS, "Short event with excessive strand bias in split reads/soft clipped reads overlapping breakpoint"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MIN_QUAL, "Insufficient quality"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artefact"))
+        header.addMetaDataLine(VCFFilterHeaderLine(IMPRECISE, "Imprecise variant"))
         header.addMetaDataLine(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Description"))
         writer.writeHeader(header)
     }

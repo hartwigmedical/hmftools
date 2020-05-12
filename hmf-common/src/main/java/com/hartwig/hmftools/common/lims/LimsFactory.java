@@ -46,7 +46,7 @@ public final class LimsFactory {
     }
 
     @NotNull
-    public static Lims fromLimsDirectoryAndHospitalDirectory(@NotNull String limsDirectory, @NotNull String hospitalDirectory)
+    public static Lims fromLimsDirectoryAndHospitalDirectory(@NotNull String limsDirectory)
             throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
@@ -58,7 +58,7 @@ public final class LimsFactory {
         Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
         Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
 
-        HospitalModel model = HospitalModelFactory.fromHospitalDirectory(hospitalDirectory);
+        HospitalModel model = HospitalModelFactory.fromHospitalDirectory(limsDirectory);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
@@ -71,27 +71,6 @@ public final class LimsFactory {
     }
 
     @NotNull
-    public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
-        String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
-        Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
-        Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
-        Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode =
-                readLimsShallowSeqTsv(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_TSV);
-
-        Map<String, LocalDate> preLimsArrivalDates = readPreLimsArrivalDateTsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_TSV);
-        Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
-        Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
-
-        return new Lims(dataPerSampleBarcode,
-                dataPerSubmission,
-                shallowSeqPerSampleBarcode,
-                preLimsArrivalDates,
-                sampleIdsWithoutSamplingDate,
-                blacklistedPatients,
-                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
-    }
-
-    @NotNull
     public static Lims empty() {
         return new Lims(Maps.newHashMap(),
                 Maps.newHashMap(),
@@ -99,7 +78,11 @@ public final class LimsFactory {
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 Sets.newHashSet(),
-                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
+                ImmutableHospitalModel.of(Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap()));
     }
 
     @NotNull

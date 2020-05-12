@@ -11,7 +11,17 @@ fun main(args: Array<String>) {
     val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
 //    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.gridss.somatic.full.vcf.gz"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
-    val filterConfig = GripssFilterConfig(0.03, 8, 0.005, 0.95, 350, 1000)
+    val filterConfig = GripssFilterConfig(
+            0.03,
+            8,
+            0.005,
+            0.95,
+            350,
+            1000,
+            50,
+            6,
+            50,
+            6)
     val config = GripssConfig(inputVCF, outputVCF, filterConfig)
 
     GripssApplication(config).use { x -> x.run() }
@@ -26,7 +36,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileWriter = GripssVCF(config.outputVcf)
 
     override fun run() {
-        fileWriter.writeHeader(fileReader.fileHeader, config.filterConfig)
+        fileWriter.writeHeader(fileReader.fileHeader)
         for (variantContext in fileReader) {
 
             val structuralVariant = StructuralVariantContext(variantContext)

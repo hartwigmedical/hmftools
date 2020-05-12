@@ -46,7 +46,7 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        if (failReport.sampleReport().hospitalQuery().hospital() == null) {
+        if (failReport.sampleReport().hospitalQuery().fullHospitalString() == null) {
             throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
         }
 
@@ -85,34 +85,45 @@ public class QCFailChapter implements ReportChapter {
 
         switch (failReason) {
             case LOW_DNA_YIELD: {
-                title = "Notification tumor sample on hold for sequencing";
-                reason = "Insufficient amount of DNA";
-                explanation = "The amount of isolated DNA was <50 ng, which is insufficient for sequencing. ";
+                title = "Notification failed sample";
+                reason = "Insufficient biopsy/tissue quality";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
                 break;
             }
             case POST_ANALYSIS_FAIL: {
-                title = "Notification of inadequate tumor sample";
-                reason = "Analysis has failed post DNA isolation";
-                explanation = "This sample could not be processed to completion successfully.";
+                title = "Notification failed sample";
+                reason = "Insufficient biopsy/tissue quality";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
                 break;
             }
             case SHALLOW_SEQ_LOW_PURITY: {
-                title = "Notification of inadequate tumor sample";
-                reason = "Not enough tumor DNA detected based on molecular estimate.";
-                explanation = "For sequencing we require a minimum of 20% tumor cells.";
+                title = "Notification failed sample";
+                reason = "Insufficient biopsy/tissue quality";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
                 break;
             }
             case INSUFFICIENT_TISSUE: {
-                title = "Notification tumor sample on hold for sequencing";
-                reason = "Insufficient tissue";
-                explanation = "The amount of isolated DNA was <50 ng, which is insufficient for sequencing. ";
+                title = "Notification failed sample";
+                reason = "Insufficient biopsy/tissue quality";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
-                title = "Notification sample with insufficient tumor content";
-                reason = "Insuffient tumor purity for reliable variant detection";
-                explanation = "Sequencing was performed but analysis indicated a too low tumor purity for reliable \n "
-                        + "identification of possible aberrations.";
+                title = "Notification failed sample";
+                reason = "Insufficient biopsy/tissue quality";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
+                break;
+            }
+            case LAB_FAILURE: {
+                title = "Notification failed sample";
+                reason = "Technical failure";
+                explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy \n "
+                        + "due to technical problems";
                 break;
             }
             default: {
@@ -351,7 +362,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsVerifiedByAndAddressedAt() {
-        String addressee = failReport.sampleReport().hospitalQuery().hospital();
+        String addressee = failReport.sampleReport().hospitalQuery().fullHospitalString();
         assert addressee != null; // Has been checked prior to calling this function.
         return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
                 addressee);

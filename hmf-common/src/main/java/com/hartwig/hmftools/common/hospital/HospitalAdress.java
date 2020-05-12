@@ -16,8 +16,8 @@ public abstract class HospitalAdress {
     public abstract String hospitalName();
 
     @NotNull
-    public abstract String hospitalCity();
+    public abstract String hospitalZip();
 
     @NotNull
-    public abstract String hospitalZip();
+    public abstract String hospitalCity();
 }

@@ -32,8 +32,6 @@ public interface PatientReporterConfig {
     String REPORTING_DB_TSV = "reporting_db_tsv";
     String TUMOR_LOCATION_CSV = "tumor_location_csv";
     String LIMS_DIRECTORY = "lims_dir";
-    String HOSPITAL_DIRECTORY = "hospital_dir";
-    String CONTACT_WIDE_TSV = "contact_wide_tsv";
 
     String RVA_LOGO = "rva_logo";
     String COMPANY_LOGO = "company_logo";
@@ -80,8 +78,6 @@ public interface PatientReporterConfig {
         options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
-        options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
-        options.addOption(CONTACT_WIDE_TSV, true, "Path towards the file of contact for WIDE TSV.");
 
         options.addOption(RVA_LOGO, true, "Path towards an image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
@@ -90,7 +86,8 @@ public interface PatientReporterConfig {
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON,
                 true,
-                "Either 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
+                "Either 'low_dna_yield', 'post_analysis_fail', 'shallow_seq_low_purity', 'insufficient_tissue_delivered',"
+                        + "'below_detection_threshold', 'lab_failure'");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -138,12 +135,6 @@ public interface PatientReporterConfig {
 
     @NotNull
     String limsDir();
-
-    @NotNull
-    String hospitalDir();
-
-    @NotNull
-    String contactWideTsv();
 
     @NotNull
     String rvaLogo();
@@ -265,8 +256,6 @@ public interface PatientReporterConfig {
                 .reportingDbTsv(nonOptionalFile(cmd, REPORTING_DB_TSV))
                 .tumorLocationCsv(nonOptionalFile(cmd, TUMOR_LOCATION_CSV))
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
-                .hospitalDir(nonOptionalDir(cmd, HOSPITAL_DIRECTORY))
-                .contactWideTsv(nonOptionalFile(cmd, CONTACT_WIDE_TSV))
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
