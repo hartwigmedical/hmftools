@@ -60,23 +60,13 @@ public final class HospitalModelFactory {
 
         Map<String, HospitalAdress> hospitalAdress = readFromHospitalAdress(hospitalAdressCsv);
 
-        return ImmutableHospitalModel.of(
-                sampleHospitalMapping,
-                hospitalDataCPCT,
-                hospitalDataDRUP,
-                hospitalDataWIDE,
-                hospitalAdress);
+        return ImmutableHospitalModel.of(sampleHospitalMapping, hospitalDataCPCT, hospitalDataDRUP, hospitalDataWIDE, hospitalAdress);
     }
 
     @NotNull
     public static HospitalModel empty() {
-        return ImmutableHospitalModel.of(Maps.newHashMap(),
-                Maps.newHashMap(),
-                Maps.newHashMap(),
-                Maps.newHashMap(),
-                Maps.newHashMap());
+        return ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap());
     }
-
 
     @NotNull
     public static Map<String, HospitalSampleMapping> readFromSampleHospitalMapping(@NotNull String sampleHospitalMappingCsv)
@@ -85,12 +75,12 @@ public final class HospitalModelFactory {
 
         List<String> lines = FileReader.build().readLines(new File(sampleHospitalMappingCsv).toPath());
         for (String line : lines) {
-            String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT_SAMPLE_HOSPITAL_MAPPING);
+            String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == FIELD_COUNT_SAMPLE_HOSPITAL_MAPPING) {
                 HospitalSampleMapping hospitalManual = ImmutableHospitalSampleMapping.of(parts[HOSPITAL_MAPPING_COLUMN]);
 
                 hospitalPerSampleMap.put(parts[SAMPLE_MAPPING_ID_COLUMN], hospitalManual);
-            } else if (parts.length > 0) {
+            } else {
                 LOGGER.warn("Could not properly parse line in sample hospital mapping csv: '{}'", line);
             }
         }
@@ -102,7 +92,7 @@ public final class HospitalModelFactory {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
-            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
+            String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
@@ -110,7 +100,7 @@ public final class HospitalModelFactory {
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
 
                 hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
-            } else if (parts.length > 0) {
+            } else {
                 LOGGER.warn("Could not properly parse line in hospital csv: '{}'", line);
             }
         }
@@ -122,7 +112,7 @@ public final class HospitalModelFactory {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
-            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
+            String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
@@ -130,7 +120,7 @@ public final class HospitalModelFactory {
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
 
                 hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
-            } else if (parts.length > 0) {
+            } else {
                 LOGGER.warn("Could not properly parse line in hospital csv: '{}'", line);
             }
         }
@@ -142,7 +132,7 @@ public final class HospitalModelFactory {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines) {
-            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT);
+            String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
@@ -150,7 +140,7 @@ public final class HospitalModelFactory {
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
 
                 hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
-            } else if (parts.length > 0) {
+            } else {
                 LOGGER.warn("Could not properly parse line in hospital csv: '{}'", line);
             }
         }
@@ -162,7 +152,7 @@ public final class HospitalModelFactory {
         Map<String, HospitalAdress> hospitalAdress = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalAdressCsv).toPath());
         for (String line : lines) {
-            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_ADRESS_FIELD_COUNT);
+            String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_ADRESS_FIELD_COUNT) {
                 HospitalAdress hospital = ImmutableHospitalAdress.of(parts[HOSPITAL_ADRESS_ID_COLUMN],
                         parts[HOSPITAL_ADRESS_NAME_COLUMN],
@@ -170,7 +160,7 @@ public final class HospitalModelFactory {
                         parts[HOSPITAL_ADRESS_CITY_COLUMN]);
 
                 hospitalAdress.put(parts[SAMPLE_MAPPING_ID_COLUMN], hospital);
-            } else if (parts.length > 0) {
+            } else {
                 LOGGER.warn("Could not properly parse line in hospital adress csv: '{}'", line);
             }
         }

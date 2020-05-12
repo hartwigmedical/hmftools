@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.hospital;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 
@@ -35,8 +36,21 @@ public abstract class HospitalModel {
     @NotNull
     abstract Map<String, HospitalAdress> hospitalAdress();
 
+    @NotNull
+    public HospitalQuery generateHospitalQuery(@NotNull String sampleId, @NotNull String requestNameCore,
+            @NotNull String requestEmailCore) {
+        return ImmutableHospitalQuery.builder()
+                .hospitalPI(extractHospitalPI(sampleId))
+                .analyseRequestName(extractRequestName(sampleId, requestNameCore))
+                .analyseRequestEmail(extractRequestEmail(sampleId, requestEmailCore))
+                .fullHospitalString(extractHospitalAdress(sampleId))
+                .hospital(extractHospitalName(sampleId))
+                .build();
+    }
+
     @Nullable
-    public String extractHospitalPI(@NotNull String sampleId) {
+    @VisibleForTesting
+    String extractHospitalPI(@NotNull String sampleId) {
         HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
@@ -60,7 +74,8 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    public String extractRequestName(@NotNull String sampleId, @NotNull String requestNameCore) {
+    @VisibleForTesting
+    String extractRequestName(@NotNull String sampleId, @NotNull String requestNameCore) {
         HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
@@ -82,7 +97,8 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    public String extractRequestEmail(@NotNull String sampleId, @NotNull String requestEmailCore) {
+    @VisibleForTesting
+    String extractRequestEmail(@NotNull String sampleId, @NotNull String requestEmailCore) {
         HospitalData hospitalData;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
@@ -114,7 +130,8 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    public String extractHospitalAdress(@NotNull String sampleId) {
+    @VisibleForTesting
+    String extractHospitalAdress(@NotNull String sampleId) {
         HospitalAdress hospitalAdress;
         String hospitalID = extractHospitalIdFromSample(sampleId);
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
@@ -136,8 +153,7 @@ public abstract class HospitalModel {
             }
 
             checkAddresseeFields(hospitalAdress);
-            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
-                    + hospitalAdress.hospitalCity();
+            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
 
         } else {
             if (hospitalID == null) {
@@ -152,8 +168,7 @@ public abstract class HospitalModel {
             }
             checkAddresseeFields(hospitalAdress);
             if (study == LimsStudy.CORE) {
-                return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
-                        + hospitalAdress.hospitalCity();
+                return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
             } else {
                 return extractHospitalPI(sampleId) + ", " + hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
                         + hospitalAdress.hospitalCity();
@@ -232,16 +247,4 @@ public abstract class HospitalModel {
             LOGGER.warn("Some address fields ({}) are missing.", Strings.join(missingFields, ','));
         }
     }
-
-    @NotNull
-    public HospitalQuery generateHospitalQuery(@NotNull String sampleId, @NotNull String requestNameCore, @NotNull String requestEmailCore) {
-        return ImmutableHospitalQuery.builder()
-                .hospitalPI(extractHospitalPI(sampleId))
-                .analyseRequestName(extractRequestName(sampleId, requestNameCore))
-                .analyseRequestEmail(extractRequestEmail(sampleId, requestEmailCore))
-                .fullHospitalString(extractHospitalAdress(sampleId))
-                .hospital(extractHospitalName(sampleId))
-                .build();
-    }
-
 }

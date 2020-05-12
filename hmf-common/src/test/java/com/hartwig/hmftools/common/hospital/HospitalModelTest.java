@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.common.hospital;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -61,7 +59,6 @@ public class HospitalModelTest {
 
     @NotNull
     public static HospitalModel buildTestHospitalModel() {
-
         Map<String, HospitalSampleMapping> sampleHospitalMapping = Maps.newHashMap();
         Map<String, HospitalData> hospitalDataCPCT = Maps.newHashMap();
         Map<String, HospitalData> hospitalDataDRUP = Maps.newHashMap();
