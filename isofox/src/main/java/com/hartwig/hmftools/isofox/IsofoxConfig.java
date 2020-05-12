@@ -518,7 +518,10 @@ public class IsofoxConfig
                 fileContents.remove(0);
             }
 
-            geneIdList.addAll(fileContents.stream().map(x -> x.split(",")[COL_GENE_ID]).collect(Collectors.toList()));
+            geneIdList.addAll(fileContents.stream()
+                    .filter(x -> !x.contains("GeneId"))
+                    .filter(x -> !x.startsWith("#"))
+                    .map(x -> x.split(",")[COL_GENE_ID]).collect(Collectors.toList()));
         }
         catch (IOException e)
         {

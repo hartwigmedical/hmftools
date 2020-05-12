@@ -403,7 +403,7 @@ public class FusionFinder
 
     private void setMissingGeneCollection(final ReadRecord read)
     {
-        if(read.getGeneCollectons()[SE_START] != NON_GENIC_ID && read.getGeneCollectons()[SE_START] == NON_GENIC_ID)
+        if(read.getGeneCollectons()[SE_START] != NON_GENIC_ID && read.getGeneCollectons()[SE_END] == NON_GENIC_ID)
         {
             final Map<Integer,List<EnsemblGeneData>> geneCollectionMap = mChrGeneCollectionMap.get(read.Chromosome);
 
