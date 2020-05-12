@@ -2,6 +2,8 @@ package com.hartwig.hmftools.extensions
 
 import com.hartwig.hmftools.gripss.VariantType
 import htsjdk.variant.variantcontext.VariantContext
+import org.apache.logging.log4j.util.Strings
+import java.util.*
 import kotlin.math.max
 
 fun VariantContext.breakendAssemblyReadPairs(): Int {
@@ -28,6 +30,17 @@ fun VariantContext.inexactHomologyLength(): Int {
 
     val (iHom1, iHom2) = this.getAttributeAsIntList("IHOMPOS", 0)
     return max(0, iHom2 - iHom1)
+}
+
+fun VariantContext.assemblies(): List<String> {
+    val assemblyCount = this.getAttributeAsInt("AS", 0) + this.getAttributeAsInt("RAS", 0) + this.getAttributeAsInt("CAS", 0)
+    if (assemblyCount >= 2 && this.hasAttribute("BEID") && this.hasAttribute("BEIDL")) {
+        val beid: List<String> = this.getAttributeAsStringList("BEID", Strings.EMPTY)
+        val beidl: List<String> = this.getAttributeAsStringList("BEIDL", Strings.EMPTY)
+        return beid.zip(beidl) { x, y -> "$x/$y" }
+    }
+
+    return Collections.emptyList()
 }
 
 fun VariantContext.toVariantType(): VariantType {

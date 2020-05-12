@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss
 
+import com.hartwig.hmftools.gripss.link.LocalLink
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File
 
@@ -36,14 +37,25 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileWriter = GripssVCF(config.outputVcf)
 
     override fun run() {
-        fileWriter.writeHeader(fileReader.fileHeader)
-        for (variantContext in fileReader) {
+        println("READING")
 
+        fileWriter.writeHeader(fileReader.fileHeader)
+        val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()
+        for (variantContext in fileReader) {
             val structuralVariant = StructuralVariantContext(variantContext)
             if (!structuralVariant.isHardFilter(config.filterConfig)) {
-                fileWriter.writeVariant(structuralVariant.context(config.filterConfig))
+                structuralVariants.add(structuralVariant)
             }
         }
+
+
+        println("LINKING")
+
+        val links = LocalLink.create(structuralVariants)
+
+        println("WRITING")
+        structuralVariants.forEach { x -> fileWriter.writeVariant(x.context(config.filterConfig, links.link(x.vcfId), links.link(x.mateId))) }
+
     }
 
     override fun close() {

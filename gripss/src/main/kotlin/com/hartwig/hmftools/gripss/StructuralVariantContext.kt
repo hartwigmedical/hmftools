@@ -18,14 +18,20 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val isShortDel = variantType is Deletion && variantType.length < SHORT_EVENT_SIZE
     val isShortIns = variantType is Insertion && variantType.length < SHORT_EVENT_SIZE
     val isShort = isShortDup || isShortDel || isShortIns
+    val vcfId: String = context.id
+    val mateId: String? = context.mateId();
 
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
-    private val mateId: String? = context.mateId();
+
+
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 
-    fun context(config: GripssFilterConfig): VariantContext {
+    fun context(config: GripssFilterConfig, localLink: String, remoteLink: String): VariantContext {
         val builder = VariantContextBuilder(context).filters()
+
+        builder.attribute(LOCAL_LINKED_BY, localLink)
+        builder.attribute(REMOTE_LINKED_BY, remoteLink)
 
         if (normalCoverageFilter(config.minNormalCoverage)) {
             builder.filter(MIN_NORMAL_COVERAGE)
@@ -85,6 +91,9 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
         return builder.attribute(TAF, tumorAF).make()
     }
+
+
+    fun assemblies(): List<String> = context.assemblies();
 
     fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupport)
 
@@ -161,16 +170,19 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return normalSupport > maxNormalSupport * tumorSupport;
     }
 
-
     private fun VariantContext.mateId(): String? {
-        if (this.hasAttribute("MATE_ID")) {
-            return this.getAttributeAsString("MATE_ID", "")
+        if (this.hasAttribute("MATEID")) {
+            return this.getAttributeAsString("MATEID", "")
         }
 
-        if (this.hasAttribute("PAR_ID")) {
-            return this.getAttributeAsString("PAR_ID", "")
+        if (this.hasAttribute("PARID")) {
+            return this.getAttributeAsString("PARID", "")
         }
 
         return null
+    }
+
+    override fun toString(): String {
+        return "SV(${context.contig}:${context.start} ${context.alleles[0].displayString} > ${context.alleles[1].displayString})"
     }
 }
