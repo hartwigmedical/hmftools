@@ -406,7 +406,7 @@ public class FusionReadData
 
                 if(reads.isEmpty())
                 {
-                    ISF_LOGGER.error("fusion({}) fragment has not reads on side", toString());
+                    ISF_LOGGER.error("fusion({}) fragment({}) has no reads on side", toString(), fragment.readId());
                     continue;
                 }
 

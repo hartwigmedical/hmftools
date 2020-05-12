@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
 
 import java.util.List;
@@ -211,6 +212,7 @@ public class FusionFragment
             return;
 
         int junctionPosition = mJunctionPositions[seIndex];
+        byte junctionOrientation = mJunctionOrientations[seIndex];
 
         int index = 0;
         while(index < mTransExonRefs[seIndex].size())
@@ -225,14 +227,17 @@ public class FusionFragment
             }
 
             ExonData exon = transData.exons().stream()
-                    .filter(x -> x.ExonStart == junctionPosition || x.ExonEnd == junctionPosition).findFirst().orElse(null);
+                    .filter(x -> (junctionOrientation == 1 && x.ExonEnd == junctionPosition)
+                            || (junctionOrientation == -1 && x.ExonStart == junctionPosition))
+                    .findFirst().orElse(null);
 
-            if(exon != null && transExonRef.ExonRank != exon.ExonRank)
+            if(exon == null || transExonRef.ExonRank != exon.ExonRank)
             {
                 mTransExonRefs[seIndex].remove(index);
                 continue;
             }
 
+            mJunctionTypes[seIndex] = KNOWN;
             ++index;
         }
     }
@@ -244,9 +249,9 @@ public class FusionFragment
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            if (exonBoundary(mRegionMatchTypes[se]))
+            if (mJunctionTypes[se] == KNOWN)
             {
-                mJunctionTypes[se] = FusionJunctionType.KNOWN;
+                continue;
             }
             else if(mJunctionPositions[se] > 0)
             {

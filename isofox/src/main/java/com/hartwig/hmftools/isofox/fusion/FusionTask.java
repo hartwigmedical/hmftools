@@ -223,7 +223,8 @@ public class FusionTask implements Callable
                     fusionData.addFusionFragment(fragment);
 
                     // mark donor-acceptor types whether strands are known or not
-                    fragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
+                    fragment.junctionTypes()[SE_START] = fusionData.getInitialFragment().junctionTypes()[SE_START];
+                    fragment.junctionTypes()[SE_END] = fusionData.getInitialFragment().junctionTypes()[SE_END];
                     return fusionData;
                 }
             }
@@ -233,7 +234,6 @@ public class FusionTask implements Callable
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
         setGeneData(fusionData);
-        fragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
 
         fusions.add(fusionData);
 
@@ -279,6 +279,8 @@ public class FusionTask implements Callable
         // get the genes supporting the splice junction in the terms of an SV (ie lower chromosome and lower position first)
         final List<List<EnsemblGeneData>> genesByPosition = Lists.newArrayList(Lists.newArrayList(), Lists.newArrayList());
 
+        FusionFragment initialFragment = fusionData.getInitialFragment();
+
         for(int se = SE_START; se <= SE_END; ++se)
         {
             final List<String> spliceGeneIds = fusionData.getInitialFragment().getGeneIds(se);
@@ -293,10 +295,8 @@ public class FusionTask implements Callable
             final List<TranscriptData> transDataList = Lists.newArrayList();
             spliceGeneIds.forEach(x -> transDataList.addAll(mGeneTransCache.getTranscripts(x)));
 
-            for(FusionFragment fragment : fusionData.getAllFragments())
-            {
-                fragment.validateTranscriptExons(transDataList, se);
-            }
+            // purge any invalid transcript-exons and mark the junction as known if applicable
+            initialFragment.validateTranscriptExons(transDataList, se);
         }
 
         // organise genes by strand based on the orientations around the splice junction
@@ -342,6 +342,9 @@ public class FusionTask implements Callable
         }
 
         fusionData.cacheTranscriptData();
+
+        initialFragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
+
     }
 
     private void markRelatedFusions()
