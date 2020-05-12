@@ -84,23 +84,6 @@ public class FusionFragmentBuilder
         return reads.stream().anyMatch(x -> x.getSuppAlignment() != null);
     }
 
-    public static boolean isRealignedFragmentCandidate(final ReadRecord read)
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if (read.isSoftClipped(se))
-            {
-                int scLength =
-                        se == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
-
-                if (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
     public static void setLocationData(final FusionFragment fragment)
     {
         // divide the reads into groups by chromosome and gene collection - so reads may span both

@@ -118,6 +118,15 @@ public class GeneCollection
     public List<TranscriptData> getEnrichedTranscripts() { return mEnrichedTranscripts; }
     public int[] getEnrichedRegion() { return mEnrichedRegion; }
 
+    public boolean inEnrichedRegion(int posStart, int posEnd)
+    {
+        if(mEnrichedRegion == null)
+            return false;
+
+        return positionsOverlap(posStart, posEnd, mEnrichedRegion[SE_START], mEnrichedRegion[SE_END]);
+    }
+
+
     public void setEnrichedTranscripts(final List<TranscriptData> transDataList)
     {
         mEnrichedTranscripts = Lists.newArrayList(transDataList);
