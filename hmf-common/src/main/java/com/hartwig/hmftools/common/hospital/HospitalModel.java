@@ -131,7 +131,7 @@ public abstract class HospitalModel {
 
     @Nullable
     @VisibleForTesting
-    private String extractHospitalAddress(@NotNull String sampleId) {
+    String extractHospitalAddress(@NotNull String sampleId) {
         HospitalAddress hospitalAddress;
         String hospitalID = extractHospitalIdFromSample(sampleId);
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
