@@ -110,6 +110,6 @@ public class HospitalModelFactoryTest {
         assertEquals(1, sampleHospitalMapping.size());
 
         HospitalSampleMapping sampleMapping = sampleHospitalMapping.get("CORE18001224T");
-        assertEquals("HOSP1", sampleMapping.internalHospitalName());
+        assertEquals("01", sampleMapping.hospitalId());
     }
 }

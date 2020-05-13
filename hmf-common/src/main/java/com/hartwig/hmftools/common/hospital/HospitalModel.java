@@ -47,9 +47,12 @@ public abstract class HospitalModel {
                 .build();
     }
 
-    private void checkIdExistInInputFile(HospitalContact hospitalContact) {
+    private boolean checkIdExistInInputFile(HospitalContact hospitalContact) {
         if (hospitalContact == null) {
             LOGGER.warn("Hospital ID exist not in input file!");
+            return false;
+        } else {
+            return true;
         }
 
     }
@@ -63,16 +66,16 @@ public abstract class HospitalModel {
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         if (study == LimsStudy.CPCT) {
             hospitalContact = hospitalDataCPCT().get(hospitalID);
-            checkIdExistInInputFile(hospitalContact);
-            return hospitalContact.hospitalPI();
+            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            return existinFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.DRUP) {
             hospitalContact = hospitalDataDRUP().get(hospitalID);
-            checkIdExistInInputFile(hospitalContact);
-            return hospitalContact.hospitalPI();
+            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            return existinFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalDataWIDE().get(hospitalID);
-            checkIdExistInInputFile(hospitalContact);
-            return hospitalContact.hospitalPI();
+            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            return existinFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.CORE) {
             return null;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -95,8 +98,8 @@ public abstract class HospitalModel {
             return null;
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalDataWIDE().get(hospitalID);
-            checkIdExistInInputFile(hospitalContact);
-            return hospitalContact.requestName();
+            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            return existinFile ? hospitalContact.requestName() : null;
         } else if (study == LimsStudy.CORE) {
             return requestNameCore;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -119,8 +122,8 @@ public abstract class HospitalModel {
             return null;
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalDataWIDE().get(hospitalID);
-            checkIdExistInInputFile(hospitalContact);
-            return hospitalContact.requestEmail();
+            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            return existinFile ? hospitalContact.requestEmail() : null;
         } else if (study == LimsStudy.CORE) {
             return requestEmailCore;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -156,9 +159,7 @@ public abstract class HospitalModel {
             } else {
                 hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
                 if (hospitalAddress == null) {
-                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
-                            sampleId,
-                            hospitalSampleMapping.hospitalId());
+                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.", sampleId, hospitalSampleMapping.hospitalId());
                     return null;
                 }
             }
@@ -202,9 +203,7 @@ public abstract class HospitalModel {
             } else {
                 hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
                 if (hospitalAddress == null) {
-                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
-                            sampleId,
-                            hospitalSampleMapping.hospitalId());
+                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.", sampleId, hospitalSampleMapping.hospitalId());
                     return null;
                 }
             }
