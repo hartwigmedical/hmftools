@@ -66,9 +66,9 @@ public class HospitalModelTest {
         Map<String, HospitalAddress> hospitalAdress = Maps.newHashMap();
 
         sampleHospitalMapping.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
-        hospitalContactCPCT.put("01", ImmutableHospitalData.of("01", "Someone", "", ""));
-        hospitalContactDRUP.put("01", ImmutableHospitalData.of("01", "Someone", "", ""));
-        hospitalContactWIDE.put("01", ImmutableHospitalData.of("01", "Someone", "Someone1", "my@email.com"));
+        hospitalContactCPCT.put("01", ImmutableHospitalContact.of("01", "Someone", "", ""));
+        hospitalContactDRUP.put("01", ImmutableHospitalContact.of("01", "Someone", "", ""));
+        hospitalContactWIDE.put("01", ImmutableHospitalContact.of("01", "Someone", "Someone1", "my@email.com"));
         hospitalAdress.put("01", ImmutableHospitalAddress.of("01", "Ext-HMF","1000 AB","AMSTERDAM"));
 
         return ImmutableHospitalModel.of(
