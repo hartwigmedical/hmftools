@@ -12,6 +12,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         private val polyC = "C".repeat(16);
     }
 
+    val start = context.start
     val variantType = context.toVariantType()
     val isSingle = variantType is Single
     val isShortDup = variantType is Duplication && variantType.length < SHORT_EVENT_SIZE
@@ -19,7 +20,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val isShortIns = variantType is Insertion && variantType.length < SHORT_EVENT_SIZE
     val isShort = isShortDup || isShortDel || isShortIns
     val vcfId: String = context.id
-    val mateId: String? = context.mateId();
+    val mateId: String? = context.mate();
 
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
@@ -187,18 +188,6 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         val tumorSupport = tumorGenotype.fragmentSupport(isSingle)
 
         return normalSupport > maxNormalSupport * tumorSupport;
-    }
-
-    private fun VariantContext.mateId(): String? {
-        if (this.hasAttribute("MATEID")) {
-            return this.getAttributeAsString("MATEID", "")
-        }
-
-        if (this.hasAttribute("PARID")) {
-            return this.getAttributeAsString("PARID", "")
-        }
-
-        return null
     }
 
     override fun toString(): String {

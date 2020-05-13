@@ -46,3 +46,15 @@ fun VariantContext.assemblies(): List<String> {
 fun VariantContext.toVariantType(): VariantType {
     return VariantType.create(this.contig, this.start, this.alleles[0].displayString, this.alleles[1].displayString)
 }
+
+fun VariantContext.mate(): String? {
+    if (this.hasAttribute("MATEID")) {
+        return this.getAttributeAsString("MATEID", "")
+    }
+
+    if (this.hasAttribute("PARID")) {
+        return this.getAttributeAsString("PARID", "")
+    }
+
+    return null
+}
