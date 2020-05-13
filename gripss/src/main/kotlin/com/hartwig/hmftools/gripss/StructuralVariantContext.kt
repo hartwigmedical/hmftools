@@ -30,8 +30,9 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     fun context(config: GripssFilterConfig, localLink: String, remoteLink: String): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
-        builder.attribute(LOCAL_LINKED_BY, localLink)
-        builder.attribute(REMOTE_LINKED_BY, remoteLink)
+        builder.attribute(TAF, tumorAF)
+                .attribute(LOCAL_LINKED_BY, localLink)
+                .attribute(REMOTE_LINKED_BY, remoteLink)
 
         if (normalCoverageFilter(config.minNormalCoverage)) {
             builder.filter(MIN_NORMAL_COVERAGE)
@@ -89,11 +90,15 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(BREAK_END_ASSEMBLY_READ_PAIR)
         }
 
+        if (minSizeFilter(config.minSize)) {
+            builder.filter(MIN_SIZE)
+        }
+
         if (builder.filters.isEmpty()) {
             builder.filter(PASS)
         }
 
-        return builder.attribute(TAF, tumorAF).make()
+        return builder.make()
     }
 
 
@@ -110,6 +115,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return isSingle && variantType.insertSequence.contains(polyG) || variantType.insertSequence.contains(polyC)
     }
 
+    fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
+        return !isSingle && !isShortDup && context.inexactHomologyLength() > maxInexactHomLength
+    }
+
     fun inexactHomologyLengthShortDelFilter(maxInexactHomLength: Int, minDelLength: Int = 100, maxDelLength: Int = 800): Boolean {
         return variantType is Deletion && variantType.length >= minDelLength && variantType.length <= maxDelLength && context.inexactHomologyLength() > maxInexactHomLength;
     }
@@ -118,16 +127,22 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return isSingle && context.breakendAssemblyReadPairs() == 0
     }
 
+    fun minSizeFilter(minSize: Int): Boolean {
+        return when (variantType) {
+            is Deletion -> variantType.length + variantType.insertSequence.length - 1 < minSize
+            is Insertion -> variantType.length + variantType.insertSequence.length + 1 < minSize
+            is Duplication -> variantType.length + variantType.insertSequence.length < minSize
+            else -> false
+        }
+    }
+
+
     fun homologyLengthFilter(maxHomLength: Int): Boolean {
         return !isSingle && context.homologyLength() > maxHomLength
     }
 
     fun homologyLengthFilterShortInversion(maxHomLength: Int, maxInversionLength: Int = 40): Boolean {
         return variantType is Inversion && variantType.length <= maxInversionLength && context.homologyLength() > maxHomLength
-    }
-
-    fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
-        return !isSingle && !isShortDup && context.inexactHomologyLength() > maxInexactHomLength
     }
 
     fun shortSplitReadTumorFilter(): Boolean {
