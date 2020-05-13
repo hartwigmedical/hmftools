@@ -16,11 +16,11 @@ public final class HospitalModelFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(HospitalModelFactory.class);
 
-    private static final String SAMPLE_HOSPITAL_MAPPING_CSV = "sample_hospital_mapping.csv";
-    private static final String HOSPITALS_ADRESS_CSV = "hospital_adress.csv";
-    private static final String HOSPITAL_CPCT_CSV = "hospital_cpct.csv";
-    private static final String HOSPITAL_DRUP_CSV = "hospital_drup.csv";
-    private static final String HOSPITAL_WIDE_CSV = "hospital_wide.csv";
+    private static final String SAMPLE_HOSPITAL_MAPPING_CSV = "sample_hospital_mapping.tsv";
+    private static final String HOSPITALS_ADRESS_CSV = "hospital_adress.tsv";
+    private static final String HOSPITAL_CPCT_CSV = "hospital_cpct.tsv";
+    private static final String HOSPITAL_DRUP_CSV = "hospital_drup.tsv";
+    private static final String HOSPITAL_WIDE_CSV = "hospital_wide.tsv";
 
     private static final int SAMPLE_MAPPING_ID_COLUMN = 0;
     private static final int HOSPITAL_MAPPING_COLUMN = 1;
@@ -36,7 +36,8 @@ public final class HospitalModelFactory {
     private static final int HOSPITAL_DATA_PI_COLUMN = 1;
     private static final int HOSPITAL_DATA_REQUEST_NAME_COLUMN = 2;
     private static final int HOSPITAL_DATA_REQUEST_EMAIL_COLUMN = 3;
-    private static final int HOSPITAL_DATA_FIELD_COUNT = 4;
+    private static final int HOSPITAL_DATA_FIELD_COUNT_WIDE = 4;
+    private static final int HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP = 2;
 
     private static final String FIELD_SEPARATOR = "\t";
 
@@ -75,7 +76,7 @@ public final class HospitalModelFactory {
 
         List<String> lines = FileReader.build().readLines(new File(sampleHospitalMappingCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR);
+            String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT_SAMPLE_HOSPITAL_MAPPING);
             if (parts.length == FIELD_COUNT_SAMPLE_HOSPITAL_MAPPING) {
                 HospitalSampleMapping hospitalManual = ImmutableHospitalSampleMapping.of(parts[HOSPITAL_MAPPING_COLUMN]);
 
@@ -92,16 +93,14 @@ public final class HospitalModelFactory {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR);
-            if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
+            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP);
+            if (parts.length == HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
-                        parts[HOSPITAL_DATA_PI_COLUMN],
-                        parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
-                        parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
+                        parts[HOSPITAL_DATA_PI_COLUMN], null, null);
 
                 hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
             } else {
-                LOGGER.warn("Could not properly parse line in hospital csv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in cpct hospital csv: '{}'", line);
             }
         }
         return hospitalData;
@@ -112,16 +111,14 @@ public final class HospitalModelFactory {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR);
-            if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
+            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP);
+            if (parts.length == HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
-                        parts[HOSPITAL_DATA_PI_COLUMN],
-                        parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
-                        parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
+                        parts[HOSPITAL_DATA_PI_COLUMN], null, null);
 
                 hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
             } else {
-                LOGGER.warn("Could not properly parse line in hospital csv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in drup hospital csv: '{}'", line);
             }
         }
         return hospitalData;
@@ -132,8 +129,8 @@ public final class HospitalModelFactory {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR);
-            if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
+            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_WIDE);
+            if (parts.length == HOSPITAL_DATA_FIELD_COUNT_WIDE) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
@@ -141,7 +138,7 @@ public final class HospitalModelFactory {
 
                 hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
             } else {
-                LOGGER.warn("Could not properly parse line in hospital csv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in wide hospital csv: '{}'", line);
             }
         }
         return hospitalData;
@@ -152,7 +149,7 @@ public final class HospitalModelFactory {
         Map<String, HospitalAdress> hospitalAdress = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalAdressCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR);
+            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_ADRESS_FIELD_COUNT);
             if (parts.length == HOSPITAL_ADRESS_FIELD_COUNT) {
                 HospitalAdress hospital = ImmutableHospitalAdress.of(parts[HOSPITAL_ADRESS_ID_COLUMN],
                         parts[HOSPITAL_ADRESS_NAME_COLUMN],

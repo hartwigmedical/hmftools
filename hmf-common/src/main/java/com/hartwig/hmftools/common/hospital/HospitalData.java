@@ -15,10 +15,10 @@ public abstract class HospitalData {
     @NotNull
     public abstract String hospitalPI();
 
-    @NotNull
+    @Nullable
     public abstract String requestName();
 
-    @NotNull
+    @Nullable
     public abstract String requestEmail();
 
 }

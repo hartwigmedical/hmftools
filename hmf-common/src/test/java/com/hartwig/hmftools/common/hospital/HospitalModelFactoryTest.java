@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.hospital;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,8 +44,6 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    @Ignore
-    // TODO Will be fixed once requester columns have been removed.
     public void canReadHospitalCPCT() throws IOException {
         Map<String, HospitalData> hospitalDataCPCT =
                 HospitalModelFactory.readFromHospitalDataCPCT(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv");
@@ -54,20 +53,18 @@ public class HospitalModelFactoryTest {
         HospitalData cpct1 = hospitalDataCPCT.get("01");
         assertEquals("01", cpct1.hospitalId());
         assertEquals("Someone", cpct1.hospitalPI());
-        assertEquals("", cpct1.requestName());
-        assertEquals("", cpct1.requestEmail());
+        assertNull(cpct1.requestName());
+        assertNull(cpct1.requestEmail());
 
-        HospitalData cpct2 = hospitalDataCPCT.get("01");
-        assertEquals("01", cpct2.hospitalId());
+        HospitalData cpct2 = hospitalDataCPCT.get("02");
+        assertEquals("02", cpct2.hospitalId());
         assertEquals("Someone", cpct2.hospitalPI());
-        assertEquals("", cpct2.requestName());
-        assertEquals("", cpct2.requestEmail());
+        assertNull(cpct2.requestName());
+        assertNull(cpct2.requestEmail());
 
     }
 
     @Test
-    @Ignore
-    // TODO Will be fixed once requester columns have been removed.
     public void canReadHospitalDRUP() throws IOException {
         Map<String, HospitalData> hospitalDataDRUP =
                 HospitalModelFactory.readFromHospitalDataDRUP(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv");
@@ -76,14 +73,14 @@ public class HospitalModelFactoryTest {
         HospitalData drup1 = hospitalDataDRUP.get("01");
         assertEquals("01", drup1.hospitalId());
         assertEquals("Someone", drup1.hospitalPI());
-        assertEquals("", drup1.requestName());
-        assertEquals("", drup1.requestEmail());
+        assertNull(drup1.requestName());
+        assertNull(drup1.requestEmail());
 
-        HospitalData drup2 = hospitalDataDRUP.get("01");
-        assertEquals("01", drup2.hospitalId());
+        HospitalData drup2 = hospitalDataDRUP.get("02");
+        assertEquals("02", drup2.hospitalId());
         assertEquals("Someone", drup2.hospitalPI());
-        assertEquals("", drup2.requestName());
-        assertEquals("", drup2.requestEmail());
+        assertNull(drup2.requestName());
+        assertNull(drup2.requestEmail());
 
     }
 
