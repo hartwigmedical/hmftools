@@ -134,9 +134,9 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalAddress findByHospitalCore(@NotNull String hospital) {
+    private HospitalAddress findByHospitalCore(@NotNull String hospitalId) {
         for (HospitalAddress hospitalAddress : hospitalAddress().values()) {
-            if (hospitalAddress.hospitalId().equals(hospital)) {
+            if (hospitalAddress.hospitalId().equals(hospitalId)) {
                 return hospitalAddress;
             }
         }
