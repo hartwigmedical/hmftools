@@ -32,12 +32,12 @@ public final class HospitalModelFactory {
     private static final int HOSPITAL_ADDRESS_CITY_COLUMN = 3;
     private static final int HOSPITAL_ADDRESS_FIELD_COUNT = 4;
 
-    private static final int HOSPITAL_DATA_ID_COLUMN = 0;
-    private static final int HOSPITAL_DATA_PI_COLUMN = 1;
-    private static final int HOSPITAL_DATA_REQUEST_NAME_COLUMN = 2;
-    private static final int HOSPITAL_DATA_REQUEST_EMAIL_COLUMN = 3;
-    private static final int HOSPITAL_DATA_FIELD_COUNT_WIDE = 4;
-    private static final int HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP = 2;
+    private static final int HOSPITAL_CONTACT_ID_COLUMN = 0;
+    private static final int HOSPITAL_CONTACT_PI_COLUMN = 1;
+    private static final int HOSPITAL_CONTACT_REQUEST_NAME_COLUMN = 2;
+    private static final int HOSPITAL_CONTACT_REQUEST_EMAIL_COLUMN = 3;
+    private static final int HOSPITAL_CONTACT_FIELD_COUNT_WIDE = 4;
+    private static final int HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP = 2;
 
     private static final String FIELD_SEPARATOR = "\t";
 
@@ -86,7 +86,7 @@ public final class HospitalModelFactory {
 
                 hospitalPerSampleMap.put(parts[SAMPLE_MAPPING_ID_COLUMN], hospitalManual);
             } else {
-                LOGGER.warn("Could not properly parse line in sample hospital mapping csv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in sample hospital mapping tsv: '{}'", line);
             }
         }
         return hospitalPerSampleMap;
@@ -97,14 +97,14 @@ public final class HospitalModelFactory {
         Map<String, HospitalContact> hospitalContactMap = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalContactCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP);
-            if (parts.length == HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP) {
+            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP);
+            if (parts.length == HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP) {
                 HospitalContact hospitalContact =
-                        ImmutableHospitalContact.of(parts[HOSPITAL_DATA_ID_COLUMN], parts[HOSPITAL_DATA_PI_COLUMN], null, null);
+                        ImmutableHospitalContact.of(parts[HOSPITAL_CONTACT_ID_COLUMN], parts[HOSPITAL_CONTACT_PI_COLUMN], null, null);
 
-                hospitalContactMap.put(parts[HOSPITAL_DATA_ID_COLUMN], hospitalContact);
+                hospitalContactMap.put(parts[HOSPITAL_CONTACT_ID_COLUMN], hospitalContact);
             } else {
-                LOGGER.warn("Could not properly parse line in cpct hospital csv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in CPCT hospital tsv: '{}'", line);
             }
         }
         return hospitalContactMap;
@@ -115,14 +115,14 @@ public final class HospitalModelFactory {
         Map<String, HospitalContact> hospitalContactMap = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalContactCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP);
-            if (parts.length == HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP) {
+            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP);
+            if (parts.length == HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP) {
                 HospitalContact hospitalContact =
-                        ImmutableHospitalContact.of(parts[HOSPITAL_DATA_ID_COLUMN], parts[HOSPITAL_DATA_PI_COLUMN], null, null);
+                        ImmutableHospitalContact.of(parts[HOSPITAL_CONTACT_ID_COLUMN], parts[HOSPITAL_CONTACT_PI_COLUMN], null, null);
 
-                hospitalContactMap.put(parts[HOSPITAL_DATA_ID_COLUMN], hospitalContact);
+                hospitalContactMap.put(parts[HOSPITAL_CONTACT_ID_COLUMN], hospitalContact);
             } else {
-                LOGGER.warn("Could not properly parse line in drup hospital csv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in DRUP hospital tsv: '{}'", line);
             }
         }
         return hospitalContactMap;
@@ -133,16 +133,16 @@ public final class HospitalModelFactory {
         Map<String, HospitalContact> hospitalContactMap = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalContactCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_WIDE);
-            if (parts.length == HOSPITAL_DATA_FIELD_COUNT_WIDE) {
-                HospitalContact hospitalContact = ImmutableHospitalContact.of(parts[HOSPITAL_DATA_ID_COLUMN],
-                        parts[HOSPITAL_DATA_PI_COLUMN],
-                        parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
-                        parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
+            String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_CONTACT_FIELD_COUNT_WIDE);
+            if (parts.length == HOSPITAL_CONTACT_FIELD_COUNT_WIDE) {
+                HospitalContact hospitalContact = ImmutableHospitalContact.of(parts[HOSPITAL_CONTACT_ID_COLUMN],
+                        parts[HOSPITAL_CONTACT_PI_COLUMN],
+                        parts[HOSPITAL_CONTACT_REQUEST_NAME_COLUMN],
+                        parts[HOSPITAL_CONTACT_REQUEST_EMAIL_COLUMN]);
 
-                hospitalContactMap.put(parts[HOSPITAL_DATA_ID_COLUMN], hospitalContact);
+                hospitalContactMap.put(parts[HOSPITAL_CONTACT_ID_COLUMN], hospitalContact);
             } else {
-                LOGGER.warn("Could not properly parse line in wide hospital csv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in WIDE hospital tsv: '{}'", line);
             }
         }
         return hospitalContactMap;
@@ -162,7 +162,7 @@ public final class HospitalModelFactory {
 
                 hospitalAddressMap.put(parts[SAMPLE_MAPPING_ID_COLUMN], hospitalAddress);
             } else {
-                LOGGER.warn("Could not properly parse line in hospital adress csv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in hospital address tsv: '{}'", line);
             }
         }
         return hospitalAddressMap;

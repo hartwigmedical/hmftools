@@ -25,13 +25,13 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @NotNull
-    abstract Map<String, HospitalContact> hospitalDataCPCT();
+    abstract Map<String, HospitalContact> hospitalContactCPCT();
 
     @NotNull
-    abstract Map<String, HospitalContact> hospitalDataDRUP();
+    abstract Map<String, HospitalContact> hospitalContactDRUP();
 
     @NotNull
-    abstract Map<String, HospitalContact> hospitalDataWIDE();
+    abstract Map<String, HospitalContact> hospitalContactWIDE();
 
     @NotNull
     abstract Map<String, HospitalAddress> hospitalAddress();
@@ -47,9 +47,9 @@ public abstract class HospitalModel {
                 .build();
     }
 
-    private boolean checkIdExistInInputFile(HospitalContact hospitalContact) {
+    private boolean checkIdExistInInputFile(HospitalContact hospitalContact, @Nullable String hospitalID) {
         if (hospitalContact == null) {
-            LOGGER.warn("Hospital ID exist not in input file!");
+            LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
             return false;
         } else {
             return true;
@@ -65,16 +65,16 @@ public abstract class HospitalModel {
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         if (study == LimsStudy.CPCT) {
-            hospitalContact = hospitalDataCPCT().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            hospitalContact = hospitalContactCPCT().get(hospitalID);
+            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
             return existinFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.DRUP) {
-            hospitalContact = hospitalDataDRUP().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            hospitalContact = hospitalContactDRUP().get(hospitalID);
+            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
             return existinFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.WIDE) {
-            hospitalContact = hospitalDataWIDE().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            hospitalContact = hospitalContactWIDE().get(hospitalID);
+            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
             return existinFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.CORE) {
             return null;
@@ -97,8 +97,8 @@ public abstract class HospitalModel {
         } else if (study == LimsStudy.DRUP) {
             return null;
         } else if (study == LimsStudy.WIDE) {
-            hospitalContact = hospitalDataWIDE().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            hospitalContact = hospitalContactWIDE().get(hospitalID);
+            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
             return existinFile ? hospitalContact.requestName() : null;
         } else if (study == LimsStudy.CORE) {
             return requestNameCore;
@@ -121,8 +121,8 @@ public abstract class HospitalModel {
         } else if (study == LimsStudy.DRUP) {
             return null;
         } else if (study == LimsStudy.WIDE) {
-            hospitalContact = hospitalDataWIDE().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact);
+            hospitalContact = hospitalContactWIDE().get(hospitalID);
+            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
             return existinFile ? hospitalContact.requestEmail() : null;
         } else if (study == LimsStudy.CORE) {
             return requestEmailCore;
