@@ -69,7 +69,7 @@ public class LimsFactoryTest {
         assertEquals("PREPV-QC037V20-SEQ008V25", tumorData.labSopVersions());
         assertEquals("HMFregCPCT", tumorData.submission());
         assertEquals("", tumorData.hospitalPathologySampleId());
-        assertEquals("", tumorData.germlineReportingChoice());
+        assertEquals("", tumorData.germlineReportingLevel());
     }
 
     @Test

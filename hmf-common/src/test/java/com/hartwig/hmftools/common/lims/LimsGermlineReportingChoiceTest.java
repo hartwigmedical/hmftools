@@ -7,33 +7,38 @@ import org.junit.Test;
 public class LimsGermlineReportingChoiceTest {
 
     @Test
-    public void canExtractGermlineChoice() {
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("1: Behandelbare toevalsbevindingen", "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("2: Alle toevalsbevindingen", "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
+    public void canExtractGermlineLevel() {
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("1: Behandelbare toevalsbevindingen", "WIDE02991111T", true));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("2: Alle toevalsbevindingen", "WIDE02991111T", true));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString(
                         "3: Geen toevalsbevindingen; familie mag deze wel opvragen",
-                        "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("3: Geen toevalsbevindingen", "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
+                        "WIDE02991111T", true));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("3: Geen toevalsbevindingen", "WIDE02991111T", true));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString(
                         "4: Geen toevalsbevindingen; familie mag deze niet opvragen",
-                        "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.NO_REPORTING,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "CPCT02991111T"));
-        assertEquals(LimsGermlineReportingChoice.NO_REPORTING,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "DRUP02991111T"));
-        assertEquals(LimsGermlineReportingChoice.NO_REPORTING,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "COLO02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "CORE02991111T"));
+                        "WIDE02991111T", true));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("", "CPCT02991111T", false));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("", "DRUP02991111T", false));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("", "COLO02991111T", false));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("", "CORE02991111T", true));
+
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("", "CORE02991111T", false));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("3: Geen toevalsbevindingen", "WIDE02991111T", false));
     }
 
     @Test(expected = IllegalStateException.class)
     public void hasUnknownGermlineChoice() {
-        LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("ALL", "WIDE02991111T");
+        LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString("ALL", "WIDE02991111T", true);
     }
 }

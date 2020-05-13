@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
@@ -25,7 +25,7 @@ final class ReportableVariantFactory {
     static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
             @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
+            @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
             DriverCategory category = driverGeneView.category(variant.gene());
@@ -57,7 +57,7 @@ final class ReportableVariantFactory {
             }
             allReportableVariants.add(fromGermlineVariant(germlineVariant.variant()).driverCategory(category)
                     .driverLikelihood(driverLikelihood)
-                    .notifyClinicalGeneticist(germlineReportingChoice == LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION
+                    .notifyClinicalGeneticist(germlineReportingChoice == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                             && germlineReportingModel.notifyAboutGene(germlineVariant.variant().gene()))
                     .build());
         }

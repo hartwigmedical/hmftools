@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -27,7 +27,7 @@ public final class ReportableVariantAnalyzer {
     public static ReportVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
             @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingChoice germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @NotNull LimsGermlineReportingLevel germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
         List<ReportableVariant> allReportableVariants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(somaticVariantsReport,
                 driverCatalog,

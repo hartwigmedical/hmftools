@@ -254,15 +254,37 @@ public class Lims {
     }
 
     @NotNull
-    public LimsGermlineReportingChoice germlineReportingChoice(@NotNull String sampleBarcode) {
+    public LimsGermlineReportingLevel germlineReportingChoice(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
-            String germlineReportingChoiceString = sampleData.germlineReportingChoice();
-            return germlineReportingChoiceString != null ? LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
-                    germlineReportingChoiceString,
-                    sampleId(sampleBarcode)) : LimsGermlineReportingChoice.NO_REPORTING;
+            String germlineReportingLevelString = sampleData.germlineReportingLevel();
+            return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString(
+                    germlineReportingLevelString,
+                    sampleId(sampleBarcode), reportGermlineVariants(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
         } else {
-            return LimsGermlineReportingChoice.NO_REPORTING;
+            return LimsGermlineReportingLevel.NO_REPORTING;
+        }
+    }
+
+    public boolean reportGermlineVariants(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+
+        if (sampleData != null) {
+            LimsStudy study = LimsStudy.fromSampleId(sampleId(sampleBarcode));
+            if (sampleData.reportGermlineVariants()) {
+                if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+                    LOGGER.warn("Consent of report germline variants is false, but must be true for CORE/WIDE!");
+                }
+                return true;
+            } else {
+                if (study == LimsStudy.CPCT || study == LimsStudy.DRUP) {
+                    LOGGER.warn("Consent of report germline variants is true, but must be false for CPCT/DRUP!");
+                }
+                return false;
+            }
+        }
+        else {
+            return false;
         }
     }
 

@@ -70,7 +70,7 @@ public class LimsTest {
                 .tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .shallowSeq(true)
                 .reportViralInsertions(false)
-                .germlineReportingChoice(Strings.EMPTY)
+                .germlineReportingLevel(Strings.EMPTY)
                 .hospitalPatientId(hospitalPatientId)
                 .hospitalPathologySampleId(hospitalPathologySampleId)
                 .build();
@@ -119,7 +119,7 @@ public class LimsTest {
 
         assertEquals(hospitalPatientId, lims.hospitalPatientId(TUMOR_SAMPLE_BARCODE));
         assertEquals(hospitalPathologySampleId, lims.hospitalPathologySampleId(TUMOR_SAMPLE_BARCODE));
-        assertEquals(LimsGermlineReportingChoice.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
         assertFalse(lims.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
     }
 
@@ -142,7 +142,7 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPatientId(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
-        assertEquals(LimsGermlineReportingChoice.NO_REPORTING, lims.germlineReportingChoice(doesNotExistSample));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(doesNotExistSample));
         assertFalse(lims.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
 
     }

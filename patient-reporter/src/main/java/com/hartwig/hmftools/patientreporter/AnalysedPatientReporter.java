@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -215,8 +215,8 @@ class AnalysedPatientReporter {
                 BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
 
-        LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);
-        if (germlineChoice != LimsGermlineReportingChoice.NO_REPORTING) {
+        LimsGermlineReportingLevel germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);
+        if (germlineChoice != LimsGermlineReportingLevel.NO_REPORTING) {
             LOGGER.info(" Patient has given the following germline consent: '{}'", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
                     reportData.driverGeneView(),

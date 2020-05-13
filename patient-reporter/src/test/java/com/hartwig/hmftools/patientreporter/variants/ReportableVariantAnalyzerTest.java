@@ -13,7 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
@@ -48,7 +48,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
-                LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
+                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 
@@ -73,7 +73,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 Lists.newArrayList(),
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
-                LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
+                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 
@@ -101,7 +101,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
+                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 
@@ -133,7 +133,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingChoice.NO_REPORTING,
+                LimsGermlineReportingLevel.NO_REPORTING,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 
