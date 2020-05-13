@@ -40,9 +40,10 @@ public abstract class HospitalModel {
     public HospitalQuery generateHospitalQuery(@NotNull String sampleId, @NotNull String requestNameCore,
             @NotNull String requestEmailCore) {
         return ImmutableHospitalQuery.builder()
+                .hospitalPI(extractHospitalPI(sampleId))
                 .requestName(extractRequestName(sampleId, requestNameCore))
                 .requestEmail(extractRequestEmail(sampleId, requestEmailCore))
-                .hospitalPIWithAddress(extractHospitalAddress(sampleId))
+                .hospitalAddress(extractHospitalAddress(sampleId))
                 .hospitalName(extractHospitalName(sampleId))
                 .build();
     }
@@ -179,12 +180,7 @@ public abstract class HospitalModel {
                 return null;
             }
             checkAddresseeFields(hospitalAddress);
-            if (study == LimsStudy.CORE) {
-                return hospitalAddress.hospitalName() + ", " + hospitalAddress.hospitalZip() + " " + hospitalAddress.hospitalCity();
-            } else {
-                return extractHospitalPI(sampleId) + ", " + hospitalAddress.hospitalName() + ", " + hospitalAddress.hospitalZip() + " "
-                        + hospitalAddress.hospitalCity();
-            }
+            return hospitalAddress.hospitalName() + ", " + hospitalAddress.hospitalZip() + " " + hospitalAddress.hospitalCity();
         }
     }
 

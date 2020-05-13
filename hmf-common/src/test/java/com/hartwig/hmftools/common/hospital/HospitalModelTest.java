@@ -43,9 +43,9 @@ public class HospitalModelTest {
     @Test
     public void canLookupAddresseeForSample() {
         HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("Someone, Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("CPCT02010001T"));
-        assertEquals("Someone, Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("DRUP02010001T"));
-        assertEquals("Someone, Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("WIDE02010001T"));
+        assertEquals("Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("CPCT02010001T"));
+        assertEquals("Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("DRUP02010001T"));
+        assertEquals("Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("WIDE02010001T"));
         assertEquals("Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("CORE02010001T"));
 
     }

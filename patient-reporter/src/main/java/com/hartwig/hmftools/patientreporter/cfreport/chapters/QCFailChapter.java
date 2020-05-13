@@ -46,7 +46,7 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        if (failReport.sampleReport().hospitalQuery().hospitalPIWithAddress() == null) {
+        if (failReport.sampleReport().hospitalQuery().hospitalAddress() == null) {
             throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
         }
 
@@ -194,7 +194,6 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Div createCOREContentBodyColumn1() {
-        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(failReport.sampleReport().tumorSampleId());
         Div divColumn = new Div();
         divColumn.add(sampleNotAdequateForWGS());
         divColumn.add(resubmitInSameDVOWithProjectName());
@@ -362,10 +361,20 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsVerifiedByAndAddressedAt() {
-        String addressee = failReport.sampleReport().hospitalQuery().hospitalPIWithAddress();
+        LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
+
+        String addressee = failReport.sampleReport().hospitalQuery().hospitalAddress();
+        String hospitalPI = failReport.sampleReport().hospitalQuery().hospitalPI();
+        String contact;
+        if (study == LimsStudy.CORE) {
+            contact = addressee;
+        } else {
+            contact = hospitalPI + ", " + addressee;
+        }
+
         assert addressee != null; // Has been checked prior to calling this function.
         return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
-                addressee);
+                contact);
     }
 
     @NotNull
