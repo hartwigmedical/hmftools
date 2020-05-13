@@ -280,7 +280,6 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static HospitalQuery hospitalQuery(){
         return ImmutableHospitalQuery.builder()
-                .hospitalPI("AB")
                 .requestName("Paul")
                 .requestEmail("paul@hartwig.com")
                 .hospitalName("HMF Testing Center")

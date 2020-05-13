@@ -40,7 +40,6 @@ public abstract class HospitalModel {
     public HospitalQuery generateHospitalQuery(@NotNull String sampleId, @NotNull String requestNameCore,
             @NotNull String requestEmailCore) {
         return ImmutableHospitalQuery.builder()
-                .hospitalPI(extractHospitalPI(sampleId))
                 .requestName(extractRequestName(sampleId, requestNameCore))
                 .requestEmail(extractRequestEmail(sampleId, requestEmailCore))
                 .hospitalPIWithAddress(extractHospitalAddress(sampleId))

@@ -10,9 +10,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HospitalQuery {
 
     @Nullable
-    public abstract String hospitalPI();
-
-    @Nullable
     public abstract String requestName();
 
     @Nullable
