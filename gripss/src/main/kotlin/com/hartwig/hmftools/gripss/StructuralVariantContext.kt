@@ -135,7 +135,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     }
 
     fun longDPSupportFilter(): Boolean {
-        return !isShort
+        return !isSingle && !isShort
                 && normalGenotype.readPairs() == 0
                 && normalGenotype.assemblyReadPairs() == 0
                 && tumorGenotype.readPairs() == 0
@@ -160,7 +160,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         val ref = normalGenotype.refSupportRead()
         val refPair = normalGenotype.refSupportReadPair()
 
-        return supportingFragments + ref + refPair > minNormalCoverage
+        return supportingFragments + ref + refPair < minNormalCoverage
     }
 
     fun normalSupportFilter(maxNormalSupport: Double): Boolean {
