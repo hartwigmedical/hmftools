@@ -63,7 +63,7 @@ public class HospitalModelTest {
         Map<String, HospitalData> hospitalDataCPCT = Maps.newHashMap();
         Map<String, HospitalData> hospitalDataDRUP = Maps.newHashMap();
         Map<String, HospitalData> hospitalDataWIDE = Maps.newHashMap();
-        Map<String, HospitalAdress> hospitalAdress = Maps.newHashMap();
+        Map<String, HospitalAddress> hospitalAdress = Maps.newHashMap();
 
         sampleHospitalMapping.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
         hospitalDataCPCT.put("01", ImmutableHospitalData.of("01", "Someone", "", ""));

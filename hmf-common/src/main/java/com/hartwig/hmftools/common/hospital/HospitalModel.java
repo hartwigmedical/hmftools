@@ -34,7 +34,7 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalData> hospitalDataWIDE();
 
     @NotNull
-    abstract Map<String, HospitalAdress> hospitalAdress();
+    abstract Map<String, HospitalAddress> hospitalAddress();
 
     @NotNull
     public HospitalQuery generateHospitalQuery(@NotNull String sampleId, @NotNull String requestNameCore,
@@ -43,7 +43,7 @@ public abstract class HospitalModel {
                 .hospitalPI(extractHospitalPI(sampleId))
                 .analyseRequestName(extractRequestName(sampleId, requestNameCore))
                 .analyseRequestEmail(extractRequestEmail(sampleId, requestEmailCore))
-                .fullHospitalString(extractHospitalAdress(sampleId))
+                .fullHospitalString(extractHospitalAddress(sampleId))
                 .hospital(extractHospitalName(sampleId))
                 .build();
     }
@@ -120,10 +120,10 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalAdress findByHospitalCore(@NotNull String hospital) {
-        for (HospitalAdress hospitalAdress : hospitalAdress().values()) {
-            if (hospitalAdress.hospitalName().equals(hospital)) {
-                return hospitalAdress;
+    private HospitalAddress findByHospitalCore(@NotNull String hospital) {
+        for (HospitalAddress hospitalAddress : hospitalAddress().values()) {
+            if (hospitalAddress.hospitalName().equals(hospital)) {
+                return hospitalAddress;
             }
         }
         return null;
@@ -131,8 +131,8 @@ public abstract class HospitalModel {
 
     @Nullable
     @VisibleForTesting
-    String extractHospitalAdress(@NotNull String sampleId) {
-        HospitalAdress hospitalAdress;
+    private String extractHospitalAddress(@NotNull String sampleId) {
+        HospitalAddress hospitalAddress;
         String hospitalID = extractHospitalIdFromSample(sampleId);
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
@@ -143,8 +143,8 @@ public abstract class HospitalModel {
                 LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
                 return null;
             } else {
-                hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
-                if (hospitalAdress == null) {
+                hospitalAddress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
+                if (hospitalAddress == null) {
                     LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
                             sampleId,
                             hospitalSampleMapping.internalHospitalName());
@@ -152,8 +152,8 @@ public abstract class HospitalModel {
                 }
             }
 
-            checkAddresseeFields(hospitalAdress);
-            return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
+            checkAddresseeFields(hospitalAddress);
+            return hospitalAddress.hospitalName() + ", " + hospitalAddress.hospitalZip() + " " + hospitalAddress.hospitalCity();
 
         } else {
             if (hospitalID == null) {
@@ -161,24 +161,24 @@ public abstract class HospitalModel {
                 return null;
             }
 
-            hospitalAdress = hospitalAdress().get(hospitalID);
-            if (hospitalAdress == null) {
+            hospitalAddress = hospitalAddress().get(hospitalID);
+            if (hospitalAddress == null) {
                 LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
                 return null;
             }
-            checkAddresseeFields(hospitalAdress);
+            checkAddresseeFields(hospitalAddress);
             if (study == LimsStudy.CORE) {
-                return hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " " + hospitalAdress.hospitalCity();
+                return hospitalAddress.hospitalName() + ", " + hospitalAddress.hospitalZip() + " " + hospitalAddress.hospitalCity();
             } else {
-                return extractHospitalPI(sampleId) + ", " + hospitalAdress.hospitalName() + ", " + hospitalAdress.hospitalZip() + " "
-                        + hospitalAdress.hospitalCity();
+                return extractHospitalPI(sampleId) + ", " + hospitalAddress.hospitalName() + ", " + hospitalAddress.hospitalZip() + " "
+                        + hospitalAddress.hospitalCity();
             }
         }
     }
 
     @Nullable
     public String extractHospitalName(@NotNull String sampleId) {
-        HospitalAdress hospitalAdress;
+        HospitalAddress hospitalAddress;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         if (sampleId.startsWith("CORE19") || sampleId.contains("CORE18")) {
@@ -188,8 +188,8 @@ public abstract class HospitalModel {
                 LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
                 return null;
             } else {
-                hospitalAdress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
-                if (hospitalAdress == null) {
+                hospitalAddress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
+                if (hospitalAddress == null) {
                     LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
                             sampleId,
                             hospitalSampleMapping.internalHospitalName());
@@ -197,8 +197,8 @@ public abstract class HospitalModel {
                 }
             }
 
-            checkAddresseeFields(hospitalAdress);
-            return hospitalAdress.hospitalName();
+            checkAddresseeFields(hospitalAddress);
+            return hospitalAddress.hospitalName();
 
         } else {
             if (hospitalID == null) {
@@ -206,15 +206,15 @@ public abstract class HospitalModel {
                 return null;
             }
 
-            hospitalAdress = hospitalAdress().get(hospitalID);
-            if (hospitalAdress == null) {
+            hospitalAddress = hospitalAddress().get(hospitalID);
+            if (hospitalAddress == null) {
                 LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
                 return null;
             }
 
-            checkAddresseeFields(hospitalAdress);
+            checkAddresseeFields(hospitalAddress);
 
-            return hospitalAdress.hospitalName();
+            return hospitalAddress.hospitalName();
         }
     }
 
@@ -230,7 +230,7 @@ public abstract class HospitalModel {
         return null;
     }
 
-    private static void checkAddresseeFields(@NotNull HospitalAdress hospital) {
+    private static void checkAddresseeFields(@NotNull HospitalAddress hospital) {
         List<String> missingFields = Lists.newArrayList();
 
         if (hospital.hospitalName().isEmpty()) {

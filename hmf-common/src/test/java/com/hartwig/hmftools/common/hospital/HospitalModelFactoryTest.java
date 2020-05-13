@@ -10,7 +10,6 @@ import java.util.Map;
 
 import com.google.common.io.Resources;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class HospitalModelFactoryTest {
@@ -25,22 +24,22 @@ public class HospitalModelFactoryTest {
 
     @Test
     public void canReadHospitalAdress() throws IOException {
-        Map<String, HospitalAdress> hospitalAdress =
-                HospitalModelFactory.readFromHospitalAdress(LIMS_DIRECTORY + File.separator + "hospital_adress.tsv");
+        Map<String, HospitalAddress> hospitalAddress =
+                HospitalModelFactory.readFromHospitalAddress(LIMS_DIRECTORY + File.separator + "hospital_address.tsv");
 
-        assertEquals(2, hospitalAdress.size());
+        assertEquals(2, hospitalAddress.size());
 
-        HospitalAdress adress1 = hospitalAdress.get("01");
-        assertEquals("01", adress1.hospitalId());
-        assertEquals("Ext-HMF", adress1.hospitalName());
-        assertEquals("1000 AB", adress1.hospitalZip());
-        assertEquals("AMSTERDAM", adress1.hospitalCity());
+        HospitalAddress address1 = hospitalAddress.get("01");
+        assertEquals("01", address1.hospitalId());
+        assertEquals("Ext-HMF", address1.hospitalName());
+        assertEquals("1000 AB", address1.hospitalZip());
+        assertEquals("AMSTERDAM", address1.hospitalCity());
 
-        HospitalAdress adress2 = hospitalAdress.get("02");
-        assertEquals("02", adress2.hospitalId());
-        assertEquals("Ext-HMF", adress2.hospitalName());
-        assertEquals("1000 AB", adress2.hospitalZip());
-        assertEquals("AMSTERDAM", adress2.hospitalCity());
+        HospitalAddress address2 = hospitalAddress.get("02");
+        assertEquals("02", address2.hospitalId());
+        assertEquals("Ext-HMF", address2.hospitalName());
+        assertEquals("1000 AB", address2.hospitalZip());
+        assertEquals("AMSTERDAM", address2.hospitalCity());
     }
 
     @Test
