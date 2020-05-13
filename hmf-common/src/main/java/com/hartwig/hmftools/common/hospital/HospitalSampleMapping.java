@@ -10,5 +10,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HospitalSampleMapping {
 
     @NotNull
-    public abstract String internalHospitalName();
+    public abstract String hospitalId();
 }

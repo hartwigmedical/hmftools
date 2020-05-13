@@ -47,6 +47,13 @@ public abstract class HospitalModel {
                 .build();
     }
 
+    private void checkIdExistInInputFile(HospitalContact hospitalContact) {
+        if (hospitalContact == null) {
+            LOGGER.warn("Hospital ID exist not in input file!");
+        }
+
+    }
+
     @Nullable
     @VisibleForTesting
     String extractHospitalPI(@NotNull String sampleId) {
@@ -56,12 +63,15 @@ public abstract class HospitalModel {
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         if (study == LimsStudy.CPCT) {
             hospitalContact = hospitalDataCPCT().get(hospitalID);
+            checkIdExistInInputFile(hospitalContact);
             return hospitalContact.hospitalPI();
         } else if (study == LimsStudy.DRUP) {
             hospitalContact = hospitalDataDRUP().get(hospitalID);
+            checkIdExistInInputFile(hospitalContact);
             return hospitalContact.hospitalPI();
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalDataWIDE().get(hospitalID);
+            checkIdExistInInputFile(hospitalContact);
             return hospitalContact.hospitalPI();
         } else if (study == LimsStudy.CORE) {
             return null;
@@ -85,6 +95,7 @@ public abstract class HospitalModel {
             return null;
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalDataWIDE().get(hospitalID);
+            checkIdExistInInputFile(hospitalContact);
             return hospitalContact.requestName();
         } else if (study == LimsStudy.CORE) {
             return requestNameCore;
@@ -108,6 +119,7 @@ public abstract class HospitalModel {
             return null;
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalDataWIDE().get(hospitalID);
+            checkIdExistInInputFile(hospitalContact);
             return hospitalContact.requestEmail();
         } else if (study == LimsStudy.CORE) {
             return requestEmailCore;
@@ -121,7 +133,7 @@ public abstract class HospitalModel {
     @Nullable
     private HospitalAddress findByHospitalCore(@NotNull String hospital) {
         for (HospitalAddress hospitalAddress : hospitalAddress().values()) {
-            if (hospitalAddress.hospitalName().equals(hospital)) {
+            if (hospitalAddress.hospitalId().equals(hospital)) {
                 return hospitalAddress;
             }
         }
@@ -142,11 +154,11 @@ public abstract class HospitalModel {
                 LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
                 return null;
             } else {
-                hospitalAddress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
+                hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
                 if (hospitalAddress == null) {
                     LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
                             sampleId,
-                            hospitalSampleMapping.internalHospitalName());
+                            hospitalSampleMapping.hospitalId());
                     return null;
                 }
             }
@@ -188,11 +200,11 @@ public abstract class HospitalModel {
                 LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
                 return null;
             } else {
-                hospitalAddress = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
+                hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
                 if (hospitalAddress == null) {
                     LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.",
                             sampleId,
-                            hospitalSampleMapping.internalHospitalName());
+                            hospitalSampleMapping.hospitalId());
                     return null;
                 }
             }

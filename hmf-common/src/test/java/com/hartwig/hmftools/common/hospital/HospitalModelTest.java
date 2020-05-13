@@ -18,6 +18,8 @@ public class HospitalModelTest {
         assertEquals("Someone", hospitalModel.extractHospitalPI("CPCT01010001"));
         assertEquals("Someone", hospitalModel.extractHospitalPI("DRUP01010001"));
         assertEquals("Someone", hospitalModel.extractHospitalPI("WIDE01010001"));
+        assertEquals("Someone", hospitalModel.extractHospitalPI("CPCT01060001"));
+
     }
 
     @Test
