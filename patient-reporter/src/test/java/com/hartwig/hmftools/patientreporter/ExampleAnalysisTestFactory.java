@@ -281,10 +281,10 @@ public final class ExampleAnalysisTestFactory {
     private static HospitalQuery hospitalQuery(){
         return ImmutableHospitalQuery.builder()
                 .hospitalPI("AB")
-                .analyseRequestName("Paul")
-                .analyseRequestEmail("paul@hartwig.com")
-                .hospital("HMF Testing Center")
-                .fullHospitalString("AB, HMF Testing Center, Zip, City")
+                .requestName("Paul")
+                .requestEmail("paul@hartwig.com")
+                .hospitalName("HMF Testing Center")
+                .hospitalPIWithAddress("AB, HMF Testing Center, Zip, City")
                 .build();
     }
 

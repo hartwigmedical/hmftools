@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HospitalData {
+public abstract class HospitalContact {
 
     @NotNull
     public abstract String hospitalId();

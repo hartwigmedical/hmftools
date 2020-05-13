@@ -25,13 +25,13 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @NotNull
-    abstract Map<String, HospitalData> hospitalDataCPCT();
+    abstract Map<String, HospitalContact> hospitalDataCPCT();
 
     @NotNull
-    abstract Map<String, HospitalData> hospitalDataDRUP();
+    abstract Map<String, HospitalContact> hospitalDataDRUP();
 
     @NotNull
-    abstract Map<String, HospitalData> hospitalDataWIDE();
+    abstract Map<String, HospitalContact> hospitalDataWIDE();
 
     @NotNull
     abstract Map<String, HospitalAddress> hospitalAddress();
@@ -41,29 +41,29 @@ public abstract class HospitalModel {
             @NotNull String requestEmailCore) {
         return ImmutableHospitalQuery.builder()
                 .hospitalPI(extractHospitalPI(sampleId))
-                .analyseRequestName(extractRequestName(sampleId, requestNameCore))
-                .analyseRequestEmail(extractRequestEmail(sampleId, requestEmailCore))
-                .fullHospitalString(extractHospitalAddress(sampleId))
-                .hospital(extractHospitalName(sampleId))
+                .requestName(extractRequestName(sampleId, requestNameCore))
+                .requestEmail(extractRequestEmail(sampleId, requestEmailCore))
+                .hospitalPIWithAddress(extractHospitalAddress(sampleId))
+                .hospitalName(extractHospitalName(sampleId))
                 .build();
     }
 
     @Nullable
     @VisibleForTesting
     String extractHospitalPI(@NotNull String sampleId) {
-        HospitalData hospitalData;
+        HospitalContact hospitalContact;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         if (study == LimsStudy.CPCT) {
-            hospitalData = hospitalDataCPCT().get(hospitalID);
-            return hospitalData.hospitalPI();
+            hospitalContact = hospitalDataCPCT().get(hospitalID);
+            return hospitalContact.hospitalPI();
         } else if (study == LimsStudy.DRUP) {
-            hospitalData = hospitalDataDRUP().get(hospitalID);
-            return hospitalData.hospitalPI();
+            hospitalContact = hospitalDataDRUP().get(hospitalID);
+            return hospitalContact.hospitalPI();
         } else if (study == LimsStudy.WIDE) {
-            hospitalData = hospitalDataWIDE().get(hospitalID);
-            return hospitalData.hospitalPI();
+            hospitalContact = hospitalDataWIDE().get(hospitalID);
+            return hospitalContact.hospitalPI();
         } else if (study == LimsStudy.CORE) {
             return null;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -76,7 +76,7 @@ public abstract class HospitalModel {
     @Nullable
     @VisibleForTesting
     String extractRequestName(@NotNull String sampleId, @NotNull String requestNameCore) {
-        HospitalData hospitalData;
+        HospitalContact hospitalContact;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
@@ -85,8 +85,8 @@ public abstract class HospitalModel {
         } else if (study == LimsStudy.DRUP) {
             return null;
         } else if (study == LimsStudy.WIDE) {
-            hospitalData = hospitalDataWIDE().get(hospitalID);
-            return hospitalData.requestName();
+            hospitalContact = hospitalDataWIDE().get(hospitalID);
+            return hospitalContact.requestName();
         } else if (study == LimsStudy.CORE) {
             return requestNameCore;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -99,7 +99,7 @@ public abstract class HospitalModel {
     @Nullable
     @VisibleForTesting
     String extractRequestEmail(@NotNull String sampleId, @NotNull String requestEmailCore) {
-        HospitalData hospitalData;
+        HospitalContact hospitalContact;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
@@ -108,8 +108,8 @@ public abstract class HospitalModel {
         } else if (study == LimsStudy.DRUP) {
             return null;
         } else if (study == LimsStudy.WIDE) {
-            hospitalData = hospitalDataWIDE().get(hospitalID);
-            return hospitalData.requestEmail();
+            hospitalContact = hospitalDataWIDE().get(hospitalID);
+            return hospitalContact.requestEmail();
         } else if (study == LimsStudy.CORE) {
             return requestEmailCore;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -177,6 +177,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
+    @VisibleForTesting
     public String extractHospitalName(@NotNull String sampleId) {
         HospitalAddress hospitalAddress;
         String hospitalID = extractHospitalIdFromSample(sampleId);

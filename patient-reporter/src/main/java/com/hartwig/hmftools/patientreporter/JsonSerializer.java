@@ -110,8 +110,8 @@ public class JsonSerializer {
     private static HospitalQuery hospitalQuery(){
         return ImmutableHospitalQuery.builder()
                 .hospitalPI(Strings.EMPTY)
-                .analyseRequestName("Paul")
-                .analyseRequestEmail("paul@hartwig.com")
+                .requestName("Paul")
+                .requestEmail("paul@hartwig.com")
                 .build();
     }
 

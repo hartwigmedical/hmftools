@@ -46,7 +46,7 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        if (failReport.sampleReport().hospitalQuery().fullHospitalString() == null) {
+        if (failReport.sampleReport().hospitalQuery().hospitalPIWithAddress() == null) {
             throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
         }
 
@@ -324,8 +324,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsRequestedBy() {
-        String requesterName = failReport.sampleReport().hospitalQuery().analyseRequestName();
-        String requesterEmail = failReport.sampleReport().hospitalQuery().analyseRequestEmail();
+        String requesterName = failReport.sampleReport().hospitalQuery().requestName();
+        String requesterEmail = failReport.sampleReport().hospitalQuery().requestEmail();
         return createContentParagraph("The requester is : ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
@@ -362,7 +362,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsVerifiedByAndAddressedAt() {
-        String addressee = failReport.sampleReport().hospitalQuery().fullHospitalString();
+        String addressee = failReport.sampleReport().hospitalQuery().hospitalPIWithAddress();
         assert addressee != null; // Has been checked prior to calling this function.
         return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
                 addressee);

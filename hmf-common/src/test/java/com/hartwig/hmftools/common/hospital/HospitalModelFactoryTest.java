@@ -44,18 +44,18 @@ public class HospitalModelFactoryTest {
 
     @Test
     public void canReadHospitalCPCT() throws IOException {
-        Map<String, HospitalData> hospitalDataCPCT =
-                HospitalModelFactory.readFromHospitalDataCPCT(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv");
+        Map<String, HospitalContact> hospitalContactCPCT =
+                HospitalModelFactory.readFromHospitalContactCPCT(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv");
 
-        assertEquals(2, hospitalDataCPCT.size());
+        assertEquals(2, hospitalContactCPCT.size());
 
-        HospitalData cpct1 = hospitalDataCPCT.get("01");
+        HospitalContact cpct1 = hospitalContactCPCT.get("01");
         assertEquals("01", cpct1.hospitalId());
         assertEquals("Someone", cpct1.hospitalPI());
         assertNull(cpct1.requestName());
         assertNull(cpct1.requestEmail());
 
-        HospitalData cpct2 = hospitalDataCPCT.get("02");
+        HospitalContact cpct2 = hospitalContactCPCT.get("02");
         assertEquals("02", cpct2.hospitalId());
         assertEquals("Someone", cpct2.hospitalPI());
         assertNull(cpct2.requestName());
@@ -65,17 +65,17 @@ public class HospitalModelFactoryTest {
 
     @Test
     public void canReadHospitalDRUP() throws IOException {
-        Map<String, HospitalData> hospitalDataDRUP =
-                HospitalModelFactory.readFromHospitalDataDRUP(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv");
-        assertEquals(2, hospitalDataDRUP.size());
+        Map<String, HospitalContact> hospitalContatcDRUP =
+                HospitalModelFactory.readFromHospitalContactDRUP(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv");
+        assertEquals(2, hospitalContatcDRUP.size());
 
-        HospitalData drup1 = hospitalDataDRUP.get("01");
+        HospitalContact drup1 = hospitalContatcDRUP.get("01");
         assertEquals("01", drup1.hospitalId());
         assertEquals("Someone", drup1.hospitalPI());
         assertNull(drup1.requestName());
         assertNull(drup1.requestEmail());
 
-        HospitalData drup2 = hospitalDataDRUP.get("02");
+        HospitalContact drup2 = hospitalContatcDRUP.get("02");
         assertEquals("02", drup2.hospitalId());
         assertEquals("Someone", drup2.hospitalPI());
         assertNull(drup2.requestName());
@@ -85,17 +85,17 @@ public class HospitalModelFactoryTest {
 
     @Test
     public void canReadHospitalWIDE() throws IOException {
-        Map<String, HospitalData> hospitalDataWIDE =
-                HospitalModelFactory.readFromHospitalDataWIDE(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv");
-        assertEquals(2, hospitalDataWIDE.size());
+        Map<String, HospitalContact> hospitalContactWIDE =
+                HospitalModelFactory.readFromHospitalContactWIDE(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv");
+        assertEquals(2, hospitalContactWIDE.size());
 
-        HospitalData wide1 = hospitalDataWIDE.get("01");
+        HospitalContact wide1 = hospitalContactWIDE.get("01");
         assertEquals("01", wide1.hospitalId());
         assertEquals("Someone", wide1.hospitalPI());
         assertEquals("Someone1", wide1.requestName());
         assertEquals("my@email.com", wide1.requestEmail());
 
-        HospitalData wide2 = hospitalDataWIDE.get("02");
+        HospitalContact wide2 = hospitalContactWIDE.get("02");
         assertEquals("02", wide2.hospitalId());
         assertEquals("Someone", wide2.hospitalPI());
         assertEquals("Someone1", wide2.requestName());

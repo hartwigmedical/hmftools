@@ -60,22 +60,22 @@ public class HospitalModelTest {
     @NotNull
     public static HospitalModel buildTestHospitalModel() {
         Map<String, HospitalSampleMapping> sampleHospitalMapping = Maps.newHashMap();
-        Map<String, HospitalData> hospitalDataCPCT = Maps.newHashMap();
-        Map<String, HospitalData> hospitalDataDRUP = Maps.newHashMap();
-        Map<String, HospitalData> hospitalDataWIDE = Maps.newHashMap();
+        Map<String, HospitalContact> hospitalContactCPCT = Maps.newHashMap();
+        Map<String, HospitalContact> hospitalContactDRUP = Maps.newHashMap();
+        Map<String, HospitalContact> hospitalContactWIDE = Maps.newHashMap();
         Map<String, HospitalAddress> hospitalAdress = Maps.newHashMap();
 
         sampleHospitalMapping.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
-        hospitalDataCPCT.put("01", ImmutableHospitalData.of("01", "Someone", "", ""));
-        hospitalDataDRUP.put("01", ImmutableHospitalData.of("01", "Someone", "", ""));
-        hospitalDataWIDE.put("01", ImmutableHospitalData.of("01", "Someone", "Someone1", "my@email.com"));
-        hospitalAdress.put("01", ImmutableHospitalAdress.of("01", "Ext-HMF","1000 AB","AMSTERDAM"));
+        hospitalContactCPCT.put("01", ImmutableHospitalData.of("01", "Someone", "", ""));
+        hospitalContactDRUP.put("01", ImmutableHospitalData.of("01", "Someone", "", ""));
+        hospitalContactWIDE.put("01", ImmutableHospitalData.of("01", "Someone", "Someone1", "my@email.com"));
+        hospitalAdress.put("01", ImmutableHospitalAddress.of("01", "Ext-HMF","1000 AB","AMSTERDAM"));
 
         return ImmutableHospitalModel.of(
                 sampleHospitalMapping,
-                hospitalDataCPCT,
-                hospitalDataDRUP,
-                hospitalDataWIDE,
+                hospitalContactCPCT,
+                hospitalContactDRUP,
+                hospitalContactWIDE,
                 hospitalAdress);
     }
 }

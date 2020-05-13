@@ -47,21 +47,25 @@ public final class HospitalModelFactory {
     @NotNull
     public static HospitalModel fromHospitalDirectory(@NotNull String limsDirectory) throws IOException {
         String sampleHospitalMappingCsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_CSV;
-        String hospitalDataCPCTCsv = limsDirectory + File.separator + HOSPITAL_CPCT_CSV;
-        String hospitalDataDRUPCsv = limsDirectory + File.separator + HOSPITAL_DRUP_CSV;
-        String hospitalDataWIDECsv = limsDirectory + File.separator + HOSPITAL_WIDE_CSV;
+        String hospitalContactCPCTCsv = limsDirectory + File.separator + HOSPITAL_CPCT_CSV;
+        String hospitalContactDRUPCsv = limsDirectory + File.separator + HOSPITAL_DRUP_CSV;
+        String hospitalContactWIDECsv = limsDirectory + File.separator + HOSPITAL_WIDE_CSV;
 
         String hospitalAddressCsv = limsDirectory + File.separator + HOSPITALS_ADDRESS_CSV;
 
         Map<String, HospitalSampleMapping> sampleHospitalMapping = readFromSampleHospitalMapping(sampleHospitalMappingCsv);
 
-        Map<String, HospitalData> hospitalDataCPCT = readFromHospitalDataCPCT(hospitalDataCPCTCsv);
-        Map<String, HospitalData> hospitalDataDRUP = readFromHospitalDataDRUP(hospitalDataDRUPCsv);
-        Map<String, HospitalData> hospitalDataWIDE = readFromHospitalDataWIDE(hospitalDataWIDECsv);
+        Map<String, HospitalContact> hospitalContactCPCT = readFromHospitalContactCPCT(hospitalContactCPCTCsv);
+        Map<String, HospitalContact> hospitalContactDRUP = readFromHospitalContactDRUP(hospitalContactDRUPCsv);
+        Map<String, HospitalContact> hospitalContactWIDE = readFromHospitalContactWIDE(hospitalContactWIDECsv);
 
         Map<String, HospitalAddress> hospitalAddress = readFromHospitalAddress(hospitalAddressCsv);
 
-        return ImmutableHospitalModel.of(sampleHospitalMapping, hospitalDataCPCT, hospitalDataDRUP, hospitalDataWIDE, hospitalAddress);
+        return ImmutableHospitalModel.of(sampleHospitalMapping,
+                hospitalContactCPCT,
+                hospitalContactDRUP,
+                hospitalContactWIDE,
+                hospitalAddress);
     }
 
     @NotNull
@@ -89,78 +93,78 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    public static Map<String, HospitalData> readFromHospitalDataCPCT(@NotNull String hospitalDataCsv) throws IOException {
-        Map<String, HospitalData> hospitalData = Maps.newHashMap();
-        List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
+    public static Map<String, HospitalContact> readFromHospitalContactCPCT(@NotNull String hospitalContactCsv) throws IOException {
+        Map<String, HospitalContact> hospitalContactMap = Maps.newHashMap();
+        List<String> lines = FileReader.build().readLines(new File(hospitalContactCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP) {
-                HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
-                        parts[HOSPITAL_DATA_PI_COLUMN], null, null);
+                HospitalContact hospitalContact =
+                        ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN], parts[HOSPITAL_DATA_PI_COLUMN], null, null);
 
-                hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
+                hospitalContactMap.put(parts[HOSPITAL_DATA_ID_COLUMN], hospitalContact);
             } else {
                 LOGGER.warn("Could not properly parse line in cpct hospital csv: '{}'", line);
             }
         }
-        return hospitalData;
+        return hospitalContactMap;
     }
 
     @NotNull
-    public static Map<String, HospitalData> readFromHospitalDataDRUP(@NotNull String hospitalDataCsv) throws IOException {
-        Map<String, HospitalData> hospitalData = Maps.newHashMap();
-        List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
+    public static Map<String, HospitalContact> readFromHospitalContactDRUP(@NotNull String hospitalContactCsv) throws IOException {
+        Map<String, HospitalContact> hospitalContactMap = Maps.newHashMap();
+        List<String> lines = FileReader.build().readLines(new File(hospitalContactCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT_CPCT_DRUP) {
-                HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
-                        parts[HOSPITAL_DATA_PI_COLUMN], null, null);
+                HospitalContact hospitalContact =
+                        ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN], parts[HOSPITAL_DATA_PI_COLUMN], null, null);
 
-                hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
+                hospitalContactMap.put(parts[HOSPITAL_DATA_ID_COLUMN], hospitalContact);
             } else {
                 LOGGER.warn("Could not properly parse line in drup hospital csv: '{}'", line);
             }
         }
-        return hospitalData;
+        return hospitalContactMap;
     }
 
     @NotNull
-    public static Map<String, HospitalData> readFromHospitalDataWIDE(@NotNull String hospitalDataCsv) throws IOException {
-        Map<String, HospitalData> hospitalData = Maps.newHashMap();
-        List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
+    public static Map<String, HospitalContact> readFromHospitalContactWIDE(@NotNull String hospitalContactCsv) throws IOException {
+        Map<String, HospitalContact> hospitalContactMap = Maps.newHashMap();
+        List<String> lines = FileReader.build().readLines(new File(hospitalContactCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_DATA_FIELD_COUNT_WIDE);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT_WIDE) {
-                HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
+                HospitalContact hospitalContact = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
                         parts[HOSPITAL_DATA_PI_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_NAME_COLUMN],
                         parts[HOSPITAL_DATA_REQUEST_EMAIL_COLUMN]);
 
-                hospitalData.put(parts[HOSPITAL_DATA_ID_COLUMN], hospital);
+                hospitalContactMap.put(parts[HOSPITAL_DATA_ID_COLUMN], hospitalContact);
             } else {
                 LOGGER.warn("Could not properly parse line in wide hospital csv: '{}'", line);
             }
         }
-        return hospitalData;
+        return hospitalContactMap;
     }
 
     @NotNull
     public static Map<String, HospitalAddress> readFromHospitalAddress(@NotNull String hospitalAddressCsv) throws IOException {
-        Map<String, HospitalAddress> hospitalAddress = Maps.newHashMap();
+        Map<String, HospitalAddress> hospitalAddressMap = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalAddressCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_ADDRESS_FIELD_COUNT);
             if (parts.length == HOSPITAL_ADDRESS_FIELD_COUNT) {
-                HospitalAddress hospital = ImmutableHospitalAddress.of(parts[HOSPITAL_ADDRESS_ID_COLUMN],
+                HospitalAddress hospitalAddress = ImmutableHospitalAddress.of(parts[HOSPITAL_ADDRESS_ID_COLUMN],
                         parts[HOSPITAL_ADDRESS_NAME_COLUMN],
                         parts[HOSPITAL_ADDRESS_ZIP_COLUMN],
                         parts[HOSPITAL_ADDRESS_CITY_COLUMN]);
 
-                hospitalAddress.put(parts[SAMPLE_MAPPING_ID_COLUMN], hospital);
+                hospitalAddressMap.put(parts[SAMPLE_MAPPING_ID_COLUMN], hospitalAddress);
             } else {
                 LOGGER.warn("Could not properly parse line in hospital adress csv: '{}'", line);
             }
         }
-        return hospitalAddress;
+        return hospitalAddressMap;
     }
 }
