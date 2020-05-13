@@ -89,6 +89,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(BREAK_END_ASSEMBLY_READ_PAIR)
         }
 
+        if (builder.filters.isEmpty()) {
+            builder.filter(PASS)
+        }
+
         return builder.attribute(TAF, tumorAF).make()
     }
 
