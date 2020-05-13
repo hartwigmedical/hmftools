@@ -18,6 +18,7 @@ public class Lims {
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     public static final String NOT_AVAILABLE_STRING = "N/A";
+    public static final String NOT_PERFORMED_STRING = "not performed";
     static final String NOT_DETERMINED_STRING = "not determined";
 
     @NotNull
@@ -192,7 +193,7 @@ public class Lims {
                 }
             }
         }
-        return NOT_AVAILABLE_STRING;
+        return NOT_PERFORMED_STRING;
     }
 
     @NotNull
