@@ -145,6 +145,9 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
+    // private static final String LOG_READ_ID = "";
+    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:21503:11720:12266";
+
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
         // check any lone reads - this cannot be one of a pair of non-genic reads since they will have already been dismissed
@@ -169,13 +172,23 @@ public class ChimericReadTracker
             // skip reads if all will be processed later or have been already
             final String readId = reads.get(0).Id;
 
-            if(skipNonGenicReads(reads))
+            if(readId.equals(LOG_READ_ID))
+            {
+                ISF_LOGGER.debug("specific read: {}", readId);
+            }
+
+            int readCount = reads.size();
+            boolean readGroupComplete = (readCount == 3 || (!hasSuppAlignment(reads) && readCount == 2));
+
+            if(skipNonGenicReads(reads, readGroupComplete))
             {
                 fragsToRemove.add(readId);
                 continue;
             }
 
-            if(!keepChimericGroup(reads))
+            boolean readsRemoved = reads.size() < readCount;
+
+            if(!readsRemoved && !keepChimericGroup(reads, readGroupComplete))
             {
                 fragsToRemove.add(readId);
                 continue;
@@ -237,7 +250,7 @@ public class ChimericReadTracker
 
     private static final int MAX_NOVEL_SJ_DISTANCE = 500000;
 
-    private boolean keepChimericGroup(final List<ReadRecord> reads)
+    private boolean keepChimericGroup(final List<ReadRecord> reads, boolean readGroupComplete)
     {
         if(reads.stream().anyMatch(x -> x.isTranslocation()))
         {
@@ -257,8 +270,6 @@ public class ChimericReadTracker
             ++mChimericStats.Inversions;
             return true;
         }
-
-        boolean readGroupComplete = (reads.size() == 3 || (!hasSuppAlignment(reads) && reads.size() == 2));
 
         if(!readGroupComplete)
             return true;
@@ -348,19 +359,15 @@ public class ChimericReadTracker
         return false;
     }
 
-    private boolean skipNonGenicReads(final List<ReadRecord> reads)
+    private boolean skipNonGenicReads(final List<ReadRecord> reads, boolean readGroupComplete)
     {
         List<ReadRecord> postGeneReads = reads.stream()
                 .filter(x -> x.PosStart > mGeneCollection.regionBounds()[SE_END])
                 .collect(Collectors.toList());
 
         // if all reads are past this gene collection's boundaries, leave them for the next one to handle
-        if(postGeneReads.size() == reads.size())
+        if(readGroupComplete && postGeneReads.size() == reads.size())
             return true;
-
-        // make note of these post-gene reads to avoid re-processing them the next time they come up
-        if(!postGeneReads.isEmpty())
-            mPostGeneReadMap.put(reads.get(0).Id, postGeneReads.size());
 
         List<ReadRecord> preGeneReads = reads.stream()
                 .filter(x -> x.PosStart < mGeneCollection.regionBounds()[SE_START])
@@ -388,6 +395,10 @@ public class ChimericReadTracker
                     return true;
             }
         }
+
+        // make note of these post-gene reads to avoid re-processing them the next time they come up
+        if(!postGeneReads.isEmpty())
+            mPostGeneReadMap.put(reads.get(0).Id, postGeneReads.size());
 
         return false;
     }
