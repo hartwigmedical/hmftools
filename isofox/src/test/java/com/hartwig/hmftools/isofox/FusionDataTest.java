@@ -133,7 +133,6 @@ public class FusionDataTest
         addTestTranscripts(geneTransCache);
 
         IsofoxConfig config = new IsofoxConfig();
-
         FusionFinder finder = new FusionFinder(config, geneTransCache);
 
         int gcId = 0;

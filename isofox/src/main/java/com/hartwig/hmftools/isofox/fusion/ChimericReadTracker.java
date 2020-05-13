@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
@@ -145,8 +146,8 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
-    // private static final String LOG_READ_ID = "";
-    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:21503:11720:12266";
+    private static final String LOG_READ_ID = "";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:21503:11720:12266";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
@@ -241,14 +242,12 @@ public class ChimericReadTracker
 
             Integer secondaryCount = mSecondaryReadMap.get(entry.getKey());
 
-            reads.forEach(x -> x.captureGeneInfo());
+            reads.forEach(x -> x.captureGeneInfo(true));
 
             if(secondaryCount != null)
                 reads.forEach(x -> x.setSecondaryReadCount(secondaryCount));
         }
     }
-
-    private static final int MAX_NOVEL_SJ_DISTANCE = 500000;
 
     private boolean keepChimericGroup(final List<ReadRecord> reads, boolean readGroupComplete)
     {

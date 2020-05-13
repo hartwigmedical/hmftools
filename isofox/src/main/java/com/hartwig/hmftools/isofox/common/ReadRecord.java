@@ -456,7 +456,7 @@ public class ReadRecord
         }
     }
 
-    public void captureGeneInfo()
+    public void captureGeneInfo(boolean purgeRegions)
     {
         for(Map.Entry<RegionReadData,RegionMatchType> entry : mMappedRegions.entrySet())
         {
@@ -472,8 +472,11 @@ public class ReadRecord
             }
         }
 
-        mMappedRegions.clear();
-        mTranscriptClassification.clear();
+        if(purgeRegions)
+        {
+            mMappedRegions.clear();
+            mTranscriptClassification.clear();
+        }
     }
 
     public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)

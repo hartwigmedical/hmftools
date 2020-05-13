@@ -58,6 +58,10 @@ public class TestUtils
     public static final String GENE_ID_5 = "ENSG0005";
     public static final int GENE_START_5 = 10000;
 
+    public static final String GENE_NAME_6 = "GENE6"; // -ve strand
+    public static final String GENE_ID_6 = "ENSG0006";
+    public static final int GENE_START_6 = 10400; // will overlap with previous gene and share some exons
+
     public static final byte POS_STRAND = 1;
     public static final byte NEG_STRAND = -1;
 
@@ -76,6 +80,8 @@ public class TestUtils
             return 3;
         if(geneId == GENE_ID_5)
             return 4;
+        if(geneId == GENE_ID_6)
+            return 5;
 
         return -1;
     }
@@ -90,7 +96,8 @@ public class TestUtils
 
         geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(GENE_ID_4, GENE_NAME_4, CHR_2, POS_STRAND, GENE_START_4, GENE_START_4 + 1000));
-        geneList.add(createEnsemblGeneData(GENE_ID_5, GENE_NAME_5, CHR_2, NEG_STRAND, GENE_START_5, GENE_START_5 + 1000));
+        geneList.add(createEnsemblGeneData(GENE_ID_5, GENE_NAME_5, CHR_2, NEG_STRAND, GENE_START_5, GENE_START_5 + 1500));
+        geneList.add(createEnsemblGeneData(GENE_ID_6, GENE_NAME_6, CHR_2, NEG_STRAND, GENE_START_6, GENE_START_6 + 1500));
         addGeneData(geneTransCache, CHR_2, geneList);
     }
 
@@ -99,6 +106,7 @@ public class TestUtils
     public static final int TRANS_3 = 3;
     public static final int TRANS_4 = 4;
     public static final int TRANS_5 = 5;
+    public static final int TRANS_6 = 5;
 
     public static void addTestTranscripts(EnsemblDataCache geneTransCache)
     {
@@ -151,12 +159,22 @@ public class TestUtils
         transDataList = Lists.newArrayList();
 
         transData = createTransExons(
-                GENE_ID_5, TRANS_5, NEG_STRAND, generateExonStarts(GENE_START_5, 3, EXON_LENGTH, 100),
+                GENE_ID_5, TRANS_5, NEG_STRAND, generateExonStarts(GENE_START_5, 5, EXON_LENGTH, 100),
                 EXON_LENGTH, codingStart, codingEnd, canonical, BIOTYPE_PROTEIN_CODING);
 
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, GENE_ID_5, transDataList);
+
+        transDataList = Lists.newArrayList();
+
+        transData = createTransExons(
+                GENE_ID_6, TRANS_6, NEG_STRAND, generateExonStarts(GENE_START_6, 6, EXON_LENGTH, 100),
+                EXON_LENGTH, codingStart, codingEnd, canonical, BIOTYPE_PROTEIN_CODING);
+
+        transDataList.add(transData);
+
+        addTransExonData(geneTransCache, GENE_ID_6, transDataList);
     }
 
     public static Cigar createCigar(int preSc, int match, int postSc)
@@ -284,7 +302,7 @@ public class TestUtils
         if(read.getMappedRegions().isEmpty())
             read.addIntronicTranscriptRefs(geneCollection.getTranscripts());
 
-        read.captureGeneInfo();
+        read.captureGeneInfo(false);
         read.setGeneCollection(SE_START, geneCollection.id(), true);
         read.setGeneCollection(SE_END, geneCollection.id(), true);
 

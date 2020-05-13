@@ -336,7 +336,6 @@ public class FusionWriter
                 if(!saData.equals("NONE"))
                     read.setSuppAlignment(saData);
 
-                read.captureGeneInfo();
                 read.setGeneCollection(SE_START,Integer.parseInt(items[geneSet]), true);
                 read.setGeneCollection(SE_END,Integer.parseInt(items[geneSet]), true);
 
