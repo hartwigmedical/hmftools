@@ -25,7 +25,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalAdress() throws IOException {
         Map<String, HospitalAdress> hospitalAdress =
-                HospitalModelFactory.readFromHospitalAdress(LIMS_DIRECTORY + File.separator + "hospital_adress.csv");
+                HospitalModelFactory.readFromHospitalAdress(LIMS_DIRECTORY + File.separator + "hospital_adress.tsv");
 
         assertEquals(2, hospitalAdress.size());
 
@@ -47,7 +47,7 @@ public class HospitalModelFactoryTest {
     // TODO Will be fixed once requester columns have been removed.
     public void canReadHospitalCPCT() throws IOException {
         Map<String, HospitalData> hospitalDataCPCT =
-                HospitalModelFactory.readFromHospitalDataCPCT(LIMS_DIRECTORY + File.separator + "hospital_cpct.csv");
+                HospitalModelFactory.readFromHospitalDataCPCT(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv");
 
         assertEquals(2, hospitalDataCPCT.size());
 
@@ -70,7 +70,7 @@ public class HospitalModelFactoryTest {
     // TODO Will be fixed once requester columns have been removed.
     public void canReadHospitalDRUP() throws IOException {
         Map<String, HospitalData> hospitalDataDRUP =
-                HospitalModelFactory.readFromHospitalDataDRUP(LIMS_DIRECTORY + File.separator + "hospital_drup.csv");
+                HospitalModelFactory.readFromHospitalDataDRUP(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv");
         assertEquals(2, hospitalDataDRUP.size());
 
         HospitalData drup1 = hospitalDataDRUP.get("01");
@@ -90,7 +90,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalWIDE() throws IOException {
         Map<String, HospitalData> hospitalDataWIDE =
-                HospitalModelFactory.readFromHospitalDataWIDE(LIMS_DIRECTORY + File.separator + "hospital_wide.csv");
+                HospitalModelFactory.readFromHospitalDataWIDE(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv");
         assertEquals(2, hospitalDataWIDE.size());
 
         HospitalData wide1 = hospitalDataWIDE.get("01");
@@ -109,7 +109,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadSampleHospitalMapping() throws IOException {
         Map<String, HospitalSampleMapping> sampleHospitalMapping =
-                HospitalModelFactory.readFromSampleHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.csv");
+                HospitalModelFactory.readFromSampleHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
 
         assertEquals(1, sampleHospitalMapping.size());
 

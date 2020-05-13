@@ -38,7 +38,7 @@ public final class HospitalModelFactory {
     private static final int HOSPITAL_DATA_REQUEST_EMAIL_COLUMN = 3;
     private static final int HOSPITAL_DATA_FIELD_COUNT = 4;
 
-    private static final String FIELD_SEPARATOR = ",";
+    private static final String FIELD_SEPARATOR = "\t";
 
     private HospitalModelFactory() {
     }
@@ -74,7 +74,7 @@ public final class HospitalModelFactory {
         Map<String, HospitalSampleMapping> hospitalPerSampleMap = Maps.newHashMap();
 
         List<String> lines = FileReader.build().readLines(new File(sampleHospitalMappingCsv).toPath());
-        for (String line : lines) {
+        for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == FIELD_COUNT_SAMPLE_HOSPITAL_MAPPING) {
                 HospitalSampleMapping hospitalManual = ImmutableHospitalSampleMapping.of(parts[HOSPITAL_MAPPING_COLUMN]);
@@ -91,7 +91,7 @@ public final class HospitalModelFactory {
     public static Map<String, HospitalData> readFromHospitalDataCPCT(@NotNull String hospitalDataCsv) throws IOException {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
-        for (String line : lines) {
+        for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
@@ -111,7 +111,7 @@ public final class HospitalModelFactory {
     public static Map<String, HospitalData> readFromHospitalDataDRUP(@NotNull String hospitalDataCsv) throws IOException {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
-        for (String line : lines) {
+        for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
@@ -131,7 +131,7 @@ public final class HospitalModelFactory {
     public static Map<String, HospitalData> readFromHospitalDataWIDE(@NotNull String hospitalDataCsv) throws IOException {
         Map<String, HospitalData> hospitalData = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalDataCsv).toPath());
-        for (String line : lines) {
+        for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_DATA_FIELD_COUNT) {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_DATA_ID_COLUMN],
@@ -151,7 +151,7 @@ public final class HospitalModelFactory {
     public static Map<String, HospitalAdress> readFromHospitalAdress(@NotNull String hospitalAdressCsv) throws IOException {
         Map<String, HospitalAdress> hospitalAdress = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalAdressCsv).toPath());
-        for (String line : lines) {
+        for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_ADRESS_FIELD_COUNT) {
                 HospitalAdress hospital = ImmutableHospitalAdress.of(parts[HOSPITAL_ADRESS_ID_COLUMN],
