@@ -33,7 +33,8 @@ public final class ReportableVariantAnalyzer {
                 driverCatalog,
                 driverGeneView,
                 germlineVariantsToReport,
-                germlineReportingModel, germlineReportingChoice);
+                germlineReportingModel,
+                germlineReportingChoice);
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         // Extract somatic evidence for high drivers variants only (See DEV-824)

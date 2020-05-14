@@ -10,14 +10,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ViralInsertionAnalyzer {
-
-    private static final Logger LOGGER = LogManager.getLogger(ViralInsertionAnalyzer.class);
 
     private static final Set<String> EXCLUDED_VIRAL_INSERTIONS =
             Sets.newHashSet("Human immunodeficiency virus", "Human immunodeficiency virus 1", "Human immunodeficiency virus 2");

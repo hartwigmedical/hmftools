@@ -11,7 +11,9 @@ public final class DriverGeneViewFactory {
 
     @NotNull
     public static DriverGeneView create() {
-        return ImmutableDriverGeneView.of(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet(),
-                DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
+        return ImmutableDriverGeneView.builder()
+                .oncoDriverGenes(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet())
+                .tsgDriverGenes(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
+                .build();
     }
 }

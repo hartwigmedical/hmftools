@@ -3,8 +3,6 @@ package com.hartwig.hmftools.patientreporter.variants.germline;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +19,6 @@ public class GermlineReportingModel {
     }
 
     @NotNull
-    @VisibleForTesting
     Set<String> reportableGermlineGenes() {
         return germlineGenesAndNotificationMap.keySet();
     }

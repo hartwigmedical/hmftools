@@ -158,7 +158,7 @@ public final class SomaticVariants {
     public static String driverString(@Nullable Double driverLikelihood) {
         DriverInterpretation interpretation = DriverInterpretation.interpret(driverLikelihood);
 
-        return interpretation != null ? interpretation.text() : Strings.EMPTY;
+        return interpretation != null ? interpretation.display() : Strings.EMPTY;
     }
 
     @NotNull
