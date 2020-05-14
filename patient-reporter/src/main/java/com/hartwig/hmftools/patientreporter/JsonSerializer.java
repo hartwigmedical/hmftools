@@ -27,7 +27,9 @@ import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.purple.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
@@ -88,7 +90,9 @@ public class JsonSerializer {
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(0.11)
+                .microsatelliteStatus(MicrosatelliteStatus.MSS)
                 .tumorMutationalLoad(180)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.HIGH)
                 .tumorMutationalBurden(13.6)
                 .chordAnalyzer(chordAnalyzer)
                 .gainsAndLosses(gainsAndLosses)
