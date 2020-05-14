@@ -26,6 +26,6 @@ public class SampleReportFactoryTest {
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY, wideSampleId));
 
         assertNull(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, cpctSampleId));
-        assertNull(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC, cpctSampleId));
+        assertNull(correctIdC, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC, cpctSampleId));
     }
 }
