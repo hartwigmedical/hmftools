@@ -84,42 +84,42 @@ public class QCFailChapter implements ReportChapter {
 
         switch (failReason) {
             case LOW_DNA_YIELD: {
-                title = "Notification failed sample";
+                title = "Notification of failed sample";
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 break;
             }
             case POST_ANALYSIS_FAIL: {
-                title = "Notification failed sample";
+                title = "Notification of failed sample";
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 break;
             }
             case SHALLOW_SEQ_LOW_PURITY: {
-                title = "Notification failed sample";
+                title = "Notification of failed sample";
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 break;
             }
             case INSUFFICIENT_TISSUE: {
-                title = "Notification failed sample";
+                title = "Notification of failed sample";
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
-                title = "Notification failed sample";
+                title = "Notification of failed sample";
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 break;
             }
             case LAB_FAILURE: {
-                title = "Notification failed sample";
+                title = "Notification of failed sample";
                 reason = "Technical failure";
                 explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy \n "
                         + "due to technical problems";
