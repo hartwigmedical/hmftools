@@ -16,6 +16,7 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
@@ -155,8 +156,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createWIDEContentBodyColumn1() {
         Div divColumn = new Div();
-        divColumn.add(sampleNotAdequateForWGS());
-        divColumn.add(resubmitInSameStudyWithSameNumber());
+        divColumn.add(resubmitSample());
         if (failReport.sampleReport().hospitalPathologySampleId() != null) {
             divColumn.add(reportIsForPathologyTissueID());
         }
@@ -194,8 +194,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createCOREContentBodyColumn1() {
         Div divColumn = new Div();
-        divColumn.add(sampleNotAdequateForWGS());
-        divColumn.add(resubmitInSameDVOWithProjectName());
+        divColumn.add(resubmitSample());
         if (failReport.sampleReport().hospitalPathologySampleId() != null) {
             divColumn.add(reportIsForPathologyTissueID());
         }
@@ -235,8 +234,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createCPCTDRUPContentBodyColumn1() {
         Div divColumn = new Div();
-        divColumn.add(sampleNotAdequateForWGS());
-        divColumn.add(resubmitInSameStudyWithSameNumber());
+        divColumn.add(resubmitSample());
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
@@ -259,22 +257,9 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph sampleNotAdequateForWGS() {
-        return createContentParagraph("The received tumor biopsies were inadequate for whole genome sequencing. ");
-    }
-
-    @NotNull
-    private Paragraph resubmitInSameStudyWithSameNumber() {
-        return createContentParagraph(
-                "If available new tumor material can be provided for a new assessment, please resubmit using the same " + failReport.study()
-                        .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
-                        + "evaluable for the " + failReport.study().studyCode() + " study.");
-    }
-
-    @NotNull
-    private Paragraph resubmitInSameDVOWithProjectName() {
-        return createContentParagraph("If available new tumor material can be provided for a new assessment, "
-                + "please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + ".");
+    private Paragraph resubmitSample() {
+        return createContentParagraph("If available new tumor/blood material can be provided for a new assessment, please contact ",
+                "info@hartwigmedicalfoundation.nl");
     }
 
     @NotNull
@@ -284,7 +269,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsForPathologyTissueID() {
-        return createContentParagraph("The tissue ID of pathology is: ", failReport.sampleReport().hospitalPathologySampleId());
+        return createContentParagraph("The tissue ID is: ", failReport.sampleReport().hospitalPathologySampleId());
     }
 
     @NotNull
@@ -346,8 +331,19 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph sampleHasMolecularTumorPercentage() {
-        return createContentParagraph("The tumor percentage based on molecular estimation is ",
-                failReport.sampleReport().purityShallowSeq());
+        if (failReport.reason() != QCFailReason.LAB_FAILURE) {
+            if (failReport.sampleReport().purityShallowSeq().equals("below detection threshold") || failReport.sampleReport()
+                    .purityShallowSeq()
+                    .equals("not performed")) {
+                return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
+            } else {
+                return createContentParagraphThree("The tumor percentage based on molecular estimation is ",
+                        failReport.sampleReport().purityShallowSeq(),
+                        " and is below the required amount (20%)");
+            }
+        } else {
+            return createContentParagraph(Strings.EMPTY);
+        }
     }
 
     @NotNull
@@ -372,8 +368,7 @@ public class QCFailChapter implements ReportChapter {
         }
 
         assert addressee != null; // Has been checked prior to calling this function.
-        return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
-                contact);
+        return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ", contact);
     }
 
     @NotNull
@@ -399,6 +394,14 @@ public class QCFailChapter implements ReportChapter {
         return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(regularPart2)
                 .add(new Text(boldPart2).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
+
+    @NotNull
+    private static Paragraph createContentParagraphThree(@NotNull String regularPart, @NotNull String boldPart,
+            @NotNull String regularPart2) {
+        return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(regularPart2)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 }
