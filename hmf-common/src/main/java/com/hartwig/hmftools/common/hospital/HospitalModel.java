@@ -37,9 +37,9 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @NotNull
-    public HospitalQuery queryHospitalData(@NotNull String sampleId, @NotNull String requesterNameCore,
+    public HospitalData queryHospitalData(@NotNull String sampleId, @NotNull String requesterNameCore,
             @NotNull String requesterEmailCore) {
-        return ImmutableHospitalQuery.builder()
+        return ImmutableHospitalData.builder()
                 .hospitalPI(extractHospitalPI(sampleId))
                 .requesterName(extractRequestName(sampleId, requesterNameCore))
                 .requesterEmail(extractRequestEmail(sampleId, requesterEmailCore))

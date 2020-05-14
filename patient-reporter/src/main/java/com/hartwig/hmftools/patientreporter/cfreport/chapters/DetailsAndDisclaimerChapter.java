@@ -60,8 +60,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
         String addressee;
-        if (sampleReport.hospitalQuery().hospitalAddress() != null) {
-            addressee = sampleReport.hospitalQuery().hospitalAddress();
+        if (sampleReport.hospitalData().hospitalAddress() != null) {
+            addressee = sampleReport.hospitalData().hospitalAddress();
             assert addressee != null;
         } else {
             LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
@@ -72,7 +72,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         if (study == LimsStudy.CORE) {
             contact = addressee;
         } else {
-            contact = sampleReport.hospitalQuery().hospitalPI() + ", " + addressee;
+            contact = sampleReport.hospitalData().hospitalPI() + ", " + addressee;
         }
 
         Paragraph sampleIdentificationLineOnReport;
@@ -174,10 +174,10 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The requester is: ").add(new Text(sampleReport.hospitalQuery().requesterName()).addStyle(
+        return createContentParagraph("The requester is: ").add(new Text(sampleReport.hospitalData().requesterName()).addStyle(
                 ReportResources.smallBodyBoldTextStyle()))
                 .add("(")
-                .add(new Text(sampleReport.hospitalQuery().requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(new Text(sampleReport.hospitalData().requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(")")
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }

@@ -44,7 +44,7 @@ public class PatientReporterApplication {
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
-            QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(config));
+            QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config));
             QCFailReport report = reporter.run(sampleMetadata, config.qcFailReason(), config.comments(), config.correctedReport());
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
@@ -108,7 +108,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static QCFailReportData buildQCFailReportData(@NotNull PatientReporterConfig config) throws IOException {
+    private static QCFailReportData buildBaseReportData(@NotNull PatientReporterConfig config) throws IOException {
         String tumorLocationCsv = config.tumorLocationCsv();
 
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
@@ -129,7 +129,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static AnalysedReportData buildAnalysedReportData(@NotNull PatientReporterConfig config) throws IOException {
-        return AnalysedReportDataLoader.buildFromFiles(buildQCFailReportData(config),
+        return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.knowledgebaseDir(),
                 config.germlineGenesCsv(),
                 config.sampleSummaryTsv());

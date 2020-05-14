@@ -37,18 +37,18 @@ public final class SidePanel {
 
         if (fullHeight && fullContent) {
             String contactNames =
-                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalQuery().requesterName() : Strings.EMPTY;
+                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalData().requesterName() : Strings.EMPTY;
             if (!contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", contactNames));
             }
 
             final String contactEmails =
-                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalQuery().requesterEmail() : Strings.EMPTY;
+                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalData().requesterEmail() : Strings.EMPTY;
             if (!contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
             }
 
-            String hospitalName = sampleReport.hospitalQuery().hospitalName();
+            String hospitalName = sampleReport.hospitalData().hospitalName();
             if (!hospitalName.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", hospitalName));
             }

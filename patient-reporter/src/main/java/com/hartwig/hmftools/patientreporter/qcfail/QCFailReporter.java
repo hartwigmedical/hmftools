@@ -31,7 +31,7 @@ public class QCFailReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(sampleMetadata,
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata,
                 reportData.limsModel(),
                 patientTumorLocation);
 

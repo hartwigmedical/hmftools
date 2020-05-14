@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +19,7 @@ public final class SampleReportFactory {
     }
 
     @NotNull
-    public static SampleReport fromLimsAndHospitalModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
+    public static SampleReport fromLimsModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
             @Nullable PatientTumorLocation patientTumorLocation) {
         String refSampleBarcode = sampleMetadata.refSampleBarcode();
         String refSampleId = sampleMetadata.refSampleId();
@@ -48,7 +47,7 @@ public final class SampleReportFactory {
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
                 .cohort(lims.cohort(tumorSampleBarcode))
                 .projectName(lims.projectName(tumorSampleBarcode))
-                .hospitalQuery(lims.hospitalQuery(tumorSampleId, tumorSampleBarcode))
+                .hospitalData(lims.hospitalData(tumorSampleId, tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode))
                 .hospitalPathologySampleId(reportHospitalTissueIdPA(lims.hospitalPathologySampleId(tumorSampleBarcode), tumorSampleId)

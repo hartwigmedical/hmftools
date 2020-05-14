@@ -78,9 +78,7 @@ class AnalysedPatientReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(sampleMetadata,
-                reportData.limsModel(),
-                patientTumorLocation);
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
 
         PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation);
         SomaticVariantAnalysis somaticVariantAnalysis =
@@ -88,7 +86,8 @@ class AnalysedPatientReporter {
 
         ChordAnalyzer chordAnalyzer = analyzeChord(chordPredictionTxt);
         List<ReportableGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
-                bachelorTsv, purpleAnalysis,
+                bachelorTsv,
+                purpleAnalysis,
                 somaticVariantAnalysis,
                 chordAnalyzer);
 
@@ -175,8 +174,8 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private PurpleAnalysis analyzePurple(@NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleGeneCnvTsv, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+    private PurpleAnalysis analyzePurple(@NotNull String purplePurityTsv, @NotNull String purpleQCFile, @NotNull String purpleGeneCnvTsv,
+            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
@@ -191,11 +190,7 @@ class AnalysedPatientReporter {
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        return PurpleAnalyzer.run(purityContext,
-                purpleQC,
-                exomeGeneCopyNumbers,
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation);
+        return PurpleAnalyzer.run(purityContext, purpleQC, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation);
     }
 
     @NotNull

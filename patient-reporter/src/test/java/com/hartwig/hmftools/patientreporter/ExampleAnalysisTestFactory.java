@@ -24,8 +24,8 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.HospitalQuery;
-import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
+import com.hartwig.hmftools.common.hospital.HospitalData;
+import com.hartwig.hmftools.common.hospital.ImmutableHospitalData;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -278,8 +278,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static HospitalQuery hospitalQuery(){
-        return ImmutableHospitalQuery.builder()
+    private static HospitalData createTestHospitalData(){
+        return ImmutableHospitalData.builder()
                 .hospitalPI("AB")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")
@@ -304,7 +304,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .hospitalQuery(hospitalQuery())
+                .hospitalData(createTestHospitalData())
                 .cohort("A")
                 .projectName("TEST")
                 .submissionId("10")

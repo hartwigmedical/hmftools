@@ -5,8 +5,8 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.hospital.HospitalData;
 import com.hartwig.hmftools.common.hospital.HospitalModel;
-import com.hartwig.hmftools.common.hospital.HospitalQuery;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -321,7 +321,7 @@ public class Lims {
     }
 
     @NotNull
-    public HospitalQuery hospitalQuery(@NotNull String sampleId, @NotNull String tumorBarcode) {
+    public HospitalData hospitalData(@NotNull String sampleId, @NotNull String tumorBarcode) {
         return hospitalModel.queryHospitalData(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
     }
 
