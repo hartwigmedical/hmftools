@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_L
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
 
 import java.util.List;
@@ -48,6 +49,7 @@ public class FusionFragment
     private final String[] mJunctionBases; // the 10 bases leading up to the junction if it exists
     private final String[] mJunctionSpliceBases; // the 2 donor/acceptor bases
     private FusionFragmentType mType;
+    private final String[] mLocationIds; // used to group proximate fragments and fusions
 
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
     private final List<TransExonRef>[] mTransExonRefs;
@@ -79,8 +81,8 @@ public class FusionFragment
         mType = UNKNOWN;
 
         FusionFragmentBuilder.setLocationData(this);
-
         FusionFragmentBuilder.setJunctionData(this);
+        mLocationIds = FusionFragmentBuilder.setLocationIds(this);
 
         extractTranscriptExonData();
     }
@@ -95,6 +97,7 @@ public class FusionFragment
     public final int[] geneCollections() { return mGeneCollections; }
     public final boolean[] inGenicRegions() { return mInGenicRegions; }
     public final byte[] orientations() { return mOrientations; }
+    public final String[] locationIds() { return mLocationIds; }
 
     public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 
@@ -114,7 +117,13 @@ public class FusionFragment
     public boolean isUnspliced() { return mRegionMatchTypes[SE_START] == INTRON && mRegionMatchTypes[SE_END] == INTRON; }
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
 
-    public String locationPair() { return formLocationPair(mChromosomes, mGeneCollections, mInGenicRegions); }
+    public String locationPair()
+    {
+        if(isSingleGene())
+            return mLocationIds[SE_START];
+        else
+            return String.format("%s_%s", mLocationIds[SE_START], mLocationIds[SE_END]);
+    }
 
     public void setType(FusionFragmentType type) { mType = type; }
 

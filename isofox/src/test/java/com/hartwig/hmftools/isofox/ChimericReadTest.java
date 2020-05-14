@@ -201,10 +201,9 @@ public class ChimericReadTest
         assertEquals(1, chimericRT.getLocalChimericReads().size());
         assertTrue(chimericRT.getJunctionPositions().isEmpty());
 
-        // a DEL more than 500K from the gene boundary is considered chimeric
         chimericRT.clear();
 
-        // DEL linking 2 genes at known splice sites is considered chimeric
+        // a DEL more than 500K from the gene boundary is considered chimeric
         read1 = createMappedRead(++readId, gc2, 10481, 10500, createCigar(0, 20, 20));
         read1.setFlag(FIRST_OF_PAIR, true);
         int geneEnd = gc2.genes().stream().mapToInt(x -> x.GeneData.GeneEnd).max().orElse(0);

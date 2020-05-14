@@ -438,5 +438,30 @@ public class FusionFragmentsTest
         assertEquals(GENE_ID_1, spliceGeneIds[SE_START].get(0));
         assertEquals(1, spliceGeneIds[SE_END].size());
         assertEquals(GENE_ID_2, spliceGeneIds[SE_END].get(0));
+
+        // a fragment with the split in the second gene
+        final GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
+
+        read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        read2 = createMappedRead(readId, gc2, 10091, 20219, createCigar(10, 20, 10099, 10, 0));
+        read2.setGeneCollection(SE_START, gc2.id(), true);
+        read2.setGeneCollection(SE_END, gc3.id(), true);
+
+        read2.setStrand(true, false);
+
+        reads = Lists.newArrayList(read1, read2);
+        fragment = new FusionFragment(reads);
+
+//        assertEquals(MATCHED_JUNCTION, fragment.type());
+//        assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
+//        assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
+//        assertEquals(1, fragment.orientations()[SE_START]);
+//        assertEquals(-1, fragment.orientations()[SE_END]);
+//        assertEquals(1100, fragment.junctionPositions()[SE_START]);
+//        assertEquals(10200, fragment.junctionPositions()[SE_END]);
+//        assertEquals(1, fragment.junctionOrientations()[SE_START]);
+//        assertEquals(-1, fragment.junctionOrientations()[SE_END]);
+//        assertEquals(DEL, fragment.getImpliedSvType());
+
     }
 }

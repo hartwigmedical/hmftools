@@ -536,7 +536,7 @@ public class FusionDataTest
 
         // 2 soft-clipped fragments matching the other side of the fusion junction
         String junctionBases = read1.ReadBases.substring(10, 40) + read2.ReadBases.substring(0, 10);
-        ReadRecord read3 = createMappedRead(++readId, gc2, 5071, 1100, createCigar(0, 30, 10), junctionBases);
+        ReadRecord read3 = createMappedRead(++readId, gc2, 5071, 5100, createCigar(0, 30, 10), junctionBases);
         ReadRecord read4 = createMappedRead(readId, gc2, 5051, 5090, createCigar(0, 40, 0));
         read4.setStrand(true, false);
         read3.setGeneCollection(SE_START, gc2.id(), false);

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.hasSuppAlignment;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
 
 import java.util.List;
 import java.util.Map;
@@ -258,13 +259,6 @@ public class ChimericReadTracker
         }
     }
 
-    private boolean isInversion(final List<ReadRecord> reads)
-    {
-        Set<Byte> orientations = Sets.newHashSet();
-        reads.stream().filter(x -> !x.isSupplementaryAlignment()).forEach(x -> orientations.add(x.orientation()));
-        return orientations.size() == 1;
-    }
-
     private boolean keepChimericGroup(final List<ReadRecord> reads, boolean readGroupComplete)
     {
         if(reads.stream().anyMatch(x -> x.isTranslocation()))
@@ -404,49 +398,6 @@ public class ChimericReadTracker
             mPostGeneReadMap.put(reads.get(0).Id, postGeneReads);
 
         return false;
-
-        /*
-        List<ReadRecord> postGeneReads = reads.stream()
-                .filter(x -> x.PosStart > mGeneCollection.regionBounds()[SE_END])
-                .collect(Collectors.toList());
-
-        // if all reads are past this gene collection's boundaries, leave them for the next one to handle
-        if(readGroupComplete && postGeneReads.size() == reads.size())
-            return true;
-
-        List<ReadRecord> preGeneReads = reads.stream()
-                .filter(x -> x.PosStart < mGeneCollection.regionBounds()[SE_START])
-                .collect(Collectors.toList());
-
-        if(!preGeneReads.isEmpty())
-        {
-            final String readId = preGeneReads.get(0).Id;
-            Integer expectedPreGeneCount = mPostGeneReadMap.get(readId);
-
-            if(expectedPreGeneCount != null)
-            {
-                if(expectedPreGeneCount != preGeneReads.size())
-                {
-                    ISF_LOGGER.warn("read({} {}:{}-{}) processed pre-gene count mismatch(exp={} vs act={})",
-                            readId, preGeneReads.get(0).Chromosome, preGeneReads.get(0).PosStart, preGeneReads.get(0).PosEnd,
-                            expectedPreGeneCount, preGeneReads.size());
-                }
-
-                // remove these already handled reads
-                mPostGeneReadMap.remove(readId);
-                preGeneReads.forEach(x -> reads.remove(x));
-
-                if(reads.isEmpty())
-                    return true;
-            }
-        }
-
-        // make note of these post-gene reads to avoid re-processing them the next time they come up
-        if(!postGeneReads.isEmpty())
-            mPostGeneReadMap.put(reads.get(0).Id, postGeneReads.size());
-
-        return false;
-        */
     }
 
     private void collectCandidateJunctions(final List<ReadRecord> reads, final Set<Integer> junctionPositions)

@@ -81,7 +81,7 @@ public class FusionReadData
         mFragments = Maps.newHashMap();
         addFusionFragment(fragment);
 
-        mLocationId = formLocationPair(mChromosomes, mGeneCollections, fragment.inGenicRegions());
+        mLocationId = fragment.locationPair();
 
         mRelatedFusions = Lists.newArrayList();
         mFusionGeneIds = new String[] {"", ""};
@@ -212,11 +212,10 @@ public class FusionReadData
 
     public boolean junctionMatch(final FusionFragment fragment)
     {
-        return fragment.type() == MATCHED_JUNCTION
-                && mJunctionPositions[SE_START] == fragment.junctionPositions()[SE_START]
-                && mJunctionPositions[SE_END] == fragment.junctionPositions()[SE_END]
-                && mJunctionOrientations[SE_START] == fragment.junctionOrientations()[SE_START]
-                && mJunctionOrientations[SE_END] == fragment.junctionOrientations()[SE_END];
+        return mJunctionPositions[SE_START] == fragment.junctionPositions()[SE_START]
+            && mJunctionPositions[SE_END] == fragment.junctionPositions()[SE_END]
+            && mJunctionOrientations[SE_START] == fragment.junctionOrientations()[SE_START]
+            && mJunctionOrientations[SE_END] == fragment.junctionOrientations()[SE_END];
     }
 
     public FusionFragment getInitialFragment() { return mFragment; }
@@ -307,7 +306,7 @@ public class FusionReadData
             List<ReadRecord> reads = fragment.reads().stream()
                     .filter(x -> mChromosomes[seIndex].equals(x.Chromosome))
                     .filter(x -> mGeneCollections[seIndex] == x.getGeneCollectons()[seIndex])
-                    .filter(x -> mFragment.inGenicRegions()[seIndex] == x.getIsGenicRegion()[seIndex])
+                    .filter(x -> mFragment.inGenicRegions()[seIndex] == x.getIsGenicRegion()[seIndex]) // shouldn't be required? position is enough
                     .collect(Collectors.toList());
 
             for (ReadRecord read : reads)

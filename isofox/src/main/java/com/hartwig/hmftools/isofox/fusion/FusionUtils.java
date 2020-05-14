@@ -58,43 +58,14 @@ public class FusionUtils
             return String.format("%s:pre_%d", chromosome, geneCollectionId);
     }
 
+    public static String formChromosomePair(final String[] chr) { return formChromosomePair(chr[SE_START], chr[SE_END]); }
     public static String formChromosomePair(final String chr1, final String chr2) { return chr1 + "_" + chr2; }
-    public static String[] getChromosomePair(final String chrPair) { return chrPair.split("_"); }
 
-    public static Set<Integer> collectCandidateJunctions(final Map<String, List<ReadRecord>> readsMap, final String chromosome)
+    public static boolean isInversion(final List<ReadRecord> reads)
     {
-        Set<Integer> candidateJunctions = Sets.newHashSet();
-
-        for(Map.Entry<String,List<ReadRecord>> entry : readsMap.entrySet())
-        {
-            for(ReadRecord read : entry.getValue())
-            {
-                if(!read.Chromosome.equals(chromosome))
-                    continue;
-
-                if(read.spansGeneCollections() && read.containsSplit())
-                {
-                    // find the largest N-split to mark the junction
-                    final int[] splitJunction = findSplitReadJunction(read);
-
-                    if(splitJunction != null)
-                    {
-                        candidateJunctions.add(splitJunction[SE_START]);
-                        candidateJunctions.add(splitJunction[SE_END]);
-                    }
-
-                    break;
-                }
-
-                if(read.isSoftClipped(SE_START) && read.Cigar.getFirstCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
-                    candidateJunctions.add(read.getCoordsBoundary(SE_START));
-
-                if(read.isSoftClipped(SE_END) && read.Cigar.getLastCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
-                    candidateJunctions.add(read.getCoordsBoundary(SE_END));
-            }
-        }
-
-        return candidateJunctions;
+        Set<Byte> orientations = Sets.newHashSet();
+        reads.stream().filter(x -> !x.isSupplementaryAlignment()).forEach(x -> orientations.add(x.orientation()));
+        return orientations.size() == 1;
     }
 
     public static int[] findSplitReadJunction(final ReadRecord read)

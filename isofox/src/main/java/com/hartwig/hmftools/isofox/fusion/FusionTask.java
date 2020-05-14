@@ -206,7 +206,7 @@ public class FusionTask implements Callable
         // 1. New fusion with correct splice-junction support - may or may not match a known transcript and exon
         // 2. Potential discordant or realigned fragment
 
-        // fusions will be stored in a map keyed by their chromosomes and junction starts
+        // fusions will be stored in a map keyed by their location pair (chromosome + geneCollectionId)
         List<FusionReadData> fusions = mFusionCandidates.get(fragment.locationPair());
 
         if(fusions == null)
@@ -239,11 +239,13 @@ public class FusionTask implements Callable
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final String chrGene = formLocation(fragment.chromosomes()[se], fragment.geneCollections()[se], fragment.inGenicRegions()[se]);
-            List<FusionReadData> fusionsByGene = mFusionsByGene.get(chrGene);
+            if(se == SE_END && fragment.locationIds()[SE_START].equals(fragment.locationIds()[SE_END]))
+                break;
+
+            List<FusionReadData> fusionsByGene = mFusionsByGene.get(fragment.locationIds()[se]);
 
             if(fusionsByGene == null)
-                mFusionsByGene.put(chrGene, Lists.newArrayList(fusionData));
+                mFusionsByGene.put(fragment.locationIds()[se], Lists.newArrayList(fusionData));
             else
                 fusionsByGene.add(fusionData);
         }
@@ -263,13 +265,10 @@ public class FusionTask implements Callable
 
     private void cacheSingleGeneFragment(final FusionFragment fragment)
     {
-        final String locationId = formLocation(
-                fragment.chromosomes()[SE_START], fragment.geneCollections()[SE_START], fragment.inGenicRegions()[SE_START]);
-
-        List<FusionFragment> fragments = mSingleGeneFragments.get(locationId);
+        List<FusionFragment> fragments = mSingleGeneFragments.get(fragment.locationIds()[SE_START]);
 
         if(fragments == null)
-            mSingleGeneFragments.put(locationId, Lists.newArrayList(fragment));
+            mSingleGeneFragments.put(fragment.locationIds()[SE_START], Lists.newArrayList(fragment));
         else
             fragments.add(fragment);
     }

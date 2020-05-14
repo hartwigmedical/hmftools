@@ -1,16 +1,21 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
 import java.util.List;
@@ -50,6 +55,8 @@ public class FusionFragmentBuilder
         if(reads.size() <= 1)
             return false;
 
+        // dismiss any read with more than 2
+
         if(hasSuppAlignment(reads))
         {
             return (reads.size() == 3);
@@ -84,6 +91,10 @@ public class FusionFragmentBuilder
     {
         return reads.stream().anyMatch(x -> x.hasSuppAlignment());
     }
+
+
+
+
 
     public static void setLocationData(final FusionFragment fragment)
     {
@@ -275,12 +286,16 @@ public class FusionFragmentBuilder
 
         if(fragment.hasSuppAlignment() && fragment.isSingleGene())
         {
+            if(!isInversion(fragment.reads()))
+            {
+                ISF_LOGGER.warn("read({}) has supp in single gene but not INV", fragment.reads().get(0));
+            }
+
             setSingleGeneSuppAlignJunctionData(fragment);
             return;
         }
 
-        // 2 gene collections are involved or a candidate realignable fragment in one collection
-
+            // 2 gene collections are involved or a candidate realignable fragment in one collection
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(fragment.isSingleGene() && se == SE_END)
@@ -398,5 +413,49 @@ public class FusionFragmentBuilder
     }
     */
 
+    public static String[] setLocationIds(final FusionFragment fragment)
+    {
+        final String[] locationIds = new String[SE_PAIR];
 
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(fragment.isSingleGene() && se == SE_END)
+                continue;
+
+            final List<ReadRecord> readsOnSide = fragment.readsByLocation(se);
+
+            if (fragment.junctionPositions()[se] > 0)
+            {
+                final int seIndex = se;
+                int closestDistance = -1;
+                int juncGeneCollection = 0;
+
+                for(ReadRecord read : readsOnSide)
+                {
+                    for(int se2 = SE_START; se2 <= SE_END; ++se2)
+                    {
+                        int distanceFromJunc = abs(read.getCoordsBoundary(se2) - fragment.junctionPositions()[se]);
+                        if(closestDistance == -1 || distanceFromJunc < closestDistance)
+                        {
+                            closestDistance = distanceFromJunc;
+                            juncGeneCollection = read.getGeneCollectons()[se2];
+                        }
+                    }
+                }
+
+                locationIds[se] = formLocation(fragment.chromosomes()[se], juncGeneCollection, true);
+            }
+            else
+            {
+                // for the discordant case, where a read spans gene collectons, take the lower read end since it will be genic
+                if(!readsOnSide.isEmpty())
+                {
+                    ReadRecord read = readsOnSide.get(0);
+                    locationIds[se] = formLocation(read.Chromosome, read.getGeneCollectons()[SE_START], true);
+                }
+            }
+        }
+
+        return locationIds;
+    }
 }
