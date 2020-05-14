@@ -52,6 +52,21 @@ public class SampleDataCache
         return cohortName.equals(SampleCohort.get(sampleId));
     }
 
+    public void removeMissingSamples(final List<String> sampleIds)
+    {
+        for(String sampleId : sampleIds)
+        {
+            SampleIds.remove(sampleId);
+            SampleCancerType.remove(sampleId);
+            SampleCohort.remove(sampleId);
+
+            for(List<String> cancerSamples : CancerTypeSamples.values())
+            {
+                cancerSamples.remove(sampleId);
+            }
+        }
+    }
+
     private boolean loadData(final String inputFile)
     {
         try

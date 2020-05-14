@@ -235,7 +235,7 @@ public class AltSpliceJunctionCohort
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to write cohort summary data file: {}", e.toString());
+            ISF_LOGGER.error("failed to write alt-SJ cohort file: {}", e.toString());
         }
 
     }

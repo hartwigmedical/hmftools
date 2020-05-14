@@ -54,6 +54,13 @@ public class CohortAnalyser
                     break;
                 }
 
+                case FUSION:
+                {
+                    FusionCohort fusionCohort = new FusionCohort(mConfig);
+                    fusionCohort.processFusionFiles();
+                    break;
+                }
+
                 case TRANSCRIPT_DISTRIBUTION:
                 {
                     TransExpressionDistribution transExpDist = new TransExpressionDistribution(mConfig);

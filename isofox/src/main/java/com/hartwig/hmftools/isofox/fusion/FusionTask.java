@@ -206,7 +206,7 @@ public class FusionTask implements Callable
         // 1. New fusion with correct splice-junction support - may or may not match a known transcript and exon
         // 2. Potential discordant or realigned fragment
 
-        // fusions will be stored in a map keyed by their location pair (chromosome + geneCollectionId)
+        // fusions will be stored in a map keyed by their chromosomes and junction starts
         List<FusionReadData> fusions = mFusionCandidates.get(fragment.locationPair());
 
         if(fusions == null)

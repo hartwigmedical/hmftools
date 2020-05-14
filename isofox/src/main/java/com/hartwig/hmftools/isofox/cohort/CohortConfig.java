@@ -34,11 +34,15 @@ public class CohortConfig
     public static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     public static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
     public static final String SPLICE_VARIANT_FILE = "splice_variant_file";
+    public static final String FAIL_MISSING = "fail_on_missing_file";
 
     public static final String TPM_LOG_THRESHOLD = "tpm_log_threshold";
     public static final String TPM_ROUNDING = "tpm_rounding";
 
     public static final String WRITE_SAMPLE_GENE_DISTRIBUTION_DATA = "write_sample_gene_dist";
+
+    public static final String FUSION_MIN_SAMPLES = "fusion_min_samples";
+    public static final String FUSION_MIN_FRAGS = "fusion_min_frags";
 
     public static final String CANCER_GENE_FILES = "cancer_gene_files";
 
@@ -77,11 +81,15 @@ public class CohortConfig
     public final double TpmLogThreshold;
     public final double TpmRounding;
 
+    public final int FusionMinSampleThreshold;
+    public final int FusionMinFragCount;
+
     public CohortConfig(final CommandLine cmd)
     {
         RootDataDir = cmd.getOptionValue(ROOT_DATA_DIRECTORY);
         UseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRS);
         AllAvailableFiles = !UseSampleDirectories && cmd.hasOption(ALL_AVAILABLE_FILES);
+        FailOnMissingSample = cmd.hasOption(FAIL_MISSING);
 
         String outputdir = cmd.getOptionValue(DATA_OUTPUT_DIR);
         if(!outputdir.endsWith(File.separator))
@@ -125,11 +133,13 @@ public class CohortConfig
         SpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
         EnsemblDataCache = cmd.getOptionValue(GENE_TRANSCRIPTS_DIR);
 
-        FailOnMissingSample = true;
         ConvertUnmatchedCancerToOther = true;
 
         TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
         TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
+
+        FusionMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_SAMPLES, "2"));
+        FusionMinFragCount = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_FRAGS, "2"));
 
         WriteSampleGeneDistributionData = cmd.hasOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
         CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
@@ -158,6 +168,8 @@ public class CohortConfig
         if(!rootDir.endsWith(File.separator))
             rootDir += File.separator;
 
+        List<String> missingSampleIds = Lists.newArrayList();
+
         for(final String sampleId : config.SampleData.SampleIds)
         {
             String filename = rootDir;
@@ -172,13 +184,24 @@ public class CohortConfig
 
             if (!Files.exists(path))
             {
-                ISF_LOGGER.error("sampleId({}) no file({}) found", sampleId, filename);
-                filenames.clear();
-                return false;
+                if(config.FailOnMissingSample)
+                {
+                    ISF_LOGGER.error("sampleId({}) file({}) not found", sampleId, filename);
+                    filenames.clear();
+                    return false;
+                }
+                else
+                {
+                    ISF_LOGGER.info("sampleId({}) file({}) not found, skipping", sampleId, filename);
+                    missingSampleIds.add(sampleId);
+                    continue;
+                }
             }
 
             filenames.add(path);
         }
+
+        config.SampleData.removeMissingSamples(missingSampleIds);
 
         return true;
     }
@@ -191,6 +214,7 @@ public class CohortConfig
         options.addOption(SAMPLE_DATA_FILE, true, "File with list of samples and cancer types to load data for");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(USE_SAMPLE_DIRS, false, "File with list of samples to load data for");
+        options.addOption(FAIL_MISSING, false, "Exit if sample input file isn't found");
         options.addOption(ALL_AVAILABLE_FILES, false, "Load all files in root directory matching expeted Isofox file names");
         options.addOption(LOAD_TYPES, true, "List of data types to load & process");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
@@ -202,6 +226,8 @@ public class CohortConfig
         options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
         options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
+        options.addOption(FUSION_MIN_SAMPLES, true, "Min number of samples to support a fusion");
+        options.addOption(FUSION_MIN_FRAGS, true, "Min frag count per sample to support a fusion");
 
         options.addOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, false, "Write per-sample gene distribution data file");
         options.addOption(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
