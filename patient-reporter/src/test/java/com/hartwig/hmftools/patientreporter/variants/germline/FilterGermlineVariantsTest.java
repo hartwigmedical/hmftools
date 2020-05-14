@@ -5,16 +5,12 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordAnalyzer;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
+import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -40,7 +36,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbers,
                 somaticVariants,
-                createChordAnalysisNoHRD());
+                ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantMatch.size());
     }
 
@@ -63,7 +59,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersMatch,
                 variantsMatch,
-                createChordAnalysisNoHRD());
+                ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantAllMatch.size()); // all three options matched
 
         List<ReportableGermlineVariant> filteredGermlineVariantNonMatchBiallelic =
@@ -72,7 +68,7 @@ public class FilterGermlineVariantsTest {
                         germlineReportingModel,
                         geneCopyNumbersMatch,
                         variantsMatch,
-                        createChordAnalysisNoHRD());
+                        ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantNonMatchBiallelic.size()); // match copy number and variant
 
         List<ReportableGermlineVariant> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -81,7 +77,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersMatch,
                 variantsNonMatch,
-                createChordAnalysisNoHRD());
+                ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantNonMatchVariant.size()); // match biallelic and copy number
 
         List<ReportableGermlineVariant> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -90,7 +86,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsMatch,
-                createChordAnalysisNoHRD());
+                ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantNonMatchCopy.size()); // match biallelic and variant
 
         List<ReportableGermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -99,7 +95,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsNonMatch,
-                createChordAnalysisNoHRD());
+                ChordStatus.HRP);
         assertEquals(0, filteredGermlineVariantNonMatch.size()); // all option failed
 
         List<ReportableGermlineVariant> filteredGermlineVariantOptionBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -108,7 +104,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsNonMatch,
-                createChordAnalysisNoHRD());
+                ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantOptionBiallelic.size()); // only match biallelic
 
         List<ReportableGermlineVariant> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -117,7 +113,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsMatch,
-                createChordAnalysisNoHRD());
+                ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantOptionVariant.size()); // only match variant
 
         List<ReportableGermlineVariant> filteredGermlineVariantOptionCopyNumberPartialLoss =
@@ -126,7 +122,7 @@ public class FilterGermlineVariantsTest {
                         germlineReportingModel,
                         geneCopyNumbersMatch,
                         variantsNonMatch,
-                        createChordAnalysisNoHRD());
+                        ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantOptionCopyNumberPartialLoss.size()); // only match copy number
 
         List<ReportableGermlineVariant> filteredGermlineVariantOptionCopyNumberHRD =
@@ -135,7 +131,7 @@ public class FilterGermlineVariantsTest {
                         germlineReportingModel,
                         geneCopyNumbersNonMatch,
                         variantsNonMatch,
-                        createChordAnalysisHRD());
+                        ChordStatus.HRD);
         assertEquals(1, filteredGermlineVariantOptionCopyNumberHRD.size()); // only match HRD
     }
 
@@ -161,37 +157,5 @@ public class FilterGermlineVariantsTest {
     @NotNull
     private static List<SomaticVariant> createSomaticVariantListForGene(@NotNull String gene) {
         return Lists.newArrayList(PatientReporterTestFactory.createTestSomaticVariantBuilder().gene(gene).build());
-    }
-
-    @NotNull
-    private static ChordAnalyzer createChordAnalysisNoHRD() {
-        double brca1Value = 0.3;
-        double brca2Value = 0.19;
-
-        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
-                .noneValue(1 - (brca1Value + brca2Value))
-                .BRCA1Value(brca1Value)
-                .BRCA2Value(brca2Value)
-                .hrdValue(brca1Value + brca2Value)
-                .predictedResponseValue(brca1Value + brca2Value > 0.5)
-                .build();
-        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRP).build();
-    }
-
-    @NotNull
-    private static ChordAnalyzer createChordAnalysisHRD() {
-        double brca1Value = 0.6;
-        double brca2Value = 0.2;
-
-        ChordAnalysis chordAnalysis =  ImmutableChordAnalysis.builder()
-                .noneValue(1 - (brca1Value + brca2Value))
-                .BRCA1Value(brca1Value)
-                .BRCA2Value(brca2Value)
-                .hrdValue(brca1Value + brca2Value)
-                .predictedResponseValue(brca1Value + brca2Value > 0.5)
-                .build();
-
-        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRD).build();
-
     }
 }

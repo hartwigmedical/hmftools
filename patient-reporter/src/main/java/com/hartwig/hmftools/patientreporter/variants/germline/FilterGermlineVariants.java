@@ -4,14 +4,13 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordAnalyzer;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +23,7 @@ public final class FilterGermlineVariants {
     public static List<ReportableGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<GermlineVariant> germlineVariants,
             @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport,
-            @NotNull ChordAnalyzer chordAnalyzer) {
+            @NotNull ChordStatus chordStatus) {
         List<ReportableGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
         Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
@@ -62,7 +61,7 @@ public final class FilterGermlineVariants {
 
                     if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
-                    } else if (filterMinCopyNumberTumor || chordAnalyzer.chordAnalysis().predictedResponseValue()) {
+                    } else if (filterMinCopyNumberTumor || chordStatus == ChordStatus.HRD) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                     }
                 }

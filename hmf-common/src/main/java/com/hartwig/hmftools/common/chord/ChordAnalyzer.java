@@ -10,6 +10,7 @@ public abstract class ChordAnalyzer {
 
     @NotNull
     public abstract ChordAnalysis chordAnalysis();
+
     @NotNull
     public abstract ChordStatus hrdStatus();
 }

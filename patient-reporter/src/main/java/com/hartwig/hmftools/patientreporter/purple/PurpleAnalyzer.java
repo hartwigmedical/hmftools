@@ -52,8 +52,8 @@ public final class PurpleAnalyzer {
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)
-                .evidenceItems(filteredEvidenceItems)
                 .purpleSignatures(purpleSignatures)
+                .evidenceItems(filteredEvidenceItems)
                 .build();
     }
 }

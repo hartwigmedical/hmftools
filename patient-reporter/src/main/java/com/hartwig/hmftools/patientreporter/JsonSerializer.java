@@ -15,11 +15,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordAnalyzer;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.hospital.HospitalData;
@@ -75,7 +71,6 @@ public class JsonSerializer {
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        ChordAnalyzer chordAnalyzer = createCOLO829ChordAnalysis();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         return ImmutableAnalysedPatientReport.builder()
@@ -94,19 +89,20 @@ public class JsonSerializer {
                 .tumorMutationalLoad(180)
                 .tumorMutationalLoadStatus(TumorMutationalStatus.HIGH)
                 .tumorMutationalBurden(13.6)
-                .chordAnalyzer(chordAnalyzer)
+                .chordHrdValue(0D)
+                .chordHrdStatus(ChordStatus.fromHRD(0D))
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(reportableHomozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath("path/to/circos.jpg")
-                .signaturePath("path/to/signature.jpg")
-                .logoRVAPath("path/to/rva_logo.jpg")
-                .logoCompanyPath("path/to/company_log.jpg")
                 .isCorrectedReport(false)
                 .isUnofficialReport(false)
                 .comments(Optional.of("This is a test report and is based off COLO829"))
+                .signaturePath("path/to/signature.jpg")
+                .logoRVAPath("path/to/rva_logo.jpg")
+                .logoCompanyPath("path/to/company_log.jpg")
                 .build();
     }
 
@@ -515,22 +511,6 @@ public class JsonSerializer {
                 .build();
 
         return Lists.newArrayList(gainLoss1);
-    }
-
-    @NotNull
-    private static ChordAnalyzer createCOLO829ChordAnalysis() {
-        double brca1Value = 0D;
-        double brca2Value = 0D;
-
-        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
-                .noneValue(1 - (brca1Value + brca2Value))
-                .BRCA1Value(brca1Value)
-                .BRCA2Value(brca2Value)
-                .hrdValue(brca1Value + brca2Value)
-                .predictedResponseValue(brca1Value + brca2Value > 0.5)
-                .build();
-        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRP).build();
-
     }
 
     @NotNull

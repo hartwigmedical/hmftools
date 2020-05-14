@@ -22,7 +22,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.itextpdf.layout.Document;
@@ -155,7 +154,7 @@ public class SummaryChapter implements ReportChapter {
         div.add(table);
 
         String hrdString = hasReliablePurity
-                ? patientReport.chordAnalyzer().hrdStatus().display()
+                ? patientReport.chordHrdStatus().display()
                 : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));

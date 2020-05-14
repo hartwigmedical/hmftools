@@ -28,9 +28,9 @@ public abstract class PurpleAnalysis {
     public abstract List<ReportableGainLoss> reportableGainsAndLosses();
 
     @NotNull
-    public abstract List<EvidenceItem> evidenceItems();
+    public abstract PurpleSignatures purpleSignatures();
 
     @NotNull
-    public abstract PurpleSignatures purpleSignatures();
+    public abstract List<EvidenceItem> evidenceItems();
 
 }
