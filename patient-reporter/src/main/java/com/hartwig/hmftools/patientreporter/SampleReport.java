@@ -41,10 +41,10 @@ public abstract class SampleReport {
     public abstract String projectName();
 
     @NotNull
-    public abstract HospitalData hospitalData();
+    public abstract String submissionId();
 
     @NotNull
-    public abstract String submissionId();
+    public abstract HospitalData hospitalData();
 
     @NotNull
     public abstract String hospitalPatientId();

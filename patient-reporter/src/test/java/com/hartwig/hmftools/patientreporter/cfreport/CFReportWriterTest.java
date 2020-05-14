@@ -171,8 +171,8 @@ public class CFReportWriterTest {
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .cohort("A")
                 .projectName("COLO-001-002")
-                .hospitalData(createTestHospitalData())
                 .submissionId("ABC")
+                .hospitalData(createTestHospitalData())
                 .hospitalPatientId("123456")
                 .hospitalPathologySampleId("A")
                 .build();

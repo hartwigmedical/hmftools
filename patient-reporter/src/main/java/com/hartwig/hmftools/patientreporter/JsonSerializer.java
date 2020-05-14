@@ -137,10 +137,10 @@ public class JsonSerializer {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .hospitalData(createTestHospitalData())
                 .cohort("TEST")
                 .projectName("TEST")
                 .submissionId("10")
+                .hospitalData(createTestHospitalData())
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")
                 .build();
