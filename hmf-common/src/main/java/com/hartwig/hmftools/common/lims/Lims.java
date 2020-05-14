@@ -273,13 +273,13 @@ public class Lims {
         if (sampleData != null) {
             LimsStudy study = LimsStudy.fromSampleId(sampleId(sampleBarcode));
             if (sampleData.reportGermlineVariants()) {
-                if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
-                    LOGGER.warn("Consent of report germline variants is false, but must be true for CORE/WIDE!");
+                if (study == LimsStudy.CPCT || study == LimsStudy.DRUP) {
+                    LOGGER.warn("Consent of report germline variants is true, but must be false for CPCT/DRUP!");
                 }
                 return true;
             } else {
-                if (study == LimsStudy.CPCT || study == LimsStudy.DRUP) {
-                    LOGGER.warn("Consent of report germline variants is true, but must be false for CPCT/DRUP!");
+                if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+                    LOGGER.warn("Consent of report germline variants is false, but must be true for CORE/WIDE!");
                 }
                 return false;
             }

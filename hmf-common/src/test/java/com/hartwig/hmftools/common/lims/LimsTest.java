@@ -29,10 +29,14 @@ public class LimsTest {
 
     @Test
     public void canExtractLimsViralInsertionsChoice() {
-        LimsJsonSampleData sampleDataTrue =
-                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).reportViralInsertions(true).build();
-        LimsJsonSampleData sampleDataFalse =
-                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).reportViralInsertions(false).build();
+        LimsJsonSampleData sampleDataTrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId(TUMOR_SAMPLE_ID)
+                .reportViralInsertions(true)
+                .build();
+        LimsJsonSampleData sampleDataFalse = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId(TUMOR_SAMPLE_ID)
+                .reportViralInsertions(false)
+                .build();
 
         Lims limsTrue = buildTestLimsWithSample(sampleDataTrue);
         Lims limsFalse = buildTestLimsWithSample(sampleDataFalse);
@@ -41,6 +45,40 @@ public class LimsTest {
         assertFalse(limsTrue.reportViralInsertions("does not exist"));
 
         assertFalse(limsFalse.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+    }
+
+    @Test
+    public void canExtactLimsReportableGermlineVariants() {
+        LimsJsonSampleData sampleDataCPCTtrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId("CPCT02991111T")
+                .reportGermlineVariants(true)
+                .build();
+        LimsJsonSampleData sampleDataCPCTfalse = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId("CPCT02991111T")
+                .reportGermlineVariants(false)
+                .build();
+
+        LimsJsonSampleData sampleDataWIDEtrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId("WIDE01010000T")
+                .reportGermlineVariants(true)
+                .build();
+        LimsJsonSampleData sampleDataWIDEfalse = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId("WIDE01010000T")
+                .reportGermlineVariants(false)
+                .build();
+
+        Lims limsCPCTTrue = buildTestLimsWithSample(sampleDataCPCTtrue);
+        Lims limsCPCTFalse = buildTestLimsWithSample(sampleDataCPCTfalse);
+        Lims limsWIDETrue = buildTestLimsWithSample(sampleDataWIDEtrue);
+        Lims limsWIDEFalse = buildTestLimsWithSample(sampleDataWIDEfalse);
+
+        assertFalse(limsCPCTTrue.reportGermlineVariants("does not exist"));
+
+        assertTrue(limsCPCTTrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
+        assertFalse(limsCPCTFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
+       // assertTrue(limsWIDETrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
+       // assertFalse(limsWIDEFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
+
     }
 
     @Test
@@ -270,7 +308,8 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDates,
-                blacklistedPatients, HospitalModelTest.buildTestHospitalModel());
+                blacklistedPatients,
+                HospitalModelTest.buildTestHospitalModel());
     }
 
     @NotNull
@@ -288,7 +327,8 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, HospitalModelTest.buildTestHospitalModel());
+                blacklistedPatients,
+                HospitalModelTest.buildTestHospitalModel());
     }
 
     @NotNull
@@ -311,9 +351,9 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, HospitalModelTest.buildTestHospitalModel());
+                blacklistedPatients,
+                HospitalModelTest.buildTestHospitalModel());
     }
-
 
     @NotNull
     private static Lims buildTestLimsWithPreLimsArrivalDateForSampleId(@NotNull String sampleId, @NotNull LocalDate date) {
@@ -332,6 +372,7 @@ public class LimsTest {
                 shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                blacklistedPatients, HospitalModelTest.buildTestHospitalModel());
+                blacklistedPatients,
+                HospitalModelTest.buildTestHospitalModel());
     }
 }
