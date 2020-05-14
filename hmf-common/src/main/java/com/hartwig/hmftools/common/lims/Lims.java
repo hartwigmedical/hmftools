@@ -259,10 +259,9 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String germlineReportingLevelString = sampleData.germlineReportingLevel();
-            return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString(
+            return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
                     germlineReportingLevelString,
-                    sampleId(sampleBarcode),
-                    reportGermlineVariants(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
+                    sampleId(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
         } else {
             return LimsGermlineReportingLevel.NO_REPORTING;
         }

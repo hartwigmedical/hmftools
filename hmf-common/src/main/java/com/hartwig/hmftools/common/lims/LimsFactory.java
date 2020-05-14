@@ -175,12 +175,6 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Set<String> readSingleColumnTsv(@NotNull String samplesWithoutSamplingDateTsv) throws IOException {
-        return Files.lines(Paths.get(samplesWithoutSamplingDateTsv)).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
-    }
-
-    @NotNull
-    @VisibleForTesting
     static Map<String, LimsShallowSeqData> readLimsShallowSeqTsv(@NotNull String shallowSeqTsv) throws IOException {
         Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode = Maps.newHashMap();
         List<String> lines = Files.lines(Paths.get(shallowSeqTsv)).collect(Collectors.toList());
@@ -199,5 +193,11 @@ public final class LimsFactory {
             }
         }
         return shallowSeqPerSampleBarcode;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static Set<String> readSingleColumnTsv(@NotNull String tsv) throws IOException {
+        return Files.lines(Paths.get(tsv)).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
     }
 }

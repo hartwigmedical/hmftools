@@ -8,12 +8,12 @@ public enum LimsGermlineReportingLevel {
     NO_REPORTING;
 
     @NotNull
-    static LimsGermlineReportingLevel fromLimsGermlineReportingLevelString(@NotNull String germlineReportingLevelString,
-            @NotNull String sampleId, boolean reportableGermlineVariant) {
+    static LimsGermlineReportingLevel fromLimsInputs(boolean reportGermlineVariants,
+            @NotNull String germlineReportingLevelString, @NotNull String sampleId) {
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         // Cases "geen toevalsbevindingen: familie mag deze/wel niet opvragen" have been merged
         // into a single category "geen toevalsbevindingen" per feb 1st 2020
-        if (reportableGermlineVariant) {
+        if (reportGermlineVariants) {
             if (study == LimsStudy.WIDE) {
                 switch (germlineReportingLevelString) {
                     case "1: Behandelbare toevalsbevindingen":
@@ -29,7 +29,6 @@ public enum LimsGermlineReportingLevel {
                 }
             }
             return REPORT_WITHOUT_NOTIFICATION;
-
         }
 
         return NO_REPORTING;
