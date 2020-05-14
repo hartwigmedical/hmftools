@@ -41,6 +41,9 @@ public class BaseDepth
 
         if(length() > mDepth.length)
         {
+            ISF_LOGGER.info("growing base depth: old({}) new({}) range({}-{})",
+                    mDepth.length, length(), mBaseRange[SE_START], mBaseRange[SE_END]);
+
             mDepth = new int[length()];
         }
         else

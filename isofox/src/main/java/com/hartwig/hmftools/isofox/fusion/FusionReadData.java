@@ -456,7 +456,7 @@ public class FusionReadData
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
                 + ",SVType,NonSupp,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,MultiMapFrags,CoverageUp,CoverageDown"
-                + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
+                + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions,RefReadId";
     }
 
     public static String fusionId(int id) { return String.format("Id_%d", id); }
@@ -577,6 +577,8 @@ public class FusionReadData
         {
             csvData.add("NONE");
         }
+
+        csvData.add(ISF_LOGGER.isDebugEnabled() ? getInitialFragment().readId() : "-");
 
         return csvData.toString();
     }

@@ -9,10 +9,12 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.generateCommonExonicRegions;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.generateExonicRegions;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 
 import java.util.List;
 import java.util.Map;
@@ -138,6 +140,33 @@ public class GeneCollection
                         ? min(mEnrichedRegion[SE_START], exonData.ExonStart) : exonData.ExonStart;
 
                 mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.ExonEnd);
+            }
+        }
+    }
+
+    public void setReadGeneCollections(final ReadRecord read, final int[] nonGenicBounds)
+    {
+        if(positionsWithin(read.PosStart, read.PosEnd, mRegionBounds[SE_START], mRegionBounds[SE_END]))
+        {
+            read.setGeneCollection(SE_START,mId, true);
+            read.setGeneCollection(SE_END,mId, true);
+        }
+        else
+        {
+            // mark any read extending beyond this gene collection's bounds in part or full
+            for (int se = SE_START; se <= SE_END; ++se)
+            {
+                if(positionWithin(
+                        read.getCoordsBoundary(se), mRegionBounds[SE_START], mRegionBounds[SE_END]))
+                {
+                    read.setGeneCollection(se,mId, true);
+                }
+                else if(positionWithin(read.getCoordsBoundary(se), nonGenicBounds[SE_START], nonGenicBounds[SE_END]))
+                {
+                    read.setGeneCollection(se,mId, false);
+                }
+
+                // otherwise the gene collection will remain unset for now
             }
         }
     }

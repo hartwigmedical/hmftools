@@ -277,6 +277,7 @@ public class ChromosomeGeneTask implements Callable
             }
             else
             {
+                // the buffer is to be able to test out pre and post gene region reads
                 geneCollection.setNonGenicPosition(SE_START, geneCollection.regionBounds()[SE_START] - 10000);
                 geneCollection.setNonGenicPosition(SE_END, geneCollection.regionBounds()[SE_END] + 10000);
             }

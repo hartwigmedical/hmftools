@@ -310,12 +310,12 @@ public class FusionFinder
         status[MISSING] = false;
         status[SKIP] = false;
 
-        if(reads.size() >= 3 || !reads.stream().anyMatch(x -> x.getSuppAlignment() != null))
+        if(reads.size() >= 3 || !reads.stream().anyMatch(x -> x.hasSuppAlignment()))
             return;
 
         for(final ReadRecord read : reads)
         {
-            if(read.getSuppAlignment() == null)
+            if(!read.hasSuppAlignment())
                 continue;
 
             SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());

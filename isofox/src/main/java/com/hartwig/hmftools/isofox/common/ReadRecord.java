@@ -43,6 +43,7 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
+import ngs.Read;
 
 public class ReadRecord
 {
@@ -153,6 +154,7 @@ public class ReadRecord
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }
+    public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
     public String mateChromosome() { return mMateChromosome; }
@@ -174,6 +176,11 @@ public class ReadRecord
     {
         return !mIsGenicRegion[SE_START] && !mIsGenicRegion[SE_END]
                 && mGeneCollections[SE_START] != NO_GENE_ID && mGeneCollections[SE_END] != NO_GENE_ID;
+    }
+
+    public boolean matches(final ReadRecord other)
+    {
+        return Id.equals(other.Id) && Cigar.toString().equals(other.Cigar.toString()) && PosStart == other.PosStart && PosEnd == other.PosEnd;
     }
 
     // public boolean outsideGeneCollection() { return mGeneCollections[SE_START] == NO_GENE_ID && mGeneCollections[SE_END] == NO_GENE_ID; }

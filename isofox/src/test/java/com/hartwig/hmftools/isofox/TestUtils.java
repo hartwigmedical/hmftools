@@ -303,8 +303,8 @@ public class TestUtils
             read.addIntronicTranscriptRefs(geneCollection.getTranscripts());
 
         read.captureGeneInfo(false);
-        read.setGeneCollection(SE_START, geneCollection.id(), true);
-        read.setGeneCollection(SE_END, geneCollection.id(), true);
+
+        geneCollection.setReadGeneCollections(read, geneCollection.getNonGenicPositions());
 
         return read;
     }
@@ -329,6 +329,10 @@ public class TestUtils
         geneReadData.forEach(x -> x.setTranscripts(geneTransCache.getTranscripts(x.GeneData.GeneId)));
 
         GeneCollection gc = new GeneCollection(id, geneReadData);
+
+        gc.setNonGenicPosition(SE_START, gc.regionBounds()[SE_START] - 9000);
+        gc.setNonGenicPosition(SE_END, gc.regionBounds()[SE_END] + 9000);
+
         return gc;
     }
 

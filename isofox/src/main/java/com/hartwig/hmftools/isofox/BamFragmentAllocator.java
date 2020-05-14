@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -172,6 +173,8 @@ public class BamFragmentAllocator
             mRetainedIntronFinder.setGeneData(null);
     }
 
+    private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
+
     public void produceBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
     {
         clearCache();
@@ -183,8 +186,10 @@ public class BamFragmentAllocator
         mNextGeneCountLog = GENE_LOG_COUNT;
         mEnrichedGeneFragments = 0;
 
-        // and some width around the base depth region to pick up junctions just outside the gene
-        int[] baseDepthRange = {geneCollection.regionBounds()[SE_START] - 10, geneCollection.regionBounds()[SE_END] + 10};
+        // and width around the base depth region to pick up junctions outside the gene
+        int[] baseDepthRange = new int[SE_PAIR];
+        baseDepthRange[SE_START] = max((int)genomeRegion.start(), geneCollection.regionBounds()[SE_START] - NON_GENIC_BASE_DEPTH_WIDTH);
+        baseDepthRange[SE_END] = min((int)genomeRegion.end(), geneCollection.regionBounds()[SE_END] + NON_GENIC_BASE_DEPTH_WIDTH);
         mBaseDepth.initialise(baseDepthRange);
 
         if(mConfig.runFunction(NOVEL_LOCATIONS))
@@ -294,29 +299,7 @@ public class BamFragmentAllocator
             read.processOverlappingRegions(overlappingRegions);
         }
 
-        if(positionsWithin(read.PosStart, read.PosEnd, mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]))
-        {
-            read.setGeneCollection(SE_START, mCurrentGenes.id(), true);
-            read.setGeneCollection(SE_END, mCurrentGenes.id(), true);
-        }
-        else
-        {
-            // mark any read extending beyond this gene collection's bounds in part or full
-            for (int se = SE_START; se <= SE_END; ++se)
-            {
-                if(positionWithin(
-                        read.getCoordsBoundary(se), mCurrentGenes.regionBounds()[SE_START], mCurrentGenes.regionBounds()[SE_END]))
-                {
-                    read.setGeneCollection(se, mCurrentGenes.id(), true);
-                }
-                else if(positionWithin(read.getCoordsBoundary(se), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
-                {
-                    read.setGeneCollection(se, mCurrentGenes.id(), false);
-                }
-
-                // otherwise the gene collection will remain unset for now
-            }
-        }
+        mCurrentGenes.setReadGeneCollections(read, mValidReadStartRegion);
 
         checkFragmentRead(read);
     }
@@ -902,7 +885,7 @@ public class BamFragmentAllocator
 
                     writer.write(String.format(",%s,%d,%s,%s,%s",
                             read.mateChromosome(), read.mateStartPosition(), read.isFirstOfPair(), read.isReadReversed(),
-                            read.getSuppAlignment() != null ? read.getSuppAlignment() : "NONE"));
+                            read.hasSuppAlignment() ? read.getSuppAlignment() : "NONE"));
 
                             writer.write(String.format(",%s,%d,%s,%s,%d,%d,%d,%s",
                             geneReadType, transId, transType, validTranscripts,

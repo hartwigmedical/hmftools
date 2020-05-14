@@ -82,7 +82,7 @@ public class FusionFragmentBuilder
 
     public static boolean hasSuppAlignment(final List<ReadRecord> reads)
     {
-        return reads.stream().anyMatch(x -> x.getSuppAlignment() != null);
+        return reads.stream().anyMatch(x -> x.hasSuppAlignment());
     }
 
     public static void setLocationData(final FusionFragment fragment)
@@ -162,7 +162,7 @@ public class FusionFragmentBuilder
 
             if(readGroup.size() == 2)
                 fragment.orientations()[se] = readGroup.stream()
-                        .filter(x -> x.getSuppAlignment() == null).findFirst().map(x -> x.orientation()).orElse((byte)0);
+                        .filter(x -> !x.hasSuppAlignment()).findFirst().map(x -> x.orientation()).orElse((byte)0);
             else
                 fragment.orientations()[se] = readGroup.get(0).orientation();
         }
@@ -195,7 +195,7 @@ public class FusionFragmentBuilder
 
         for(ReadRecord read : fragment.readsByLocation(SE_START))
         {
-            if (read.getSuppAlignment() == null)
+            if (!read.hasSuppAlignment())
                 continue;
 
             int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
@@ -301,7 +301,7 @@ public class FusionFragmentBuilder
 
                 if(fragment.hasSuppAlignment())
                 {
-                    if(rgRead.getSuppAlignment() != null)
+                    if(rgRead.hasSuppAlignment())
                         read = rgRead;
                     else
                         continue;

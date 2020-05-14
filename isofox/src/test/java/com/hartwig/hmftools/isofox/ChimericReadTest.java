@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNC
 import static org.junit.Assert.assertEquals;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
@@ -220,6 +221,116 @@ public class ChimericReadTest
         assertEquals(2, chimericRT.getJunctionPositions().size());
         assertTrue(chimericRT.getJunctionPositions().contains(10500));
         assertTrue(chimericRT.getJunctionPositions().contains(chimericJunc));
+    }
+
+    @Test
+    public void testPrePosGeneReads()
+    {
+        // 2 gene collections, testing reads before, inside and after the genes
+        final EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        int gcId = 0;
+
+        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        IsofoxConfig config = new IsofoxConfig();
+        ChimericReadTracker chimericRT = new ChimericReadTracker(config);
+        BaseDepth baseDepth = new BaseDepth();
+
+        chimericRT.initialise(gc1);
+        baseDepth.initialise(gc1.regionBounds());
+
+        FragmentTracker fragTracker = new FragmentTracker();
+
+        // pre and post reads are discarded since they don't affect the gene
+        int readId = 0;
+        ReadRecord read1 = createMappedRead(readId, gc1, 481, 500, createCigar(0, 20, 20));
+        read1.setFlag(FIRST_OF_PAIR, true);
+        ReadRecord read2 = createMappedRead(readId, gc1, 2000, 2019, createCigar(20, 20, 0));
+        read2.setStrand(true, false);
+
+        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.postProcessChimericReads(baseDepth, fragTracker);
+
+        assertTrue(chimericRT.getReadMap().isEmpty());
+        assertTrue(chimericRT.getLocalChimericReads().isEmpty());
+        assertTrue(chimericRT.getJunctionPositions().isEmpty());
+        chimericRT.clear();
+
+        chimericRT.initialise(gc2);
+        baseDepth.initialise(gc2.regionBounds());
+        fragTracker.checkRead(read2);
+        chimericRT.postProcessChimericReads(baseDepth, fragTracker);
+
+        assertTrue(chimericRT.getReadMap().isEmpty());
+        assertTrue(chimericRT.getLocalChimericReads().isEmpty());
+        assertTrue(chimericRT.getJunctionPositions().isEmpty());
+
+        // pre and post gene reads are kept if relating to other genes / have supp alignments
+        chimericRT.clear();
+        fragTracker.clear();
+        chimericRT.initialise(gc1);
+        baseDepth.initialise(gc1.regionBounds());
+
+        read1 = createMappedRead(++readId, gc1, 481, 500, createCigar(0, 20, 20));
+        read1.setFlag(FIRST_OF_PAIR, true);
+        read1.setSuppAlignment("supp");
+
+        read2 = createMappedRead(++readId, gc1, 2000, 2019, createCigar(20, 20, 0));
+        read2.setStrand(true, false);
+        read2.setSuppAlignment("supp");
+
+        // these post-gene reads will be skipped in this gene collection
+        ReadRecord read3 = createMappedRead(readId, gc1, 2010, 2049, createCigar(0, 40, 0));
+
+        // will also be skipped since relates to next gene collection
+        ReadRecord read4 = createMappedRead(++readId, gc1, 2000, 2019, createCigar(20, 20, 0));
+
+        // will be processed and the post gene read cached so as not to handle again in gc2
+        ReadRecord read5 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        ReadRecord read6 = createMappedRead(readId, gc1, 2100, 2119, createCigar(20, 20, 0));
+
+        fragTracker.checkRead(read1);
+        fragTracker.checkRead(read4);
+        chimericRT.addChimericReadPair(read2, read3);
+        chimericRT.addChimericReadPair(read5, read6);
+
+        chimericRT.postProcessChimericReads(baseDepth, fragTracker);
+
+        assertEquals(2, chimericRT.getReadMap().size());
+        assertTrue(chimericRT.getReadMap().containsKey(read1.Id));
+        assertTrue(chimericRT.getReadMap().containsKey(read5.Id));
+        assertFalse(chimericRT.getReadMap().containsKey(read2.Id));
+        assertFalse(chimericRT.getReadMap().containsKey(read4.Id));
+        assertTrue(chimericRT.getLocalChimericReads().isEmpty());
+        assertTrue(chimericRT.getJunctionPositions().contains(500));
+        assertTrue(chimericRT.getJunctionPositions().contains(1100));
+        assertFalse(chimericRT.getJunctionPositions().contains(2000));
+        assertTrue(chimericRT.getJunctionPositions().contains(2100));
+
+        chimericRT.clear();
+        fragTracker.clear();
+        chimericRT.initialise(gc2);
+        baseDepth.initialise(gc2.regionBounds());
+
+        chimericRT.addChimericReadPair(read2, read3);
+        fragTracker.checkRead(read4);
+        fragTracker.checkRead(read6);
+
+        chimericRT.postProcessChimericReads(baseDepth, fragTracker);
+
+        assertEquals(2, chimericRT.getReadMap().size());
+        assertTrue(chimericRT.getReadMap().containsKey(read2.Id));
+        assertTrue(chimericRT.getReadMap().containsKey(read4.Id));
+        assertTrue(chimericRT.getLocalChimericReads().isEmpty());
+        assertTrue(chimericRT.getJunctionPositions().contains(2000));
+        assertFalse(chimericRT.getJunctionPositions().contains(2100)); // already processed
+
+        // assertEquals(1, chimericRT.getLocalChimericReads().size());
     }
 
 }

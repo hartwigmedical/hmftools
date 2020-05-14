@@ -125,17 +125,6 @@ public class FusionFragment
 
     public final List<TransExonRef>[] getTransExonRefs() { return mTransExonRefs; }
 
-    /*
-    public final List<ReadRecord> readsByLocation(final String chromosome, int geneCollection, boolean isGenic)
-    {
-        return mReads.stream()
-                .filter(x -> chromosome.equals(x.Chromosome))
-                .filter(x -> geneCollection == x.getGeneCollectons()[seIndex])
-                .filter(x -> isGenic == x.getIsGenicRegion()[seIndex])
-                .collect(Collectors.toList());
-    }
-    */
-
     public List<String> getGeneIds(int seIndex)
     {
         final List<String> geneIds = Lists.newArrayList();

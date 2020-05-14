@@ -163,7 +163,7 @@ public class FusionWriter
 
                 mReadWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d,%s,%d",
                         read.isFirstOfPair(), read.isSupplementaryAlignment(), read.isReadReversed(), read.isProperPair(),
-                        read.getSuppAlignment() != null ? read.getSuppAlignment().replaceAll(",", ";") : "NONE",
+                        read.hasSuppAlignment() ? read.getSuppAlignment().replaceAll(",", ";") : "NONE",
                         read.ReadBases, read.flags(), read.mateChromosome(), read.mateStartPosition()));
 
                 // log the transcript exons affected, and the highest matching transcript

@@ -195,9 +195,9 @@ public class FusionTask implements Callable
     private void writeData()
     {
         // write results
-        // ISF_LOGGER.debug("{}: writing results", mTaskId);
         mFusionWriter.writeFusionData(mFusionCandidates);
         mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
+        mFusionWriter.writeUnfusedFragments(mSingleGeneFragments);
     }
 
     private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
