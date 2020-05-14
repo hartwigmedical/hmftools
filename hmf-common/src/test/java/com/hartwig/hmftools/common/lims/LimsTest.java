@@ -247,7 +247,7 @@ public class LimsTest {
                 .build();
 
         Lims lims1 = buildTestLimsWithSample(sampleData1);
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims1.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_PERFORMED_STRING, lims1.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
         assertEquals("70%", lims1.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
 
         LimsJsonSampleData sampleData2 = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
@@ -258,7 +258,7 @@ public class LimsTest {
                 .build();
 
         Lims lims2 = buildTestLimsWithSample(sampleData2);
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims2.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_PERFORMED_STRING, lims2.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims2.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
 

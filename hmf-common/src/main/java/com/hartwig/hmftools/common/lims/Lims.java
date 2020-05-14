@@ -189,7 +189,7 @@ public class Lims {
                         }
                     }
                 } else {
-                    return NOT_DETERMINED_STRING;
+                    return NOT_PERFORMED_STRING;
                 }
             }
         }
