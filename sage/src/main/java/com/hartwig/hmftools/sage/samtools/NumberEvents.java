@@ -14,15 +14,20 @@ public class NumberEvents {
         }
 
         int additionalIndels = 0;
+        int softClips = 0;
         for (CigarElement cigarElement : record.getCigar()) {
             switch (cigarElement.getOperator()) {
                 case D:
                 case I:
                     additionalIndels += (cigarElement.getLength() - 1);
+                    break;
+                case S:
+                    softClips++;
+                    break;
             }
         }
 
-        return (Integer) nm - additionalIndels;
+        return (Integer) nm - additionalIndels + softClips;
     }
 
     public static int numberOfEventsWithMNV(int rawNumberEvents, @NotNull final String ref, @NotNull final String alt) {
