@@ -237,7 +237,7 @@ class AnalysedPatientReporter {
                     reportableViralInsertions.size());
             return reportableViralInsertions;
         } else {
-            LOGGER.info(" Patient has not given consent for viral insertion reporting. Skipping analysis!");
+            LOGGER.info(" No consent has been given for viral insertions. No viral insertions will be reported!");
             return null;
         }
     }
@@ -270,7 +270,7 @@ class AnalysedPatientReporter {
         LOGGER.info(" Number of gains and losses to report: {}", report.gainsAndLosses().size());
         LOGGER.info(" Gene fusions to report: {}", report.geneFusions().size());
         LOGGER.info(" Gene disruptions to report: {}", report.geneDisruptions().size());
-        LOGGER.info(" Viral insertions to report: {}", report.viralInsertions().size());
+        LOGGER.info(" Viral insertions to report: {}", report.viralInsertions() != null ? report.viralInsertions().size() : "0");
 
         LOGGER.info("Printing actionability results for {}", report.sampleReport().tumorSampleId());
         LOGGER.info(" Tumor-specific evidence items found: {}", report.tumorSpecificEvidence().size());

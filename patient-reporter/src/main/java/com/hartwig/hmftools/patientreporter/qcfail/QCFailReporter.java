@@ -23,7 +23,7 @@ public class QCFailReporter {
     @NotNull
     public QCFailReport run(@NotNull SampleMetadata sampleMetadata, @NotNull QCFailReason reason, @Nullable String comments,
             boolean correctedReport) {
-        QCFailStudy study = QCFailStudy.fromSample(sampleMetadata.tumorSampleId());
+        QCFailStudy study = QCFailStudy.fromSampleId(sampleMetadata.tumorSampleId());
 
         assert study != null;
 

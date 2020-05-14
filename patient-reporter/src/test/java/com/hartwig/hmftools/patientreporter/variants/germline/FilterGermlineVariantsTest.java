@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.patientreporter.variants.germline;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestDriverGeneView;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestGermlineGenesReporting;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestGermlineVariantBuilder;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestSomaticVariantBuilder;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -8,7 +14,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
@@ -20,11 +25,11 @@ public class FilterGermlineVariantsTest {
     private static final String ONCOGENE = "ONCO";
     private static final String TSG = "TSG";
 
-    private static final DriverGeneView TEST_DRIVER_GENE_VIEW = PatientReporterTestFactory.createTestDriverGeneView(ONCOGENE, TSG);
+    private static final DriverGeneView TEST_DRIVER_GENE_VIEW = createTestDriverGeneView(ONCOGENE, TSG);
 
     @Test
     public void checkForGermlineGenesReportedONCO() {
-        GermlineReportingModel germlineReportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        GermlineReportingModel germlineReportingModel = createTestGermlineGenesReporting();
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         List<SomaticVariant> somaticVariants = Lists.newArrayList();
@@ -42,7 +47,7 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedTSG() {
-        GermlineReportingModel germlineReportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        GermlineReportingModel germlineReportingModel = createTestGermlineGenesReporting();
 
         List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true, 1);
         List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false, 2);
@@ -137,12 +142,12 @@ public class FilterGermlineVariantsTest {
 
     @NotNull
     private static List<GermlineVariant> createTestGermlineVariantsONCOGene() {
-        return Lists.newArrayList(PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCOGENE).build());
+        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(ONCOGENE).build());
     }
 
     @NotNull
     private static List<GermlineVariant> createTestGermlineVariantsTSGGene(boolean biallelic, double adjustedCopyNumber) {
-        return Lists.newArrayList(PatientReporterTestFactory.createTestGermlineVariantBuilder()
+        return Lists.newArrayList(createTestGermlineVariantBuilder()
                 .gene(TSG)
                 .biallelic(biallelic)
                 .adjustedCopyNumber(adjustedCopyNumber)
@@ -151,11 +156,11 @@ public class FilterGermlineVariantsTest {
 
     @NotNull
     private static List<GeneCopyNumber> createCopyNumberListForTSG(int minCopyNumber) {
-        return Lists.newArrayList(PatientReporterTestFactory.createTestCopyNumberBuilder().gene(TSG).minCopyNumber(minCopyNumber).build());
+        return Lists.newArrayList(createTestCopyNumberBuilder().gene(TSG).minCopyNumber(minCopyNumber).build());
     }
 
     @NotNull
     private static List<SomaticVariant> createSomaticVariantListForGene(@NotNull String gene) {
-        return Lists.newArrayList(PatientReporterTestFactory.createTestSomaticVariantBuilder().gene(gene).build());
+        return Lists.newArrayList(createTestSomaticVariantBuilder().gene(gene).build());
     }
 }

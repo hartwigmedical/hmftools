@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.patientreporter.purple;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestEvidenceBuilder;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestReportableGainLossBuilder;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -8,18 +12,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.actionability.EvidenceScope;
-import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -30,7 +25,7 @@ public class CheckEvidenceCnvTest {
         List<ReportableGainLoss> reportableGainsAndLosses = createTestReportableGainsAndLosses("GENE1");
         List<EvidenceItem> evidenceItems = createTestEvidenceItems();
 
-        GeneCopyNumber geneCopyNumber = createTestCopyNumberBuilder("GENE2").build();
+        GeneCopyNumber geneCopyNumber = createTestCopyNumberBuilder().gene("NOT_GENE1").build();
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = Maps.newHashMap();
         evidencePerGeneCopyNumber.put(geneCopyNumber, evidenceItems);
@@ -43,10 +38,11 @@ public class CheckEvidenceCnvTest {
 
     @Test
     public void doNotFilterEvidenceOnReportableGene() {
-        List<ReportableGainLoss> reportableGainsAndLosses = createTestReportableGainsAndLosses("GENE1");
+        String gene = "GENE1";
+        List<ReportableGainLoss> reportableGainsAndLosses = createTestReportableGainsAndLosses(gene);
         List<EvidenceItem> evidenceItems = createTestEvidenceItems();
 
-        GeneCopyNumber geneCopyNumber = createTestCopyNumberBuilder("GENE1").build();
+        GeneCopyNumber geneCopyNumber = createTestCopyNumberBuilder().gene(gene).build();
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = Maps.newHashMap();
         evidencePerGeneCopyNumber.put(geneCopyNumber, evidenceItems);
@@ -59,15 +55,7 @@ public class CheckEvidenceCnvTest {
 
     @NotNull
     private static List<ReportableGainLoss> createTestReportableGainsAndLosses(@NotNull String gene) {
-        ReportableGainLoss gainLoss = ImmutableReportableGainLoss.builder()
-                .chromosome("1")
-                .chromosomeBand("band")
-                .gene(gene)
-                .copies(0)
-                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
-                .build();
-
-        return Lists.newArrayList(gainLoss);
+        return Lists.newArrayList(createTestReportableGainLossBuilder().gene(gene).build());
     }
 
     @NotNull
@@ -79,44 +67,5 @@ public class CheckEvidenceCnvTest {
         evidenceItems.add(createTestEvidenceBuilder().build());
 
         return evidenceItems;
-    }
-
-    @NotNull
-    private static ImmutableEvidenceItem.Builder createTestEvidenceBuilder() {
-        return ImmutableEvidenceItem.builder()
-                .event(Strings.EMPTY)
-                .level(EvidenceLevel.LEVEL_A)
-                .response(Strings.EMPTY)
-                .reference(Strings.EMPTY)
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .drug(Strings.EMPTY)
-                .drugsType(Strings.EMPTY)
-                .cancerType(Strings.EMPTY)
-                .isOnLabel(false);
-    }
-
-    @NotNull
-    private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene) {
-        return ImmutableGeneCopyNumber.builder()
-                .start(1)
-                .end(2)
-                .gene(gene)
-                .chromosome("1")
-                .chromosomeBand("band")
-                .minRegionStart(0)
-                .minRegionStartSupport(SegmentSupport.NONE)
-                .minRegionEnd(0)
-                .minRegionEndSupport(SegmentSupport.NONE)
-                .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minRegions(1)
-                .germlineHet2HomRegions(0)
-                .germlineHomRegions(0)
-                .somaticRegions(1)
-                .minCopyNumber(0.1)
-                .maxCopyNumber(0.1)
-                .transcriptID("trans")
-                .transcriptVersion(0)
-                .minMinorAllelePloidy(0);
     }
 }

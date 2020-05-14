@@ -35,7 +35,7 @@ public class CircosChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) throws IOException {
-         String circosPath = patientReport.circosPath();
+        String circosPath = patientReport.circosPath();
         try {
             Image circosImage = new Image(ImageDataFactory.create(circosPath));
             circosImage.setMaxHeight(400);

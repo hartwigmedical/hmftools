@@ -22,8 +22,8 @@ public enum QCFailStudy {
     }
 
     @Nullable
-    public static QCFailStudy fromSample(@NotNull final String sample) {
-        LimsStudy study = LimsStudy.fromSampleId(sample);
+    public static QCFailStudy fromSampleId(@NotNull String sampleId) {
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
         switch (study) {
             case CPCT:
