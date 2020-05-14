@@ -13,10 +13,10 @@ public abstract class HospitalQuery {
     public abstract String hospitalPI();
 
     @Nullable
-    public abstract String requestName();
+    public abstract String requesterName();
 
     @Nullable
-    public abstract String requestEmail();
+    public abstract String requesterEmail();
 
     @Nullable
     public abstract String hospitalName();

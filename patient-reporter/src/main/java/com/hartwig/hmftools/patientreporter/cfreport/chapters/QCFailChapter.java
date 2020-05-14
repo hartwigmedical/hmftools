@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
@@ -323,8 +322,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsRequestedBy() {
-        String requesterName = failReport.sampleReport().hospitalQuery().requestName();
-        String requesterEmail = failReport.sampleReport().hospitalQuery().requestEmail();
+        String requesterName = failReport.sampleReport().hospitalQuery().requesterName();
+        String requesterEmail = failReport.sampleReport().hospitalQuery().requesterEmail();
         return createContentParagraph("The requester is : ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);

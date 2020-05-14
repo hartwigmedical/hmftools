@@ -22,7 +22,7 @@ public abstract class HospitalModel {
     private static final Logger LOGGER = LogManager.getLogger(HospitalModel.class);
 
     @NotNull
-    abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
+    abstract Map<String, HospitalAddress> hospitalAddress();
 
     @NotNull
     abstract Map<String, HospitalContact> hospitalContactCPCT();
@@ -34,17 +34,17 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalContact> hospitalContactWIDE();
 
     @NotNull
-    abstract Map<String, HospitalAddress> hospitalAddress();
+    abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @NotNull
-    public HospitalQuery generateHospitalQuery(@NotNull String sampleId, @NotNull String requestNameCore,
-            @NotNull String requestEmailCore) {
+    public HospitalQuery queryHospitalData(@NotNull String sampleId, @NotNull String requesterNameCore,
+            @NotNull String requesterEmailCore) {
         return ImmutableHospitalQuery.builder()
                 .hospitalPI(extractHospitalPI(sampleId))
-                .requestName(extractRequestName(sampleId, requestNameCore))
-                .requestEmail(extractRequestEmail(sampleId, requestEmailCore))
-                .hospitalAddress(extractHospitalAddress(sampleId))
+                .requesterName(extractRequestName(sampleId, requesterNameCore))
+                .requesterEmail(extractRequestEmail(sampleId, requesterEmailCore))
                 .hospitalName(extractHospitalName(sampleId))
+                .hospitalAddress(extractHospitalAddress(sampleId))
                 .build();
     }
 
@@ -55,7 +55,6 @@ public abstract class HospitalModel {
         } else {
             return true;
         }
-
     }
 
     @Nullable
@@ -67,16 +66,16 @@ public abstract class HospitalModel {
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
         if (study == LimsStudy.CPCT) {
             hospitalContact = hospitalContactCPCT().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
-            return existinFile ? hospitalContact.hospitalPI() : null;
+            boolean existsInFile = checkIdExistInInputFile(hospitalContact, hospitalID);
+            return existsInFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.DRUP) {
             hospitalContact = hospitalContactDRUP().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
-            return existinFile ? hospitalContact.hospitalPI() : null;
+            boolean existsInFile = checkIdExistInInputFile(hospitalContact, hospitalID);
+            return existsInFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalContactWIDE().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
-            return existinFile ? hospitalContact.hospitalPI() : null;
+            boolean existsInFile = checkIdExistInInputFile(hospitalContact, hospitalID);
+            return existsInFile ? hospitalContact.hospitalPI() : null;
         } else if (study == LimsStudy.CORE) {
             return null;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -88,7 +87,7 @@ public abstract class HospitalModel {
 
     @Nullable
     @VisibleForTesting
-    String extractRequestName(@NotNull String sampleId, @NotNull String requestNameCore) {
+    String extractRequestName(@NotNull String sampleId, @NotNull String requesterNameCore) {
         HospitalContact hospitalContact;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
@@ -99,10 +98,10 @@ public abstract class HospitalModel {
             return null;
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalContactWIDE().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
-            return existinFile ? hospitalContact.requestName() : null;
+            boolean existsInFile = checkIdExistInInputFile(hospitalContact, hospitalID);
+            return existsInFile ? hospitalContact.requesterName() : null;
         } else if (study == LimsStudy.CORE) {
-            return requestNameCore;
+            return requesterNameCore;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
             return null;
         } else {
@@ -112,7 +111,7 @@ public abstract class HospitalModel {
 
     @Nullable
     @VisibleForTesting
-    String extractRequestEmail(@NotNull String sampleId, @NotNull String requestEmailCore) {
+    String extractRequestEmail(@NotNull String sampleId, @NotNull String requesterEmailCore) {
         HospitalContact hospitalContact;
         String hospitalID = extractHospitalIdFromSample(sampleId);
 
@@ -123,10 +122,10 @@ public abstract class HospitalModel {
             return null;
         } else if (study == LimsStudy.WIDE) {
             hospitalContact = hospitalContactWIDE().get(hospitalID);
-            boolean existinFile = checkIdExistInInputFile(hospitalContact, hospitalID);
-            return existinFile ? hospitalContact.requestEmail() : null;
+            boolean existsInFile = checkIdExistInInputFile(hospitalContact, hospitalID);
+            return existsInFile ? hospitalContact.requesterEmail() : null;
         } else if (study == LimsStudy.CORE) {
-            return requestEmailCore;
+            return requesterEmailCore;
         } else if (study == LimsStudy.NON_CANCER_STUDY) {
             return null;
         } else {

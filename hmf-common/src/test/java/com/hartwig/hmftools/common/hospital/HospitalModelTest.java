@@ -19,11 +19,10 @@ public class HospitalModelTest {
         assertEquals("Someone", hospitalModel.extractHospitalPI("DRUP01010001"));
         assertEquals("Someone", hospitalModel.extractHospitalPI("WIDE01010001"));
         assertNull(hospitalModel.extractHospitalPI("CPCT01060001"));
-
     }
 
     @Test
-    public void extractRequestName() {
+    public void extractRequesterName() {
         HospitalModel hospitalModel = buildTestHospitalModel();
         assertEquals("Someone1", hospitalModel.extractRequestName("WIDE01010001", "BB"));
         assertNull(hospitalModel.extractRequestName("DRUP01010001", "BB"));
@@ -32,7 +31,7 @@ public class HospitalModelTest {
     }
 
     @Test
-    public void extractRequestEmail() {
+    public void extractRequesterEmail() {
         HospitalModel hospitalModel = buildTestHospitalModel();
         assertEquals("my@email.com", hospitalModel.extractRequestEmail("WIDE01010001", "AA"));
         assertNull(hospitalModel.extractRequestEmail("CPCT01010001", "AA"));
@@ -47,7 +46,6 @@ public class HospitalModelTest {
         assertEquals("Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("DRUP02010001T"));
         assertEquals("Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("WIDE02010001T"));
         assertEquals("Ext-HMF, 1000 AB AMSTERDAM", hospitalModel.extractHospitalAddress("CORE02010001T"));
-
     }
 
     @Test
@@ -61,23 +59,24 @@ public class HospitalModelTest {
 
     @NotNull
     public static HospitalModel buildTestHospitalModel() {
-        Map<String, HospitalSampleMapping> sampleHospitalMapping = Maps.newHashMap();
+        Map<String, HospitalAddress> hospitalAddress = Maps.newHashMap();
         Map<String, HospitalContact> hospitalContactCPCT = Maps.newHashMap();
         Map<String, HospitalContact> hospitalContactDRUP = Maps.newHashMap();
         Map<String, HospitalContact> hospitalContactWIDE = Maps.newHashMap();
-        Map<String, HospitalAddress> hospitalAdress = Maps.newHashMap();
+        Map<String, HospitalSampleMapping> sampleHospitalMapping = Maps.newHashMap();
 
-        sampleHospitalMapping.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
-        hospitalContactCPCT.put("01", ImmutableHospitalContact.of("01", "Someone", "", ""));
-        hospitalContactDRUP.put("01", ImmutableHospitalContact.of("01", "Someone", "", ""));
+        hospitalAddress.put("01", ImmutableHospitalAddress.of("01", "Ext-HMF", "1000 AB", "AMSTERDAM"));
+        hospitalContactCPCT.put("01", ImmutableHospitalContact.of("01", "Someone", null, null));
+        hospitalContactDRUP.put("01", ImmutableHospitalContact.of("01", "Someone", null, null));
         hospitalContactWIDE.put("01", ImmutableHospitalContact.of("01", "Someone", "Someone1", "my@email.com"));
-        hospitalAdress.put("01", ImmutableHospitalAddress.of("01", "Ext-HMF","1000 AB","AMSTERDAM"));
+        sampleHospitalMapping.put("CORE18001224T", ImmutableHospitalSampleMapping.of("01"));
 
-        return ImmutableHospitalModel.of(
-                sampleHospitalMapping,
-                hospitalContactCPCT,
-                hospitalContactDRUP,
-                hospitalContactWIDE,
-                hospitalAdress);
+        return ImmutableHospitalModel.builder()
+                .hospitalAddress(hospitalAddress)
+                .hospitalContactCPCT(hospitalContactCPCT)
+                .hospitalContactDRUP(hospitalContactDRUP)
+                .hospitalContactWIDE(hospitalContactWIDE)
+                .sampleHospitalMapping(sampleHospitalMapping)
+                .build();
     }
 }

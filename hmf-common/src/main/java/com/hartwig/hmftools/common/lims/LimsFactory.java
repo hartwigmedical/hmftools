@@ -58,7 +58,7 @@ public final class LimsFactory {
         Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
         Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
 
-        HospitalModel model = HospitalModelFactory.fromHospitalDirectory(limsDirectory);
+        HospitalModel model = HospitalModelFactory.fromLimsDirectory(limsDirectory);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
@@ -67,7 +67,6 @@ public final class LimsFactory {
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
                 model);
-
     }
 
     @NotNull

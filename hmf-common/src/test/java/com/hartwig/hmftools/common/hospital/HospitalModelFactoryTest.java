@@ -17,13 +17,13 @@ public class HospitalModelFactoryTest {
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
 
     @Test
-    public void canReadFromHospitalDirectory() throws IOException {
-        HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(LIMS_DIRECTORY);
+    public void canCreateFromLimsDirectory() throws IOException {
+        HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(LIMS_DIRECTORY);
         assertNotNull(hospitalModel);
     }
 
     @Test
-    public void canReadHospitalAdress() throws IOException {
+    public void canReadHospitalAddressTsv() throws IOException {
         Map<String, HospitalAddress> hospitalAddress =
                 HospitalModelFactory.readFromHospitalAddress(LIMS_DIRECTORY + File.separator + "hospital_address.tsv");
 
@@ -43,63 +43,61 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalCPCT() throws IOException {
+    public void canReadHospitalContactCPCT() throws IOException {
         Map<String, HospitalContact> hospitalContactCPCT =
-                HospitalModelFactory.readFromHospitalContactCPCT(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv");
+                HospitalModelFactory.readFromHospitalContact(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv", 2);
 
         assertEquals(2, hospitalContactCPCT.size());
 
         HospitalContact cpct1 = hospitalContactCPCT.get("01");
         assertEquals("01", cpct1.hospitalId());
         assertEquals("Someone", cpct1.hospitalPI());
-        assertNull(cpct1.requestName());
-        assertNull(cpct1.requestEmail());
+        assertNull(cpct1.requesterName());
+        assertNull(cpct1.requesterEmail());
 
         HospitalContact cpct2 = hospitalContactCPCT.get("02");
         assertEquals("02", cpct2.hospitalId());
         assertEquals("Someone", cpct2.hospitalPI());
-        assertNull(cpct2.requestName());
-        assertNull(cpct2.requestEmail());
-
+        assertNull(cpct2.requesterName());
+        assertNull(cpct2.requesterEmail());
     }
 
     @Test
-    public void canReadHospitalDRUP() throws IOException {
-        Map<String, HospitalContact> hospitalContatcDRUP =
-                HospitalModelFactory.readFromHospitalContactDRUP(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv");
-        assertEquals(2, hospitalContatcDRUP.size());
+    public void canReadHospitalContactDRUP() throws IOException {
+        Map<String, HospitalContact> hospitalContactDRUP =
+                HospitalModelFactory.readFromHospitalContact(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv", 2);
+        assertEquals(2, hospitalContactDRUP.size());
 
-        HospitalContact drup1 = hospitalContatcDRUP.get("01");
+        HospitalContact drup1 = hospitalContactDRUP.get("01");
         assertEquals("01", drup1.hospitalId());
         assertEquals("Someone", drup1.hospitalPI());
-        assertNull(drup1.requestName());
-        assertNull(drup1.requestEmail());
+        assertNull(drup1.requesterName());
+        assertNull(drup1.requesterEmail());
 
-        HospitalContact drup2 = hospitalContatcDRUP.get("02");
+        HospitalContact drup2 = hospitalContactDRUP.get("02");
         assertEquals("02", drup2.hospitalId());
         assertEquals("Someone", drup2.hospitalPI());
-        assertNull(drup2.requestName());
-        assertNull(drup2.requestEmail());
-
+        assertNull(drup2.requesterName());
+        assertNull(drup2.requesterEmail());
     }
 
     @Test
-    public void canReadHospitalWIDE() throws IOException {
+    public void canReadHospitalContactWIDE() throws IOException {
         Map<String, HospitalContact> hospitalContactWIDE =
-                HospitalModelFactory.readFromHospitalContactWIDE(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv");
+                HospitalModelFactory.readFromHospitalContact(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4);
         assertEquals(2, hospitalContactWIDE.size());
 
         HospitalContact wide1 = hospitalContactWIDE.get("01");
         assertEquals("01", wide1.hospitalId());
         assertEquals("Someone", wide1.hospitalPI());
-        assertEquals("Someone1", wide1.requestName());
-        assertEquals("my@email.com", wide1.requestEmail());
+        assertEquals("Someone1", wide1.requesterName());
+        assertEquals("my@email.com", wide1.requesterEmail());
 
         HospitalContact wide2 = hospitalContactWIDE.get("02");
         assertEquals("02", wide2.hospitalId());
         assertEquals("Someone", wide2.hospitalPI());
-        assertEquals("Someone1", wide2.requestName());
-        assertEquals("my@email.com", wide2.requestEmail());
+        assertEquals("Someone1", wide2.requesterName());
+        assertEquals("my@email.com", wide2.requesterEmail());
     }
 
     @Test

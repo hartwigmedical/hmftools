@@ -16,9 +16,9 @@ public abstract class HospitalContact {
     public abstract String hospitalPI();
 
     @Nullable
-    public abstract String requestName();
+    public abstract String requesterName();
 
     @Nullable
-    public abstract String requestEmail();
+    public abstract String requesterEmail();
 
 }
