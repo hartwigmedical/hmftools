@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.HospitalData;
+import com.hartwig.hmftools.common.lims.hospital.HospitalData;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 
 import org.apache.logging.log4j.util.Strings;

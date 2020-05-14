@@ -5,8 +5,8 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.hospital.HospitalData;
-import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.lims.hospital.HospitalData;
+import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

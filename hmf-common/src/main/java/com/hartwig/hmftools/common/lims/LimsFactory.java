@@ -21,9 +21,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.hartwig.hmftools.common.hospital.HospitalModel;
-import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
-import com.hartwig.hmftools.common.hospital.ImmutableHospitalModel;
+import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
+import com.hartwig.hmftools.common.lims.hospital.HospitalModelFactory;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
