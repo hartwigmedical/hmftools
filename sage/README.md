@@ -291,18 +291,23 @@ There are a number of constraints to penalise the quality:
   2. if the read encompasses more than one variant, or
   3. if the ProperPair flag (0x02) is not set 
 
-The quality is incremented as follows:
+To do this we first calculate a modified base quality as follows:
 
 distanceFromReadEdge = minimum distance from either end of the complete read context to the edge of the read  
 baseQuality (SNV/MNV) = BASEQ at variant location(s)  
 baseQuality (Indel) = min BASEQ over core read context  
 modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty (12)` , 3 * distanceFromReadEdge) 
 
+We also modify the map quality taking into account the number of events, soft clipping and improper pair annotation:
+
 readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs count as only 1 event
+distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)`^ 
 improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if proper pair flag not set else 0  
-distanceFromReference = number of somatic alterations to get to reference from the complete read context  
-distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)` 
 modifiedMapQuality = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty  
+
+^ note that for the 6 highly polymorphic HLA genes (HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DQR1) we do not apply the distance from reference penalty
+
+We then take the minimum of the 2 modified qualities as the read contribution to the total quality: 
 
 matchQuality += max(0, min(modifiedMapQuality, modifiedBaseQuality))
 
