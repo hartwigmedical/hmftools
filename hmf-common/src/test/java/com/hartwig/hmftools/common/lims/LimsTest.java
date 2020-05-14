@@ -137,7 +137,7 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.projectName(doesNotExistSample));
         assertNull(lims.dnaNanograms(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.pathologyTumorPercentage(doesNotExistSample));
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.purityShallowSeq(doesNotExistSample));
+        assertEquals(Lims.NOT_PERFORMED_STRING, lims.purityShallowSeq(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.primaryTumor(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPatientId(doesNotExistSample));
@@ -188,7 +188,7 @@ public class LimsTest {
                 .build();
 
         Lims lims1 = buildTestLimsWithSample(sampleData1);
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims1.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_PERFORMED_STRING, lims1.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
 
         LimsJsonSampleData sampleData2 = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .sampleId(TUMOR_SAMPLE_ID)
