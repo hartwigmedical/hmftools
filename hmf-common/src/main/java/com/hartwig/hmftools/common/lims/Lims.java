@@ -261,7 +261,8 @@ public class Lims {
             String germlineReportingLevelString = sampleData.germlineReportingLevel();
             return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsGermlineReportingLevelString(
                     germlineReportingLevelString,
-                    sampleId(sampleBarcode), reportGermlineVariants(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
+                    sampleId(sampleBarcode),
+                    reportGermlineVariants(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
         } else {
             return LimsGermlineReportingLevel.NO_REPORTING;
         }
@@ -274,17 +275,18 @@ public class Lims {
             LimsStudy study = LimsStudy.fromSampleId(sampleId(sampleBarcode));
             if (sampleData.reportGermlineVariants()) {
                 if (study == LimsStudy.CPCT || study == LimsStudy.DRUP) {
-                    LOGGER.warn("Consent of report germline variants is true, but must be false for CPCT/DRUP!");
+                    LOGGER.warn("Consent of report germline variants is true, but must be false at study CPCT/DRUP for sample '{}'",
+                            sampleId(sampleBarcode));
                 }
                 return true;
             } else {
                 if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
-                    LOGGER.warn("Consent of report germline variants is false, but must be true for CORE/WIDE!");
+                    LOGGER.warn("Consent of report germline variants is false, but must be true at study CORE/WIDE for sample '{}'",
+                            sampleId(sampleBarcode));
                 }
                 return false;
             }
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -296,12 +298,14 @@ public class Lims {
             LimsStudy study = LimsStudy.fromSampleId(sampleId(sampleBarcode));
             if (sampleData.reportViralInsertions()) {
                 if (study == LimsStudy.DRUP || study == LimsStudy.CPCT) {
-                    LOGGER.warn("Consent of viral insertions is true, but must be false for CPCT/DRUP!");
+                    LOGGER.warn("Consent of viral insertions is true, but must be false at study CPCT/DRUP for sample '{}'",
+                            sampleId(sampleBarcode));
                 }
                 return true;
             } else {
                 if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
-                    LOGGER.warn("Consent of viral insertions is false, but must be true for WIDE/CORE!");
+                    LOGGER.warn("Consent of viral insertions is false, but must be true at study CORE/WIDE for sample '{}'",
+                            sampleId(sampleBarcode));
                 }
                 return false;
             }
