@@ -144,41 +144,41 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    @VisibleForTesting
-    String extractHospitalAddress(@NotNull String sampleId) {
+    private HospitalAddress findHospitalAdressModel(@NotNull String sampleId) {
+        HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
         HospitalAddress hospitalAddress;
-        String hospitalID = extractHospitalIdFromSample(sampleId);
-        LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
-        if (sampleId.startsWith("CORE19") || sampleId.contains("CORE18")) {
-            // These are the old core names, we need to manually map them.
-            HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
-            if (hospitalSampleMapping == null) {
-                LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
+        if (hospitalSampleMapping != null) {
+            hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
+            if (hospitalAddress == null) {
+                LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.", sampleId, hospitalSampleMapping.hospitalId());
                 return null;
-            } else {
-                hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
-                if (hospitalAddress == null) {
-                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.", sampleId, hospitalSampleMapping.hospitalId());
-                    return null;
-                }
             }
-
-            checkAddresseeFields(hospitalAddress);
-            return hospitalAddress.hospitalName() + ", " + hospitalAddress.hospitalZip() + " " + hospitalAddress.hospitalCity();
-
         } else {
+            String hospitalID = extractHospitalIdFromSample(sampleId);
             if (hospitalID == null) {
                 LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
                 return null;
             }
-
             hospitalAddress = hospitalAddress().get(hospitalID);
             if (hospitalAddress == null) {
                 LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
                 return null;
             }
-            checkAddresseeFields(hospitalAddress);
+
+        }
+        checkAddresseeFields(hospitalAddress);
+        return hospitalAddress;
+    }
+
+    @Nullable
+    @VisibleForTesting
+    String extractHospitalAddress(@NotNull String sampleId) {
+        HospitalAddress hospitalAddress = findHospitalAdressModel(sampleId);
+
+        if (hospitalAddress == null) {
+            return null;
+        } else {
             return hospitalAddress.hospitalName() + ", " + hospitalAddress.hospitalZip() + " " + hospitalAddress.hospitalCity();
         }
     }
@@ -186,42 +186,14 @@ public abstract class HospitalModel {
     @Nullable
     @VisibleForTesting
     public String extractHospitalName(@NotNull String sampleId) {
-        HospitalAddress hospitalAddress;
-        String hospitalID = extractHospitalIdFromSample(sampleId);
+        HospitalAddress hospitalAddress = findHospitalAdressModel(sampleId);
 
-        if (sampleId.startsWith("CORE19") || sampleId.contains("CORE18")) {
-            // These are the old core names, we need to manually map them.
-            HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
-            if (hospitalSampleMapping == null) {
-                LOGGER.error("Cannot find sample hospital mapping for sample '{}'.", sampleId);
-                return null;
-            } else {
-                hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
-                if (hospitalAddress == null) {
-                    LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.", sampleId, hospitalSampleMapping.hospitalId());
-                    return null;
-                }
-            }
-
-            checkAddresseeFields(hospitalAddress);
-            return hospitalAddress.hospitalName();
-
+        if (hospitalAddress == null) {
+            return null;
         } else {
-            if (hospitalID == null) {
-                LOGGER.warn("Could not find hospital for sample '{}'", sampleId);
-                return null;
-            }
-
-            hospitalAddress = hospitalAddress().get(hospitalID);
-            if (hospitalAddress == null) {
-                LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
-                return null;
-            }
-
-            checkAddresseeFields(hospitalAddress);
-
             return hospitalAddress.hospitalName();
         }
+
     }
 
     @Nullable
