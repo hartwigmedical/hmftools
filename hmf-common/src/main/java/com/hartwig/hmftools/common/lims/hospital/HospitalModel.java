@@ -34,7 +34,7 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalContact> hospitalContactWIDE();
 
     @NotNull
-    abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
+    abstract Map<String, String> sampleToHospitalMapping();
 
     @NotNull
     public HospitalData queryHospitalData(@NotNull String sampleId, @NotNull String requesterNameCore,
@@ -144,11 +144,11 @@ public abstract class HospitalModel {
 
     @Nullable
     private HospitalAddress findHospitalAddressModel(@NotNull String sampleId) {
-        HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
+        String hospitalSampleMapping = sampleToHospitalMapping().get(sampleId);
         HospitalAddress hospitalAddress;
 
         if (hospitalSampleMapping != null) {
-            hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
+            hospitalAddress = findByHospitalCore(hospitalSampleMapping);
             if (hospitalAddress == null) {
                 return null;
             }

@@ -108,15 +108,12 @@ public class HospitalModelFactoryTest {
 
     @Test
     public void canReadSampleHospitalMapping() throws IOException {
-        Map<String, HospitalSampleMapping> sampleHospitalMapping =
-                HospitalModelFactory.readFromSampleHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
+        Map<String, String> sampleHospitalMapping =
+                HospitalModelFactory.readFromSampleToHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
 
         assertEquals(2, sampleHospitalMapping.size());
 
-        HospitalSampleMapping sampleMapping1 = sampleHospitalMapping.get("CORE18001224T");
-        assertEquals("01", sampleMapping1.hospitalId());
-
-        HospitalSampleMapping sampleMapping2 = sampleHospitalMapping.get("CORE18002000T");
-        assertEquals("03", sampleMapping2.hospitalId());
+        assertEquals("01", sampleHospitalMapping.get("CORE18001224T"));
+        assertEquals("03", sampleHospitalMapping.get("CORE18002000T"));
     }
 }

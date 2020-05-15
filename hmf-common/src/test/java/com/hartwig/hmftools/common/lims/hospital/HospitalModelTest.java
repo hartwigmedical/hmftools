@@ -63,20 +63,20 @@ public class HospitalModelTest {
         Map<String, HospitalContact> hospitalContactCPCT = Maps.newHashMap();
         Map<String, HospitalContact> hospitalContactDRUP = Maps.newHashMap();
         Map<String, HospitalContact> hospitalContactWIDE = Maps.newHashMap();
-        Map<String, HospitalSampleMapping> sampleHospitalMapping = Maps.newHashMap();
+        Map<String, String> sampleHospitalMapping = Maps.newHashMap();
 
         hospitalAddress.put("01", ImmutableHospitalAddress.of("01", "Ext-HMF", "1000 AB", "AMSTERDAM"));
         hospitalContactCPCT.put("01", ImmutableHospitalContact.of("01", "Someone", null, null));
         hospitalContactDRUP.put("01", ImmutableHospitalContact.of("01", "Someone", null, null));
         hospitalContactWIDE.put("01", ImmutableHospitalContact.of("01", "Someone", "Someone1", "my@email.com"));
-        sampleHospitalMapping.put("CORE18001224T", ImmutableHospitalSampleMapping.of("01"));
+        sampleHospitalMapping.put("CORE18001224T", "01");
 
         return ImmutableHospitalModel.builder()
                 .hospitalAddress(hospitalAddress)
                 .hospitalContactCPCT(hospitalContactCPCT)
                 .hospitalContactDRUP(hospitalContactDRUP)
                 .hospitalContactWIDE(hospitalContactWIDE)
-                .sampleHospitalMapping(sampleHospitalMapping)
+                .sampleToHospitalMapping(sampleHospitalMapping)
                 .build();
     }
 }
