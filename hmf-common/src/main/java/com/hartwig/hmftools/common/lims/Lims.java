@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.lims.hospital.HospitalData;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -321,7 +322,16 @@ public class Lims {
 
     @NotNull
     public HospitalData hospitalData(@NotNull String tumorBarcode) {
-        return hospitalModel.queryHospitalData(sampleId(tumorBarcode), requesterName(tumorBarcode), requesterEmail(tumorBarcode));
+        String sampleId = sampleId(tumorBarcode);
+        HospitalData data =
+                hospitalModel.queryHospitalData(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
+
+        if (data == null) {
+            LOGGER.warn("Could not find hospital data for tumor sample {} with barcode {}", sampleId, tumorBarcode);
+            data = ImmutableHospitalData.builder().hospitalName(NOT_AVAILABLE_STRING).hospitalAddress(NOT_AVAILABLE_STRING).build();
+        }
+
+        return data;
     }
 
     @Nullable

@@ -9,19 +9,21 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HospitalData {
 
+    // A PI is generally only defined in context of a study (CPCT / DRUP etc)
     @Nullable
     public abstract String hospitalPI();
 
+    // A requester is generally only defined in context of a specific submission (CORE etc).
     @Nullable
     public abstract String requesterName();
 
     @Nullable
     public abstract String requesterEmail();
 
-    @Nullable
+    @NotNull
     public abstract String hospitalName();
 
-    @Nullable
+    @NotNull
     public abstract String hospitalAddress();
 
 }
