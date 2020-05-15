@@ -87,7 +87,7 @@ public class CFReportWriterTest {
     }
 
     @Test
-    public void canGenerateBelowDetionThresholdWithoutGenomicAlterationsReport() throws IOException {
+    public void canGenerateBelowDetectionThresholdWithoutGenomicAlterationsReport() throws IOException {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",
                 QCFailReason.BELOW_DETECTION_THRESHOLD,
