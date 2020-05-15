@@ -111,9 +111,12 @@ public class HospitalModelFactoryTest {
         Map<String, HospitalSampleMapping> sampleHospitalMapping =
                 HospitalModelFactory.readFromSampleHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
 
-        assertEquals(1, sampleHospitalMapping.size());
+        assertEquals(2, sampleHospitalMapping.size());
 
-        HospitalSampleMapping sampleMapping = sampleHospitalMapping.get("CORE18001224T");
-        assertEquals("01", sampleMapping.hospitalId());
+        HospitalSampleMapping sampleMapping1 = sampleHospitalMapping.get("CORE18001224T");
+        assertEquals("01", sampleMapping1.hospitalId());
+
+        HospitalSampleMapping sampleMapping2 = sampleHospitalMapping.get("CORE18002000T");
+        assertEquals("02", sampleMapping2.hospitalId());
     }
 }
