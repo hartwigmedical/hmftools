@@ -337,9 +337,15 @@ public class QCFailChapter implements ReportChapter {
                     .equals("not performed")) {
                 return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
             } else {
-                return createContentParagraphThree("The tumor percentage based on molecular estimation is ",
-                        failReport.sampleReport().purityShallowSeq(),
-                        " and is below the required amount (20%)");
+                if (failReport.reason() == QCFailReason.SHALLOW_SEQ_LOW_PURITY) {
+                    return createContentParagraphThree("The tumor percentage based on molecular estimation is ",
+                            failReport.sampleReport().purityShallowSeq(),
+                            " and is below the required amount (20%)");
+                } else {
+                    return createContentParagraph("The tumor percentage based on molecular estimation is ",
+                            failReport.sampleReport().purityShallowSeq());
+                }
+
             }
         } else {
             return createContentParagraph(Strings.EMPTY);
