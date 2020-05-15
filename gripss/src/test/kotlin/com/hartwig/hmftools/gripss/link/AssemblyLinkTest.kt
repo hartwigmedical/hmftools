@@ -2,6 +2,7 @@ package com.hartwig.hmftools.gripss.link
 
 import com.google.common.collect.Sets
 import com.hartwig.hmftools.gripss.StructuralVariantContext
+import com.hartwig.hmftools.gripss.store.LinkStore
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFCodec
 import htsjdk.variant.vcf.VCFHeader
@@ -23,7 +24,7 @@ class AssemblyLinkTest {
     fun testNonMatesAreLinked() {
         val variant1 = createVariant(1000, "id1", "T", "]2:1190]T", "mate1", "asm1", "325").toSv()
         val variant2 = createVariant(1010, "id2", "T", "T[3:1190[", "mate2", "asm1", "325").toSv()
-        val localLink = LocalLink.create(listOf(variant1, variant2))
+        val localLink:LinkStore = LinkStore.create(AssemblyLink().create(listOf(variant1, variant2)))
         assertEquals("asm1/325", localLink.link("id1"))
         assertEquals("asm1/325", localLink.link("id2"))
     }
@@ -33,7 +34,7 @@ class AssemblyLinkTest {
     fun testNonMatesAreWithDifferentLocationsAreNotLinked() {
         val variant1 = createVariant(1000, "id1", "T", "]2:1190]T", "mate1", "asm1", "325").toSv()
         val variant2 = createVariant(1010, "id2", "T", "T[3:1190[", "mate2", "asm1", "0").toSv()
-        val localLink = LocalLink.create(listOf(variant1, variant2))
+        val localLink:LinkStore = LinkStore.create(AssemblyLink().create(listOf(variant1, variant2)))
         assertEquals(Strings.EMPTY, localLink.link("id1"))
         assertEquals(Strings.EMPTY, localLink.link("id2"))
     }
@@ -42,7 +43,7 @@ class AssemblyLinkTest {
     fun testSimpleDelIsNotLinked() {
         val variant1 = createVariant(1000, "id1", "T", "T[1:1010[", "id2", "asm1", "325").toSv()
         val variant2 = createVariant(1010, "id2", "T", "]1:1000]T", "id1", "asm1", "325").toSv()
-        val localLink = LocalLink.create(listOf(variant1, variant2))
+        val localLink:LinkStore = LinkStore.create(AssemblyLink().create(listOf(variant1, variant2)))
         assertEquals(Strings.EMPTY, localLink.link("id1"))
         assertEquals(Strings.EMPTY, localLink.link("id2"))
     }
@@ -53,7 +54,7 @@ class AssemblyLinkTest {
         val variant1 = createVariant(1000, "id1", "T", "T[1:1010[", "id2", "asm1", "325").toSv()
         val variant2 = createVariant(1010, "id2", "T", "]1:1000]T", "id1", "asm1", "325").toSv()
         val rightOfDel = createVariant(1012, "id3", "T", "T[1:2010[T", "mate3", "asm1", "325").toSv()
-        val localLink = LocalLink.create(listOf(leftOfDel, variant1, variant2, rightOfDel))
+        val localLink:LinkStore = LinkStore.create(AssemblyLink().create(listOf(leftOfDel, variant1, variant2, rightOfDel)))
         assertEquals("asm1/325-1", localLink.link("id0"))
         assertEquals("asm1/325-1", localLink.link("id1"))
         assertEquals("asm1/325-2", localLink.link("id2"))

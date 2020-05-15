@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.gripss
 
-import com.hartwig.hmftools.gripss.link.LocalLink
+import com.hartwig.hmftools.extensions.dedup.AssemblyDedup
+import com.hartwig.hmftools.gripss.link.AssemblyLink
+import com.hartwig.hmftools.gripss.store.LinkStore
+import com.hartwig.hmftools.gripss.store.VariantStore
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File
 
@@ -41,23 +44,44 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         println("READING")
 
         fileWriter.writeHeader(fileReader.fileHeader)
-        val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()
-        for (variantContext in fileReader) {
-            val structuralVariant = StructuralVariantContext(variantContext)
-            if (!structuralVariant.isHardFilter(config.filterConfig)) {
-                structuralVariants.add(structuralVariant)
-            }
-        }
+        val structuralVariants = hardFilterVariants(fileReader)
 
 
         println("LINKING")
 
-        val links = LocalLink.create(structuralVariants)
+        val variantStore = VariantStore.create(structuralVariants)
+        val assemblyLinks = AssemblyLink().create(structuralVariants)
+        val links = LinkStore.create(assemblyLinks)
+        val assemblyDedup = AssemblyDedup(links, variantStore);
+
+        for (variant in structuralVariants) {
+            assemblyDedup.dedup(variant)
+        }
 
         println("WRITING")
-        structuralVariants.forEach { x -> fileWriter.writeVariant(x.context(config.filterConfig, links.link(x.vcfId), links.link(x.mateId))) }
+        structuralVariants.forEach { x -> fileWriter.writeVariant(x.context(config.filterConfig, links.localLinkedBy(x.vcfId), links.localLinkedBy(x.mateId))) }
 
     }
+
+    fun hardFilterVariants(fileReader: VCFFileReader): List<StructuralVariantContext> {
+        val unfiltered: MutableSet<String> = mutableSetOf()
+        val hardFilter: MutableSet<String> = mutableSetOf()
+        val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()
+
+        for (variantContext in fileReader) {
+            val structuralVariant = StructuralVariantContext(variantContext)
+            if (hardFilter.contains(structuralVariant.vcfId) || structuralVariant.isHardFilter(config.filterConfig)) {
+                structuralVariant.mateId?.let { hardFilter.add(it) }
+            } else {
+                unfiltered.add(variantContext.id)
+                structuralVariants.add(structuralVariant)
+            }
+        }
+
+        val mateIsValidOrNull = { x: StructuralVariantContext -> x.mateId?.let { unfiltered.contains(it) } != false}
+        return structuralVariants.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }
+    }
+
 
     override fun close() {
         fileReader.close()

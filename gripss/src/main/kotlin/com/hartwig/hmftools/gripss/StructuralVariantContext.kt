@@ -12,8 +12,11 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         private val polyC = "C".repeat(16);
     }
 
-    val start = context.start
+    val contig = context.contig!!
+
+    val imprecise = context.imprecise()
     val variantType = context.toVariantType()
+    val orientation = variantType.startOrientation
     val isSingle = variantType is Single
     val isShortDup = variantType is Duplication && variantType.length < SHORT_EVENT_SIZE
     val isShortDel = variantType is Deletion && variantType.length < SHORT_EVENT_SIZE
@@ -22,11 +25,17 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val vcfId: String = context.id
     val mateId: String? = context.mate();
 
+    val start = context.start
+    val confidenceInterval = context.confidenceInterval();
+    private val minStart = start + confidenceInterval.first;
+    private val maxStart = start + confidenceInterval.second;
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
-
-
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
+
+    fun confidenceIntervalsOverlap(other: StructuralVariantContext): Boolean {
+        return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
+    }
 
     fun context(config: GripssFilterConfig, localLink: String, remoteLink: String): VariantContext {
         val builder = VariantContextBuilder(context).filters()
@@ -191,6 +200,6 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     }
 
     override fun toString(): String {
-        return "SV(${context.contig}:${context.start} ${context.alleles[0].displayString} > ${context.alleles[1].displayString})"
+        return "${context.id} ${context.contig}:${context.start} ${context.alleles[0].displayString} > ${context.alleles[1].displayString}"
     }
 }

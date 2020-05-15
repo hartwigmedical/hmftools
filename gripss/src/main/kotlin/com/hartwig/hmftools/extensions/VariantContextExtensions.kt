@@ -58,3 +58,26 @@ fun VariantContext.mate(): String? {
 
     return null
 }
+
+fun VariantContext.confidenceInterval(): Pair<Int, Int> {
+    val (start, end) = this.getAttributeAsString("CIPOS", "0,0")
+            .replace("[", "")
+            .replace("]", "")
+            .split(",")
+            .map { x -> x.trim().toInt() }
+    return Pair(start, end)
+}
+
+fun VariantContext.isConfidenceIntervalUnbalanced(): Boolean {
+    if (!this.hasAttribute("CIPOS")) {
+        return false;
+    }
+
+    val (startOffset, endOffset) = this.getAttributeAsString("CIPOS", "0,0").split(",").map { x -> x.toInt() }
+    return endOffset.toInt() + startOffset.toInt() > 1
+}
+
+fun VariantContext.centreInMicrohomology(): VariantContext {
+
+    return this;
+}
