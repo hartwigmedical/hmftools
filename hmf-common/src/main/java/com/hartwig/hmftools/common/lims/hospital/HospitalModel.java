@@ -5,8 +5,6 @@ import java.util.Map;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,8 +13,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HospitalModel {
-
-    private static final Logger LOGGER = LogManager.getLogger(HospitalModel.class);
 
     @NotNull
     abstract Map<String, HospitalAddress> hospitalAddress();
