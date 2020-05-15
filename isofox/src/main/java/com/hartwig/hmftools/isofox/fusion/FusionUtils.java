@@ -2,11 +2,10 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -20,6 +19,9 @@ public class FusionUtils
     public static final int FS_UPSTREAM = 0;
     public static final int FS_DOWNSTREAM = 1;
     public static final int FS_PAIR = 2;
+
+    public static final byte POS_ORIENT = 1;
+    public static final byte NEG_ORIENT = -1;
 
     public static int switchStream(int iter) { return iter == FS_UPSTREAM ? FS_DOWNSTREAM : FS_UPSTREAM; }
 
@@ -70,7 +72,7 @@ public class FusionUtils
 
     public static int[] findSplitReadJunction(final ReadRecord read)
     {
-        if(!read.spansGeneCollections() || !read.containsSplit())
+        if(!read.containsSplit())
             return null;
 
         final int maxSplitLength = read.Cigar.getCigarElements().stream()
@@ -91,4 +93,21 @@ public class FusionUtils
 
         return null;
     }
+
+    public static boolean hasRealignableSoftClip(final ReadRecord read, int se, boolean checkMax)
+    {
+        if(!read.isSoftClipped(se))
+            return false;
+
+        int scLength = se == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
+
+        return (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && (!checkMax || scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH));
+    }
+
+    public static boolean isRealignedFragmentCandidate(final ReadRecord read)
+    {
+        return hasRealignableSoftClip(read, SE_START, true) || hasRealignableSoftClip(read, SE_END, true);
+    }
+
+
 }

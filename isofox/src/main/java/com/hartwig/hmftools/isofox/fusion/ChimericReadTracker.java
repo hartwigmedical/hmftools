@@ -7,12 +7,11 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.hasSuppAlignment;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
 
 import java.util.List;
@@ -83,23 +82,6 @@ public class ChimericReadTracker
         mJunctionPositions.clear();
     }
 
-    public static boolean isRealignedFragmentCandidate(final ReadRecord read)
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if (read.isSoftClipped(se))
-            {
-                int scLength =
-                        se == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
-
-                if (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
     public void addRealignmentCandidates(final ReadRecord read1, final ReadRecord read2)
     {
         mCandidateRealignedReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
@@ -155,8 +137,8 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
-    // private static final String LOG_READ_ID = "";
-    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:23402:5592:12765";
+    private static final String LOG_READ_ID = "";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:23402:5592:12765";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
@@ -204,7 +186,6 @@ public class ChimericReadTracker
                 continue;
             }
 
-            // int jcBefore = mJunctionPositions.size();
             collectCandidateJunctions(reads, mJunctionPositions);
         }
 
@@ -320,7 +301,31 @@ public class ChimericReadTracker
     {
         Set<Integer> junctionPositions = Sets.newHashSet();
 
-        collectCandidateJunctions(reads, junctionPositions);
+        ReadRecord splitRead = null;
+
+        for(ReadRecord read : reads)
+        {
+            if(read.containsSplit())
+            {
+                // find the largest N-split to mark the junction
+                final int[] splitJunction = findSplitReadJunction(read);
+
+                if(splitJunction != null)
+                {
+                    junctionPositions.add(splitJunction[SE_START]);
+                    junctionPositions.add(splitJunction[SE_END]);
+                    splitRead = read;
+                }
+
+                break;
+            }
+
+            if(hasRealignableSoftClip(read, SE_START, false))
+                junctionPositions.add(read.getCoordsBoundary(SE_START));
+
+            if(hasRealignableSoftClip(read, SE_END, false))
+                junctionPositions.add(read.getCoordsBoundary(SE_END));
+        }
 
         if(junctionPositions.size() < 2)
             return false;
@@ -331,9 +336,18 @@ public class ChimericReadTracker
         {
             Set<String> geneIds = Sets.newHashSet();
 
-            reads.stream().forEach(x -> x.getMappedRegions().entrySet().stream()
-                    .filter(y -> y.getKey().PosStart == juncPosition || y.getKey().PosEnd == juncPosition)
-                    .forEach(y -> y.getKey().getTransExonRefs().stream().forEach(z -> geneIds.add(z.GeneId))));
+            if(splitRead != null)
+            {
+                splitRead.getMappedRegions().entrySet().stream()
+                        .filter(x -> x.getKey().PosStart == juncPosition || x.getKey().PosEnd == juncPosition)
+                        .forEach(x -> x.getKey().getTransExonRefs().stream().forEach(y -> geneIds.add(y.GeneId)));
+            }
+            else
+            {
+                reads.stream().forEach(x -> x.getMappedRegions().entrySet().stream()
+                        .filter(y -> y.getKey().PosStart == juncPosition || y.getKey().PosEnd == juncPosition)
+                        .forEach(y -> y.getKey().getTransExonRefs().stream().forEach(z -> geneIds.add(z.GeneId))));
+            }
 
             positionGeneLists.add(geneIds);
         }
@@ -354,6 +368,9 @@ public class ChimericReadTracker
 
                 if(!geneIds1.stream().anyMatch(x -> geneIds2.contains(x)))
                 {
+                    if(splitRead != null)
+                        splitRead.setHasInterGeneSplit(); // will make use of this when handling fusions
+
                     return true;
                 }
             }
@@ -404,24 +421,18 @@ public class ChimericReadTracker
     {
         for(ReadRecord read : reads)
         {
-            if(read.spansGeneCollections() && read.containsSplit())
+            if(read.hasInterGeneSplit())
             {
-                // find the largest N-split to mark the junction
                 final int[] splitJunction = findSplitReadJunction(read);
-
-                if(splitJunction != null)
-                {
-                    junctionPositions.add(splitJunction[SE_START]);
-                    junctionPositions.add(splitJunction[SE_END]);
-                }
-
+                junctionPositions.add(splitJunction[SE_START]);
+                junctionPositions.add(splitJunction[SE_END]);
                 break;
             }
 
-            if(read.isSoftClipped(SE_START) && read.Cigar.getFirstCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+            if(hasRealignableSoftClip(read, SE_START, false))
                 junctionPositions.add(read.getCoordsBoundary(SE_START));
 
-            if(read.isSoftClipped(SE_END) && read.Cigar.getLastCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+            if(hasRealignableSoftClip(read, SE_END, false))
                 junctionPositions.add(read.getCoordsBoundary(SE_END));
         }
     }

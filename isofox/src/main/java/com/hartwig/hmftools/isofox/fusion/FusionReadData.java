@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
@@ -26,7 +25,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_PAIR;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_UPSTREAM;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.switchStream;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -40,6 +39,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -67,6 +67,8 @@ public class FusionReadData
     private final List<EnsemblGeneData>[] mCandidateGenes; // up and downstream genes
     private final String[] mFusionGeneIds;
     private final int[] mStreamIndices; // mapping of up & down stream to position data which is in SV terms
+    private final int[] mMaxSplitLengths;
+
 
     public FusionReadData(int id, final FusionFragment fragment)
     {
@@ -87,6 +89,7 @@ public class FusionReadData
         mFusionGeneIds = new String[] {"", ""};
         mStreamIndices = new int[] { SE_START, SE_END };
         mReadDepth = new int[] {0, 0};
+        mMaxSplitLengths = new int[] {0, 0};
 
         mCandidateGenes = new List[FS_PAIR];
         mCandidateGenes[SE_START] = Lists.newArrayList();
@@ -228,7 +231,7 @@ public class FusionReadData
         }
     }
 
-    public boolean canAddUnfusedFragment(final FusionFragment fragment, int maxFragmentDistance)
+    public boolean canAddDiscordantFragment(final FusionFragment fragment, int maxFragmentDistance)
     {
         // a discordant read spans both genes and cannot be outside the standard long fragment length either in intronic terms
         // or by exons if exonic
@@ -296,7 +299,7 @@ public class FusionReadData
         return true;
     }
 
-    public boolean isRelignedFragment(final FusionFragment fragment)
+    public boolean canRelignFragmentToJunction(final FusionFragment fragment)
     {
         boolean hasSupportingRead = false;
 
@@ -306,7 +309,6 @@ public class FusionReadData
             List<ReadRecord> reads = fragment.reads().stream()
                     .filter(x -> mChromosomes[seIndex].equals(x.Chromosome))
                     .filter(x -> mGeneCollections[seIndex] == x.getGeneCollectons()[seIndex])
-                    .filter(x -> mFragment.inGenicRegions()[seIndex] == x.getIsGenicRegion()[seIndex]) // shouldn't be required? position is enough
                     .collect(Collectors.toList());
 
             for (ReadRecord read : reads)
@@ -384,24 +386,21 @@ public class FusionReadData
         }
     }
 
-    private int[] maxSplitMappedLength()
+    public void calcMaxSplitMappedLength()
     {
         // find the longest section mapped across the junction
         final List<FusionFragment> fragments = mFragments.get(MATCHED_JUNCTION);
 
-        int[] maxSplitLengths = new int[SE_PAIR];
-
         if(fragments == null)
-            return maxSplitLengths;
+            return;
 
         for (int se = SE_START; se <= SE_END; ++se)
         {
             final int seIndex = se;
             for(final FusionFragment fragment : fragments)
             {
-                final List<ReadRecord> reads = !fragment.isSingleGene() ? fragment.readsByLocation(se) :
-                        fragment.reads().stream()
-                                .filter(x -> positionWithin(mJunctionPositions[seIndex], x.PosStart, x.PosEnd)).collect(Collectors.toList());
+                final List<ReadRecord> reads = fragment.readsByLocation(se).stream()
+                        .filter(x -> positionWithin(mJunctionPositions[seIndex], x.PosStart, x.PosEnd)).collect(Collectors.toList());
 
                 if(reads.isEmpty())
                 {
@@ -409,26 +408,71 @@ public class FusionReadData
                     continue;
                 }
 
-                int mappedBases;
+                List<int[]> mappedCoords;
+
                 if(reads.size() == 1)
                 {
-                    mappedBases = reads.get(0).getMappedRegionCoords(false).stream().mapToInt(x -> x[SE_END] - x[SE_START]).sum();
+                    mappedCoords = reads.get(0).getMappedRegionCoords(false);
                 }
                 else
                 {
-                    final List<int[]> sharedRegions = deriveCommonRegions(
+                    mappedCoords = deriveCommonRegions(
                             reads.get(0).getMappedRegionCoords(false), reads.get(1).getMappedRegionCoords(false));
-                    mappedBases = sharedRegions.stream().mapToInt(x -> x[SE_END] - x[SE_START]).sum();
                 }
 
-                maxSplitLengths[se] = max(mappedBases, maxSplitLengths[se]);
+                int mappedBases = 0;
+
+                for(int[] coord : mappedCoords)
+                {
+                    if(mJunctionOrientations[se] == NEG_ORIENT)
+                    {
+                        if(coord[SE_END] < mJunctionPositions[se])
+                            continue;
+
+                        mappedBases += coord[SE_END] - max(mJunctionPositions[se], coord[SE_START]) + 1;
+                    }
+                    else
+                    {
+                        if(coord[SE_START] > mJunctionPositions[se])
+                            break;
+
+                        mappedBases += min(mJunctionPositions[se], coord[SE_END]) - coord[SE_START] + 1;
+                    }
+                }
+
+                mMaxSplitLengths[se] = max(mappedBases, mMaxSplitLengths[se]);
             }
         }
+    }
 
-        return maxSplitLengths;
+    public void calcJunctionDepth(final Map<String,Map<Integer,BaseDepth>> chrGeneDepthMap)
+    {
+        for (int se = SE_START; se <= SE_END; ++se)
+        {
+            if(mGeneCollections[se] == -1)
+                continue;
+
+            final Map<Integer, BaseDepth> baseDepthMap = chrGeneDepthMap.get(mChromosomes[se]);
+
+            if(baseDepthMap == null)
+                continue;
+
+            final BaseDepth baseDepth = baseDepthMap != null ? baseDepthMap.get(mGeneCollections[se]) : null;
+
+            if(baseDepth == null)
+            {
+                ISF_LOGGER.error("fusion({}) gc({}) missing base depth", this.toString(), mGeneCollections[se]);
+                continue;
+            }
+
+            int baseDepthCount = baseDepth.depthAtBase(junctionPositions()[se]);
+            mReadDepth[se] += baseDepthCount;
+        }
+
     }
 
     public int[] getReadDepth() { return mReadDepth; }
+    public int[] getMaxSplitLengths() { return mMaxSplitLengths; }
 
     public String getGeneName(int stream)
     {
@@ -455,7 +499,7 @@ public class FusionReadData
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
                 + ",SVType,NonSupp,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,MultiMapFrags,CoverageUp,CoverageDown"
-                + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions,RefReadId";
+                + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions,InitReadId";
     }
 
     public static String fusionId(int id) { return String.format("Id_%d", id); }
@@ -522,9 +566,8 @@ public class FusionReadData
         csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UPSTREAM]], splitFragments)));
         csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_DOWNSTREAM]], splitFragments)));
 
-        final int[] maxSplitLengths = maxSplitMappedLength();
-        csvData.add(String.valueOf(maxSplitLengths[mStreamIndices[FS_UPSTREAM]]));
-        csvData.add(String.valueOf(maxSplitLengths[mStreamIndices[FS_DOWNSTREAM]]));
+        csvData.add(String.valueOf(mMaxSplitLengths[mStreamIndices[FS_UPSTREAM]]));
+        csvData.add(String.valueOf(mMaxSplitLengths[mStreamIndices[FS_DOWNSTREAM]]));
 
         for (int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
         {
@@ -577,7 +620,8 @@ public class FusionReadData
             csvData.add("NONE");
         }
 
-        csvData.add(ISF_LOGGER.isDebugEnabled() ? getInitialFragment().readId() : "-");
+        // csvData.add(ISF_LOGGER.isDebugEnabled() ? getInitialFragment().readId() : "-");
+        csvData.add(getInitialFragment().readId()); // very handy for now
 
         return csvData.toString();
     }

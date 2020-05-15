@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNC
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
 import java.util.Map;
@@ -36,11 +36,9 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class FusionFragment
 {
     private final List<ReadRecord> mReads;
-    private final List<ReadRecord>[] mReadsByLocation;
     private final boolean mHasSupplementaryAlignment;
 
     private final int[] mGeneCollections;
-    private final boolean[] mInGenicRegions;
     private final String[] mChromosomes;
     private final byte[] mOrientations;
     private final int[] mJunctionPositions; // fusion junction if exists
@@ -59,12 +57,7 @@ public class FusionFragment
         mReads = reads;
         mHasSupplementaryAlignment = FusionFragmentBuilder.hasSuppAlignment(mReads);
 
-        mReadsByLocation = new List[SE_PAIR];
-        mReadsByLocation[SE_START] = Lists.newArrayList();
-        mReadsByLocation[SE_END] = Lists.newArrayList();
-
         mGeneCollections = new int[] {NON_GENIC_ID, NON_GENIC_ID};
-        mInGenicRegions = new boolean[] {true, true};
         mJunctionPositions = new int[] {-1, -1};
         mChromosomes = new String[] {"", ""};
         mJunctionOrientations = new byte[] {0, 0};
@@ -73,6 +66,7 @@ public class FusionFragment
         mJunctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
         mJunctionBases = new String[] {"", ""};
         mJunctionSpliceBases = new String[] {"", ""};
+        mLocationIds = new String[] {"", ""};
 
         mTransExonRefs = new List[SE_PAIR];
         mTransExonRefs[SE_START] = Lists.newArrayList();
@@ -80,31 +74,38 @@ public class FusionFragment
 
         mType = UNKNOWN;
 
-        FusionFragmentBuilder.setLocationData(this);
-        FusionFragmentBuilder.setJunctionData(this);
-        mLocationIds = FusionFragmentBuilder.setLocationIds(this);
+        FusionFragmentBuilder.setFragmentProperties(this);
+
+        if(mType != UNKNOWN)
+        {
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                mLocationIds[se] = formLocation(mChromosomes[se], mGeneCollections[se], true);
+            }
+        }
+
+        // FusionFragmentBuilder.setLocationData(this);
+        // FusionFragmentBuilder.setJunctionData(this);
+        // mLocationIds = FusionFragmentBuilder.setLocationIds(this);
 
         extractTranscriptExonData();
     }
 
     public String readId() { return mReads.get(0).Id; }
 
-    public final List<ReadRecord> readsByLocation(int se) { return mReadsByLocation[se]; }
     public final List<ReadRecord> reads() { return mReads; }
 
     public FusionFragmentType type() { return mType; }
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
-    public final boolean[] inGenicRegions() { return mInGenicRegions; }
     public final byte[] orientations() { return mOrientations; }
     public final String[] locationIds() { return mLocationIds; }
 
     public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 
-    public boolean isSingleGene()
+    public boolean isSingleGeneCollection()
     {
-        return mChromosomes[SE_START].equals(mChromosomes[SE_END]) && mGeneCollections[SE_START] == mGeneCollections[SE_END]
-                && mInGenicRegions[SE_START] == mInGenicRegions[SE_END];
+        return mChromosomes[SE_START].equals(mChromosomes[SE_END]) && mGeneCollections[SE_START] == mGeneCollections[SE_END];
     }
 
     public final int[] junctionPositions() { return mJunctionPositions; }
@@ -119,7 +120,7 @@ public class FusionFragment
 
     public String locationPair()
     {
-        if(isSingleGene())
+        if(isSingleGeneCollection())
             return mLocationIds[SE_START];
         else
             return String.format("%s_%s", mLocationIds[SE_START], mLocationIds[SE_END]);
@@ -147,13 +148,28 @@ public class FusionFragment
         return geneIds;
     }
 
+    public final List<ReadRecord> readsByLocation(final int se)
+    {
+        if(mType == UNKNOWN)
+            return Lists.newArrayList();
+
+        // doesn't take junctions into consideration
+        if(isSingleGeneCollection())
+            return mReads;
+
+        return mReads.stream()
+                .filter(x -> x.Chromosome.equals(mChromosomes[se]))
+                .filter(x -> x.getGeneCollectons()[SE_START] == mGeneCollections[se] || x.getGeneCollectons()[SE_END] == mGeneCollections[se])
+                .collect(Collectors.toList());
+    }
+
     private void extractTranscriptExonData()
     {
         // set transcript & exon info for each junction from each applicable read
         // only take the highest matches
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final List<ReadRecord> reads = isSingleGene() ? mReads : readsByLocation(se);
+            final List<ReadRecord> reads = readsByLocation(se);
 
             for (final ReadRecord read : reads)
             {

@@ -182,13 +182,20 @@ public class FusionFinder
             if(!isValidFragment(reads))
             {
                 ++invalidFragments;
-                mFusionWriter.writeReadData(reads, "INVALID");
+                mFusionWriter.writeReadData(reads, "INVALID_READ_COUNT");
             }
             else
             {
                 reads.forEach(x -> checkMissingGeneData(x));
 
                 FusionFragment fragment = new FusionFragment(reads);
+
+                if(fragment.type() == FusionFragmentType.UNKNOWN)
+                {
+                    ++invalidFragments;
+                    mFusionWriter.writeReadData(reads, "INVALID_FRAG");
+                    continue;
+                }
 
                 ++fragments;
 

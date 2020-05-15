@@ -69,6 +69,7 @@ public class ReadRecord
     private int mFragmentInsertSize;
     private String mSupplementaryAlignment;
     private int mSecondaryReadCount;
+    private boolean mHasInterGeneSplit;
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
 
@@ -123,6 +124,7 @@ public class ReadRecord
         mFragmentInsertSize = insertSize;
         mSupplementaryAlignment = null;
         mSecondaryReadCount = 0;
+        mHasInterGeneSplit = false;
     }
 
     public int range() { return PosEnd - PosStart; }
@@ -234,14 +236,6 @@ public class ReadRecord
 
         return false;
     }
-
-    /*
-    public static boolean isDupPair(final ReadRecord read1, final ReadRecord read2)
-    {
-        return (read1.isFirstOfPair() && read1.isReadReversed() && !read2.isReadReversed())
-            || (read2.isFirstOfPair() && read2.isReadReversed() && !read1.isReadReversed());
-    }
-    */
 
     public List<int[]> getMappedRegionCoords() { return mMappedCoords; }
 
@@ -654,6 +648,9 @@ public class ReadRecord
     {
         return Cigar.containsOperator(CigarOperator.N);
     }
+
+    public boolean hasInterGeneSplit() { return mHasInterGeneSplit; }
+    public void setHasInterGeneSplit() { mHasInterGeneSplit = true; }
 
     public boolean containsSoftClipping()
     {

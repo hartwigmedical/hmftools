@@ -137,7 +137,8 @@ public class FusionWriter
                 mReadWriter = createBufferedWriter(outputFileName, false);
                 mReadWriter.write("ReadSetCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Orientation,Cigar,InsertSize");
                 mReadWriter.write(",FirstInPair,Supplementary,ReadReversed,ProperPair,SuppAlign");
-                mReadWriter.write(",Bases,Flags,MateChr,MatePosStart,GeneSetStart,GeneSetEnd,TransExons,BestMatch,TransExonData");
+                mReadWriter.write(",Bases,Flags,MateChr,MatePosStart,GeneSetStart,GeneSetEnd,GenicStart,GenicEnd");
+                mReadWriter.write(",InterGeneSplit,TransExons,BestMatch,TransExonData");
                 mReadWriter.newLine();
             }
         }
@@ -182,8 +183,9 @@ public class FusionWriter
                     }
                 }
 
-                mReadWriter.write(String.format(",%d,%d,%d,%s,%s",
+                mReadWriter.write(String.format(",%d,%d,%s,%s,%s,%d,%s,%s",
                         read.getGeneCollectons()[SE_START], read.getGeneCollectons()[SE_END],
+                        read.getIsGenicRegion()[SE_START], read.getIsGenicRegion()[SE_END], read.hasInterGeneSplit(),
                         transExonRefCount, highestTransMatchType, transExonRefCount == 0 ? "NONE" : transExonData));
                 mReadWriter.newLine();
             }
@@ -221,7 +223,7 @@ public class FusionWriter
             final String outputFileName = mConfig.formOutputFile("chimeric_frags.csv");
 
             mFragmentWriter = createBufferedWriter(outputFileName, false);
-            mFragmentWriter.write("ReadId,ReadCount,FusionGroup,Type,SameGene,ScCount");
+            mFragmentWriter.write("ReadId,ReadCount,FusionGroup,Type,SameGeneSet,ScCount,HasSupp");
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -230,8 +232,9 @@ public class FusionWriter
                 mFragmentWriter.write(",Orient" + prefix);
                 mFragmentWriter.write(",JuncPos" + prefix);
                 mFragmentWriter.write(",JuncOrient" + prefix);
-                mFragmentWriter.write(",Region" + prefix);
                 mFragmentWriter.write(",JuncType" + prefix);
+                mFragmentWriter.write(",GeneSet" + prefix);
+                mFragmentWriter.write(",Region" + prefix);
             }
 
             mFragmentWriter.newLine();
@@ -251,16 +254,17 @@ public class FusionWriter
 
         try
         {
-            mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d",
+            mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d,%s",
                     fragment.readId(), fragment.reads().size(), fusionId, type,
-                    fragment.isSingleGene(), fragment.reads().stream().filter(x -> x.containsSoftClipping()).count()));
+                    fragment.isSingleGeneCollection(), fragment.reads().stream().filter(x -> x.containsSoftClipping()).count(),
+                    fragment.hasSuppAlignment()));
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 mFragmentWriter.write(String.format(",%s,%d,%d,%d,%s,%s",
                         fragment.chromosomes()[se], fragment.orientations()[se],
-                        fragment.junctionPositions()[se], fragment.junctionOrientations()[se],
-                        fragment.regionMatchTypes()[se], fragment.junctionTypes()[se]));
+                        fragment.junctionPositions()[se], fragment.junctionOrientations()[se], fragment.junctionTypes()[se],
+                        fragment.geneCollections()[se], fragment.regionMatchTypes()[se]));
             }
 
             mFragmentWriter.newLine();

@@ -10,9 +10,9 @@ import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonM
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_UPSTREAM;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class FusionTask implements Callable
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
     private final Map<String,List<FusionReadData>> mFusionsByGene; // keyed by the locationId
     private final Map<String,List<FusionFragment>> mDiscordantFragments; // keyed by the chromosome pair
-    private final Map<String,List<FusionFragment>> mSingleGeneFragments; // keyed by chromosome, since single-sided
+    private final Map<String,List<FusionFragment>> mRealignCandidateFragments; // keyed by chromosome, since single-sided
 
     private final FusionWriter mFusionWriter;
 
@@ -69,7 +69,7 @@ public class FusionTask implements Callable
         mFusionCandidates = Maps.newHashMap();
         mFusionsByGene = Maps.newHashMap();
         mDiscordantFragments = Maps.newHashMap();
-        mSingleGeneFragments = Maps.newHashMap();
+        mRealignCandidateFragments = Maps.newHashMap();
         mReadIds = Sets.newHashSet();
 
         mFusionWriter = fusionWriter;
@@ -137,9 +137,9 @@ public class FusionTask implements Callable
                     cacheDiscordantFragment(fragment);
                 }
             }
-            else if(fragment.isSingleGene())
+            else if(fragment.type() == REALIGN_CANDIDATE)
             {
-                cacheSingleGeneFragment(fragment);
+                cacheRealignCandidateFragment(fragment);
             }
             else
             {
@@ -149,47 +149,24 @@ public class FusionTask implements Callable
 
         ISF_LOGGER.info("{}: chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
-                mSingleGeneFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
+                mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
-    }
-
-    private void calculateReadDepth()
-    {
-        for (List<FusionReadData> fusions : mFusionCandidates.values())
-        {
-            for(FusionReadData fusionData : fusions)
-            {
-                for (int se = SE_START; se <= SE_END; ++se)
-                {
-                    if(fusionData.geneCollections()[se] == -1)
-                        continue;
-
-                    final Map<Integer,BaseDepth> baseDepthMap = mChrGeneDepthMap.get(fusionData.chromosomes()[se]);
-
-                    if(baseDepthMap == null)
-                        continue;
-
-                    final BaseDepth baseDepth = baseDepthMap != null ? baseDepthMap.get(fusionData.geneCollections()[se]) : null;
-
-                    if(baseDepth == null)
-                    {
-                        ISF_LOGGER.error("fusion({}) gc({}) missing base depth", fusionData, fusionData.geneCollections()[se]);
-                        continue;
-                    }
-
-                    int baseDepthCount = baseDepth.depthAtBase(fusionData.junctionPositions()[se]);
-                    fusionData.getReadDepth()[se] += baseDepthCount;
-                }
-            }
-        }
     }
 
     private void annotateFusions()
     {
-        ISF_LOGGER.debug("{}: marking related fusions", mTaskId);
+        ISF_LOGGER.debug("{}: annotating fusions", mTaskId);
+
         markRelatedFusions();
 
-        calculateReadDepth();
+        for (List<FusionReadData> fusions : mFusionCandidates.values())
+        {
+            for (FusionReadData fusionData : fusions)
+            {
+                fusionData.calcJunctionDepth(mChrGeneDepthMap);
+                fusionData.calcMaxSplitMappedLength();
+            }
+        }
     }
 
     private void writeData()
@@ -197,7 +174,7 @@ public class FusionTask implements Callable
         // write results
         mFusionWriter.writeFusionData(mFusionCandidates);
         mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
-        mFusionWriter.writeUnfusedFragments(mSingleGeneFragments);
+        mFusionWriter.writeUnfusedFragments(mRealignCandidateFragments);
     }
 
     private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
@@ -263,12 +240,12 @@ public class FusionTask implements Callable
             fragments.add(fragment);
     }
 
-    private void cacheSingleGeneFragment(final FusionFragment fragment)
+    private void cacheRealignCandidateFragment(final FusionFragment fragment)
     {
-        List<FusionFragment> fragments = mSingleGeneFragments.get(fragment.locationIds()[SE_START]);
+        List<FusionFragment> fragments = mRealignCandidateFragments.get(fragment.locationIds()[SE_START]);
 
         if(fragments == null)
-            mSingleGeneFragments.put(fragment.locationIds()[SE_START], Lists.newArrayList(fragment));
+            mRealignCandidateFragments.put(fragment.locationIds()[SE_START], Lists.newArrayList(fragment));
         else
             fragments.add(fragment);
     }
@@ -438,10 +415,10 @@ public class FusionTask implements Callable
 
                 for(FusionReadData fusionData : fusions)
                 {
-                    if(fusionData.canAddUnfusedFragment(fragment, mConfig.MaxFragmentLength))
+                    if(fusionData.canAddDiscordantFragment(fragment, mConfig.MaxFragmentLength))
                     {
                         // check if one of the split read ends can be realigned to support the fusion junction
-                        if(fusionData.isRelignedFragment(fragment))
+                        if(fusionData.canRelignFragmentToJunction(fragment))
                         {
                             fragment.setType(REALIGNED);
                         }
@@ -507,10 +484,10 @@ public class FusionTask implements Callable
 
                 for(FusionReadData fusionData : fusions)
                 {
-                    if(fusionData.canAddUnfusedFragment(fragment, mConfig.MaxFragmentLength))
+                    if(fusionData.canAddDiscordantFragment(fragment, mConfig.MaxFragmentLength))
                     {
                         // check if one of the split read ends can be realigned to support the fusion junction
-                        if(fusionData.isRelignedFragment(fragment))
+                        if(fusionData.canRelignFragmentToJunction(fragment))
                         {
                             fragment.setType(REALIGNED);
                         }
@@ -531,7 +508,7 @@ public class FusionTask implements Callable
 
     private void assignRealignedFragments()
     {
-        for(Map.Entry<String,List<FusionFragment>> entry : mSingleGeneFragments.entrySet())
+        for(Map.Entry<String,List<FusionFragment>> entry : mRealignCandidateFragments.entrySet())
         {
             final List<FusionReadData> fusions = mFusionsByGene.get(entry.getKey());
 
@@ -544,13 +521,9 @@ public class FusionTask implements Callable
 
             for (FusionFragment fragment : fragments)
             {
-                // no need to check trans-exon matches since will look after covering the exact base of the junction instead
-                // if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
-                //    continue;
-
                 for(FusionReadData fusionData : fusions)
                 {
-                    if(fusionData.isRelignedFragment(fragment))
+                    if(fusionData.canRelignFragmentToJunction(fragment))
                     {
                         fragment.setType(REALIGNED);
                         fusionData.addFusionFragment(fragment);
@@ -568,7 +541,7 @@ public class FusionTask implements Callable
         mNextFusionId = 0;
         mFusionCandidates.clear();
         mDiscordantFragments.clear();
-        mSingleGeneFragments.clear();
+        mRealignCandidateFragments.clear();
         mReadIds.clear();
     }
 
