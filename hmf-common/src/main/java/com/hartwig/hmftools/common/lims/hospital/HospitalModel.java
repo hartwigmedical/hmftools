@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.lims.hospital;
 
 import java.util.Map;
 
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.LogManager;
@@ -58,9 +59,9 @@ public abstract class HospitalModel {
         }
 
         return ImmutableHospitalData.builder()
-                .hospitalPI(contact != null ? contact.hospitalPI() : null)
-                .requesterName(requesterName)
-                .requesterEmail(requesterEmail)
+                .hospitalPI(contact != null ? contact.hospitalPI() : Lims.NOT_AVAILABLE_STRING)
+                .requesterName(requesterName != null ? requesterName : Lims.NOT_AVAILABLE_STRING)
+                .requesterEmail(requesterEmail != null ? requesterEmail : Lims.NOT_AVAILABLE_STRING)
                 .hospitalName(address.hospitalName())
                 .hospitalAddress(address.hospitalZip() + " " + address.hospitalCity())
                 .build();

@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.lims.Lims;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -18,15 +19,15 @@ public class HospitalModelTest {
 
         HospitalData dataCPCT = model.queryHospitalData("CPCT02010001T", "coreRequester", "coreRequesterEmail");
         assertEquals("CPCT-PI", dataCPCT.hospitalPI());
-        assertNull(dataCPCT.requesterName());
-        assertNull(dataCPCT.requesterEmail());
+        assertEquals(Lims.NOT_AVAILABLE_STRING, dataCPCT.requesterName());
+        assertEquals(Lims.NOT_AVAILABLE_STRING, dataCPCT.requesterEmail());
         assertEquals("HMF", dataCPCT.hospitalName());
         assertEquals("1000 AB AMSTERDAM", dataCPCT.hospitalAddress());
 
         HospitalData dataDRUP = model.queryHospitalData("DRUP02010001T", "coreRequester", "coreRequesterEmail");
         assertEquals("DRUP-PI", dataDRUP.hospitalPI());
-        assertNull(dataDRUP.requesterName());
-        assertNull(dataDRUP.requesterEmail());
+        assertEquals(Lims.NOT_AVAILABLE_STRING, dataDRUP.requesterName());
+        assertEquals(Lims.NOT_AVAILABLE_STRING, dataDRUP.requesterEmail());
         assertEquals("HMF", dataDRUP.hospitalName());
         assertEquals("1000 AB AMSTERDAM", dataDRUP.hospitalAddress());
 
@@ -38,14 +39,14 @@ public class HospitalModelTest {
         assertEquals("1000 AB AMSTERDAM", dataWIDE.hospitalAddress());
 
         HospitalData dataCORE = model.queryHospitalData("CORE02010001T", "coreRequester", "coreRequesterEmail");
-        assertNull(dataCORE.hospitalPI());
+        assertEquals(Lims.NOT_AVAILABLE_STRING, dataCORE.hospitalPI());
         assertEquals("coreRequester", dataCORE.requesterName());
         assertEquals("coreRequesterEmail", dataCORE.requesterEmail());
         assertEquals("HMF", dataCORE.hospitalName());
         assertEquals("1000 AB AMSTERDAM", dataCORE.hospitalAddress());
 
         HospitalData dataCOREManuallyMapped = model.queryHospitalData("CORE18123456T", "coreRequester", "coreRequesterEmail");
-        assertNull(dataCOREManuallyMapped.hospitalPI());
+        assertEquals(Lims.NOT_AVAILABLE_STRING, dataCOREManuallyMapped.hospitalPI());
         assertEquals("coreRequester", dataCOREManuallyMapped.requesterName());
         assertEquals("coreRequesterEmail", dataCOREManuallyMapped.requesterEmail());
         assertEquals("HMF", dataCOREManuallyMapped.hospitalName());

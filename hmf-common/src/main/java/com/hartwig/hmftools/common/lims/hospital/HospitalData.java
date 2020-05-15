@@ -9,15 +9,16 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HospitalData {
 
-    // A PI is generally only defined in context of a study (CPCT / DRUP etc)
-    @Nullable
+    // A PI is generally only defined in context of a study (CPCT / DRUP etc). Otherwise NOT_AVAILABLE
+    @NotNull
     public abstract String hospitalPI();
 
-    // A requester is generally only defined in context of a specific submission (CORE etc).
-    @Nullable
+    // A requester is generally only defined in context of a specific submission (CORE etc). Otherwise NOT_AVAILABLE
+    @NotNull
     public abstract String requesterName();
 
-    @Nullable
+    // A requester is generally only defined in context of a specific submission (CORE etc). Otherwise NOT_AVAILABLE
+    @NotNull
     public abstract String requesterEmail();
 
     @NotNull
