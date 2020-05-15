@@ -71,10 +71,13 @@ abstract class LimsJsonSampleData {
     @SerializedName("hospital_pa_sample_id")
     public abstract String hospitalPathologySampleId();
 
-    // Choice regarding reporting of germline findings is only used in WIDE/CORE projects
+    @SerializedName("report_germline")
+    public abstract boolean reportGermlineVariants();
+
+    // Choice regarding reporting of germline findings is only used in WIDE projects
     @Nullable
-    @SerializedName("germline_findings")
-    public abstract String germlineReportingChoice();
+    @SerializedName("report_germline_level")
+    public abstract String germlineReportingLevel();
 
     @NotNull
     @SerializedName("lab_sop_versions")

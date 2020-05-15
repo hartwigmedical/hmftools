@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_COUNT;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
@@ -59,6 +60,7 @@ public class SageVariantContextFactory {
         final VariantContextBuilder builder = new VariantContextBuilder().chr(variant.chromosome())
                 .start(variant.position())
                 .attribute(READ_CONTEXT, counter.toString())
+                .attribute(READ_CONTEXT_EVENTS, variant.minNumberOfEvents())
                 .log10PError(variant.totalQuality() / -10d)
                 .source("SAGE")
                 .computeEndFromAlleles(alleles, (int) variant.position())

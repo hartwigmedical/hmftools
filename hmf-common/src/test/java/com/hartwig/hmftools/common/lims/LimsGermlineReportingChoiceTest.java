@@ -7,33 +7,34 @@ import org.junit.Test;
 public class LimsGermlineReportingChoiceTest {
 
     @Test
-    public void canExtractGermlineChoice() {
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("1: Behandelbare toevalsbevindingen", "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("2: Alle toevalsbevindingen", "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
+    public void canExtractGermlineLevel() {
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsInputs(true, "1: Behandelbare toevalsbevindingen", "WIDE02991111T"));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsInputs(true, "2: Alle toevalsbevindingen", "WIDE02991111T"));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsInputs(true,
                         "3: Geen toevalsbevindingen; familie mag deze wel opvragen",
                         "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("3: Geen toevalsbevindingen", "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsInputs(true, "3: Geen toevalsbevindingen", "WIDE02991111T"));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsInputs(true,
                         "4: Geen toevalsbevindingen; familie mag deze niet opvragen",
                         "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.NO_REPORTING,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "CPCT02991111T"));
-        assertEquals(LimsGermlineReportingChoice.NO_REPORTING,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "DRUP02991111T"));
-        assertEquals(LimsGermlineReportingChoice.NO_REPORTING,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "COLO02991111T"));
-        assertEquals(LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "CORE02991111T"));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, LimsGermlineReportingLevel.fromLimsInputs(false, "", "CPCT02991111T"));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, LimsGermlineReportingLevel.fromLimsInputs(false, "", "DRUP02991111T"));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, LimsGermlineReportingLevel.fromLimsInputs(false, "", "COLO02991111T"));
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsInputs(true, "", "CORE02991111T"));
+
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, LimsGermlineReportingLevel.fromLimsInputs(false, "", "CORE02991111T"));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsInputs(false, "3: Geen toevalsbevindingen", "WIDE02991111T"));
     }
 
     @Test(expected = IllegalStateException.class)
     public void hasUnknownGermlineChoice() {
-        LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("ALL", "WIDE02991111T");
+        LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "WIDE02991111T");
     }
 }

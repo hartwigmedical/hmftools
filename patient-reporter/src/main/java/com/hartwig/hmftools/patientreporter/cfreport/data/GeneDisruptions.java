@@ -13,7 +13,7 @@ public final class GeneDisruptions {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> sort(@NotNull final List<ReportableGeneDisruption> disruptions) {
+    public static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
             String locationAndGene1 = GeneUtil.zeroPrefixed(disruption1.location()) + disruption1.gene();
             String locationAndGene2 = GeneUtil.zeroPrefixed(disruption2.location()) + disruption2.gene();

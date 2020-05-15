@@ -15,19 +15,17 @@ import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordAnalyzer;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.HospitalQuery;
-import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
+import com.hartwig.hmftools.common.lims.hospital.HospitalData;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.purple.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
@@ -73,7 +71,6 @@ public class JsonSerializer {
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        ChordAnalyzer chordAnalyzer = createCOLO829ChordAnalysis();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         return ImmutableAnalysedPatientReport.builder()
@@ -88,30 +85,35 @@ public class JsonSerializer {
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(0.11)
+                .microsatelliteStatus(MicrosatelliteStatus.MSS)
                 .tumorMutationalLoad(180)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.HIGH)
                 .tumorMutationalBurden(13.6)
-                .chordAnalyzer(chordAnalyzer)
+                .chordHrdValue(0D)
+                .chordHrdStatus(ChordStatus.fromHRD(0D))
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(reportableHomozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath("path/to/circos.jpg")
-                .signaturePath("path/to/signature.jpg")
-                .logoRVAPath("path/to/rva_logo.jpg")
-                .logoCompanyPath("path/to/company_log.jpg")
                 .isCorrectedReport(false)
                 .isUnofficialReport(false)
                 .comments(Optional.of("This is a test report and is based off COLO829"))
+                .signaturePath("path/to/signature.jpg")
+                .logoRVAPath("path/to/rva_logo.jpg")
+                .logoCompanyPath("path/to/company_log.jpg")
                 .build();
     }
 
     @NotNull
-    private static HospitalQuery hospitalQuery(){
-        return ImmutableHospitalQuery.builder()
-                .hospitalPI(Strings.EMPTY)
-                .analyseRequestName("Paul")
-                .analyseRequestEmail("paul@hartwig.com")
+    private static HospitalData createTestHospitalData(){
+        return ImmutableHospitalData.builder()
+                .hospitalPI("PI")
+                .requesterName("Paul")
+                .requesterEmail("paul@hartwig.com")
+                .hospitalName("Hospital Name")
+                .hospitalAddress("1000AB, Amsterdam")
                 .build();
     }
 
@@ -131,10 +133,10 @@ public class JsonSerializer {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .hospitalQuery(hospitalQuery())
                 .cohort("TEST")
                 .projectName("TEST")
                 .submissionId("10")
+                .hospitalData(createTestHospitalData())
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")
                 .build();
@@ -509,22 +511,6 @@ public class JsonSerializer {
                 .build();
 
         return Lists.newArrayList(gainLoss1);
-    }
-
-    @NotNull
-    private static ChordAnalyzer createCOLO829ChordAnalysis() {
-        double brca1Value = 0D;
-        double brca2Value = 0D;
-
-        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
-                .noneValue(1 - (brca1Value + brca2Value))
-                .BRCA1Value(brca1Value)
-                .BRCA2Value(brca2Value)
-                .hrdValue(brca1Value + brca2Value)
-                .predictedResponseValue(brca1Value + brca2Value > 0.5)
-                .build();
-        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRP).build();
-
     }
 
     @NotNull

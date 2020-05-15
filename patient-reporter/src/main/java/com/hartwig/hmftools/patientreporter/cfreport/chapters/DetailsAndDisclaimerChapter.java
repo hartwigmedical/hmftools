@@ -60,12 +60,19 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
         String addressee;
-        if (sampleReport.hospitalQuery().fullHospitalString() != null) {
-            addressee = sampleReport.hospitalQuery().fullHospitalString();
+        if (sampleReport.hospitalData().hospitalAddress() != null) {
+            addressee = sampleReport.hospitalData().hospitalAddress();
             assert addressee != null;
         } else {
             LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
             addressee = DataUtil.NA_STRING;
+        }
+
+        String contact;
+        if (study == LimsStudy.CORE) {
+            contact = addressee;
+        } else {
+            contact = sampleReport.hospitalData().hospitalPI() + ", " + addressee;
         }
 
         Paragraph sampleIdentificationLineOnReport;
@@ -103,7 +110,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 sampleReport.refSampleBarcode()));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
-        div.add(createContentParagraph("This report is addressed at: ", addressee));
+        div.add(createContentParagraph("This report is addressed at: ", contact));
 
         if (study == LimsStudy.CORE) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
@@ -167,9 +174,10 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The requester is: ").add(new Text(sampleReport.hospitalQuery().analyseRequestName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+        return createContentParagraph("The requester is: ").add(new Text(sampleReport.hospitalData().requesterName()).addStyle(
+                ReportResources.smallBodyBoldTextStyle()))
                 .add("(")
-                .add(new Text(sampleReport.hospitalQuery().analyseRequestEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(new Text(sampleReport.hospitalData().requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(")")
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }

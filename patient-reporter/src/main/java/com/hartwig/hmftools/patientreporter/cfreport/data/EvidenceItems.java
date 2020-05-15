@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class EvidenceItems {
 
@@ -16,7 +16,7 @@ public final class EvidenceItems {
     }
 
     @NotNull
-    public static List<EvidenceItem> sort(@NotNull final List<EvidenceItem> evidenceItems) {
+    public static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
             if (item1.level().equals(item2.level())) {
                 if (item1.event().equals(item2.event())) {
@@ -31,7 +31,7 @@ public final class EvidenceItems {
     }
 
     @NotNull
-    public static String sourceUrl(@NotNull final EvidenceItem item) {
+    public static String sourceUrl(@NotNull EvidenceItem item) {
         String source = item.source().sourceName();
         String reference = item.reference();
         String gene = item.event();
@@ -50,7 +50,7 @@ public final class EvidenceItems {
         }
     }
 
-    public static int uniqueEventCount(@NotNull final List<EvidenceItem> evidenceItems) {
+    public static int uniqueEventCount(@NotNull List<EvidenceItem> evidenceItems) {
         Set<String> events = Sets.newHashSet();
         for (EvidenceItem evidence : evidenceItems) {
             events.add(evidence.event());
@@ -58,7 +58,7 @@ public final class EvidenceItems {
         return events.size();
     }
 
-    public static int uniqueTherapyCount(@NotNull final List<EvidenceItem> evidenceItems) {
+    public static int uniqueTherapyCount(@NotNull List<EvidenceItem> evidenceItems) {
         Set<String> drugs = Sets.newHashSet();
         for (EvidenceItem evidence : evidenceItems) {
             drugs.add(evidence.drug());

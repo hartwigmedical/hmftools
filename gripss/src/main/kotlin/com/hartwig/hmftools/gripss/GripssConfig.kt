@@ -16,4 +16,5 @@ data class GripssFilterConfig(
         val maxHomLength: Int,
         val maxHomLengthShortInversion: Int,
         val maxInexactHomLength: Int,
-        val maxInexactHomLengthShortDel: Int)
+        val maxInexactHomLengthShortDel: Int,
+        val minSize: Int)

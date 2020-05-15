@@ -33,6 +33,7 @@ public class ReadContextCounterFactory {
                         qualityRecalibrationMap.get(sample),
                         x.tier(),
                         maxCoverage(x),
+                        x.minNumberOfEvents(),
                         x.maxReadDepth() < config.maxRealignmentDepth()))
                 .collect(Collectors.toList());
     }

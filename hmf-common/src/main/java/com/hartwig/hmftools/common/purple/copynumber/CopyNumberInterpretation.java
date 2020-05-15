@@ -24,15 +24,15 @@ public enum CopyNumberInterpretation {
     }
 
     @NotNull
-    public static CopyNumberInterpretation fromCNADriver(@NotNull DriverCatalog copyNumber) {
-        if (copyNumber.driver() == DriverType.AMP) {
+    public static CopyNumberInterpretation fromCNADriver(@NotNull DriverCatalog cnaDriver) {
+        if (cnaDriver.driver() == DriverType.AMP) {
             return GAIN;
         }
 
-        if (copyNumber.driver() == DriverType.DEL) {
-            return Doubles.greaterThan(copyNumber.maxCopyNumber(), 0.5) ? PARTIAL_LOSS : FULL_LOSS;
+        if (cnaDriver.driver() == DriverType.DEL) {
+            return Doubles.greaterThan(cnaDriver.maxCopyNumber(), 0.5) ? PARTIAL_LOSS : FULL_LOSS;
         }
 
-        throw new IllegalStateException("Driver not an AMP or DEL: " + copyNumber);
+        throw new IllegalStateException("Driver not an AMP or DEL: " + cnaDriver);
     }
 }

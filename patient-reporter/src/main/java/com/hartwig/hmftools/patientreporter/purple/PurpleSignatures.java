@@ -13,12 +13,12 @@ public abstract class PurpleSignatures {
 
     public abstract double microsatelliteIndelsPerMb();
 
+    @NotNull
+    public abstract MicrosatelliteStatus microsatelliteStatus();
+
     public abstract double tumorMutationalBurdenPerMb();
 
     public abstract int tumorMutationalLoad();
-
-    @NotNull
-    public abstract MicrosatelliteStatus microsatelliteStatus();
 
     @NotNull
     public abstract TumorMutationalStatus tumorMutationalLoadStatus();

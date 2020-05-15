@@ -4,8 +4,13 @@ import kotlin.math.abs
 
 data class Single(
         override val insertSequence: String,
-        val startOrientation: Byte)
-    : VariantType()
+        override val startOrientation: Byte)
+    : VariantType() {
+
+    override fun alt(): String {
+        return if (startOrientation == 1.toByte()) ".${insertSequence}" else "${insertSequence}."
+    }
+}
 
 data class Translocation(
         override val insertSequence: String,
@@ -52,12 +57,18 @@ data class Insertion(
 sealed class Paired : VariantType() {
     abstract val otherChromosome: String
     abstract val otherPosition: Int
-    abstract val startOrientation: Byte
     abstract val endOrientation: Byte
+
+    override fun alt(): String {
+        return if (startOrientation == 1.toByte()) ".${insertSequence}" else "${insertSequence}."
+    }
 }
 
 sealed class VariantType {
     abstract val insertSequence: String
+    abstract val startOrientation: Byte
+
+    abstract fun alt(): String
 
     companion object Factory {
         private const val BREAKPOINT_REGEX = "^(.*)([\\[\\]])(.+)[\\[\\]](.*)\$"

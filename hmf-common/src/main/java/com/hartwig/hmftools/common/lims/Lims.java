@@ -5,8 +5,8 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.hospital.HospitalModel;
-import com.hartwig.hmftools.common.hospital.HospitalQuery;
+import com.hartwig.hmftools.common.lims.hospital.HospitalData;
+import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +18,7 @@ public class Lims {
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     public static final String NOT_AVAILABLE_STRING = "N/A";
+    public static final String NOT_PERFORMED_STRING = "not performed";
     static final String NOT_DETERMINED_STRING = "not determined";
 
     @NotNull
@@ -188,11 +189,11 @@ public class Lims {
                         }
                     }
                 } else {
-                    return NOT_DETERMINED_STRING;
+                    return NOT_PERFORMED_STRING;
                 }
             }
         }
-        return NOT_AVAILABLE_STRING;
+        return NOT_PERFORMED_STRING;
     }
 
     @NotNull
@@ -254,15 +255,38 @@ public class Lims {
     }
 
     @NotNull
-    public LimsGermlineReportingChoice germlineReportingChoice(@NotNull String sampleBarcode) {
+    public LimsGermlineReportingLevel germlineReportingChoice(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
-            String germlineReportingChoiceString = sampleData.germlineReportingChoice();
-            return germlineReportingChoiceString != null ? LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
-                    germlineReportingChoiceString,
-                    sampleId(sampleBarcode)) : LimsGermlineReportingChoice.NO_REPORTING;
+            String germlineReportingLevelString = sampleData.germlineReportingLevel();
+            return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
+                    germlineReportingLevelString,
+                    sampleId(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
         } else {
-            return LimsGermlineReportingChoice.NO_REPORTING;
+            return LimsGermlineReportingLevel.NO_REPORTING;
+        }
+    }
+
+    public boolean reportGermlineVariants(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+
+        if (sampleData != null) {
+            LimsStudy study = LimsStudy.fromSampleId(sampleId(sampleBarcode));
+            if (sampleData.reportGermlineVariants()) {
+                if (study == LimsStudy.CPCT || study == LimsStudy.DRUP) {
+                    LOGGER.warn("Consent of report germline variants is true, but must be false at study CPCT/DRUP for sample '{}'",
+                            sampleId(sampleBarcode));
+                }
+                return true;
+            } else {
+                if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+                    LOGGER.warn("Consent of report germline variants is false, but must be true at study CORE/WIDE for sample '{}'",
+                            sampleId(sampleBarcode));
+                }
+                return false;
+            }
+        } else {
+            return false;
         }
     }
 
@@ -273,12 +297,14 @@ public class Lims {
             LimsStudy study = LimsStudy.fromSampleId(sampleId(sampleBarcode));
             if (sampleData.reportViralInsertions()) {
                 if (study == LimsStudy.DRUP || study == LimsStudy.CPCT) {
-                    LOGGER.warn("Consent of viral insertions is true, but must be false for CPCT/DRUP!");
+                    LOGGER.warn("Consent of viral insertions is true, but must be false at study CPCT/DRUP for sample '{}'",
+                            sampleId(sampleBarcode));
                 }
                 return true;
             } else {
                 if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
-                    LOGGER.warn("Consent of viral insertions is false, but must be true for WIDE/CORE!");
+                    LOGGER.warn("Consent of viral insertions is false, but must be true at study CORE/WIDE for sample '{}'",
+                            sampleId(sampleBarcode));
                 }
                 return false;
             }
@@ -294,8 +320,8 @@ public class Lims {
     }
 
     @NotNull
-    public HospitalQuery hospitalQuery(@NotNull String sampleId, @NotNull String tumorBarcode) {
-        return hospitalModel.generateHospitalQuery(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
+    public HospitalData hospitalData(@NotNull String tumorBarcode) {
+        return hospitalModel.queryHospitalData(sampleId(tumorBarcode), requesterName(tumorBarcode), requesterEmail(tumorBarcode));
     }
 
     @Nullable

@@ -20,15 +20,15 @@ import org.jetbrains.annotations.NotNull;
 
 final class TherapyDetailsChapterFunctions {
 
-    private final static float COL_WIDTH_VARIANT = 110;
-    private final static float COL_WIDTH_MATCH = 60;
-    private final static float COL_WIDTH_DRUG_ICONS = 25;
-    private final static float COL_WIDTH_DRUG_LIST = 180;
-    private final static float COL_WIDTH_LEVEL = 42;
-    private final static float COL_WIDTH_RESPONSE = 75;
-    private final static float COL_WIDTH_SOURCE = 40;
+    private static final float COL_WIDTH_VARIANT = 110;
+    private static final float COL_WIDTH_MATCH = 60;
+    private static final float COL_WIDTH_DRUG_ICONS = 25;
+    private static final float COL_WIDTH_DRUG_LIST = 180;
+    private static final float COL_WIDTH_LEVEL = 42;
+    private static final float COL_WIDTH_RESPONSE = 75;
+    private static final float COL_WIDTH_SOURCE = 40;
 
-    private final static String TREATMENT_DELIMITER = " + ";
+    private static final String TREATMENT_DELIMITER = " + ";
 
     private TherapyDetailsChapterFunctions() {
     }

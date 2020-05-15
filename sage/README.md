@@ -291,28 +291,43 @@ There are a number of constraints to penalise the quality:
   2. if the read encompasses more than one variant, or
   3. if the ProperPair flag (0x02) is not set 
 
-The quality is incremented as follows:
+To do this we first calculate a modified base quality as follows:
 
+<pre>
 distanceFromReadEdge = minimum distance from either end of the complete read context to the edge of the read  
 baseQuality (SNV/MNV) = BASEQ at variant location(s)  
 baseQuality (Indel) = min BASEQ over core read context  
 modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty (12)` , 3 * distanceFromReadEdge) 
+</pre>
 
+We also modify the map quality taking into account the number of events, soft clipping and improper pair annotation:
+
+<pre>
 readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs count as only 1 event
+distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)`^ 
 improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if proper pair flag not set else 0  
-distanceFromReference = number of somatic alterations to get to reference from the complete read context  
-distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)` 
 modifiedMapQuality = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty  
 
+^ note that for the 6 highly polymorphic HLA genes (HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DQR1) we do not apply the distance from reference penalty
+</pre>
+
+We then take the minimum of the 2 modified qualities as the read contribution to the total quality: 
+
+<pre>
 matchQuality += max(0, min(modifiedMapQuality, modifiedBaseQuality))
+</pre>
 
 A 'jitter penalty' is also calculated.  The jitter penalty is meant to model common sequencing errors whereby a repeat can be extended or contracted by 1 repeat unit.  Weakly supported variants with read contexts which differ by only 1 repeat from a true read context found in the tumor with a lot of support may be artefacts of these sequencing errors and are penalised.  If a `LENGTHENED` or `SHORTENED` jitter match is made we increment the jitter penalty as a function of the count of the repeat sequence in the microsatellite:
 
-`JITTER_PENALTY` += `jitterPenalty (0.25)`  * max(0, repeatCount - `jitterMinRepeatCount (3)` )
+<pre>
+`JITTER_PENALTY` += `jitterPenalty (0.25)`  * max(0, repeatCount - `jitterMinRepeatCount (3)`)
+</pre>
 
 The final quality score also takes into account jitter and is calculated as:
 
+<pre>
 `QUAL` =  matchQuality - `JITTER_PENALTY`
+</pre>
 
 ### Output
 

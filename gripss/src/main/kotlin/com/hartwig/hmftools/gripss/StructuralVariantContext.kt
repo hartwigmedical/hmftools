@@ -12,20 +12,37 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         private val polyC = "C".repeat(16);
     }
 
+    val contig = context.contig!!
+
+    val imprecise = context.imprecise()
     val variantType = context.toVariantType()
+    val orientation = variantType.startOrientation
     val isSingle = variantType is Single
     val isShortDup = variantType is Duplication && variantType.length < SHORT_EVENT_SIZE
     val isShortDel = variantType is Deletion && variantType.length < SHORT_EVENT_SIZE
     val isShortIns = variantType is Insertion && variantType.length < SHORT_EVENT_SIZE
     val isShort = isShortDup || isShortDel || isShortIns
+    val vcfId: String = context.id
+    val mateId: String? = context.mate();
 
+    val start = context.start
+    val confidenceInterval = context.confidenceInterval();
+    private val minStart = start + confidenceInterval.first;
+    private val maxStart = start + confidenceInterval.second;
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
-    private val mateId: String? = context.mateId();
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 
-    fun context(config: GripssFilterConfig): VariantContext {
+    fun confidenceIntervalsOverlap(other: StructuralVariantContext): Boolean {
+        return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
+    }
+
+    fun context(config: GripssFilterConfig, localLink: String, remoteLink: String): VariantContext {
         val builder = VariantContextBuilder(context).filters()
+
+        builder.attribute(TAF, tumorAF)
+                .attribute(LOCAL_LINKED_BY, localLink)
+                .attribute(REMOTE_LINKED_BY, remoteLink)
 
         if (normalCoverageFilter(config.minNormalCoverage)) {
             builder.filter(MIN_NORMAL_COVERAGE)
@@ -83,8 +100,19 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             builder.filter(BREAK_END_ASSEMBLY_READ_PAIR)
         }
 
-        return builder.attribute(TAF, tumorAF).make()
+        if (minSizeFilter(config.minSize)) {
+            builder.filter(MIN_SIZE)
+        }
+
+        if (builder.filters.isEmpty()) {
+            builder.filter(PASS)
+        }
+
+        return builder.make()
     }
+
+
+    fun assemblies(): List<String> = context.assemblies();
 
     fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupport)
 
@@ -97,6 +125,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return isSingle && variantType.insertSequence.contains(polyG) || variantType.insertSequence.contains(polyC)
     }
 
+    fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
+        return !isSingle && !isShortDup && context.inexactHomologyLength() > maxInexactHomLength
+    }
+
     fun inexactHomologyLengthShortDelFilter(maxInexactHomLength: Int, minDelLength: Int = 100, maxDelLength: Int = 800): Boolean {
         return variantType is Deletion && variantType.length >= minDelLength && variantType.length <= maxDelLength && context.inexactHomologyLength() > maxInexactHomLength;
     }
@@ -105,16 +137,22 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return isSingle && context.breakendAssemblyReadPairs() == 0
     }
 
+    fun minSizeFilter(minSize: Int): Boolean {
+        return when (variantType) {
+            is Deletion -> variantType.length + variantType.insertSequence.length - 1 < minSize
+            is Insertion -> variantType.length + variantType.insertSequence.length + 1 < minSize
+            is Duplication -> variantType.length + variantType.insertSequence.length < minSize
+            else -> false
+        }
+    }
+
+
     fun homologyLengthFilter(maxHomLength: Int): Boolean {
         return !isSingle && context.homologyLength() > maxHomLength
     }
 
     fun homologyLengthFilterShortInversion(maxHomLength: Int, maxInversionLength: Int = 40): Boolean {
         return variantType is Inversion && variantType.length <= maxInversionLength && context.homologyLength() > maxHomLength
-    }
-
-    fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
-        return !isSingle && !isShortDup && context.inexactHomologyLength() > maxInexactHomLength
     }
 
     fun shortSplitReadTumorFilter(): Boolean {
@@ -126,7 +164,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     }
 
     fun longDPSupportFilter(): Boolean {
-        return !isShort
+        return !isSingle && !isShort
                 && normalGenotype.readPairs() == 0
                 && normalGenotype.assemblyReadPairs() == 0
                 && tumorGenotype.readPairs() == 0
@@ -151,7 +189,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         val ref = normalGenotype.refSupportRead()
         val refPair = normalGenotype.refSupportReadPair()
 
-        return supportingFragments + ref + refPair > minNormalCoverage
+        return supportingFragments + ref + refPair < minNormalCoverage
     }
 
     fun normalSupportFilter(maxNormalSupport: Double): Boolean {
@@ -161,16 +199,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return normalSupport > maxNormalSupport * tumorSupport;
     }
 
-
-    private fun VariantContext.mateId(): String? {
-        if (this.hasAttribute("MATE_ID")) {
-            return this.getAttributeAsString("MATE_ID", "")
-        }
-
-        if (this.hasAttribute("PAR_ID")) {
-            return this.getAttributeAsString("PAR_ID", "")
-        }
-
-        return null
+    override fun toString(): String {
+        return "${context.id} ${context.contig}:${context.start} ${context.alleles[0].displayString} > ${context.alleles[1].displayString}"
     }
 }

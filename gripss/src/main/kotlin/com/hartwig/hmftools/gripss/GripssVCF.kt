@@ -3,12 +3,9 @@ package com.hartwig.hmftools.gripss
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.writer.Options
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
-import htsjdk.variant.vcf.VCFFilterHeaderLine
-import htsjdk.variant.vcf.VCFHeader
-import htsjdk.variant.vcf.VCFHeaderLineType
-import htsjdk.variant.vcf.VCFInfoHeaderLine
+import htsjdk.variant.vcf.*
 
-const val TAF = "TAF";
+
 const val MIN_QUAL = "minQual";
 const val IMPRECISE = "imprecise";
 const val MIN_TUMOR_AF = "minTumorAF";
@@ -27,6 +24,12 @@ const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
 const val BREAK_END_ASSEMBLY_READ_PAIR = "breakendAssemblyReadPair"
 
 const val PON = "PON"
+const val PASS = "PASS"
+const val MIN_SIZE = "minSize"
+
+const val TAF = "TAF";
+const val LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
+const val REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
 
 class GripssVCF(outputVCF: String) : AutoCloseable {
     val writer = VariantContextWriterBuilder().setOutputFile(outputVCF).unsetOption(Options.INDEX_ON_THE_FLY).build()
@@ -39,6 +42,7 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         //        ##FILTER=<ID=NO_ASRP,Description="Breakend supported by 0 assembled read pairs">
         //        ##FILTER=<ID=cohortMinSize,Description="Variant is smaller than the minimum event size considered for this cohort">
 
+        header.addMetaDataLine(VCFFilterHeaderLine(MIN_SIZE, "Event is too short"))
         header.addMetaDataLine(VCFFilterHeaderLine(BREAK_END_ASSEMBLY_READ_PAIR, "Breakend supported by 0 assembled read pairs"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_HOM_LENGTH, "Breakpoint homology length too long"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH, "Inexact breakpoint homology length too long"))
@@ -55,7 +59,11 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_QUAL, "Insufficient quality"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artefact"))
         header.addMetaDataLine(VCFFilterHeaderLine(IMPRECISE, "Imprecise variant"))
+        header.addMetaDataLine(VCFFilterHeaderLine(PASS, "Variant passes all filters"))
         header.addMetaDataLine(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Description"))
+        header.addMetaDataLine(VCFInfoHeaderLine(LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Breakend linking information"))
+        header.addMetaDataLine(VCFInfoHeaderLine(REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend linking information"))
+
         writer.writeHeader(header)
     }
 

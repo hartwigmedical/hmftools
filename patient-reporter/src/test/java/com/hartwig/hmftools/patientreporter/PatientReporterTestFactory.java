@@ -3,11 +3,16 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
+import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
+import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -17,6 +22,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.purple.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.driver.ImmutableDriverGeneView;
@@ -140,6 +146,31 @@ public final class PatientReporterTestFactory {
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0D)
                 .notifyClinicalGeneticist(false);
+    }
+
+    @NotNull
+    public static ImmutableReportableGainLoss.Builder createTestReportableGainLossBuilder() {
+        return ImmutableReportableGainLoss.builder()
+                .chromosome("1")
+                .chromosomeBand("band")
+                .gene(Strings.EMPTY)
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS);
+    }
+
+    @NotNull
+    public static ImmutableEvidenceItem.Builder createTestEvidenceBuilder() {
+        return ImmutableEvidenceItem.builder()
+                .event(Strings.EMPTY)
+                .source(ActionabilitySource.CIVIC)
+                .reference(Strings.EMPTY)
+                .drug(Strings.EMPTY)
+                .drugsType(Strings.EMPTY)
+                .level(EvidenceLevel.LEVEL_A)
+                .response(Strings.EMPTY)
+                .isOnLabel(false)
+                .cancerType(Strings.EMPTY)
+                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull

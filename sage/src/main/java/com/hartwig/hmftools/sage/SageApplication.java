@@ -116,7 +116,7 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-        //        createChromosomePipeline("1", recalibrationMap).process(50084006, 50084106);
+//                createChromosomePipeline("10", recalibrationMap).process(130404941, 130405950);
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
         LOGGER.info("Completed in {} seconds", timeTaken / 1000);

@@ -42,7 +42,7 @@ class PageEventHandler implements IEventHandler {
     public void handleEvent(@NotNull Event event) {
         PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
         if (documentEvent.getType().equals(PdfDocumentEvent.START_PAGE)) {
-            final PdfPage page = documentEvent.getPage();
+            PdfPage page = documentEvent.getPage();
 
             header.renderHeader(chapterTitle, firstPageOfChapter, page);
             if (firstPageOfChapter) {
@@ -79,7 +79,7 @@ class PageEventHandler implements IEventHandler {
             outline = pdf.getOutlines(false);
         }
 
-        final PdfOutline chapterItem = outline.addOutline(title);
+        PdfOutline chapterItem = outline.addOutline(title);
         chapterItem.addDestination(PdfExplicitRemoteGoToDestination.createFitH(pdf.getNumberOfPages(), 0));
     }
 }

@@ -61,7 +61,7 @@ public final class ReportingDb {
     }
 
     @VisibleForTesting
-    public static boolean requiresSummary(@NotNull String sampleId, @NotNull LimsStudy study) {
+    static boolean requiresSummary(@NotNull String sampleId, @NotNull LimsStudy study) {
         LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(sampleId);
 
         if (study == LimsStudy.WIDE) {

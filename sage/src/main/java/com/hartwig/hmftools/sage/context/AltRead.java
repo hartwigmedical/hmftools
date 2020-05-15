@@ -13,13 +13,16 @@ class AltRead {
     private final String ref;
     private final String alt;
     private final int quality;
+    private final int numberOfEvents;
 
-    AltRead(final RefContext refContext, final String ref, final String alt, final int quality, @Nullable final ReadContext readContext) {
+    AltRead(final RefContext refContext, final String ref, final String alt, final int quality, final int numberOfEvents,
+            @Nullable final ReadContext readContext) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
         this.quality = quality;
         this.readContext = readContext;
+        this.numberOfEvents = numberOfEvents;
     }
 
     public boolean containsReadContext() {
@@ -57,7 +60,7 @@ class AltRead {
     }
 
     public void updateRefContext() {
-        refContext.altRead(ref, alt, quality, readContext);
+        refContext.altRead(ref, alt, quality, numberOfEvents, readContext);
     }
 
 }

@@ -256,7 +256,7 @@ public class StructuralVariantFactory {
                 inferredType = StructuralVariantType.INV;
             } else if (startLeg.orientation() == -1) {
                 inferredType = StructuralVariantType.DUP;
-            } else if (insertedSequence != null && insertedSequence.length() > endLeg.position() - startLeg.position()) {
+            } else if (insertedSequence != null && insertedSequence.length() > 0 && Math.abs(endLeg.position() - startLeg.position()) <= 1) {
                 inferredType = StructuralVariantType.INS;
             } else {
                 inferredType = StructuralVariantType.DEL;

@@ -14,9 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.hospital.HospitalAdress;
-import com.hartwig.hmftools.common.hospital.HospitalData;
-import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 
 import org.junit.Test;
 
@@ -72,7 +69,7 @@ public class LimsFactoryTest {
         assertEquals("PREPV-QC037V20-SEQ008V25", tumorData.labSopVersions());
         assertEquals("HMFregCPCT", tumorData.submission());
         assertEquals("", tumorData.hospitalPathologySampleId());
-        assertEquals("", tumorData.germlineReportingChoice());
+        assertEquals("", tumorData.germlineReportingLevel());
     }
 
     @Test

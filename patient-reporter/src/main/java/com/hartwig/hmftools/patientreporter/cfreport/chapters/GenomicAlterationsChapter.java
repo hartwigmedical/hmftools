@@ -57,7 +57,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createHomozygousDisruptionsTable(patientReport.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
-
     }
 
     @NotNull
@@ -91,8 +90,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER) });
         }
 
-        List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
-        for (ReportableVariant variant : sortedVariants) {
+        for (ReportableVariant variant : SomaticVariants.sort(reportableVariants)) {
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant)));
             contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
             contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsCodingImpact()));
@@ -187,8 +185,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("3' Start"),
                         TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER) });
 
-        List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
-        for (ReportableGeneFusion fusion : sortedFusions) {
+        for (ReportableGeneFusion fusion : GeneFusions.sort(fusions)) {
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneTranscriptStart()))
                     .addStyle(ReportResources.dataHighlightLinksStyle())
@@ -217,8 +214,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Disrupted copies").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.CENTER) });
 
-        List<ReportableGeneDisruption> sortedDisruptions = GeneDisruptions.sort(disruptions);
-        for (ReportableGeneDisruption disruption : sortedDisruptions) {
+        for (ReportableGeneDisruption disruption : GeneDisruptions.sort(disruptions)) {
             contentTable.addCell(TableUtil.createContentCell(disruption.location()));
             contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
             contentTable.addCell(TableUtil.createContentCell(disruption.range()));

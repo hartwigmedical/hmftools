@@ -15,7 +15,7 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> sort(@NotNull final List<ReportableGeneFusion> fusions) {
+    public static List<ReportableGeneFusion> sort(@NotNull List<ReportableGeneFusion> fusions) {
         return fusions.stream().sorted((fusion1, fusion2) -> {
             if (fusion1.geneStart().equals(fusion2.geneStart())) {
                 return fusion1.geneEnd().compareTo(fusion2.geneEnd());
@@ -26,7 +26,7 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static Set<String> uniqueGeneFusions(@NotNull final List<ReportableGeneFusion> fusions) {
+    public static Set<String> uniqueGeneFusions(@NotNull List<ReportableGeneFusion> fusions) {
         Set<String> genes = Sets.newHashSet();
         for (ReportableGeneFusion fusion : fusions) {
             genes.add(name(fusion));
@@ -35,12 +35,12 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static String name(@NotNull final ReportableGeneFusion fusion) {
+    public static String name(@NotNull ReportableGeneFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 
     @NotNull
-    public static String transcriptUrl(@NotNull final String transcriptField) {
+    public static String transcriptUrl(@NotNull String transcriptField) {
         return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + transcriptField;
     }
 }

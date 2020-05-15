@@ -21,9 +21,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.hartwig.hmftools.common.hospital.HospitalModel;
-import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
-import com.hartwig.hmftools.common.hospital.ImmutableHospitalModel;
+import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
+import com.hartwig.hmftools.common.lims.hospital.HospitalModelFactory;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +58,7 @@ public final class LimsFactory {
         Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
         Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
 
-        HospitalModel model = HospitalModelFactory.fromHospitalDirectory(limsDirectory);
+        HospitalModel model = HospitalModelFactory.fromLimsDirectory(limsDirectory);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
@@ -67,7 +67,6 @@ public final class LimsFactory {
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
                 model);
-
     }
 
     @NotNull
@@ -176,12 +175,6 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Set<String> readSingleColumnTsv(@NotNull String samplesWithoutSamplingDateTsv) throws IOException {
-        return Files.lines(Paths.get(samplesWithoutSamplingDateTsv)).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
-    }
-
-    @NotNull
-    @VisibleForTesting
     static Map<String, LimsShallowSeqData> readLimsShallowSeqTsv(@NotNull String shallowSeqTsv) throws IOException {
         Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode = Maps.newHashMap();
         List<String> lines = Files.lines(Paths.get(shallowSeqTsv)).collect(Collectors.toList());
@@ -200,5 +193,11 @@ public final class LimsFactory {
             }
         }
         return shallowSeqPerSampleBarcode;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static Set<String> readSingleColumnTsv(@NotNull String tsv) throws IOException {
+        return Files.lines(Paths.get(tsv)).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
     }
 }

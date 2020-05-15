@@ -17,16 +17,12 @@ import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordAnalyzer;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.HospitalQuery;
-import com.hartwig.hmftools.common.hospital.ImmutableHospitalQuery;
 import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.common.lims.hospital.HospitalData;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -68,8 +64,7 @@ public final class ExampleAnalysisTestFactory {
         int tumorMutationalLoad = 180;
         double tumorMutationalBurden = 13.6;
         double microsatelliteIndelsPerMb = 0.11;
-        MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
-        TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
+        double chordHrdValue = 0D;
 
         ReportData reportData = testReportData();
 
@@ -81,7 +76,6 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        ChordAnalyzer chordAnalyzer = createCOLO829ChordAnalysis();
         List<ViralInsertion> viralInsertions = null;
 
         String sampleId = "PNT00012345T";
@@ -107,11 +101,12 @@ public final class ExampleAnalysisTestFactory {
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
-                .microsatelliteStatus(msiStatus)
+                .microsatelliteStatus(MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb))
                 .tumorMutationalLoad(tumorMutationalLoad)
-                .tumorMutationalLoadStatus(tmlStatus)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
                 .tumorMutationalBurden(tumorMutationalBurden)
-                .chordAnalyzer(chordAnalyzer)
+                .chordHrdValue(chordHrdValue)
+                .chordHrdStatus(ChordStatus.fromHRD(chordHrdValue))
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -135,8 +130,7 @@ public final class ExampleAnalysisTestFactory {
         int tumorMutationalLoad = 182;
         double tumorMutationalBurden = 13.6;
         double microsatelliteIndelsPerMb = 0.1089;
-        MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
-        TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
+        double chordHrdValue = 0.8;
 
         ReportData reportData = testReportData();
 
@@ -146,7 +140,6 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableVariant> reportableVariants = createAllSomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = createTestFusions();
-        ChordAnalyzer chordAnalyzer = createHRDChordAnalysis();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = createTestViralInsertions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
@@ -166,11 +159,12 @@ public final class ExampleAnalysisTestFactory {
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
-                .microsatelliteStatus(msiStatus)
+                .microsatelliteStatus(MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb))
                 .tumorMutationalLoad(tumorMutationalLoad)
-                .tumorMutationalLoadStatus(tmlStatus)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
                 .tumorMutationalBurden(tumorMutationalBurden)
-                .chordAnalyzer(chordAnalyzer)
+                .chordHrdValue(chordHrdValue)
+                .chordHrdStatus(ChordStatus.fromHRD(chordHrdValue))
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -194,8 +188,7 @@ public final class ExampleAnalysisTestFactory {
         int tumorMutationalLoad = 182;
         double tumorMutationalBurden = 13.6;
         double microsatelliteIndelsPerMb = 0.1089;
-        MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
-        TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
+        double chordHrdValue = 0.8;
 
         ReportData reportData = testReportData();
 
@@ -205,7 +198,6 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableVariant> reportableVariants = createAllSomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = createTestFusions();
-        ChordAnalyzer chordAnalyzer = createHRDChordAnalysis();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
@@ -225,11 +217,12 @@ public final class ExampleAnalysisTestFactory {
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
-                .microsatelliteStatus(msiStatus)
+                .microsatelliteStatus(MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb))
                 .tumorMutationalLoad(tumorMutationalLoad)
-                .tumorMutationalLoadStatus(tmlStatus)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
                 .tumorMutationalBurden(tumorMutationalBurden)
-                .chordAnalyzer(chordAnalyzer)
+                .chordHrdValue(chordHrdValue)
+                .chordHrdStatus(ChordStatus.fromHRD(chordHrdValue))
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -278,13 +271,13 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static HospitalQuery hospitalQuery(){
-        return ImmutableHospitalQuery.builder()
+    private static HospitalData createTestHospitalData(){
+        return ImmutableHospitalData.builder()
                 .hospitalPI("AB")
-                .analyseRequestName("Paul")
-                .analyseRequestEmail("paul@hartwig.com")
-                .hospital("HMF Testing Center")
-                .fullHospitalString("AB, HMF Testing Center, Zip, City")
+                .requesterName("Paul")
+                .requesterEmail("paul@hartwig.com")
+                .hospitalName("HMF Testing Center")
+                .hospitalAddress("Zip, City")
                 .build();
     }
 
@@ -304,10 +297,10 @@ public final class ExampleAnalysisTestFactory {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .hospitalQuery(hospitalQuery())
                 .cohort("A")
                 .projectName("TEST")
                 .submissionId("10")
+                .hospitalData(createTestHospitalData())
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")
                 .build();
@@ -756,36 +749,6 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         return Lists.newArrayList(fusion1, fusion2);
-    }
-
-    @NotNull
-    private static ChordAnalyzer createCOLO829ChordAnalysis() {
-        double brca1Value = 0D;
-        double brca2Value = 0D;
-
-        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
-                .noneValue(1 - (brca1Value + brca2Value))
-                .BRCA1Value(brca1Value)
-                .BRCA2Value(brca2Value)
-                .hrdValue(brca1Value + brca2Value)
-                .predictedResponseValue(brca1Value + brca2Value > 0.5)
-                .build();
-        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRP).build();
-    }
-
-    @NotNull
-    private static ChordAnalyzer createHRDChordAnalysis() {
-        double brca1Value = 0D;
-        double brca2Value = 0.8;
-
-        ChordAnalysis chordAnalysis = ImmutableChordAnalysis.builder()
-                .noneValue(1 - (brca1Value + brca2Value))
-                .BRCA1Value(brca1Value)
-                .BRCA2Value(brca2Value)
-                .hrdValue(brca1Value + brca2Value)
-                .predictedResponseValue(brca1Value + brca2Value > 0.5)
-                .build();
-        return ImmutableChordAnalyzer.builder().chordAnalysis(chordAnalysis).hrdStatus(ChordStatus.HRD).build();
     }
 
     @NotNull

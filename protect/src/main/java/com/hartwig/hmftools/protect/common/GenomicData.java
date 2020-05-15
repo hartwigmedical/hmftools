@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -79,8 +79,8 @@ public class GenomicData {
                 BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
 
-        LimsGermlineReportingChoice germlineChoice = lims.germlineReportingChoice(sampleBarcode);
-        if (germlineChoice == LimsGermlineReportingChoice.NO_REPORTING) {
+        LimsGermlineReportingLevel germlineChoice = lims.germlineReportingChoice(sampleBarcode);
+        if (germlineChoice == LimsGermlineReportingLevel.NO_REPORTING) {
             LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();
         } else {
@@ -166,7 +166,7 @@ public class GenomicData {
     public static ReportableVariantAnalysis somaticAndGermlineVariantsTogether(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
             @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
+            @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = mergeSomaticAndGermlineVariants(somaticVariantsReport,
                 driverCatalog,
                 driverGeneView,
@@ -182,7 +182,7 @@ public class GenomicData {
     private static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
             @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
+            @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
             DriverCategory category = driverGeneView.category(variant.gene());
@@ -205,7 +205,7 @@ public class GenomicData {
                     .build());
         }
 
-        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION;
+        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION;
         for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
             DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());

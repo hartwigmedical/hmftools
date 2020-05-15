@@ -35,7 +35,7 @@ public class AltContextTest {
 
         // Ordering should not matter!
         Collections.shuffle(readContexts);
-        readContexts.forEach(victim::addReadContext);
+        readContexts.forEach(x -> victim.addReadContext(0, x));
 
         assertFalse(victim.finaliseAndValidate());
     }
@@ -54,7 +54,7 @@ public class AltContextTest {
 
         // Ordering should not matter!
         Collections.shuffle(readContexts);
-        readContexts.forEach(victim::addReadContext);
+        readContexts.forEach(x -> victim.addReadContext(0, x));
 
         assertTrue(victim.finaliseAndValidate());
         assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
@@ -83,7 +83,7 @@ public class AltContextTest {
 
         // Ordering should not matter!
         Collections.shuffle(readContexts);
-        readContexts.forEach(victim::addReadContext);
+        readContexts.forEach(x -> victim.addReadContext(0, x));
 
         assertTrue(victim.finaliseAndValidate());
         assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
@@ -112,7 +112,7 @@ public class AltContextTest {
 
         // Ordering should not matter!
         Collections.shuffle(readContexts);
-        readContexts.forEach(victim::addReadContext);
+        readContexts.forEach(x -> victim.addReadContext(0, x));
 
         assertTrue(victim.finaliseAndValidate());
         assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));

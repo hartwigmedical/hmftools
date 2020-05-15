@@ -22,7 +22,7 @@ class StructuralVariantContextTest {
 
     @Test
     fun testBreakendAssemblyReadPair() {
-        val single = createSingle();
+        val single = sgl();
         assertTrue(single.toSv().breakendAssemblyReadPairsFilter())
         assertFalse(single.setAttribute("BASRP", 1).toSv().breakendAssemblyReadPairsFilter())
 
@@ -33,7 +33,7 @@ class StructuralVariantContextTest {
 
     @Test
     fun testImpreciseFilter() {
-        val victim = createSingle()
+        val victim = sgl()
         assertFalse(victim.toSv().impreciseFilter())
         assertFalse(victim.setAttribute("IMPRECISE", false).toSv().impreciseFilter())
         assertTrue(victim.setAttribute("IMPRECISE", true).toSv().impreciseFilter())
@@ -41,14 +41,14 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportFilter() {
-        assertTrue(createSingle().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
-        assertFalse(createSingle().fragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
-        assertTrue(createSingle().fragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
+        assertTrue(sgl().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
+        assertFalse(sgl().fragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
+        assertTrue(sgl().fragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
     }
 
     @Test
     fun testQualFilter() {
-        val breakEnd = createSingle().qual(200).toSv();
+        val breakEnd = sgl().qual(200).toSv();
         assertTrue(breakEnd.qualFilter(201, 1000))
         assertFalse(breakEnd.qualFilter(200, 1000))
         assertFalse(breakEnd.qualFilter(199, 1000))
@@ -74,7 +74,7 @@ class StructuralVariantContextTest {
     @Test
     fun testHomologyLengthFilter() {
         val attribute = "HOMLEN"
-        val single = createSingle().setAttribute(attribute, 1000).toSv()
+        val single = sgl().setAttribute(attribute, 1000).toSv()
         assertFalse(single.homologyLengthFilter(1))
 
         val dup = shortDup().setAttribute(attribute, 50).toSv()
@@ -93,7 +93,7 @@ class StructuralVariantContextTest {
     @Test
     fun testInexactHomologyLengthFilter() {
         val attribute = "IHOMPOS"
-        assertFalse(createSingle().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(1))
+        assertFalse(sgl().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(1))
 
         val bnd = bnd().setAttribute(attribute, listOf(1, 51)).toSv()
         assertFalse(bnd.inexactHomologyLengthFilter(50))
@@ -119,6 +119,7 @@ class StructuralVariantContextTest {
 
     @Test
     fun testLongDPSupport() {
+        assertFalse(sgl().toSv().longDPSupportFilter())
         assertFalse(shortDel().toSv().longDPSupportFilter())
         assertTrue(bnd().toSv().longDPSupportFilter())
         assertFalse(bnd().addGenotypeAttribute("RP", 1, 0).toSv().longDPSupportFilter())
@@ -172,7 +173,7 @@ class StructuralVariantContextTest {
         val shortInv = shortInv().toSv()
         assertTrue(shortInv.variantType is Inversion)
 
-        assertTrue(createSingle().toSv().isSingle)
+        assertTrue(sgl().toSv().isSingle)
         assertFalse(createBreakPoint().toSv().isSingle)
     }
 
@@ -184,7 +185,7 @@ class StructuralVariantContextTest {
 
     private fun shortDup(position: Int = 110, otherPosition: Int = 100): VariantContext = createVariant(position, "A", "ATACTGCTACA[1:${otherPosition}[")
 
-    private fun createSingle(): VariantContext {
+    private fun sgl(): VariantContext {
         return createVariant(1, "C", ".A")
     }
 

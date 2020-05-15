@@ -19,7 +19,8 @@
       "shallowseq": false,
       "report_viral": false,
       "cohort": "",
-      "germline_findings": "",
+      "report_germline_level": "",
+      "report_germline": false,
       "hospital_pa_sample_id": ""
     },
     "FR1235": {
@@ -41,7 +42,8 @@
       "shallowseq": true,
       "report_viral": true,
       "cohort": "",
-      "germline_findings": "",
+      "report_germline_level": "",
+      "report_germline": false,
       "hospital_pa_sample_id": ""
     },
     "FR1236": {
@@ -63,7 +65,8 @@
       "shallowseq": true,
       "report_viral": true,
       "cohort": "",
-      "germline_findings": "",
+      "report_germline_level": "",
+      "report_germline": false,
       "hospital_pa_sample_id": ""
     },
     "FR1237": {

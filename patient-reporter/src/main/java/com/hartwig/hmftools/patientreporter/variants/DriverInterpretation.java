@@ -9,15 +9,15 @@ public enum DriverInterpretation {
     LOW("Low");
 
     @NotNull
-    private final String text;
+    private final String display;
 
-    DriverInterpretation(@NotNull final String text) {
-        this.text = text;
+    DriverInterpretation(@NotNull final String display) {
+        this.display = display;
     }
 
     @NotNull
-    public String text() {
-        return text;
+    public String display() {
+        return display;
     }
 
     @Nullable

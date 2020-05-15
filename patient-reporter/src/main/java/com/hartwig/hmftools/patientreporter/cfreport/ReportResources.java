@@ -175,7 +175,7 @@ public final class ReportResources {
         try {
             return FontProgramFactory.createFont(resourcePath);
         } catch (IOException exception) {
-            // Should never happen, fonts are loaded fromm code
+            // Should never happen, fonts are loaded from code
             throw new IllegalStateException(exception);
         }
     }

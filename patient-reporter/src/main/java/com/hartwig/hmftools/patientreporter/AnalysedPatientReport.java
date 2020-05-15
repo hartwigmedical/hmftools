@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.chord.ChordAnalyzer;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -53,18 +53,20 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract double microsatelliteIndelsPerMb();
 
-    public abstract int tumorMutationalLoad();
-
-    public abstract double tumorMutationalBurden();
-
     @NotNull
     public abstract MicrosatelliteStatus microsatelliteStatus();
+
+    public abstract int tumorMutationalLoad();
 
     @NotNull
     public abstract TumorMutationalStatus tumorMutationalLoadStatus();
 
+    public abstract double tumorMutationalBurden();
+
+    public abstract double chordHrdValue();
+
     @NotNull
-    public abstract ChordAnalyzer chordAnalyzer();
+    public abstract ChordStatus chordHrdStatus();
 
     @NotNull
     public abstract List<ReportableGainLoss> gainsAndLosses();
@@ -84,11 +86,11 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract String circosPath();
 
-    public abstract boolean isUnofficialReport();
-
     @Override
     @NotNull
     public abstract Optional<String> comments();
+
+    public abstract boolean isUnofficialReport();
 
     @Override
     public abstract boolean isCorrectedReport();

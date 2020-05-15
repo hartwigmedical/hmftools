@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.hospital;
+package com.hartwig.hmftools.common.lims.hospital;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HospitalAdress {
+public abstract class HospitalAddress {
 
     @NotNull
     public abstract String hospitalId();
