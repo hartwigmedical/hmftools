@@ -88,29 +88,26 @@ public final class HospitalModelFactory {
 
         for (String CPCT : keyCPCT) {
             if (!keyAdress.contains(CPCT)) {
-                LOGGER.info(CPCT);
-                LOGGER.warn("CPCT hospital ID is not present in hospital adress");
+                LOGGER.warn("CPCT hospital ID is not present in hospital adress '{}'", CPCT);
             }
         }
 
         for (String DRUP : keyDRUP) {
             if (!keyAdress.contains(DRUP)) {
-                LOGGER.info(DRUP);
-                LOGGER.warn("DRUP hospital ID is not present in hospital adress");
+                LOGGER.warn("DRUP hospital ID is not present in hospital adress '{}'", DRUP);
             }
         }
 
         for (String WIDE : keyWIDE) {
             if (!keyAdress.contains(WIDE)) {
-                LOGGER.info(WIDE);
-                LOGGER.warn("WIDE hospital ID is not present in hospital adress");
+                LOGGER.warn("WIDE hospital ID is not present in hospital adress '{}'", WIDE);
             }
         }
 
         for (Map.Entry<String, HospitalSampleMapping> sampleMapping : keySampleMapping.entrySet()) {
             HospitalSampleMapping hospitalSampleMapping = sampleMapping.getValue();
             if (!keyAdress.contains(hospitalSampleMapping.hospitalId())) {
-                LOGGER.warn("sample mapping hospital ID is not present in hospital adress");
+                LOGGER.warn("sample mapping hospital ID is not present in hospital adress '{}'", hospitalSampleMapping.hospitalId());
             }
         }
     }

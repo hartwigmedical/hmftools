@@ -117,6 +117,6 @@ public class HospitalModelFactoryTest {
         assertEquals("01", sampleMapping1.hospitalId());
 
         HospitalSampleMapping sampleMapping2 = sampleHospitalMapping.get("CORE18002000T");
-        assertEquals("02", sampleMapping2.hospitalId());
+        assertEquals("03", sampleMapping2.hospitalId());
     }
 }

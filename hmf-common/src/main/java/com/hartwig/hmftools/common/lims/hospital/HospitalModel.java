@@ -147,7 +147,6 @@ public abstract class HospitalModel {
         HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
         HospitalAddress hospitalAddress;
 
-        LOGGER.info("ID: " + hospitalSampleMapping);
         if (hospitalSampleMapping != null) {
             hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
             if (hospitalAddress == null) {
