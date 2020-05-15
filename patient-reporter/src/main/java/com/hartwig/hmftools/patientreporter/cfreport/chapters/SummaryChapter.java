@@ -34,7 +34,6 @@ import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class SummaryChapter implements ReportChapter {
 
@@ -78,8 +77,8 @@ public class SummaryChapter implements ReportChapter {
         renderGenomicAlterations(reportDocument, patientReport);
     }
 
-    private void renderSummaryText(@NotNull Document reportDocument, @Nullable String text) {
-        if (text == null || text.isEmpty()) {
+    private void renderSummaryText(@NotNull Document reportDocument, @NotNull String text) {
+        if (text.isEmpty()) {
             return;
         }
 
@@ -153,9 +152,7 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
 
-        String hrdString = hasReliablePurity
-                ? patientReport.chordHrdStatus().display()
-                : DataUtil.NA_STRING;
+        String hrdString = hasReliablePurity ? patientReport.chordHrdStatus().display() : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));
 

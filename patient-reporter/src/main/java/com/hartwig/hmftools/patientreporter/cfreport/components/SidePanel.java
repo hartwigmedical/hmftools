@@ -24,6 +24,8 @@ public final class SidePanel {
     private static final float RECTANGLE_HEIGHT_SHORT = 110;
     private static final Logger LOGGER = LogManager.getLogger(SidePanel.class);
 
+    private SidePanel() {
+    }
 
     public static void renderSidePanel(PdfPage page, @NotNull final SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());

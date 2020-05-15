@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TableUtil {
 
-    private final static float TABLE_BOTTOM_MARGIN = 20;
+    private static final float TABLE_BOTTOM_MARGIN = 20;
 
     private TableUtil() {
     }

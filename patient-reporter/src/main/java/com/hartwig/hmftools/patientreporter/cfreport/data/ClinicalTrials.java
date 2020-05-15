@@ -16,7 +16,7 @@ public final class ClinicalTrials {
     }
 
     @NotNull
-    public static List<ClinicalTrial> sort(@NotNull final List<ClinicalTrial> trials) {
+    public static List<ClinicalTrial> sort(@NotNull List<ClinicalTrial> trials) {
         return trials.stream().sorted((item1, item2) -> {
             if (item1.event().equals(item2.event())) {
                 return item1.acronym().compareTo(item2.acronym());
@@ -35,7 +35,7 @@ public final class ClinicalTrials {
     }
 
     @NotNull
-    public static String sourceUrl(@NotNull final ClinicalTrial trial) {
+    public static String sourceUrl(@NotNull ClinicalTrial trial) {
         String source = trial.source().sourceName();
         String reference = trial.reference();
         String ext = EXTId(reference);
@@ -54,7 +54,7 @@ public final class ClinicalTrials {
         return ext.substring(3).trim();
     }
 
-    public static int uniqueEventCount(@NotNull final List<ClinicalTrial> trials) {
+    public static int uniqueEventCount(@NotNull List<ClinicalTrial> trials) {
         Set<String> events = Sets.newHashSet();
         for (ClinicalTrial trial : trials) {
             events.add(trial.event());
@@ -62,7 +62,7 @@ public final class ClinicalTrials {
         return events.size();
     }
 
-    public static int uniqueTrialCount(@NotNull final List<ClinicalTrial> trials) {
+    public static int uniqueTrialCount(@NotNull List<ClinicalTrial> trials) {
         Set<String> acronyms = Sets.newHashSet();
         for (ClinicalTrial trial : trials) {
             acronyms.add(trial.acronym());

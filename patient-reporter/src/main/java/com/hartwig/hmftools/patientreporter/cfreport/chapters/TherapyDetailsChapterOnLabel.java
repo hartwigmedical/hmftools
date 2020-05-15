@@ -20,12 +20,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class TherapyDetailsChapterOnLabel implements ReportChapter {
 
-    private final static float COL_WIDTH_EVENT = 110;
-    private final static float COL_WIDTH_MATCH = 60;
-    private final static float COL_WIDTH_TREATMENT_ICONS = 25;
-    private final static float COL_WIDTH_TRIAL_NAME = 222;
-    private final static float COL_WIDTH_CCMO = 75;
-    private final static float COL_WIDTH_SOURCE = 40;
+    private static final float COL_WIDTH_EVENT = 110;
+    private static final float COL_WIDTH_MATCH = 60;
+    private static final float COL_WIDTH_TREATMENT_ICONS = 25;
+    private static final float COL_WIDTH_TRIAL_NAME = 222;
+    private static final float COL_WIDTH_CCMO = 75;
+    private static final float COL_WIDTH_SOURCE = 40;
 
     @NotNull
     private final AnalysedPatientReport patientReport;
@@ -41,7 +41,7 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
     }
 
     @Override
-    public  void render(@NotNull  Document reportDocument) {
+    public void render(@NotNull Document reportDocument) {
         Table chapterTable = new Table(1);
 
         chapterTable.addCell(new Cell().add(TherapyDetailsChapterFunctions.createEvidenceTable("Tumor type specific evidence",
@@ -59,19 +59,17 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
     }
 
     @NotNull
-    private static Table createClinicalTrialsTable(@NotNull  List<ClinicalTrial> trials) {
-         String title = "Tumor type specific clinical trials (NL)";
+    private static Table createClinicalTrialsTable(@NotNull List<ClinicalTrial> trials) {
+        String title = "Tumor type specific clinical trials (NL)";
 
         if (trials.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-         Table contentTable =
-                TableUtil.createReportContentTable(new float[] { COL_WIDTH_EVENT, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
-                                COL_WIDTH_TRIAL_NAME, COL_WIDTH_CCMO, COL_WIDTH_SOURCE },
-                        new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),
-                                TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("CCMO"),
-                                TableUtil.createHeaderCell("Source") });
+        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_EVENT, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
+                        COL_WIDTH_TRIAL_NAME, COL_WIDTH_CCMO, COL_WIDTH_SOURCE },
+                new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),
+                        TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("CCMO"), TableUtil.createHeaderCell("Source") });
 
         for (ClinicalTrial trial : ClinicalTrials.sort(trials)) {
             String trialName = trial.acronym();

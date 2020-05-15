@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class BarChart extends InlineBarChart {
 
-    private final static float HEIGHT = 45;
+    private static final float HEIGHT = 45;
 
     private final String lowLabel;
     private final String highLabel;
@@ -231,7 +231,7 @@ public class BarChart extends InlineBarChart {
 
         private void drawRoundedRect(@NotNull Rectangle outerBoundingBox, @NotNull Rectangle innerBoundingBox, float filledPercentage,
                 @NotNull Color outlineColor, @NotNull Color fillColor, boolean dashedOutline, @NotNull PdfCanvas canvas) {
-            filledPercentage = (float) MathUtil.clamp(filledPercentage, 0, 1);
+            double clampedFilledPercentage = (float) MathUtil.clamp(filledPercentage, 0, 1);
 
             canvas.setStrokeColor(outlineColor);
             canvas.setFillColor(ReportResources.PALETTE_WHITE);
@@ -247,12 +247,12 @@ public class BarChart extends InlineBarChart {
             canvas.fillStroke();
             canvas.setLineDash(1f);
 
-            if (filledPercentage > 0 || forceMarkerInRoundedRectangle) {
+            if (clampedFilledPercentage > 0 || forceMarkerInRoundedRectangle) {
                 float innerBarRadius = getHeightRadius(innerBoundingBox);
                 canvas.setFillColor(fillColor);
                 canvas.roundRectangle(innerBoundingBox.getX(),
                         innerBoundingBox.getY(),
-                        MathUtil.map(filledPercentage, 0, 1, innerBarRadius, innerBoundingBox.getWidth()),
+                        MathUtil.map(clampedFilledPercentage, 0, 1, innerBarRadius, innerBoundingBox.getWidth()),
                         innerBoundingBox.getHeight(),
                         innerBarRadius);
                 canvas.fill();

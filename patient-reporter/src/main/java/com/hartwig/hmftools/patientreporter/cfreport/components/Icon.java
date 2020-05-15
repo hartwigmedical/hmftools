@@ -66,10 +66,8 @@ public class Icon {
 
     @NotNull
     public static Text createLevelIcon(@NotNull String level) {
-        level = level.toUpperCase();
-
         IconType iconType;
-        switch (level) {
+        switch (level.toUpperCase()) {
             case "A":
                 iconType = IconType.LEVEL_A;
                 break;

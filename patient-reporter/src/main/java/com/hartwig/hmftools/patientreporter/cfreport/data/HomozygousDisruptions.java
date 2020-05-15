@@ -29,8 +29,9 @@ public final class HomozygousDisruptions {
     }
 
     @NotNull
+    @SuppressWarnings("unused")
     public static Set<String> disruptedGenes(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
-        final Set<String> genes = Sets.newHashSet();
+         Set<String> genes = Sets.newHashSet();
         for (ReportableHomozygousDisruption disruption : homozygousDisruptions) {
             genes.add(disruption.gene());
         }

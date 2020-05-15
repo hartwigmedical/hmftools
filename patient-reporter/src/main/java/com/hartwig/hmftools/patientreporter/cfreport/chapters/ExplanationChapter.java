@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.layout.Document;
@@ -104,9 +103,8 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "OncoAct accurately identifies viral DNA insertions in the tumor’s DNA."
-                        + " Currently only integrated virus DNA can be detected. Viral detection has been validated against PCR "
-                        + "based high-risk HPV detection with a accuracy of 95.8% (Cohen’s kappa 0.915)." })));
+                .add(createContentDiv(new String[] { "Currently only integrated virus DNA can be detected.",
+                        "The list of viruses that are considered can be found on https://resources.hartwigmedicalfoundation.nl."})));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
         table.addCell(TableUtil.createLayoutCell());
