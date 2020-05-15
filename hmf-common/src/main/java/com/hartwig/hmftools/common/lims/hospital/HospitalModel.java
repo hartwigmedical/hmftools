@@ -50,7 +50,6 @@ public abstract class HospitalModel {
 
     private boolean checkIdExistInInputFile(HospitalContact hospitalContact, @Nullable String hospitalID) {
         if (hospitalContact == null) {
-            LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
             return false;
         } else {
             return true;
@@ -144,14 +143,14 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalAddress findHospitalAdressModel(@NotNull String sampleId) {
+    private HospitalAddress findHospitalAddressModel(@NotNull String sampleId) {
         HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sampleId);
         HospitalAddress hospitalAddress;
 
+        LOGGER.info("ID: " + hospitalSampleMapping);
         if (hospitalSampleMapping != null) {
             hospitalAddress = findByHospitalCore(hospitalSampleMapping.hospitalId());
             if (hospitalAddress == null) {
-                LOGGER.error("Cannot find hospital details for sample '{}' using '{}'.", sampleId, hospitalSampleMapping.hospitalId());
                 return null;
             }
         } else {
@@ -162,7 +161,6 @@ public abstract class HospitalModel {
             }
             hospitalAddress = hospitalAddress().get(hospitalID);
             if (hospitalAddress == null) {
-                LOGGER.warn("Hospital model does not contain id '{}'", hospitalID);
                 return null;
             }
 
@@ -174,7 +172,7 @@ public abstract class HospitalModel {
     @Nullable
     @VisibleForTesting
     String extractHospitalAddress(@NotNull String sampleId) {
-        HospitalAddress hospitalAddress = findHospitalAdressModel(sampleId);
+        HospitalAddress hospitalAddress = findHospitalAddressModel(sampleId);
 
         if (hospitalAddress == null) {
             return null;
@@ -186,7 +184,7 @@ public abstract class HospitalModel {
     @Nullable
     @VisibleForTesting
     public String extractHospitalName(@NotNull String sampleId) {
-        HospitalAddress hospitalAddress = findHospitalAdressModel(sampleId);
+        HospitalAddress hospitalAddress = findHospitalAddressModel(sampleId);
 
         if (hospitalAddress == null) {
             return null;

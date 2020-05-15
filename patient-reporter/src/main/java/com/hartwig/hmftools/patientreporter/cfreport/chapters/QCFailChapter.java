@@ -16,10 +16,14 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
+
+    private static final Logger LOGGER = LogManager.getLogger(ReportChapter.class);
 
     @NotNull
     private final QCFailReport failReport;
@@ -47,7 +51,7 @@ public class QCFailChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document reportDocument) {
         if (failReport.sampleReport().hospitalData().hospitalAddress() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
+            LOGGER.warn("No recipient address present for sample {}", failReport.sampleReport().tumorSampleId());
         }
 
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),

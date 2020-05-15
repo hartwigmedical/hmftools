@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -64,13 +65,54 @@ public final class HospitalModelFactory {
                 readFromHospitalContact(hospitalContactWIDETsv, HOSPITAL_CONTACT_FIELD_COUNT_WIDE);
         Map<String, HospitalSampleMapping> sampleHospitalMapping = readFromSampleHospitalMapping(sampleHospitalMappingTsv);
 
-        return ImmutableHospitalModel.builder()
+        HospitalModel hospitalModel = ImmutableHospitalModel.builder()
                 .hospitalAddress(hospitalAddress)
                 .sampleHospitalMapping(sampleHospitalMapping)
                 .hospitalContactCPCT(hospitalContactCPCT)
                 .hospitalContactDRUP(hospitalContactDRUP)
                 .hospitalContactWIDE(hospitalContactWIDE)
                 .build();
+
+        checkFields(hospitalModel);
+
+        return hospitalModel;
+    }
+
+    @VisibleForTesting
+    public static void checkFields(@NotNull HospitalModel hospitalModel) {
+        Set<String> keyAdress = hospitalModel.hospitalAddress().keySet();
+        Set<String> keyCPCT = hospitalModel.hospitalContactCPCT().keySet();
+        Set<String> keyDRUP = hospitalModel.hospitalContactDRUP().keySet();
+        Set<String> keyWIDE = hospitalModel.hospitalContactWIDE().keySet();
+        Set<String> keySampleMapping = hospitalModel.sampleHospitalMapping().keySet();
+
+        for (String CPCT : keyCPCT) {
+            if (!keyAdress.contains(CPCT)) {
+                LOGGER.info(CPCT);
+                LOGGER.warn("CPCT hospital ID is not present in hospital adress");
+            }
+        }
+
+        for (String DRUP : keyDRUP) {
+            if (!keyAdress.contains(DRUP)) {
+                LOGGER.info(DRUP);
+                LOGGER.warn("DRUP hospital ID is not present in hospital adress");
+            }
+        }
+
+        for (String WIDE : keyWIDE) {
+            if (!keyAdress.contains(WIDE)) {
+                LOGGER.info(WIDE);
+                LOGGER.warn("WIDE hospital ID is not present in hospital adress");
+            }
+        }
+
+        for (String sampleMapping : keySampleMapping) {
+            if (!keyAdress.contains(sampleMapping)) {
+                LOGGER.info(sampleMapping);
+                LOGGER.warn("sample mapping hospital ID is not present in hospital adress");
+            }
+        }
     }
 
     @NotNull

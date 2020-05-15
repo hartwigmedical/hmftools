@@ -23,6 +23,12 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
+    public void allDataArePresent() throws IOException {
+        HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(LIMS_DIRECTORY);
+        HospitalModelFactory.checkFields(hospitalModel);
+    }
+
+    @Test
     public void canReadHospitalAddressTsv() throws IOException {
         Map<String, HospitalAddress> hospitalAddress =
                 HospitalModelFactory.readFromHospitalAddress(LIMS_DIRECTORY + File.separator + "hospital_address.tsv");
@@ -107,7 +113,7 @@ public class HospitalModelFactoryTest {
 
         assertEquals(1, sampleHospitalMapping.size());
 
-        HospitalSampleMapping sampleMapping = sampleHospitalMapping.get("CORE18001224T");
+        HospitalSampleMapping sampleMapping = sampleHospitalMapping.get("01");
         assertEquals("01", sampleMapping.hospitalId());
     }
 }
