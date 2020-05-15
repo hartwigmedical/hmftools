@@ -137,8 +137,8 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
-    // private static final String LOG_READ_ID = "";
-    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:21506:2131:4925";
+    private static final String LOG_READ_ID = "";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:13212:25618:6595";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
@@ -381,12 +381,11 @@ public class ChimericReadTracker
 
     private boolean skipNonGenicReads(final List<ReadRecord> reads)
     {
-        // any set of entirely post-gene read(s)will be skipped and then picked up by the next gene collection's processing
+        // any set of entirely post-gene read(s) will be skipped and then picked up by the next gene collection's processing
         // otherwise record that they were processed to avoid double-processing them in the next gene collection
-
-        List<ReadRecord> postGeneReads = reads.stream()
+        List<ReadRecord> postGeneReads = !mGeneCollection.isEndOfChromosome() ? reads.stream()
                 .filter(x -> x.PosStart > mGeneCollection.regionBounds()[SE_END])
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()) : Lists.newArrayList();
 
         if(postGeneReads.size() == reads.size())
             return true;

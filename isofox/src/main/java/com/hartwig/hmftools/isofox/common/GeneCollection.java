@@ -34,6 +34,7 @@ public class GeneCollection
     private final String mChromosome;
     private final int[] mRegionBounds;
     private final int[] mNonGenicPositions; // position prior to this region beginning and since the last gene collection
+    private boolean mEndOfChromosome;
 
     private final Map<Integer,GeneReadData> mTransIdsGeneMap;
 
@@ -58,6 +59,7 @@ public class GeneCollection
 
         mRegionBounds = new int[SE_PAIR];
         mNonGenicPositions = new int[SE_PAIR];
+        mEndOfChromosome = false;
 
         mChromosome = genes.get(0).GeneData.Chromosome;
 
@@ -84,6 +86,8 @@ public class GeneCollection
     public final int[] regionBounds() { return mRegionBounds; }
     public void setNonGenicPosition(int se, int position) { mNonGenicPositions[se] = position; }
     public int[] getNonGenicPositions() { return mNonGenicPositions; }
+    public boolean isEndOfChromosome() { return mEndOfChromosome; }
+    public void setEndOfChromosome() { mEndOfChromosome = true; }
 
     public final List<TranscriptData> getTranscripts() { return mTranscripts; }
 

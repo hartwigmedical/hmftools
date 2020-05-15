@@ -99,6 +99,8 @@ public class FusionFragment
 
     public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 
+    public boolean isSingleChromosome() { return mChromosomes[SE_START].equals(mChromosomes[SE_END]); }
+
     public boolean isSingleGeneCollection()
     {
         return mChromosomes[SE_START].equals(mChromosomes[SE_END]) && mGeneCollections[SE_START] == mGeneCollections[SE_END];

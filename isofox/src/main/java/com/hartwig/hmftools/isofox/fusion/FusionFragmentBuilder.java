@@ -167,7 +167,8 @@ public class FusionFragmentBuilder
         }
 
         // identify the properties of the junction and use it to set other properties of the fragment
-        if(fragment.reads().stream().anyMatch(x -> x.containsSplit() && (x.spansGeneCollections() || x.hasInterGeneSplit())))
+        if(fragment.isSingleChromosome()
+        && fragment.reads().stream().anyMatch(x -> x.containsSplit() && (x.spansGeneCollections() || x.hasInterGeneSplit())))
         {
             // set the junction data around the spanning N-split
             setSplitReadJunctionData(fragment);
@@ -405,7 +406,7 @@ public class FusionFragmentBuilder
 
         fragment.setType(DISCORDANT);
 
-        if(readGroups.size() != 2 || fragment.reads().size() != 2)
+        if(readGroups.size() != 2 || fragment.reads().size() != 2 || !fragment.isSingleChromosome())
             return;
 
         // check for evidence of a fusion junction from soft-clipped reads but without supplementary alignment data

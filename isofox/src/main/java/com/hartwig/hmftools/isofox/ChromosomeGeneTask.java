@@ -273,6 +273,7 @@ public class ChromosomeGeneTask implements Callable
                 else
                 {
                     geneCollection.setNonGenicPosition(SE_END, (int)getChromosomeLength(mChromosome) - 1000);
+                    geneCollection.setEndOfChromosome();
                 }
             }
             else
