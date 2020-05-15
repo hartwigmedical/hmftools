@@ -86,6 +86,7 @@ public class QCFailChapter implements ReportChapter {
         String title;
         String reason;
         String explanation;
+        String explanationDetail;
 
         switch (failReason) {
             case LOW_DNA_YIELD: {
@@ -93,6 +94,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
+                        + "could not be further analyzed due to insufficient quality.";
                 break;
             }
             case POST_ANALYSIS_FAIL: {
@@ -100,6 +103,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
+                        + "could not be further analyzed due to insufficient quality.";
                 break;
             }
             case SHALLOW_SEQ_LOW_PURITY: {
@@ -107,6 +112,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
+                        + "and could not be further analyzed.";
                 break;
             }
             case INSUFFICIENT_TISSUE: {
@@ -114,6 +121,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
+                        + "could not be further analyzed due to insufficient quality.";
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
@@ -121,6 +130,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
+                        + "could not be further analyzed due to insufficient quality.";
                 break;
             }
             case LAB_FAILURE: {
@@ -128,12 +139,14 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Technical failure";
                 explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy \n "
                         + "due to technical problems";
+                explanationDetail = "";
                 break;
             }
             default: {
                 title = "TITLE";
                 reason = "SUB_TITLE";
                 explanation = "MESSAGE";
+                explanationDetail = "MESSAGE";
             }
         }
 
@@ -143,6 +156,8 @@ public class QCFailChapter implements ReportChapter {
         div.add(new Paragraph(title.toUpperCase()).addStyle(ReportResources.subTextStyle()));
         div.add(new Paragraph(reason).addStyle(ReportResources.dataHighlightStyle()));
         div.add(new Paragraph(explanation).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
+        div.add(new Paragraph(explanationDetail).addStyle(ReportResources.subTextStyle())
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING));
 
         return div;
     }
@@ -341,14 +356,8 @@ public class QCFailChapter implements ReportChapter {
                     .equals("not performed")) {
                 return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
             } else {
-                if (failReport.reason() == QCFailReason.SHALLOW_SEQ_LOW_PURITY) {
-                    return createContentParagraphThree("The tumor percentage based on molecular estimation is ",
-                            failReport.sampleReport().purityShallowSeq(),
-                            " and is below the required amount (20%)");
-                } else {
-                    return createContentParagraph("The tumor percentage based on molecular estimation is ",
-                            failReport.sampleReport().purityShallowSeq());
-                }
+                return createContentParagraph("The tumor percentage based on molecular estimation is ",
+                        failReport.sampleReport().purityShallowSeq());
 
             }
         } else {
@@ -404,14 +413,6 @@ public class QCFailChapter implements ReportChapter {
         return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(regularPart2)
                 .add(new Text(boldPart2).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
-    }
-
-    @NotNull
-    private static Paragraph createContentParagraphThree(@NotNull String regularPart, @NotNull String boldPart,
-            @NotNull String regularPart2) {
-        return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .add(regularPart2)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 }
