@@ -121,10 +121,10 @@ public class FusionFinder
         mChrGeneDepthMap.put(chromosome, geneDepthMap);
     }
 
-    private static final int LOG_COUNT = 10000;
+    private static final int LOG_COUNT = 100000;
 
-    // private static final String LOG_READ_ID = "";
-    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:11303:18581:15228";
+    private static final String LOG_READ_ID = "";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:11303:18581:15228";
 
     public void findFusions()
     {

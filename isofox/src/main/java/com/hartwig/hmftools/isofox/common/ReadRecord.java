@@ -657,9 +657,13 @@ public class ReadRecord
     }
 
     private static int MIN_BASE_MATCH = 2;
+    private static int MAX_BASE_MATCH = 10;
 
     private void checkMissedJunctions(final RegionReadData region)
     {
+        if(mSupplementaryAlignment != null)
+            return;
+
         // check for reads either soft-clipped or apparently unspliced, where the extra bases can match with the next exon
 
         // check start of read
@@ -670,6 +674,7 @@ public class ReadRecord
         int deletedLength = Cigar.getCigarElements().stream().filter(x -> x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
 
         int extraBaseLength = 0;
+        int scLength = 0;
 
         if(region.start() > readStartPos && readEndPos > region.start())
         {
@@ -678,14 +683,15 @@ public class ReadRecord
 
         if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S && readStartPos == region.start())
         {
-            extraBaseLength += Cigar.getFirstCigarElement().getLength();
+            scLength = Cigar.getFirstCigarElement().getLength();
+            extraBaseLength += scLength;
         }
 
         // less any deleted bases
         extraBaseLength = max(extraBaseLength - deletedLength, 0);
 
         // allow a single base match if only 1 region matches
-        if(extraBaseLength >= 1 && extraBaseLength <= 10)
+        if(extraBaseLength >= 1 && extraBaseLength <= MAX_BASE_MATCH && scLength <= MAX_BASE_MATCH)
         {
             // first check for a match with the next exon on the lower side
             final String extraBases = ReadBases.substring(0, extraBaseLength);
@@ -724,6 +730,7 @@ public class ReadRecord
         readEndPos = readSection[SE_END];
 
         extraBaseLength = 0;
+        scLength = 0;
 
         if(readEndPos > region.end() && readStartPos < region.end())
         {
@@ -732,12 +739,13 @@ public class ReadRecord
 
         if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S && readEndPos == region.end())
         {
-            extraBaseLength += Cigar.getLastCigarElement().getLength();
+            scLength = Cigar.getLastCigarElement().getLength();
+            extraBaseLength += scLength;
         }
 
         extraBaseLength = max(extraBaseLength - deletedLength, 0);
 
-        if(extraBaseLength >= 1 && extraBaseLength <= 10)
+        if(extraBaseLength >= 1 && extraBaseLength <= MAX_BASE_MATCH && scLength <= MAX_BASE_MATCH)
         {
             // now check for a match to the next exon up
             final String extraBases = ReadBases.substring(Length - extraBaseLength, Length);
