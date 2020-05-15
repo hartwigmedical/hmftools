@@ -84,7 +84,7 @@ public final class HospitalModelFactory {
         Set<String> keyCPCT = hospitalModel.hospitalContactCPCT().keySet();
         Set<String> keyDRUP = hospitalModel.hospitalContactDRUP().keySet();
         Set<String> keyWIDE = hospitalModel.hospitalContactWIDE().keySet();
-        Set<String> keySampleMapping = hospitalModel.sampleHospitalMapping().keySet();
+        Map<String, HospitalSampleMapping> keySampleMapping = hospitalModel.sampleHospitalMapping();
 
         for (String CPCT : keyCPCT) {
             if (!keyAdress.contains(CPCT)) {
@@ -107,9 +107,9 @@ public final class HospitalModelFactory {
             }
         }
 
-        for (String sampleMapping : keySampleMapping) {
-            if (!keyAdress.contains(sampleMapping)) {
-                LOGGER.info(sampleMapping);
+        for (Map.Entry<String, HospitalSampleMapping> sampleMapping : keySampleMapping.entrySet()) {
+            HospitalSampleMapping hospitalSampleMapping = sampleMapping.getValue();
+            if (!keyAdress.contains(hospitalSampleMapping.hospitalId())) {
                 LOGGER.warn("sample mapping hospital ID is not present in hospital adress");
             }
         }
