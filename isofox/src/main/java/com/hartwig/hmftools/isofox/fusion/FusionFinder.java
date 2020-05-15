@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
-import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
@@ -123,6 +123,9 @@ public class FusionFinder
 
     private static final int LOG_COUNT = 10000;
 
+    // private static final String LOG_READ_ID = "";
+    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:11303:18581:15228";
+
     public void findFusions()
     {
         ISF_LOGGER.info("processing {} chimeric read groups", mReadsMap.size());
@@ -178,6 +181,11 @@ public class FusionFinder
                 ++recoveredSuppReads;
             else if(recoveryStatus[MISSING])
                 ++missingSuppReads;
+
+            if(reads.get(0).Id.equals(LOG_READ_ID))
+            {
+                ISF_LOGGER.debug("specific read: {}", reads.get(0));
+            }
 
             if(!isValidFragment(reads))
             {
@@ -410,7 +418,7 @@ public class FusionFinder
 
     private void setMissingGeneCollection(final ReadRecord read)
     {
-        if(read.getGeneCollectons()[SE_START] != NON_GENIC_ID && read.getGeneCollectons()[SE_END] == NON_GENIC_ID)
+        if(read.getGeneCollectons()[SE_START] != NO_GENE_ID && read.getGeneCollectons()[SE_END] == NO_GENE_ID)
         {
             final Map<Integer,List<EnsemblGeneData>> geneCollectionMap = mChrGeneCollectionMap.get(read.Chromosome);
 
@@ -418,9 +426,18 @@ public class FusionFinder
 
             for(Map.Entry<Integer,List<EnsemblGeneData>> entry : geneCollectionMap.entrySet())
             {
-                if(entry.getValue().stream().anyMatch(x -> positionWithin(readEnd, x.GeneStart, x.GeneEnd)))
+                final int[] genesRange = new int[] {
+                        entry.getValue().stream().mapToInt(x -> x.GeneStart).min().orElse(0),
+                        entry.getValue().stream().mapToInt(x -> x.GeneEnd).max().orElse(0) };
+
+                if(positionWithin(readEnd, genesRange[SE_START], genesRange[SE_END]))
                 {
                     read.setGeneCollection(SE_END, entry.getKey(), true);
+                    return;
+                }
+                else if(readEnd < genesRange[SE_START])
+                {
+                    read.setGeneCollection(SE_END, entry.getKey(), false);
                     return;
                 }
             }
@@ -432,7 +449,7 @@ public class FusionFinder
         if(!read.spansGeneCollections())
             return;
 
-        if(read.getGeneCollectons()[SE_END] == NON_GENIC_ID)
+        if(read.getGeneCollectons()[SE_END] == NO_GENE_ID)
         {
             setMissingGeneCollection(read);
         }

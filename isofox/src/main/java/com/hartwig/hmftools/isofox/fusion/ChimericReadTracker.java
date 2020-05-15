@@ -137,8 +137,8 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
-    private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:23402:5592:12765";
+    // private static final String LOG_READ_ID = "";
+    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:21506:2131:4925";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
@@ -248,17 +248,16 @@ public class ChimericReadTracker
             return true;
         }
 
+        if(readGroupComplete && isInversion(reads))
+        {
+            ++mChimericStats.Inversions;
+            return true;
+        }
+
         if(reads.stream().anyMatch(x -> x.spansGeneCollections()))
         {
             // may turn out to just end in the next pre-gene section but cannot say at this time
             ++mChimericStats.LocalInterGeneFrags;
-            return true;
-        }
-
-        // if(reads.stream().anyMatch(x -> x.isInversion()))
-        if(readGroupComplete && isInversion(reads))
-        {
-            ++mChimericStats.Inversions;
             return true;
         }
 
@@ -278,7 +277,7 @@ public class ChimericReadTracker
             int maxPosition = reads.stream().mapToInt(x -> x.getCoordsBoundary(SE_END)).max().orElse(0);
 
             if(mGeneCollection.regionBounds()[SE_START] - minPosition > MAX_NOVEL_SJ_DISTANCE
-                    || maxPosition - mGeneCollection.regionBounds()[SE_END] > MAX_NOVEL_SJ_DISTANCE)
+            || maxPosition - mGeneCollection.regionBounds()[SE_END] > MAX_NOVEL_SJ_DISTANCE)
             {
                 // too far from the gene boundaries so consider these chimeric
                 return true;
@@ -286,6 +285,7 @@ public class ChimericReadTracker
         }
 
         // check whether 2 genes must be involved, or whether just one gene can explain the junction
+        // NOTE: since not all chimeric reads may be available at this point, this test is repeated in the fusion routine
         if(hasMultipleKnownSpliceGenes(reads))
         {
             ++mChimericStats.LocalInterGeneFrags;

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.POS_ORIENT;
 
 import java.util.List;
 import java.util.Map;
@@ -286,7 +287,7 @@ public class RnaUtils
             {
                 return INV;
             }
-            else if(orientations[SE_START] == 1)
+            else if(orientations[SE_START] == POS_ORIENT)
             {
                 return DEL;
             }

@@ -76,7 +76,7 @@ public class FusionCohortData
     {
         final String[] items = data.split(DELIMITER);
 
-        final String[] chromosomes = new String[] { items[fieldIndexMap.get("ChrDown")], items[fieldIndexMap.get("ChrDown")] };
+        final String[] chromosomes = new String[] { items[fieldIndexMap.get("ChrUp")], items[fieldIndexMap.get("ChrDown")] };
 
         final int[] junctionPositions =
                 new int[] { Integer.parseInt(items[fieldIndexMap.get("PosUp")]), Integer.parseInt(items[fieldIndexMap.get("PosDown")]) };

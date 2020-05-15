@@ -48,8 +48,6 @@ public class GeneCollection
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
     private final int[] mFragmentCounts; // counts by various classifications
 
-    public static final int NON_GENIC_ID = -1;
-
     public GeneCollection(int id, final List<GeneReadData> genes)
     {
         mId = id;

@@ -7,7 +7,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
@@ -78,7 +77,7 @@ public class ReadRecord
     private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
     private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
 
-    private final static int NO_GENE_ID = -1;
+    public final static int NO_GENE_ID = -1;
 
     public static ReadRecord from(final SAMRecord record)
     {

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -332,9 +333,9 @@ public class FusionFragmentBuilder
         // set gene collections from the reads without any knowledge of which junctions they may support
         final List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
         final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
-        final List<Integer> positions = Lists.newArrayListWithCapacity(2);
+        final Map<String,Integer> positions = Maps.newHashMapWithExpectedSize(2);
         final List<Integer> geneCollections = Lists.newArrayListWithCapacity(2);
-        final List<Byte> orientations = Lists.newArrayListWithCapacity(2);
+        final Map<String,ReadRecord> reads = Maps.newHashMapWithExpectedSize(2);
 
         final Map<String,List<ReadRecord>> readGroups = Maps.newHashMapWithExpectedSize(2);
 
@@ -346,9 +347,7 @@ public class FusionFragmentBuilder
                 if(!read.spansGeneCollections() && se == SE_END)
                     continue;
 
-                int geneId = read.getGeneCollectons()[se];
-
-                final String chrGeneId = formLocation(read.Chromosome, geneId, true); // genic status ignored for group determination
+                final String chrGeneId = formLocation(read.Chromosome, read.getGeneCollectons()[se], true); // genic status ignored for group determination
 
                 List<ReadRecord> readGroup = readGroups.get(chrGeneId);
 
@@ -359,11 +358,17 @@ public class FusionFragmentBuilder
                     chrGeneCollections.add(chrGeneId);
                     chromosomes.add(read.Chromosome);
                     geneCollections.add(read.getGeneCollectons()[se]);
-                    positions.add(read.getCoordsBoundary(se)); // no overlap in gene collections so doesn't matter which position is used
-                    orientations.add(read.orientation());
+                    positions.put(chrGeneId, read.getCoordsBoundary(se)); // no overlap in gene collections so doesn't matter which position is used
+                    reads.put(chrGeneId, read);
                 }
                 else
                 {
+                    if(read.getCoordsBoundary(se) < positions.get(chrGeneId))
+                    {
+                        positions.put(chrGeneId, min(positions.get(chrGeneId), read.getCoordsBoundary(se)));
+                        reads.put(chrGeneId, read);
+                    }
+
                     readGroup.add(read);
                 }
             }
@@ -375,7 +380,8 @@ public class FusionFragmentBuilder
             fragment.geneCollections()[SE_START] = fragment.geneCollections()[SE_END] = geneCollections.get(0);
 
             // orientation could be set based on the orientations and positions of the reads.. do this when the junction data is set
-            fragment.orientations()[SE_START] = fragment.orientations()[SE_END] = fragment.reads().get(0).orientation();
+            fragment.orientations()[SE_START] = POS_ORIENT;
+            fragment.orientations()[SE_END] = NEG_ORIENT;
 
             return;
         }
@@ -384,7 +390,7 @@ public class FusionFragmentBuilder
         int lowerIndex;
 
         if (chromosomes.get(0).equals(chromosomes.get(1)))
-            lowerIndex = positions.get(0) <= positions.get(1) ? 0 : 1;
+            lowerIndex = positions.get(chrGeneCollections.get(0)) <= positions.get(chrGeneCollections.get(1)) ? 0 : 1;
         else
             lowerIndex = lowerChromosome(chromosomes.get(0), chromosomes.get(1)) ? 0 : 1;
 
@@ -393,10 +399,8 @@ public class FusionFragmentBuilder
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
             final String chrGeneId = chrGeneCollections.get(index);
 
-            final List<ReadRecord> readGroup = readGroups.get(chrGeneId);
-
             fragment.geneCollections()[se] = geneCollections.get(index);
-            fragment.orientations()[se] = readGroup.get(0).orientation();
+            fragment.orientations()[se] = reads.get(chrGeneId).orientation();
         }
 
         fragment.setType(DISCORDANT);
@@ -412,47 +416,20 @@ public class FusionFragmentBuilder
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
             final String chrGeneId = chrGeneCollections.get(index);
-            ReadRecord read = readGroups.get(chrGeneId).get(0);
+            ReadRecord read = reads.get(chrGeneId);
 
-            if(!read.containsSoftClipping())
+            int requiredScSide = switchIndex(se);
+
+            if(!read.isSoftClipped(requiredScSide))
                 break;
 
-            int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
-            int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
+            int scLength = requiredScSide == SE_START ?
+                    read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
 
-            if(scLeft < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
-                scLeft = 0;
-
-            if(scRight < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
-                scRight = 0;
-
-            if(scLeft == 0 && scRight == 0)
+            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
                 break;
 
-            boolean useLeft = false;
-
-            if(scLeft > 0 && scRight > 0)
-            {
-                // should be very unlikely since implies a very short exon and even then would expect it to be mapped
-                if(scLeft >= scRight)
-                {
-                    useLeft = true;
-                }
-                else if(scRight > scLeft)
-                {
-                    useLeft = false;
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            else
-            {
-                useLeft = scLeft > 0;
-            }
-
-            if(useLeft)
+            if(requiredScSide == SE_START)
             {
                 scPositions[se] = read.getCoordsBoundary(SE_START);
                 scOrientations[se] = -1;

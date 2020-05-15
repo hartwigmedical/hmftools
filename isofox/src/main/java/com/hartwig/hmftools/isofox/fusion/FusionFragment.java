@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.GeneCollection.NON_GENIC_ID;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
@@ -57,7 +57,7 @@ public class FusionFragment
         mReads = reads;
         mHasSupplementaryAlignment = FusionFragmentBuilder.hasSuppAlignment(mReads);
 
-        mGeneCollections = new int[] {NON_GENIC_ID, NON_GENIC_ID};
+        mGeneCollections = new int[] {NO_GENE_ID, NO_GENE_ID};
         mJunctionPositions = new int[] {-1, -1};
         mChromosomes = new String[] {"", ""};
         mJunctionOrientations = new byte[] {0, 0};
@@ -83,10 +83,6 @@ public class FusionFragment
                 mLocationIds[se] = formLocation(mChromosomes[se], mGeneCollections[se], true);
             }
         }
-
-        // FusionFragmentBuilder.setLocationData(this);
-        // FusionFragmentBuilder.setJunctionData(this);
-        // mLocationIds = FusionFragmentBuilder.setLocationIds(this);
 
         extractTranscriptExonData();
     }

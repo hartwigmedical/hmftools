@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
@@ -449,7 +450,7 @@ public class FusionReadData
     {
         for (int se = SE_START; se <= SE_END; ++se)
         {
-            if(mGeneCollections[se] == -1)
+            if(mGeneCollections[se] == NO_GENE_ID)
                 continue;
 
             final Map<Integer, BaseDepth> baseDepthMap = chrGeneDepthMap.get(mChromosomes[se]);
@@ -457,7 +458,7 @@ public class FusionReadData
             if(baseDepthMap == null)
                 continue;
 
-            final BaseDepth baseDepth = baseDepthMap != null ? baseDepthMap.get(mGeneCollections[se]) : null;
+            final BaseDepth baseDepth = baseDepthMap.get(mGeneCollections[se]);
 
             if(baseDepth == null)
             {
@@ -468,7 +469,6 @@ public class FusionReadData
             int baseDepthCount = baseDepth.depthAtBase(junctionPositions()[se]);
             mReadDepth[se] += baseDepthCount;
         }
-
     }
 
     public int[] getReadDepth() { return mReadDepth; }

@@ -260,8 +260,8 @@ public class BamFragmentAllocator
         processRead(ReadRecord.from(record));
     }
 
-    private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:1:13309:9951:9410"; //
+    // private static final String LOG_READ_ID = "";
+    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:22608:9239:16045"; //
 
     private void processRead(ReadRecord read)
     {
