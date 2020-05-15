@@ -182,7 +182,7 @@ public abstract class HospitalModel {
 
     @Nullable
     @VisibleForTesting
-    public String extractHospitalName(@NotNull String sampleId) {
+    String extractHospitalName(@NotNull String sampleId) {
         HospitalAddress hospitalAddress = findHospitalAddressModel(sampleId);
 
         if (hospitalAddress == null) {
