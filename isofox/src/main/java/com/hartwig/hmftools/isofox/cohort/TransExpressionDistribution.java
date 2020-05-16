@@ -166,8 +166,6 @@ public class TransExpressionDistribution
 
             boolean roundValues = mConfig.SampleData.SampleIds.size() >= 100;
 
-            final Map<Integer,double[]> transTpmData = Maps.newHashMap();
-
             for(final String data : lines)
             {
                 final String[] items = data.split(DELIMITER);

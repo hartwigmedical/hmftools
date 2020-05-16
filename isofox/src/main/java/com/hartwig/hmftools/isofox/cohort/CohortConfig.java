@@ -43,6 +43,9 @@ public class CohortConfig
 
     public static final String FUSION_MIN_SAMPLES = "fusion_min_samples";
     public static final String FUSION_MIN_FRAGS = "fusion_min_frags";
+    public static final String FUSION_COMPARISONS = "fusion_comparisons";
+    public static final String FUSION_GENERATE_COHORT = "fusion_gen_cohort";
+    public static final String FUSION_COHORT_FILE = "fusion_cohort_file";
 
     public static final String CANCER_GENE_FILES = "cancer_gene_files";
 
@@ -83,10 +86,19 @@ public class CohortConfig
 
     public final int FusionMinSampleThreshold;
     public final int FusionMinFragCount;
+    public final boolean FusionGenerateCohort;
+    public final List<String> FusionComparisonSources;
+    public final String FusionCohortFile;
 
     public CohortConfig(final CommandLine cmd)
     {
-        RootDataDir = cmd.getOptionValue(ROOT_DATA_DIRECTORY);
+        String rootDir = cmd.getOptionValue(ROOT_DATA_DIRECTORY);
+
+        if(!rootDir.endsWith(File.separator))
+            rootDir += File.separator;
+
+        RootDataDir = rootDir;
+
         UseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRS);
         AllAvailableFiles = !UseSampleDirectories && cmd.hasOption(ALL_AVAILABLE_FILES);
         FailOnMissingSample = cmd.hasOption(FAIL_MISSING);
@@ -140,6 +152,11 @@ public class CohortConfig
 
         FusionMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_SAMPLES, "2"));
         FusionMinFragCount = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_FRAGS, "2"));
+        FusionGenerateCohort = cmd.hasOption(FUSION_GENERATE_COHORT);
+
+        FusionCohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
+        FusionComparisonSources = cmd.hasOption(FUSION_COMPARISONS) ?
+                Arrays.stream(cmd.getOptionValue(FUSION_COMPARISONS).split(";")).collect(Collectors.toList()) : Lists.newArrayList();
 
         WriteSampleGeneDistributionData = cmd.hasOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
         CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
@@ -164,9 +181,6 @@ public class CohortConfig
     public static boolean formSampleFilenames(final CohortConfig config, final CohortAnalysisType dataType, final List<Path> filenames)
     {
         String rootDir = config.RootDataDir;
-
-        if(!rootDir.endsWith(File.separator))
-            rootDir += File.separator;
 
         List<String> missingSampleIds = Lists.newArrayList();
 
@@ -226,8 +240,12 @@ public class CohortConfig
         options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
         options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
+
+        options.addOption(FUSION_GENERATE_COHORT, false, "Generate a fusion cohort file");
         options.addOption(FUSION_MIN_SAMPLES, true, "Min number of samples to support a fusion");
         options.addOption(FUSION_MIN_FRAGS, true, "Min frag count per sample to support a fusion");
+        options.addOption(FUSION_COHORT_FILE, true, "Cohort file previously generated");
+        options.addOption(FUSION_COMPARISONS, true, "List of sources to compare fusions between");
 
         options.addOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, false, "Write per-sample gene distribution data file");
         options.addOption(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
