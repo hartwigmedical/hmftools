@@ -41,7 +41,6 @@ public class FusionTask implements Callable
 
     private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
     private final List<FusionFragment> mAllFragments;
-    private final Set<String> mReadIds;
 
     private int mNextFusionId;
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
@@ -72,7 +71,6 @@ public class FusionTask implements Callable
         mFusionsByGene = Maps.newHashMap();
         mDiscordantFragments = Maps.newHashMap();
         mRealignCandidateFragments = Maps.newHashMap();
-        mReadIds = Sets.newHashSet();
 
         mFusionWriter = fusionWriter;
 
@@ -87,7 +85,9 @@ public class FusionTask implements Callable
     @Override
     public Long call()
     {
-        ISF_LOGGER.info("{}: processing {} chimeric fragments", mTaskId, mAllFragments.size());
+        int initialFragmentCount = mAllFragments.size();
+
+        ISF_LOGGER.info("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
 
         mPerfCounters[PC_DISCOVERY].start();;
 
@@ -109,8 +109,10 @@ public class FusionTask implements Callable
 
         writeData();
 
-        if(mAllFragments.size() > 1000)
-            ISF_LOGGER.info("{}: fusion task complete", mTaskId);
+        ISF_LOGGER.info("{}: fusion task complete, fusions({}) unassigned(disc={} realgn={})",
+                mTaskId, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
+                mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
+                mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum());
 
         return (long)1;
     }
@@ -122,8 +124,6 @@ public class FusionTask implements Callable
         int junctioned = 0;
         for (FusionFragment fragment : mAllFragments)
         {
-            mReadIds.add(fragment.readId());
-
             if (fragment.type() == MATCHED_JUNCTION)
             {
                 fragment.setJunctionBases(mConfig.RefFastaSeqFile);
@@ -153,6 +153,9 @@ public class FusionTask implements Callable
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
+
+        // free up the set of initial fragments now they've all been assigned
+        mAllFragments.clear();
     }
 
     private void annotateFusions()
@@ -545,7 +548,6 @@ public class FusionTask implements Callable
         mFusionCandidates.clear();
         mDiscordantFragments.clear();
         mRealignCandidateFragments.clear();
-        mReadIds.clear();
     }
 
 }

@@ -39,14 +39,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
+import com.hartwig.hmftools.isofox.common.DuplicateReadTracker;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -86,9 +89,6 @@ public class BamFragmentAllocator
     private int mTotalBamReadCount;
     private int mNextGeneCountLog;
 
-    private final Map<Integer,List<int[]>> mDuplicateCache;
-    private final List<String> mDuplicateReadIds;
-
     private final List<CategoryCountsData> mTransComboData;
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
     private final RetainedIntronFinder mRetainedIntronFinder;
@@ -103,6 +103,7 @@ public class BamFragmentAllocator
     private final GcRatioCounts mGcRatioCounts;
     private final GcRatioCounts mGeneGcRatioCounts;
     private int mEnrichedGeneFragments;
+    private final DuplicateReadTracker mDuplicateTracker;
 
     public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
@@ -126,8 +127,7 @@ public class BamFragmentAllocator
 
         mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, !mRunFusions);
 
-        mDuplicateCache = Maps.newHashMap();
-        mDuplicateReadIds = Lists.newArrayList();
+        mDuplicateTracker = new DuplicateReadTracker(mConfig.MarkDuplicates);
 
         mReadDataWriter = resultsWriter.getReadDataWriter();
         mGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
@@ -152,6 +152,7 @@ public class BamFragmentAllocator
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
     public BaseDepth getBaseDepth() { return mBaseDepth; }
     public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
+    public final Set<String> getChimericDuplicateReadIds() { return mChimericReads.getReadIds(); }
 
     private static int GENE_LOG_COUNT = 100000;
 
@@ -169,6 +170,8 @@ public class BamFragmentAllocator
 
         if(mRetainedIntronFinder != null)
             mRetainedIntronFinder.setGeneData(null);
+
+        mDuplicateTracker.clear();
     }
 
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
@@ -176,7 +179,6 @@ public class BamFragmentAllocator
     public void produceBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
     {
         clearCache();
-        clearDuplicates();
 
         mCurrentGenes = geneCollection;
         mChimericReads.initialise(mCurrentGenes);
@@ -235,7 +237,7 @@ public class BamFragmentAllocator
             return;
         }
 
-        if(checkDuplicates(record))
+        if(mDuplicateTracker.checkDuplicates(record))
         {
             if(mConfig.DropDuplicates)
             {
@@ -261,7 +263,7 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:1:21308:22754:15258";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:12504:26102:8291";
 
     private void processRead(ReadRecord read)
     {
@@ -770,66 +772,6 @@ public class BamFragmentAllocator
         {
             mChimericReads.addChimericReadPair(read1, read2);
         }
-    }
-
-    private static final int DUP_DATA_SECOND_START = 0;
-    private static final int DUP_DATA_READ_LEN = 1;
-    private static final int DUP_DATA_INSERT_SIZE = 2;
-
-    public boolean checkDuplicates(final SAMRecord record)
-    {
-        if(record.getDuplicateReadFlag())
-            return true;
-
-        if(!mConfig.MarkDuplicates)
-            return false;
-
-        if(mDuplicateReadIds.contains(record.getReadName()))
-        {
-            mDuplicateReadIds.remove(record.getReadName());
-            return true;
-        }
-
-        if(!record.getReferenceName().equals(record.getMateReferenceName()) || record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
-            return false;
-
-        int firstStartPos = record.getFirstOfPairFlag() ? record.getStart() : record.getMateAlignmentStart();
-        int secondStartPos = record.getFirstOfPairFlag() ? record.getMateAlignmentStart() : record.getStart();
-        int readLength = record.getReadLength();
-        int insertSize = record.getInferredInsertSize();
-
-        List<int[]> dupDataList = mDuplicateCache.get(firstStartPos);
-
-        if(dupDataList == null)
-        {
-            dupDataList = Lists.newArrayList();
-            mDuplicateCache.put(firstStartPos, dupDataList);
-        }
-        else
-        {
-            // search for a match
-            if(dupDataList.stream().anyMatch(x -> x[DUP_DATA_SECOND_START] == secondStartPos
-                    && x[DUP_DATA_READ_LEN] == readLength && insertSize == x[DUP_DATA_INSERT_SIZE]))
-            {
-                ISF_LOGGER.trace("duplicate fragment: id({}) chr({}) pos({}->{}) otherReadStart({}) insertSize({})",
-                        record.getReadName(), record.getReferenceName(), firstStartPos, record.getEnd(), secondStartPos, insertSize);
-
-                // cache so the second read can be identified immediately
-                mDuplicateReadIds.add(record.getReadName());
-                return true;
-            }
-        }
-
-        int[] dupData = {secondStartPos, readLength, insertSize};
-        dupDataList.add(dupData);
-
-        return false;
-    }
-
-    private void clearDuplicates()
-    {
-        mDuplicateCache.clear();
-        mDuplicateReadIds.clear();
     }
 
     public static BufferedWriter createReadDataWriter(final IsofoxConfig config)

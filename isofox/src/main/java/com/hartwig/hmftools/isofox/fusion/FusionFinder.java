@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
@@ -56,6 +58,7 @@ public class FusionFinder
     private final EnsemblDataCache mGeneTransCache;
 
     private final Map<String,List<ReadRecord>> mReadsMap;
+    private final Set<String> mDuplicateReadIds;
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
     private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
 
@@ -76,6 +79,7 @@ public class FusionFinder
         mGeneTransCache = geneTransCache;
 
         mReadsMap = Maps.newHashMap();
+        mDuplicateReadIds = Sets.newHashSet();
         mChrGeneCollectionMap = Maps.newHashMap();
         mChrGeneDepthMap = Maps.newHashMap();
         mFusionTasks = Lists.newArrayList();
@@ -95,6 +99,11 @@ public class FusionFinder
     public void addChimericReads(final Map<String,List<ReadRecord>> chimericReadMap)
     {
         mergeChimericReadMaps(mReadsMap, chimericReadMap);
+    }
+
+    public void addDuplicateReadIds(final Set<String> readIds)
+    {
+        mergeDuplicateReadIds(mDuplicateReadIds, readIds);
     }
 
     public static void addChimericReads(final Map<String,List<ReadRecord>> chimericReadMap, final ReadRecord read)
@@ -128,6 +137,7 @@ public class FusionFinder
 
     public void findFusions()
     {
+        // convert any set of valid reads into a fragment, and then process these in groups by chromosomal pair
         ISF_LOGGER.info("processing {} chimeric read groups", mReadsMap.size());
 
         mPerfCounter.start();
@@ -156,7 +166,7 @@ public class FusionFinder
 
             final List<ReadRecord> reads = entry.getValue();
 
-            if(reads.stream().anyMatch(x -> x.isDuplicate()))
+            if(mDuplicateReadIds.contains(reads.get(0).Id) || reads.stream().anyMatch(x -> x.isDuplicate()))
             {
                 ++duplicates;
                 continue;
@@ -241,9 +251,12 @@ public class FusionFinder
             }
         }
 
-        ISF_LOGGER.info("chimeric groups({} skipped={} dups={} invalid={} recov={} miss={} candidates={}) chrPairs({}) tasks({})",
-                mReadsMap.size(), skipped, duplicates, invalidFragments, recoveredSuppReads, missingSuppReads, fragments,
+        ISF_LOGGER.info("chimeric groups({} skipped={} dups=({} existing={}) invalid={} recov={} miss={} candidates={}) chrPairs({}) tasks({})",
+                mReadsMap.size(), skipped, duplicates, mDuplicateReadIds.size(), invalidFragments, recoveredSuppReads, missingSuppReads, fragments,
                 chrPairFragments.size(), mFusionTasks.size());
+
+        mReadsMap.clear();
+        mDuplicateReadIds.clear();
 
         if(mFusionTasks.isEmpty())
         {
@@ -554,6 +567,11 @@ public class FusionFinder
                 readsById.addAll(entry.getValue());
             }
         }
+    }
+
+    public static void mergeDuplicateReadIds(final Set<String> destSet, final Set<String> sourceSet)
+    {
+        sourceSet.forEach(x -> destSet.add(x));
     }
 
     private void logPerformanceStats()

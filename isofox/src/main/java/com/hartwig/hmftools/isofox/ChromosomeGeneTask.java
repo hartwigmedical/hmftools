@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionFinder.mergeDuplicateReadIds;
 
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,7 @@ public class ChromosomeGeneTask implements Callable
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
     private final Map<String,List<ReadRecord>> mChimericReadMap;
+    private final Set<String> mChimericDuplicateReadIds;
     private final ChimericStats mChimericStats;
     private final Set<Integer> mMissingJunctionPositions;
 
@@ -124,6 +126,7 @@ public class ChromosomeGeneTask implements Callable
         mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
         mChimericReadMap = Maps.newHashMap();
+        mChimericDuplicateReadIds = Sets.newHashSet();
         mMissingJunctionPositions = Sets.newHashSet();
         mChimericStats = new ChimericStats();
 
@@ -146,6 +149,7 @@ public class ChromosomeGeneTask implements Callable
     public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
     public final Map<String,List<ReadRecord>> getChimericReadMap() { return mChimericReadMap; }
+    public final Set<String> getChimericDuplicateReadIds() { return mChimericDuplicateReadIds; }
     public final Map<Integer,List<EnsemblGeneData>> getGeneCollectionMap() { return mGeneCollectionMap; }
     public final Map<Integer,BaseDepth> getGeneDepthMap() { return mGeneDepthMap; }
     public final ChimericStats getChimericStats() { return mChimericStats; }
@@ -301,7 +305,7 @@ public class ChromosomeGeneTask implements Callable
             ISF_LOGGER.debug("chr({}) gene({}) processed({} of {})",
                     mChromosome, geneCollection.geneNames(10), mCurrentGeneIndex, mGeneDataList.size());
 
-            ++mGenesProcessed;
+            mGenesProcessed += geneCollection.genes().size();
 
             lastGeneCollectionEndPosition = geneCollection.regionBounds()[SE_END] + 1;
 
@@ -318,7 +322,7 @@ public class ChromosomeGeneTask implements Callable
         if(nextLogCount > 100)
         {
             ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
-            ISF_LOGGER.info("chr({}) chimeric data: {}", mChromosome, mChimericStats);
+            ISF_LOGGER.info("chr({}) chimeric data: {} dups={}", mChromosome, mChimericStats, mChimericDuplicateReadIds.size());
         }
     }
 
@@ -440,6 +444,7 @@ public class ChromosomeGeneTask implements Callable
             final Set<Integer> candidateJunctions = mBamFragmentAllocator.getChimericReadTracker().getJunctionPositions();
 
             mergeChimericReadMaps(mChimericReadMap, readMap);
+            mergeDuplicateReadIds(mChimericDuplicateReadIds, mBamFragmentAllocator.getChimericDuplicateReadIds());
 
             final BaseDepth baseDepth = mBamFragmentAllocator.getBaseDepth();
             final Map<Integer,Integer> depthMap = baseDepth.createPositionMap(candidateJunctions);

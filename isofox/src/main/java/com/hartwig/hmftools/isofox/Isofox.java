@@ -240,6 +240,7 @@ public class Isofox
             for(ChromosomeGeneTask chrTask : chrTasks)
             {
                 mFusionFinder.addChimericReads(chrTask.getChimericReadMap());
+                mFusionFinder.addDuplicateReadIds(chrTask.getChimericDuplicateReadIds());
                 mFusionFinder.addChromosomeGeneCollections(chrTask.chromosome(), chrTask.getGeneCollectionMap());
                 mFusionFinder.addChromosomeGeneDepth(chrTask.chromosome(), chrTask.getGeneDepthMap());
                 chimericStats.merge(chrTask.getChimericStats());

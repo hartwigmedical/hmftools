@@ -38,6 +38,7 @@ public class ChimericReadTracker
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
     private final Map<String,List<ReadRecord>> mCandidateRealignedReadMap;
     private final Map<String,Integer> mSecondaryReadMap;
+    private final Set<String> mDuplicateReadIds; // currently only used to store chimeric duplicates
 
     // to avoid double-processing reads falling after a gene collection
     private final Map<String,List<ReadRecord>> mPostGeneReadMap;
@@ -50,6 +51,7 @@ public class ChimericReadTracker
         mChimericStats = new ChimericStats();
         mChimericReadMap = Maps.newHashMap();
         mJunctionPositions = Sets.newHashSet();
+        mDuplicateReadIds = Sets.newHashSet();
         mLocalChimericReads = Lists.newArrayList();
         mCandidateRealignedReadMap = Maps.newHashMap();
         mSecondaryReadMap = Maps.newHashMap();
@@ -61,6 +63,7 @@ public class ChimericReadTracker
     public final Map<String,List<ReadRecord>> getReadMap() { return mChimericReadMap; }
     public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
     public final List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
+    public Set<String> getReadIds() { return mDuplicateReadIds; }
     public ChimericStats getStats() { return mChimericStats; }
 
     public void initialise(final GeneCollection geneCollection)
@@ -80,10 +83,14 @@ public class ChimericReadTracker
         mSecondaryReadMap.clear();
         mLocalChimericReads.clear();
         mJunctionPositions.clear();
+        mDuplicateReadIds.clear();
     }
 
     public void addRealignmentCandidates(final ReadRecord read1, final ReadRecord read2)
     {
+        if(read1.isDuplicate() || read2.isDuplicate()) // group complete so drop these
+            return;
+
         mCandidateRealignedReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
     }
 
@@ -102,9 +109,12 @@ public class ChimericReadTracker
         if(mGeneCollection.inEnrichedRegion(read1.PosStart, read1.PosEnd) || mGeneCollection.inEnrichedRegion(read2.PosStart, read2.PosEnd))
             return;
 
-        // populate transcript info for intronic reads since it will be used in fusion matching
-        addIntronicTranscriptData(read1);
-        addIntronicTranscriptData(read2);
+        if(!read1.isDuplicate() && !read2.isDuplicate())
+        {
+            // populate transcript info for intronic reads since it will be used in fusion matching
+            addIntronicTranscriptData(read1);
+            addIntronicTranscriptData(read2);
+        }
 
         // add the pair when it's clear there aren't others with the same ID in the map
         if(mConfig.RunValidations && mChimericReadMap.containsKey(read1.Id))
@@ -151,8 +161,12 @@ public class ChimericReadTracker
             if(read.isMateUnmapped() || mGeneCollection.inEnrichedRegion(read.PosStart, read.PosEnd))
                 continue;
 
-            baseDepth.processRead(read.getMappedRegionCoords());
-            addIntronicTranscriptData(read);
+            if(!read.isDuplicate())
+            {
+                baseDepth.processRead(read.getMappedRegionCoords());
+                addIntronicTranscriptData(read);
+            }
+
             addChimericReads(mChimericReadMap, read);
         }
 
@@ -171,6 +185,16 @@ public class ChimericReadTracker
 
             int readCount = reads.size();
             boolean readGroupComplete = (readCount == 3 || (!hasSuppAlignment(reads) && readCount == 2));
+
+            // if an entire group is a duplicate it can be dropped, otherwise record it's ID for the reads in other gene collections then drop it
+            if(reads.stream().anyMatch(x -> x.isDuplicate()))
+            {
+                if (!readGroupComplete)
+                    mDuplicateReadIds.add(readId);
+
+                fragsToRemove.add(readId);
+                continue;
+            }
 
             if(skipNonGenicReads(reads))
             {
