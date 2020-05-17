@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.lims.hospital;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,15 +19,29 @@ public class HospitalModelFactoryTest {
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
 
     @Test
-    public void canCreateFromLimsDirectory() throws IOException {
+    public void canCreateFromLimsDirectoryWithoutWarnings() throws IOException {
         HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(LIMS_DIRECTORY);
         assertNotNull(hospitalModel);
+
+        assertTrue(HospitalModelFactory.validateModelIntegrity(hospitalModel));
     }
 
     @Test
-    public void allDataArePresent() throws IOException {
-        HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(LIMS_DIRECTORY);
-        HospitalModelFactory.checkFields(hospitalModel);
+    public void canValidateIntegrityCorrectly() {
+        HospitalModel emptyModel = ImmutableHospitalModel.builder().build();
+        assertTrue(HospitalModelFactory.validateModelIntegrity(emptyModel));
+
+        HospitalModel noAddressModel = ImmutableHospitalModel.builder()
+                .putHospitalContactCPCT("HOSP",
+                        ImmutableHospitalContact.builder()
+                                .hospitalId("HOSP")
+                                .hospitalPI("Test")
+                                .requesterName("Test")
+                                .requesterEmail("Test")
+                                .build())
+                .build();
+
+        assertFalse(HospitalModelFactory.validateModelIntegrity(noAddressModel));
     }
 
     @Test
@@ -107,16 +123,13 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadSampleHospitalMapping() throws IOException {
-        Map<String, HospitalSampleMapping> sampleHospitalMapping =
-                HospitalModelFactory.readFromSampleHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
+    public void canReadSampleToHospitalMapping() throws IOException {
+        Map<String, String> sampleHospitalMapping =
+                HospitalModelFactory.readFromSampleToHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
 
         assertEquals(2, sampleHospitalMapping.size());
 
-        HospitalSampleMapping sampleMapping1 = sampleHospitalMapping.get("CORE18001224T");
-        assertEquals("01", sampleMapping1.hospitalId());
-
-        HospitalSampleMapping sampleMapping2 = sampleHospitalMapping.get("CORE18002000T");
-        assertEquals("03", sampleMapping2.hospitalId());
+        assertEquals("01", sampleHospitalMapping.get("CORE18001224T"));
+        assertEquals("02", sampleHospitalMapping.get("CORE18002000T"));
     }
 }

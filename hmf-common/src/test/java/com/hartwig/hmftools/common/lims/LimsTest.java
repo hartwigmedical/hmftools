@@ -14,7 +14,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.lims.hospital.HospitalModelTest;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -78,7 +78,6 @@ public class LimsTest {
         assertFalse(limsCPCTFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
         assertTrue(limsWIDETrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
         assertFalse(limsWIDEFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
-
     }
 
     @Test
@@ -309,7 +308,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDates,
                 blacklistedPatients,
-                HospitalModelTest.buildTestHospitalModel());
+                ImmutableHospitalModel.builder().build());
     }
 
     @NotNull
@@ -328,7 +327,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                HospitalModelTest.buildTestHospitalModel());
+                ImmutableHospitalModel.builder().build());
     }
 
     @NotNull
@@ -352,7 +351,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                HospitalModelTest.buildTestHospitalModel());
+                ImmutableHospitalModel.builder().build());
     }
 
     @NotNull
@@ -373,6 +372,6 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                HospitalModelTest.buildTestHospitalModel());
+                ImmutableHospitalModel.builder().build());
     }
 }

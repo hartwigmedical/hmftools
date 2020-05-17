@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
@@ -63,53 +64,59 @@ public final class HospitalModelFactory {
                 readFromHospitalContact(hospitalContactDRUPTsv, HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP);
         Map<String, HospitalContact> hospitalContactWIDE =
                 readFromHospitalContact(hospitalContactWIDETsv, HOSPITAL_CONTACT_FIELD_COUNT_WIDE);
-        Map<String, HospitalSampleMapping> sampleHospitalMapping = readFromSampleHospitalMapping(sampleHospitalMappingTsv);
+        Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMapping(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
                 .hospitalAddress(hospitalAddress)
-                .sampleHospitalMapping(sampleHospitalMapping)
+                .sampleToHospitalMapping(sampleHospitalMapping)
                 .hospitalContactCPCT(hospitalContactCPCT)
                 .hospitalContactDRUP(hospitalContactDRUP)
                 .hospitalContactWIDE(hospitalContactWIDE)
                 .build();
 
-        checkFields(hospitalModel);
+        validateModelIntegrity(hospitalModel);
 
         return hospitalModel;
     }
 
     @VisibleForTesting
-    public static void checkFields(@NotNull HospitalModel hospitalModel) {
-        Set<String> keyAdress = hospitalModel.hospitalAddress().keySet();
+    static boolean validateModelIntegrity(@NotNull HospitalModel hospitalModel) {
+        Set<String> hospitalIdsInAddressList = hospitalModel.hospitalAddress().keySet();
         Set<String> keyCPCT = hospitalModel.hospitalContactCPCT().keySet();
         Set<String> keyDRUP = hospitalModel.hospitalContactDRUP().keySet();
         Set<String> keyWIDE = hospitalModel.hospitalContactWIDE().keySet();
-        Map<String, HospitalSampleMapping> keySampleMapping = hospitalModel.sampleHospitalMapping();
+        Set<String> keySampleMapping = Sets.newHashSet(hospitalModel.sampleToHospitalMapping().values());
 
+        boolean allCorrect = true;
         for (String CPCT : keyCPCT) {
-            if (!keyAdress.contains(CPCT)) {
-                LOGGER.warn("CPCT hospital ID is not present in hospital adress '{}'", CPCT);
+            if (!hospitalIdsInAddressList.contains(CPCT)) {
+                allCorrect = false;
+                LOGGER.warn("CPCT hospital ID is not present in hospital address list: '{}'", CPCT);
             }
         }
 
         for (String DRUP : keyDRUP) {
-            if (!keyAdress.contains(DRUP)) {
-                LOGGER.warn("DRUP hospital ID is not present in hospital adress '{}'", DRUP);
+            if (!hospitalIdsInAddressList.contains(DRUP)) {
+                allCorrect = false;
+                LOGGER.warn("DRUP hospital ID is not present in hospital address list: '{}'", DRUP);
             }
         }
 
         for (String WIDE : keyWIDE) {
-            if (!keyAdress.contains(WIDE)) {
-                LOGGER.warn("WIDE hospital ID is not present in hospital adress '{}'", WIDE);
+            if (!hospitalIdsInAddressList.contains(WIDE)) {
+                allCorrect = false;
+                LOGGER.warn("WIDE hospital ID is not present in hospital address list: '{}'", WIDE);
             }
         }
 
-        for (Map.Entry<String, HospitalSampleMapping> sampleMapping : keySampleMapping.entrySet()) {
-            HospitalSampleMapping hospitalSampleMapping = sampleMapping.getValue();
-            if (!keyAdress.contains(hospitalSampleMapping.hospitalId())) {
-                LOGGER.warn("sample mapping hospital ID is not present in hospital adress '{}'", hospitalSampleMapping.hospitalId());
+        for (String sampleMapping : keySampleMapping) {
+            if (!hospitalIdsInAddressList.contains(sampleMapping)) {
+                allCorrect = false;
+                LOGGER.warn("Sample mapping hospital ID is not present in hospital address list: '{}'", sampleMapping);
             }
         }
+
+        return allCorrect;
     }
 
     @NotNull
@@ -162,16 +169,14 @@ public final class HospitalModelFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, HospitalSampleMapping> readFromSampleHospitalMapping(@NotNull String sampleHospitalMappingTsv) throws IOException {
-        Map<String, HospitalSampleMapping> hospitalPerSampleMap = Maps.newHashMap();
+    static Map<String, String> readFromSampleToHospitalMapping(@NotNull String sampleHospitalMappingTsv) throws IOException {
+        Map<String, String> hospitalPerSampleMap = Maps.newHashMap();
 
         List<String> lines = FileReader.build().readLines(new File(sampleHospitalMappingTsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == FIELD_COUNT_SAMPLE_HOSPITAL_MAPPING) {
-                HospitalSampleMapping hospitalManual = ImmutableHospitalSampleMapping.of(parts[HOSPITAL_MAPPING_COLUMN]);
-
-                hospitalPerSampleMap.put(parts[SAMPLE_MAPPING_ID_COLUMN], hospitalManual);
+                hospitalPerSampleMap.put(parts[SAMPLE_MAPPING_ID_COLUMN], parts[HOSPITAL_MAPPING_COLUMN]);
             } else {
                 LOGGER.warn("Could not properly parse line in sample hospital mapping tsv: '{}'", line);
             }
