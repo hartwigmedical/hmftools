@@ -148,7 +148,7 @@ public class ChimericReadTracker
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:13212:25618:6595";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:23308:18394:18413";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
@@ -189,9 +189,7 @@ public class ChimericReadTracker
             // if an entire group is a duplicate it can be dropped, otherwise record it's ID for the reads in other gene collections then drop it
             if(reads.stream().anyMatch(x -> x.isDuplicate()))
             {
-                if (!readGroupComplete)
-                    mDuplicateReadIds.add(readId);
-
+                mDuplicateReadIds.add(readId);
                 fragsToRemove.add(readId);
                 continue;
             }
