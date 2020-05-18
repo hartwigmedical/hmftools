@@ -96,7 +96,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 sampleReport.refSampleBarcode()));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
-        div.add(createContentParagraph("This report is addressed to: ", reportAddressedAt(sampleReport.hospitalContactData())));
+        div.add(createContentParagraph("This report is addressed to: ", reportAddressedTo(sampleReport.hospitalContactData())));
 
         if (study == LimsStudy.CORE) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
@@ -112,7 +112,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String reportAddressedAt(@NotNull HospitalContactData contactData) {
+    private static String reportAddressedTo(@NotNull HospitalContactData contactData) {
         if (!contactData.hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
             return contactData.hospitalPI() + ", " + contactData.hospitalAddress();
         } else {
