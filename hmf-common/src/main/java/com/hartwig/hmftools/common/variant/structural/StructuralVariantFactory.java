@@ -30,48 +30,48 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class StructuralVariantFactory {
 
-    public final static String RECOVERED = "RECOVERED";
-    public final static String RECOVERY_METHOD = "RECOVERY_METHOD";
-    public final static String RECOVERY_FILTER = "RECOVERY_FILTER";
+    public static final String RECOVERED = "RECOVERED";
+    public static final String RECOVERY_METHOD = "RECOVERY_METHOD";
+    public static final String RECOVERY_FILTER = "RECOVERY_FILTER";
     public static final String PASS = "PASS";
     public static final String INFERRED = "INFERRED";
-    public final static String CIPOS = "CIPOS";
-    public final static String SVTYPE = "SVTYPE";
+    public static final String CIPOS = "CIPOS";
+    public static final String SVTYPE = "SVTYPE";
     public static final String PON_FILTER_PON = "PON";
-    public final static String IMPRECISE = "IMPRECISE";
+    public static final String IMPRECISE = "IMPRECISE";
 
-    private final static String MATE_ID = "MATEID";
-    private final static String PAR_ID = "PARID";
-    private final static String INS_SEQ = "SVINSSEQ";
-    private final static String LEFT_INS_SEQ = "LEFT_SVINSSEQ";
-    private final static String RIGHT_INS_SEQ = "RIGHT_SVINSSEQ";
-    private final static String HOM_SEQ = "HOMSEQ";
-    private final static String BPI_AF = "BPI_AF";
-    private final static String TAF = "TAF";
-    private final static String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
-    private final static String IHOMPOS = "IHOMPOS";
-    private final static String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
-    private final static String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
-    private final static String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
-    private final static String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
-    private final static String EVENT = "EVENT";
-    private final static String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
-    private final static String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
-    private final static String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
-    private final static String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
-    private final static String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
-    private final static String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
-    private final static String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
-    private final static String ANCHOR_SUPPORT_CIGAR = "SC";
+    private static final String MATE_ID = "MATEID";
+    private static final String PAR_ID = "PARID";
+    private static final String INS_SEQ = "SVINSSEQ";
+    private static final String LEFT_INS_SEQ = "LEFT_SVINSSEQ";
+    private static final String RIGHT_INS_SEQ = "RIGHT_SVINSSEQ";
+    private static final String HOM_SEQ = "HOMSEQ";
+    private static final String BPI_AF = "BPI_AF";
+    private static final String TAF = "TAF";
+    private static final String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
+    private static final String IHOMPOS = "IHOMPOS";
+    private static final String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
+    private static final String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
+    private static final String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
+    private static final String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
+    private static final String EVENT = "EVENT";
+    private static final String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
+    private static final String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
+    private static final String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
+    private static final String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
+    private static final String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
+    private static final String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
+    private static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
+    private static final String ANCHOR_SUPPORT_CIGAR = "SC";
 
     /**
      * Must match the small deldup threshold in scripts/gridss/gridss.config.R
      */
-    private final static int SMALL_DELDUP_SIZE = 1000;
-    private final static int NORMAL_GENOTYPE_ORDINAL = 0;
-    private final static int TUMOUR_GENOTYPE_ORDINAL = 1;
-    private final static Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
-    private final static Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
+    private static final int SMALL_DELDUP_SIZE = 1000;
+    private static final int NORMAL_GENOTYPE_ORDINAL = 0;
+    private static final int TUMOUR_GENOTYPE_ORDINAL = 1;
+    private static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
+    private static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
 
     @NotNull
     private final Map<String, VariantContext> unmatched = Maps.newHashMap();
@@ -135,7 +135,9 @@ public class StructuralVariantFactory {
 
         final int start = context.getStart();
         final int end = context.getEnd();
-        final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
+        final List<Double> af = context.hasAttribute(BPI_AF)
+                ? context.getAttributeAsDoubleList(BPI_AF, 0.0)
+                : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         byte startOrientation = 0, endOrientation = 0;
         switch (type) {
@@ -215,7 +217,9 @@ public class StructuralVariantFactory {
 
         final int start = first.getStart();
         final int end = second.getStart();
-        final List<Double> af = first.hasAttribute(BPI_AF) ? first.getAttributeAsDoubleList(BPI_AF, 0.0) : first.hasAttribute(TAF) ? first.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
+        final List<Double> af = first.hasAttribute(BPI_AF)
+                ? first.getAttributeAsDoubleList(BPI_AF, 0.0)
+                : first.hasAttribute(TAF) ? first.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         final String alt = first.getAlternateAllele(0).getDisplayString();
         final Matcher match = BREAKEND_REGEX.matcher(alt);
@@ -256,7 +260,8 @@ public class StructuralVariantFactory {
                 inferredType = StructuralVariantType.INV;
             } else if (startLeg.orientation() == -1) {
                 inferredType = StructuralVariantType.DUP;
-            } else if (insertedSequence != null && insertedSequence.length() > 0 && Math.abs(endLeg.position() - startLeg.position()) <= 1) {
+            } else if (insertedSequence != null && insertedSequence.length() > 0
+                    && Math.abs(endLeg.position() - startLeg.position()) <= 1) {
                 inferredType = StructuralVariantType.INS;
             } else {
                 inferredType = StructuralVariantType.DEL;
@@ -278,7 +283,9 @@ public class StructuralVariantFactory {
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(context)));
         Preconditions.checkArgument(SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches());
 
-        final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
+        final List<Double> af = context.hasAttribute(BPI_AF)
+                ? context.getAttributeAsDoubleList(BPI_AF, 0.0)
+                : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         final String alt = context.getAlternateAllele(0).getDisplayString();
         // local orientation determined by the positioning of the anchoring bases

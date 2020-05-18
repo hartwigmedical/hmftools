@@ -30,7 +30,7 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class AmberVCF {
 
-    private final static String PASS = "PASS";
+    private static final String PASS = "PASS";
 
     private final String tumorSample;
     private final AmberConfig config;

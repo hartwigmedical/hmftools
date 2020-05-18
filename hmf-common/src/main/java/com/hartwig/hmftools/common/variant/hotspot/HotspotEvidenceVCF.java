@@ -33,12 +33,12 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class HotspotEvidenceVCF {
 
-    private final static String PASS = "PASS";
-    private final static String ALLELIC_FREQUENCY = "AF";
-    private final static String HOTSPOT_FLAG = "HOTSPOT";
-    private final static String GERMLINE_INDEL = "GERMLINE_INDEL";
-    private final static String GERMLINE_HET_LIKELIHOOD = "GHBL";
-    private final static String LOW_CONFIDENCE = "LOW_CONFIDENCE";
+    private static final String PASS = "PASS";
+    private static final String ALLELIC_FREQUENCY = "AF";
+    private static final String HOTSPOT_FLAG = "HOTSPOT";
+    private static final String GERMLINE_INDEL = "GERMLINE_INDEL";
+    private static final String GERMLINE_HET_LIKELIHOOD = "GHBL";
+    private static final String LOW_CONFIDENCE = "LOW_CONFIDENCE";
 
     private final VCFHeader header;
     private final String tumorSample;
@@ -52,8 +52,7 @@ public class HotspotEvidenceVCF {
     private final int minIndelQuality;
 
     public HotspotEvidenceVCF(@NotNull final String normalSample, @NotNull final String tumorSample, final double maxNormalHetLikelihood,
-            final int minTumorReads, final double minSnvVAF, final double minIndelVAF, final int minSnvQuality,
-            final int minIndelQuality) {
+            final int minTumorReads, final double minSnvVAF, final double minIndelVAF, final int minSnvQuality, final int minIndelQuality) {
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
         this.maxNormalHetLikelihood = maxNormalHetLikelihood;

@@ -13,10 +13,10 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public final class EnrichedStructuralVariantFactory {
 
-    private final static String PURPLE_AF = "PURPLE_AF";
-    private final static String PURPLE_CN = "PURPLE_CN";
-    private final static String PURPLE_CN_CHANGE = "PURPLE_CN_CHANGE";
-    private final static String PURPLE_PLOIDY = "PURPLE_PLOIDY";
+    private static final String PURPLE_AF = "PURPLE_AF";
+    private static final String PURPLE_CN = "PURPLE_CN";
+    private static final String PURPLE_CN_CHANGE = "PURPLE_CN_CHANGE";
+    private static final String PURPLE_PLOIDY = "PURPLE_PLOIDY";
 
     @NotNull
     public List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants) {
