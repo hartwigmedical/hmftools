@@ -307,9 +307,10 @@ readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs
 distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)`^ 
 improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if proper pair flag not set else 0  
 modifiedMapQuality^ = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty  
+</pre>
 
 ^ note that for the 6 highly polymorphic HLA genes (HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DQR1) we instead use modified MAPQ = min (10, MAPQ - mapQualityFixedPenalty).  We intend to improve this at some later stage by making the caller HLA type aware.
-</pre>
+
 
 We then take the minimum of the 2 modified qualities as the read contribution to the total quality: 
 
