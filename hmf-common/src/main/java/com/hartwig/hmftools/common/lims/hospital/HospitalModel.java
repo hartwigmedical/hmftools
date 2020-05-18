@@ -15,32 +15,32 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HospitalModel {
 
     @NotNull
-    abstract Map<String, HospitalAddress> hospitalAddress();
+    abstract Map<String, HospitalAddress> hospitalAddressMap();
 
     @NotNull
-    abstract Map<String, HospitalPersons> hospitalContactCPCT();
+    abstract Map<String, HospitalPersons> hospitalPersonsCPCT();
 
     @NotNull
-    abstract Map<String, HospitalPersons> hospitalContactDRUP();
+    abstract Map<String, HospitalPersons> hospitalPersonsDRUP();
 
     @NotNull
-    abstract Map<String, HospitalPersons> hospitalContactWIDE();
+    abstract Map<String, HospitalPersons> hospitalPersonsWIDE();
 
     @NotNull
     abstract Map<String, String> sampleToHospitalMapping();
 
     @Nullable
-    public HospitalData queryHospitalData(@NotNull String sampleId, @NotNull String coreRequesterName,
+    public HospitalContactData queryHospitalData(@NotNull String sampleId, @NotNull String coreRequesterName,
             @NotNull String coreRequesterEmail) {
         String hospitalId = getHospitalIdForSample(sampleId);
         if (hospitalId == null) {
             return null;
         }
 
-        HospitalAddress address = hospitalAddress().get(hospitalId);
+        HospitalAddress address = hospitalAddressMap().get(hospitalId);
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        HospitalPersons contact = findContactDataForStudy(hospitalId, study);
-        if (address == null || (contact == null && (study == LimsStudy.CPCT || study == LimsStudy.WIDE || study == LimsStudy.DRUP))) {
+        HospitalPersons persons = findPersonsForStudy(hospitalId, study);
+        if (address == null || (persons == null && (study == LimsStudy.CPCT || study == LimsStudy.WIDE || study == LimsStudy.DRUP))) {
             return null;
         }
 
@@ -49,13 +49,13 @@ public abstract class HospitalModel {
         if (study == LimsStudy.CORE) {
             requesterName = coreRequesterName;
             requesterEmail = coreRequesterEmail;
-        } else if (contact != null) {
-            requesterName = contact.requesterName();
-            requesterEmail = contact.requesterEmail();
+        } else if (persons != null) {
+            requesterName = persons.requesterName();
+            requesterEmail = persons.requesterEmail();
         }
 
-        return ImmutableHospitalData.builder()
-                .hospitalPI(contact != null ? contact.hospitalPI() : Lims.NOT_AVAILABLE_STRING)
+        return ImmutableHospitalContactData.builder()
+                .hospitalPI(persons != null ? persons.hospitalPI() : Lims.NOT_AVAILABLE_STRING)
                 .requesterName(requesterName != null ? requesterName : Lims.NOT_AVAILABLE_STRING)
                 .requesterEmail(requesterEmail != null ? requesterEmail : Lims.NOT_AVAILABLE_STRING)
                 .hospitalName(address.hospitalName())
@@ -64,14 +64,14 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalPersons findContactDataForStudy(@NotNull String hospitalId, @NotNull LimsStudy study) {
+    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @NotNull LimsStudy study) {
         switch (study) {
             case CPCT:
-                return hospitalContactCPCT().get(hospitalId);
+                return hospitalPersonsCPCT().get(hospitalId);
             case DRUP:
-                return hospitalContactDRUP().get(hospitalId);
+                return hospitalPersonsDRUP().get(hospitalId);
             case WIDE:
-                return hospitalContactWIDE().get(hospitalId);
+                return hospitalPersonsWIDE().get(hospitalId);
             default:
                 return null;
         }

@@ -11,8 +11,8 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.lims.hospital.HospitalData;
-import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalData;
+import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
@@ -143,8 +143,8 @@ public class CFReportWriterTest {
     }
 
     @NotNull
-    private static HospitalData createTestHospitalData(){
-        return ImmutableHospitalData.builder()
+    private static HospitalContactData createTestHospitalData(){
+        return ImmutableHospitalContactData.builder()
                 .hospitalPI("AB")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")

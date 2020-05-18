@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HospitalData {
+public abstract class HospitalContactData {
 
     // A PI is generally only defined in context of a study (CPCT / DRUP etc). Otherwise NOT_AVAILABLE
     @NotNull

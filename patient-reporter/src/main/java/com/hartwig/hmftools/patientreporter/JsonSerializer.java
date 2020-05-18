@@ -18,8 +18,8 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.lims.hospital.HospitalData;
-import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalData;
+import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -107,8 +107,8 @@ public class JsonSerializer {
     }
 
     @NotNull
-    private static HospitalData createTestHospitalData(){
-        return ImmutableHospitalData.builder()
+    private static HospitalContactData createTestHospitalData(){
+        return ImmutableHospitalContactData.builder()
                 .hospitalPI("PI")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")

@@ -31,12 +31,12 @@ public final class HospitalModelFactory {
     private static final int HOSPITAL_ADDRESS_CITY_COLUMN = 3;
     private static final int HOSPITAL_ADDRESS_FIELD_COUNT = 4;
 
-    private static final int HOSPITAL_CONTACT_ID_COLUMN = 0;
-    private static final int HOSPITAL_CONTACT_PI_COLUMN = 1;
-    private static final int HOSPITAL_CONTACT_REQUESTER_NAME_COLUMN = 2;
-    private static final int HOSPITAL_CONTACT_REQUESTER_EMAIL_COLUMN = 3;
-    private static final int HOSPITAL_CONTACT_FIELD_COUNT_WIDE = 4;
-    private static final int HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP = 2;
+    private static final int HOSPITAL_PERSONS_ID_COLUMN = 0;
+    private static final int HOSPITAL_PERSONS_PI_COLUMN = 1;
+    private static final int HOSPITAL_PERSONS_REQUESTER_NAME_COLUMN = 2;
+    private static final int HOSPITAL_PERSONS_REQUESTER_EMAIL_COLUMN = 3;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_WIDE = 4;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP = 2;
 
     private static final int SAMPLE_MAPPING_ID_COLUMN = 0;
     private static final int HOSPITAL_MAPPING_COLUMN = 1;
@@ -51,27 +51,27 @@ public final class HospitalModelFactory {
     public static HospitalModel fromLimsDirectory(@NotNull String limsDirectory) throws IOException {
         String hospitalAddressTsv = limsDirectory + File.separator + HOSPITALS_ADDRESS_TSV;
 
-        String hospitalContactCPCTTsv = limsDirectory + File.separator + HOSPITAL_CPCT_TSV;
-        String hospitalContactDRUPTsv = limsDirectory + File.separator + HOSPITAL_DRUP_TSV;
-        String hospitalContactWIDETsv = limsDirectory + File.separator + HOSPITAL_WIDE_TSV;
+        String hospitalPersonsCPCTTsv = limsDirectory + File.separator + HOSPITAL_CPCT_TSV;
+        String hospitalPersonsDRUPTsv = limsDirectory + File.separator + HOSPITAL_DRUP_TSV;
+        String hospitalPersonsWIDETsv = limsDirectory + File.separator + HOSPITAL_WIDE_TSV;
 
         String sampleHospitalMappingTsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_TSV;
 
-        Map<String, HospitalAddress> hospitalAddress = readFromHospitalAddress(hospitalAddressTsv);
-        Map<String, HospitalPersons> hospitalContactCPCT =
-                readFromHospitalContact(hospitalContactCPCTTsv, HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP);
-        Map<String, HospitalPersons> hospitalContactDRUP =
-                readFromHospitalContact(hospitalContactDRUPTsv, HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP);
-        Map<String, HospitalPersons> hospitalContactWIDE =
-                readFromHospitalContact(hospitalContactWIDETsv, HOSPITAL_CONTACT_FIELD_COUNT_WIDE);
+        Map<String, HospitalAddress> hospitalAddressMap = readFromHospitalAddress(hospitalAddressTsv);
+        Map<String, HospitalPersons> hospitalPersonsCPCT =
+                readFromHospitalPersons(hospitalPersonsCPCTTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP);
+        Map<String, HospitalPersons> hospitalPersonsDRUP =
+                readFromHospitalPersons(hospitalPersonsDRUPTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP);
+        Map<String, HospitalPersons> hospitalPersonsWIDE =
+                readFromHospitalPersons(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE);
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMapping(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
-                .hospitalAddress(hospitalAddress)
+                .hospitalAddressMap(hospitalAddressMap)
+                .hospitalPersonsCPCT(hospitalPersonsCPCT)
+                .hospitalPersonsDRUP(hospitalPersonsDRUP)
+                .hospitalPersonsWIDE(hospitalPersonsWIDE)
                 .sampleToHospitalMapping(sampleHospitalMapping)
-                .hospitalContactCPCT(hospitalContactCPCT)
-                .hospitalContactDRUP(hospitalContactDRUP)
-                .hospitalContactWIDE(hospitalContactWIDE)
                 .build();
 
         validateModelIntegrity(hospitalModel);
@@ -81,10 +81,10 @@ public final class HospitalModelFactory {
 
     @VisibleForTesting
     static boolean validateModelIntegrity(@NotNull HospitalModel hospitalModel) {
-        Set<String> hospitalIdsInAddressList = hospitalModel.hospitalAddress().keySet();
-        Set<String> keyCPCT = hospitalModel.hospitalContactCPCT().keySet();
-        Set<String> keyDRUP = hospitalModel.hospitalContactDRUP().keySet();
-        Set<String> keyWIDE = hospitalModel.hospitalContactWIDE().keySet();
+        Set<String> hospitalIdsInAddressList = hospitalModel.hospitalAddressMap().keySet();
+        Set<String> keyCPCT = hospitalModel.hospitalPersonsCPCT().keySet();
+        Set<String> keyDRUP = hospitalModel.hospitalPersonsDRUP().keySet();
+        Set<String> keyWIDE = hospitalModel.hospitalPersonsWIDE().keySet();
         Set<String> keySampleMapping = Sets.newHashSet(hospitalModel.sampleToHospitalMapping().values());
 
         boolean allCorrect = true;
@@ -143,28 +143,28 @@ public final class HospitalModelFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, HospitalPersons> readFromHospitalContact(@NotNull String hospitalContactTsv, int expectedFieldCount)
+    static Map<String, HospitalPersons> readFromHospitalPersons(@NotNull String hospitalPersonsTsv, int expectedFieldCount)
             throws IOException {
-        Map<String, HospitalPersons> hospitalContactMap = Maps.newHashMap();
-        List<String> lines = FileReader.build().readLines(new File(hospitalContactTsv).toPath());
+        Map<String, HospitalPersons> hospitalPersonsMap = Maps.newHashMap();
+        List<String> lines = FileReader.build().readLines(new File(hospitalPersonsTsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == expectedFieldCount) {
-                String requesterName = parts.length > 2 ? parts[HOSPITAL_CONTACT_REQUESTER_NAME_COLUMN] : null;
-                String requesterEmail = parts.length > 2 ? parts[HOSPITAL_CONTACT_REQUESTER_EMAIL_COLUMN] : null;
+                String requesterName = parts.length > 2 ? parts[HOSPITAL_PERSONS_REQUESTER_NAME_COLUMN] : null;
+                String requesterEmail = parts.length > 2 ? parts[HOSPITAL_PERSONS_REQUESTER_EMAIL_COLUMN] : null;
 
                 HospitalPersons hospitalPersons = ImmutableHospitalPersons.builder()
-                        .hospitalPI(parts[HOSPITAL_CONTACT_PI_COLUMN])
+                        .hospitalPI(parts[HOSPITAL_PERSONS_PI_COLUMN])
                         .requesterName(requesterName)
                         .requesterEmail(requesterEmail)
                         .build();
 
-                hospitalContactMap.put(parts[HOSPITAL_CONTACT_ID_COLUMN], hospitalPersons);
+                hospitalPersonsMap.put(parts[HOSPITAL_PERSONS_ID_COLUMN], hospitalPersons);
             } else {
-                LOGGER.warn("Could not properly parse line in hospital contact tsv: '{}'", line);
+                LOGGER.warn("Could not properly parse line in hospital persons tsv: '{}'", line);
             }
         }
-        return hospitalContactMap;
+        return hospitalPersonsMap;
     }
 
     @NotNull

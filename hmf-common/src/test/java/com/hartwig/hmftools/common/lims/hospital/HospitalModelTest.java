@@ -17,45 +17,45 @@ public class HospitalModelTest {
     public void canExtractHospitalDataFromHospitalModel() {
         HospitalModel model = buildTestHospitalModel();
 
-        HospitalData dataCPCT = model.queryHospitalData("CPCT02010001T", "coreRequester", "coreRequesterEmail");
+        HospitalContactData dataCPCT = model.queryHospitalData("CPCT02010001T", "coreRequester", "coreRequesterEmail");
         assertEquals("CPCT-PI", dataCPCT.hospitalPI());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCPCT.requesterName());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCPCT.requesterEmail());
         assertEquals("HMF", dataCPCT.hospitalName());
         assertEquals("1000 AB AMSTERDAM", dataCPCT.hospitalAddress());
 
-        HospitalData dataDRUP = model.queryHospitalData("DRUP02010001T", "coreRequester", "coreRequesterEmail");
+        HospitalContactData dataDRUP = model.queryHospitalData("DRUP02010001T", "coreRequester", "coreRequesterEmail");
         assertEquals("DRUP-PI", dataDRUP.hospitalPI());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataDRUP.requesterName());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataDRUP.requesterEmail());
         assertEquals("HMF", dataDRUP.hospitalName());
         assertEquals("1000 AB AMSTERDAM", dataDRUP.hospitalAddress());
 
-        HospitalData dataWIDE = model.queryHospitalData("WIDE02010001T", "coreRequester", "coreRequesterEmail");
+        HospitalContactData dataWIDE = model.queryHospitalData("WIDE02010001T", "coreRequester", "coreRequesterEmail");
         assertEquals("WIDE-PI", dataWIDE.hospitalPI());
         assertEquals("WIDE-req", dataWIDE.requesterName());
         assertEquals("wide@email.com", dataWIDE.requesterEmail());
         assertEquals("HMF", dataWIDE.hospitalName());
         assertEquals("1000 AB AMSTERDAM", dataWIDE.hospitalAddress());
 
-        HospitalData dataCORE = model.queryHospitalData("CORE02010001T", "coreRequester", "coreRequesterEmail");
+        HospitalContactData dataCORE = model.queryHospitalData("CORE02010001T", "coreRequester", "coreRequesterEmail");
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCORE.hospitalPI());
         assertEquals("coreRequester", dataCORE.requesterName());
         assertEquals("coreRequesterEmail", dataCORE.requesterEmail());
         assertEquals("HMF", dataCORE.hospitalName());
         assertEquals("1000 AB AMSTERDAM", dataCORE.hospitalAddress());
 
-        HospitalData dataCOREManuallyMapped = model.queryHospitalData("CORE18123456T", "coreRequester", "coreRequesterEmail");
+        HospitalContactData dataCOREManuallyMapped = model.queryHospitalData("CORE18123456T", "coreRequester", "coreRequesterEmail");
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCOREManuallyMapped.hospitalPI());
         assertEquals("coreRequester", dataCOREManuallyMapped.requesterName());
         assertEquals("coreRequesterEmail", dataCOREManuallyMapped.requesterEmail());
         assertEquals("HMF", dataCOREManuallyMapped.hospitalName());
         assertEquals("1000 AB AMSTERDAM", dataCOREManuallyMapped.hospitalAddress());
 
-        HospitalData dataSampleDoesNotExist = model.queryHospitalData("I Don't exist", "coreRequester", "coreRequesterEmail");
+        HospitalContactData dataSampleDoesNotExist = model.queryHospitalData("I Don't exist", "coreRequester", "coreRequesterEmail");
         assertNull(dataSampleDoesNotExist);
 
-        HospitalData dataHospitalDoesNotExist = model.queryHospitalData("CPCT02020202T", "coreRequester", "coreRequesterEmail");
+        HospitalContactData dataHospitalDoesNotExist = model.queryHospitalData("CPCT02020202T", "coreRequester", "coreRequesterEmail");
         assertNull(dataHospitalDoesNotExist);
     }
 
@@ -74,10 +74,10 @@ public class HospitalModelTest {
         sampleHospitalMapping.put("CORE18123456T", "01");
 
         return ImmutableHospitalModel.builder()
-                .hospitalAddress(hospitalAddress)
-                .hospitalContactCPCT(hospitalContactCPCT)
-                .hospitalContactDRUP(hospitalContactDRUP)
-                .hospitalContactWIDE(hospitalContactWIDE)
+                .hospitalAddressMap(hospitalAddress)
+                .hospitalPersonsCPCT(hospitalContactCPCT)
+                .hospitalPersonsDRUP(hospitalContactDRUP)
+                .hospitalPersonsWIDE(hospitalContactWIDE)
                 .sampleToHospitalMapping(sampleHospitalMapping)
                 .build();
     }

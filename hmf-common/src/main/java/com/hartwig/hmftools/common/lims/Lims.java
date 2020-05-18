@@ -5,9 +5,9 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.lims.hospital.HospitalData;
+import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
-import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalData;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -320,13 +320,13 @@ public class Lims {
     }
 
     @NotNull
-    public HospitalData hospitalData(@NotNull String tumorBarcode) {
+    public HospitalContactData hospitalData(@NotNull String tumorBarcode) {
         String sampleId = sampleId(tumorBarcode);
-        HospitalData data = hospitalModel.queryHospitalData(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
+        HospitalContactData data = hospitalModel.queryHospitalData(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
 
         if (data == null) {
             LOGGER.warn("Could not find hospital data for tumor sample {} with barcode {}", sampleId, tumorBarcode);
-            data = ImmutableHospitalData.builder()
+            data = ImmutableHospitalContactData.builder()
                     .hospitalPI(NOT_AVAILABLE_STRING)
                     .requesterName(NOT_AVAILABLE_STRING)
                     .requesterEmail(NOT_AVAILABLE_STRING)
