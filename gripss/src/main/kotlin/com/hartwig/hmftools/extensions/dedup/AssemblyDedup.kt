@@ -9,10 +9,10 @@ class AssemblyDedup(private val linkStore: LinkStore, private val variantStore: 
 
     fun dedup(variant: StructuralVariantContext): Boolean {
 
-        if (!variant.isSingle) {
+        if (!variant.isSingle && variant.imprecise) {
             val target = variantStore.select(variant.mateId!!)
 
-            val alternativeStart = variantStore.selectOthersInRangeWithSameOrientation(variant)
+            val alternativeStart = variantStore.selectAlternatives(variant)
             for (alternative in alternativeStart) {
                 val assemblyLinks = assemblyLinks(alternative, target, mutableListOf())
                 if (assemblyLinks.isNotEmpty()) {

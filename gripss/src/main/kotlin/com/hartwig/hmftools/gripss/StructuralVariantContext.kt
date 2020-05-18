@@ -37,7 +37,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
     }
 
-    fun context(config: GripssFilterConfig, localLink: String, remoteLink: String): VariantContext {
+    fun context(config: GripssFilterConfig, localLink: String, remoteLink: String, dedup: Boolean): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
         builder.attribute(TAF, tumorAF)
@@ -102,6 +102,10 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
         if (minSizeFilter(config.minSize)) {
             builder.filter(MIN_SIZE)
+        }
+
+        if (dedup) {
+            builder.filter(DEDUP)
         }
 
         if (builder.filters.isEmpty()) {

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.gripss
 
-import com.hartwig.hmftools.extensions.dedup.AssemblyDedup
+import com.hartwig.hmftools.extensions.dedup.TransitiveDedup
 import com.hartwig.hmftools.gripss.link.AssemblyLink
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.VariantStore
@@ -52,14 +52,13 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val variantStore = VariantStore.create(structuralVariants)
         val assemblyLinks = AssemblyLink().create(structuralVariants)
         val links = LinkStore.create(assemblyLinks)
-        val assemblyDedup = AssemblyDedup(links, variantStore);
-
-        for (variant in structuralVariants) {
-            assemblyDedup.dedup(variant)
-        }
+        val assemblyDedup = TransitiveDedup(links, variantStore);
 
         println("WRITING")
-        structuralVariants.forEach { x -> fileWriter.writeVariant(x.context(config.filterConfig, links.localLinkedBy(x.vcfId), links.localLinkedBy(x.mateId))) }
+        for (variant in structuralVariants) {
+            val dedup = assemblyDedup.dedup(variant)
+            fileWriter.writeVariant(variant.context(config.filterConfig, links.localLinkedBy(variant.vcfId), links.localLinkedBy(variant.mateId), dedup))
+        }
 
     }
 

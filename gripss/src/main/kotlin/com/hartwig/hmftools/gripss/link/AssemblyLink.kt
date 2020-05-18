@@ -29,8 +29,6 @@ class AssemblyLink {
 
     private fun createLinks(assembly: String, variants: MutableList<StructuralVariantContext>): List<Link> {
 
-        if (assembly == "asm2-190027/23")
-
         if (variants.size < 2) {
             return Collections.emptyList()
         }
