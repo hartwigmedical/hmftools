@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
@@ -18,14 +16,10 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
-
-    private static final Logger LOGGER = LogManager.getLogger(ReportChapter.class);
 
     @NotNull
     private final QCFailReport failReport;
@@ -374,16 +368,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Paragraph reportIsVerifiedByAndAddressedAt() {
         return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
-                reportAddressedTo(failReport.sampleReport().hospitalContactData()));
-    }
-
-    @NotNull
-    private static String reportAddressedTo(@NotNull HospitalContactData contactData) {
-        if (!contactData.hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
-            return contactData.hospitalPI() + ", " + contactData.hospitalAddress();
-        } else {
-            return contactData.hospitalAddress();
-        }
+                failReport.sampleReport().addressee());
     }
 
     @NotNull

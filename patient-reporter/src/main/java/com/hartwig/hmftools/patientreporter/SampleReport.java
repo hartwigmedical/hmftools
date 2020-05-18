@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 
@@ -97,5 +98,15 @@ public abstract class SampleReport {
     public String cancerSubTypeString() {
         PatientTumorLocation type = patientTumorLocation();
         return type != null ? type.cancerSubtype() : Strings.EMPTY;
+    }
+
+    @NotNull
+    @Value.Derived
+    public String addressee() {
+        if (!hospitalContactData().hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
+            return hospitalContactData().hospitalPI() + ", " + hospitalContactData().hospitalAddress();
+        } else {
+            return hospitalContactData().hospitalAddress();
+        }
     }
 }

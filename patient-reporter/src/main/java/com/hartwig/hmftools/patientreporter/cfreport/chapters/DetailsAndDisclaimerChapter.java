@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -17,13 +15,9 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class DetailsAndDisclaimerChapter implements ReportChapter {
-
-    private static final Logger LOGGER = LogManager.getLogger(DetailsAndDisclaimerChapter.class);
 
     @NotNull
     private final AnalysedPatientReport patientReport;
@@ -96,7 +90,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 sampleReport.refSampleBarcode()));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
-        div.add(createContentParagraph("This report is addressed to: ", reportAddressedTo(sampleReport.hospitalContactData())));
+        div.add(createContentParagraph("This report is addressed to: ", sampleReport.addressee()));
 
         if (study == LimsStudy.CORE) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
@@ -109,15 +103,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
 
         return div;
-    }
-
-    @NotNull
-    private static String reportAddressedTo(@NotNull HospitalContactData contactData) {
-        if (!contactData.hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
-            return contactData.hospitalPI() + ", " + contactData.hospitalAddress();
-        } else {
-            return contactData.hospitalAddress();
-        }
     }
 
     @NotNull

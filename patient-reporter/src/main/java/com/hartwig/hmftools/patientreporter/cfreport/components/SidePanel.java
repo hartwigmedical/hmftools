@@ -11,7 +11,6 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class SidePanel {
@@ -39,24 +38,15 @@ public final class SidePanel {
         LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
         if (fullHeight && fullContent) {
-            String requesterName =
-                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalContactData().requesterName() : Strings.EMPTY;
-            if (!requesterName.isEmpty()) {
-                cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", requesterName));
-            }
-
-            String requesterEmail = study == LimsStudy.CORE || study == LimsStudy.WIDE
-                    ? sampleReport.hospitalContactData().requesterEmail()
-                    : Strings.EMPTY;
-            if (!requesterEmail.isEmpty()) {
-                cv.add(createSidePanelDiv(++sideTextIndex, "Email", requesterEmail));
+            if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+                cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", sampleReport.hospitalContactData().requesterName()));
+                cv.add(createSidePanelDiv(++sideTextIndex, "Email", sampleReport.hospitalContactData().requesterEmail()));
             }
 
             cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", sampleReport.hospitalContactData().hospitalName()));
 
-            String hospitalPatientId = study == LimsStudy.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
-            if (!hospitalPatientId.isEmpty()) {
-                cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", hospitalPatientId));
+            if (study == LimsStudy.CORE && !sampleReport.hospitalPatientId().isEmpty()) {
+                cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
         }
 
