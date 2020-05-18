@@ -44,6 +44,10 @@ public class QCFailReporter {
 
         String calculatedPurity = Strings.EMPTY;
         if (reason == QCFailReason.BELOW_DETECTION_THRESHOLD || reason == QCFailReason.POST_ANALYSIS_FAIL) {
+
+            //check for sample are present in shallow seq db when executed
+            reportData.limsModel().purityShallowSeq(sampleMetadata.tumorSampleBarcode());
+
             calculatedPurity = purity;
         } else {
             calculatedPurity = reportData.limsModel().purityShallowSeq(sampleMetadata.tumorSampleBarcode());
