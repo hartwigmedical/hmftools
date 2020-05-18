@@ -50,7 +50,7 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        if (failReport.sampleReport().hospitalData().hospitalAddress() == null) {
+        if (failReport.sampleReport().hospitalContactData().hospitalAddress() == null) {
             LOGGER.warn("No recipient address present for sample {}", failReport.sampleReport().tumorSampleId());
         }
 
@@ -326,8 +326,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsRequestedBy() {
-        String requesterName = failReport.sampleReport().hospitalData().requesterName();
-        String requesterEmail = failReport.sampleReport().hospitalData().requesterEmail();
+        String requesterName = failReport.sampleReport().hospitalContactData().requesterName();
+        String requesterEmail = failReport.sampleReport().hospitalContactData().requesterEmail();
         return createContentParagraph("The requester is : ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
@@ -377,8 +377,8 @@ public class QCFailChapter implements ReportChapter {
     private Paragraph reportIsVerifiedByAndAddressedAt() {
         LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
 
-        String addressee = failReport.sampleReport().hospitalData().hospitalAddress();
-        String hospitalPI = failReport.sampleReport().hospitalData().hospitalPI();
+        String addressee = failReport.sampleReport().hospitalContactData().hospitalAddress();
+        String hospitalPI = failReport.sampleReport().hospitalContactData().hospitalPI();
         String contact;
         if (study == LimsStudy.CORE) {
             contact = addressee;

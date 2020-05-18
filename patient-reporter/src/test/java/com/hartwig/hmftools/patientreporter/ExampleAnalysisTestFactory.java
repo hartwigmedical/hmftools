@@ -271,13 +271,13 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static HospitalContactData createTestHospitalData(){
+    private static HospitalContactData createTestHospitalContactData(){
         return ImmutableHospitalContactData.builder()
                 .hospitalPI("AB")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")
                 .hospitalName("HMF Testing Center")
-                .hospitalAddress("Zip, City")
+                .hospitalAddress("Zip City")
                 .build();
     }
 
@@ -300,7 +300,7 @@ public final class ExampleAnalysisTestFactory {
                 .cohort("A")
                 .projectName("TEST")
                 .submissionId("10")
-                .hospitalData(createTestHospitalData())
+                .hospitalContactData(createTestHospitalContactData())
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")
                 .build();

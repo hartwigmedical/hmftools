@@ -41,24 +41,24 @@ public final class SidePanel {
 
         LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
-        if (sampleReport.hospitalData().hospitalAddress() == null) {
+        if (sampleReport.hospitalContactData().hospitalAddress() == null) {
             LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
         }
 
         if (fullHeight && fullContent) {
             String contactNames =
-                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalData().requesterName() : Strings.EMPTY;
+                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalContactData().requesterName() : Strings.EMPTY;
             if (!contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", contactNames));
             }
 
             final String contactEmails =
-                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalData().requesterEmail() : Strings.EMPTY;
+                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalContactData().requesterEmail() : Strings.EMPTY;
             if (!contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
             }
 
-            String hospitalName = sampleReport.hospitalData().hospitalName();
+            String hospitalName = sampleReport.hospitalContactData().hospitalName();
             if (!hospitalName.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", hospitalName));
             }

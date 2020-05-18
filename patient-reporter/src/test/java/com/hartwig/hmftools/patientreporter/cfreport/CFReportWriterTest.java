@@ -143,13 +143,13 @@ public class CFReportWriterTest {
     }
 
     @NotNull
-    private static HospitalContactData createTestHospitalData(){
+    private static HospitalContactData createTestHospitalContactData(){
         return ImmutableHospitalContactData.builder()
                 .hospitalPI("AB")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")
                 .hospitalName("HMF Testing Center")
-                .hospitalAddress("Zip, City")
+                .hospitalAddress("1000 AB AMSTERDAM")
                 .build();
     }
 
@@ -172,7 +172,7 @@ public class CFReportWriterTest {
                 .cohort("A")
                 .projectName("COLO-001-002")
                 .submissionId("ABC")
-                .hospitalData(createTestHospitalData())
+                .hospitalContactData(createTestHospitalContactData())
                 .hospitalPatientId("123456")
                 .hospitalPathologySampleId("A")
                 .build();

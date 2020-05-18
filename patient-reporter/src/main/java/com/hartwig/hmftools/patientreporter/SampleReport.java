@@ -44,7 +44,7 @@ public abstract class SampleReport {
     public abstract String submissionId();
 
     @NotNull
-    public abstract HospitalContactData hospitalData();
+    public abstract HospitalContactData hospitalContactData();
 
     @NotNull
     public abstract String hospitalPatientId();
