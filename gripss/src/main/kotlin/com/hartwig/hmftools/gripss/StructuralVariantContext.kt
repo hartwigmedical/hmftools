@@ -27,11 +27,14 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     val start = context.start
     val confidenceInterval = context.confidenceInterval();
-    private val minStart = start + confidenceInterval.first;
-    private val maxStart = start + confidenceInterval.second;
+    val minStart = start + confidenceInterval.first
+    val maxStart = start + confidenceInterval.second
+    val insertSequenceLength = variantType.insertSequence.length
+
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
+
 
     fun confidenceIntervalsOverlap(other: StructuralVariantContext): Boolean {
         return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
