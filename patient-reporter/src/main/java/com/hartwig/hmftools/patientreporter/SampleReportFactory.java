@@ -6,9 +6,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,7 +23,7 @@ public final class SampleReportFactory {
 
     @NotNull
     public static SampleReport fromLimsModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
-            @Nullable PatientTumorLocation patientTumorLocation) {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull String purity) {
         String refSampleBarcode = sampleMetadata.refSampleBarcode();
         String refSampleId = sampleMetadata.refSampleId();
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
@@ -46,7 +48,7 @@ public final class SampleReportFactory {
                 .patientTumorLocation(patientTumorLocation)
                 .refArrivalDate(arrivalDateRefSample)
                 .tumorArrivalDate(arrivalDateTumorSample)
-                .purityShallowSeq(lims.purityShallowSeq(tumorSampleBarcode))
+                .purity(purity)
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
                 .cohort(lims.cohort(tumorSampleBarcode))
                 .projectName(lims.projectName(tumorSampleBarcode))

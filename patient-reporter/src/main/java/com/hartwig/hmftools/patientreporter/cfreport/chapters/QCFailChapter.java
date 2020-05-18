@@ -92,8 +92,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
-                        + "could not be further analyzed due to insufficient quality.";
+                explanationDetail = "The tumor percentage based on molecular estimation could not be determined due to insufficient"
+                        + " tumor DNA";
                 break;
             }
             case POST_ANALYSIS_FAIL: {
@@ -101,7 +101,7 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
+                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n and "
                         + "could not be further analyzed due to insufficient quality.";
                 break;
             }
@@ -119,8 +119,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
-                        + "could not be further analyzed due to insufficient quality.";
+                explanationDetail = "The tumor percentage based on molecular estimation could not be determined due to insufficient "
+                        + "tumor DNA";
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
@@ -128,8 +128,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
-                        + "could not be further analyzed due to insufficient quality.";
+                explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
+                        + "and could not be further analyzed.";
                 break;
             }
             case LAB_FAILURE: {
@@ -349,13 +349,13 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Paragraph sampleHasMolecularTumorPercentage() {
         if (failReport.reason() != QCFailReason.LAB_FAILURE) {
-            if (failReport.sampleReport().purityShallowSeq().equals("below detection threshold") || failReport.sampleReport()
-                    .purityShallowSeq()
+            if (failReport.sampleReport().purity().equals("below detection threshold") || failReport.sampleReport()
+                    .purity()
                     .equals("not performed")) {
                 return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
             } else {
                 return createContentParagraph("The tumor percentage based on molecular estimation is ",
-                        failReport.sampleReport().purityShallowSeq());
+                        failReport.sampleReport().purity());
 
             }
         } else {

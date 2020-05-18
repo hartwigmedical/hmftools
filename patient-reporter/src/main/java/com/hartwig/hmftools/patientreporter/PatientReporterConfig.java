@@ -227,8 +227,9 @@ public interface PatientReporterConfig {
         String germlineGenesCsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
 
-        if (!isQCFail) {
+        if (qcFailReason == QCFailReason.POST_ANALYSIS_FAIL || qcFailReason == QCFailReason.BELOW_DETECTION_THRESHOLD) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
+        } else if (!isQCFail) {
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             purpleGeneCnvTsv = nonOptionalFile(cmd, PURPLE_GENE_CNV_TSV);
             somaticVariantVcf = nonOptionalFile(cmd, SOMATIC_VARIANT_VCF);

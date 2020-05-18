@@ -29,7 +29,7 @@ public abstract class SampleReport {
     public abstract LocalDate tumorArrivalDate();
 
     @NotNull
-    public abstract String purityShallowSeq();
+    public abstract String purity();
 
     @NotNull
     public abstract String labProcedures();
