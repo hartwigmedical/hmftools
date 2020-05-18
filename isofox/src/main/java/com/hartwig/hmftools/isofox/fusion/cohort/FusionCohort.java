@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.cohort;
+package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.cohort.ExternalFusionData.FUSION_SOURCE_ARRIBA;
+import static com.hartwig.hmftools.isofox.fusion.cohort.ExternalFusionData.FUSION_SOURCE_ARRIBA;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 public class FusionCohort
 {

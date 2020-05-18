@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_FREQUENCY;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
+import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
 
 import org.apache.commons.cli.CommandLine;

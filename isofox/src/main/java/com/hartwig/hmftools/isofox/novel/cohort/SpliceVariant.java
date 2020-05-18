@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.cohort;
+package com.hartwig.hmftools.isofox.novel.cohort;
 
 import java.util.Map;
 

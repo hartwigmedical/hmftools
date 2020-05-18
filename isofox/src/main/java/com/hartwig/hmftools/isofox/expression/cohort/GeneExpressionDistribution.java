@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.cohort;
+package com.hartwig.hmftools.isofox.expression.cohort;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -6,9 +6,9 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
-import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.DISTRIBUTION_SIZE;
-import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.convertDistribution;
-import static com.hartwig.hmftools.isofox.cohort.TransExpressionDistribution.roundTPM;
+import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.DISTRIBUTION_SIZE;
+import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.convertDistribution;
+import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.roundTPM;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -24,6 +24,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
+import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 public class GeneExpressionDistribution
 {

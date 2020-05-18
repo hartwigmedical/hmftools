@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.cohort;
+package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
+import com.hartwig.hmftools.isofox.cohort.CohortConfig;
+import com.hartwig.hmftools.isofox.cohort.SampleDataCache;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class AltSpliceJunctionCohort
@@ -32,7 +34,7 @@ public class AltSpliceJunctionCohort
     private final Map<String,Integer> mFieldsMap;
 
     // map of chromosomes to a map of genes to a list of alternate splice junctions
-    private final Map<String, Map<String,List<AltSjCohortData>>> mAltSpliceJunctions;
+    private final Map<String, Map<String,List<AltSpliceJuncCohortData>>> mAltSpliceJunctions;
 
     private final SpliceVariantMatching mSpliceVariantMatching;
 
@@ -126,7 +128,7 @@ public class AltSpliceJunctionCohort
         if(!mConfig.ExcludedGeneIds.isEmpty() && mConfig.ExcludedGeneIds.contains(altSJ.getGeneId()))
             return;
 
-        Map<String,List<AltSjCohortData>> chrSJs = mAltSpliceJunctions.get(altSJ.Chromosome);
+        Map<String,List<AltSpliceJuncCohortData>> chrSJs = mAltSpliceJunctions.get(altSJ.Chromosome);
 
         if(chrSJs == null)
         {
@@ -134,7 +136,7 @@ public class AltSpliceJunctionCohort
             mAltSpliceJunctions.put(altSJ.Chromosome, chrSJs);
         }
 
-        List<AltSjCohortData> geneList = chrSJs.get(altSJ.getGeneId());
+        List<AltSpliceJuncCohortData> geneList = chrSJs.get(altSJ.getGeneId());
 
         if(geneList == null)
         {
@@ -144,11 +146,11 @@ public class AltSpliceJunctionCohort
 
         boolean isCohortA = mConfig.SampleData.sampleInCohort(sampleId, SampleDataCache.COHORT_A);
 
-        AltSjCohortData altSjData = geneList.stream().filter(x -> x.AltSJ.matches(altSJ)).findFirst().orElse(null);
+        AltSpliceJuncCohortData altSjData = geneList.stream().filter(x -> x.AltSJ.matches(altSJ)).findFirst().orElse(null);
 
         if(altSjData == null)
         {
-            altSjData = new AltSjCohortData(altSJ);
+            altSjData = new AltSpliceJuncCohortData(altSJ);
             geneList.add(altSjData);
         }
 
@@ -176,16 +178,16 @@ public class AltSpliceJunctionCohort
 
             int scCohortA = mConfig.SampleData.sampleCountInCohort(mConfig.SampleData.SampleIds, SampleDataCache.COHORT_A);
 
-            for(Map.Entry<String,Map<String,List<AltSjCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
+            for(Map.Entry<String,Map<String,List<AltSpliceJuncCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
             {
                 final String chromosome = chrEntry.getKey();
-                final Map<String,List<AltSjCohortData>> geneMap = chrEntry.getValue();
+                final Map<String,List<AltSpliceJuncCohortData>> geneMap = chrEntry.getValue();
 
-                for(Map.Entry<String,List<AltSjCohortData>> geneEntry : geneMap.entrySet())
+                for(Map.Entry<String,List<AltSpliceJuncCohortData>> geneEntry : geneMap.entrySet())
                 {
                     final String geneId = geneEntry.getKey();
 
-                    for (AltSjCohortData altSjData : geneEntry.getValue())
+                    for (AltSpliceJuncCohortData altSjData : geneEntry.getValue())
                     {
                         final AltSpliceJunction altSJ = altSjData.AltSJ;
 

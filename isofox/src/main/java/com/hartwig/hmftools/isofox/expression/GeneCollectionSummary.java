@@ -1,13 +1,10 @@
-package com.hartwig.hmftools.isofox.exp_rates;
-
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+package com.hartwig.hmftools.isofox.expression;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 

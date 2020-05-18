@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.exp_rates;
+package com.hartwig.hmftools.isofox.expression;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
@@ -16,7 +16,6 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.GeneCollection;
 
 public class ExpectedCountsCache
 {

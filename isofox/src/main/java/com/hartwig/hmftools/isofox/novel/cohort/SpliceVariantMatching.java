@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.cohort;
+package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class SpliceVariantMatching

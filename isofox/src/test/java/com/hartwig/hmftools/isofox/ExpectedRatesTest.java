@@ -20,10 +20,10 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
-import com.hartwig.hmftools.isofox.exp_rates.ExpectationMaxFit;
-import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
-import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
+import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
+import com.hartwig.hmftools.isofox.expression.ExpectationMaxFit;
+import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
+import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.logging.log4j.Level;

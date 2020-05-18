@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.exp_rates;
+package com.hartwig.hmftools.isofox.expression;
 
 import static java.lang.Math.min;
 

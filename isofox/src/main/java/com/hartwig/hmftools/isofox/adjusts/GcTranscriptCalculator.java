@@ -31,7 +31,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummary;
+import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 
 public class GcTranscriptCalculator
 {

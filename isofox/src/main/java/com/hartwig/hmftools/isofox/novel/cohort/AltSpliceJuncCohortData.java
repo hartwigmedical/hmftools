@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.cohort;
+package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static java.lang.Math.max;
 
@@ -9,7 +9,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
-public class AltSjCohortData
+public class AltSpliceJuncCohortData
 {
     public final AltSpliceJunction AltSJ;
 
@@ -24,7 +24,7 @@ public class AltSjCohortData
     private int mMaxFragmentCountCohortB;
     private final int[] mPositionCounts; // counts at the start and end
 
-    public AltSjCohortData(final AltSpliceJunction altSJ)
+    public AltSpliceJuncCohortData(final AltSpliceJunction altSJ)
     {
         AltSJ = altSJ;
         mSampleIdsCohortA = Lists.newArrayList();

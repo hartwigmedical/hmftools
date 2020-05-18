@@ -17,6 +17,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.isofox.expression.cohort.GeneExpressionDistribution;
+import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
+import com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution;
+import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort;
+import com.hartwig.hmftools.isofox.novel.cohort.AltSpliceJunctionCohort;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
 import org.apache.commons.cli.CommandLine;

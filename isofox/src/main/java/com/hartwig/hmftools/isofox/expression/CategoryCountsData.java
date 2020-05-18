@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.isofox.exp_rates;
+package com.hartwig.hmftools.isofox.expression;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_FREQUENCY;
 
 import java.util.List;
 

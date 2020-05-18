@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.exp_rates;
+package com.hartwig.hmftools.isofox.expression;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_PERC;
