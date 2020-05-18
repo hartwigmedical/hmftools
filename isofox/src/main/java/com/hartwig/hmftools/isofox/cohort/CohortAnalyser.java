@@ -36,10 +36,12 @@ import org.jetbrains.annotations.NotNull;
 public class CohortAnalyser
 {
     private final CohortConfig mConfig;
+    private final CommandLine mCmdLineArgs;
 
-    public CohortAnalyser(final CohortConfig config)
+    public CohortAnalyser(final CommandLine cmdLineArgs)
     {
-        mConfig = config;
+        mCmdLineArgs = cmdLineArgs;
+        mConfig = new CohortConfig(cmdLineArgs);
     }
 
     public boolean load()
@@ -54,14 +56,14 @@ public class CohortAnalyser
 
                 case ALT_SPLICE_JUNCTION:
                 {
-                    AltSpliceJunctionCohort altSjCohort = new AltSpliceJunctionCohort(mConfig);
+                    AltSpliceJunctionCohort altSjCohort = new AltSpliceJunctionCohort(mConfig, mCmdLineArgs);
                     altSjCohort.processAltSpliceJunctions();
                     break;
                 }
 
                 case FUSION:
                 {
-                    FusionCohort fusionCohort = new FusionCohort(mConfig);
+                    FusionCohort fusionCohort = new FusionCohort(mConfig, mCmdLineArgs);
                     fusionCohort.processFusionFiles();
                     break;
                 }
@@ -157,9 +159,7 @@ public class CohortAnalyser
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        CohortConfig config = new CohortConfig(cmd);
-
-        CohortAnalyser cohortAnalyser = new CohortAnalyser(config);
+        CohortAnalyser cohortAnalyser = new CohortAnalyser(cmd);
 
         if(!cohortAnalyser.load())
         {

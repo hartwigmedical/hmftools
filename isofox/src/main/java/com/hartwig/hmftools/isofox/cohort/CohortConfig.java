@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
+import com.hartwig.hmftools.isofox.novel.cohort.AltSpliceJunctionCohort;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -30,10 +32,6 @@ public class CohortConfig
     public static final String USE_SAMPLE_DIRS = "use_sample_dir";
     public static final String ALL_AVAILABLE_FILES = "all_available_files";
     public static final String LOAD_TYPES = "load_types";
-    public static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
-    public static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
-    public static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
-    public static final String SPLICE_VARIANT_FILE = "splice_variant_file";
     public static final String FAIL_MISSING = "fail_on_missing_file";
 
     public static final String TPM_LOG_THRESHOLD = "tpm_log_threshold";
@@ -41,11 +39,6 @@ public class CohortConfig
 
     public static final String WRITE_SAMPLE_GENE_DISTRIBUTION_DATA = "write_sample_gene_dist";
 
-    public static final String FUSION_COMPARISONS = "fusion_comparisons";
-    public static final String FUSION_GENERATE_COHORT = "fusion_gen_cohort";
-    public static final String FUSION_MIN_SAMPLES = "fusion_min_samples";
-    public static final String FUSION_MIN_FRAGS = "fusion_min_frags";
-    public static final String FUSION_COHORT_FILE = "fusion_cohort_file";
 
     public static final String CANCER_GENE_FILES = "cancer_gene_files";
 
@@ -68,10 +61,6 @@ public class CohortConfig
     public final List<CohortAnalysisType> LoadTypes;
 
     // routine specifics
-    public final int AltSJMinSampleThreshold;
-    public final int AltSJMinFragsUnrequiredGenes;
-    public final double AltSJProbabilityThreshold;
-    public final String SpliceVariantFile;
     public final String EnsemblDataCache;
 
     public final boolean WriteSampleGeneDistributionData;
@@ -83,12 +72,6 @@ public class CohortConfig
     public final String CancerGeneFiles;
     public final double TpmLogThreshold;
     public final double TpmRounding;
-
-    public final int FusionMinSampleThreshold;
-    public final int FusionMinFragCount;
-    public final boolean FusionGenerateCohort;
-    public final List<String> FusionComparisonSources;
-    public final String FusionCohortFile;
 
     public CohortConfig(final CommandLine cmd)
     {
@@ -139,24 +122,12 @@ public class CohortConfig
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
-        AltSJMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
-        AltSJMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
-        AltSJProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
-        SpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
         EnsemblDataCache = cmd.getOptionValue(GENE_TRANSCRIPTS_DIR);
 
         ConvertUnmatchedCancerToOther = true;
 
         TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
         TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
-
-        FusionMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_SAMPLES, "2"));
-        FusionMinFragCount = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_FRAGS, "2"));
-        FusionGenerateCohort = cmd.hasOption(FUSION_GENERATE_COHORT);
-
-        FusionCohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
-        FusionComparisonSources = cmd.hasOption(FUSION_COMPARISONS) ?
-                Arrays.stream(cmd.getOptionValue(FUSION_COMPARISONS).split(";")).collect(Collectors.toList()) : Lists.newArrayList();
 
         WriteSampleGeneDistributionData = cmd.hasOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
         CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
@@ -241,16 +212,6 @@ public class CohortConfig
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
 
-        options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
-        options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
-        options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
-        options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
-
-        options.addOption(FUSION_GENERATE_COHORT, false, "Generate a fusion cohort file");
-        options.addOption(FUSION_MIN_SAMPLES, true, "Min number of samples to support a fusion");
-        options.addOption(FUSION_MIN_FRAGS, true, "Min frag count per sample to support a fusion");
-        options.addOption(FUSION_COHORT_FILE, true, "Cohort file previously generated");
-        options.addOption(FUSION_COMPARISONS, true, "List of sources to compare fusions between");
 
         options.addOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, false, "Write per-sample gene distribution data file");
         options.addOption(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
@@ -259,6 +220,9 @@ public class CohortConfig
         options.addOption(SAMPLE_MUT_FILE, true, "Sample mutations by gene and cancer type");
         options.addOption(TPM_ROUNDING, true, "TPM/FPM rounding factor, base-10 integer (default=2, ie 1%)");
         options.addOption(TPM_LOG_THRESHOLD, true, "Only write transcripts with TPM greater than this");
+
+        AltSpliceJunctionCohort.addCmdLineOptions(options);
+        FusionCohortConfig.addCmdLineOptions(options);
 
         options.addOption(LOG_DEBUG, false, "Log verbose");
 

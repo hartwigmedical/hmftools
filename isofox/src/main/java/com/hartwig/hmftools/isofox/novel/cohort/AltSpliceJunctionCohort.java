@@ -27,9 +27,23 @@ import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.cohort.SampleDataCache;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+
 public class AltSpliceJunctionCohort
 {
     private final CohortConfig mConfig;
+
+    // other config
+    private final int mMinSampleThreshold;
+    private final int mMinFragsUnrequiredGenes;
+    private final double mProbabilityThreshold;
+    private final String mSpliceVariantFile;
+
+    private static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
+    private static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
+    private static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
+    private static final String SPLICE_VARIANT_FILE = "splice_variant_file";
 
     private final Map<String,Integer> mFieldsMap;
 
@@ -40,14 +54,28 @@ public class AltSpliceJunctionCohort
 
     private final FisherExactTest mFisherET;
 
-    public AltSpliceJunctionCohort(final CohortConfig config)
+    public AltSpliceJunctionCohort(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
         mAltSpliceJunctions = Maps.newHashMap();
         mFisherET = new FisherExactTest();
         mFieldsMap = Maps.newHashMap();
 
-        mSpliceVariantMatching = mConfig.SpliceVariantFile != null ? new SpliceVariantMatching(mConfig) : null;
+        mMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
+        mMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
+        mProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
+        mSpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
+
+
+        mSpliceVariantMatching = mSpliceVariantFile != null ? new SpliceVariantMatching(mConfig) : null;
+    }
+
+    public static void addCmdLineOptions(final Options options)
+    {
+        options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
+        options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
+        options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
+        options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
     }
 
     public void processAltSpliceJunctions()
@@ -78,7 +106,7 @@ public class AltSpliceJunctionCohort
 
         ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
 
-        if(mConfig.AltSJMinSampleThreshold > 1)
+        if(mMinSampleThreshold > 1)
         {
             // write a report for any re-occurring alt SJ
             writeReoccurringAltSpliceJunctions();
@@ -114,9 +142,9 @@ public class AltSpliceJunctionCohort
     {
         if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(altSJ.getGeneId()))
         {
-            if(mConfig.AltSJMinFragsUnrequiredGenes > 0)
+            if(mMinFragsUnrequiredGenes > 0)
             {
-                if(altSJ.getFragmentCount() < mConfig.AltSJMinFragsUnrequiredGenes)
+                if(altSJ.getFragmentCount() < mMinFragsUnrequiredGenes)
                     return;
             }
             else
@@ -195,7 +223,7 @@ public class AltSpliceJunctionCohort
                         int scWithAltSJCohortA = altSjData.getSampleIds(true).size();
                         int scWithAltSJCohortB = scWithAltSJ - scWithAltSJCohortA;
 
-                        if(scWithAltSJCohortA < mConfig.AltSJMinSampleThreshold && scWithAltSJCohortB < mConfig.AltSJMinSampleThreshold)
+                        if(scWithAltSJCohortA < mMinSampleThreshold && scWithAltSJCohortB < mMinSampleThreshold)
                             continue;
 
                         int scNoAltSJCohortA = scCohortA - scWithAltSJCohortA;
@@ -204,7 +232,7 @@ public class AltSpliceJunctionCohort
                         double expectedVal  = scCohortA * scWithAltSJ / (double)totalSampleCount;
                         double fisherProb = mFisherET.calc(scWithAltSJCohortA, scNoAltSJCohortA, scWithAltSJCohortB, scNoAltSJCohortB, expectedVal);
 
-                        if(fisherProb > mConfig.AltSJProbabilityThreshold)
+                        if(fisherProb > mProbabilityThreshold)
                             continue;
 
                         writer.write(String.format("%s,%s,%s,%d,%d",

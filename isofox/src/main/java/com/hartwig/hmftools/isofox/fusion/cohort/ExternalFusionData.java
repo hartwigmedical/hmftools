@@ -2,11 +2,20 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 public class ExternalFusionData
 {
@@ -79,5 +88,49 @@ public class ExternalFusionData
 
         return new ExternalFusionData(FUSION_SOURCE_ARRIBA, chromosomes, positions, orientations, svType, geneNames,
                 splitFragments, discordantFragments, coverage, otherData);
+    }
+
+    public static void loadExternalFusionFiles(
+            final String sampleId, final CohortConfig config, final FusionCohortConfig fusionConfig,
+            final Map<String,List<ExternalFusionData>> mappedFusions)
+    {
+        mappedFusions.clear();
+
+        if(fusionConfig.ComparisonSources.contains(FUSION_SOURCE_ARRIBA))
+        {
+            final String arribaMainFile = config.RootDataDir + sampleId + ".fusions.tsv";
+            final String arribaDiscardedFile = config.RootDataDir + sampleId + ".fusions.discarded.tsv";
+
+            try
+            {
+                final List<String> lines = Files.readAllLines(Paths.get(arribaMainFile));
+                lines.remove(0);
+
+                final List<String> lines2 = Files.readAllLines(Paths.get(arribaDiscardedFile));
+                lines2.remove(0);
+                lines.addAll(lines2);
+
+                List<ExternalFusionData> sampleFusions = lines.stream()
+                        .map(x -> ExternalFusionData.loadArribaFusion(x))
+                        .filter(x -> x != null)
+                        .collect(Collectors.toList());
+
+                for(ExternalFusionData fusion : sampleFusions)
+                {
+                    final String chrPair = formChromosomePair(fusion.Chromosomes);
+
+                    List<ExternalFusionData> chrPairFusions = mappedFusions.get(chrPair);
+                    if(chrPairFusions == null)
+                        mappedFusions.put(chrPair, Lists.newArrayList(fusion));
+                    else
+                        chrPairFusions.add(fusion);
+                }
+            }
+            catch(IOException e)
+            {
+                ISF_LOGGER.error("failed to load arriba fusion file({}): {}", arribaMainFile, e.toString());
+                return;
+            }
+        }
     }
 }

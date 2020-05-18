@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static java.nio.file.Files.readAllLines;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
