@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 

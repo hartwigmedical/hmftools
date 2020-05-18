@@ -19,7 +19,7 @@ import com.hartwig.hmftools.protect.actionability.variant.VariantEvidenceAnalyze
 import com.hartwig.hmftools.protect.actionability.variant.VariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

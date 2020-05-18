@@ -6,8 +6,8 @@ import java.util.Map;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableDisruption;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 
 import org.jetbrains.annotations.NotNull;

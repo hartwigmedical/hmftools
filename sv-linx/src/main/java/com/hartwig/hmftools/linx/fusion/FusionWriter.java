@@ -2,8 +2,8 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.context;
-import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.fusionPloidy;
+import static com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile.context;
+import static com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile.fusionPloidy;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -14,13 +14,13 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.fusion.FusionAnnotations;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.GeneFusion;
+import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;

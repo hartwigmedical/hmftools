@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-
 public class ChimericStats
 {
     public int ChimericJunctions;

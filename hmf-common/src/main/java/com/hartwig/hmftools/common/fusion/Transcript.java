@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.variant.structural.annotation;
+package com.hartwig.hmftools.common.fusion;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isDownstream;
+import static com.hartwig.hmftools.common.fusion.GeneAnnotation.isDownstream;
 
 import java.util.Map;
 

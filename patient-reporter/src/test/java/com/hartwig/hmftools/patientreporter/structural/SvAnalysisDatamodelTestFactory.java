@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
+import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.POST_CODING_PHASE;
+import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
@@ -11,9 +11,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.GeneFusion;
+import com.hartwig.hmftools.common.fusion.Transcript;
 
 import org.junit.Test;
 

@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.linx.rna;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;

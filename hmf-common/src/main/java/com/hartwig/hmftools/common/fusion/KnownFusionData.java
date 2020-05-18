@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.fusion;
+package com.hartwig.hmftools.common.fusion;
 
 import java.io.File;
 import java.io.IOException;

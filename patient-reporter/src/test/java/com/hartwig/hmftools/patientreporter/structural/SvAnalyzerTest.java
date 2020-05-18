@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableDisruption;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
 import org.junit.Test;
 

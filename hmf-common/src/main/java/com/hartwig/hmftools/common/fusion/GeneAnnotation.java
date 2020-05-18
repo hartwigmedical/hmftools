@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.structural.annotation;
+package com.hartwig.hmftools.common.fusion;
 
 import java.util.List;
 

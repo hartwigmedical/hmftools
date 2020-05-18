@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.neoepitope;
 
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.fusion.GeneFusion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

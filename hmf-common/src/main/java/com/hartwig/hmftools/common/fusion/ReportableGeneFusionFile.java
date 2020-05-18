@@ -1,10 +1,6 @@
-package com.hartwig.hmftools.common.variant.structural.annotation;
+package com.hartwig.hmftools.common.fusion;
 
 import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_REGION_TYPE_EXONIC;
-import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_REGION_TYPE_INTRONIC;
-import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_REGION_TYPE_UPSTREAM;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,10 +91,10 @@ public final class ReportableGeneFusionFile {
     @NotNull
     public static String context(@NotNull Transcript transcript, int fusedExon) {
         switch (transcript.regionType()) {
-            case TRANS_REGION_TYPE_UPSTREAM:
+            case Transcript.TRANS_REGION_TYPE_UPSTREAM:
                 return "Promoter Region";
-            case TRANS_REGION_TYPE_EXONIC:
-            case TRANS_REGION_TYPE_INTRONIC:
+            case Transcript.TRANS_REGION_TYPE_EXONIC:
+            case Transcript.TRANS_REGION_TYPE_INTRONIC:
                 return String.format("Exon %d", fusedExon);
         }
 

@@ -10,7 +10,7 @@ import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.actionability.EvidenceLevel;
 import com.hartwig.hmftools.protect.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

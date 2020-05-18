@@ -8,8 +8,8 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
+import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
+import com.hartwig.hmftools.common.fusion.ReportableDisruption;
 
 import org.junit.Test;
 

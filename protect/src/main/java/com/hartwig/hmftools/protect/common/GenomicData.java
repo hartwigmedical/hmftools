@@ -19,8 +19,8 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
 import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
 
 import org.apache.logging.log4j.LogManager;

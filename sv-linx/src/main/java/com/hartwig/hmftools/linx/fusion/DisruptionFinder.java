@@ -26,11 +26,11 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSu
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
+import com.hartwig.hmftools.common.fusion.ReportableDisruption;
+import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
+import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvBreakend;

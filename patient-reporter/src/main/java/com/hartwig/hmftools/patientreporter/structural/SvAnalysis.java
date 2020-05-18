@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.structural;
 import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

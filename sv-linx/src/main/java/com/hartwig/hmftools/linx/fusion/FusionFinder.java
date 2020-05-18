@@ -10,24 +10,25 @@ import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIO
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_RETAINED_INTRON;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_3P_PROM;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_5P_PROM;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
+import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
+import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
+import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 
-import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FUSION_PAIRS_CSV;
-import static com.hartwig.hmftools.linx.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
-import static com.hartwig.hmftools.linx.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.GeneFusion;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 
 import org.apache.commons.cli.CommandLine;

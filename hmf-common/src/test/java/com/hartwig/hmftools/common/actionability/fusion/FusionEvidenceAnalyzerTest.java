@@ -5,8 +5,8 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
