@@ -51,7 +51,7 @@ public final class SampleReportFactory {
                 .cohort(lims.cohort(tumorSampleBarcode))
                 .projectName(lims.projectName(tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
-                .hospitalData(lims.hospitalData(tumorSampleBarcode))
+                .hospitalData(lims.hospitalContactData(tumorSampleBarcode))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode))
                 .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId))
                 .build();

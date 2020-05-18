@@ -140,17 +140,17 @@ public class Lims {
     }
 
     @NotNull
-    public String requesterEmail(@NotNull String sampleBarcode) {
-        String submission = submission(sampleBarcode);
-        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.reportContactEmail() : NOT_AVAILABLE_STRING;
-    }
-
-    @NotNull
     public String requesterName(@NotNull String sampleBarcode) {
         String submission = submission(sampleBarcode);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.reportContactName() : NOT_AVAILABLE_STRING;
+    }
+
+    @NotNull
+    public String requesterEmail(@NotNull String sampleBarcode) {
+        String submission = submission(sampleBarcode);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.reportContactEmail() : NOT_AVAILABLE_STRING;
     }
 
     @Nullable
@@ -235,6 +235,31 @@ public class Lims {
     }
 
     @NotNull
+    public String cohort(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        return sampleData != null ? sampleData.cohort() : NOT_AVAILABLE_STRING;
+    }
+
+    @NotNull
+    public HospitalContactData hospitalContactData(@NotNull String tumorBarcode) {
+        String sampleId = sampleId(tumorBarcode);
+        HospitalContactData data = hospitalModel.queryHospitalData(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
+
+        if (data == null) {
+            LOGGER.warn("Could not find hospital data for tumor sample {} with barcode {}", sampleId, tumorBarcode);
+            data = ImmutableHospitalContactData.builder()
+                    .hospitalPI(NOT_AVAILABLE_STRING)
+                    .requesterName(NOT_AVAILABLE_STRING)
+                    .requesterEmail(NOT_AVAILABLE_STRING)
+                    .hospitalName(NOT_AVAILABLE_STRING)
+                    .hospitalAddress(NOT_AVAILABLE_STRING)
+                    .build();
+        }
+
+        return data;
+    }
+
+    @NotNull
     public String hospitalPatientId(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
@@ -311,31 +336,6 @@ public class Lims {
         } else {
             return false;
         }
-    }
-
-    @NotNull
-    public String cohort(@NotNull String sampleBarcode) {
-        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        return sampleData != null ? sampleData.cohort() : NOT_AVAILABLE_STRING;
-    }
-
-    @NotNull
-    public HospitalContactData hospitalData(@NotNull String tumorBarcode) {
-        String sampleId = sampleId(tumorBarcode);
-        HospitalContactData data = hospitalModel.queryHospitalData(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
-
-        if (data == null) {
-            LOGGER.warn("Could not find hospital data for tumor sample {} with barcode {}", sampleId, tumorBarcode);
-            data = ImmutableHospitalContactData.builder()
-                    .hospitalPI(NOT_AVAILABLE_STRING)
-                    .requesterName(NOT_AVAILABLE_STRING)
-                    .requesterEmail(NOT_AVAILABLE_STRING)
-                    .hospitalName(NOT_AVAILABLE_STRING)
-                    .hospitalAddress(NOT_AVAILABLE_STRING)
-                    .build();
-        }
-
-        return data;
     }
 
     @Nullable
