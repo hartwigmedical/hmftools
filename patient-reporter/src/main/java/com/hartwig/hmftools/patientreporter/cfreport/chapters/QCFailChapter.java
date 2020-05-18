@@ -105,7 +105,7 @@ public class QCFailChapter implements ReportChapter {
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
-                        + "and could not be further analyzed.";
+                        + "but could not be further analyzed.";
                 break;
             }
             case INSUFFICIENT_TISSUE: {
@@ -123,7 +123,7 @@ public class QCFailChapter implements ReportChapter {
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
-                        + "and could not be further analyzed.";
+                        + "but could not be further analyzed.";
                 break;
             }
             case LAB_FAILURE: {
