@@ -24,7 +24,7 @@ public final class SidePanel {
     private SidePanel() {
     }
 
-    public static void renderSidePanel(PdfPage page, @NotNull final SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
+    public static void renderSidePanel(@NotNull PdfPage page, @NotNull SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
