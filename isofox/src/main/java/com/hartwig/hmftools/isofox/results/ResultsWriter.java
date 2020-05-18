@@ -84,8 +84,11 @@ public class ResultsWriter
         mReadGcRatioWriter = null;
         mRetainedIntronWriter = null;
 
-        initialiseGeneCollectionWriter();
-        initialiseExternalWriters();
+        if(!mConfig.runFusionsOnly())
+        {
+            initialiseGeneCollectionWriter();
+            initialiseExternalWriters();
+        }
     }
 
     public void close()
@@ -217,7 +220,7 @@ public class ResultsWriter
 
     public synchronized void writeGeneCollectionData(final GeneCollection geneCollection)
     {
-        if(mConfig.OutputDir.isEmpty())
+        if(mGeneCollectionWriter == null)
             return;
 
         try

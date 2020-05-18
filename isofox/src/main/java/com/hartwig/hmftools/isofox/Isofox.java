@@ -170,69 +170,72 @@ public class Isofox
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getFragmentAllocator().totalReadCount()).sum();
         ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
-        int[] totalCounts = new int[typeAsInt(FragmentType.MAX)];
-
-        for(int i = 0; i < totalCounts.length; ++i)
+        if(!mConfig.runFusionsOnly())
         {
-            final int fragIndex = i;
-            totalCounts[i] += chrTasks.stream().mapToInt(x -> x.getCombinedCounts()[fragIndex]).sum();
-        }
+            int[] totalCounts = new int[typeAsInt(FragmentType.MAX)];
 
-        int enrichedGeneFragCount = chrTasks.stream().mapToInt(x -> x.getEnrichedGenesFragmentCount()).sum();
-
-        GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
-        chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getCounts()));
-        double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
-
-        if(mConfig.ApplyGcBiasAdjust)
-        {
-            applyGcAdjustments(chrTasks, nonEnrichedGcRatioCounts);
-        }
-
-        final SummaryStats summaryStats = createSummaryStats(
-                totalCounts, enrichedGeneFragCount,
-                medianGCRatio, mFragmentLengthDistribution, mConfig.ReadLength);
-
-        mResultsWriter.writeSummaryStats(summaryStats);
-
-        if(mConfig.WriteGcData)
-        {
-            GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
-            chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getFragmentAllocator().getGcRatioCounts().getCounts()));
-
-            writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getCounts(), false);
-            double[] percentData = new double[combinedGcRatioCounts.size()];
-
-            copyVector(combinedGcRatioCounts.getCounts(), percentData);
-            convertToPercentages(percentData);
-            writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL_PERC", percentData, true);
-
-            if(!mConfig.EnrichedGeneIds.isEmpty())
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
-
-            if(mConfig.ApplyGcBiasAdjust)
+            for (int i = 0; i < totalCounts.length; ++i)
             {
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED",
-                        mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts(), false);
-
-                copyVector(mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts(), percentData);
-                convertToPercentages(percentData);
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED_PERC", percentData, true);
-
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ADJUSTMENTS",
-                        mGcTranscriptCalcs.getGcRatioAdjustments(), true);
+                final int fragIndex = i;
+                totalCounts[i] += chrTasks.stream().mapToInt(x -> x.getCombinedCounts()[fragIndex]).sum();
             }
+
+            int enrichedGeneFragCount = chrTasks.stream().mapToInt(x -> x.getEnrichedGenesFragmentCount()).sum();
+
+            GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
+            chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getCounts()));
+            double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
+
+            if (mConfig.ApplyGcBiasAdjust)
+            {
+                applyGcAdjustments(chrTasks, nonEnrichedGcRatioCounts);
+            }
+
+            final SummaryStats summaryStats = createSummaryStats(
+                    totalCounts, enrichedGeneFragCount,
+                    medianGCRatio, mFragmentLengthDistribution, mConfig.ReadLength);
+
+            mResultsWriter.writeSummaryStats(summaryStats);
+
+            if (mConfig.WriteGcData)
+            {
+                GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
+                chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getFragmentAllocator().getGcRatioCounts().getCounts()));
+
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getCounts(), false);
+                double[] percentData = new double[combinedGcRatioCounts.size()];
+
+                copyVector(combinedGcRatioCounts.getCounts(), percentData);
+                convertToPercentages(percentData);
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL_PERC", percentData, true);
+
+                if (!mConfig.EnrichedGeneIds.isEmpty())
+                    writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
+
+                if (mConfig.ApplyGcBiasAdjust)
+                {
+                    writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED",
+                            mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts(), false);
+
+                    copyVector(mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts(), percentData);
+                    convertToPercentages(percentData);
+                    writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED_PERC", percentData, true);
+
+                    writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ADJUSTMENTS",
+                            mGcTranscriptCalcs.getGcRatioAdjustments(), true);
+                }
+            }
+
+            // calculate a TPM for all transcripts before results are written
+            final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
+            chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
+
+            double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.EnrichedGeneIds);
+            chrTasks.forEach(x -> setTranscriptsPerMillion(x.getGeneCollectionSummaryData(), tpmFactors));
+
+            chrTasks.forEach(x -> x.writeResults());
+            mResultsWriter.close();
         }
-
-        // calculate a TPM for all transcripts before results are written
-        final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
-        chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
-
-        double[] tmpFactors = calcTpmFactors(geneSummaryData, mConfig.EnrichedGeneIds);
-        chrTasks.forEach(x -> setTranscriptsPerMillion(x.getGeneCollectionSummaryData(), tmpFactors));
-
-        chrTasks.forEach(x -> x.writeResults());
-        mResultsWriter.close();
 
         if(mConfig.runFunction(FUSIONS))
         {

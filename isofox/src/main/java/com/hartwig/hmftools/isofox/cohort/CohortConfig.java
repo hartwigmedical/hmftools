@@ -41,10 +41,10 @@ public class CohortConfig
 
     public static final String WRITE_SAMPLE_GENE_DISTRIBUTION_DATA = "write_sample_gene_dist";
 
-    public static final String FUSION_MIN_SAMPLES = "fusion_min_samples";
-    public static final String FUSION_MIN_FRAGS = "fusion_min_frags";
     public static final String FUSION_COMPARISONS = "fusion_comparisons";
     public static final String FUSION_GENERATE_COHORT = "fusion_gen_cohort";
+    public static final String FUSION_MIN_SAMPLES = "fusion_min_samples";
+    public static final String FUSION_MIN_FRAGS = "fusion_min_frags";
     public static final String FUSION_COHORT_FILE = "fusion_cohort_file";
 
     public static final String CANCER_GENE_FILES = "cancer_gene_files";
@@ -166,8 +166,13 @@ public class CohortConfig
 
     public static boolean isValid(final CommandLine cmd)
     {
-        return cmd.hasOption(ROOT_DATA_DIRECTORY) && cmd.hasOption(DATA_OUTPUT_DIR) && cmd.hasOption(SAMPLE_DATA_FILE)
-                && cmd.hasOption(LOAD_TYPES);
+        if(!cmd.hasOption(ROOT_DATA_DIRECTORY) || !cmd.hasOption(DATA_OUTPUT_DIR) || !cmd.hasOption(SAMPLE_DATA_FILE)
+        || !cmd.hasOption(LOAD_TYPES))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public String formCohortFilename(final String fileId)

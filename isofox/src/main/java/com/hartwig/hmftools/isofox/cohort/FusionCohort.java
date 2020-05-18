@@ -50,6 +50,12 @@ public class FusionCohort
 
     public void processFusionFiles()
     {
+        if(!mConfig.FusionGenerateCohort && mConfig.FusionComparisonSources.isEmpty())
+        {
+            ISF_LOGGER.warn("no fusion functions configured");
+            return;
+        }
+
         if(mConfig.FusionCohortFile != null)
         {
             ISF_LOGGER.info("loading cohort fusion file", mConfig.FusionCohortFile);

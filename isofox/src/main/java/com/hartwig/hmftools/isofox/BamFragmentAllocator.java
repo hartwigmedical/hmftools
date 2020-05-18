@@ -44,8 +44,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
@@ -114,7 +112,7 @@ public class BamFragmentAllocator
         mTransComboData = Lists.newArrayList();
 
         mRunFusions = mConfig.Functions.contains(FUSIONS);
-        mFusionsOnly = mRunFusions && mConfig.Functions.size() == 1;
+        mFusionsOnly = mConfig.runFusionsOnly();
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
