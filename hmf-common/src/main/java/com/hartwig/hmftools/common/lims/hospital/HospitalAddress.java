@@ -10,9 +10,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HospitalAddress {
 
     @NotNull
-    public abstract String hospitalId();
-
-    @NotNull
     public abstract String hospitalName();
 
     @NotNull

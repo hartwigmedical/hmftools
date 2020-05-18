@@ -18,13 +18,13 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalAddress> hospitalAddress();
 
     @NotNull
-    abstract Map<String, HospitalContact> hospitalContactCPCT();
+    abstract Map<String, HospitalPersons> hospitalContactCPCT();
 
     @NotNull
-    abstract Map<String, HospitalContact> hospitalContactDRUP();
+    abstract Map<String, HospitalPersons> hospitalContactDRUP();
 
     @NotNull
-    abstract Map<String, HospitalContact> hospitalContactWIDE();
+    abstract Map<String, HospitalPersons> hospitalContactWIDE();
 
     @NotNull
     abstract Map<String, String> sampleToHospitalMapping();
@@ -39,7 +39,7 @@ public abstract class HospitalModel {
 
         HospitalAddress address = hospitalAddress().get(hospitalId);
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        HospitalContact contact = findContactDataForStudy(hospitalId, study);
+        HospitalPersons contact = findContactDataForStudy(hospitalId, study);
         if (address == null || (contact == null && (study == LimsStudy.CPCT || study == LimsStudy.WIDE || study == LimsStudy.DRUP))) {
             return null;
         }
@@ -64,7 +64,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalContact findContactDataForStudy(@NotNull String hospitalId, @NotNull LimsStudy study) {
+    private HospitalPersons findContactDataForStudy(@NotNull String hospitalId, @NotNull LimsStudy study) {
         switch (study) {
             case CPCT:
                 return hospitalContactCPCT().get(hospitalId);

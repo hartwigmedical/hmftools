@@ -58,11 +58,11 @@ public final class HospitalModelFactory {
         String sampleHospitalMappingTsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_TSV;
 
         Map<String, HospitalAddress> hospitalAddress = readFromHospitalAddress(hospitalAddressTsv);
-        Map<String, HospitalContact> hospitalContactCPCT =
+        Map<String, HospitalPersons> hospitalContactCPCT =
                 readFromHospitalContact(hospitalContactCPCTTsv, HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP);
-        Map<String, HospitalContact> hospitalContactDRUP =
+        Map<String, HospitalPersons> hospitalContactDRUP =
                 readFromHospitalContact(hospitalContactDRUPTsv, HOSPITAL_CONTACT_FIELD_COUNT_CPCT_DRUP);
-        Map<String, HospitalContact> hospitalContactWIDE =
+        Map<String, HospitalPersons> hospitalContactWIDE =
                 readFromHospitalContact(hospitalContactWIDETsv, HOSPITAL_CONTACT_FIELD_COUNT_WIDE);
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMapping(sampleHospitalMappingTsv);
 
@@ -127,12 +127,13 @@ public final class HospitalModelFactory {
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_ADDRESS_FIELD_COUNT) {
-                HospitalAddress hospitalAddress = ImmutableHospitalAddress.of(parts[HOSPITAL_ADDRESS_ID_COLUMN],
-                        parts[HOSPITAL_ADDRESS_NAME_COLUMN],
-                        parts[HOSPITAL_ADDRESS_ZIP_COLUMN],
-                        parts[HOSPITAL_ADDRESS_CITY_COLUMN]);
+                HospitalAddress hospitalAddress = ImmutableHospitalAddress.builder()
+                        .hospitalName(parts[HOSPITAL_ADDRESS_NAME_COLUMN])
+                        .hospitalZip(parts[HOSPITAL_ADDRESS_ZIP_COLUMN])
+                        .hospitalCity(parts[HOSPITAL_ADDRESS_CITY_COLUMN])
+                        .build();
 
-                hospitalAddressMap.put(parts[SAMPLE_MAPPING_ID_COLUMN], hospitalAddress);
+                hospitalAddressMap.put(parts[HOSPITAL_ADDRESS_ID_COLUMN], hospitalAddress);
             } else {
                 LOGGER.warn("Could not properly parse line in hospital address tsv: '{}'", line);
             }
@@ -142,9 +143,9 @@ public final class HospitalModelFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, HospitalContact> readFromHospitalContact(@NotNull String hospitalContactTsv, int expectedFieldCount)
+    static Map<String, HospitalPersons> readFromHospitalContact(@NotNull String hospitalContactTsv, int expectedFieldCount)
             throws IOException {
-        Map<String, HospitalContact> hospitalContactMap = Maps.newHashMap();
+        Map<String, HospitalPersons> hospitalContactMap = Maps.newHashMap();
         List<String> lines = FileReader.build().readLines(new File(hospitalContactTsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
@@ -152,14 +153,13 @@ public final class HospitalModelFactory {
                 String requesterName = parts.length > 2 ? parts[HOSPITAL_CONTACT_REQUESTER_NAME_COLUMN] : null;
                 String requesterEmail = parts.length > 2 ? parts[HOSPITAL_CONTACT_REQUESTER_EMAIL_COLUMN] : null;
 
-                HospitalContact hospitalContact = ImmutableHospitalContact.builder()
-                        .hospitalId(parts[HOSPITAL_CONTACT_ID_COLUMN])
+                HospitalPersons hospitalPersons = ImmutableHospitalPersons.builder()
                         .hospitalPI(parts[HOSPITAL_CONTACT_PI_COLUMN])
                         .requesterName(requesterName)
                         .requesterEmail(requesterEmail)
                         .build();
 
-                hospitalContactMap.put(parts[HOSPITAL_CONTACT_ID_COLUMN], hospitalContact);
+                hospitalContactMap.put(parts[HOSPITAL_CONTACT_ID_COLUMN], hospitalPersons);
             } else {
                 LOGGER.warn("Could not properly parse line in hospital contact tsv: '{}'", line);
             }
