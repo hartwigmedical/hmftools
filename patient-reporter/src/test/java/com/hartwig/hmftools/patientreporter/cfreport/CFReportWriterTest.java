@@ -167,7 +167,7 @@ public class CFReportWriterTest {
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
                 .refArrivalDate(LocalDate.parse("10-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
-                .purityShallowSeq(shallowSeqPurity != null ? shallowSeqPurity : "not determined")
+                .purity(shallowSeqPurity != null ? shallowSeqPurity : "not determined")
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .cohort("A")
                 .projectName("COLO-001-002")

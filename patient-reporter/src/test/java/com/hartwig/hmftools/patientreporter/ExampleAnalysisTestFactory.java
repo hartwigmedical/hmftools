@@ -295,7 +295,7 @@ public final class ExampleAnalysisTestFactory {
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
                 .refArrivalDate(LocalDate.parse("01-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
-                .purityShallowSeq(Strings.EMPTY)
+                .purity(Strings.EMPTY)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .cohort("A")
                 .projectName("TEST")
