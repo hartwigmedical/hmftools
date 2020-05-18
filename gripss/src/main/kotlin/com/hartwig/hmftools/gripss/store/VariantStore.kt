@@ -34,20 +34,21 @@ class VariantStore(
         return variantsByChromosome.keys
     }
 
-    fun selectVariantsOnContig(contig: String): List<StructuralVariantContext> {
+    fun selectContigVariants(contig: String): List<StructuralVariantContext> {
         return variantsByChromosome.getOrDefault(contig, Collections.emptyList())
     }
 
-    fun selectTransitivelyLinkedVariants(variant: StructuralVariantContext, maxDistance: Int = 1000): List<StructuralVariantContext> {
+    fun selectNearbyFacingVariants(variant: StructuralVariantContext, maxDistance: Int = 1000): List<StructuralVariantContext> {
+        val commonFilter: (StructuralVariantContext) -> Boolean = { x -> x.orientation != variant.orientation}
         val filter: (StructuralVariantContext) -> Boolean = if (variant.orientation == 1.toByte())
-            { x -> x.start <= variant.start && x.start >= variant.start - maxDistance && x.orientation != variant.orientation }
+            { x -> commonFilter(x) && x.start <= variant.start && x.start >= variant.start - maxDistance}
         else
-            { x -> x.start >= variant.start && x.start <= variant.start + maxDistance && x.orientation != variant.orientation }
+            { x -> commonFilter(x) && x.start >= variant.start && x.start <= variant.start + maxDistance}
         return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter(filter)
     }
 
     fun selectAlternatives(variant: StructuralVariantContext): List<StructuralVariantContext> {
-        return selectInRange(variant) { other -> other.vcfId != variant.vcfId && other.mateId?.equals(variant.vcfId) != true && other.orientation == variant.orientation }
+        return selectInRange(variant) { x -> x.vcfId != variant.vcfId && x.mateId?.equals(variant.vcfId) != true && x.orientation == variant.orientation }
     }
 
     private fun selectInRange(variant: StructuralVariantContext, filter: (StructuralVariantContext) -> Boolean): List<StructuralVariantContext> {

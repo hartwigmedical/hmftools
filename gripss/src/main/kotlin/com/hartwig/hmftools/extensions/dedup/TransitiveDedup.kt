@@ -3,6 +3,7 @@ package com.hartwig.hmftools.extensions.dedup
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.VariantStore
+import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.max
@@ -10,21 +11,23 @@ import kotlin.math.min
 
 class TransitiveDedup(private val linkStore: LinkStore, private val variantStore: VariantStore) {
 
+    companion object {
+        private val logger = LogManager.getLogger(this::class.java)
+    }
+
     fun dedup(variant: StructuralVariantContext): Boolean {
 
         if (!variant.isSingle) {
             val target = variantStore.select(variant.mateId!!)
 
-            val alternativeStart = variantStore.selectAlternatives(variant)
+            val alternativeStart = variantStore.selectAlternatives(variant).filter { x -> !x.imprecise && !x.isSingle }
             for (alternative in alternativeStart) {
-                if (!alternative.isSingle) {
-                    val (minDistance, maxDistance) = distance(variant, alternative)
-                    val nextJump = LinkedVariantStart(alternative.vcfId, alternative.mateId!!, minDistance, maxDistance, alternative.insertSequenceLength)
-                    val assemblyLinks = assemblyLinks(nextJump, target, 2, mutableListOf())
-                    if (assemblyLinks.isNotEmpty()) {
-                        println("$variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${assemblyLinks.joinToString("")}")
-                        return true
-                    }
+                val (minDistance, maxDistance) = distance(variant, alternative)
+                val nextJump = LinkedVariantStart(alternative.vcfId, alternative.mateId!!, minDistance, maxDistance, alternative.insertSequenceLength)
+                val assemblyLinks = assemblyLinks(nextJump, target, 2, mutableListOf())
+                if (assemblyLinks.isNotEmpty()) {
+                    logger.info("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${assemblyLinks.joinToString("")}")
+                    return true
                 }
             }
         }
@@ -47,28 +50,24 @@ class TransitiveDedup(private val linkStore: LinkStore, private val variantStore
         }
 
         // Always try assembled links first!
-        val assemblyLinkedVariants = linkStore.followLinks(current.mateId).map { vcfId -> variantStore.select(vcfId) }
+        val assemblyLinkedVariants = linkStore.linkedVariants(current.mateId).map { vcfId -> variantStore.select(vcfId) }.filter { x -> !x.imprecise && !x.isSingle }
         for (linkedVariant in assemblyLinkedVariants) {
-            if (!linkedVariant.isSingle && !linkedVariant.imprecise) {
-                val (minDistance, maxDistance) = distance(linkedVariant, mate)
-                val nextJump = AssemblyLinkedVariant(linkedVariant.vcfId, linkedVariant.mateId!!, minDistance, maxDistance, linkedVariant.insertSequenceLength)
-                val newAssemblyLinks = assemblyLinks(nextJump, target, maxTransitiveJumps, newPath)
-                if (newAssemblyLinks.isNotEmpty()) {
-                    return newAssemblyLinks
-                }
+            val (minDistance, maxDistance) = distance(linkedVariant, mate)
+            val nextJump = AssemblyLinkedVariant(linkedVariant.vcfId, linkedVariant.mateId!!, minDistance, maxDistance, linkedVariant.insertSequenceLength)
+            val newAssemblyLinks = assemblyLinks(nextJump, target, maxTransitiveJumps, newPath)
+            if (newAssemblyLinks.isNotEmpty()) {
+                return newAssemblyLinks
             }
         }
 
         if (maxTransitiveJumps > 0) {
-            val transitiveLinkedVariants = variantStore.selectTransitivelyLinkedVariants(mate)
+            val transitiveLinkedVariants = variantStore.selectNearbyFacingVariants(mate).filter { x -> !x.imprecise && !x.isSingle }
             for (linkedVariant in transitiveLinkedVariants) {
-                if (!linkedVariant.isSingle && !linkedVariant.imprecise) {
-                    val (minDistance, maxDistance) = distance(linkedVariant, mate)
-                    val nextJump = TransitiveLinkedVariant(linkedVariant.vcfId, linkedVariant.mateId!!, minDistance, maxDistance, linkedVariant.insertSequenceLength)
-                    val newAssemblyLinks = assemblyLinks(nextJump, target, maxTransitiveJumps - 1, newPath)
-                    if (newAssemblyLinks.isNotEmpty()) {
-                        return newAssemblyLinks
-                    }
+                val (minDistance, maxDistance) = distance(linkedVariant, mate)
+                val nextJump = TransitiveLinkedVariant(linkedVariant.vcfId, linkedVariant.mateId!!, minDistance, maxDistance, linkedVariant.insertSequenceLength)
+                val newAssemblyLinks = assemblyLinks(nextJump, target, maxTransitiveJumps - 1, newPath)
+                if (newAssemblyLinks.isNotEmpty()) {
+                    return newAssemblyLinks
                 }
             }
         }
@@ -99,6 +98,8 @@ class TransitiveDedup(private val linkStore: LinkStore, private val variantStore
 
         return Pair(minDistance, maxDistance)
     }
+
+
 }
 
 

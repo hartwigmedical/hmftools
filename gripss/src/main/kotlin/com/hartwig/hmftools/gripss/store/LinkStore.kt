@@ -24,7 +24,7 @@ class LinkStore(private val variantsByLink: Map<String, List<String>>, private v
         return linkByVariant.get(vcfId)?.joinToString(",")  ?: Strings.EMPTY
     }
 
-    fun followLinks(vcfId: String): List<String> {
+    fun linkedVariants(vcfId: String): List<String> {
         return linksByVariant(vcfId).flatMap { x -> variantsByLink(x) }.filter { x -> x != vcfId }
     }
 
