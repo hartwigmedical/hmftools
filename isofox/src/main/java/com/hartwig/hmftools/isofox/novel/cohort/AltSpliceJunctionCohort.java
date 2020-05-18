@@ -66,8 +66,7 @@ public class AltSpliceJunctionCohort
         mProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
         mSpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
 
-
-        mSpliceVariantMatching = mSpliceVariantFile != null ? new SpliceVariantMatching(mConfig) : null;
+        mSpliceVariantMatching = mSpliceVariantFile != null ? new SpliceVariantMatching(mConfig, mSpliceVariantFile) : null;
     }
 
     public static void addCmdLineOptions(final Options options)

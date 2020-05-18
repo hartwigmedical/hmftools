@@ -40,7 +40,7 @@ public class SpliceVariantMatching
 
     private BufferedWriter mWriter;
 
-    public SpliceVariantMatching(final CohortConfig config)
+    public SpliceVariantMatching(final CohortConfig config, final String spliceVariantFile)
     {
         mConfig = config;
         mFieldsMap = Maps.newHashMap();
@@ -52,7 +52,7 @@ public class SpliceVariantMatching
         mWriter = null;
 
         initialiseWriter();
-        loadSpliceVariants(mConfig.SpliceVariantFile);
+        loadSpliceVariants(spliceVariantFile);
     }
 
     public void close() { closeBufferedWriter(mWriter); }
