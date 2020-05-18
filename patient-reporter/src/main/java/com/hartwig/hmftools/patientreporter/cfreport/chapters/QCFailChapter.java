@@ -95,7 +95,7 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n and "
+                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
                         + "could not be further analyzed due to insufficient quality.";
                 break;
             }
