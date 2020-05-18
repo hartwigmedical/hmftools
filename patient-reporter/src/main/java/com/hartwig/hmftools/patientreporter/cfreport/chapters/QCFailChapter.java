@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
@@ -50,10 +52,6 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        if (failReport.sampleReport().hospitalContactData().hospitalAddress() == null) {
-            LOGGER.warn("No recipient address present for sample {}", failReport.sampleReport().tumorSampleId());
-        }
-
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
                 failReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
@@ -375,19 +373,17 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsVerifiedByAndAddressedAt() {
-        LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
+        return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
+                reportAddressedTo(failReport.sampleReport().hospitalContactData()));
+    }
 
-        String addressee = failReport.sampleReport().hospitalContactData().hospitalAddress();
-        String hospitalPI = failReport.sampleReport().hospitalContactData().hospitalPI();
-        String contact;
-        if (study == LimsStudy.CORE) {
-            contact = addressee;
+    @NotNull
+    private static String reportAddressedTo(@NotNull HospitalContactData contactData) {
+        if (!contactData.hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
+            return contactData.hospitalPI() + ", " + contactData.hospitalAddress();
         } else {
-            contact = hospitalPI + ", " + addressee;
+            return contactData.hospitalAddress();
         }
-
-        assert addressee != null; // Has been checked prior to calling this function.
-        return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ", contact);
     }
 
     @NotNull

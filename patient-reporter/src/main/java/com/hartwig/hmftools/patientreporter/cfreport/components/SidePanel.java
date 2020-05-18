@@ -11,8 +11,6 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +20,6 @@ public final class SidePanel {
     private static final float CONTENT_X_START = 455;
     private static final float RECTANGLE_WIDTH = 170;
     private static final float RECTANGLE_HEIGHT_SHORT = 110;
-    private static final Logger LOGGER = LogManager.getLogger(SidePanel.class);
 
     private SidePanel() {
     }
@@ -41,27 +38,21 @@ public final class SidePanel {
 
         LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
-        if (sampleReport.hospitalContactData().hospitalAddress() == null) {
-            LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
-        }
-
         if (fullHeight && fullContent) {
-            String contactNames =
+            String requesterName =
                     study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalContactData().requesterName() : Strings.EMPTY;
-            if (!contactNames.isEmpty()) {
-                cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", contactNames));
+            if (!requesterName.isEmpty()) {
+                cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", requesterName));
             }
 
-            final String contactEmails =
-                    study == LimsStudy.CORE || study == LimsStudy.WIDE ? sampleReport.hospitalContactData().requesterEmail() : Strings.EMPTY;
-            if (!contactEmails.isEmpty()) {
-                cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
+            String requesterEmail = study == LimsStudy.CORE || study == LimsStudy.WIDE
+                    ? sampleReport.hospitalContactData().requesterEmail()
+                    : Strings.EMPTY;
+            if (!requesterEmail.isEmpty()) {
+                cv.add(createSidePanelDiv(++sideTextIndex, "Email", requesterEmail));
             }
 
-            String hospitalName = sampleReport.hospitalContactData().hospitalName();
-            if (!hospitalName.isEmpty()) {
-                cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", hospitalName));
-            }
+            cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", sampleReport.hospitalContactData().hospitalName()));
 
             String hospitalPatientId = study == LimsStudy.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
             if (!hospitalPatientId.isEmpty()) {

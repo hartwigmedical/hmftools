@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -59,22 +61,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         SampleReport sampleReport = patientReport.sampleReport();
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
-        String addressee;
-        if (sampleReport.hospitalContactData().hospitalAddress() != null) {
-            addressee = sampleReport.hospitalContactData().hospitalAddress();
-            assert addressee != null;
-        } else {
-            LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
-            addressee = DataUtil.NA_STRING;
-        }
-
-        String contact;
-        if (study == LimsStudy.CORE) {
-            contact = addressee;
-        } else {
-            contact = sampleReport.hospitalContactData().hospitalPI() + ", " + addressee;
-        }
-
         Paragraph sampleIdentificationLineOnReport;
         if (patientReport.sampleReport().hospitalPathologySampleId() != null) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
@@ -110,7 +96,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 sampleReport.refSampleBarcode()));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
-        div.add(createContentParagraph("This report is addressed at: ", contact));
+        div.add(createContentParagraph("This report is addressed to: ", reportAddressedAt(sampleReport.hospitalContactData())));
 
         if (study == LimsStudy.CORE) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
@@ -123,6 +109,15 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
 
         return div;
+    }
+
+    @NotNull
+    private static String reportAddressedAt(@NotNull HospitalContactData contactData) {
+        if (!contactData.hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
+            return contactData.hospitalPI() + ", " + contactData.hospitalAddress();
+        } else {
+            return contactData.hospitalAddress();
+        }
     }
 
     @NotNull
@@ -174,11 +169,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The requester is: ").add(new Text(sampleReport.hospitalContactData().requesterName()).addStyle(
-                ReportResources.smallBodyBoldTextStyle()))
-                .add("(")
-                .add(new Text(sampleReport.hospitalContactData().requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .add(")")
+        String requesterName = sampleReport.hospitalContactData().requesterName();
+        String requesterEmail = sampleReport.hospitalContactData().requesterEmail();
+
+        return createContentParagraph("The requester is: ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 }
