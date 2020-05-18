@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
@@ -27,12 +28,14 @@ public class QCFailReporter {
 
     @NotNull
     public QCFailReport run(@NotNull SampleMetadata sampleMetadata, @NotNull QCFailReason reason, @Nullable String comments,
-            boolean correctedReport, @Nullable String purplePurityTsv) throws IOException {
+            boolean correctedReport, @NotNull String purplePurityTsv) throws IOException {
         QCFailStudy study = QCFailStudy.fromSampleId(sampleMetadata.tumorSampleId());
 
         String purity = Strings.EMPTY;
-        if (purplePurityTsv != null) {
+        boolean hasReliablePurity = true;
+        if (!purplePurityTsv.equals(Strings.EMPTY)) {
             PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+            hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
             purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
         }
 
@@ -48,14 +51,14 @@ public class QCFailReporter {
             //check for sample are present in shallow seq db when executed
             reportData.limsModel().purityShallowSeq(sampleMetadata.tumorSampleBarcode());
 
-            calculatedPurity = purity;
+            calculatedPurity = hasReliablePurity ? purity : "below detection threshold";
+
         } else {
             calculatedPurity = reportData.limsModel().purityShallowSeq(sampleMetadata.tumorSampleBarcode());
         }
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata,
-                reportData.limsModel(),
-                patientTumorLocation, calculatedPurity);
+        SampleReport sampleReport =
+                SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation, calculatedPurity);
 
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
