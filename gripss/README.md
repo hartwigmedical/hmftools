@@ -54,7 +54,7 @@ Filter | Default | Scope | Description
 minDelDupLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
 shortInvMaxHomLength | 6 | INV(<40b) | 
 shortDelMaxHomLength | 6 | DEL(<1kb) | 
-shortDelDupStrandBias | true | DEL & DUP(<1kb) | Enable base quality recalibration
+shortDelDupStrandBias | TRUE | DEL & DUP(<1kb) | Enable base quality recalibration
 shortDelDupSRSupport | TRUE | DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read
 shortDelDupNormalSRSupport | FALSE | DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read in the normal
 small.replacement.fp | | DEL(<1kb) | *TO DO!!!*
