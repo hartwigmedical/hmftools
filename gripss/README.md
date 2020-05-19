@@ -66,7 +66,7 @@ small.replacement.fp | | DEL(<1kb) | *TO DO!!!*
 
 ### A. Assembly linkage
 
-<Jon - can you write
+<Jon - please add details>
 
 ### B. Deduplication and transitive linkage
 
@@ -91,7 +91,7 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 Any breakend that is linked to a PASS breakend (by one of the 3 above rules) is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued regardless of soft filtering.
 
-<TO DO - specify known file>
+<JON - please add details of known file>
 
 ## 5. PON Filtering
 
