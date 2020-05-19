@@ -50,14 +50,14 @@ maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the re
 We also have 7 special filters applying to specific short variant categories:
 
 Filter | Default | Scope | Description 
----|---|---
+---|---|---|---
 minDelDupLength | 32 | DEL & DUP | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called.   Shorter variants
 shortInvMaxHomLength | 6 | INV < 40 bases long | 
 shortDelMaxHomLength | 6 | DEL < 1000 bases | 
 shortDelDupStrandBias | true | DEL & DUP <1000 bases | Enable base quality recalibration
 shortDelDupSRSupport | TRUE | DEL & DUP <1000 bases | Short DELs and DUPs must be supported by at least 1 split read
 shortDelDupNormalSRSupport | FALSE | DEL & DUP <1000 bases | Short DELs and DUPs must not be supported by 1 split read in the normal
-small.replacement.fp | DEL & DUP <1000 bases | *TO DO!!!*
+small.replacement.fp | | DEL & DUP <1000 bases | *TO DO!!!*
 
 
 
