@@ -2,29 +2,6 @@
 
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.    GRIPSS inputs the raw GRIDSS vcf and outputs a somatic vcf.
 
-## Installation
-
-<To Do> 
-
-# Usage
-
-<To Do> 
-
-## Mandatory Arguments
-
-Argument | Description 
----|---
-|
-
-<To Do> 
-  
-## Example Usage
-
-Minimum set of arguments (running in tumor only mode):
-
-```
-< TO DO>
-```
 
 # Algorithm
 
@@ -32,7 +9,7 @@ There are 6 key steps in GRIPSS described in detail below:
   1. [Hard Filters](#1-hard-filters)
   2. [Realignment](#2-realignment)
   3. [Soft Filters](#3-soft-filters)
-  4. [Linkage, Deduplication and Rescue](#4-linkage-deduplication-and-rescue)
+  4. [Linkage, Deduplication and Rescue](#4-linkage,-deduplication-and-rescue)
   5. [Pon Filtering](#6-pon-filtering)
 
 ## 1. Hard filters
