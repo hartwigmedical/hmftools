@@ -39,7 +39,7 @@ public enum QCFailReason {
             return UNDEFINED;
         }
 
-        for (final QCFailReason reason : QCFailReason.values()) {
+        for (QCFailReason reason : QCFailReason.values()) {
             if (reason.identifier().equals(identifier)) {
                 return reason;
             }
