@@ -24,6 +24,9 @@ public abstract class QCFailReport implements PatientReport {
     @NotNull
     public abstract QCFailStudy study();
 
+    @Nullable
+    public abstract String wgsPurityString();
+
     @Override
     @NotNull
     public abstract Optional<String> comments();

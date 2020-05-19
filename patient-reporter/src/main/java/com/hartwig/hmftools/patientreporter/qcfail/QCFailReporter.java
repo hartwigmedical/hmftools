@@ -39,27 +39,24 @@ public class QCFailReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
-        String calculatedPurity;
+        String wgsPurityString = null;
         if (reason == QCFailReason.BELOW_DETECTION_THRESHOLD || reason == QCFailReason.POST_ANALYSIS_FAIL) {
             // In these cases we have done full WGS.
             PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
-            calculatedPurity =
+            wgsPurityString =
                     hasReliablePurity ? new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100) : Lims.PURITY_NOT_RELIABLE;
 
-        } else {
-            // No full WGS has been performed so we try to recover shallow seq purity from lims.
-            calculatedPurity = reportData.limsModel().purityShallowSeq(sampleMetadata.tumorSampleBarcode());
         }
 
-        SampleReport sampleReport =
-                SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation, calculatedPurity);
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
 
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
                 .study(study)
+                .wgsPurityString(wgsPurityString)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
                 .signaturePath(reportData.signaturePath())

@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
@@ -80,10 +81,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateLowDNAYieldReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T",
-                "60%",
-                QCFailReason.LOW_DNA_YIELD,
-                testReportFilePath("hmf_low_dna_yield_report.pdf"));
+        generateQCFailCPCTReport("CPCT01000001T", "60%", QCFailReason.LOW_DNA_YIELD, testReportFilePath("hmf_low_dna_yield_report.pdf"));
     }
 
     @Test
@@ -96,10 +94,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateLabFailureReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T",
-                "60%",
-                QCFailReason.LAB_FAILURE,
-                testReportFilePath("hmf_lab_failure_report.pdf"));
+        generateQCFailCPCTReport("CPCT01000001T", "60%", QCFailReason.LAB_FAILURE, testReportFilePath("hmf_lab_failure_report.pdf"));
     }
 
     @Test
@@ -143,7 +138,7 @@ public class CFReportWriterTest {
     }
 
     @NotNull
-    private static HospitalContactData createTestHospitalContactData(){
+    private static HospitalContactData createTestHospitalContactData() {
         return ImmutableHospitalContactData.builder()
                 .hospitalPI("AB")
                 .requesterName("Paul")
@@ -167,7 +162,7 @@ public class CFReportWriterTest {
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
                 .refArrivalDate(LocalDate.parse("10-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
-                .purity(shallowSeqPurity != null ? shallowSeqPurity : "not determined")
+                .shallowSeqPurityString(shallowSeqPurity != null ? shallowSeqPurity : Lims.NOT_PERFORMED_STRING)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .cohort("A")
                 .projectName("COLO-001-002")
@@ -192,14 +187,18 @@ public class CFReportWriterTest {
             default:
                 failStudy = QCFailStudy.CPCT;
         }
-        QCFailReport patientReport = ImmutableQCFailReport.of(sampleReport,
-                reason,
-                failStudy,
-                Optional.empty(),
-                false,
-                testReportData().signaturePath(),
-                testReportData().logoRVAPath(),
-                testReportData().logoCompanyPath());
+
+        QCFailReport patientReport = ImmutableQCFailReport.builder()
+                .sampleReport(sampleReport)
+                .reason(reason)
+                .study(failStudy)
+                .wgsPurityString(null)
+                .comments(Optional.empty())
+                .isCorrectedReport(false)
+                .signaturePath(testReportData().signaturePath())
+                .logoRVAPath(testReportData().logoRVAPath())
+                .logoCompanyPath(testReportData().logoCompanyPath())
+                .build();
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeQCFailReport(patientReport, filename);

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
@@ -86,8 +87,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation could not be determined due to insufficient"
-                        + " tumor DNA";
+                explanationDetail =
+                        "The tumor percentage based on molecular estimation could not be determined due to insufficient" + " tumor DNA";
                 break;
             }
             case POST_ANALYSIS_FAIL: {
@@ -113,8 +114,8 @@ public class QCFailChapter implements ReportChapter {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation could not be determined due to insufficient "
-                        + "tumor DNA";
+                explanationDetail =
+                        "The tumor percentage based on molecular estimation could not be determined due to insufficient " + "tumor DNA";
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
@@ -174,7 +175,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleHasMolecularTumorPercentage());
+        divColumn.add(sampleMolecularTumorPercentageEstimation());
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
 
         return divColumn;
@@ -214,7 +215,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleHasMolecularTumorPercentage());
+        divColumn.add(sampleMolecularTumorPercentageEstimation());
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         return divColumn;
     }
@@ -249,7 +250,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleHasMolecularTumorPercentage());
+        divColumn.add(sampleMolecularTumorPercentageEstimation());
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
 
         return divColumn;
@@ -341,16 +342,15 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph sampleHasMolecularTumorPercentage() {
+    private Paragraph sampleMolecularTumorPercentageEstimation() {
         if (failReport.reason() != QCFailReason.LAB_FAILURE) {
-            if (failReport.sampleReport().purity().equals("below detection threshold") || failReport.sampleReport()
-                    .purity()
-                    .equals("not performed")) {
+            String effectivePurity = failReport.wgsPurityString() != null
+                    ? failReport.wgsPurityString()
+                    : failReport.sampleReport().shallowSeqPurityString();
+            if (effectivePurity.equals(Lims.PURITY_NOT_RELIABLE) || effectivePurity.equals(Lims.NOT_PERFORMED_STRING)) {
                 return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
             } else {
-                return createContentParagraph("The tumor percentage based on molecular estimation is ",
-                        failReport.sampleReport().purity());
-
+                return createContentParagraph("The tumor percentage based on molecular estimation is ", effectivePurity);
             }
         } else {
             return createContentParagraph(Strings.EMPTY);

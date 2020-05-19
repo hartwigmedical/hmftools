@@ -76,9 +76,8 @@ class AnalysedPatientReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
-        String calculatedPurity = reportData.limsModel().purityShallowSeq(sampleMetadata.tumorSampleBarcode());
         SampleReport sampleReport =
-                SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation, calculatedPurity);
+                SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
 
         PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation);
         SomaticVariantAnalysis somaticVariantAnalysis =
@@ -256,7 +255,7 @@ class AnalysedPatientReporter {
                 !report.sampleReport().cancerSubTypeString().isEmpty()
                         ? " (" + report.sampleReport().cancerSubTypeString() + ")"
                         : Strings.EMPTY);
-        LOGGER.info(" Shallow seq purity: {}", report.sampleReport().purity());
+        LOGGER.info(" Shallow seq purity: {}", report.sampleReport().shallowSeqPurityString());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
 
