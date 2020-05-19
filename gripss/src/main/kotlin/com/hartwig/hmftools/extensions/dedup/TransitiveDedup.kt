@@ -10,6 +10,7 @@ import java.util.*
 class TransitiveDedup(private val assemblyLinkStore: LinkStore, private val variantStore: VariantStore) {
 
     companion object {
+        const val MAX_TRANSITIVE_JUMPS = 2
         private val logger = LogManager.getLogger(this::class.java)
     }
 
@@ -20,7 +21,7 @@ class TransitiveDedup(private val assemblyLinkStore: LinkStore, private val vari
 
             val alternativeStart = variantStore.selectAlternatives(variant).filter { x -> !x.imprecise && !x.isSingle }
             for (alternative in alternativeStart) {
-                val assemblyLinks = assemblyLinks("trs_${variant.vcfId}_0", alternative, target, 2, mutableListOf())
+                val assemblyLinks = assemblyLinks("trs_${variant.vcfId}_", alternative, target, MAX_TRANSITIVE_JUMPS, mutableListOf())
                 if (assemblyLinks.isNotEmpty()) {
                     logger.info("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${assemblyLinks.alternatePath()}")
                     return true
@@ -32,7 +33,7 @@ class TransitiveDedup(private val assemblyLinkStore: LinkStore, private val vari
     }
 
 
-    private fun assemblyLinks(linkPrefix: String, current: StructuralVariantContext, target: StructuralVariantContext, maxTransitiveJumps: Int, path: List<Link>): List<Link> {
+    private fun assemblyLinks(transLinkPrefix: String, current: StructuralVariantContext, target: StructuralVariantContext, maxTransitiveJumps: Int, path: List<Link>): List<Link> {
         val mate = variantStore.select(current.mateId!!)
         val newPath: List<Link> = path + Link(current)
         if (matchTarget(mate, target)) {
@@ -49,7 +50,7 @@ class TransitiveDedup(private val assemblyLinkStore: LinkStore, private val vari
         val assemblyLinkedVariants = assemblyLinkStore.linkedVariants(current.mateId).map { vcfId -> variantStore.select(vcfId) }.filter { x -> !x.imprecise && !x.isSingle }
         for (linkedVariant in assemblyLinkedVariants) {
             val nextJump = Link("ASM", Pair(mate, linkedVariant))
-            val newAssemblyLinks = assemblyLinks(linkPrefix, linkedVariant, target, maxTransitiveJumps, newPath + nextJump)
+            val newAssemblyLinks = assemblyLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps, newPath + nextJump)
             if (newAssemblyLinks.isNotEmpty()) {
                 return newAssemblyLinks
             }
@@ -58,8 +59,8 @@ class TransitiveDedup(private val assemblyLinkStore: LinkStore, private val vari
         if (maxTransitiveJumps > 0) {
             val transitiveLinkedVariants = variantStore.selectNearbyFacingVariants(mate).filter { x -> !x.imprecise && !x.isSingle }
             for (linkedVariant in transitiveLinkedVariants) {
-                val nextJump = Link("TRS", Pair(mate, linkedVariant))
-                val newAssemblyLinks = assemblyLinks(linkPrefix, linkedVariant, target, maxTransitiveJumps - 1, newPath + nextJump)
+                val nextJump = Link("$transLinkPrefix${MAX_TRANSITIVE_JUMPS - maxTransitiveJumps}", Pair(mate, linkedVariant))
+                val newAssemblyLinks = assemblyLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps - 1, newPath + nextJump)
                 if (newAssemblyLinks.isNotEmpty()) {
                     return newAssemblyLinks
                 }
@@ -107,8 +108,6 @@ class TransitiveDedup(private val assemblyLinkStore: LinkStore, private val vari
 
         return stringJoiner.toString()
     }
-
-
 }
 
 
