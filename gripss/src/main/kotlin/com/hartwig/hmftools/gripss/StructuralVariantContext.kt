@@ -7,7 +7,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder
 const val SHORT_EVENT_SIZE = 1000
 
 class StructuralVariantContext(private val context: VariantContext, normalOrdinal: Int = 0, tumorOrdinal: Int = 1) {
-    private companion object Constants {
+    private companion object {
         private val polyG = "G".repeat(16);
         private val polyC = "C".repeat(16);
     }
@@ -40,88 +40,92 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
     }
 
-    fun context(config: GripssFilterConfig, localLink: String, remoteLink: String, dedup: Boolean): VariantContext {
+    fun context(localLink: String, remoteLink: String, altPath: String?, filters: List<String>): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
         builder.attribute(TAF, tumorAF)
                 .attribute(LOCAL_LINKED_BY, localLink)
                 .attribute(REMOTE_LINKED_BY, remoteLink)
 
-        if (normalCoverageFilter(config.minNormalCoverage)) {
-            builder.filter(MIN_NORMAL_COVERAGE)
-        }
+        altPath?.let { x -> builder.attribute(ALT_PATH, x) }
 
-        if (allelicFrequencyFilter(config.minTumorAF)) {
-            builder.filter(MIN_TUMOR_AF)
-        }
-
-        if (strandBiasFilter(config.maxShortStrandBias)) {
-            builder.filter(SHORT_STRAND_BIAS)
-        }
-
-        if (qualFilter(config.minQualBreakEnd, config.minQualBreakPoint)) {
-            builder.filter(MIN_QUAL)
-        }
-
-        if (impreciseFilter()) {
-            builder.filter(IMPRECISE)
-        }
-
-        if (polyGCFilter()) {
-            builder.filter(MAX_POLY_G_LENGTH)
-        }
-
-        if (homologyLengthFilter(config.maxHomLength)) {
-            builder.filter(MAX_HOM_LENGTH)
-        }
-
-        if (homologyLengthFilterShortInversion(config.maxHomLengthShortInversion)) {
-            builder.filter(MAX_HOM_LENGTH_SHORT_INV)
-        }
-
-        if (inexactHomologyLengthFilter(config.maxInexactHomLength)) {
-            builder.filter(MAX_INEXACT_HOM_LENGTH)
-        }
-
-        if (inexactHomologyLengthShortDelFilter(config.maxInexactHomLengthShortDel)) {
-            builder.filter(MAX_INEXACT_HOM_LENGTH_SHORT_DEL)
-        }
-
-        if (shortSplitReadTumorFilter()) {
-            builder.filter(SHORT_SR_SUPPORT)
-        }
-
-        if (shortSplitReadNormalFilter()) {
-            builder.filter(SHORT_SR_NORMAL)
-        }
-
-        if (longDPSupportFilter()) {
-            builder.filter(LONG_DP_SUPPORT)
-        }
-
-        if (breakendAssemblyReadPairsFilter()) {
-            builder.filter(BREAK_END_ASSEMBLY_READ_PAIR)
-        }
-
-        if (minSizeFilter(config.minSize)) {
-            builder.filter(MIN_SIZE)
-        }
-
-        if (dedup) {
-            builder.filter(DEDUP)
-        }
-
-        if (builder.filters.isEmpty()) {
+        filters.forEach { x -> builder.filter(x)}
+        if (filters.isEmpty()) {
             builder.filter(PASS)
         }
 
         return builder.make()
     }
 
-
     fun assemblies(): List<String> = context.assemblies();
 
     fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupport)
+
+    fun softFilters(config: GripssFilterConfig): List<String> {
+        val result = mutableListOf<String>()
+
+        if (normalCoverageFilter(config.minNormalCoverage)) {
+            result.add(MIN_NORMAL_COVERAGE)
+        }
+
+        if (allelicFrequencyFilter(config.minTumorAF)) {
+            result.add(MIN_TUMOR_AF)
+        }
+
+        if (strandBiasFilter(config.maxShortStrandBias)) {
+            result.add(SHORT_STRAND_BIAS)
+        }
+
+        if (qualFilter(config.minQualBreakEnd, config.minQualBreakPoint)) {
+            result.add(MIN_QUAL)
+        }
+
+        if (impreciseFilter()) {
+            result.add(IMPRECISE)
+        }
+
+        if (polyGCFilter()) {
+            result.add(MAX_POLY_G_LENGTH)
+        }
+
+        if (homologyLengthFilter(config.maxHomLength)) {
+            result.add(MAX_HOM_LENGTH)
+        }
+
+        if (homologyLengthFilterShortInversion(config.maxHomLengthShortInversion)) {
+            result.add(MAX_HOM_LENGTH_SHORT_INV)
+        }
+
+        if (inexactHomologyLengthFilter(config.maxInexactHomLength)) {
+            result.add(MAX_INEXACT_HOM_LENGTH)
+        }
+
+        if (inexactHomologyLengthShortDelFilter(config.maxInexactHomLengthShortDel)) {
+            result.add(MAX_INEXACT_HOM_LENGTH_SHORT_DEL)
+        }
+
+        if (shortSplitReadTumorFilter()) {
+            result.add(SHORT_SR_SUPPORT)
+        }
+
+        if (shortSplitReadNormalFilter()) {
+            result.add(SHORT_SR_NORMAL)
+        }
+
+        if (longDPSupportFilter()) {
+            result.add(LONG_DP_SUPPORT)
+        }
+
+        if (breakendAssemblyReadPairsFilter()) {
+            result.add(BREAK_END_ASSEMBLY_READ_PAIR)
+        }
+
+        if (minSizeFilter(config.minSize)) {
+            result.add(MIN_SIZE)
+        }
+
+        return result
+    }
 
     fun qualFilter(minQualBreakEnd: Int, minQualBreakPoint: Int): Boolean {
         val minQual = if (isSingle) minQualBreakEnd else minQualBreakPoint
@@ -207,6 +211,6 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     }
 
     override fun toString(): String {
-        return "${context.id} ${context.contig}:${context.start} ${context.alleles[0].displayString} > ${context.alleles[1].displayString}"
+        return "${context.id} ${context.contig}:${context.start} QUAL:${context.phredScaledQual} Orientation:${variantType.startOrientation} ${context.alleles[0].displayString}  > ${context.alleles[1].displayString}"
     }
 }

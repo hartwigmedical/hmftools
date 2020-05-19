@@ -39,21 +39,21 @@ class VariantStore(
     }
 
     fun selectNearbyFacingVariants(variant: StructuralVariantContext, maxDistance: Int = 1000): List<StructuralVariantContext> {
-        val commonFilter: (StructuralVariantContext) -> Boolean = { x -> x.orientation != variant.orientation}
+        val commonFilter: (StructuralVariantContext) -> Boolean = { x -> x.orientation != variant.orientation }
         val filter: (StructuralVariantContext) -> Boolean = if (variant.orientation == 1.toByte())
-            { x -> commonFilter(x) && x.start <= variant.start && x.start >= variant.start - maxDistance}
+            { x -> commonFilter(x) && x.start <= variant.start && x.start >= variant.start - maxDistance }
         else
-            { x -> commonFilter(x) && x.start >= variant.start && x.start <= variant.start + maxDistance}
+            { x -> commonFilter(x) && x.start >= variant.start && x.start <= variant.start + maxDistance }
         return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter(filter)
     }
 
     fun selectAlternatives(variant: StructuralVariantContext): List<StructuralVariantContext> {
-        return selectInRange(variant) { x -> x.vcfId != variant.vcfId && x.mateId?.equals(variant.vcfId) != true && x.orientation == variant.orientation }
+        return selectOthersInConfidenceIntervals(variant) { x -> x.mateId?.equals(variant.vcfId) != true && x.orientation == variant.orientation }
     }
 
-    private fun selectInRange(variant: StructuralVariantContext, filter: (StructuralVariantContext) -> Boolean): List<StructuralVariantContext> {
+    fun selectOthersInConfidenceIntervals(variant: StructuralVariantContext, filter: (StructuralVariantContext) -> Boolean = { true }): List<StructuralVariantContext> {
         return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter { other ->
-            return@filter filter(other) && variant.confidenceIntervalsOverlap(other)
+            return@filter filter(other) && variant.confidenceIntervalsOverlap(other) && other.vcfId != variant.vcfId
         }
     }
 

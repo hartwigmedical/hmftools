@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.gripss
 
+import com.hartwig.hmftools.bedpe.dedup.DedupPair
 import com.hartwig.hmftools.gripss.link.AlternatePath
 import com.hartwig.hmftools.gripss.link.AssemblyLink
 import com.hartwig.hmftools.gripss.store.LinkStore
+import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import com.hartwig.hmftools.gripss.store.VariantStore
 import htsjdk.variant.vcf.VCFFileReader
 import org.apache.logging.log4j.LogManager
@@ -11,20 +13,8 @@ import java.io.File
 fun main(args: Array<String>) {
 
     val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
-//    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.gridss.somatic.vcf"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
-    val filterConfig = GripssFilterConfig(
-            0.03,
-            8,
-            0.005,
-            0.95,
-            1000,
-            350,
-            50,
-            6,
-            50,
-            5,
-            32)
+    val filterConfig = GripssFilterConfig.default()
     val config = GripssConfig(inputVCF, outputVCF, filterConfig)
 
     GripssApplication(config).use { x -> x.run() }
@@ -48,20 +38,37 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val structuralVariants = hardFilterVariants(fileReader)
         val variantStore = VariantStore.invoke(structuralVariants)
 
+        logger.info("Initial soft filters")
+        val softFiltersInitial = SoftFilterStore(config.filterConfig, structuralVariants)
+
         logger.info("Finding assembly links")
         val assemblyLinks: LinkStore = AssemblyLink(structuralVariants)
 
         logger.info("Finding transitive links")
         val alternatePaths: Collection<AlternatePath> = AlternatePath(assemblyLinks, variantStore, structuralVariants)
-        val transitiveLinks: LinkStore  = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
+        val alternatePathsStringsByVcfId = alternatePaths.associate { x -> Pair(x.vcfId, x.pathString())}
+        val transitiveLinks: LinkStore = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
+
+        logger.info("Paired break end de-duplication")
+        val dedupPair = DedupPair(softFiltersInitial, alternatePaths)
+        val softFiltersAfterPairedDedup = softFiltersInitial.update(dedupPair.duplicates, dedupPair.rescue)
 
         logger.info("Finding double stranded break links")
         // TODO: Add DSB Links
-        val allLinks = LinkStore(assemblyLinks, transitiveLinks)
+        val combinedLinks = LinkStore(assemblyLinks, transitiveLinks)
+
+//        DedupSingle.create(variantStore, structuralVariants)
 
         logger.info("Writing file: ${config.outputVcf}")
         for (variant in structuralVariants) {
-            fileWriter.writeVariant(variant.context(config.filterConfig, allLinks.localLinkedBy(variant.vcfId), allLinks.localLinkedBy(variant.mateId), false))
+
+            val localLinkedBy = combinedLinks[variant.vcfId]
+            val remoteLinkedBy = combinedLinks[variant.mateId]
+            val filters = softFiltersAfterPairedDedup[variant.vcfId]
+            val altPath = alternatePathsStringsByVcfId[variant.vcfId]
+
+
+            fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, filters))
         }
 
     }
@@ -81,7 +88,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
             }
         }
 
-        val mateIsValidOrNull = { x: StructuralVariantContext -> x.mateId?.let { unfiltered.contains(it) } != false}
+        val mateIsValidOrNull = { x: StructuralVariantContext -> x.mateId?.let { unfiltered.contains(it) } != false }
         return structuralVariants.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }
     }
 

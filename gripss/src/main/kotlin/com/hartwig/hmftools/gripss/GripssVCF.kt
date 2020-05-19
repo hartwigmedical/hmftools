@@ -16,19 +16,21 @@ const val MAX_POLY_G_LENGTH = "maxPolyGLength"
 const val SHORT_STRAND_BIAS = "shortStrandBias"
 const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
 const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
-
 const val MAX_HOM_LENGTH = "maxHomLength"
+
 const val MAX_HOM_LENGTH_SHORT_INV = "maxHomLengthShortInv"
 const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
 const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
 const val BREAK_END_ASSEMBLY_READ_PAIR = "breakendAssemblyReadPair"
-
 const val PON = "PON"
+
+const val PAIR = "PAIR"
 const val PASS = "PASS"
 const val DEDUP = "dedup"
 const val MIN_SIZE = "minSize"
 
 const val TAF = "TAF";
+const val ALT_PATH = "ALTP";
 const val LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
 const val REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
 
@@ -61,7 +63,9 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artefact"))
         header.addMetaDataLine(VCFFilterHeaderLine(IMPRECISE, "Imprecise variant"))
         header.addMetaDataLine(VCFFilterHeaderLine(PASS, "Variant passes all filters"))
+
         header.addMetaDataLine(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Description"))
+        header.addMetaDataLine(VCFInfoHeaderLine(ALT_PATH, 1, VCFHeaderLineType.String, "Alternate path"))
         header.addMetaDataLine(VCFInfoHeaderLine(LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Breakend linking information"))
         header.addMetaDataLine(VCFInfoHeaderLine(REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend linking information"))
 

@@ -21,7 +21,7 @@ class LinkStore(private val linkByVariant: Map<String, List<Link>>) {
             val linkByVariant = HashMap<String, MutableList<Link>>()
 
             for (store in stores) {
-                for (link in store.allLinks()) {
+                for (link in linkByVariant.values.flatten()) {
                     linkByVariant.computeIfAbsent(link.vcfId) { mutableListOf() }.add(link)
                 }
             }
@@ -30,11 +30,7 @@ class LinkStore(private val linkByVariant: Map<String, List<Link>>) {
         }
     }
 
-    private fun allLinks(): List<Link> {
-        return linkByVariant.values.flatten()
-    }
-
-    fun localLinkedBy(vcfId: String?): String {
+    operator fun get(vcfId: String?): String {
         return linkByVariant[vcfId]?.joinToString(",") { x -> x.link } ?: Strings.EMPTY
     }
 

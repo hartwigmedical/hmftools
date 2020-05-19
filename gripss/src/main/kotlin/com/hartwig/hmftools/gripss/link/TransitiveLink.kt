@@ -11,14 +11,14 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         const val MAX_TRANSITIVE_JUMPS = 2
     }
 
-    fun transitiveLink(variant: StructuralVariantContext): List<Link> {
+    fun transitiveLink(variant: StructuralVariantContext, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
 
         if (!variant.isSingle) {
             val target = variantStore.select(variant.mateId!!)
 
             val alternativeStart = variantStore.selectAlternatives(variant).filter { x -> !x.imprecise && !x.isSingle }
             for (alternative in alternativeStart) {
-                val assemblyLinks = assemblyLinks("trs_${variant.vcfId}_", alternative, target, MAX_TRANSITIVE_JUMPS, mutableListOf())
+                val assemblyLinks = assemblyLinks("trs_${variant.vcfId}_", alternative, target, maxTransitiveJumps, mutableListOf())
                 if (assemblyLinks.isNotEmpty()) {
                     return assemblyLinks
                 }
@@ -32,7 +32,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
             : List<Link> {
         val mate = variantStore.select(current.mateId!!)
         val newPath: List<Link> = path + Link(current)
-        if (matchTarget(mate, target)) {
+        if (isMatch(mate, target)) {
             if (!target.imprecise) {
                 val (minTotalDistance, maxTotalDistance) = newPath.totalDistance()
                 if (target.insertSequenceLength < minTotalDistance || target.insertSequenceLength > maxTotalDistance) {
@@ -70,8 +70,11 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     }
 
 
-    private fun matchTarget(current: StructuralVariantContext, target: StructuralVariantContext): Boolean {
-        return current.vcfId != target.vcfId && current.mateId!! != target.vcfId && current.orientation == target.orientation && target.confidenceIntervalsOverlap(current)
+    private fun isMatch(current: StructuralVariantContext, target: StructuralVariantContext): Boolean {
+        return current.vcfId != target.vcfId
+                && current.mateId!! != target.vcfId
+                && current.orientation == target.orientation
+                && target.confidenceIntervalsOverlap(current)
     }
 
 

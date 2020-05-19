@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.HashSet
 
-data class AlternatePath(val vcfId: String, val path: List<Link>) {
+data class AlternatePath(val vcfId: String, val mateId: String, val path: List<Link>) {
 
     companion object {
         private val logger = LogManager.getLogger(this::class.java)
@@ -19,16 +19,16 @@ data class AlternatePath(val vcfId: String, val path: List<Link>) {
             val transitiveLink = TransitiveLink(assemblyLinkStore, variantStore)
 
             for (variant in variants) {
-                if (variant.mateId != null && !result.keys.contains(variant.vcfId) && !failed.contains(variant.vcfId)) {
+                if (variant.mateId != null && !result.keys.contains(variant.mateId) && !failed.contains(variant.mateId)) {
                     val links = transitiveLink.transitiveLink(variant)
                     if (links.isNotEmpty()) {
-                        val alternatePath = AlternatePath(variant.vcfId, links)
-                        val reverseAlternatePath = AlternatePath(variant.mateId, links.map { x -> x.reverse() }.reversed())
+                        val alternatePath = AlternatePath(variant.vcfId, variant.mateId, links)
+                        val reverseAlternatePath = AlternatePath(variant.mateId, variant.vcfId, links.map { x -> x.reverse() }.reversed())
                         result[variant.vcfId] = alternatePath
                         result[variant.mateId] = reverseAlternatePath
-                        logger.info("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${alternatePath.path()}")
+                        logger.debug("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${alternatePath.pathString()}")
                     } else {
-                        failed.add(variant.mateId)
+                        failed.add(variant.vcfId)
                     }
                 }
             }
@@ -37,12 +37,18 @@ data class AlternatePath(val vcfId: String, val path: List<Link>) {
         }
     }
 
+    fun size(): Int = path.size
+
+    fun pathVcfIds(): List<String> {
+        return path.map { x -> x.vcfId } + path[path.size - 1].otherVcfId
+    }
+
 
     fun transitiveLinks(): List<Link> {
         return path.filter { x -> x.link.startsWith("trs") }
     }
 
-    fun path(): String {
+    fun pathString(): String {
         val stringJoiner = StringJoiner("")
 
         for (i in path.indices) {
