@@ -24,10 +24,7 @@ data class Link(val link: String, val vcfId: String, val otherVcfId: String, val
             return Pair(min(minDistance, maxDistance), max(minDistance, maxDistance))
         }
     }
-
     override fun toString(): String {
         return "$vcfId<$link>$otherVcfId"
     }
-
-
 }

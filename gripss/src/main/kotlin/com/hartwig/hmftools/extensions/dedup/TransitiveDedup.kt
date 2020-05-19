@@ -47,12 +47,15 @@ class TransitiveDedup(private val assemblyLinkStore: LinkStore, private val vari
         }
 
         // Always try assembled links first!
-        val assemblyLinkedVariants = assemblyLinkStore.linkedVariants(current.mateId).map { vcfId -> variantStore.select(vcfId) }.filter { x -> !x.imprecise && !x.isSingle }
-        for (linkedVariant in assemblyLinkedVariants) {
-            val nextJump = Link("ASM", Pair(mate, linkedVariant))
-            val newAssemblyLinks = assemblyLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps, newPath + nextJump)
-            if (newAssemblyLinks.isNotEmpty()) {
-                return newAssemblyLinks
+        val assemblyLinkedVariants = assemblyLinkStore.linkedVariants(current.mateId)
+        for (link in assemblyLinkedVariants) {
+            val linkedVariant =  variantStore.select(link.otherVcfId)
+            if (!linkedVariant.isSingle && !linkedVariant.imprecise) {
+                val nextJump = Link(link.link, Pair(mate, linkedVariant))
+                val newAssemblyLinks = assemblyLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps, newPath + nextJump)
+                if (newAssemblyLinks.isNotEmpty()) {
+                    return newAssemblyLinks
+                }
             }
         }
 

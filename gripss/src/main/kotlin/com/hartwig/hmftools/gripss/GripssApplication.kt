@@ -86,7 +86,6 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         return structuralVariants.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }
     }
 
-
     override fun close() {
         fileReader.close()
         fileWriter.close()
