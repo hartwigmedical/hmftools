@@ -20,7 +20,7 @@ public class Lims {
 
     public static final String NOT_AVAILABLE_STRING = "N/A";
     public static final String NOT_PERFORMED_STRING = "not performed";
-    public static final String PURITY_NOT_RELIABLE = "below detection threshold";
+    public static final String PURITY_NOT_RELIABLE_STRING = "below detection threshold";
 
     @NotNull
     private final Map<String, LimsJsonSampleData> dataPerSampleBarcode;
@@ -180,7 +180,7 @@ public class Lims {
             } else {
                 if (purityShallowExecuted) {
                     if (!shallowSeq.hasReliablePurity()) {
-                        return PURITY_NOT_RELIABLE;
+                        return PURITY_NOT_RELIABLE_STRING;
                     } else {
                         try {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
@@ -242,12 +242,12 @@ public class Lims {
     }
 
     @NotNull
-    public HospitalContactData hospitalContactData(@NotNull String tumorBarcode) {
-        String sampleId = sampleId(tumorBarcode);
-        HospitalContactData data = hospitalModel.queryHospitalData(sampleId, requesterName(tumorBarcode), requesterEmail(tumorBarcode));
+    public HospitalContactData hospitalContactData(@NotNull String sampleBarcode) {
+        String sampleId = sampleId(sampleBarcode);
+        HospitalContactData data = hospitalModel.queryHospitalData(sampleId, requesterName(sampleBarcode), requesterEmail(sampleBarcode));
 
         if (data == null) {
-            LOGGER.warn("Could not find hospital data for tumor sample {} with barcode {}", sampleId, tumorBarcode);
+            LOGGER.warn("Could not find hospital data for sample '{}' with barcode '{}'", sampleId, sampleBarcode);
             data = ImmutableHospitalContactData.builder()
                     .hospitalPI(NOT_AVAILABLE_STRING)
                     .requesterName(NOT_AVAILABLE_STRING)

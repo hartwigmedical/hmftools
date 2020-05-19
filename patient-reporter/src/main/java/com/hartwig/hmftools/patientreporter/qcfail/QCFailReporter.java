@@ -46,7 +46,7 @@ public class QCFailReporter {
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
             wgsPurityString =
-                    hasReliablePurity ? new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100) : Lims.PURITY_NOT_RELIABLE;
+                    hasReliablePurity ? new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100) : Lims.PURITY_NOT_RELIABLE_STRING;
 
         }
 
