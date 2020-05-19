@@ -11,7 +11,6 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -171,12 +170,9 @@ public class CFReportWriterTest {
                 .hospitalPathologySampleId("A")
                 .build();
 
-        LimsStudy study = LimsStudy.fromSampleId(sampleId);
-
         QCFailReport patientReport = ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
-                .study(study)
                 .wgsPurityString(null)
                 .comments(Optional.empty())
                 .isCorrectedReport(false)

@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -241,13 +240,10 @@ public final class ExampleAnalysisTestFactory {
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        LimsStudy study = LimsStudy.fromSampleId(sampleId);
-
         ReportData reportData = testReportData();
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
-                .study(study)
                 .comments(Optional.empty())
                 .isCorrectedReport(false)
                 .signaturePath(reportData.signaturePath())

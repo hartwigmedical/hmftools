@@ -33,7 +33,7 @@ public class QCFailReporter {
         LimsStudy study = LimsStudy.fromSampleId(sampleMetadata.tumorSampleId());
 
         if (study == LimsStudy.NON_CANCER_STUDY) {
-            throw new IllegalStateException("Could not derive study for QC fail report for " + sampleMetadata.tumorSampleId());
+            throw new IllegalStateException("QC fail report not supported for non-cancer study samples: " + sampleMetadata.tumorSampleId());
         }
 
         PatientTumorLocation patientTumorLocation =
@@ -55,7 +55,6 @@ public class QCFailReporter {
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
-                .study(study)
                 .wgsPurityString(wgsPurityString)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
