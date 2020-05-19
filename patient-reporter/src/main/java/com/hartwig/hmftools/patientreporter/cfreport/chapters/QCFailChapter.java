@@ -10,6 +10,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAnd
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailType;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
@@ -62,14 +63,16 @@ public class QCFailChapter implements ReportChapter {
         LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
 
         switch (study) {
-            case CORE:
-                reportDocument.add(createCOREContentBody());
-                break;
             case WIDE:
                 reportDocument.add(createWIDEContentBody());
                 break;
-            default:
+            case CORE:
+                reportDocument.add(createCOREContentBody());
+                break;
+            case DRUP:
+            case CPCT:
                 reportDocument.add(createCPCTDRUPContentBody());
+                break;
         }
 
         reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(15));
@@ -147,12 +150,14 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn = new Div();
         divColumn.add(resubmitSample());
         if (failReport.sampleReport().hospitalPathologySampleId() != null) {
-            divColumn.add(reportIsForPathologyTissueID());
+            divColumn.add(reportIsForPathologySampleID());
         }
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleMolecularTumorPercentageEstimation());
+        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
+            divColumn.add(sampleHasMolecularTumorPercentage());
+        }
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
 
         return divColumn;
@@ -162,7 +167,7 @@ public class QCFailChapter implements ReportChapter {
     private Div createWIDEContentBodyColumn2() {
         Div divColumn = new Div();
         divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
         divColumn.add(testsArePerformedByAccreditedLab());
@@ -185,14 +190,16 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn = new Div();
         divColumn.add(resubmitSample());
         if (failReport.sampleReport().hospitalPathologySampleId() != null) {
-            divColumn.add(reportIsForPathologyTissueID());
+            divColumn.add(reportIsForPathologySampleID());
         }
         divColumn.add(reportIsForHospitalPatientID());
         divColumn.add(reportIsForProjectAndSubmission());
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleMolecularTumorPercentageEstimation());
+        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
+            divColumn.add(sampleHasMolecularTumorPercentage());
+        }
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         return divColumn;
     }
@@ -201,7 +208,7 @@ public class QCFailChapter implements ReportChapter {
     private Div createCOREContentBodyColumn2() {
         Div divColumn = new Div();
         divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(reportIsRequestedBy());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
@@ -227,7 +234,9 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleMolecularTumorPercentageEstimation());
+        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
+            divColumn.add(sampleHasMolecularTumorPercentage());
+        }
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
 
         return divColumn;
@@ -237,7 +246,7 @@ public class QCFailChapter implements ReportChapter {
     private Div createCPCTDRUPContentBodyColumn2() {
         Div divColumn = new Div();
         divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
         divColumn.add(testsArePerformedByAccreditedLab());
@@ -257,13 +266,13 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph reportIsForPathologyTissueID() {
+    private Paragraph reportIsForPathologySampleID() {
         return createContentParagraph("The tissue ID is: ", failReport.sampleReport().hospitalPathologySampleId());
     }
 
     @NotNull
     private Paragraph reportIsForProjectAndSubmission() {
-        return createContentParagraphTwice("The project name of sample is ",
+        return createContentParagraphTwice("The project name of the sample is ",
                 failReport.sampleReport().projectName(),
                 " and the submission ID is ",
                 failReport.sampleReport().submissionId());
@@ -310,7 +319,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsGeneratedByPatientReporterVersion() {
-        return createContentParagraph("This report is based by patient reporter ", ReportResources.VERSION_REPORT);
+        return createContentParagraph("This report is generated by patient reporter ", ReportResources.VERSION_REPORT);
     }
 
     @NotNull
@@ -319,18 +328,13 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph sampleMolecularTumorPercentageEstimation() {
-        if (failReport.reason() != QCFailReason.LAB_FAILURE) {
-            String effectivePurity = failReport.wgsPurityString() != null
-                    ? failReport.wgsPurityString()
-                    : failReport.sampleReport().shallowSeqPurityString();
-            if (effectivePurity.equals(Lims.PURITY_NOT_RELIABLE_STRING) || effectivePurity.equals(Lims.NOT_PERFORMED_STRING)) {
-                return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
-            } else {
-                return createContentParagraph("The tumor percentage based on molecular estimation is ", effectivePurity);
-            }
+    private Paragraph sampleHasMolecularTumorPercentage() {
+        String effectivePurity =
+                failReport.wgsPurityString() != null ? failReport.wgsPurityString() : failReport.sampleReport().shallowSeqPurityString();
+        if (effectivePurity.equals(Lims.PURITY_NOT_RELIABLE_STRING) || effectivePurity.equals(Lims.NOT_PERFORMED_STRING)) {
+            return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
         } else {
-            return createContentParagraph(Strings.EMPTY);
+            return createContentParagraph("The tumor percentage based on molecular estimation is ", effectivePurity);
         }
     }
 
@@ -343,7 +347,7 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph reportIsVerifiedByAndAddressedAt() {
+    private Paragraph reportIsVerifiedByAndAddressedTo() {
         return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
                 failReport.sampleReport().addressee());
     }
