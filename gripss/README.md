@@ -9,7 +9,7 @@ There are 6 key steps in GRIPSS described in detail below:
   1. [Hard Filters](#1-hard-filters)
   2. [Realignment](#2-realignment)
   3. [Soft Filters](#3-soft-filters)
-  4. [Linkage, Deduplication and Rescue](#4-linkage,-deduplication-and-rescue)
+  4. [Linkage, Deduplication and Rescue](#4-linkage-deduplication-and-rescue)
   5. [Pon Filtering](#5-pon-filtering)
 
 ## 1. Hard filters
