@@ -6,11 +6,11 @@ GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tum
 # Algorithm
 
 There are 5 steps in GRIPSS described in detail below:
-  1. [Hard Filters](#1-hard-filters)
+  1. [Hard filters](#1-hard-filters)
   2. [Realignment](#2-realignment)
-  3. [Soft Filters](#3-soft-filters)
-  4. [Linkage, Deduplication and Rescue](#4-linkage-deduplication-and-rescue)
-  5. [Pon Filtering](#5-pon-filtering)
+  3. [Soft filters](#3-soft-filters)
+  4. [Linkage, deduplication and rescue](#4-linkage-deduplication-and-rescue)
+  5. [Pon filtering](#5-pon-filtering)
 
 ## 1. Hard filters
 
@@ -93,7 +93,7 @@ Any breakend that is linked to a PASS breakend (by one of the 3 above rules) is 
 
 <JON - please add details of known file>
 
-## 5. PON Filtering
+## 5. PON filtering
 
 <TO DO>
   
