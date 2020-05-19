@@ -54,6 +54,3 @@ Any breakend that is linked to a PASS breakend (by one of the 3 above rules) is 
 ## 5. PON Filtering
 
 <TO DO>
-
-# Version History and Download Links
- - Upcoming
