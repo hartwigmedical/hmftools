@@ -29,7 +29,38 @@ For the purposes of backwards compatibility we also perform 3 other fixes to cor
 
 ## 3. Soft filters
  
-<TO DO>
+The following filters are applied to all variants
+
+Filter | Default | Description / purpose
+---|---|---
+minQual | breakpoints: 350; single breakend:1000 | Minimum absolute tumor support for variant
+minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
+minTumorAF | 0.5 | Low AF variants in high depth regions may be artefacts
+imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome  
+maxInexactHomologyLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
+DPsupport | TRUE | Variants (except for DEL and DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mapability.   Not suitable for non paired reads or very short fragment sizes.  
+
+Single breakends have 2 additional filters:
+
+Filter | Default | Description 
+---|---|---
+breakendAssemblyReadPair | TRUE | ???
+maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts
+
+We also have 7 special filters applying to specific short variant categories:
+
+Filter | Default | Scope | Description 
+---|---|---
+minDelDupLength | 32 | DEL & DUP | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called.   Shorter variants
+shortInvMaxHomLength | 6 | INV < 40 bases long | 
+shortDelMaxHomLength | 6 | DEL < 1000 bases | 
+shortDelDupStrandBias | true | DEL & DUP <1000 bases | Enable base quality recalibration
+shortDelDupSRSupport | TRUE | DEL & DUP <1000 bases | Short DELs and DUPs must be supported by at least 1 split read
+shortDelDupNormalSRSupport | FALSE | DEL & DUP <1000 bases | Short DELs and DUPs must not be supported by 1 split read in the normal
+small.replacement.fp | DEL & DUP <1000 bases | *TO DO!!!*
+
+
+
 
 ## 4. Linkage, deduplication and rescue
 
