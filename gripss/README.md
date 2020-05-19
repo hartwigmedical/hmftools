@@ -41,12 +41,12 @@ For the purposes of backwards compatibility we also perform 3 other fixes to cor
 
 The GRIDSS output may contain structural variants which may be duplicated either by a single SV or by a chain of SVs with breakends proximate to each other which may or may not already be linked by assembly.   In the case where a variant is duplicated by a chain, we term this variant the spanning variant and these links to be transitive links.
 
-For a variant to be marked as a duplicate, we must find 2 candidate transitive breakends which match the orientation and position (within CIPOS bounds) of the spanning variant. The candidate transitive breakends must be linkable in a continuous chain as 
+For a variant to be marked as a duplicate, we must find 2 candidate transitive breakends which match the orientation and position (within CIPOS bounds) of the spanning variant. The candidate transitive breakends must be linkable in a continuous chain as one of the following cases:
 
 * same variant - opposite breakends of the same SV
 * same assembly - the 2 transitive SVs are part of the same assembly and oriented away from each other
-* 1 transitive jump - the far breakend of the 2 transitive SVs / assemblies face each other and the total chain distance must be less than 1000 bases
-* 2 transitive jumps - the far breakend of the 2 transitive SVs / assemblies both face opposite ends of a 3rd SV or assembly and the total chain distance must be less than 1000 bases
+* 1 transitive jump - the far breakend of the 2 transitive SVs / assemblies face each other and each link must be less than 1000 bases
+* 2 transitive jumps - the far breakend of the 2 transitive SVs / assemblies both face opposite ends of a 3rd SV or assembly and each link must be less than 1000 bases
 
 Further, all the transitive links must be precise variants.   If the deduplicated spanning variant is PRECISE, then the length of the insert sequence of the spanning variant must match the entire chain length of the transitive variants (within CIPOS bounds).  
 
