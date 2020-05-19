@@ -5,7 +5,7 @@ GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tum
 
 # Algorithm
 
-There are 6 key steps in GRIPSS described in detail below:
+There are 5 steps in GRIPSS described in detail below:
   1. [Hard Filters](#1-hard-filters)
   2. [Realignment](#2-realignment)
   3. [Soft Filters](#3-soft-filters)
