@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -29,9 +30,9 @@ public class QCFailReporter {
     @NotNull
     public QCFailReport run(@NotNull QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
             @Nullable String comments, boolean correctedReport) throws IOException {
-        QCFailStudy study = QCFailStudy.fromSampleId(sampleMetadata.tumorSampleId());
+        LimsStudy study = LimsStudy.fromSampleId(sampleMetadata.tumorSampleId());
 
-        if (study == null) {
+        if (study == LimsStudy.NON_CANCER_STUDY) {
             throw new IllegalStateException("Could not derive study for QC fail report for " + sampleMetadata.tumorSampleId());
         }
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.qcfail;
 
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
@@ -22,7 +23,7 @@ public abstract class QCFailReport implements PatientReport {
     public abstract QCFailReason reason();
 
     @NotNull
-    public abstract QCFailStudy study();
+    public abstract LimsStudy study();
 
     @Nullable
     public abstract String wgsPurityString();
