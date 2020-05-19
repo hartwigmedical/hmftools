@@ -78,77 +78,52 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Div createFailReasonDiv(@NotNull QCFailReason failReason) {
-        String title;
-        String reason;
-        String explanation;
-        String explanationDetail;
+        String reason = DataUtil.NA_STRING;
+        String explanation = DataUtil.NA_STRING;
+        String explanationDetail = DataUtil.NA_STRING;
 
-        switch (failReason) {
-            case LOW_DNA_YIELD: {
-                title = "Notification of failed sample";
+        switch (failReason.type()) {
+            case LOW_QUALITY_BIOPSY: {
                 reason = "Insufficient biopsy/tissue quality";
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
+                break;
+            }
+            case TECHNICAL_FAILURE: {
+                reason = "Technical failure";
+                explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy \n "
+                        + "due to technical problems";
+            }
+        }
+
+        switch (failReason) {
+            case INSUFFICIENT_TISSUE:
+            case LOW_DNA_YIELD: {
                 explanationDetail =
                         "The tumor percentage based on molecular estimation could not be determined due to insufficient tumor DNA";
                 break;
             }
+            case SHALLOW_SEQ_LOW_PURITY:
+            case BELOW_DETECTION_THRESHOLD: {
+                explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
+                        + "and could not be further analyzed.";
+                break;
+            }
             case POST_ANALYSIS_FAIL: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
                 explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
                         + "could not be further analyzed due to insufficient quality.";
                 break;
             }
-            case SHALLOW_SEQ_LOW_PURITY: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
-                        + "and could not be further analyzed.";
-                break;
-            }
-            case INSUFFICIENT_TISSUE: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
-                explanationDetail =
-                        "The tumor percentage based on molecular estimation could not be determined due to insufficient tumor DNA";
-                break;
-            }
-            case BELOW_DETECTION_THRESHOLD: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
-                        + "and could not be further analyzed.";
-                break;
-            }
             case LAB_FAILURE: {
-                title = "Notification of failed sample";
-                reason = "Technical failure";
-                explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy \n "
-                        + "due to technical problems";
-                explanationDetail = "";
+                explanationDetail = Strings.EMPTY;
                 break;
-            }
-            default: {
-                title = "TITLE";
-                reason = "SUB_TITLE";
-                explanation = "MESSAGE";
-                explanationDetail = "MESSAGE";
             }
         }
 
         Div div = new Div();
         div.setKeepTogether(true);
 
-        div.add(new Paragraph(title.toUpperCase()).addStyle(ReportResources.subTextStyle()));
+        div.add(new Paragraph("NOTIFICATION OF FAILED SAMPLE").addStyle(ReportResources.subTextStyle()));
         div.add(new Paragraph(reason).addStyle(ReportResources.dataHighlightStyle()));
         div.add(new Paragraph(explanation).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
         div.add(new Paragraph(explanationDetail).addStyle(ReportResources.subTextStyle())
