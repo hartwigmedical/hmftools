@@ -41,8 +41,7 @@ public class QCFailReporter {
                         sampleMetadata.tumorSampleId());
 
         String wgsPurityString = null;
-        if (reason == QCFailReason.BELOW_DETECTION_THRESHOLD || reason == QCFailReason.POST_ANALYSIS_FAIL) {
-            // In these cases we have done full WGS.
+        if (reason.isFullWgsDataAvailable()) {
             PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
