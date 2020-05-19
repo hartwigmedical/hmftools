@@ -2,20 +2,12 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 public class ExternalFusionData
 {
@@ -68,7 +60,7 @@ public class ExternalFusionData
         // confidence      closest_genomic_breakpoint1     closest_genomic_breakpoint2     filters fusion_transcript
         // reading_frame   peptide_sequence        read_identifiers
 
-        final String[] geneNames = new String[] { items[0], items[1] };
+        final String[] geneNames = new String[] { items[0].replaceAll(",",";"), items[1].replaceAll(",",";") };
         final String[] chromosomes = { items[4].split(":")[0], items[5].split(":")[0] };
 
         if(!HumanChromosome.contains(chromosomes[SE_START]) || !HumanChromosome.contains(chromosomes[SE_END]))
@@ -90,47 +82,19 @@ public class ExternalFusionData
                 splitFragments, discordantFragments, coverage, otherData);
     }
 
-    public static void loadExternalFusionFiles(
-            final String sampleId, final CohortConfig config, final FusionCohortConfig fusionConfig,
-            final Map<String,List<ExternalFusionData>> mappedFusions)
+    public boolean matches(final FusionData other)
     {
-        mappedFusions.clear();
-
-        if(fusionConfig.ComparisonSources.contains(FUSION_SOURCE_ARRIBA))
+        for(int se = SE_START; se <= SE_END; ++se)
         {
-            final String arribaMainFile = config.RootDataDir + sampleId + ".fusions.tsv";
-            final String arribaDiscardedFile = config.RootDataDir + sampleId + ".fusions.discarded.tsv";
-
-            try
+            if(Chromosomes[se].equals(other.Chromosomes[SE_START]) && Chromosomes[switchIndex(se)].equals(other.Chromosomes[SE_END])
+            && JunctionPositions[se] == other.JunctionPositions[SE_START] && JunctionPositions[switchIndex(se)] == other.JunctionPositions[SE_END])
             {
-                final List<String> lines = Files.readAllLines(Paths.get(arribaMainFile));
-                lines.remove(0);
-
-                final List<String> lines2 = Files.readAllLines(Paths.get(arribaDiscardedFile));
-                lines2.remove(0);
-                lines.addAll(lines2);
-
-                List<ExternalFusionData> sampleFusions = lines.stream()
-                        .map(x -> ExternalFusionData.loadArribaFusion(x))
-                        .filter(x -> x != null)
-                        .collect(Collectors.toList());
-
-                for(ExternalFusionData fusion : sampleFusions)
-                {
-                    final String chrPair = formChromosomePair(fusion.Chromosomes);
-
-                    List<ExternalFusionData> chrPairFusions = mappedFusions.get(chrPair);
-                    if(chrPairFusions == null)
-                        mappedFusions.put(chrPair, Lists.newArrayList(fusion));
-                    else
-                        chrPairFusions.add(fusion);
-                }
-            }
-            catch(IOException e)
-            {
-                ISF_LOGGER.error("failed to load arriba fusion file({}): {}", arribaMainFile, e.toString());
-                return;
+                return true;
             }
         }
+
+        return false;
     }
+
+
 }

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.getFileId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
@@ -74,6 +75,8 @@ public class CohortConfig
     public final double TpmLogThreshold;
     public final double TpmRounding;
 
+    public final FusionCohortConfig Fusions;
+
     public CohortConfig(final CommandLine cmd)
     {
         String rootDir = cmd.getOptionValue(ROOT_DATA_DIRECTORY);
@@ -134,6 +137,8 @@ public class CohortConfig
         CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
         CancerTransFile = cmd.getOptionValue(CANCER_TRANS_FILE);
         SampleMutationsFile = cmd.getOptionValue(SAMPLE_MUT_FILE);
+
+        Fusions = LoadTypes.contains(FUSION) ? new FusionCohortConfig(cmd) : null;
     }
 
     public static boolean isValid(final CommandLine cmd)

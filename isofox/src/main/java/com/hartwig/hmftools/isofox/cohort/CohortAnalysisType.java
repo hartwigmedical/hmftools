@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.FUSION_FILE_ID;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.GENE_RESULTS_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
@@ -14,6 +15,7 @@ public enum CohortAnalysisType
     TRANSCRIPT_DISTRIBUTION,
     ALT_SPLICE_JUNCTION,
     FUSION,
+    PASSING_FUSION,
     RETAINED_INTRON,
     SAMPLE_ROUTINES;
 
@@ -36,6 +38,9 @@ public enum CohortAnalysisType
 
             case FUSION:
                 return FUSION_FILE_ID;
+
+            case PASSING_FUSION:
+                return PASS_FUSION_FILE_ID;
 
             default:
                 return "";

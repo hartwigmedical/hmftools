@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.PASSING_FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
-import static com.hartwig.hmftools.isofox.fusion.cohort.ExternalFusionData.loadExternalFusionFiles;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedWriter;
@@ -18,30 +18,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 import org.apache.commons.cli.CommandLine;
 
 public class FusionCohort
 {
     private final CohortConfig mConfig;
-    private final FusionCohortConfig mFusionConfig;
 
     private final FusionFilters mFilters;
     private final Map<String,Integer> mFieldsMap;
     private String mFilteredFusionHeader;
+    private final ExternalFusionCompare mExternalFusionCompare;
 
     // map of chromosome-pair to start position to list of fusion junctions
     private final Map<String, Map<Integer,List<FusionCohortData>>> mFusions;
 
-    private final Map<String,List<ExternalFusionData>> mExternalFusionData;
-
     private int mFusionCount;
+
+    public static final String PASS_FUSION_FILE_ID = "pass_fusions.csv";
 
     /* Routines:
         1. generate a cohort file from multiple sample fusion files from Isofox
@@ -52,18 +51,17 @@ public class FusionCohort
     public FusionCohort(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
-        mFusionConfig = new FusionCohortConfig(cmd);
-        mFilters = new FusionFilters(mFusionConfig, cmd);
+        mFilters = new FusionFilters(mConfig.Fusions, cmd);
         mFusions = Maps.newHashMap();
         mFieldsMap = Maps.newHashMap();
-        mExternalFusionData = Maps.newHashMap();
         mFusionCount = 0;
         mFilteredFusionHeader = null;
+        mExternalFusionCompare = !mConfig.Fusions.ComparisonSources.isEmpty() ? new ExternalFusionCompare(mConfig) : null;
     }
 
     public void processFusionFiles()
     {
-        if(!mFusionConfig.GenerateCohort && mFusionConfig.ComparisonSources.isEmpty() && !mFusionConfig.WriteFilteredFusions)
+        if(!mConfig.Fusions.GenerateCohort && mConfig.Fusions.ComparisonSources.isEmpty() && !mConfig.Fusions.WriteFilteredFusions)
         {
             ISF_LOGGER.warn("no fusion functions configured");
             return;
@@ -71,7 +69,9 @@ public class FusionCohort
 
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, FUSION, filenames))
+        final CohortAnalysisType fileType = !mConfig.Fusions.ComparisonSources.isEmpty() ? PASSING_FUSION : FUSION;
+
+        if(!formSampleFilenames(mConfig, fileType, filenames))
             return;
 
         ISF_LOGGER.info("loading {} sample fusion files", mConfig.SampleData.SampleIds.size());
@@ -91,20 +91,21 @@ public class FusionCohort
 
             ISF_LOGGER.info("{}: sample({}) loaded {} fusions", i, sampleId, sampleFusions.size());
 
-            if(mFusionConfig.WriteFilteredFusions)
+            if(mConfig.Fusions.WriteFilteredFusions)
             {
                 writeFilteredFusion(sampleId, sampleFusions);
                 continue;
             }
 
             // add to the fusion cohort collection
-            sampleFusions.forEach(x -> addToCohortCache(x, sampleId));
-
-            if(!mFusionConfig.ComparisonSources.isEmpty())
+            if(mConfig.Fusions.GenerateCohort)
             {
-                loadExternalFusionFiles(sampleId, mConfig, mFusionConfig, mExternalFusionData);
-                compareExternalFusions();
-                mFusions.clear();
+                sampleFusions.forEach(x -> addToCohortCache(x, sampleId));
+            }
+
+            if(!mConfig.Fusions.ComparisonSources.isEmpty())
+            {
+                mExternalFusionCompare.compareFusions(sampleId, sampleFusions);
             }
 
             if(mFusionCount > nextLog)
@@ -114,27 +115,15 @@ public class FusionCohort
             }
         }
 
-        if(mFusionConfig.GenerateCohort)
+        if(mConfig.Fusions.GenerateCohort)
         {
             ISF_LOGGER.info("loaded {} fusion records, total fusion count({})", totalProcessed, mFusionCount);
-            FusionCohortData.writeCohortFusions(mFusions, mConfig, mFusionConfig);
+            FusionCohortData.writeCohortFusions(mFusions, mConfig, mConfig.Fusions);
             return;
         }
-    }
 
-    private void compareExternalFusions()
-    {
-        /*
-        #ISFOX PASES
-
-        View(merge(merge(passFusions %>% mutate(breakpoint1=paste(ChrUp,PosUp,sep=":") ,breakpoint2=paste(ChrDown,PosDown,sep=":")),arriba %>% distinct(breakpoint1,breakpoint2,filters,result),by=c('breakpoint1','breakpoint2'),all.x=T),
-             arriba %>% distinct(breakpoint1,breakpoint2,filters,result) %>% mutate(revOrientation=TRUE),by.x=c('breakpoint1','breakpoint2'),by.y=c('breakpoint2','breakpoint1'),all.x=T) %>% select(CoverageUp,CoverageDown,TotalFragments,everything()))
-
-        #ARRIBA PASSES
-        View(merge(merge(passedArriba,passFusions %>% mutate(breakpoint1=paste(ChrUp,PosUp,sep=":"),breakpoint2=paste(ChrDown,PosDown,sep=":")),by=c('breakpoint1','breakpoint2'),all.x=T),
-                   passFusions %>% mutate(breakpoint1=paste(ChrUp,PosUp,sep=":"),breakpoint2=paste(ChrDown,PosDown,sep=":"),revOrientation=TRUE),by.x=c('breakpoint1','breakpoint2'),by.y=c('breakpoint2','breakpoint1'),all.x=T))# %>%
-           filter(is.na(FusionId.x),is.na(FusionId.y),!grepl("read-through",type)))
-         */
+        if(mExternalFusionCompare != null)
+            mExternalFusionCompare.close();
     }
 
     private List<FusionData> loadSampleFile(final Path filename)
@@ -157,7 +146,7 @@ public class FusionCohort
             {
                 FusionData fusion = FusionData.fromCsv(data, mFieldsMap);
 
-                if(mFusionConfig.WriteFilteredFusions)
+                if(mConfig.Fusions.WriteFilteredFusions)
                     fusion.cacheCsvData(data);
 
                 fusions.add(fusion);
@@ -174,7 +163,7 @@ public class FusionCohort
 
     private void addToCohortCache(final FusionData fusion, final String sampleId)
     {
-        if(fusion.SplitFrags < mFusionConfig.MinFragCount)
+        if(fusion.SplitFrags < mConfig.Fusions.MinFragCount)
             return;
 
         if(!mConfig.RestrictedGeneIds.isEmpty())
@@ -235,13 +224,16 @@ public class FusionCohort
     private void writeFilteredFusion(final String sampleId, final List<FusionData> sampleFusions)
     {
         // mark passing fusions, and then include any which are related to them
-        sampleFusions.forEach(x -> mFilters.markKnownGeneTypes(x));
-
         final List<FusionData> passingFusions = Lists.newArrayList();
         final List<FusionData> nonPassingFusionsWithRelated = Lists.newArrayList();
 
         for (FusionData fusion : sampleFusions)
         {
+            if(fusion.Id == 3003911)
+            {
+                ISF_LOGGER.debug("here");
+            }
+
             mFilters.markKnownGeneTypes(fusion);
 
             if(mFilters.isPassingFusion(fusion))
@@ -285,7 +277,7 @@ public class FusionCohort
 
         try
         {
-            final String outputFileName = mConfig.OutputDir + sampleId + ".isf.passing.fusions.csv";
+            final String outputFileName = mConfig.OutputDir + sampleId + ".isf." + PASS_FUSION_FILE_ID;
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write(mFilteredFusionHeader);
             writer.write(",GeneTypeUp,GeneTypeDown");

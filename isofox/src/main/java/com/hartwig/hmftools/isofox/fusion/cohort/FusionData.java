@@ -150,7 +150,7 @@ public class FusionData
 
     public double alleleFrequency()
     {
-        int coverage = max(Coverage[SE_START], Coverage[SE_END]);
+        double coverage = max(Coverage[SE_START], Coverage[SE_END]);
         return coverage> 0 ? (SplitFrags + RealignedFrags) / coverage : 0;
     }
 }
