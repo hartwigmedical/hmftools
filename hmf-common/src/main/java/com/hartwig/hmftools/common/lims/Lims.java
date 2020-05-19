@@ -20,6 +20,7 @@ public class Lims {
 
     public static final String NOT_AVAILABLE_STRING = "N/A";
     public static final String NOT_PERFORMED_STRING = "not performed";
+    public static final String PURITY_NOT_RELIABLE = "below detection threshold";
 
     @NotNull
     private final Map<String, LimsJsonSampleData> dataPerSampleBarcode;
@@ -179,7 +180,7 @@ public class Lims {
             } else {
                 if (purityShallowExecuted) {
                     if (!shallowSeq.hasReliablePurity()) {
-                        return "below detection threshold";
+                        return PURITY_NOT_RELIABLE;
                     } else {
                         try {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";

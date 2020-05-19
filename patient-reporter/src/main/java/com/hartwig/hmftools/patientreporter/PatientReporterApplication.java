@@ -45,11 +45,11 @@ public class PatientReporterApplication {
         if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
             QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config));
-            QCFailReport report = reporter.run(sampleMetadata,
-                    config.qcFailReason(),
+            QCFailReport report = reporter.run(config.qcFailReason(),
+                    sampleMetadata,
+                    config.purplePurityTsv(),
                     config.comments(),
-                    config.correctedReport(),
-                    config.purplePurityTsv());
+                    config.correctedReport());
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 

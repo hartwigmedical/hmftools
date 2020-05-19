@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -13,7 +14,6 @@ import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,33 +27,29 @@ public class QCFailReporter {
     }
 
     @NotNull
-    public QCFailReport run(@NotNull SampleMetadata sampleMetadata, @NotNull QCFailReason reason, @Nullable String comments,
-            boolean correctedReport, @NotNull String purplePurityTsv) throws IOException {
+    public QCFailReport run(@NotNull QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
+            @Nullable String comments, boolean correctedReport) throws IOException {
         QCFailStudy study = QCFailStudy.fromSampleId(sampleMetadata.tumorSampleId());
 
-        String purity = Strings.EMPTY;
-        boolean hasReliablePurity = true;
-        if (!purplePurityTsv.equals(Strings.EMPTY)) {
-            PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-            hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
-            purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
+        if (study == null) {
+            throw new IllegalStateException("Could not derive study for QC fail report for " + sampleMetadata.tumorSampleId());
         }
-
-        assert study != null;
 
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
-        String calculatedPurity = Strings.EMPTY;
+        String calculatedPurity;
         if (reason == QCFailReason.BELOW_DETECTION_THRESHOLD || reason == QCFailReason.POST_ANALYSIS_FAIL) {
+            // In these cases we have done full WGS.
+            PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+            boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
-            //check for sample are present in shallow seq db when executed
-            reportData.limsModel().purityShallowSeq(sampleMetadata.tumorSampleBarcode());
-
-            calculatedPurity = hasReliablePurity ? purity : "below detection threshold";
+            calculatedPurity =
+                    hasReliablePurity ? new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100) : Lims.PURITY_NOT_RELIABLE;
 
         } else {
+            // No full WGS has been performed so we try to recover shallow seq purity from lims.
             calculatedPurity = reportData.limsModel().purityShallowSeq(sampleMetadata.tumorSampleBarcode());
         }
 
