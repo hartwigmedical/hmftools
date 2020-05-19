@@ -22,6 +22,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
 
+    private static final String TITLE_REPORT = "Failed Sample Report";
+
     @NotNull
     private final QCFailReport failReport;
 
@@ -32,7 +34,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return failReport.isCorrectedReport() ? failReport.reason().title() + " (Corrected)" : failReport.reason().title();
+        return failReport.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
     }
 
     @Override

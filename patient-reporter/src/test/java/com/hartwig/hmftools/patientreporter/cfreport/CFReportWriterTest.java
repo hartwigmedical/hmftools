@@ -172,25 +172,11 @@ public class CFReportWriterTest {
                 .build();
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        QCFailStudy failStudy;
-        switch (study) {
-            case CORE:
-                failStudy = QCFailStudy.CORE;
-                break;
-            case WIDE:
-                failStudy = QCFailStudy.WIDE;
-                break;
-            case DRUP:
-                failStudy = QCFailStudy.DRUP;
-                break;
-            default:
-                failStudy = QCFailStudy.CPCT;
-        }
 
         QCFailReport patientReport = ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
-                .study(failStudy)
+                .study(study)
                 .wgsPurityString(null)
                 .comments(Optional.empty())
                 .isCorrectedReport(false)

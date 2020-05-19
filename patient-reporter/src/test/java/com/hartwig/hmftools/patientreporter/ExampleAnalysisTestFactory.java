@@ -242,26 +242,12 @@ public final class ExampleAnalysisTestFactory {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        QCFailStudy failStudy;
-        switch (study) {
-            case CORE:
-                failStudy = QCFailStudy.CORE;
-                break;
-            case WIDE:
-                failStudy = QCFailStudy.WIDE;
-                break;
-            case DRUP:
-                failStudy = QCFailStudy.DRUP;
-                break;
-            default:
-                failStudy = QCFailStudy.CPCT;
-        }
 
         ReportData reportData = testReportData();
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
-                .study(failStudy)
+                .study(study)
                 .comments(Optional.empty())
                 .isCorrectedReport(false)
                 .signaturePath(reportData.signaturePath())
