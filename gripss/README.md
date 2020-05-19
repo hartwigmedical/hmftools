@@ -51,7 +51,7 @@ We also have 7 special filters applying to specific short variant categories:
 
 Filter | Default | Scope | Description 
 ---|---|---|---
-minDelDupLength | 32 | DEL & DUP | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called.   Shorter variants
+minDelDupLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
 shortInvMaxHomLength | 6 | INV(<40b) | 
 shortDelMaxHomLength | 6 | DEL(<1kb) | 
 shortDelDupStrandBias | true | DEL & DUP(<1kb) | Enable base quality recalibration
