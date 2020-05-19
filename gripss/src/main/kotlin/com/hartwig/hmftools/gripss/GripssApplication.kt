@@ -5,6 +5,7 @@ import com.hartwig.hmftools.gripss.link.AssemblyLink
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.VariantStore
 import htsjdk.variant.vcf.VCFFileReader
+import org.apache.logging.log4j.LogManager
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -37,24 +38,28 @@ fun main(args: Array<String>) {
 
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
 
+    companion object {
+        private val logger = LogManager.getLogger(this::class.java)
+    }
+
     private val fileReader = VCFFileReader(File(config.inputVcf), false)
     private val fileWriter = GripssVCF(config.outputVcf)
 
     override fun run() {
-        println("READING")
+        logger.info("Reading file: ${config.inputVcf}")
 
         fileWriter.writeHeader(fileReader.fileHeader)
         val structuralVariants = hardFilterVariants(fileReader)
 
 
-        println("LINKING")
+        logger.info("LINKING")
 
         val variantStore = VariantStore.create(structuralVariants)
         val assemblyLinks = AssemblyLink().create(structuralVariants)
         val links = LinkStore.create(assemblyLinks)
         val assemblyDedup = TransitiveDedup(links, variantStore);
 
-        println("WRITING")
+        logger.info("Writing file: ${config.outputVcf}")
         for (variant in structuralVariants) {
             val dedup = assemblyDedup.dedup(variant)
             fileWriter.writeVariant(variant.context(config.filterConfig, links.localLinkedBy(variant.vcfId), links.localLinkedBy(variant.mateId), dedup))
@@ -62,7 +67,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
     }
 
-    fun hardFilterVariants(fileReader: VCFFileReader): List<StructuralVariantContext> {
+    private fun hardFilterVariants(fileReader: VCFFileReader): List<StructuralVariantContext> {
         val unfiltered: MutableSet<String> = mutableSetOf()
         val hardFilter: MutableSet<String> = mutableSetOf()
         val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()

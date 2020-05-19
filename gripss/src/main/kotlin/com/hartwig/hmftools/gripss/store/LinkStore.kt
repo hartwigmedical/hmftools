@@ -12,7 +12,7 @@ class LinkStore(private val variantsByLink: Map<String, List<String>>, private v
             val variantsByLink = HashMap<String, MutableList<String>>()
             val linkByVariant = HashMap<String, MutableList<String>>()
 
-            for ((vcfId, link) in links) {
+            for ((link, vcfId) in links) {
                 linkByVariant.computeIfAbsent(vcfId) { mutableListOf()}.add(link)
                 variantsByLink.computeIfAbsent(link) { mutableListOf()}.add(vcfId)
             }

@@ -56,7 +56,7 @@ class AssemblyLink {
 
     private fun createLinks(assembly: String, variants: Pair<StructuralVariantContext, StructuralVariantContext>): List<Link> {
         if (variants.first.mateId?.equals(variants.second.vcfId) != true) {
-            return listOf(Link(variants.first.vcfId, assembly), Link(variants.second.vcfId, assembly))
+            return listOf(Link(assembly, Pair(variants.first, variants.second)), Link(assembly, Pair(variants.second, variants.first)))
         }
         return Collections.emptyList()
     }
