@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +21,7 @@ public class FusionCohortConfig
     private static final String FUSION_MIN_SAMPLES = "fusion_min_samples";
     private static final String FUSION_MIN_FRAGS = "fusion_min_frags";
     private static final String FUSION_COHORT_FILE = "fusion_cohort_file";
-    private static final String WRITE_FILTERED_FUSIONS = "write_filtered_fusions";
+    private static final String WRITE_FILTERED_FUSIONS = "fusion_write_filtered";
 
     // parameters to include fusion in cohort file
     public final int MinSampleThreshold;
@@ -36,7 +41,7 @@ public class FusionCohortConfig
         CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
 
         ComparisonSources = cmd.hasOption(FUSION_COMPARISONS) ?
-                Arrays.stream(cmd.getOptionValue(FUSION_COMPARISONS).split(";")).collect(Collectors.toList()) : Lists.newArrayList();
+                Arrays.stream(cmd.getOptionValue(FUSION_COMPARISONS).split(ITEM_DELIM)).collect(Collectors.toList()) : Lists.newArrayList();
     }
 
     public static void addCmdLineOptions(final Options options)
@@ -47,5 +52,9 @@ public class FusionCohortConfig
         options.addOption(FUSION_MIN_FRAGS, true, "Min frag count per sample to support a fusion");
         options.addOption(FUSION_COHORT_FILE, true, "Cohort file previously generated");
         options.addOption(FUSION_COMPARISONS, true, "List of sources to compare fusions between");
+
+        options.addOption(FUSION_PAIRS_CSV, true, "Known fusion pairs");
+        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Promiscuous 5-prime fusion genes");
+        options.addOption(PROMISCUOUS_THREE_CSV, true, "Promiscuous 3-prime fusion genes");
     }
 }

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -111,7 +112,7 @@ public class GeneCollection
 
         for(int i = 1; i < min(mGenes.size(), maxCount); ++i)
         {
-            geneNames.append(";" + mGenes.get(i).name());
+            geneNames.append(ITEM_DELIM + mGenes.get(i).name());
         }
 
         return geneNames.toString();

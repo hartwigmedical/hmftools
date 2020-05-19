@@ -60,6 +60,7 @@ public class ResultsWriter
     private BufferedWriter mRetainedIntronWriter;
 
     public static final String DELIMITER = ",";
+    public static final String ITEM_DELIM = ";";
     public static final String FLD_SAMPLE_ID = "SampleId";
     public static final String FLD_GENE_ID = "GeneId";
     public static final String FLD_GENE_SET_ID = "GeneSetId";

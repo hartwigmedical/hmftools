@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.File;
 import java.io.IOException;
@@ -140,7 +141,7 @@ public class IsofoxConfig
         ExcludedGeneIds = Lists.newArrayList();
 
         EnrichedGeneIds = cmd.hasOption(ENRICHED_GENE_IDS) ?
-                Arrays.stream(cmd.getOptionValue(ENRICHED_GENE_IDS).split(";")).collect(Collectors.toList()) : Lists.newArrayList();
+                Arrays.stream(cmd.getOptionValue(ENRICHED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()) : Lists.newArrayList();
 
         if(cmd.hasOption(GENE_ID_FILE))
         {
@@ -160,7 +161,7 @@ public class IsofoxConfig
 
         if(cmd.hasOption(FUNCTIONS))
         {
-            final String[] functionsStr = cmd.getOptionValue(FUNCTIONS).split(";");
+            final String[] functionsStr = cmd.getOptionValue(FUNCTIONS).split(ITEM_DELIM);
 
             for(final String functionStr : functionsStr)
             {
@@ -220,13 +221,13 @@ public class IsofoxConfig
                 Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : DEFAULT_GC_RATIO_BUCKET;
 
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
-                Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
+                Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(ITEM_DELIM)).collect(Collectors.toList())
                 : Lists.newArrayList();
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
         RunValidations = cmd.hasOption(RUN_VALIDATIONS);
         RunPerfChecks = cmd.hasOption(PERF_CHECKS);
-        SpecificChromosomes = cmd.hasOption(SPECIFIC_CHR) ? Arrays.stream(cmd.getOptionValue(SPECIFIC_CHR).split(";")).collect(Collectors.toList())
+        SpecificChromosomes = cmd.hasOption(SPECIFIC_CHR) ? Arrays.stream(cmd.getOptionValue(SPECIFIC_CHR).split(ITEM_DELIM)).collect(Collectors.toList())
                 : Lists.newArrayList();
 
         ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
@@ -242,7 +243,7 @@ public class IsofoxConfig
 
         if(cmd.hasOption(ER_FRAGMENT_LENGTHS))
         {
-            String[] fragLengths = cmd.getOptionValue(ER_FRAGMENT_LENGTHS).split(";");
+            String[] fragLengths = cmd.getOptionValue(ER_FRAGMENT_LENGTHS).split(ITEM_DELIM);
             for(int i = 0; i < fragLengths.length; ++i)
             {
                 String[] flItem = fragLengths[i].split("-");

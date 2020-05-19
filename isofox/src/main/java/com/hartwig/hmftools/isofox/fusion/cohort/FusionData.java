@@ -5,14 +5,24 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FUSION_ID_PREFIX;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FUSION_NONE;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_PAIR;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
+import org.apache.commons.compress.utils.Lists;
+
 public class FusionData
 {
+    public final int Id;
     public final String[] Chromosomes;
     public final int[] JunctionPositions;
     public final byte[] JunctionOrientations;
@@ -21,14 +31,21 @@ public class FusionData
     public final String[] GeneIds;
     public final String[] GeneNames;
     public final int[] Coverage;
+    public final int[] AnchorDistance;
     public final int SplitFrags;
     public final int RealignedFrags;
     public final int DiscordantFrags;
 
-    public FusionData(final String[] chromosomes, final int[] junctionPositions, final byte[] junctionOrientations,
+    private String mRawData;
+    private final FusionGeneType[] mGeneType;
+    private final List<Integer> mRelatedFusionIds;
+    private boolean mHasRelatedKnownSpliceSites;
+
+    public FusionData(int id, final String[] chromosomes, final int[] junctionPositions, final byte[] junctionOrientations,
             final FusionJunctionType[] junctionTypes, final String svType, final String[] geneIds, final String[] geneNames,
-            int splitFrags, int realignedFrags, int discordantFrags, final int[] coverage)
+            int splitFrags, int realignedFrags, int discordantFrags, final int[] coverage, final int[] anchorDistance)
     {
+        Id = id;
         Chromosomes = chromosomes;
         JunctionPositions = junctionPositions;
         JunctionOrientations = junctionOrientations;
@@ -40,11 +57,49 @@ public class FusionData
         RealignedFrags = realignedFrags;
         DiscordantFrags = discordantFrags;
         Coverage = coverage;
+        AnchorDistance = anchorDistance;
+
+        mRawData = null;
+        mGeneType = new FusionGeneType[] { FusionGeneType.UNKNOWN, FusionGeneType.UNKNOWN };
+        mRelatedFusionIds = Lists.newArrayList();
+        mHasRelatedKnownSpliceSites = false;
     }
+
+    public void cacheCsvData(final String data) { mRawData = data; }
+    public String rawData() { return mRawData; }
+    public List<Integer> relatedFusionIds() { return mRelatedFusionIds; }
+
+    public final FusionGeneType[] getGeneTypes() { return mGeneType; }
+
+    public boolean isKnownFusionPair()
+    {
+        return mGeneType[SE_START] == FusionGeneType.KNOWN && mGeneType[SE_END] == FusionGeneType.KNOWN;
+    }
+
+    public boolean isRelated(final FusionData other)
+    {
+        if(!mRelatedFusionIds.contains(other.Id))
+            return false;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(GeneNames[se].isEmpty() || !other.GeneNames[se].equals(GeneNames[se]))
+                return false;
+        }
+
+        return true;
+    }
+
+    public boolean hasKnownSpliceSites() { return JunctionTypes[SE_START] == KNOWN && JunctionTypes[SE_END] == KNOWN; }
+
+    public void setHasRelatedKnownSpliceSites() { mHasRelatedKnownSpliceSites = true; }
+    public boolean hasRelatedKnownSpliceSites() { return mHasRelatedKnownSpliceSites; }
 
     public static FusionData fromCsv(final String data, final Map<String,Integer> fieldIndexMap)
     {
         final String[] items = data.split(DELIMITER);
+
+        int fusionId = Integer.parseInt(items[fieldIndexMap.get("FusionId")].replaceAll(FUSION_ID_PREFIX, ""));
 
         final String[] chromosomes = new String[] { items[fieldIndexMap.get("ChrUp")], items[fieldIndexMap.get("ChrDown")] };
 
@@ -66,12 +121,24 @@ public class FusionData
         final int[] coverage = new int[] {
                 Integer.parseInt(items[fieldIndexMap.get("CoverageUp")]), Integer.parseInt(items[fieldIndexMap.get("CoverageDown")]) };
 
+        final int[] anchorDistance = new int[] {
+                Integer.parseInt(items[fieldIndexMap.get("MaxAnchorLengthUp")]), Integer.parseInt(items[fieldIndexMap.get("MaxAnchorLengthDown")]) };
+
         FusionData fusion = new FusionData(
-                chromosomes, junctionPositions, junctionOrientations, junctionTypes, svType, geneIds, geneNames,
+                fusionId, chromosomes, junctionPositions, junctionOrientations, junctionTypes, svType, geneIds, geneNames,
                 Integer.parseInt(items[fieldIndexMap.get("SplitFrags")]),
                 Integer.parseInt(items[fieldIndexMap.get("RealignedFrags")]),
                 Integer.parseInt(items[fieldIndexMap.get("DiscordantFrags")]),
-                coverage);
+                coverage, anchorDistance);
+
+        final String[] relatedFusionIdStr = fieldIndexMap.containsKey("RelatedSplicedIds") ?
+                items[fieldIndexMap.get("RelatedSplicedIds")].split(ITEM_DELIM, -1) :
+                items[fieldIndexMap.get("RelatedFusions")].split(ITEM_DELIM, -1);
+
+        Arrays.stream(relatedFusionIdStr)
+                .filter(x -> !x.equals(FUSION_NONE))
+                .mapToInt(x -> Integer.parseInt(x.replaceAll(FUSION_ID_PREFIX, "")))
+                .forEach(x -> fusion.relatedFusionIds().add(x));
 
         return fusion;
     }

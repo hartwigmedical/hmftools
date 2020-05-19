@@ -6,7 +6,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -32,11 +31,13 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -54,7 +55,8 @@ public class FusionReadData
 
     private boolean mIncompleteData;
 
-    private final List<Integer> mRelatedFusions;
+    private final Set<Integer> mRelatedProximateFusions;
+    private final Set<Integer> mRelatedSplicedFusions;
 
     // not stored by stream
     private final String[] mChromosomes;
@@ -86,7 +88,9 @@ public class FusionReadData
 
         mLocationId = fragment.locationPair();
 
-        mRelatedFusions = Lists.newArrayList();
+        mRelatedSplicedFusions = Sets.newHashSet();
+        mRelatedProximateFusions = Sets.newHashSet();
+
         mFusionGeneIds = new String[] {"", ""};
         mStreamIndices = new int[] { SE_START, SE_END };
         mReadDepth = new int[] {0, 0};
@@ -201,12 +205,14 @@ public class FusionReadData
             return new byte[] { mCandidateGenes[SE_END].get(0).Strand, mCandidateGenes[SE_START].get(0).Strand };
     }
 
-    public final List<Integer> getRelatedFusions() { return mRelatedFusions; }
+    public final Set<Integer> getRelatedFusions() { return mRelatedSplicedFusions; }
 
-    public void addRelatedFusion(int id)
+    public void addRelatedFusion(int id, boolean isSpliced)
     {
-        if(!mRelatedFusions.contains(id))
-            mRelatedFusions.add(id);
+        if(isSpliced)
+            mRelatedSplicedFusions.add(id);
+        else
+            mRelatedProximateFusions.add(id);
     }
 
     public StructuralVariantType getImpliedSvType()
@@ -499,10 +505,14 @@ public class FusionReadData
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
                 + ",SVType,NonSupp,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,MultiMapFrags,CoverageUp,CoverageDown"
-                + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions,InitReadId";
+                + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown"
+                + ",OtherGenesUp,OtherGenesDown,RelatedSplicedIds,RelatedProxIds,InitReadId";
     }
 
-    public static String fusionId(int id) { return String.format("Id_%d", id); }
+    public static final String FUSION_ID_PREFIX = "Id_";
+    public static final String FUSION_NONE = "NONE";
+
+    public static String fusionId(int id) { return String.format("%s%d", FUSION_ID_PREFIX, id); }
 
     public String toCsv()
     {
@@ -574,7 +584,7 @@ public class FusionReadData
             final List<TransExonRef> transExonRefs = getTransExonRefsByStream(fs);
             if(transExonRefs.isEmpty())
             {
-                csvData.add("NONE");
+                csvData.add(FUSION_NONE);
                 continue;
             }
 
@@ -601,23 +611,33 @@ public class FusionReadData
                     }
                 }
 
-                csvData.add(!otherGenes[fs].isEmpty() ? otherGenes[fs] : "NONE");
+                csvData.add(!otherGenes[fs].isEmpty() ? otherGenes[fs] : FUSION_NONE);
             }
         }
         else
         {
-            csvData.add("NONE");
-            csvData.add("NONE");
+            csvData.add(FUSION_NONE);
+            csvData.add(FUSION_NONE);
         }
 
-        if(!mRelatedFusions.isEmpty())
+        if(!mRelatedSplicedFusions.isEmpty())
         {
-            List<String> relatedFusions = mRelatedFusions.stream().map(x -> fusionId(x)).collect(Collectors.toList());
+            List<String> relatedFusions = mRelatedSplicedFusions.stream().map(x -> fusionId(x)).collect(Collectors.toList());
             csvData.add(appendStrList(relatedFusions, ';'));
         }
         else
         {
-            csvData.add("NONE");
+            csvData.add(FUSION_NONE);
+        }
+
+        if(!mRelatedProximateFusions.isEmpty())
+        {
+            List<String> relatedFusions = mRelatedProximateFusions.stream().map(x -> fusionId(x)).collect(Collectors.toList());
+            csvData.add(appendStrList(relatedFusions, ';'));
+        }
+        else
+        {
+            csvData.add(FUSION_NONE);
         }
 
         // csvData.add(ISF_LOGGER.isDebugEnabled() ? getInitialFragment().readId() : "-");

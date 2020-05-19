@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -10,6 +12,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.cohort.ExternalFusionData.loadExternalFusionFiles;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
+import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -30,6 +34,7 @@ public class FusionCohort
 
     private final FusionFilters mFilters;
     private final Map<String,Integer> mFieldsMap;
+    private String mFilteredFusionHeader;
 
     // map of chromosome-pair to start position to list of fusion junctions
     private final Map<String, Map<Integer,List<FusionCohortData>>> mFusions;
@@ -41,23 +46,24 @@ public class FusionCohort
     /* Routines:
         1. generate a cohort file from multiple sample fusion files from Isofox
         2. write a set of filtered/passing fusions for each sample fusion file loaded
-        3. run comparison of fitered/passing fusions between Isofox and external fusion files
+        3. run comparison of filtered/passing fusions between Isofox and external fusion files
     */
 
     public FusionCohort(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
         mFusionConfig = new FusionCohortConfig(cmd);
-        mFilters = new FusionFilters(mFusionConfig);
+        mFilters = new FusionFilters(mFusionConfig, cmd);
         mFusions = Maps.newHashMap();
         mFieldsMap = Maps.newHashMap();
         mExternalFusionData = Maps.newHashMap();
         mFusionCount = 0;
+        mFilteredFusionHeader = null;
     }
 
     public void processFusionFiles()
     {
-        if(!mFusionConfig.GenerateCohort && mFusionConfig.ComparisonSources.isEmpty())
+        if(!mFusionConfig.GenerateCohort && mFusionConfig.ComparisonSources.isEmpty() && !mFusionConfig.WriteFilteredFusions)
         {
             ISF_LOGGER.warn("no fusion functions configured");
             return;
@@ -87,7 +93,7 @@ public class FusionCohort
 
             if(mFusionConfig.WriteFilteredFusions)
             {
-                sampleFusions.stream().filter(x -> mFilters.isPassingFusion(x)).forEach(x -> writeFilteredFusion(x));
+                writeFilteredFusion(sampleId, sampleFusions);
                 continue;
             }
 
@@ -116,11 +122,6 @@ public class FusionCohort
         }
     }
 
-    private void writeFilteredFusion(final FusionData fusion)
-    {
-
-    }
-
     private void compareExternalFusions()
     {
         /*
@@ -143,10 +144,26 @@ public class FusionCohort
             final List<String> lines = Files.readAllLines(filename);
 
             if(mFieldsMap.isEmpty())
+            {
+                mFilteredFusionHeader = lines.get(0);
                 mFieldsMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
+            }
 
             lines.remove(0);
-            return lines.stream().map(x -> FusionData.fromCsv(x, mFieldsMap)).collect(Collectors.toList());
+
+            List<FusionData> fusions = Lists.newArrayList();
+
+            for(String data : lines)
+            {
+                FusionData fusion = FusionData.fromCsv(data, mFieldsMap);
+
+                if(mFusionConfig.WriteFilteredFusions)
+                    fusion.cacheCsvData(data);
+
+                fusions.add(fusion);
+            }
+
+            return fusions;
         }
         catch(IOException e)
         {
@@ -214,4 +231,79 @@ public class FusionCohort
         fusionsByPosition.add(fusionCohortData);
         ++mFusionCount;
     }
+
+    private void writeFilteredFusion(final String sampleId, final List<FusionData> sampleFusions)
+    {
+        // mark passing fusions, and then include any which are related to them
+        sampleFusions.forEach(x -> mFilters.markKnownGeneTypes(x));
+
+        final List<FusionData> passingFusions = Lists.newArrayList();
+        final List<FusionData> nonPassingFusionsWithRelated = Lists.newArrayList();
+
+        for (FusionData fusion : sampleFusions)
+        {
+            mFilters.markKnownGeneTypes(fusion);
+
+            if(mFilters.isPassingFusion(fusion))
+            {
+                passingFusions.add(fusion);
+            }
+            else
+            {
+                if(!fusion.relatedFusionIds().isEmpty())
+                    nonPassingFusionsWithRelated.add(fusion);
+            }
+        }
+
+        int relatedToPassing = 0;
+        for (FusionData fusion : nonPassingFusionsWithRelated)
+        {
+            boolean matchesPassing = false;
+            for(FusionData passingFusion : passingFusions)
+            {
+                if(fusion.isRelated(passingFusion))
+                {
+                    matchesPassing = true;
+
+                    if(passingFusion.hasKnownSpliceSites())
+                    {
+                        fusion.setHasRelatedKnownSpliceSites();
+                        break;
+                    }
+                }
+            }
+
+           if(matchesPassing)
+           {
+               ++relatedToPassing;
+               passingFusions.add(fusion);
+           }
+        }
+
+        ISF_LOGGER.info("sample({}) writing {} passing fusions from total({} relatedToPass={})",
+                sampleId, passingFusions.size(), sampleFusions.size(), relatedToPassing);
+
+        try
+        {
+            final String outputFileName = mConfig.OutputDir + sampleId + ".isf.passing.fusions.csv";
+            final BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write(mFilteredFusionHeader);
+            writer.write(",GeneTypeUp,GeneTypeDown");
+            writer.newLine();
+
+            for (FusionData fusion : passingFusions)
+            {
+                writer.write(fusion.rawData());
+                writer.write(String.format(",%s,%s", fusion.getGeneTypes()[SE_START], fusion.getGeneTypes()[SE_END]));
+                writer.newLine();
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write fusion cohort file: {}", e.toString());
+        }
+    }
+
 }

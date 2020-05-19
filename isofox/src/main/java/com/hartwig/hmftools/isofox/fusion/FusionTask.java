@@ -325,8 +325,9 @@ public class FusionTask implements Callable
         fusionData.cacheTranscriptData();
 
         initialFragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
-
     }
+
+    private static final int POSITION_REALIGN_DISTANCE = 20;
 
     private void markRelatedFusions()
     {
@@ -357,20 +358,18 @@ public class FusionTask implements Callable
                     if(isSpliced && fusion2.isUnspliced())
                     {
                         if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UPSTREAM))
-                                && hasTranscriptExonMatch(downRefs1, fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), -1))
+                        && hasTranscriptExonMatch(downRefs1, fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), -1))
                         {
-                            fusion1.addRelatedFusion(fusion2.id());
-                            fusion2.addRelatedFusion(fusion1.id());
+                            fusion2.addRelatedFusion(fusion1.id(), true);
                             continue;
                         }
                     }
                     else if(isUnspliced && fusion2.isKnownSpliced())
                     {
                         if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UPSTREAM))
-                                && hasTranscriptExonMatch(fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), downRefs1, -1))
+                        && hasTranscriptExonMatch(fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), downRefs1, -1))
                         {
-                            fusion1.addRelatedFusion(fusion2.id());
-                            fusion2.addRelatedFusion(fusion1.id());
+                            fusion1.addRelatedFusion(fusion2.id(), true);
                             continue;
                         }
                     }
@@ -388,15 +387,13 @@ public class FusionTask implements Callable
 
                     if(isSimilar)
                     {
-                        fusion1.addRelatedFusion(fusion2.id());
-                        fusion2.addRelatedFusion(fusion1.id());
+                        fusion1.addRelatedFusion(fusion2.id(), false);
+                        fusion2.addRelatedFusion(fusion1.id(), false);
                     }
                 }
             }
         }
     }
-
-    private static final int POSITION_REALIGN_DISTANCE = 20;
 
     private void assignDiscordantFragments()
     {

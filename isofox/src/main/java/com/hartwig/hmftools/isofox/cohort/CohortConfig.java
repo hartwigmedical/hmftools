@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.getFileId;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -101,7 +102,7 @@ public class CohortConfig
             ISF_LOGGER.warn("invalid sample data file({})", sampleDataFile);
         }
 
-        LoadTypes = Arrays.stream(cmd.getOptionValue(LOAD_TYPES).split(";"))
+        LoadTypes = Arrays.stream(cmd.getOptionValue(LOAD_TYPES).split(ITEM_DELIM))
                 .map(x -> CohortAnalysisType.valueOf(x)).collect(Collectors.toList());
 
         CancerGeneFiles = cmd.getOptionValue(CANCER_GENE_FILES);

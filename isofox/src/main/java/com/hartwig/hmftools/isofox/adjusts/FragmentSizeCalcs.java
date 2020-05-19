@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QU
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -181,7 +182,7 @@ public class FragmentSizeCalcs
                 String genesName = overlappingGenes.get(0).GeneName;
                 for(int i = 1; i < min(overlappingGenes.size(), 10); ++i)
                 {
-                    genesName += ";" + overlappingGenes.get(i).GeneName;
+                    genesName += ITEM_DELIM + overlappingGenes.get(i).GeneName;
                 }
 
                 writeGeneFragmentLengths(mGeneWriter, mFragmentLengthsByGene, genesName, overlappingGenes.size(), chromosome, mCurrentGenesRange);

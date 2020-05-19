@@ -69,6 +69,9 @@ public class FusionCohortData
 
             if(JunctionPositions[se] != other.JunctionPositions[se])
                 return false;
+
+            if(JunctionOrientations[se] != other.JunctionOrientations[se])
+                return false;
         }
 
         return true;

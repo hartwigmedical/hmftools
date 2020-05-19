@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatch
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.fusionId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -164,7 +165,7 @@ public class FusionWriter
 
                 mReadWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d,%s,%d",
                         read.isFirstOfPair(), read.isSupplementaryAlignment(), read.isReadReversed(), read.isProperPair(),
-                        read.hasSuppAlignment() ? read.getSuppAlignment().replaceAll(",", ";") : "NONE",
+                        read.hasSuppAlignment() ? read.getSuppAlignment().replaceAll(",", ITEM_DELIM) : "NONE",
                         read.ReadBases, read.flags(), read.mateChromosome(), read.mateStartPosition()));
 
                 // log the transcript exons affected, and the highest matching transcript
@@ -375,7 +376,7 @@ public class FusionWriter
     {
         List<TransExonRef> transExonRefs = Lists.newArrayList();
 
-        for(String ref : data.split(";", -1))
+        for(String ref : data.split(ITEM_DELIM, -1))
         {
             String[] items = ref.split(":");
             if(items.length != 4)
