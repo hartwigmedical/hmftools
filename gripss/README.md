@@ -81,7 +81,7 @@ For a variant to be marked as a duplicate, we must find 2 candidate transitive b
 
 Further, all the transitive links must be precise variants.   If the deduplicated spanning variant is PRECISE, then the length of the insert sequence of the spanning variant must match the entire chain length of the transitive variants (within CIPOS bounds).  
 
-In the special case of a single breakend . . . <TO DO - write logic>
+Any single breakend which matches the position and orientation of another breakend (within CIPOS bounds) is also filtered as DEDUP (if the matching variant is also a single breakend then the highest scoring passing breakend will be kept).
 
 ### C. Linkage by double stranded break
 
