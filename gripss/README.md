@@ -10,7 +10,7 @@ There are 6 key steps in GRIPSS described in detail below:
   2. [Realignment](#2-realignment)
   3. [Soft Filters](#3-soft-filters)
   4. [Linkage, Deduplication and Rescue](#4-linkage,-deduplication-and-rescue)
-  5. [Pon Filtering](#6-pon-filtering)
+  5. [Pon Filtering](#5-pon-filtering)
 
 ## 1. Hard filters
 
@@ -31,7 +31,7 @@ For the purposes of backwards compatibility we also perform 3 other fixes to cor
  
 <TO DO>
 
-## 4. Linkage, deduplication & rescue
+## 4. Linkage, deduplication and rescue
 
 ### A. Assembly linkage
 
@@ -51,7 +51,7 @@ Any breakend that is linked to a PASS breakend (by one of the 3 above rules) is 
 
 <TO DO - specify known file>
 
-## 6. PON Filtering
+## 5. PON Filtering
 
 <TO DO>
 
