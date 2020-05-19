@@ -10,7 +10,7 @@ class VariantStore(
         private val variantsByChromosome: Map<String, List<StructuralVariantContext>>) {
 
     companion object Factory {
-        fun create(variants: List<StructuralVariantContext>): VariantStore {
+        operator fun invoke(variants: List<StructuralVariantContext>): VariantStore {
             val variantsById = HashMap<String, StructuralVariantContext>()
             val variantsByChromosome = HashMap<String, MutableList<StructuralVariantContext>>()
             for (variant in variants) {

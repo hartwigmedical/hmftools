@@ -8,16 +8,30 @@ import kotlin.collections.HashMap
 class LinkStore(private val linkByVariant: Map<String, List<Link>>) {
 
     companion object Factory {
-        fun create(links: Collection<Link>): LinkStore {
-            val variantsByLink = HashMap<String, MutableList<Link>>()
+        operator fun invoke(links: Collection<Link>): LinkStore {
             val linkByVariant = HashMap<String, MutableList<Link>>()
 
             for (link in links) {
-                linkByVariant.computeIfAbsent(link.vcfId) { mutableListOf()}.add(link)
-                variantsByLink.computeIfAbsent(link.link) { mutableListOf()}.add(link)
+                linkByVariant.computeIfAbsent(link.vcfId) { mutableListOf() }.add(link)
             }
             return LinkStore(linkByVariant)
         }
+
+        operator fun invoke(vararg stores: LinkStore): LinkStore {
+            val linkByVariant = HashMap<String, MutableList<Link>>()
+
+            for (store in stores) {
+                for (link in store.allLinks()) {
+                    linkByVariant.computeIfAbsent(link.vcfId) { mutableListOf() }.add(link)
+                }
+            }
+
+            return LinkStore(linkByVariant)
+        }
+    }
+
+    private fun allLinks(): List<Link> {
+        return linkByVariant.values.flatten()
     }
 
     fun localLinkedBy(vcfId: String?): String {

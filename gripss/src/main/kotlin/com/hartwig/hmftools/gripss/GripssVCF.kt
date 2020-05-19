@@ -41,7 +41,6 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         //TODO:
         //        ##FILTER=<ID=small.replacement.fp,Description="Deletion with insertion of the same length that is not a simple inversion.">
         //        ##FILTER=<ID=NO_ASRP,Description="Breakend supported by 0 assembled read pairs">
-        //        ##FILTER=<ID=cohortMinSize,Description="Variant is smaller than the minimum event size considered for this cohort">
 
         header.addMetaDataLine(VCFFilterHeaderLine(DEDUP, "Event is duplicate of another"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_SIZE, "Event is too short"))
@@ -74,7 +73,6 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
     }
 
     override fun close() {
-        println("Closing file")
         writer.close()
     }
 

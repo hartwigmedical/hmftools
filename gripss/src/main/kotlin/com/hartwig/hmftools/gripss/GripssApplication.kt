@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.gripss
 
-import com.hartwig.hmftools.extensions.dedup.TransitiveDedup
+import com.hartwig.hmftools.gripss.link.AlternatePath
 import com.hartwig.hmftools.gripss.link.AssemblyLink
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.VariantStore
@@ -9,9 +9,6 @@ import org.apache.logging.log4j.LogManager
 import java.io.File
 
 fun main(args: Array<String>) {
-
-    val time = System.currentTimeMillis();
-    println("Starting")
 
     val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
 //    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.gridss.somatic.vcf"
@@ -31,8 +28,6 @@ fun main(args: Array<String>) {
     val config = GripssConfig(inputVCF, outputVCF, filterConfig)
 
     GripssApplication(config).use { x -> x.run() }
-
-    println("Finished in ${(System.currentTimeMillis() - time) / 1000} seconds")
 }
 
 
@@ -42,6 +37,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         private val logger = LogManager.getLogger(this::class.java)
     }
 
+    private val startTime = System.currentTimeMillis();
     private val fileReader = VCFFileReader(File(config.inputVcf), false)
     private val fileWriter = GripssVCF(config.outputVcf)
 
@@ -50,19 +46,22 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
         fileWriter.writeHeader(fileReader.fileHeader)
         val structuralVariants = hardFilterVariants(fileReader)
+        val variantStore = VariantStore.invoke(structuralVariants)
 
+        logger.info("Finding assembly links")
+        val assemblyLinks: LinkStore = AssemblyLink(structuralVariants)
 
-        logger.info("LINKING")
+        logger.info("Finding transitive links")
+        val alternatePaths: Collection<AlternatePath> = AlternatePath(assemblyLinks, variantStore, structuralVariants)
+        val transitiveLinks: LinkStore  = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
 
-        val variantStore = VariantStore.create(structuralVariants)
-        val assemblyLinks = AssemblyLink().create(structuralVariants)
-        val links = LinkStore.create(assemblyLinks)
-        val assemblyDedup = TransitiveDedup(links, variantStore);
+        logger.info("Finding double stranded break links")
+        // TODO: Add DSB Links
+        val allLinks = LinkStore(assemblyLinks, transitiveLinks)
 
         logger.info("Writing file: ${config.outputVcf}")
         for (variant in structuralVariants) {
-            val dedup = assemblyDedup.dedup(variant)
-            fileWriter.writeVariant(variant.context(config.filterConfig, links.localLinkedBy(variant.vcfId), links.localLinkedBy(variant.mateId), dedup))
+            fileWriter.writeVariant(variant.context(config.filterConfig, allLinks.localLinkedBy(variant.vcfId), allLinks.localLinkedBy(variant.mateId), false))
         }
 
     }
@@ -89,6 +88,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     override fun close() {
         fileReader.close()
         fileWriter.close()
+        logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
     }
 }
 
