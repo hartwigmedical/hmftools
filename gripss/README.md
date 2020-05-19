@@ -66,7 +66,7 @@ small.replacement.fp | | DEL(<1kb) | *TO DO!!!*
 
 ### A. Assembly linkage
 
-<Jon - please add details>
+Variants located on a single assembly are given a unique 'asm' identifier.
 
 ### B. Deduplication and transitive linkage
 
