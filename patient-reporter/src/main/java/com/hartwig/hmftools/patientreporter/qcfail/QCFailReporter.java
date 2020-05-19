@@ -43,11 +43,10 @@ public class QCFailReporter {
         if (reason == QCFailReason.BELOW_DETECTION_THRESHOLD || reason == QCFailReason.POST_ANALYSIS_FAIL) {
             // In these cases we have done full WGS.
             PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+            String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
-            wgsPurityString =
-                    hasReliablePurity ? new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100) : Lims.PURITY_NOT_RELIABLE_STRING;
-
+            wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
         }
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
