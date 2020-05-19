@@ -88,7 +88,7 @@ public class QCFailChapter implements ReportChapter {
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 explanationDetail =
-                        "The tumor percentage based on molecular estimation could not be determined due to insufficient" + " tumor DNA";
+                        "The tumor percentage based on molecular estimation could not be determined due to insufficient tumor DNA";
                 break;
             }
             case POST_ANALYSIS_FAIL: {
@@ -115,7 +115,7 @@ public class QCFailChapter implements ReportChapter {
                 explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
                         + "Whole Genome Sequencing";
                 explanationDetail =
-                        "The tumor percentage based on molecular estimation could not be determined due to insufficient " + "tumor DNA";
+                        "The tumor percentage based on molecular estimation could not be determined due to insufficient tumor DNA";
                 break;
             }
             case BELOW_DETECTION_THRESHOLD: {
