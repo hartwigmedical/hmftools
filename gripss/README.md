@@ -36,9 +36,10 @@ Filter | Default | Description / purpose
 minQual | breakpoints: 350; single breakend:1000 | Minimum absolute tumor support for variant
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
 minTumorAF | 0.5 | Low AF variants in high depth regions may be artefacts
-imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome  
+imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   Only variants with no insert sequence or homology sequence may be filtered as imprecise.  
 maxInexactHomologyLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
 DPsupport | TRUE | Variants (except for DEL and DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mapability.   Not suitable for non paired reads or very short fragment sizes.  
+PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
 
 Single breakends have 2 additional filters:
 
@@ -93,7 +94,3 @@ Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and
 
 <JON - please add details of known file>
 
-## 5. PON filtering
-
-<TO DO>
-  
