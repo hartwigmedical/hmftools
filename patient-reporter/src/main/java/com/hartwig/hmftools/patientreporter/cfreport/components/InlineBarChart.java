@@ -43,7 +43,7 @@ public class InlineBarChart extends Div {
         return scaledValue(value());
     }
 
-    final double min() {
+    public final double min() {
         return min;
     }
 

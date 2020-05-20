@@ -72,15 +72,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         }
 
         BarChart hrChart = new BarChart(hrdValue, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
-        if (hrdValue == 0.0) {
-            hrChart = new BarChart(hrdValue, HrDeficiency.RANGE_MIN_BARPLOT, HrDeficiency.RANGE_MAX, "Low", "High", false);
-            hrChart.enabled(hasReliablePurity && isMicrosatelliteStable);
-            hrChart.setTickMarks(HrDeficiency.RANGE_MIN_BARPLOT, HrDeficiency.RANGE_MAX, 0.1, SINGLE_DECIMAL_FORMAT);
-            hrChart.enableUndershoot(NO_DECIMAL_FORMAT.format(0));
-        } else {
-            hrChart.enabled(hasReliablePurity && isMicrosatelliteStable);
-            hrChart.setTickMarks(HrDeficiency.RANGE_MIN_BARPLOT_NO_UNDERSHOOT, HrDeficiency.RANGE_MAX, 0.1, SINGLE_DECIMAL_FORMAT);
-        }
+        hrChart.enabled(hasReliablePurity && isMicrosatelliteStable);
+        hrChart.setTickMarks(HrDeficiency.RANGE_MIN_BARPLOT, HrDeficiency.RANGE_MAX, 0.1, SINGLE_DECIMAL_FORMAT);
 
         hrChart.setIndicator(ChordStatus.HRD_THRESHOLD, "HRD status (" + DOUBLE_DECIMAL_FORMAT.format(ChordStatus.HRD_THRESHOLD) + ")");
 
