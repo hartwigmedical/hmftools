@@ -59,8 +59,12 @@ fun VariantContext.mate(): String? {
     return null
 }
 
-fun VariantContext.confidenceInterval(): Pair<Int, Int> {
-    val (start, end) = this.getAttributeAsString("CIPOS", "0,0")
+fun VariantContext.confidenceInterval(): Pair<Int, Int> = this.confidenceInterval("CIPOS")
+
+fun VariantContext.remoteConfidenceInterval(): Pair<Int, Int> = this.confidenceInterval("CIRPOS")
+
+private fun VariantContext.confidenceInterval(attribute: String): Pair<Int, Int> {
+    val (start, end) = this.getAttributeAsString(attribute, "0,0")
             .replace("[", "")
             .replace("]", "")
             .split(",")
