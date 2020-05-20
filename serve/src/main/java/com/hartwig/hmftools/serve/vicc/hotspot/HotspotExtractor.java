@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -54,14 +55,13 @@ public class HotspotExtractor {
             for (Feature feature : viccEntry.features()) {
                 String featureKey = feature.geneSymbol() + ":p." + feature.name();
                 if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType()) || isProteinAnnotation(feature.name())) {
-                    List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name());
-                    LOGGER.info("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
-                    if (hotspots.isEmpty()) {
-                        unresolvableFeatures.add(featureKey);
-                    }
+//                    List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name());
+//                    LOGGER.info("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
+//                    if (hotspots.isEmpty()) {
+//                        unresolvableFeatures.add(featureKey);
+//                    }
 
-
-                    allHotspotsPerFeature.put(feature, hotspots);
+                    allHotspotsPerFeature.put(feature, Lists.newArrayList());
                 }
             }
         }

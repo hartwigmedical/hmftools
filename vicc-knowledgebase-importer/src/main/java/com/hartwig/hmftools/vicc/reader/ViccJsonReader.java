@@ -64,15 +64,20 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    public static List<ViccEntry> readSingleKnowledgebase(@NotNull String jsonPath,
-            @NotNull String knowledgebase) throws IOException {
+    public static List<ViccEntry> readSingleKnowledgebase(@NotNull String jsonPath, @NotNull String knowledgebase) throws IOException {
+        return readSingleKnowledgebaseWithMaxEntries(jsonPath, knowledgebase, Integer.MAX_VALUE);
+    }
+
+    @NotNull
+    public static List<ViccEntry> readSingleKnowledgebaseWithMaxEntries(@NotNull String jsonPath, @NotNull String knowledgebase,
+            int maxEntries) throws IOException {
         List<ViccEntry> entries = Lists.newArrayList();
 
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(jsonPath));
         reader.setLenient(true);
 
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && entries.size() < maxEntries) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
             if (string(viccEntryObject, "source").equals(knowledgebase)) {
                 entries.add(createViccEntry(viccEntryObject));

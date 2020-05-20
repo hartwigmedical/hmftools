@@ -40,9 +40,9 @@ public class CnvExtractor {
         Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
         if (viccEntry.source() == ViccSource.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
-                if (ONCOKB_AMPLIFICATIONS.contains(feature.biomarkerType())) {
+                if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
                     ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
-                } else if (ONCOKB_DELETIONS.contains(feature.biomarkerType())) {
+                } else if (ONCOKB_DELETIONS.contains(feature.name())) {
                     ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
                 }
             }
