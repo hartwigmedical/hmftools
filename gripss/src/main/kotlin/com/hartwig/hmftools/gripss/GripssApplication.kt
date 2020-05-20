@@ -64,7 +64,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val combinedLinks = LinkStore(assemblyLinks, transitiveLinks, dsbLinks)
 
         logger.info("Rescuing linked variants")
-        val linkRescues = LinkRescue(combinedLinks, softFiltersAfterSingleDedup)
+        val linkRescues = LinkRescue(combinedLinks, softFiltersAfterSingleDedup, variantStore)
         val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), linkRescues.rescues)
 
         logger.info("Writing file: ${config.outputVcf}")

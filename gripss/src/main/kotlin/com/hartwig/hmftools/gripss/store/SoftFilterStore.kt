@@ -28,7 +28,7 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     fun filters(vcfId: String, mateId: String?): Set<String> {
         val result = get(vcfId)
-        val isMateFiltered = mateId?.let { isPassing(it)} == false
+        val isMateFiltered = mateId?.let { isPassing(it) } == false
 
         if (result.isEmpty() && isMateFiltered) {
             return mateFiltered
@@ -42,6 +42,9 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     fun isPassing(vcfId: String) = get(vcfId).isEmpty()
 
+    fun isEligibleForRescue(vcfId: String, mateId: String?): Boolean {
+        return isEligibleForRescue(vcfId) && mateId?.let { isDuplicate(it) } != true
+    }
     fun isEligibleForRescue(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == false
 
     fun isDuplicate(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == true
@@ -61,4 +64,5 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
         return SoftFilterStore(result)
     }
+
 }
