@@ -82,7 +82,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing "
                         + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation. \n"
-                        + "Tumors with a score greater or equals than 0.5 are considered HR deficient by complete BRCA inactivation.",
+                        + "Tumors with a score greater or equal than 0.5 are considered HR deficient by complete BRCA inactivation.",
                 hrChart,
                 noHrdWhenMicrosatelliteUnstable,
                 displayFootNote));
