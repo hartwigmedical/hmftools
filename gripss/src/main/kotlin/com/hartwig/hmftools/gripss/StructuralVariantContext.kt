@@ -30,6 +30,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val minStart = start + confidenceInterval.first
     val maxStart = start + confidenceInterval.second
     val insertSequenceLength = variantType.insertSequence.length
+    val qual = context.phredScaledQual
 
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
@@ -40,7 +41,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
     }
 
-    fun context(localLink: String, remoteLink: String, altPath: String?, filters: List<String>): VariantContext {
+    fun context(localLink: String, remoteLink: String, altPath: String?, filters: Set<String>): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
         builder.attribute(TAF, tumorAF)
@@ -61,8 +62,8 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupport)
 
-    fun softFilters(config: GripssFilterConfig): List<String> {
-        val result = mutableListOf<String>()
+    fun softFilters(config: GripssFilterConfig): Set<String> {
+        val result = mutableSetOf<String>()
 
         if (normalCoverageFilter(config.minNormalCoverage)) {
             result.add(MIN_NORMAL_COVERAGE)

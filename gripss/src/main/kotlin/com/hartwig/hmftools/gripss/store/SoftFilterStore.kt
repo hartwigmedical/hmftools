@@ -5,11 +5,11 @@ import com.hartwig.hmftools.gripss.GripssFilterConfig
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import java.util.*
 
-class SoftFilterStore(private val filters: Map<String, List<String>>) {
+class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     companion object {
         operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>): SoftFilterStore {
-            val filters = mutableMapOf<String, List<String>>()
+            val filters = mutableMapOf<String, Set<String>>()
             for (variant in variants) {
                 filters[variant.vcfId] = variant.softFilters(config)
             }
@@ -18,20 +18,24 @@ class SoftFilterStore(private val filters: Map<String, List<String>>) {
         }
     }
 
-    operator fun get(vcfId: String): List<String> {
-        return filters.getOrDefault(vcfId, Collections.emptyList())
+    operator fun get(vcfId: String): Set<String> {
+        return filters.getOrDefault(vcfId, Collections.emptySet())
+    }
+
+    fun duplicates(): Set<String> {
+        return filters.entries.filter { (_, filters) -> filters.contains(DEDUP) }.map { x -> x.key }.toSet()
     }
 
     fun update(duplicates: Set<String>, rescues: Set<String>): SoftFilterStore {
-        val result = mutableMapOf<String, MutableList<String>>()
+        val result = mutableMapOf<String, MutableSet<String>>()
         for ((vcfId, softFilters) in filters) {
             if (!rescues.contains(vcfId)) {
-                result[vcfId] = softFilters.toMutableList()
+                result[vcfId] = softFilters.toMutableSet()
             }
         }
 
         for (vcfId in duplicates) {
-            result.computeIfAbsent(vcfId) {mutableListOf()}.add(DEDUP)
+            result.computeIfAbsent(vcfId) { mutableSetOf() }.add(DEDUP)
         }
 
 

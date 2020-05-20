@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.gripss
 
 import com.hartwig.hmftools.bedpe.dedup.DedupPair
+import com.hartwig.hmftools.bedpe.dedup.DedupSingle
 import com.hartwig.hmftools.gripss.link.AlternatePath
 import com.hartwig.hmftools.gripss.link.AssemblyLink
 import com.hartwig.hmftools.gripss.link.DsbLink
@@ -48,24 +49,26 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         logger.info("Finding transitive links")
         val alternatePaths: Collection<AlternatePath> = AlternatePath(assemblyLinks, variantStore, structuralVariants)
         val alternatePathsStringsByVcfId = alternatePaths.associate { x -> Pair(x.vcfId, x.pathString())}
-        val transitiveLinks: LinkStore = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
+        val transitiveLinks = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
 
         logger.info("Paired break end de-duplication")
         val dedupPair = DedupPair(softFiltersInitial, alternatePaths)
         val softFiltersAfterPairedDedup = softFiltersInitial.update(dedupPair.duplicates, dedupPair.rescue)
 
-        logger.info("Finding double stranded break links")
-        val dsbLinks = DsbLink(variantStore, assemblyLinks, dedupPair.duplicates, structuralVariants)
-        val combinedLinks = LinkStore(assemblyLinks, transitiveLinks, dsbLinks)
+        logger.info("Single break end de-duplication")
+        val dedupSingle = DedupSingle(variantStore, softFiltersAfterPairedDedup, structuralVariants)
+        val softFiltersAfterSingleDedup = softFiltersAfterPairedDedup.update(dedupSingle.duplicates, setOf())
 
-//        DedupSingle.create(variantStore, structuralVariants)
+        logger.info("Finding double stranded break links")
+        val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates(), structuralVariants)
+        val combinedLinks = LinkStore(assemblyLinks, transitiveLinks, dsbLinks)
 
         logger.info("Writing file: ${config.outputVcf}")
         for (variant in structuralVariants) {
 
             val localLinkedBy = combinedLinks[variant.vcfId]
             val remoteLinkedBy = combinedLinks[variant.mateId]
-            val filters = softFiltersAfterPairedDedup[variant.vcfId]
+            val filters = softFiltersAfterSingleDedup[variant.vcfId]
             val altPath = alternatePathsStringsByVcfId[variant.vcfId]
 
 

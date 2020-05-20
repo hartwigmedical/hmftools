@@ -26,7 +26,7 @@ data class AlternatePath(val vcfId: String, val mateId: String, val path: List<L
                         val reverseAlternatePath = AlternatePath(variant.mateId, variant.vcfId, links.map { x -> x.reverse() }.reversed())
                         result[variant.vcfId] = alternatePath
                         result[variant.mateId] = reverseAlternatePath
-                        logger.info("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${alternatePath.pathString()}")
+                        logger.debug("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${alternatePath.pathString()}")
                     } else {
                         failed.add(variant.vcfId)
                     }
