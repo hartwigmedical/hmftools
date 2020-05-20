@@ -353,7 +353,7 @@ public class VisualiserWriter
 
     private final String getPositionValue(final SvBreakend breakend, boolean isChainEnd)
     {
-        long position = breakend.position();
+        int position = breakend.position();
 
         if(breakend.orientation() == 1 && breakend.arm() == P_ARM)
         {
@@ -403,8 +403,8 @@ public class VisualiserWriter
                     final int[] exonPosOffsets = geneData.ExonPositionOffsets.get(exonData.ExonRank);
                     final int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.ExonRank);
 
-                    long exonStart = exonData.ExonStart + exonPosOffsets[SE_START];
-                    long exonEnd = exonData.ExonEnd + exonPosOffsets[SE_END];
+                    int exonStart = exonData.ExonStart + exonPosOffsets[SE_START];
+                    int exonEnd = exonData.ExonEnd + exonPosOffsets[SE_END];
 
                     geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
                             geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonStart, exonEnd));
@@ -439,11 +439,11 @@ public class VisualiserWriter
             // show the 5' and 3' UTR or non-coding regions as 'protein domains'
             if(transData.CodingEnd != null && transData.CodingEnd != null)
             {
-                long fivePrimeUtrStart = transData.Strand == 1 ? transData.TransStart : transData.CodingEnd + 1;
-                long fivePrimeUtrEnd = transData.Strand == 1 ? transData.CodingStart - 1 : transData.TransEnd;
+                int fivePrimeUtrStart = transData.Strand == 1 ? transData.TransStart : transData.CodingEnd + 1;
+                int fivePrimeUtrEnd = transData.Strand == 1 ? transData.CodingStart - 1 : transData.TransEnd;
 
-                long threePrimeUtrStart = transData.Strand == 1 ? transData.CodingEnd + 1 : transData.TransStart;
-                long threePrimeUtrEnd = transData.Strand == 1 ? transData.TransEnd : transData.CodingStart - 1;
+                int threePrimeUtrStart = transData.Strand == 1 ? transData.CodingEnd + 1 : transData.TransStart;
+                int threePrimeUtrEnd = transData.Strand == 1 ? transData.TransEnd : transData.CodingStart - 1;
 
                 if(fivePrimeUtrStart < fivePrimeUtrEnd)
                 {

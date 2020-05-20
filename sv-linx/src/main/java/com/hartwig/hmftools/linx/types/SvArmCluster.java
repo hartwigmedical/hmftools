@@ -24,8 +24,8 @@ public class SvArmCluster
 
     private final String mChromosome;
     private final ChromosomeArm mArm;
-    private long mStartPos;
-    private long mEndPos;
+    private int mStartPos;
+    private int mEndPos;
 
     private int mType;
     private int mTICount;
@@ -57,8 +57,8 @@ public class SvArmCluster
 
     public final String chromosome() { return mChromosome; }
     public final ChromosomeArm arm() { return mArm; }
-    public long posStart() { return mStartPos; }
-    public long posEnd() { return mEndPos; }
+    public int posStart() { return mStartPos; }
+    public int posEnd() { return mEndPos; }
 
     public List<SvBreakend> getBreakends() { return mBreakends; }
 

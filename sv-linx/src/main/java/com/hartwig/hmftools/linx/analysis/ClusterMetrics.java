@@ -92,7 +92,7 @@ public class ClusterMetrics
                 final SvBreakend breakend = breakendList.get(i);
                 final SvVarData var = breakend.getSV();
                 final SvBreakend nextBreakend = breakendList.get(i+1);
-                long breakendsDistance = nextBreakend.position() - breakend.position();
+                int breakendsDistance = nextBreakend.position() - breakend.position();
 
                 boolean isDB = breakend.getDBLink() != null && breakend.getDBLink() == nextBreakend.getDBLink();
 
@@ -105,7 +105,7 @@ public class ClusterMetrics
                 {
                     ++DBCount;
 
-                    long delLength = isDB ? max(breakend.getDBLink().length(), 0) : (isSimpleDel ? var.length() : breakendsDistance);
+                    int delLength = isDB ? max(breakend.getDBLink().length(), 0) : (isSimpleDel ? var.length() : breakendsDistance);
 
                     TotalDBLength += delLength;
 

@@ -44,7 +44,7 @@ public class GeneTestUtils
         geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
     }
 
-    public static int getCodingBases(final Long start, final Long end)
+    public static int getCodingBases(final Integer start, final Integer end)
     {
         if(start != null && end != null)
             return (int)(end - start) + 1;

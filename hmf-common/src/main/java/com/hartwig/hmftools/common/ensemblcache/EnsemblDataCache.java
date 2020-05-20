@@ -591,8 +591,8 @@ public class EnsemblDataCache
                 upExonRank, upExonPhase, downExonRank, downExonPhase,
                 (int)codingBases, (int)totalCodingBases,
                 exonMax, transData.IsCanonical, transData.TransStart, transData.TransEnd,
-                transData.CodingStart != null ? Long.valueOf(transData.CodingStart) : null,
-                transData.CodingEnd != null ? Long.valueOf(transData.CodingEnd) : null);
+                transData.CodingStart != null ? transData.CodingStart : null,
+                transData.CodingEnd != null ? transData.CodingEnd : null);
 
         transcript.setBioType(transData.BioType);
 

@@ -14,19 +14,17 @@ public class SvArmGroup
     private final String mId;
     private List<SvVarData> mSVs;
     private List<SvBreakend> mBreakends;
-    private final SvCluster mCluster;
 
     private final String mChromosome;
     private final ChromosomeArm mArm;
 
     // width of SVs on the arm taking into account any excluded SVs
-    private long mStartPos;
-    private long mEndPos;
+    private int mStartPos;
+    private int mEndPos;
 
-    public SvArmGroup(final SvCluster cluster, final String chr, final ChromosomeArm arm)
+    public SvArmGroup(final String chr, final ChromosomeArm arm)
     {
         mId = makeChrArmStr(chr, arm);
-        mCluster = cluster;
 
         mChromosome = chr;
         mArm = arm;
@@ -41,8 +39,8 @@ public class SvArmGroup
 
     public final String chromosome() { return mChromosome; }
     public final ChromosomeArm arm() { return mArm; }
-    public long posStart() { return mStartPos; }
-    public long posEnd() { return mEndPos; }
+    public int posStart() { return mStartPos; }
+    public int posEnd() { return mEndPos; }
 
     public boolean hasEndsSet()
     {

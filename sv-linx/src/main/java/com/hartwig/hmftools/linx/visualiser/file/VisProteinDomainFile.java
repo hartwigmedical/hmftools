@@ -20,8 +20,8 @@ public class VisProteinDomainFile
     public final int ClusterId;
     public final String Transcript;
     public final String Chromosome;
-    public final long Start;
-    public final long End;
+    public final int Start;
+    public final int End;
     public final String Info;
 
     public static final String PD_FIVE_PRIME_UTR = "5-Prime UTR";
@@ -30,7 +30,7 @@ public class VisProteinDomainFile
 
 
     public VisProteinDomainFile(final String sampleId, int clusterId, final String transcript,
-            final String chromosome, long start, long end, final String info)
+            final String chromosome, int start, int end, final String info)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -115,8 +115,8 @@ public class VisProteinDomainFile
                 Integer.valueOf(values[index++]),
                 values[index++],
                 values[index++],
-                Long.valueOf(values[index++]),
-                Long.valueOf(values[index++]),
+                Integer.valueOf(values[index++]),
+                Integer.valueOf(values[index++]),
                 values[index++]);
     }
 }

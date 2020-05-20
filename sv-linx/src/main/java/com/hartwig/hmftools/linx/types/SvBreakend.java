@@ -15,7 +15,7 @@ public class SvBreakend {
     private final String mChromosome;
     private final ChromosomeArm mArm ;
     private final String mChrArm;
-    private final long mPosition;
+    private final int mPosition;
     private final byte mOrientation;
     private boolean mUsesStart;
 
@@ -39,7 +39,7 @@ public class SvBreakend {
     public final ChromosomeArm arm() { return mArm; }
     public final String getChrArm() { return mChrArm; }
 
-    public final long position() { return mPosition; }
+    public final int position() { return mPosition; }
     public final byte orientation() { return mOrientation; }
     public boolean usesStart() { return mUsesStart; }
 

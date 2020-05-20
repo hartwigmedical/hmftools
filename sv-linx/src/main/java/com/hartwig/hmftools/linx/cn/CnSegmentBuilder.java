@@ -76,8 +76,8 @@ public class CnSegmentBuilder
 
             double currentCopyNumber = mOtherAllelePloidy + mUndisruptedAllelePloidy + netSvPloidy;
 
-            long centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, P_ARM);
-            long chromosomeLength = SvUtilities.getChromosomeLength(chromosome);
+            int centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, P_ARM);
+            int chromosomeLength = SvUtilities.getChromosomeLength(chromosome);
 
             for (int i = 0; i < breakendList.size(); ++i)
             {

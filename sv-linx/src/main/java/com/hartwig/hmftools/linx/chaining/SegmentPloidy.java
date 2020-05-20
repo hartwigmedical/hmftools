@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.linx.chaining.SvChainState.EXHAUSTED_PLOIDY_A
 
 public class SegmentPloidy
 {
-    public final long PosStart;
-    public final long PosEnd;
+    public final int PosStart;
+    public final int PosEnd;
     public final double MajorAP;
     public final double MinorAP;
     public double AFixedAP;
@@ -21,7 +21,7 @@ public class SegmentPloidy
     private double mLinkPloidy;
     private double mExhaustedLevel;
 
-    public SegmentPloidy(final long posStart, final long posEnd, double major, double minor)
+    public SegmentPloidy(final int posStart, final int posEnd, double major, double minor)
     {
         PosStart = posStart;
         PosEnd = posEnd;
@@ -40,7 +40,7 @@ public class SegmentPloidy
     public boolean isValid() { return mIsValid; }
     public void setValid(boolean toggle) { mIsValid = toggle; }
 
-    public long length() { return PosEnd - PosStart; }
+    public int length() { return PosEnd - PosStart; }
     public double clusterPloidy() { return mClusterAP; }
     public void setClusterPloidy(double ploidy)
     {

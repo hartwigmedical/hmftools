@@ -57,10 +57,6 @@ public class CnDataLoader
     public static final double MIN_LOH_CN = 0.5;
     public static final double TOTAL_CN_LOSS = 0.5;
 
-    public static final int P_ARM_TELOMERE_CN = 0;
-    public static final int CENTROMERE_CN = 1;
-    public static final int Q_ARM_TELOMERE_CN = 2;
-
     private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 
     public CnDataLoader(final String purpleDataPath, DatabaseAccess dbAccess)
@@ -178,8 +174,8 @@ public class CnDataLoader
                 boolean isStart = isStart(be);
 
                 final String svChromosome = isStart ? svData.startChromosome() : svData.endChromosome();
-                long svPosition = isStart ? svData.startPosition() : svData.endPosition();
-                long svOrientation = isStart ? svData.startOrientation() : svData.endOrientation();
+                int svPosition = isStart ? svData.startPosition() : svData.endPosition();
+                int svOrientation = isStart ? svData.startOrientation() : svData.endOrientation();
 
                 final List<SvCNData> cnDataList = mChrCnDataMap.get(svChromosome);
 
@@ -191,7 +187,7 @@ public class CnDataLoader
                 for(SvCNData cnData : cnDataList)
                 {
                     // ignore orientation during matching since CN change is not a reliable determinant of SV orientation
-                    long cnPosition = cnData.StartPos;
+                    int cnPosition = cnData.StartPos;
 
                     if(svOrientation == 1)
                         --cnPosition;
@@ -258,8 +254,8 @@ public class CnDataLoader
         if(svData == null)
             return false;
 
-        long svPosStart = svData.startOrientation() == -1 ? cnData.StartPos : cnData.StartPos - 1;
-        long svPosEnd = cnData.EndPos + 1;
+        int svPosStart = svData.startOrientation() == -1 ? cnData.StartPos : cnData.StartPos - 1;
+        int svPosEnd = cnData.EndPos + 1;
 
         return (svData.startPosition() == svPosStart && svData.endPosition() == svPosEnd);
     }
@@ -494,7 +490,7 @@ public class CnDataLoader
             return null;
         }
 
-        long svPosition = requiredOrient == -1 ? cnData.StartPos : cnData.StartPos - 1;
+        int svPosition = requiredOrient == -1 ? cnData.StartPos : cnData.StartPos - 1;
 
         final StructuralVariantData svData = cnData.getStructuralVariantData();
 
@@ -515,7 +511,7 @@ public class CnDataLoader
         StructuralVariantData startSvData = findSvData(startData, 1);
 
         StructuralVariantData endSvData = null;
-        long lohLength = 0;
+        int lohLength = 0;
 
         if(incomplete)
         {

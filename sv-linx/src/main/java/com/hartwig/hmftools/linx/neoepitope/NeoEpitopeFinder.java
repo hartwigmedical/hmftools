@@ -215,12 +215,12 @@ public class NeoEpitopeFinder
             return "";
 
         final GeneAnnotation gene = transcript.gene();
-        long breakPosition = gene.position();
+        int breakPosition = gene.position();
 
         int requiredBases = AMINO_ACID_REF_COUNT * 3 + phaseOffset;
 
-        long codingStart = transcript.CodingStart;
-        long codingEnd = transcript.CodingEnd;
+        int codingStart = transcript.CodingStart;
+        int codingEnd = transcript.CodingEnd;
         boolean postCoding = transcript.postCoding();
 
         final List<ExonData> exonDataList = transData.exons();
@@ -237,7 +237,7 @@ public class NeoEpitopeFinder
                 if (exon.ExonStart < breakPosition || (!postCoding && exon.ExonStart < codingStart))
                     continue;
 
-                long posStart, posEnd;
+                int posStart, posEnd;
 
                 if (collectAllBases || requiredBases > exon.ExonEnd - exon.ExonStart + 1)
                 {
@@ -277,7 +277,7 @@ public class NeoEpitopeFinder
                 if(exon.ExonEnd > breakPosition || (!postCoding && exon.ExonEnd > codingEnd))
                     continue;
 
-                long posStart, posEnd;
+                int posStart, posEnd;
 
                 if(collectAllBases || requiredBases > exon.ExonEnd - exon.ExonStart + 1)
                 {
@@ -317,7 +317,7 @@ public class NeoEpitopeFinder
     {
         final List<ExonData> exonDataList = transData.exons();
 
-        long breakPosition = gene.position();
+        int breakPosition = gene.position();
 
         int exonicBaseCount = 0;
 

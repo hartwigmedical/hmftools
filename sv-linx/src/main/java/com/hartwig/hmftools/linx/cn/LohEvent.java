@@ -15,8 +15,8 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 public class LohEvent
 {
     public final String Chromosome;
-    public final long PosStart;
-    public final long PosEnd;
+    public final int PosStart;
+    public final int PosEnd;
     public final String SegStart;
     public final String SegEnd;
     public final int SegCount;
@@ -36,8 +36,8 @@ public class LohEvent
 
     public LohEvent(
             final String chr,
-            final long posStart,
-            final long posEnd,
+            final int posStart,
+            final int posEnd,
             final String segStart,
             final String segEnd,
             final int segCount,
@@ -81,7 +81,7 @@ public class LohEvent
 
     public boolean matchedBothSVs() { return mBreakendStart != null && mBreakendEnd != null; }
     public boolean sameSV() { return mBreakendStart != null && mBreakendStart.getSV() == mBreakendEnd.getSV(); }
-    public long length() { return PosEnd - PosStart; }
+    public int length() { return PosEnd - PosStart; }
 
     public void addHomLossEvents(final List<HomLossEvent> events)
     {

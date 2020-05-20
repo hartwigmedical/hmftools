@@ -650,7 +650,7 @@ public class FusionFinder
 
         factor /= 100;
 
-        long length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
+        int length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
 
         // will be a range between 1-99 * current factor
         length = min(round(length/10), 99);
@@ -715,7 +715,7 @@ public class FusionFinder
 
         factor /= 100;
 
-        long length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
+        int length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
 
         // will be a range between 1-99 * current factor
         length = min(round(length/10), 99);

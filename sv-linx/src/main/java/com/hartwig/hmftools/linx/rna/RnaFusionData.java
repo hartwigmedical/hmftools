@@ -21,8 +21,8 @@ public class RnaFusionData
     public final String GeneDown;
     public final String ChrUp;
     public final String ChrDown;
-    public final long PositionUp;
-    public final long PositionDown;
+    public final int PositionUp;
+    public final int PositionDown;
     public final byte StrandUp;
     public final byte StrandDown;
 
@@ -81,7 +81,7 @@ public class RnaFusionData
     public static final String DNA_MATCH_TYPE_INVALID = "INVALID";
 
     public RnaFusionData(final String name, final String geneUp, final String geneDown, final String chrUp, final String chrDown,
-            long posUp, long posDown, byte strandUp, byte strandDown, int junctionReadCount, int spanningFragCount, final String spliceType)
+            int posUp, int posDown, byte strandUp, byte strandDown, int junctionReadCount, int spanningFragCount, final String spliceType)
     {
         GeneUp = geneUp;
         GeneDown = geneDown;

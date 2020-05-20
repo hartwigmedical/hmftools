@@ -36,7 +36,7 @@ public class ProposedLinks
     private Map<SvBreakend, Boolean> mExhaustBreakend;
 
     private String mPloidyMatchType;
-    private long mShortestDistance;
+    private int mShortestDistance;
 
     public static String PM_MATCHED = "Matched";
     public static String PM_NONE = "None";
@@ -73,7 +73,7 @@ public class ProposedLinks
         mFoldbackChain = foldbackChain;
         mPloidyMatchType = PM_NONE;
 
-        mShortestDistance = Links.stream().mapToLong(x -> x.length()).min().getAsLong();
+        mShortestDistance = Links.stream().mapToInt(x -> x.length()).min().getAsInt();
     }
 
     public final SvChain targetChain() { return mChainTarget; }
@@ -230,7 +230,7 @@ public class ProposedLinks
     public ChainingRule topRule() { return mRules.get(0); }
     public boolean hasRule(ChainingRule rule) { return mRules.contains(rule); }
 
-    public long shortestLinkDistance() { return mShortestDistance; }
+    public int shortestLinkDistance() { return mShortestDistance; }
 
     public String toString()
     {

@@ -116,7 +116,7 @@ public class IndelAnnotator
         }
     }
 
-    private List<IndelData> findIndels(final String chromosome, long posStart, long posEnd)
+    private List<IndelData> findIndels(final String chromosome, int posStart, int posEnd)
     {
         final List<IndelData> indelDataList = mSampleChrIndelData.get(chromosome);
 
@@ -149,8 +149,8 @@ public class IndelAnnotator
 
         for(SvLinkedPair pair : cluster.getLinkedPairs())
         {
-            long lowerPos = pair.getBreakend(true).position();
-            long upperPos = pair.getBreakend(false).position();
+            int lowerPos = pair.getBreakend(true).position();
+            int upperPos = pair.getBreakend(false).position();
             pair.setIndelCount(findIndels(pair.chromosome(), lowerPos, upperPos).size());
 
             if(pair.getIndelCount() > 0)
@@ -248,7 +248,7 @@ public class IndelAnnotator
             if (variant.isFiltered())
                 continue;
 
-            sampleIndelList.add(new IndelData(variant.chromosome(), variant.position(), variant.ref(), variant.alt(),
+            sampleIndelList.add(new IndelData(variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(),
                     variant.microhomology(), variant.repeatCount(), variant.ploidy()));
         }
 

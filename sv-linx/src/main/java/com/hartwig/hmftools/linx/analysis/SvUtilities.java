@@ -36,13 +36,13 @@ public class SvUtilities {
     }
 
 
-    public static long getChromosomeLength(final String chromosome)
+    public static int getChromosomeLength(final String chromosome)
     {
         Long chrLength = refGenomeLengths().lengths().get(HumanChromosome.fromString(chromosome));
-        return chrLength != null ? chrLength : 0;
+        return chrLength != null ? chrLength.intValue() : 0;
     }
 
-    public static final ChromosomeArm getChromosomalArm(final String chromosome, final long position)
+    public static final ChromosomeArm getChromosomalArm(final String chromosome, final int position)
     {
         final Long centromerePos = refGenomeLengths().centromeres().get(HumanChromosome.fromString(chromosome));
 
@@ -52,7 +52,7 @@ public class SvUtilities {
         return position < centromerePos ? P_ARM : Q_ARM;
     }
 
-    public static long getChromosomalArmLength(final String chromosome, final ChromosomeArm armType)
+    public static int getChromosomalArmLength(final String chromosome, final ChromosomeArm armType)
     {
         final RefGenome refGenome = refGenomeLengths();
         final HumanChromosome chr = HumanChromosome.fromString(chromosome);
@@ -64,12 +64,12 @@ public class SvUtilities {
 
         if(armType == P_ARM)
         {
-            return centromerePos;
+            return centromerePos.intValue();
         }
 
-        long chrLength = refGenome.lengths().get(chr);
+        int chrLength = refGenome.lengths().get(chr).intValue();
 
-        return chrLength - centromerePos;
+        return chrLength - centromerePos.intValue();
     }
 
     public static boolean isShortArmChromosome(final String chromosome)
@@ -87,7 +87,7 @@ public class SvUtilities {
 
             SvBreakend breakend = var.getBreakend(be);
 
-            long position = breakend.position();
+            int position = breakend.position();
 
             List<SvBreakend> breakendList = chrBreakendMap.get(breakend.chromosome());
 
@@ -189,7 +189,7 @@ public class SvUtilities {
         return combinedStr.toString();
     }
 
-    public static boolean isWithin(final SvVarData variant, final String chromosome, final long position)
+    public static boolean isWithin(final SvVarData variant, final String chromosome, final int position)
     {
         if(!variant.chromosome(true).equals(chromosome) || !variant.chromosome(false).equals(chromosome))
             return false;
@@ -218,9 +218,9 @@ public class SvUtilities {
         return false;
     }
 
-    public static long getProximity(final SvVarData var1, final SvVarData var2)
+    public static int getProximity(final SvVarData var1, final SvVarData var2)
     {
-        long minDistance = -1;
+        int minDistance = -1;
 
         for(int se1 = SE_START; se1 <= SE_END; ++se1)
         {
@@ -238,7 +238,7 @@ public class SvUtilities {
 
                 if(be1.chromosome().equals(be2.chromosome()))
                 {
-                    long distance = abs(be1.position() - be2.position());
+                    int distance = abs(be1.position() - be2.position());
                     if(minDistance == -1 || distance < minDistance)
                         minDistance = distance;
                 }

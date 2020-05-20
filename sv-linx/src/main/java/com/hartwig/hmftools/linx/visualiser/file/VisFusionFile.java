@@ -23,7 +23,7 @@ public class VisFusionFile
     public final String GeneNameUp;
     public final String TranscriptUp;
     public final String ChrUp;
-    public final long PosUp;
+    public final int PosUp;
     public final int StrandUp;
     public final String RegionTypeUp;
     public final int FusedExonUp;
@@ -31,16 +31,16 @@ public class VisFusionFile
     public final String GeneNameDown;
     public final String TranscriptDown;
     public final String ChrDown;
-    public final long PosDown;
+    public final int PosDown;
     public final int StrandDown;
     public final String RegionTypeDown;
     public final int FusedExonDown;
 
     public VisFusionFile(final String sampleId, int clusterId, boolean reportable,
             final String geneNameUp, final String transcriptUp,
-            final String chrUp, long posUp, int strandUp, final String regionTypeUp, int fusedExonUp,
+            final String chrUp, int posUp, int strandUp, final String regionTypeUp, int fusedExonUp,
             final String geneNameDown, final String transcriptDown,
-            final String chrDown, long posDown, int strandDown, final String regionTypeDown, int fusedExonDown)
+            final String chrDown, int posDown, int strandDown, final String regionTypeDown, int fusedExonDown)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -159,14 +159,14 @@ public class VisFusionFile
                 values[index++],
                 values[index++],
                 values[index++],
-                Long.valueOf(values[index++]),
+                Integer.valueOf(values[index++]),
                 Integer.valueOf(values[index++]),
                 values[index++],
                 Integer.valueOf(values[index++]),
                 values[index++],
                 values[index++],
                 values[index++],
-                Long.valueOf(values[index++]),
+                Integer.valueOf(values[index++]),
                 Integer.valueOf(values[index++]),
                 values[index++],
                 Integer.valueOf(values[index++]));

@@ -154,8 +154,8 @@ public class SvLinkedPair {
         mNextClusteredSvDistance = clusterDistance;
     }
 
-    public long getNextSvDistance() { return mNextSvDistance; }
-    public long getNextClusteredSvDistance() { return mNextClusteredSvDistance; }
+    public int getNextSvDistance() { return mNextSvDistance; }
+    public int getNextClusteredSvDistance() { return mNextClusteredSvDistance; }
 
     public void setLocationType(final String type) { mLocationType = type; }
     public final String locationType() { return mLocationType; }

@@ -164,7 +164,7 @@ public class RnaFusionMapper
         {
             boolean isUpstream = (i == 0);
             String chromosome = isUpstream ? rnaFusion.ChrUp : rnaFusion.ChrDown;
-            long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
+            int rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
             byte geneStrand = isUpstream ? rnaFusion.StrandUp : rnaFusion.StrandDown;
             List<SvBreakend> viableBreakends = isUpstream ? viableUpBreakends : viableDownBreakends;
             List<SvBreakend> nearBreakends = isUpstream ? nearUpBreakends : nearDownBreakends;
@@ -302,7 +302,7 @@ public class RnaFusionMapper
             for(int i = 0; i <= 1 ; ++i)
             {
                 boolean isUpstream = (i == 0);
-                long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
+                int rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
 
                 List<Transcript> transcriptList;
                 List<SvBreakend> breakendList;
@@ -355,14 +355,14 @@ public class RnaFusionMapper
 
                 Transcript closestTrans = null;
                 SvBreakend closestBreakend = null;
-                long closestDistance = 0;
+                int closestDistance = 0;
 
                 for (int j = 0; j < transcriptList.size(); ++j)
                 {
                     final Transcript trans = transcriptList.get(j);
                     final SvBreakend breakend = breakendList.get(j);
 
-                    long distance = abs(rnaPosition - trans.svPosition());
+                    int distance = abs(rnaPosition - trans.svPosition());
                     if(closestTrans == null || distance < closestDistance)
                     {
                         closestDistance = distance;
@@ -437,8 +437,8 @@ public class RnaFusionMapper
 
     private static int MAX_PROMOTOR_DISTANCE_UP = 100000;
 
-    public boolean isTranscriptBreakendViableForRnaBoundary(final Transcript trans, boolean isUpstream, long breakendPosition,
-            long rnaPosition, boolean exactRnaPosition)
+    public boolean isTranscriptBreakendViableForRnaBoundary(final Transcript trans, boolean isUpstream, int breakendPosition,
+            int rnaPosition, boolean exactRnaPosition)
     {
         // breakend must fall at or before the RNA boundary but not further upstream than the previous splice acceptor
 
@@ -495,7 +495,7 @@ public class RnaFusionMapper
                 if((strand == 1 && rnaPosition <= exonData.ExonStart && exonData.ExonRank <= 2)
                 || (strand == -1 && rnaPosition >= exonData.ExonEnd && exonData.ExonRank <= 2))
                 {
-                    long breakendDistance = abs(breakendPosition - rnaPosition);
+                    int breakendDistance = abs(breakendPosition - rnaPosition);
 
                     if(breakendDistance > MAX_PROMOTOR_DISTANCE_UP || trans.hasNegativePrevSpliceAcceptorDistance())
                         return false;
@@ -611,11 +611,11 @@ public class RnaFusionMapper
         return candidatePosDiff < currentPosDiff;
     }
 
-    private boolean isViableBreakend(final SvBreakend breakend, long rnaPosition, byte geneStrand, boolean isUpstream)
+    private boolean isViableBreakend(final SvBreakend breakend, int rnaPosition, byte geneStrand, boolean isUpstream)
     {
         boolean requireHigherBreakendPos = isUpstream ? (geneStrand == 1) : (geneStrand == -1);
 
-        long position = breakend.position();
+        int position = breakend.position();
 
         int offsetMargin = breakend.usesStart() ?
                 breakend.getSV().getSvData().startHomologySequence().length() : breakend.getSV().getSvData().endHomologySequence().length();
@@ -658,7 +658,7 @@ public class RnaFusionMapper
         {
             boolean isUpstream = (i == 0);
             final String geneName = isUpstream ? rnaFusion.GeneUp : rnaFusion.GeneDown;
-            long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
+            int rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
             Map<String,int[]> transPhases = isUpstream ? transPhasesUp : transPhasesDown;
 
             EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(geneName);
@@ -675,8 +675,8 @@ public class RnaFusionMapper
             if (rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_UNKONWN))
             {
                 // check that the RNA position is within the bounds of the gene before proceeding
-                long upPosLimit = geneData.GeneEnd;
-                long downPosLimit = geneData.GeneStart;
+                int upPosLimit = geneData.GeneEnd;
+                int downPosLimit = geneData.GeneStart;
 
                 if(!isUpstream)
                 {
@@ -805,7 +805,7 @@ public class RnaFusionMapper
     private static final int EXON_PHASE = 2;
     private static final int EXON_EXACT_MATCH = 3;
 
-    private int[] findExonMatch(final List<ExonData> exonDataList, int strand, long position)
+    private int[] findExonMatch(final List<ExonData> exonDataList, int strand, int position)
     {
         int[] exonMatch = new int[EXON_EXACT_MATCH+1];
 
@@ -1033,7 +1033,7 @@ public class RnaFusionMapper
 
                 RnaFusionData rnaData = new RnaFusionData(
                         items[COL_NAME], geneUp, geneDown, items[COL_CHR_UP], items[COL_CHR_DOWN],
-                        Long.parseLong(items[COL_POS_UP]), Long.parseLong(items[COL_POS_DOWN]),
+                        Integer.parseInt(items[COL_POS_UP]), Integer.parseInt(items[COL_POS_DOWN]),
                         Byte.parseByte(items[COL_STRAND_UP]), Byte.parseByte(items[COL_STRAND_DOWN]),
                         Integer.parseInt(items[COL_JUNCT_RC]),Integer.parseInt(items[COL_SPAN_RC]), items[COL_SPLICE]);
 

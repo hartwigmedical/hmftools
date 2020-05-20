@@ -50,7 +50,7 @@ public class SvVarData
     private int[] mFoldbackLength;
     private String[] mFoldbackInfo;
 
-    private long mNearestSvDistance;
+    private int mNearestSvDistance;
     private String mNearestSvRelation;
 
     private List<List<SvLinkedPair>> mTiLinks; // start and end lists of inferred or assembled TIs
@@ -150,7 +150,7 @@ public class SvVarData
 
     // for convenience
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
-    public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
+    public final int position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
     public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
     public final double copyNumber(boolean isStart){ return mCopyNumber[seIndex(isStart)]; }
     public final StructuralVariantType type() { return mSVData.type(); }
@@ -199,7 +199,7 @@ public class SvVarData
     public final SvCluster getCluster() { return mCluster; }
     public void setCluster(final SvCluster cluster) { mCluster = cluster; }
 
-    public final long length()
+    public final int length()
     {
         if(type() == BND || isSglBreakend())
             return 0;
@@ -258,8 +258,8 @@ public class SvVarData
         return max(getMaxAssembledBreakend(), (int)getRoundedPloidy(true));
     }
 
-    public long getNearestSvDistance() { return mNearestSvDistance; }
-    public void setNearestSvDistance(long distance) { mNearestSvDistance = distance; }
+    public int getNearestSvDistance() { return mNearestSvDistance; }
+    public void setNearestSvDistance(int distance) { mNearestSvDistance = distance; }
     public String getNearestSvRelation() { return mNearestSvRelation; }
     public void setNearestSvRelation(final String rel) { mNearestSvRelation = rel; }
 

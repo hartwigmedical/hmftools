@@ -8,8 +8,8 @@ public abstract class StructuralVariantData {
     public abstract int id();
     public abstract String startChromosome();
     public abstract String endChromosome();
-    public abstract long startPosition();
-    public abstract long endPosition();
+    public abstract int startPosition();
+    public abstract int endPosition();
     public abstract byte startOrientation();
     public abstract byte endOrientation();
     public abstract String startHomologySequence();

@@ -5,7 +5,7 @@ import static java.lang.Math.abs;
 public class IndelData
 {
     public final String Chromosome;
-    public final long Position;
+    public final int Position;
     public final String Ref;
     public final String Alt;
     public final String Microhomology;
@@ -19,7 +19,7 @@ public class IndelData
     private static final int HIGH_REPEAT_COUNT = 4;
 
     public IndelData(
-            final String chromosome, long position, final String ref, final String alt, final String microhomology,
+            final String chromosome, int position, final String ref, final String alt, final String microhomology,
             int repeatCount, double ploidy)
     {
         Chromosome = chromosome;
@@ -64,7 +64,7 @@ public class IndelData
         int index = INDEL_COL_SAMPLE+1;
 
         return new IndelData(indelData[index++],
-                Long.parseLong(indelData[index++]),
+                Integer.parseInt(indelData[index++]),
                 indelData[index++],
                 indelData[index++],
                 indelData[index++],

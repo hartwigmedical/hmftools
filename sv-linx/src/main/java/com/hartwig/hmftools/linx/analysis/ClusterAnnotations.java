@@ -194,8 +194,8 @@ public class ClusterAnnotations
                         continue;
                     }
 
-                    long overlapStart = max(pair.getBreakend(true).position(), otherPair.getBreakend(true).position());
-                    long overlapEnd = min(pair.getBreakend(false).position(), otherPair.getBreakend(false).position());
+                    int overlapStart = max(pair.getBreakend(true).position(), otherPair.getBreakend(true).position());
+                    int overlapEnd = min(pair.getBreakend(false).position(), otherPair.getBreakend(false).position());
 
                     if(overlapEnd - overlapStart >= SHORT_TI_LENGTH) // longer than a max DB length
                     {
@@ -370,7 +370,7 @@ public class ClusterAnnotations
                     final SvBreakend breakend = breakendList.get(i);
                     final SvBreakend nextBreakend = breakendList.get(i + 1);
 
-                    long breakendDistance = nextBreakend.position() - breakend.position();
+                    int breakendDistance = nextBreakend.position() - breakend.position();
 
                     genomicSpan += min(MAX_MERGE_DISTANCE * 2, breakendDistance);
 
@@ -388,7 +388,7 @@ public class ClusterAnnotations
                         if(!complexClusters.contains(otherCluster) || encounteredClusters.contains(otherCluster))
                             continue;
 
-                        long distance = min(
+                        int distance = min(
                                 abs(breakend.position() - otherBreakend.position()),
                                 abs(nextBreakend.position() - otherBreakend.position()));
 
@@ -736,7 +736,7 @@ public class ClusterAnnotations
         // sum of segments of CN gain between the chain ends
         final List<SvBreakend> breakendList = cluster.getChrBreakendMap().get(chainStart.chromosome());
 
-        long prevPosition = 0;
+        int prevPosition = 0;
         double prevCN = 0;
         boolean inSegment = false;
         double netPloidy = 0;
@@ -771,7 +771,7 @@ public class ClusterAnnotations
             }
             else
             {
-                long segmentLength = breakend.position() - prevPosition;
+                int segmentLength = breakend.position() - prevPosition;
 
                 if(breakend.orientation() == -1)
                 {

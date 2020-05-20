@@ -91,8 +91,8 @@ public class MiscTest
         LinxTester tester = new LinxTester();
 
         // 4 breakends, 2 on each arm
-        long centromerePos = SvUtilities.getChromosomalArmLength("1", P_ARM);
-        long qArmPos = centromerePos + 10000000;
+        int centromerePos = SvUtilities.getChromosomalArmLength("1", P_ARM);
+        int qArmPos = centromerePos + 10000000;
         final SvVarData var1 = createDel(tester.nextVarId(), "1", 100,200);
         final SvVarData var2 = createDel(tester.nextVarId(), "1", 300,400);
         final SvVarData var3 = createDel(tester.nextVarId(), "1", qArmPos + 1000, qArmPos + 2000);

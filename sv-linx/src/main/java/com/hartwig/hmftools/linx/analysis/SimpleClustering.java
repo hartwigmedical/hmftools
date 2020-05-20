@@ -226,7 +226,7 @@ public class SimpleClustering
                 mClusterHistoryWriter.newLine();
             }
 
-            long breakendDistance = getProximity(var1, var2);
+            int breakendDistance = getProximity(var1, var2);
 
             mClusterHistoryWriter.write(String.format("%s,%d", mSampleId, mClusteringIndex));
 
@@ -550,7 +550,7 @@ public class SimpleClustering
         // find and record any long DEL or DUP for merging, including long synthetic ones
         if(cluster.isSyntheticType() && cluster.getResolvedType().isSimple() && !cluster.isResolved())
         {
-            long syntheticLength = getSyntheticLength(cluster);
+            int syntheticLength = getSyntheticLength(cluster);
 
             if ((cluster.getResolvedType() == ResolvedType.DEL && syntheticLength >= mState.getDelCutoffLength())
             || (cluster.getResolvedType() == ResolvedType.DUP && syntheticLength >= mState.getDupCutoffLength()))
@@ -823,7 +823,7 @@ public class SimpleClustering
             return false;
     }
 
-    protected boolean exceedsDupDelCutoffLength(StructuralVariantType type, long length)
+    protected boolean exceedsDupDelCutoffLength(StructuralVariantType type, int length)
     {
         if(type == DEL)
             return length > mState.getDelCutoffLength();

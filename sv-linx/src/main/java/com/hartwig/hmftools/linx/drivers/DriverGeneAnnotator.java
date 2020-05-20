@@ -326,8 +326,8 @@ public class DriverGeneAnnotator
         }
 
         // find the LOH and hom-loss events which caused this DEL
-        long minRegionStart = dgData.GeneCN.minRegionStart();
-        long minRegionEnd = dgData.GeneCN.minRegionEnd();
+        int minRegionStart = (int)dgData.GeneCN.minRegionStart();
+        int minRegionEnd = (int)dgData.GeneCN.minRegionEnd();
 
         for(final LohEvent lohEvent : mCopyNumberData.getLohData())
         {
@@ -411,8 +411,8 @@ public class DriverGeneAnnotator
         if(dgData.TransData.CodingStart == null || dgData.TransData.CodingEnd == null)
             return;
 
-        long codingStart = dgData.TransData.CodingStart;
-        long codingEnd = dgData.TransData.CodingEnd;
+        int codingStart = dgData.TransData.CodingStart;
+        int codingEnd = dgData.TransData.CodingEnd;
 
         for(final LohEvent lohEvent : mCopyNumberData.getLohData())
         {
@@ -526,7 +526,7 @@ public class DriverGeneAnnotator
 
     private OpposingSegment findOrCreateOpposingSegment(
             List<OpposingSegment> opposingSegments, final List<SvBreakend> breakendList, final SvBreakend startBreakend,
-            boolean traverseUp, long stopPosition)
+            boolean traverseUp, int stopPosition)
     {
         OpposingSegment opposingSegment = opposingSegments.stream()
                 .filter(x -> x.Breakends.contains(startBreakend))
@@ -588,8 +588,8 @@ public class DriverGeneAnnotator
             final DriverGeneData dgData, final List<SvBreakend> breakendList, final SvBreakend startBreakend, boolean traverseUp,
             List<OpposingSegment> opposingSegments)
     {
-        long transStart = dgData.TransData.TransStart;
-        long transEnd = dgData.TransData.TransEnd;
+        int transStart = dgData.TransData.TransStart;
+        int transEnd = dgData.TransData.TransEnd;
 
         double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
 
@@ -719,8 +719,8 @@ public class DriverGeneAnnotator
             return;
 
         // sum up breakend ploidies from telomere to centromere for the gene in question net off ploidy within a cluster
-        long transStart = dgData.TransData.TransStart;
-        long transEnd = dgData.TransData.TransEnd;
+        int transStart = dgData.TransData.TransStart;
+        int transEnd = dgData.TransData.TransEnd;
 
         int startIndex = 0;
         int endIndex = breakendList.size() - 1;
@@ -1084,8 +1084,8 @@ public class DriverGeneAnnotator
                         geneData.Chromosome, dgData.Arm, mSamplePloidy, dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
                         centromereCopyNumber, telomereCopyNumber, driverEvent.getCopyNumberGain()));
 
-                long posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
-                long posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
+                int posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
+                int posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
                 String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
                 String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
 

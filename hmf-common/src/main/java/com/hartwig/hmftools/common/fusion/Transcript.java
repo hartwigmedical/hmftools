@@ -15,13 +15,13 @@ public class Transcript {
     public final String StableId;
 
     @Nullable
-    public final Long CodingStart;
+    public final Integer CodingStart;
 
     @Nullable
-    public final Long CodingEnd;
+    public final Integer CodingEnd;
 
-    public final long TranscriptStart;
-    public final long TranscriptEnd;
+    public final int TranscriptStart;
+    public final int TranscriptEnd;
 
     public final int ExonUpstream;
     public final int ExonDownstream;
@@ -74,8 +74,8 @@ public class Transcript {
     public Transcript(@NotNull final GeneAnnotation gene, int transId, final String stableId,
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
             final int codingBases, final int totalCodingBases,
-            final int exonMax, final boolean canonical, long transcriptStart, long transcriptEnd,
-            final Long codingStart, final Long codingEnd)
+            final int exonMax, final boolean canonical, int transcriptStart, int transcriptEnd,
+            final Integer codingStart, final Integer codingEnd)
     {
         TransId = transId;
         StableId = stableId;
@@ -147,7 +147,7 @@ public class Transcript {
     @NotNull
     public GeneAnnotation gene() { return mGene; }
 
-    public long svPosition() { return mGene.position(); }
+    public int svPosition() { return mGene.position(); }
     public String geneName() { return mGene.GeneName; }
     public boolean isUpstream() { return mGene.isUpstream(); }
 
@@ -166,7 +166,7 @@ public class Transcript {
         return ExonUpstream > 0 && (ExonDownstream - ExonUpstream) == 1;
     }
 
-    public long getDistanceUpstream()
+    public int getDistanceUpstream()
     {
         if(!isPromoter())
             return 0;
@@ -303,8 +303,8 @@ public class Transcript {
 
     public static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
     {
-        // long codingBases = transcript.calcCodingBases(isUpstream);
-        long codingBases = transcript.codingBases();
+        // int codingBases = transcript.calcCodingBases(isUpstream);
+        int codingBases = transcript.codingBases();
 
         // subtract 1 to get back to phasing starting at zero, ie start with the first coding base where position == coding start:
         // coding base: 1 2 3 4 5 6 7 8 9 10
@@ -324,7 +324,7 @@ public class Transcript {
 
     public int exonicBasePhase() { return mExonicBasePhase; }
 
-    public final long length() { return TranscriptEnd - TranscriptStart; }
+    public final int length() { return TranscriptEnd - TranscriptStart; }
 
     public boolean isDisruptive() { return mIsDisruptive; }
     public void setIsDisruptive(boolean toggle) { mIsDisruptive = toggle; }
@@ -335,8 +335,8 @@ public class Transcript {
     public double undisruptedCopyNumber() { return mUndisruptedCopyNumber; }
     public void setUndisruptedCopyNumber(double copyNumber) { mUndisruptedCopyNumber = copyNumber; }
 
-    public long codingStart() { return CodingStart != null ? CodingStart : 0; }
-    public long codingEnd() { return CodingEnd != null ? CodingEnd : 0; }
+    public int codingStart() { return CodingStart != null ? CodingStart : 0; }
+    public int codingEnd() { return CodingEnd != null ? CodingEnd : 0; }
 
     public final String toString()
     {

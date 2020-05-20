@@ -853,7 +853,7 @@ public class FusionDisruptionAnalyser
             {
                 // skip breakends which cannot be chained by min TI length
                 int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
-                long breakendDistance = abs(breakend.position() - nextBreakend.position());
+                int breakendDistance = abs(breakend.position() - nextBreakend.position());
 
                 if(breakendDistance < minTiLength)
                     continue;
@@ -896,7 +896,7 @@ public class FusionDisruptionAnalyser
         int facingBreakends = 0;
         int disruptedExons = 0;
         boolean transcriptTerminated = false;
-        long minDistance = startPair.length();
+        int minDistance = startPair.length();
         boolean allLinksAssembled = startPair.isAssembled();
 
         boolean isUpstream = transcript.isUpstream();

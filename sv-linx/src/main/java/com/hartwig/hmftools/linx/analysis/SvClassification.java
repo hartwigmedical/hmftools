@@ -134,7 +134,7 @@ public class SvClassification
     }
 
     public static void setClusterResolvedState(
-            SvCluster cluster, boolean isFinal, long longDelThreshold, long longDupThreshold, int proximityThreshold)
+            SvCluster cluster, boolean isFinal, int longDelThreshold, int longDupThreshold, int proximityThreshold)
     {
         if(cluster.getResolvedType() != NONE)
             return;
@@ -256,7 +256,7 @@ public class SvClassification
         return true;
     }
 
-    public static long getSyntheticLength(final SvCluster cluster)
+    public static int getSyntheticLength(final SvCluster cluster)
     {
         // assumes has been called on an appropriate cluster
 
@@ -274,17 +274,17 @@ public class SvClassification
         }
     }
 
-    public static long getSyntheticTiLength(final SvCluster cluster)
+    public static int getSyntheticTiLength(final SvCluster cluster)
     {
         if(cluster.getChains().size() != 1)
             return NO_LENGTH;
 
         final SvChain chain = cluster.getChains().get(0);
 
-        return chain.getLinkedPairs().stream().mapToLong(x -> x.length()).max().getAsLong();
+        return chain.getLinkedPairs().stream().mapToInt(x -> x.length()).max().getAsInt();
     }
 
-    public static long getSyntheticGapLength(final SvCluster cluster)
+    public static int getSyntheticGapLength(final SvCluster cluster)
     {
         // the min distance between the longest TI and the chain ends, if has a TI on the same end
         if(cluster.getChains().size() != 1)
@@ -297,7 +297,7 @@ public class SvClassification
         if(!chainStart.getChrArm().equals(chainEnd.getChrArm()))
             return NO_LENGTH;
 
-        long minDistance = NO_LENGTH;
+        int minDistance = NO_LENGTH;
 
         for(final SvLinkedPair pair : chain.getLinkedPairs())
         {
@@ -311,15 +311,15 @@ public class SvClassification
                 continue;
             }
 
-            long distanceStart = min(
+            int distanceStart = min(
                     abs(chainStart.position() - pair.firstBreakend().position()),
                     abs(chainStart.position() - pair.secondBreakend().position()));
 
-            long distanceEnd = min(
+            int distanceEnd = min(
                     abs(chainEnd.position() - pair.firstBreakend().position()),
                     abs(chainEnd.position() - pair.secondBreakend().position()));
 
-            long gapLength = min(distanceStart, distanceEnd);
+            int gapLength = min(distanceStart, distanceEnd);
 
             if(minDistance == NO_LENGTH || gapLength < minDistance)
                 minDistance = gapLength;
@@ -338,7 +338,7 @@ public class SvClassification
 
         // test the chain for short TIs only
         int totalChainLength = 0;
-        long longestTILength = 0;
+        int longestTILength = 0;
         for (SvLinkedPair pair : chain.getLinkedPairs())
         {
             if (pair.length() > SHORT_TI_LENGTH)
@@ -405,7 +405,7 @@ public class SvClassification
         boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)
                 || (breakend2.position() < breakend1.position() && breakend2.orientation() == -1);
 
-        long length = abs(breakend1.position() - breakend2.position());
+        int length = abs(breakend1.position() - breakend2.position());
 
         ResolvedType resolvedType = NONE;
 

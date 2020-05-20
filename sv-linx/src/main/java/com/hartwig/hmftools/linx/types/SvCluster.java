@@ -214,7 +214,7 @@ public class SvCluster
 
             if (!groupFound)
             {
-                SvArmGroup armGroup = new SvArmGroup(this, var.chromosome(useStart), var.arm(useStart));
+                SvArmGroup armGroup = new SvArmGroup(var.chromosome(useStart), var.arm(useStart));
                 armGroup.addVariant(var);
                 mArmGroups.add(armGroup);
             }
@@ -540,7 +540,7 @@ public class SvCluster
 
     public void markSubclonal()
     {
-        long lowCNChangeSupportCount = mSVs.stream().filter(x -> hasLowPloidy(x)).count();
+        int lowCNChangeSupportCount = (int)mSVs.stream().filter(x -> hasLowPloidy(x)).count();
         mIsSubclonal = lowCNChangeSupportCount / (double)mSVs.size() > 0.5;
     }
 

@@ -125,7 +125,7 @@ public class ReplicationOriginAnnotator
     }
 
     // general purpose method
-    public double getReplicationOriginValue(final String chromosome, long position)
+    public double getReplicationOriginValue(final String chromosome, int position)
     {
         if(mReplicationOrigins.isEmpty())
             return 0;

@@ -441,8 +441,8 @@ public class DisruptionFinder
         // for this pair to not affect the fusion, the section it traverses cannot cross any gene's splice acceptor
         // with the same strand direction unless that is part of a fully traversed non-coding 5' exon
 
-        long lowerPos = pair.getBreakend(true).position();
-        long upperPos = pair.getBreakend(false).position();
+        int lowerPos = pair.getBreakend(true).position();
+        int upperPos = pair.getBreakend(false).position();
 
         List<EnsemblGeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(pair.chromosome());
 

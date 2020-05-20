@@ -148,7 +148,7 @@ public class SvFilters
                 if(breakend.orientation() != nextBreakend.orientation())
                     continue;
 
-                long distance = nextBreakend.position() - breakend.position();
+                int distance = nextBreakend.position() - breakend.position();
 
                 if(distance <= PERMITED_SGL_DUP_BE_DISTANCE && (var.type() == SGL || nextVar.type() == SGL))
                 {
@@ -317,8 +317,8 @@ public class SvFilters
         if(breakend.getSV().getSvData().insertSequence().length() >= MIN_TEMPLATED_INSERTION_LENGTH
         && !nextBreakend.getSV().getTIAssemblies(!nextBreakend.usesStart()).isEmpty())
         {
-            long posLimitDown = nextBreakend.position() - 1; // nextBreakend.getSV().getSvData().startIntervalOffsetEnd()
-            long posLimitUp = nextBreakend.position() + 1;
+            int posLimitDown = nextBreakend.position() - 1; // nextBreakend.getSV().getSvData().startIntervalOffsetEnd()
+            int posLimitUp = nextBreakend.position() + 1;
 
             if(breakend.position() >= posLimitDown && breakend.position() <= posLimitUp)
             {

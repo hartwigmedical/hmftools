@@ -59,11 +59,11 @@ public class ClusteringPrep
 
     public static void setSimpleVariantLengths(ClusteringState state)
     {
-        long delCutoffLength = 0;
-        long dupCutoffLength = 0;
+        int delCutoffLength = 0;
+        int dupCutoffLength = 0;
 
-        List<Long> delLengthsList = Lists.newArrayList();
-        List<Long> dupLengthsList = Lists.newArrayList();
+        List<Integer> delLengthsList = Lists.newArrayList();
+        List<Integer> dupLengthsList = Lists.newArrayList();
 
         int simpleArmCount = 0;
 
@@ -174,16 +174,16 @@ public class ClusteringPrep
                 final SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
 
                 // work out closest distance to breakends before and after if not the same SV
-                long closestDistance = -1;
+                int closestDistance = -1;
                 if(prevBreakend != null && prevBreakend.getSV() != var)
                 {
-                    long distance = breakend.position() - prevBreakend.position();
+                    int distance = breakend.position() - prevBreakend.position();
                     closestDistance = distance;
                 }
 
                 if(nextBreakend != null && nextBreakend.getSV() != var)
                 {
-                    long distance = nextBreakend.position() - breakend.position();
+                    int distance = nextBreakend.position() - breakend.position();
                     if(closestDistance < 0 || distance < closestDistance)
                         closestDistance = distance;
                 }

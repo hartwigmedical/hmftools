@@ -23,11 +23,11 @@ public class VisGeneExonFile
     public final String Chromosome;
     public final String AnnotationType;
     public final int ExonRank;
-    public final long ExonStart;
-    public final long ExonEnd;
+    public final int ExonStart;
+    public final int ExonEnd;
 
     public VisGeneExonFile(final String sampleId, int clusterId, final String gene, final String transcript, final String chromosome,
-            final String type, int exonRank, long exonStart, long exonEnd)
+            final String type, int exonRank, int exonStart, int exonEnd)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -121,8 +121,8 @@ public class VisGeneExonFile
                 values[index++],
                 values[index++],
                 Integer.valueOf(values[index++]),
-                Long.valueOf(values[index++]),
-                Long.valueOf(values[index++]));
+                Integer.valueOf(values[index++]),
+                Integer.valueOf(values[index++]));
     }
 
 }

@@ -29,38 +29,38 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 public class SvTestUtils
 {
     public static SvVarData createSv(final int varId, final String chrStart, final String chrEnd,
-            long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type, final String insertSeq)
+            int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type, final String insertSeq)
     {
         return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type,
                 2, 2, 1, 1, 1, insertSeq);
     }
 
     // for convenience
-    public static SvVarData createDel(final int varId, final String chromosome, long posStart, long posEnd)
+    public static SvVarData createDel(final int varId, final String chromosome, int posStart, int posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, 1, -1, DEL,
                 2, 2, 1, 1, 1, "");
     }
 
-    public static SvVarData createIns(final int varId, final String chromosome, long posStart, long posEnd)
+    public static SvVarData createIns(final int varId, final String chromosome, int posStart, int posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, 1, -1, INS,
                 2, 2, 1, 1, 1, "");
     }
 
-    public static SvVarData createDup(final int varId, final String chromosome, long posStart, long posEnd)
+    public static SvVarData createDup(final int varId, final String chromosome, int posStart, int posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, -1, 1, DUP,
                 3, 3, 1, 1, 1, "");
     }
 
-    public static SvVarData createInv(final int varId, final String chromosome, long posStart, long posEnd, int orientation)
+    public static SvVarData createInv(final int varId, final String chromosome, int posStart, int posEnd, int orientation)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, orientation, orientation, INV,
                 orientation == 1 ? 4 : 3, orientation == 1 ? 3 : 4, 1, 1, 1, "");
     }
 
-    public static SvVarData createSgl(final int varId, final String chromosome, long position, int orientation)
+    public static SvVarData createSgl(final int varId, final String chromosome, int position, int orientation)
     {
         SvVarData var = createTestSv(varId, chromosome, "0", position, -1, orientation, -1, SGL,
                 3, 0, 1, 0, 1, "");
@@ -68,7 +68,7 @@ public class SvTestUtils
         return var;
     }
 
-    public static SvVarData createInf(final int varId, final String chromosome, long position, int orientation)
+    public static SvVarData createInf(final int varId, final String chromosome, int position, int orientation)
     {
         SvVarData var = createTestSv(varId, chromosome, "0", position, -1, orientation, -1, INF,
                 3, 0, 1, 0, 1, "");
@@ -76,7 +76,7 @@ public class SvTestUtils
         return var;
     }
 
-    public static SvVarData createBnd(final int varId, final String chrStart, long posStart, int orientStart, final String chrEnd, long posEnd, int orientEnd)
+    public static SvVarData createBnd(final int varId, final String chrStart, int posStart, int orientStart, final String chrEnd, int posEnd, int orientEnd)
     {
         SvVarData var = createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, BND,
                 3, 3, 1, 1, 1, "");
@@ -85,7 +85,7 @@ public class SvTestUtils
     }
 
     public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
-            long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type, double ploidy)
+            int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type, double ploidy)
     {
         // let the copy number test data routine take care of setting CN and CN change data
         return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type,
@@ -93,14 +93,14 @@ public class SvTestUtils
     }
 
     public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
-            long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type,
+            int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq)
     {
         return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type, cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, PASS);
     }
 
     public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
-            long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type,
+            int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq,
             final String filter)
     {
@@ -186,7 +186,7 @@ public class SvTestUtils
 
 
     public static GeneCopyNumber createGeneCopyNumber(final String gene, final String chromosome,
-            double minCopyNumber, long posStart, long posEnd)
+            double minCopyNumber, int posStart, int posEnd)
     {
         return ImmutableGeneCopyNumber.builder()
                 .chromosome(chromosome)

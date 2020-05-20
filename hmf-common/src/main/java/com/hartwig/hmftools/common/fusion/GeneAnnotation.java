@@ -30,7 +30,7 @@ public class GeneAnnotation {
     private StructuralVariantType mSvType;
     private String mChromosome;
     private byte mOrientation;
-    private long mPosition;
+    private int mPosition;
     private double mPloidy;
     private String mInsertSequence;
 
@@ -59,7 +59,7 @@ public class GeneAnnotation {
     public void setGeneData(final EnsemblGeneData geneData) { mGeneData = geneData; }
     public final EnsemblGeneData getGeneData() { return mGeneData; }
 
-    public void setPositionalData(final String chromosome, long position, byte orientation)
+    public void setPositionalData(final String chromosome, int position, byte orientation)
     {
         mChromosome = chromosome;
         mPosition = position;
@@ -80,7 +80,7 @@ public class GeneAnnotation {
 
     public int id() { return mVarId; }
     public byte orientation() { return mOrientation; }
-    public long position() { return mPosition; }
+    public int position() { return mPosition; }
     public StructuralVariantType type() { return mSvType; }
     public String chromosome() { return mChromosome; }
     public double ploidy() { return mPloidy; }
@@ -131,7 +131,7 @@ public class GeneAnnotation {
             if(!trans.isUpstream() && trans.hasNegativePrevSpliceAcceptorDistance())
                 continue;
 
-            long distance = Strand == 1 ? trans.TranscriptStart - mPosition : mPosition - trans.TranscriptEnd;
+            int distance = Strand == 1 ? trans.TranscriptStart - mPosition : mPosition - trans.TranscriptEnd;
 
             if(distance > 0 && distance <= preGeneDistance)
                 return true;

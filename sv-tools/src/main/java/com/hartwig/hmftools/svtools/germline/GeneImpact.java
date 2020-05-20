@@ -135,7 +135,8 @@ public class GeneImpact
 
             if(!overlapGenes.isEmpty())
             {
-                overlapGenes.stream().forEach(x -> x.setPositionalData(sv.chromosome(true), sv.position(true), sv.orientation(true)));
+                overlapGenes.stream().forEach(x -> x.setPositionalData(
+                        sv.chromosome(true), sv.position(true).intValue(), sv.orientation(true)));
             }
         }
 
@@ -154,7 +155,8 @@ public class GeneImpact
 
             if(!svGenes.isEmpty())
             {
-                svGenes.stream().forEach(x -> x.setPositionalData(sv.chromosome(isStart), sv.position(isStart), sv.orientation(isStart)));
+                svGenes.stream().forEach(x -> x.setPositionalData(
+                        sv.chromosome(isStart), sv.position(isStart).intValue(), sv.orientation(isStart)));
             }
         }
     }
@@ -337,7 +339,7 @@ public class GeneImpact
                         if ((gene1.orientation() == -1 && gene1.position() < gene2.position())
                         || (gene2.orientation() == -1 && gene2.position() < gene1.position()))
                         {
-                            long tiLength = abs(gene2.position() - gene1.position());
+                            int tiLength = abs(gene2.position() - gene1.position());
 
                             LOGGER.debug("SVs({} & {}) have facing intronic breakends in gene({}) exons({} -> {}) tiLength({})",
                                     var1.Id, var2.Id, gene1.GeneName, trans1.ExonUpstream, trans1.ExonDownstream, tiLength);
@@ -387,7 +389,7 @@ public class GeneImpact
                                 && transStart1.geneName().equals(transEnd2.geneName())
                                 && transStart1.ExonDownstream == transEnd2.ExonDownstream)
                         {
-                            long dbLength = abs(transStart1.gene().position() - transStart2.gene().position());
+                            int dbLength = abs(transStart1.gene().position() - transStart2.gene().position());
 
                             LOGGER.debug("SVs({} & {}) form reciprocal INV in gene({}) exons({} -> {}) dbLength({})",
                                     var1.Id, var2.Id, transStart1.geneName(),

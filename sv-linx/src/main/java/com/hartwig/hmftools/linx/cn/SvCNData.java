@@ -11,8 +11,8 @@ public class SvCNData {
 
     final private int mId;
     final public String Chromosome;
-    final public long StartPos;
-    final public long EndPos;
+    final public int StartPos;
+    final public int EndPos;
     final public double CopyNumber;
     final public String SegStart;
     final public String SegEnd;
@@ -27,7 +27,7 @@ public class SvCNData {
     private StructuralVariantData mSvData; // linked if known
     private boolean mSvLinkOnStart;
 
-    public SvCNData(int id, final String chromosome, final long startPos, final long endPos,
+    public SvCNData(int id, final String chromosome, final int startPos, final int endPos,
             final double copyNumber, final String segStart,  final String segEnd,  final int bafCount,
             final double actualBaf,  final int depthWindowCount)
     {
@@ -50,8 +50,8 @@ public class SvCNData {
     {
         mId = id;
         Chromosome = record.chromosome();
-        StartPos = record.start();
-        EndPos = record.end();
+        StartPos = (int)record.start();
+        EndPos = (int)record.end();
         CopyNumber = record.averageTumorCopyNumber();
         SegStart = record.segmentStartSupport().toString();
         SegEnd = record.segmentEndSupport().toString();
@@ -64,8 +64,8 @@ public class SvCNData {
     }
 
     public int id() { return mId; }
-    public long position(boolean useStart) { return useStart ? StartPos : EndPos; }
-    public long length() { return EndPos - StartPos; }
+    public int position(boolean useStart) { return useStart ? StartPos : EndPos; }
+    public int length() { return EndPos - StartPos; }
 
     public int getIndex() { return mIndex; }
     public void setIndex(int index) { mIndex = index; }

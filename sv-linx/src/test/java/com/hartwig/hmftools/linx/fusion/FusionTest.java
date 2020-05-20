@@ -160,7 +160,7 @@ public class FusionTest
         Integer codingEnd = new Integer(950);
 
         Transcript upTrans1 = new Transcript(upGene, 1, "TRANS01", 2, 1, 3, 1,
-                50, 300,5, true, 100, 1000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
+                50, 300,5, true, 100, 1000, codingStart, codingEnd);
         upTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
 
         GeneAnnotation downGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
@@ -169,7 +169,7 @@ public class FusionTest
         codingEnd = new Integer(10950);
 
         Transcript downTrans1 = new Transcript(downGene, 11, "TRANS11", 2, 1, 3, 1,
-                50, 300,5, true, 10000, 11000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
+                50, 300,5, true, 10000, 11000, codingStart, codingEnd);
         downTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
 
         GeneFusion fusion1 = new GeneFusion(upTrans1, downTrans1, true);
@@ -200,7 +200,7 @@ public class FusionTest
 
         // 3. down protein coding
         Transcript downTrans2 = new Transcript(downGene, 12, "TRANS12", 2, 1, 3, 1,
-                50, 300,5, true, 10000, 11000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
+                50, 300,5, true, 10000, 11000, codingStart, codingEnd);
         downTrans2.setBioType(BIOTYPE_PROCESSED_TRANS);
 
         fusion1.setAnnotations(null);
@@ -219,7 +219,7 @@ public class FusionTest
 
         // 5. 3P partner canonical
         Transcript downTrans3 = new Transcript(downGene, 13, "TRANS13", 2, 1, 3, 1,
-                50, 300,5, false, 10000, 11000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
+                50, 300,5, false, 10000, 11000, codingStart, codingEnd);
         downTrans3.setBioType(BIOTYPE_PROTEIN_CODING);
 
         fusion1 = new GeneFusion(upTrans1, downTrans3, true);
@@ -229,7 +229,7 @@ public class FusionTest
 
         // 6. 5P partner canonical
         Transcript upTrans2 = new Transcript(upGene, 2, "TRANS02", 2, 1, 3, 1,
-                50, 300,5, false, 100, 1000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
+                50, 300,5, false, 100, 1000, codingStart, codingEnd);
         upTrans2.setBioType(BIOTYPE_PROTEIN_CODING);
 
         fusion1 = new GeneFusion(upTrans2, downTrans1, true);
@@ -239,7 +239,7 @@ public class FusionTest
 
         // 7. 5P partner less coding bases
         Transcript upTrans3 = new Transcript(upGene, 3, "TRANS03", 2, 1, 3, 1,
-                40, 200,5, true, 100, 1000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
+                40, 200,5, true, 100, 1000, codingStart, codingEnd);
         upTrans3.setBioType(BIOTYPE_PROTEIN_CODING);
 
         fusion1 = new GeneFusion(upTrans3, downTrans1, true);

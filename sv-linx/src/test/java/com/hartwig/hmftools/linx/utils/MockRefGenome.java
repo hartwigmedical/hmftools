@@ -16,7 +16,7 @@ public class MockRefGenome implements RefGenomeInterface
 
 
     @Override
-    public String getBaseString(final String chromosome, long posStart, long posEnd)
+    public String getBaseString(final String chromosome, int posStart, int posEnd)
     {
         String chrBases = RefGenomeMap.get(chromosome);
 

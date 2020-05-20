@@ -73,7 +73,7 @@ public class KataegisAnnotator
     {
         // find the nearest facing breakend
         SvBreakend closestBreakend = null;
-        long shortestDistance = 0;
+        int shortestDistance = 0;
 
         for (final SvBreakend breakend : breakendList)
         {
@@ -94,7 +94,7 @@ public class KataegisAnnotator
             }
             else
             {
-                long distance = breakend.position() - katData.PosEnd;
+                int distance = breakend.position() - katData.PosEnd;
 
                 if (distance > PROXIMITY_THRESHOLD)
                     break;
@@ -134,7 +134,7 @@ public class KataegisAnnotator
 
             if(breakend != null)
             {
-                long distance = min(abs(data.PosStart - breakend.position()), abs(data.PosEnd - breakend.position()));
+                int distance = min(abs(data.PosStart - breakend.position()), abs(data.PosEnd - breakend.position()));
 
                 mFileWriter.write(String.format(",%d,%d,%s,%d,%d",
                         breakend.getSV().id(), breakend.position(), breakend.usesStart(), breakend.orientation(), distance));
@@ -193,8 +193,8 @@ public class KataegisAnnotator
 
                 KataegisData data = new KataegisData(
                         chromosome,
-                        Long.parseLong(items[KAT_COL_POS_START]),
-                        Long.parseLong(items[KAT_COL_POS_END]),
+                        Integer.parseInt(items[KAT_COL_POS_START]),
+                        Integer.parseInt(items[KAT_COL_POS_END]),
                         items[KAT_COL_ID],
                         Integer.parseInt(items[KAT_COL_SNV_COUNT]));
 

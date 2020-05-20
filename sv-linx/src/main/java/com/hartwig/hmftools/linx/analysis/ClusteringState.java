@@ -20,8 +20,8 @@ public class ClusteringState
     private List<LohEvent> mLohEventList;
     private List<HomLossEvent> mHomLossList;
 
-    private long mDelCutoffLength;
-    private long mDupCutoffLength;
+    private int mDelCutoffLength;
+    private int mDupCutoffLength;
 
     public static String CR_PROXIMITY = "Prox";
     public static String CR_LOH = "LOH";
@@ -58,8 +58,8 @@ public class ClusteringState
         mHomLossList = homLossEvents;
     }
 
-    public long getDupCutoffLength() { return mDelCutoffLength; }
-    public long getDelCutoffLength() { return mDupCutoffLength; }
+    public int getDupCutoffLength() { return mDelCutoffLength; }
+    public int getDelCutoffLength() { return mDupCutoffLength; }
 
     public void reset()
     {
@@ -69,7 +69,7 @@ public class ClusteringState
         mChrBreakendMap.clear();
     }
 
-    public void setCutoffLengths(long delLength, long dupLength)
+    public void setCutoffLengths(int delLength, int dupLength)
     {
         mDelCutoffLength = delLength;
         mDupCutoffLength = dupLength;

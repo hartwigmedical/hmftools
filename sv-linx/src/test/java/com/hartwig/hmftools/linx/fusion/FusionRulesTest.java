@@ -54,8 +54,8 @@ public class FusionRulesTest
 
 
         // non-coding combos
-        Long codingStart = null;
-        Long codingEnd = null;
+        Integer codingStart = null;
+        Integer codingEnd = null;
 
         Transcript trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 3, -1,
                 0, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
@@ -63,8 +63,8 @@ public class FusionRulesTest
         String transName2 = "ENST0002";
         int transId2 = 2;
 
-        codingStart = new Long(100);
-        codingEnd = new Long(200);
+        codingStart = new Integer(100);
+        codingEnd = new Integer(200);
         Transcript trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 3, -1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
@@ -82,8 +82,8 @@ public class FusionRulesTest
         trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 3, -1,
                 0, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        codingStart = new Long(100);
-        codingEnd = new Long(200);
+        codingStart = new Integer(100);
+        codingEnd = new Integer(200);
         trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 3, -1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
@@ -239,8 +239,8 @@ public class FusionRulesTest
 
 
         // non-coding combos
-        Long codingStart = new Long(100);
-        Long codingEnd = new Long(200);
+        Integer codingStart = new Integer(100);
+        Integer codingEnd = new Integer(200);
 
         Transcript transUp = new Transcript(gene1, transId1, transName1, 2, 1, 3, 1,
                 10, getCodingBases(codingStart, codingEnd),10, true, 50, 250, codingStart, codingEnd);

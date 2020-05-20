@@ -17,12 +17,12 @@ public class VisCopyNumberFile
 {
     public final String SampleId;
     public final String Chromosome;
-    public final long Start;
-    public final long End;
+    public final int Start;
+    public final int End;
     public final double CopyNumber;
     public final double BAF;
 
-    public VisCopyNumberFile(final String sampleId, final String chromosome, long start, long end, double copyNumber, double baf)
+    public VisCopyNumberFile(final String sampleId, final String chromosome, int start, int end, double copyNumber, double baf)
     {
         SampleId = sampleId;
         Chromosome = chromosome;
@@ -104,8 +104,8 @@ public class VisCopyNumberFile
         return new VisCopyNumberFile(
                 values[index++],
                 values[index++],
-                Long.valueOf(values[index++]),
-                Long.valueOf(values[index++]),
+                Integer.valueOf(values[index++]),
+                Integer.valueOf(values[index++]),
                 Double.valueOf(values[index++]),
                 Double.valueOf(values[index++]));
     }

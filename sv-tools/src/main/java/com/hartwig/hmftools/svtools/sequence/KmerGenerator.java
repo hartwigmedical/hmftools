@@ -95,9 +95,9 @@ public class KmerGenerator
 
                 final String kmerId = items[COL_KMER_ID];
                 final String chromosome = items[COL_CHR];
-                long posStart = Long.parseLong(items[COL_POS_START]);
+                int posStart = Integer.parseInt(items[COL_POS_START]);
                 int orientStart = Integer.parseInt(items[COL_ORIENT_START]);
-                long posEnd = Long.parseLong(items[COL_POS_END]);
+                int posEnd = Integer.parseInt(items[COL_POS_END]);
                 int orientEnd = Integer.parseInt(items[COL_ORIENT_END]);
                 int baseLength = Integer.parseInt(items[COL_BASE_LENGTH]);
                 final String insertSeq = items[COL_INSERT_SEQ];
@@ -123,7 +123,7 @@ public class KmerGenerator
         }
     }
 
-    private final String getBaseString(final String chromosome, long position, int orientation, int length)
+    private final String getBaseString(final String chromosome, int position, int orientation, int length)
     {
         if(orientation == 1)
             return mRefGenome.getBaseString(chromosome, position - length, position);

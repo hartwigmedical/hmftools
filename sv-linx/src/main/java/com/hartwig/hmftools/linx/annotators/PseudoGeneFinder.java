@@ -192,7 +192,7 @@ public class PseudoGeneFinder
                             }
                             else
                             {
-                                long exonLength = exonData.ExonEnd - exonData.ExonStart;
+                                int exonLength = exonData.ExonEnd - exonData.ExonStart;
 
                                 // if say X bases have been lost from the start, then set the end to factor this in
                                 if(exonsLost[SE_START] < 0)
@@ -216,7 +216,7 @@ public class PseudoGeneFinder
     }
 
     private List<PseudoGeneMatch> findPseudoGeneExonMatches(
-            final GeneAnnotation gene, long posStart, long posEnd, int startHomologyLength, int endHomologyLength)
+            final GeneAnnotation gene, int posStart, int posEnd, int startHomologyLength, int endHomologyLength)
     {
         List<PseudoGeneMatch> pseudoMatches = Lists.newArrayList();
 
@@ -399,8 +399,8 @@ public class PseudoGeneFinder
         if(genesStart.isEmpty() || genesEnd.isEmpty())
             return false;
 
-        long posStart = var.position(true);
-        long posEnd = var.position(false);
+        int posStart = var.position(true);
+        int posEnd = var.position(false);
 
         int startHomologyLength = var.getSvData().startHomologySequence().length();
         int endHomologyLength = var.getSvData().endHomologySequence().length();

@@ -6,8 +6,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 public class HomLossEvent
 {
     public final String Chromosome;
-    public final long PosStart;
-    public final long PosEnd;
+    public final int PosStart;
+    public final int PosEnd;
     public final String SegStart;
     public final String SegEnd;
     public final int StartSV; // the DB SvId
@@ -18,8 +18,8 @@ public class HomLossEvent
 
     public HomLossEvent(
             final String chr,
-            final long posStart,
-            final long posEnd,
+            final int posStart,
+            final int posEnd,
             final String segStart,
             final String segEnd,
             final int startSV,

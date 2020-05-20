@@ -28,8 +28,8 @@ public class VisSvDataFile
     public final String InfoStart;
     public final String ChrEnd;
     public final String InfoEnd;
-    public final long PosStart;
-    public final long PosEnd;
+    public final int PosStart;
+    public final int PosEnd;
     public final byte OrientStart;
     public final byte OrientEnd;
     public final double Ploidy;
@@ -39,7 +39,7 @@ public class VisSvDataFile
 
     public VisSvDataFile(final String sampleId, int clusterId, int chainId, int svId,
             StructuralVariantType type, final com.hartwig.hmftools.linx.types.ResolvedType resolvedType, boolean isSynthetic,
-            final String chrStart, final String chrEnd, long posStart, long posEnd,
+            final String chrStart, final String chrEnd, int posStart, int posEnd,
             byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, double ploidy)
     {
         SampleId = sampleId;
@@ -157,8 +157,8 @@ public class VisSvDataFile
                 Boolean.valueOf(values[index++]),
                 values[index++],
                 values[index++],
-                Long.valueOf(values[index++]),
-                Long.valueOf(values[index++]),
+                Integer.valueOf(values[index++]),
+                Integer.valueOf(values[index++]),
                 Byte.valueOf(values[index++]),
                 Byte.valueOf(values[index++]),
                 values[index++],

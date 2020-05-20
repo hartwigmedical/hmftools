@@ -166,7 +166,7 @@ public class CopyNumberAnalyser
         mPerfCounter.logStats();
     }
 
-    private static final long CN_SEGMENT_WINDOW_SIZE = 3000000;
+    private static final int CN_SEGMENT_WINDOW_SIZE = 3000000;
 
     private void writeCnSegmentStats(final String sampleId)
     {
@@ -201,7 +201,7 @@ public class CopyNumberAnalyser
                 if(cnDataList.isEmpty())
                 {
                     // account for no segments with CN change
-                    long chromosomeLength = getChromosomeLength(chromosome);
+                    int chromosomeLength = getChromosomeLength(chromosome);
                     int windowCount = (int)(chromosomeLength/CN_SEGMENT_WINDOW_SIZE);
 
                     mCnSegmentWriter.write(String.format("%s,%s,%s,%d,%d",
@@ -214,8 +214,8 @@ public class CopyNumberAnalyser
                 final Map<Integer,Integer> cnFrequency = Maps.newHashMap();
                 cnFrequency.put(0, 0);
 
-                long windowStartPos = 0;
-                long windowEndPos = windowStartPos + CN_SEGMENT_WINDOW_SIZE;
+                int windowStartPos = 0;
+                int windowEndPos = windowStartPos + CN_SEGMENT_WINDOW_SIZE;
 
                 // account for first and last segments
                 final SvCNData firstSegment = cnDataList.get(0);
@@ -228,7 +228,7 @@ public class CopyNumberAnalyser
                     if(cnData.StartPos < windowEndPos)
                         continue;
 
-                    windowEndPos = (long)floor(cnData.StartPos/(double)CN_SEGMENT_WINDOW_SIZE)*CN_SEGMENT_WINDOW_SIZE;
+                    windowEndPos = (int)floor(cnData.StartPos/(double)CN_SEGMENT_WINDOW_SIZE)*CN_SEGMENT_WINDOW_SIZE;
 
                     // account for the distance out the telomere for the last segment
                     int skippedWindowCount = (int)((windowEndPos - windowStartPos) / CN_SEGMENT_WINDOW_SIZE);
@@ -274,7 +274,7 @@ public class CopyNumberAnalyser
 
 
                 /*
-                long lastWindowStart = 0;
+                int lastWindowStart = 0;
                 double cnWindowTotal = 0;
                 int elevatedCnWindows = 0;
 
@@ -286,12 +286,12 @@ public class CopyNumberAnalyser
                     }
                     else
                     {
-                        long segmentStartPos = cnData.StartPos;
+                        int segmentStartPos = cnData.StartPos;
 
                         while(true)
                         {
                             // take each segment spanning the required window distance
-                            long segmentEndPos = min(cnData.EndPos, lastWindowStart + CN_SEGMENT_WINDOW_SIZE);
+                            int segmentEndPos = min(cnData.EndPos, lastWindowStart + CN_SEGMENT_WINDOW_SIZE);
                             cnWindowTotal += cnData.CopyNumber * (segmentEndPos - segmentStartPos);
 
                             if(cnData.EndPos - lastWindowStart < CN_SEGMENT_WINDOW_SIZE)
@@ -428,7 +428,7 @@ public class CopyNumberAnalyser
 
             ++armStats[armIndex].SegmentCount;
 
-            long segLength = cnData.length();
+            int segLength = cnData.length();
 
             armStats[armIndex].MaxCopyNumber = max(armStats[armIndex].MaxCopyNumber, copyNumber);
 
@@ -468,7 +468,7 @@ public class CopyNumberAnalyser
 
     private void calcArmCopyNumber(CnArmStats armStats, double baseDistanceCopyNumber, final List<double[]> cnSegments)
     {
-        long armLength = getChromosomalArmLength(armStats.Chromosome, armStats.Arm);
+        int armLength = getChromosomalArmLength(armStats.Chromosome, armStats.Arm);
         double halfArmLength = armLength * 0.5;
 
         armStats.AverageCopyNumber = baseDistanceCopyNumber / armLength;
