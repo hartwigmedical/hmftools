@@ -65,17 +65,16 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
         logger.info("Rescuing linked variants")
         val linkRescues = LinkRescue(combinedLinks, softFiltersAfterSingleDedup)
-        val finalFilters = softFiltersAfterSingleDedup.update(setOf(), linkRescues.rescues)
+        val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), linkRescues.rescues)
 
         logger.info("Writing file: ${config.outputVcf}")
         for (variant in variantStore.selectAll()) {
 
             val localLinkedBy = combinedLinks[variant.vcfId]
             val remoteLinkedBy = combinedLinks[variant.mateId]
-            val filters = finalFilters[variant.vcfId]
             val altPath = alternatePathsStringsByVcfId[variant.vcfId]
 
-
+            val filters = finalFilters.filters(variant.vcfId, variant.mateId)
             fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, filters))
         }
 

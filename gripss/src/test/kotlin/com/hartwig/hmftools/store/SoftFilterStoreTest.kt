@@ -32,4 +32,17 @@ class SoftFilterStoreTest {
         assertTrue(victim.isPassing("id3"))
     }
 
+    @Test
+    fun testMateFilters() {
+        val filters: MutableMap<String, Set<String>> = HashMap()
+        filters["id1"] = setOf(MIN_QUAL, MIN_SIZE)
+        filters["id2"] = setOf(MIN_SIZE, DEDUP)
+        val victim = SoftFilterStore(filters)
+        assertTrue(victim.filters("id1", null).isNotEmpty())
+        assertTrue(victim.filters("id2", null).isNotEmpty())
+        assertTrue(victim.filters("id3", null).isEmpty())
+        assertTrue(victim.filters("id3", "id4").isEmpty())
+        assertTrue(victim.filters("id3", "id1").isNotEmpty())
+    }
+
 }

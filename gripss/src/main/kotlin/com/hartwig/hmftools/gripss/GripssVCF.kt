@@ -24,7 +24,7 @@ const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
 const val BREAK_END_ASSEMBLY_READ_PAIR = "breakendAssemblyReadPair"
 const val PON = "PON"
 
-const val PAIR = "PAIR"
+const val MATE = "mate"
 const val PASS = "PASS"
 const val DEDUP = "dedup"
 const val MIN_SIZE = "minSize"
@@ -44,6 +44,7 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         //        ##FILTER=<ID=small.replacement.fp,Description="Deletion with insertion of the same length that is not a simple inversion.">
         //        ##FILTER=<ID=NO_ASRP,Description="Breakend supported by 0 assembled read pairs">
 
+        header.addMetaDataLine(VCFFilterHeaderLine(MATE, "Mate is filtered"))
         header.addMetaDataLine(VCFFilterHeaderLine(DEDUP, "Event is duplicate of another"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_SIZE, "Event is too short"))
         header.addMetaDataLine(VCFFilterHeaderLine(BREAK_END_ASSEMBLY_READ_PAIR, "Breakend supported by 0 assembled read pairs"))
