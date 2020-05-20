@@ -17,4 +17,23 @@ data class GripssFilterConfig(
         val maxHomLengthShortInversion: Int,
         val maxInexactHomLength: Int,
         val maxInexactHomLengthShortDel: Int,
-        val minSize: Int)
+        val minSize: Int) {
+
+    companion object {
+        fun default(): GripssFilterConfig {
+            return GripssFilterConfig(
+                    0.03,
+                    8,
+                    0.005,
+                    0.95,
+                    1000,
+                    350,
+                    50,
+                    6,
+                    50,
+                    5,
+                    32)
+        }
+    }
+
+}

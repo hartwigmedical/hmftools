@@ -10,7 +10,7 @@ class VariantStore(
         private val variantsByChromosome: Map<String, List<StructuralVariantContext>>) {
 
     companion object Factory {
-        fun create(variants: List<StructuralVariantContext>): VariantStore {
+        operator fun invoke(variants: List<StructuralVariantContext>): VariantStore {
             val variantsById = HashMap<String, StructuralVariantContext>()
             val variantsByChromosome = HashMap<String, MutableList<StructuralVariantContext>>()
             for (variant in variants) {
@@ -30,15 +30,20 @@ class VariantStore(
         return variantsById[vcfId]!!
     }
 
-    fun selectOthersInRangeWithSameOrientation(variant: StructuralVariantContext): List<StructuralVariantContext> {
-        return selectInRange(variant) { other -> other.vcfId != variant.vcfId && other.orientation == variant.orientation }
+    fun contigsWithVariants(): Set<String> {
+        return variantsByChromosome.keys
     }
 
-    private fun selectInRange(variant: StructuralVariantContext, filter: (StructuralVariantContext) -> Boolean): List<StructuralVariantContext> {
-        return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter { other ->
-            return@filter filter(other) && variant.confidenceIntervalsOverlap(other)
-        }
+    fun selectContigVariants(contig: String): List<StructuralVariantContext> {
+        return variantsByChromosome.getOrDefault(contig, Collections.emptyList())
     }
 
+    fun selectOthersNearby(variant: StructuralVariantContext, maxDistance: Int, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
+        val minStart = variant.minStart - maxDistance
+        val maxStart = variant.maxStart + maxDistance
+        val idFilter = { other: StructuralVariantContext -> variant.vcfId != other.vcfId && variant.mateId?.equals(other.vcfId) != true }
+        val overlapFilter = { other: StructuralVariantContext -> other.minStart <= maxStart && other.maxStart >= minStart }
+        return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter { x -> idFilter(x) && overlapFilter(x) && filter(x) }
+    }
 
 }

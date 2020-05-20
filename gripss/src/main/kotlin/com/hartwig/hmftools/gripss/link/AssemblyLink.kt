@@ -1,13 +1,20 @@
 package com.hartwig.hmftools.gripss.link
 
 import com.hartwig.hmftools.gripss.StructuralVariantContext
+import com.hartwig.hmftools.gripss.store.LinkStore
 import java.util.*
 import kotlin.Comparator
 import kotlin.collections.HashMap
 
 class AssemblyLink {
 
-    fun create(allVariants: Collection<StructuralVariantContext>): List<Link> {
+    companion object {
+        operator fun invoke(allVariants: Collection<StructuralVariantContext>): LinkStore {
+            return LinkStore(AssemblyLink().links(allVariants))
+        }
+    }
+
+    fun links(allVariants: Collection<StructuralVariantContext>): List<Link> {
         val variantsByAssembly: HashMap<String, MutableList<StructuralVariantContext>> = HashMap()
         for (variant in allVariants) {
             if (!variant.isSingle) {
@@ -28,8 +35,6 @@ class AssemblyLink {
     }
 
     private fun createLinks(assembly: String, variants: MutableList<StructuralVariantContext>): List<Link> {
-
-        if (assembly == "asm2-190027/23")
 
         if (variants.size < 2) {
             return Collections.emptyList()
@@ -58,7 +63,7 @@ class AssemblyLink {
 
     private fun createLinks(assembly: String, variants: Pair<StructuralVariantContext, StructuralVariantContext>): List<Link> {
         if (variants.first.mateId?.equals(variants.second.vcfId) != true) {
-            return listOf(Link(variants.first.vcfId, assembly), Link(variants.second.vcfId, assembly))
+            return listOf(Link(assembly, Pair(variants.first, variants.second)), Link(assembly, Pair(variants.second, variants.first)))
         }
         return Collections.emptyList()
     }

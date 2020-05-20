@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
@@ -9,6 +10,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAnd
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailType;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
@@ -16,14 +18,12 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
 
-    private static final Logger LOGGER = LogManager.getLogger(ReportChapter.class);
+    private static final String TITLE_REPORT = "Failed Sample Report";
 
     @NotNull
     private final QCFailReport failReport;
@@ -35,7 +35,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return failReport.isCorrectedReport() ? failReport.reason().title() + " (Corrected)" : failReport.reason().title();
+        return failReport.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
     }
 
     @Override
@@ -50,10 +50,6 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        if (failReport.sampleReport().hospitalData().hospitalAddress() == null) {
-            LOGGER.warn("No recipient address present for sample {}", failReport.sampleReport().tumorSampleId());
-        }
-
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
                 failReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
@@ -67,14 +63,16 @@ public class QCFailChapter implements ReportChapter {
         LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
 
         switch (study) {
-            case CORE:
-                reportDocument.add(createCOREContentBody());
-                break;
             case WIDE:
                 reportDocument.add(createWIDEContentBody());
                 break;
-            default:
+            case CORE:
+                reportDocument.add(createCOREContentBody());
+                break;
+            case DRUP:
+            case CPCT:
                 reportDocument.add(createCPCTDRUPContentBody());
+                break;
         }
 
         reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(15));
@@ -83,77 +81,52 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Div createFailReasonDiv(@NotNull QCFailReason failReason) {
-        String title;
-        String reason;
-        String explanation;
-        String explanationDetail;
+        String reason = DataUtil.NA_STRING;
+        String explanation = DataUtil.NA_STRING;
+        String explanationDetail = DataUtil.NA_STRING;
+
+        switch (failReason.type()) {
+            case LOW_QUALITY_BIOPSY: {
+                reason = "Insufficient biopsy/tissue quality";
+                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
+                        + "Whole Genome Sequencing";
+                break;
+            }
+            case TECHNICAL_FAILURE: {
+                reason = "Technical failure";
+                explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy \n "
+                        + "due to technical problems";
+            }
+        }
 
         switch (failReason) {
+            case INSUFFICIENT_TISSUE:
             case LOW_DNA_YIELD: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
-                        + "could not be further analyzed due to insufficient quality.";
+                explanationDetail =
+                        "The tumor percentage based on molecular estimation could not be determined due to insufficient tumor DNA";
                 break;
             }
-            case POST_ANALYSIS_FAIL: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
-                        + "could not be further analyzed due to insufficient quality.";
-                break;
-            }
-            case SHALLOW_SEQ_LOW_PURITY: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
+            case SHALLOW_SEQ_LOW_PURITY:
+            case BELOW_DETECTION_THRESHOLD: {
                 explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
                         + "and could not be further analyzed.";
                 break;
             }
-            case INSUFFICIENT_TISSUE: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
-                        + "could not be further analyzed due to insufficient quality.";
-                break;
-            }
-            case BELOW_DETECTION_THRESHOLD: {
-                title = "Notification of failed sample";
-                reason = "Insufficient biopsy/tissue quality";
-                explanation = "The received biopsy/tissue sample did not meet the requirements that are needed for \n high quality "
-                        + "Whole Genome Sequencing";
+            case POST_ANALYSIS_FAIL: {
                 explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
                         + "could not be further analyzed due to insufficient quality.";
                 break;
             }
             case LAB_FAILURE: {
-                title = "Notification of failed sample";
-                reason = "Technical failure";
-                explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy \n "
-                        + "due to technical problems";
-                explanationDetail = "";
+                explanationDetail = Strings.EMPTY;
                 break;
-            }
-            default: {
-                title = "TITLE";
-                reason = "SUB_TITLE";
-                explanation = "MESSAGE";
-                explanationDetail = "MESSAGE";
             }
         }
 
         Div div = new Div();
         div.setKeepTogether(true);
 
-        div.add(new Paragraph(title.toUpperCase()).addStyle(ReportResources.subTextStyle()));
+        div.add(new Paragraph("NOTIFICATION OF FAILED SAMPLE").addStyle(ReportResources.subTextStyle()));
         div.add(new Paragraph(reason).addStyle(ReportResources.dataHighlightStyle()));
         div.add(new Paragraph(explanation).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
         div.add(new Paragraph(explanationDetail).addStyle(ReportResources.subTextStyle())
@@ -177,12 +150,14 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn = new Div();
         divColumn.add(resubmitSample());
         if (failReport.sampleReport().hospitalPathologySampleId() != null) {
-            divColumn.add(reportIsForPathologyTissueID());
+            divColumn.add(reportIsForPathologySampleID());
         }
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleHasMolecularTumorPercentage());
+        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
+            divColumn.add(sampleHasMolecularTumorPercentage());
+        }
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
 
         return divColumn;
@@ -192,7 +167,7 @@ public class QCFailChapter implements ReportChapter {
     private Div createWIDEContentBodyColumn2() {
         Div divColumn = new Div();
         divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
         divColumn.add(testsArePerformedByAccreditedLab());
@@ -215,14 +190,16 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn = new Div();
         divColumn.add(resubmitSample());
         if (failReport.sampleReport().hospitalPathologySampleId() != null) {
-            divColumn.add(reportIsForPathologyTissueID());
+            divColumn.add(reportIsForPathologySampleID());
         }
         divColumn.add(reportIsForHospitalPatientID());
         divColumn.add(reportIsForProjectAndSubmission());
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleHasMolecularTumorPercentage());
+        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
+            divColumn.add(sampleHasMolecularTumorPercentage());
+        }
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         return divColumn;
     }
@@ -231,7 +208,7 @@ public class QCFailChapter implements ReportChapter {
     private Div createCOREContentBodyColumn2() {
         Div divColumn = new Div();
         divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(reportIsRequestedBy());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
@@ -257,7 +234,9 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleHasMolecularTumorPercentage());
+        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
+            divColumn.add(sampleHasMolecularTumorPercentage());
+        }
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
 
         return divColumn;
@@ -267,7 +246,7 @@ public class QCFailChapter implements ReportChapter {
     private Div createCPCTDRUPContentBodyColumn2() {
         Div divColumn = new Div();
         divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
         divColumn.add(testsArePerformedByAccreditedLab());
@@ -287,13 +266,13 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph reportIsForPathologyTissueID() {
+    private Paragraph reportIsForPathologySampleID() {
         return createContentParagraph("The tissue ID is: ", failReport.sampleReport().hospitalPathologySampleId());
     }
 
     @NotNull
     private Paragraph reportIsForProjectAndSubmission() {
-        return createContentParagraphTwice("The project name of sample is ",
+        return createContentParagraphTwice("The project name of the sample is ",
                 failReport.sampleReport().projectName(),
                 " and the submission ID is ",
                 failReport.sampleReport().submissionId());
@@ -326,8 +305,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsRequestedBy() {
-        String requesterName = failReport.sampleReport().hospitalData().requesterName();
-        String requesterEmail = failReport.sampleReport().hospitalData().requesterEmail();
+        String requesterName = failReport.sampleReport().hospitalContactData().requesterName();
+        String requesterEmail = failReport.sampleReport().hospitalContactData().requesterEmail();
         return createContentParagraph("The requester is : ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
@@ -340,7 +319,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsGeneratedByPatientReporterVersion() {
-        return createContentParagraph("This report is based by patient reporter ", ReportResources.VERSION_REPORT);
+        return createContentParagraph("This report is generated by patient reporter ", ReportResources.VERSION_REPORT);
     }
 
     @NotNull
@@ -350,18 +329,12 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph sampleHasMolecularTumorPercentage() {
-        if (failReport.reason() != QCFailReason.LAB_FAILURE) {
-            if (failReport.sampleReport().purityShallowSeq().equals("below detection threshold") || failReport.sampleReport()
-                    .purityShallowSeq()
-                    .equals("not performed")) {
-                return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
-            } else {
-                return createContentParagraph("The tumor percentage based on molecular estimation is ",
-                        failReport.sampleReport().purityShallowSeq());
-
-            }
+        String effectivePurity =
+                failReport.wgsPurityString() != null ? failReport.wgsPurityString() : failReport.sampleReport().shallowSeqPurityString();
+        if (effectivePurity.equals(Lims.PURITY_NOT_RELIABLE_STRING) || effectivePurity.equals(Lims.NOT_PERFORMED_STRING)) {
+            return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
         } else {
-            return createContentParagraph(Strings.EMPTY);
+            return createContentParagraph("The tumor percentage based on molecular estimation is ", effectivePurity);
         }
     }
 
@@ -374,20 +347,9 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph reportIsVerifiedByAndAddressedAt() {
-        LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
-
-        String addressee = failReport.sampleReport().hospitalData().hospitalAddress();
-        String hospitalPI = failReport.sampleReport().hospitalData().hospitalPI();
-        String contact;
-        if (study == LimsStudy.CORE) {
-            contact = addressee;
-        } else {
-            contact = hospitalPI + ", " + addressee;
-        }
-
-        assert addressee != null; // Has been checked prior to calling this function.
-        return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ", contact);
+    private Paragraph reportIsVerifiedByAndAddressedTo() {
+        return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
+                failReport.sampleReport().addressee());
     }
 
     @NotNull

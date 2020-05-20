@@ -7,7 +7,6 @@ class VariantTypeTest {
 
     @Test
     fun testBnd() {
-        val startAlt = "AAT[2:110["
         val start = VariantType.create("1", 100, "A", "AAT[2:110[")
         assertEquals(Translocation("AT","2", 110, 1, -1), start)
 

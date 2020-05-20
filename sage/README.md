@@ -306,10 +306,11 @@ We also modify the map quality taking into account the number of events, soft cl
 readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs count as only 1 event
 distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)`^ 
 improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if proper pair flag not set else 0  
-modifiedMapQuality = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty  
-
-^ note that for the 6 highly polymorphic HLA genes (HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DQR1) we do not apply the distance from reference penalty
+modifiedMapQuality^ = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty  
 </pre>
+
+^ note that for the 6 highly polymorphic HLA genes (HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DQR1) we instead use modified MAPQ = min (10, MAPQ - mapQualityFixedPenalty).  We intend to improve this at some later stage by making the caller HLA type aware.
+
 
 We then take the minimum of the 2 modified qualities as the read contribution to the total quality: 
 
@@ -380,7 +381,7 @@ min_tumor_qual|70**|100|160|240|`QUAL`
 min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
 min_germline_depth|0|0|10 | 10 | Normal `RC_CNT[6]`
 min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
-max_germline_vaf***|10%|6%|4% | 4% | Normal`RC_CNT[1+2+3+4]` / `RC_CNT[6]`
+max_germline_vaf***|10%|4%|4% | 4% | Normal`RC_CNT[1+2+3+4]` / `RC_CNT[6]`
 max_germline_rel_raw_base_qual|100%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 
 ** Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.

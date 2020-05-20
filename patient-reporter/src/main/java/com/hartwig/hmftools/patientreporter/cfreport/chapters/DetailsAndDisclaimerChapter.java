@@ -15,13 +15,9 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class DetailsAndDisclaimerChapter implements ReportChapter {
-
-    private static final Logger LOGGER = LogManager.getLogger(DetailsAndDisclaimerChapter.class);
 
     @NotNull
     private final AnalysedPatientReport patientReport;
@@ -59,22 +55,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         SampleReport sampleReport = patientReport.sampleReport();
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
-        String addressee;
-        if (sampleReport.hospitalData().hospitalAddress() != null) {
-            addressee = sampleReport.hospitalData().hospitalAddress();
-            assert addressee != null;
-        } else {
-            LOGGER.warn("No recipient address present for sample {}", sampleReport.tumorSampleId());
-            addressee = DataUtil.NA_STRING;
-        }
-
-        String contact;
-        if (study == LimsStudy.CORE) {
-            contact = addressee;
-        } else {
-            contact = sampleReport.hospitalData().hospitalPI() + ", " + addressee;
-        }
-
         Paragraph sampleIdentificationLineOnReport;
         if (patientReport.sampleReport().hospitalPathologySampleId() != null) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
@@ -110,7 +90,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 sampleReport.refSampleBarcode()));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
-        div.add(createContentParagraph("This report is addressed at: ", contact));
+        div.add(createContentParagraph("This report is addressed to: ", sampleReport.addressee()));
 
         if (study == LimsStudy.CORE) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
@@ -174,11 +154,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The requester is: ").add(new Text(sampleReport.hospitalData().requesterName()).addStyle(
-                ReportResources.smallBodyBoldTextStyle()))
-                .add("(")
-                .add(new Text(sampleReport.hospitalData().requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .add(")")
+        String requesterName = sampleReport.hospitalContactData().requesterName();
+        String requesterEmail = sampleReport.hospitalContactData().requesterEmail();
+
+        return createContentParagraph("The requester is: ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 }

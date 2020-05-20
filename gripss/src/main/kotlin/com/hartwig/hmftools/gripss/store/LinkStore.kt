@@ -5,35 +5,40 @@ import org.apache.logging.log4j.util.Strings
 import java.util.*
 import kotlin.collections.HashMap
 
-class LinkStore(private val variantsByLink: Map<String, List<String>>, private val linkByVariant: Map<String, List<String>>) {
+class LinkStore(private val linkByVariant: Map<String, List<Link>>) {
 
     companion object Factory {
-        fun create(links: Collection<Link>): LinkStore {
-            val variantsByLink = HashMap<String, MutableList<String>>()
-            val linkByVariant = HashMap<String, MutableList<String>>()
+        operator fun invoke(links: Collection<Link>): LinkStore {
+            val linkByVariant = HashMap<String, MutableList<Link>>()
 
-            for ((vcfId, link) in links) {
-                linkByVariant.computeIfAbsent(vcfId) { mutableListOf()}.add(link)
-                variantsByLink.computeIfAbsent(link) { mutableListOf()}.add(vcfId)
+            for (link in links) {
+                linkByVariant.computeIfAbsent(link.vcfId) { mutableListOf() }.add(link)
             }
-            return LinkStore(variantsByLink, linkByVariant)
+            return LinkStore(linkByVariant)
+        }
+
+        operator fun invoke(vararg stores: LinkStore): LinkStore {
+            val linkByVariant = HashMap<String, MutableList<Link>>()
+
+            for (store in stores) {
+                for (link in store.linkByVariant.values.flatten()) {
+                    linkByVariant.computeIfAbsent(link.vcfId) { mutableListOf() }.add(link)
+                }
+            }
+
+            return LinkStore(linkByVariant)
         }
     }
 
-    fun localLinkedBy(vcfId: String?): String {
-        return linkByVariant.get(vcfId)?.joinToString(",")  ?: Strings.EMPTY
+    operator fun get(vcfId: String?): String {
+        return linkByVariant[vcfId]?.joinToString(",") { x -> x.link } ?: Strings.EMPTY
     }
 
-    fun followLinks(vcfId: String): List<String> {
-        return linksByVariant(vcfId).flatMap { x -> variantsByLink(x) }.filter { x -> x != vcfId }
-    }
-
-    private fun variantsByLink(link: String): List<String> {
-        return variantsByLink.getOrDefault(link, Collections.emptyList())
-    }
-
-    private fun linksByVariant(vcfId: String): List<String> {
+    fun linkedVariants(vcfId: String): List<Link> {
         return linkByVariant.getOrDefault(vcfId, Collections.emptyList())
     }
 
+    fun linkedVariants(): Set<String> {
+        return linkByVariant.keys
+    }
 }

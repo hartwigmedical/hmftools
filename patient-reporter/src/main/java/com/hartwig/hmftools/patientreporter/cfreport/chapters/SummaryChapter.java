@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -168,7 +169,7 @@ public class SummaryChapter implements ReportChapter {
             table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(valueLabel).addStyle(ReportResources.dataHighlightStyle())));
             table.addCell(createMiddleAlignedCell().add(createInlineBarChart(value, min, max)));
         } else {
-            table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(DataUtil.BELOW_DETECTION_STRING).addStyle(ReportResources.dataHighlightNaStyle())));
+            table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(Lims.PURITY_NOT_RELIABLE_STRING).addStyle(ReportResources.dataHighlightNaStyle())));
         }
     }
 

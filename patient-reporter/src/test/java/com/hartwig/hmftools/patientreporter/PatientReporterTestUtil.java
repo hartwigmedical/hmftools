@@ -6,15 +6,15 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneViewFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneViewFactory;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +59,7 @@ public final class PatientReporterTestUtil {
                     .summaryModel(summaryModel)
                     .build();
         } catch (IOException exception) {
-            throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
+            throw new IllegalStateException("Could not generate test analysed report data: " + exception.getMessage());
         }
     }
 }

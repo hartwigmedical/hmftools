@@ -20,9 +20,9 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.lims.hospital.HospitalData;
-import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalData;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
+import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -37,7 +37,6 @@ import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
@@ -241,27 +240,10 @@ public final class ExampleAnalysisTestFactory {
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        QCFailStudy failStudy;
-        switch (study) {
-            case CORE:
-                failStudy = QCFailStudy.CORE;
-                break;
-            case WIDE:
-                failStudy = QCFailStudy.WIDE;
-                break;
-            case DRUP:
-                failStudy = QCFailStudy.DRUP;
-                break;
-            default:
-                failStudy = QCFailStudy.CPCT;
-        }
-
         ReportData reportData = testReportData();
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
-                .study(failStudy)
                 .comments(Optional.empty())
                 .isCorrectedReport(false)
                 .signaturePath(reportData.signaturePath())
@@ -271,13 +253,13 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static HospitalData createTestHospitalData(){
-        return ImmutableHospitalData.builder()
+    private static HospitalContactData createTestHospitalContactData(){
+        return ImmutableHospitalContactData.builder()
                 .hospitalPI("AB")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")
                 .hospitalName("HMF Testing Center")
-                .hospitalAddress("Zip, City")
+                .hospitalAddress("Zip City")
                 .build();
     }
 
@@ -295,12 +277,12 @@ public final class ExampleAnalysisTestFactory {
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
                 .refArrivalDate(LocalDate.parse("01-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
-                .purityShallowSeq(Strings.EMPTY)
+                .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .cohort("A")
                 .projectName("TEST")
                 .submissionId("10")
-                .hospitalData(createTestHospitalData())
+                .hospitalContactData(createTestHospitalContactData())
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")
                 .build();

@@ -71,16 +71,18 @@ public class TumorCharacteristicsChapter implements ReportChapter {
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
         }
 
-        BarChart hrChart = new BarChart(hrdValue, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
+        // We subtract 0.0001 from the minimum to allow visualization of a HR-score of exactly 0.
+        BarChart hrChart = new BarChart(hrdValue, HrDeficiency.RANGE_MIN - 0.0001, HrDeficiency.RANGE_MAX, "Low", "High", false);
         hrChart.enabled(hasReliablePurity && isMicrosatelliteStable);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, SINGLE_DECIMAL_FORMAT);
+
         hrChart.setIndicator(ChordStatus.HRD_THRESHOLD, "HRD status (" + DOUBLE_DECIMAL_FORMAT.format(ChordStatus.HRD_THRESHOLD) + ")");
 
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
                 hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing "
                         + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation. \n"
-                        + "Tumors with a score greater or equals than 0.5 are considered HR deficient by complete BRCA inactivation.",
+                        + "Tumors with a score greater or equal than 0.5 are considered HR deficient by complete BRCA inactivation.",
                 hrChart,
                 noHrdWhenMicrosatelliteUnstable,
                 displayFootNote));
