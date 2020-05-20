@@ -71,9 +71,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
         }
 
-        BarChart hrChart = new BarChart(hrdValue, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
+        // We subtract 0.0001 from the minimum to allow visualization of a HR-score of exactly 0.
+        BarChart hrChart = new BarChart(hrdValue, HrDeficiency.RANGE_MIN - 0.0001, HrDeficiency.RANGE_MAX, "Low", "High", false);
         hrChart.enabled(hasReliablePurity && isMicrosatelliteStable);
-        hrChart.setTickMarks(HrDeficiency.RANGE_MIN_BARPLOT, HrDeficiency.RANGE_MAX, 0.1, SINGLE_DECIMAL_FORMAT);
+        hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, SINGLE_DECIMAL_FORMAT);
 
         hrChart.setIndicator(ChordStatus.HRD_THRESHOLD, "HRD status (" + DOUBLE_DECIMAL_FORMAT.format(ChordStatus.HRD_THRESHOLD) + ")");
 
