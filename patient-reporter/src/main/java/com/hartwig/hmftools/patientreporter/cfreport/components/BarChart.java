@@ -16,9 +16,13 @@ import com.itextpdf.layout.renderer.DivRenderer;
 import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class BarChart extends InlineBarChart {
+
+    private static final Logger LOGGER = LogManager.getLogger(BarChart.class);
 
     private static final float HEIGHT = 45;
 
@@ -71,7 +75,7 @@ public class BarChart extends InlineBarChart {
         if (value >= min() && value <= max()) {
             threshold = new Indicator(name, value);
         } else {
-            System.err.println("Indicator value outside bounds");
+            LOGGER.warn("Indicator value outside bounds");
         }
     }
 
@@ -87,7 +91,7 @@ public class BarChart extends InlineBarChart {
 
     @Override
     public Div setHeight(float height) {
-        System.err.println("Cannot set height of BarChart, has fixed height");
+        LOGGER.warn("Cannot set height of BarChart, has fixed height");
         return super.setHeight(HEIGHT);
     }
 
