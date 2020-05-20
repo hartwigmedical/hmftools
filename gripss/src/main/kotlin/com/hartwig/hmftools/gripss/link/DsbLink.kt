@@ -9,7 +9,7 @@ import kotlin.collections.HashMap
 class DsbLink(private val variantStore: VariantStore, private val assemblyLinkStore: LinkStore, private val duplicates: Set<String>) {
 
     companion object {
-        const val MAX_DISTANCE = 30
+        const val MAX_DSB_DISTANCE = 30
 
         operator fun invoke(variantStore: VariantStore, assemblyLinkStore: LinkStore, duplicates: Set<String>, variants: List<StructuralVariantContext>): LinkStore {
 
@@ -26,10 +26,10 @@ class DsbLink(private val variantStore: VariantStore, private val assemblyLinkSt
     }
 
     fun dsbLinks(i: Int, variant: StructuralVariantContext): List<Link> {
-        val nearby = variantStore.selectNearby(variant, MAX_DISTANCE) { x -> !duplicates.contains(x.vcfId) }
+        val nearby = variantStore.selectDoubleStrandedBreaks(variant)
         if (nearby.size == 1) {
             val other = nearby[0]
-            val linkIsSymmetric = variantStore.selectNearby(other, MAX_DISTANCE) { x -> !duplicates.contains(x.vcfId) }.size == 1
+            val linkIsSymmetric = variantStore.selectDoubleStrandedBreaks(other).size == 1
             if (!linkIsSymmetric) {
                 return Collections.emptyList()
             }
@@ -44,4 +44,10 @@ class DsbLink(private val variantStore: VariantStore, private val assemblyLinkSt
 
         return Collections.emptyList()
     }
+
+    private fun VariantStore.selectDoubleStrandedBreaks(variant: StructuralVariantContext): List<StructuralVariantContext> {
+        val dsbFilter = { other: StructuralVariantContext -> other.orientation != variant.orientation && !duplicates.contains(other.vcfId) }
+        return selectOthersNearby(variant, MAX_DSB_DISTANCE, dsbFilter)
+    }
+
 }

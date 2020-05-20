@@ -38,34 +38,12 @@ class VariantStore(
         return variantsByChromosome.getOrDefault(contig, Collections.emptyList())
     }
 
-    fun selectNearbyJoined(variant: StructuralVariantContext, maxDistance: Int): List<StructuralVariantContext> {
-        val leftFilter = {other: StructuralVariantContext -> other.minStart <= variant.maxStart}
-        val rightFilter = {other: StructuralVariantContext -> other.maxStart >= variant.minStart}
-        val directionFilter = if (variant.orientation == 1.toByte()) leftFilter else rightFilter
-
-        return selectNearby(variant, maxDistance, directionFilter)
-    }
-
-    fun selectNearby(variant: StructuralVariantContext, maxDistance: Int, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
+    fun selectOthersNearby(variant: StructuralVariantContext, maxDistance: Int, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
         val minStart = variant.minStart - maxDistance
         val maxStart = variant.maxStart + maxDistance
-        val idFilter = {other: StructuralVariantContext -> variant.vcfId != other.vcfId && variant.mateId?.equals(other.vcfId) != true}
+        val idFilter = { other: StructuralVariantContext -> variant.vcfId != other.vcfId && variant.mateId?.equals(other.vcfId) != true }
         val overlapFilter = { other: StructuralVariantContext -> other.minStart <= maxStart && other.maxStart >= minStart }
-        val orientationFilter = { other: StructuralVariantContext -> other.orientation != variant.orientation }
-
-        return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter { x -> idFilter(x) && overlapFilter(x) && orientationFilter(x) && filter(x) }
+        return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter { x -> idFilter(x) && overlapFilter(x) && filter(x) }
     }
-
-
-    fun selectAlternatives(variant: StructuralVariantContext): List<StructuralVariantContext> {
-        return selectOthersInConfidenceIntervals(variant) { x -> x.mateId?.equals(variant.vcfId) != true && x.orientation == variant.orientation }
-    }
-
-    fun selectOthersInConfidenceIntervals(variant: StructuralVariantContext, filter: (StructuralVariantContext) -> Boolean = { true }): List<StructuralVariantContext> {
-        return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter { other ->
-            return@filter filter(other) && variant.confidenceIntervalsOverlap(other) && other.vcfId != variant.vcfId
-        }
-    }
-
 
 }

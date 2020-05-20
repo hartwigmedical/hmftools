@@ -17,7 +17,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         if (!variant.isSingle) {
             val target = variantStore.select(variant.mateId!!)
 
-            val alternativeStart = variantStore.selectAlternatives(variant).filter { x -> !x.imprecise && !x.isSingle }
+            val alternativeStart = variantStore.selectAlternatives(variant)
             for (alternative in alternativeStart) {
                 val assemblyLinks = assemblyLinks("trs_${variant.vcfId}_", alternative, target, maxTransitiveJumps, mutableListOf())
                 if (assemblyLinks.isNotEmpty()) {
@@ -57,7 +57,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         }
 
         if (maxTransitiveJumps > 0) {
-            val transitiveLinkedVariants = variantStore.selectNearbyJoined(mate, MAX_TRANSITIVE_DISTANCE).filter { x -> !x.imprecise && !x.isSingle }
+            val transitiveLinkedVariants = variantStore.selectTransitive(mate).filter { x -> !x.imprecise && !x.isSingle }
             for (linkedVariant in transitiveLinkedVariants) {
                 val nextJump = Link("$transLinkPrefix${MAX_TRANSITIVE_JUMPS - maxTransitiveJumps}", Pair(mate, linkedVariant))
                 val newAssemblyLinks = assemblyLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps - 1, newPath + nextJump)
@@ -89,6 +89,20 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         }
 
         return Pair(minDistance, maxDistance)
+    }
+
+    private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): List<StructuralVariantContext> {
+        val alternativeFilter = { other: StructuralVariantContext -> other.orientation == variant.orientation && !other.imprecise && !other.isSingle }
+        return selectOthersNearby(variant, 0) { x -> alternativeFilter(x)}
+    }
+
+    private fun VariantStore.selectTransitive(variant: StructuralVariantContext): List<StructuralVariantContext> {
+        val leftFilter = {other: StructuralVariantContext -> other.minStart <= variant.maxStart}
+        val rightFilter = {other: StructuralVariantContext -> other.maxStart >= variant.minStart}
+        val directionFilter = if (variant.orientation == 1.toByte()) leftFilter else rightFilter
+        val transitiveFilter = { other: StructuralVariantContext -> other.orientation != variant.orientation && !other.imprecise && !other.isSingle }
+
+        return selectOthersNearby(variant, MAX_TRANSITIVE_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x)}
     }
 
 }
