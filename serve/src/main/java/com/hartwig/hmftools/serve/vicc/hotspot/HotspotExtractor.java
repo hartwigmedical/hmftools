@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -49,8 +48,8 @@ public class HotspotExtractor {
     }
 
     @NotNull
-    public Map<String, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
-        Map<String, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
+    public Map<Feature, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
+        Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
         if (viccEntry.source() == ViccSource.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
                 String featureKey = feature.geneSymbol() + ":p." + feature.name();
@@ -61,12 +60,8 @@ public class HotspotExtractor {
                         unresolvableFeatures.add(featureKey);
                     }
 
-                    List<VariantHotspot> currentHotspots = allHotspotsPerFeature.get(featureKey);
-                    if (currentHotspots == null) {
-                        currentHotspots = Lists.newArrayList();
-                    }
-                    currentHotspots.addAll(hotspots);
-                    allHotspotsPerFeature.put(featureKey, currentHotspots);
+
+                    allHotspotsPerFeature.put(feature, hotspots);
                 }
             }
         }

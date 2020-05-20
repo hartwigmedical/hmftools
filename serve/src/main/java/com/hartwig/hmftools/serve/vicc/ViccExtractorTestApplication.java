@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.vicc.cnv.CnvExtractor;
+import com.hartwig.hmftools.serve.vicc.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
@@ -18,9 +20,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-public class ViccHotspotExtractorTestApplication {
+public class ViccExtractorTestApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccHotspotExtractorTestApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
     private static final boolean RUN_ON_SERVER = true;
 
@@ -46,29 +48,22 @@ public class ViccHotspotExtractorTestApplication {
         LOGGER.info("Read {} entries", viccEntries.size());
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile);
-        Map<String, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
+        CnvExtractor cnvExtractor = new CnvExtractor();
+
+        Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
+        Map<Feature, KnownAmplificationDeletion> allKnownAmpsDelsPerFeature = Maps.newHashMap();
         for (ViccEntry viccEntry : viccEntries) {
-            mergeIntoExistingMap(allHotspotsPerFeature, hotspotExtractor.extractHotspots(viccEntry));
+            allHotspotsPerFeature.putAll(hotspotExtractor.extractHotspots(viccEntry));
+            allKnownAmpsDelsPerFeature.putAll(cnvExtractor.extractKnownAmplificationsDeletions(viccEntry));
         }
 
-        LOGGER.info("Done extracting {} hotspots for {} features", valuesCount(allHotspotsPerFeature), allHotspotsPerFeature.size());
+        LOGGER.info("Done extracting for {}", source);
+        LOGGER.info(" Extracted {} hotspots for {} features", valuesCount(allHotspotsPerFeature), allHotspotsPerFeature.size());
+        LOGGER.info(" Extracted {} known amps and dels", allKnownAmpsDelsPerFeature.size());
 
-        LOGGER.info("Printing unresolvable features");
+        LOGGER.info("Printing features that could not be resolved through hotspot extraction");
         for (String feature : hotspotExtractor.unresolvableFeatures()) {
             LOGGER.info(feature);
-        }
-    }
-
-    @VisibleForTesting
-    static <T, Y> void mergeIntoExistingMap(@NotNull Map<T, List<Y>> map, @NotNull Map<T, List<Y>> mapToMergeIn) {
-        for (Map.Entry<T, List<Y>> entry : mapToMergeIn.entrySet()) {
-            if (map.containsKey(entry.getKey())) {
-                List<Y> currentEntries = map.get(entry.getKey());
-                currentEntries.addAll(entry.getValue());
-                map.put(entry.getKey(), currentEntries);
-            } else {
-                map.put(entry.getKey(), entry.getValue());
-            }
         }
     }
 

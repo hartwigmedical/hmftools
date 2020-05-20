@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.serve.vicc.cnv;
 
+import java.util.Map;
+import java.util.Set;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -22,6 +28,36 @@ import org.jetbrains.annotations.NotNull;
 public class CnvExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CnvExtractor.class);
+
+    private static final Set<String> ONCOKB_AMPLIFICATIONS =
+            Sets.newHashSet("Amplification", "AMPLIFICATION", "amplification");
+
+    private static final Set<String> ONCOKB_DELETIONS =
+            Sets.newHashSet("Deletion", "DELETION", "deletion");
+
+    @NotNull
+    public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
+        Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
+        if (viccEntry.source() == ViccSource.ONCOKB) {
+            for (Feature feature : viccEntry.features()) {
+                if (ONCOKB_AMPLIFICATIONS.contains(feature.biomarkerType())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                } else if (ONCOKB_DELETIONS.contains(feature.biomarkerType())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                }
+            }
+        }
+        return ampsDelsPerFeature;
+    }
+
+    @NotNull
+    private static KnownAmplificationDeletion oncoKbEventForGene(@NotNull String gene, @NotNull String eventType) {
+        return ImmutableKnownAmplificationDeletion.builder().gene(gene)
+                .source("OncoKB")
+                .eventType(eventType)
+                .sourceLink("link")
+                .build();
+    }
 
     @NotNull
     public static KnownAmplificationDeletion determineKnownAmplificationDeletion(@NotNull ViccSource source, @NotNull String typeEvent,
