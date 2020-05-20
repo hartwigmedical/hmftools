@@ -52,7 +52,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val transitiveLinks = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
 
         logger.info("Paired break end de-duplication")
-        val dedupPair = DedupPair(initialFilters, alternatePaths)
+        val dedupPair = DedupPair(initialFilters, alternatePaths, variantStore)
         val softFiltersAfterPairedDedup = initialFilters.update(dedupPair.duplicates, dedupPair.rescue)
 
         logger.info("Single break end de-duplication")
