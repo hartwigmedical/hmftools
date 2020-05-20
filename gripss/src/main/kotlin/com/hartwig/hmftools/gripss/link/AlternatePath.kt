@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.gripss.link
 
-import com.hartwig.hmftools.gripss.StructuralVariantContext
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.VariantStore
 import org.apache.logging.log4j.LogManager
@@ -12,13 +11,13 @@ data class AlternatePath(val vcfId: String, val mateId: String, val path: List<L
     companion object {
         private val logger = LogManager.getLogger(this::class.java)
 
-        operator fun invoke(assemblyLinkStore: LinkStore, variantStore: VariantStore, variants: List<StructuralVariantContext>): Collection<AlternatePath> {
+        operator fun invoke(assemblyLinkStore: LinkStore, variantStore: VariantStore): Collection<AlternatePath> {
 
             val failed = HashSet<String>()
             val result = HashMap<String, AlternatePath>()
             val transitiveLink = TransitiveLink(assemblyLinkStore, variantStore)
 
-            for (variant in variants) {
+            for (variant in variantStore.selectAll()) {
                 if (variant.mateId != null && !result.keys.contains(variant.mateId) && !failed.contains(variant.mateId)) {
                     val links = transitiveLink.transitiveLink(variant)
                     if (links.isNotEmpty()) {

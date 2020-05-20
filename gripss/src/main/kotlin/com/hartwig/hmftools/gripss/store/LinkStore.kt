@@ -37,4 +37,8 @@ class LinkStore(private val linkByVariant: Map<String, List<Link>>) {
     fun linkedVariants(vcfId: String): List<Link> {
         return linkByVariant.getOrDefault(vcfId, Collections.emptyList())
     }
+
+    fun linkedVariants(): Set<String> {
+        return linkByVariant.keys
+    }
 }

@@ -26,6 +26,12 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
         return filters.entries.filter { (_, filters) -> filters.contains(DEDUP) }.map { x -> x.key }.toSet()
     }
 
+    fun isPassing(vcfId: String) = get(vcfId).isEmpty()
+
+    fun isEligibleForRescue(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == false
+
+    fun isDuplicate(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == true
+
     fun update(duplicates: Set<String>, rescues: Set<String>): SoftFilterStore {
         val result = mutableMapOf<String, MutableSet<String>>()
         for ((vcfId, softFilters) in filters) {

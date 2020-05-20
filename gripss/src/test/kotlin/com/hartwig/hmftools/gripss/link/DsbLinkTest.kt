@@ -30,7 +30,7 @@ class DsbLinkTest {
         val variantStore = VariantStore(variants)
         val assemblyStore = AssemblyLink(variants)
 
-        val dsbLinks = DsbLink(variantStore, assemblyStore, duplicates, variants)
+        val dsbLinks = DsbLink(variantStore, assemblyStore, duplicates)
         assertEquals("dsb1", dsbLinks[variant1.vcfId])
         assertEquals("dsb1", dsbLinks[variant2.vcfId])
     }
@@ -45,7 +45,7 @@ class DsbLinkTest {
         val variantStore = VariantStore(variants)
         val assemblyStore = AssemblyLink(variants)
 
-        val dsbLinks = DsbLink(variantStore, assemblyStore, duplicates, variants)
+        val dsbLinks = DsbLink(variantStore, assemblyStore, duplicates)
         assertEquals("", dsbLinks[variant1.vcfId])
         assertEquals("", dsbLinks[variant2.vcfId])
     }
@@ -61,7 +61,7 @@ class DsbLinkTest {
         val variantStore = VariantStore(variants)
         val assemblyStore = AssemblyLink(variants)
 
-        val dsbLinks = DsbLink(variantStore, assemblyStore, duplicates, variants)
+        val dsbLinks = DsbLink(variantStore, assemblyStore, duplicates)
         assertEquals("", dsbLinks[variant1.vcfId])
         assertEquals("", dsbLinks[variant2.vcfId])
         assertEquals("", dsbLinks[variant3.vcfId])
@@ -78,7 +78,7 @@ class DsbLinkTest {
         val variantStore = VariantStore(variants)
         val assemblyStore = AssemblyLink(variants)
 
-        val dsbLinks = DsbLink(variantStore, assemblyStore, duplicates, variants)
+        val dsbLinks = DsbLink(variantStore, assemblyStore, duplicates)
         assertEquals("", dsbLinks[variant1.vcfId])
         assertEquals("dsb1", dsbLinks[variant2.vcfId])
         assertEquals("dsb1", dsbLinks[variant3.vcfId])
