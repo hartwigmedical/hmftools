@@ -16,7 +16,7 @@ class DsbLink(private val variantStore: VariantStore, private val assemblyLinkSt
             val linkByVariant = HashMap<String, Link>()
             val dsbLink = DsbLink(variantStore, assemblyLinkStore, duplicates)
             for (variant in variants) {
-                if (!linkByVariant.containsKey(variant.vcfId)) {
+                if (!linkByVariant.containsKey(variant.vcfId) && !duplicates.contains(variant.vcfId)) {
                     val links = dsbLink.dsbLinks(linkByVariant.size / 2 + 1, variant)
                     links.forEach { x -> linkByVariant[x.vcfId] = x }
                 }
