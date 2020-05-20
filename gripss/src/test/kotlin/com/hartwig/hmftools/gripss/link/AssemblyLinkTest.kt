@@ -25,8 +25,8 @@ class AssemblyLinkTest {
         val variant1 = createVariant(1000, "id1", "T", "]2:1190]T", "mate1", "asm1", "325").toSv()
         val variant2 = createVariant(1010, "id2", "T", "T[3:1190[", "mate2", "asm1", "325").toSv()
         val localLink = LinkStore(AssemblyLink().links(listOf(variant1, variant2)))
-        assertEquals("asm1/325", localLink.localLinkedBy("id1"))
-        assertEquals("asm1/325", localLink.localLinkedBy("id2"))
+        assertEquals("asm1/325", localLink.get("id1"))
+        assertEquals("asm1/325", localLink.get("id2"))
     }
 
 
@@ -35,8 +35,8 @@ class AssemblyLinkTest {
         val variant1 = createVariant(1000, "id1", "T", "]2:1190]T", "mate1", "asm1", "325").toSv()
         val variant2 = createVariant(1010, "id2", "T", "T[3:1190[", "mate2", "asm1", "0").toSv()
         val localLink = LinkStore(AssemblyLink().links(listOf(variant1, variant2)))
-        assertEquals(Strings.EMPTY, localLink.localLinkedBy("id1"))
-        assertEquals(Strings.EMPTY, localLink.localLinkedBy("id2"))
+        assertEquals(Strings.EMPTY, localLink.get("id1"))
+        assertEquals(Strings.EMPTY, localLink.get("id2"))
     }
 
     @Test
@@ -44,8 +44,8 @@ class AssemblyLinkTest {
         val variant1 = createVariant(1000, "id1", "T", "T[1:1010[", "id2", "asm1", "325").toSv()
         val variant2 = createVariant(1010, "id2", "T", "]1:1000]T", "id1", "asm1", "325").toSv()
         val localLink = LinkStore(AssemblyLink().links(listOf(variant1, variant2)))
-        assertEquals(Strings.EMPTY, localLink.localLinkedBy("id1"))
-        assertEquals(Strings.EMPTY, localLink.localLinkedBy("id2"))
+        assertEquals(Strings.EMPTY, localLink.get("id1"))
+        assertEquals(Strings.EMPTY, localLink.get("id2"))
     }
 
     @Test
@@ -55,10 +55,10 @@ class AssemblyLinkTest {
         val variant2 = createVariant(1010, "id2", "T", "]1:1000]T", "id1", "asm1", "325").toSv()
         val rightOfDel = createVariant(1012, "id3", "T", "T[1:2010[T", "mate3", "asm1", "325").toSv()
         val localLink:LinkStore = LinkStore(AssemblyLink().links(listOf(leftOfDel, variant1, variant2, rightOfDel)))
-        assertEquals("asm1/325-1", localLink.localLinkedBy("id0"))
-        assertEquals("asm1/325-1", localLink.localLinkedBy("id1"))
-        assertEquals("asm1/325-2", localLink.localLinkedBy("id2"))
-        assertEquals("asm1/325-2", localLink.localLinkedBy("id3"))
+        assertEquals("asm1/325-1", localLink.get("id0"))
+        assertEquals("asm1/325-1", localLink.get("id1"))
+        assertEquals("asm1/325-2", localLink.get("id2"))
+        assertEquals("asm1/325-2", localLink.get("id3"))
     }
 
     fun createVariant(pos: Int, vcfId: String, ref: String, alt: String, mate: String, beid: String, beidl: String): VariantContext {

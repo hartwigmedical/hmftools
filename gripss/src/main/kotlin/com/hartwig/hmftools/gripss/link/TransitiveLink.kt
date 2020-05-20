@@ -9,6 +9,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
 
     companion object {
         const val MAX_TRANSITIVE_JUMPS = 2
+        const val MAX_TRANSITIVE_DISTANCE = 1000
     }
 
     fun transitiveLink(variant: StructuralVariantContext, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
@@ -56,7 +57,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         }
 
         if (maxTransitiveJumps > 0) {
-            val transitiveLinkedVariants = variantStore.selectNearbyFacingVariants(mate).filter { x -> !x.imprecise && !x.isSingle }
+            val transitiveLinkedVariants = variantStore.selectNearbyJoined(mate, MAX_TRANSITIVE_DISTANCE).filter { x -> !x.imprecise && !x.isSingle }
             for (linkedVariant in transitiveLinkedVariants) {
                 val nextJump = Link("$transLinkPrefix${MAX_TRANSITIVE_JUMPS - maxTransitiveJumps}", Pair(mate, linkedVariant))
                 val newAssemblyLinks = assemblyLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps - 1, newPath + nextJump)

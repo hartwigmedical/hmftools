@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss
 import com.hartwig.hmftools.bedpe.dedup.DedupPair
 import com.hartwig.hmftools.gripss.link.AlternatePath
 import com.hartwig.hmftools.gripss.link.AssemblyLink
+import com.hartwig.hmftools.gripss.link.DsbLink
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import com.hartwig.hmftools.gripss.store.VariantStore
@@ -54,8 +55,8 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val softFiltersAfterPairedDedup = softFiltersInitial.update(dedupPair.duplicates, dedupPair.rescue)
 
         logger.info("Finding double stranded break links")
-        // TODO: Add DSB Links
-        val combinedLinks = LinkStore(assemblyLinks, transitiveLinks)
+        val dsbLinks = DsbLink(variantStore, assemblyLinks, dedupPair.duplicates, structuralVariants)
+        val combinedLinks = LinkStore(assemblyLinks, transitiveLinks, dsbLinks)
 
 //        DedupSingle.create(variantStore, structuralVariants)
 

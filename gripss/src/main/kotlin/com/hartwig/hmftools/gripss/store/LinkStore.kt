@@ -21,7 +21,7 @@ class LinkStore(private val linkByVariant: Map<String, List<Link>>) {
             val linkByVariant = HashMap<String, MutableList<Link>>()
 
             for (store in stores) {
-                for (link in linkByVariant.values.flatten()) {
+                for (link in store.linkByVariant.values.flatten()) {
                     linkByVariant.computeIfAbsent(link.vcfId) { mutableListOf() }.add(link)
                 }
             }
