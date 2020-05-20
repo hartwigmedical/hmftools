@@ -36,7 +36,7 @@ public class FusionData
     public final int DiscordantFrags;
 
     private String mRawData;
-    private final FusionGeneType[] mGeneType;
+    private KnownGeneType mKnownFusionType;
     private final List<Integer> mRelatedFusionIds;
     private boolean mHasRelatedKnownSpliceSites;
     private int mCohortFrequency;
@@ -65,7 +65,7 @@ public class FusionData
         AnchorDistance = anchorDistance;
 
         mRawData = null;
-        mGeneType = new FusionGeneType[] { FusionGeneType.UNKNOWN, FusionGeneType.UNKNOWN };
+        mKnownFusionType = KnownGeneType.OTHER;
         mRelatedFusionIds = Lists.newArrayList();
         mHasRelatedKnownSpliceSites = false;
         mCohortFrequency = 0;
@@ -76,12 +76,8 @@ public class FusionData
     public String rawData() { return mRawData; }
     public List<Integer> relatedFusionIds() { return mRelatedFusionIds; }
 
-    public final FusionGeneType[] getGeneTypes() { return mGeneType; }
-
-    public boolean isKnownFusionPair()
-    {
-        return mGeneType[SE_START] == FusionGeneType.KNOWN && mGeneType[SE_END] == FusionGeneType.KNOWN;
-    }
+    public final KnownGeneType getKnownFusionType() { return mKnownFusionType; }
+    public void setKnownFusionType(KnownGeneType type) { mKnownFusionType = type; }
 
     public boolean isRelated(final FusionData other)
     {

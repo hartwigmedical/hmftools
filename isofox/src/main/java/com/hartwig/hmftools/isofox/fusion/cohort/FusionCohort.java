@@ -44,6 +44,7 @@ public class FusionCohort
     private final Map<String, Map<Integer,List<FusionCohortData>>> mFusions;
 
     private int mFusionCount;
+    private BufferedWriter mWriter;
 
     public static final String PASS_FUSION_FILE_ID = "pass_fusions.csv";
 
@@ -62,6 +63,7 @@ public class FusionCohort
         mFusionCount = 0;
         mFilteredFusionHeader = null;
         mExternalFusionCompare = !mConfig.Fusions.ComparisonSources.isEmpty() ? new ExternalFusionCompare(mConfig) : null;
+        mWriter = null;
     }
 
     public void processFusionFiles()
@@ -137,6 +139,8 @@ public class FusionCohort
 
         if(mExternalFusionCompare != null)
             mExternalFusionCompare.close();
+
+        closeBufferedWriter(mWriter);
     }
 
     private List<FusionData> loadSampleFile(final Path filename)
@@ -159,7 +163,7 @@ public class FusionCohort
             {
                 FusionData fusion = FusionData.fromCsv(data, mFieldsMap);
 
-                if(mConfig.Fusions.WriteFilteredFusions)
+                if(mConfig.Fusions.WriteFilteredFusions || mConfig.Fusions.WriteCombinedFusions)
                     fusion.cacheCsvData(data);
 
                 fusions.add(fusion);
@@ -299,6 +303,11 @@ public class FusionCohort
         {
             writeFusions(sampleId, sampleFusions, FUSION_FILE_ID);
         }
+
+        if(mConfig.Fusions.WriteCombinedFusions)
+        {
+            writeCombinedFusions(sampleId, passingFusions);
+        }
     }
 
     private void writeFusions(final String sampleId, final List<FusionData> fusions, final String fileId)
@@ -309,14 +318,14 @@ public class FusionCohort
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write(mFilteredFusionHeader);
-            writer.write(",Filter,CohortCount,GeneTypeUp,GeneTypeDown");
+            writer.write(",Filter,CohortCount,KnownFusionType");
             writer.newLine();
 
             for (FusionData fusion : fusions)
             {
                 writer.write(fusion.rawData());
-                writer.write(String.format(",%s,%d,%s,%s",
-                        fusion.filter(), fusion.cohortFrequency(), fusion.getGeneTypes()[SE_START], fusion.getGeneTypes()[SE_END]));
+                writer.write(String.format(",%s,%d,%s",
+                        fusion.filter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
                 writer.newLine();
             }
 
@@ -325,6 +334,34 @@ public class FusionCohort
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to write filtered fusion file({}): {}", outputFile, e.toString());
+        }
+    }
+
+    private void writeCombinedFusions(final String sampleId, final List<FusionData> fusions)
+    {
+        final String outputFile = mConfig.formCohortFilename("combined_fusions.csv");
+
+        try
+        {
+            if(mWriter == null)
+            {
+                mWriter = createBufferedWriter(outputFile, false);
+                mWriter.write(String.format("SampleId,%s", mFilteredFusionHeader));
+                mWriter.write(",Filter,CohortCount,KnownFusionType");
+                mWriter.newLine();
+            }
+
+            for (FusionData fusion : fusions)
+            {
+                mWriter.write(String.format("%s,%s", sampleId, fusion.rawData()));
+                mWriter.write(String.format(",%s,%d,%s",
+                        fusion.filter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
+                mWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write combined fusion file({}): {}", outputFile, e.toString());
         }
     }
 

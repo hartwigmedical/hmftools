@@ -22,6 +22,7 @@ public class FusionCohortConfig
     private static final String FUSION_MIN_FRAGS = "fusion_min_frags";
     private static final String FUSION_COHORT_FILE = "fusion_cohort_file";
     private static final String WRITE_FILTERED_FUSIONS = "fusion_write_filtered";
+    private static final String WRITE_COMBINED_FUSIONS = "fusion_write_combined";
     private static final String COMPARE_UNFILTERED = "fusion_compare_unfiltered";
     private static final String REWRITE_ANNOTATED = "fusion_rewrite_annotated";
 
@@ -33,6 +34,7 @@ public class FusionCohortConfig
     public final String CohortFile;
 
     public final boolean WriteFilteredFusions; // rewrite passing fusions
+    public final boolean WriteCombinedFusions;
     public final boolean RewriteAnnotatedFusions; // rewrite all fusions with cohort and other gene data
 
     public final List<String> ComparisonSources;
@@ -46,6 +48,7 @@ public class FusionCohortConfig
         WriteFilteredFusions = cmd.hasOption(WRITE_FILTERED_FUSIONS);
         CompareUnfiltered = cmd.hasOption(COMPARE_UNFILTERED);
         RewriteAnnotatedFusions = cmd.hasOption(REWRITE_ANNOTATED);
+        WriteCombinedFusions = cmd.hasOption(WRITE_COMBINED_FUSIONS);
 
         CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
 
@@ -63,6 +66,7 @@ public class FusionCohortConfig
         options.addOption(FUSION_COMPARISONS, true, "List of sources to compare fusions between");
         options.addOption(COMPARE_UNFILTERED, false, "Included unfiltered fusions in comparison with external tools");
         options.addOption(REWRITE_ANNOTATED, false, "Rewrtite all fusions with cohort and other annotations");
+        options.addOption(WRITE_COMBINED_FUSIONS, false, "Write a combined file with passing fusion");
 
         options.addOption(FUSION_PAIRS_CSV, true, "Known fusion pairs");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Promiscuous 5-prime fusion genes");

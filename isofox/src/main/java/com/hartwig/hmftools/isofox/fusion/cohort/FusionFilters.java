@@ -11,6 +11,14 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_COHORT;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_SUPPORT;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_OTHER;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_PAIR;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.OTHER;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.OTHER_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_OTHER;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_PROM3;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
@@ -66,7 +74,7 @@ public class FusionFilters
       (AF>=0.05&TotalFragments>=10)) %>% select(len,SVType,everything()))
          */
 
-        if(fusion.isKnownFusionPair())
+        if(fusion.getKnownFusionType() == KNOWN_PAIR)
             return true;
 
         if(min(fusion.AnchorDistance[SE_START], fusion.AnchorDistance[SE_END]) < MIN_ANCHOR_DISTANCE && fusion.DiscordantFrags == 0)
@@ -145,24 +153,61 @@ public class FusionFilters
 
     public void markKnownGeneTypes(final FusionData fusion)
     {
+        boolean[] isKnown = {false, false};
+
         for(final String[] knownPair : mKnownFusionData.knownPairs())
         {
+            if(knownPair[FIVE_GENE].equals(fusion.GeneNames[SE_START]) && knownPair[THREE_GENE].equals(fusion.GeneNames[SE_END]))
+            {
+                fusion.setKnownFusionType(KNOWN_PAIR);
+                return;
+            }
+
             if(knownPair[FIVE_GENE].equals(fusion.GeneNames[SE_START]))
-                fusion.getGeneTypes()[SE_START] = FusionGeneType.KNOWN;
+                isKnown[SE_START] = true;
 
             if(knownPair[THREE_GENE].equals(fusion.GeneNames[SE_END]))
-                fusion.getGeneTypes()[SE_END] = FusionGeneType.KNOWN;
+                isKnown[SE_END] = true;
         }
 
-        if(!fusion.GeneNames[SE_START].equals(FusionGeneType.KNOWN) && mKnownFusionData.promiscuousFiveGenes().contains(fusion.GeneNames[SE_START]))
+        boolean[] isProm = { false, false };
+
+        if(!isKnown[SE_START] && mKnownFusionData.promiscuousFiveGenes().contains(fusion.GeneNames[SE_START]))
+            isProm[SE_START] = true;
+
+        if(!isKnown[SE_END] && mKnownFusionData.promiscuousThreeGenes().contains(fusion.GeneNames[SE_END]))
+            isProm[SE_END] = true;
+
+        if(isKnown[SE_START])
         {
-            fusion.getGeneTypes()[SE_START] = FusionGeneType.FIVE_PROMISCUOUS;
+            if(isProm[SE_END])
+                fusion.setKnownFusionType(KNOWN_PROM3);
+            else
+                fusion.setKnownFusionType(KNOWN_OTHER);
+        }
+        else if(isKnown[SE_END])
+        {
+            if(isProm[SE_START])
+                fusion.setKnownFusionType(PROM5_KNOWN);
+            else
+                fusion.setKnownFusionType(KNOWN_OTHER);
+        }
+        else if(isProm[SE_START])
+        {
+            if(isProm[SE_END])
+                fusion.setKnownFusionType(PROM5_PROM3);
+            else
+                fusion.setKnownFusionType(PROM5_OTHER);
+        }
+        else if(isProm[SE_END])
+        {
+            fusion.setKnownFusionType(OTHER_PROM3);
+        }
+        else
+        {
+            fusion.setKnownFusionType(OTHER);
         }
 
-        if(!fusion.GeneNames[SE_END].equals(FusionGeneType.KNOWN) && mKnownFusionData.promiscuousThreeGenes().contains(fusion.GeneNames[SE_END]))
-        {
-            fusion.getGeneTypes()[SE_END] = FusionGeneType.THREE_PROMISCUOUS;
-        }
     }
 
     private void loadCohortFile()

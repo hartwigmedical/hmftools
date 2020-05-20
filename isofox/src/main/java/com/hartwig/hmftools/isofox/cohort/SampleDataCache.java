@@ -83,7 +83,7 @@ public class SampleDataCache
 
             for(String item : items)
             {
-                final String[] data = item.split(",");
+                final String[] data = item.split(DELIMITER);
                 if(data.length < 2)
                     return false;
 

@@ -3,8 +3,10 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -60,6 +62,7 @@ public class ExternalFusionData
         // #gene1  gene2   strand1(gene/fusion)    strand2(gene/fusion)    breakpoint1     breakpoint2     site1   site2   type    direction1      direction2
         // 11              12              13                      14              15
         // split_reads1    split_reads2    discordant_mates        coverage1       coverage2
+        // 16              17                              18                               19
         // confidence      closest_genomic_breakpoint1     closest_genomic_breakpoint2     filters fusion_transcript
         // reading_frame   peptide_sequence        read_identifiers
 
@@ -79,7 +82,11 @@ public class ExternalFusionData
         int coverage1 = items[14].equals(".") ? 0 : Integer.parseInt(items[14]);
         int coverage2 = items[15].equals(".") ? 0 : Integer.parseInt(items[15]);
         final int[] coverage = new int[] { coverage1, coverage2 };
+
         final Map<String, String> otherData = Maps.newHashMap();
+
+        otherData.put("Conf", items[16]);
+        otherData.put("Filters", items[19].replaceAll(",",";"));
 
         return new ExternalFusionData(FUSION_SOURCE_ARRIBA, chromosomes, positions, orientations, svType, geneNames,
                 splitFragments, discordantFragments, coverage, otherData);
@@ -97,6 +104,20 @@ public class ExternalFusionData
         }
 
         return false;
+    }
+
+    public String otherDataStr()
+    {
+        if(OtherData.isEmpty())
+            return "";
+
+        StringJoiner data = new StringJoiner(" ");
+        for(Map.Entry<String,String> entry : OtherData.entrySet())
+        {
+            data.add(entry.getKey() + "=" + entry.getValue());
+        }
+
+        return data.toString();
     }
 
 
