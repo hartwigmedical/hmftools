@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.File;
@@ -387,9 +388,9 @@ public class IsofoxConfig
     public String formOutputFile(final String fileId)
     {
         if(OutputIdentifier != null)
-            return OutputDir + SampleId + ".isf." + OutputIdentifier + "." + fileId;
+            return OutputDir + SampleId + ISOFOX_ID + OutputIdentifier + "." + fileId;
         else
-            return OutputDir + SampleId + ".isf." + fileId;
+            return OutputDir + SampleId + ISOFOX_ID + fileId;
     }
 
     public IsofoxConfig()

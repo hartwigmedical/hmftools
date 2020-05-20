@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_COHORT;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_SUPPORT;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
@@ -67,8 +69,11 @@ public class FusionFilters
         if(fusion.isKnownFusionPair())
             return true;
 
-        if(min(fusion.AnchorDistance[SE_START], fusion.AnchorDistance[SE_END]) < MIN_ANCHOR_DISTANCE && fusion.DiscordantFrags < 0)
+        if(min(fusion.AnchorDistance[SE_START], fusion.AnchorDistance[SE_END]) < MIN_ANCHOR_DISTANCE && fusion.DiscordantFrags == 0)
+        {
+            fusion.setFilter(FILTER_SUPPORT);
             return false;
+        }
 
         double requiredAF;
         int requiredFragments;
@@ -96,49 +101,65 @@ public class FusionFilters
         }
 
         if(fusion.alleleFrequency() < requiredAF)
+        {
+            fusion.setFilter(FILTER_SUPPORT);
             return false;
+        }
 
-        if(fusion.SplitFrags + fusion.RealignedFrags < requiredFragments)
+        if(fusion.totalFragments() < requiredFragments)
+        {
+            fusion.setFilter(FILTER_SUPPORT);
             return false;
+        }
 
-        if(matchesCohortFusion(fusion))
+        if(fusion.cohortFrequency() > 0 || matchesCohortFusion(fusion))
+        {
+            fusion.setFilter(FILTER_COHORT);
             return false;
+        }
 
         return true;
     }
 
     public boolean matchesCohortFusion(final FusionData fusion)
     {
+        return findCohortFusion(fusion) != null;
+    }
+
+    public FusionCohortData findCohortFusion(final FusionData fusion)
+    {
         final String chrPair = formChromosomePair(fusion.Chromosomes[SE_START], fusion.Chromosomes[SE_END]);
 
         final Map<Integer,List<FusionCohortData>> chrPairFusions = mCohortFusions.get(chrPair);
 
         if(chrPairFusions == null)
-            return false;
+            return null;
 
         final List<FusionCohortData> fusionsByPosition = chrPairFusions.get(fusion.JunctionPositions[SE_START]);
 
         if(fusionsByPosition == null)
-            return false;
+            return null;
 
-        return fusionsByPosition.stream().anyMatch(x -> x.matches(fusion));
+        return fusionsByPosition.stream().filter(x -> x.matches(fusion)).findFirst().orElse(null);
     }
 
     public void markKnownGeneTypes(final FusionData fusion)
     {
-        if(mKnownFusionData.knownPairs().stream()
-                .anyMatch(x -> x[FIVE_GENE].equals(fusion.GeneNames[SE_START]) && x[THREE_GENE].equals(fusion.GeneNames[SE_END])))
+        for(final String[] knownPair : mKnownFusionData.knownPairs())
         {
-            fusion.getGeneTypes()[SE_START] = FusionGeneType.KNOWN;
-            fusion.getGeneTypes()[SE_END] = FusionGeneType.KNOWN;
+            if(knownPair[FIVE_GENE].equals(fusion.GeneNames[SE_START]))
+                fusion.getGeneTypes()[SE_START] = FusionGeneType.KNOWN;
+
+            if(knownPair[THREE_GENE].equals(fusion.GeneNames[SE_END]))
+                fusion.getGeneTypes()[SE_END] = FusionGeneType.KNOWN;
         }
 
-        if(mKnownFusionData.promiscuousFiveGenes().contains(fusion.GeneNames[SE_START]))
+        if(!fusion.GeneNames[SE_START].equals(FusionGeneType.KNOWN) && mKnownFusionData.promiscuousFiveGenes().contains(fusion.GeneNames[SE_START]))
         {
             fusion.getGeneTypes()[SE_START] = FusionGeneType.FIVE_PROMISCUOUS;
         }
 
-        if(mKnownFusionData.promiscuousThreeGenes().contains(fusion.GeneNames[SE_END]))
+        if(!fusion.GeneNames[SE_END].equals(FusionGeneType.KNOWN) && mKnownFusionData.promiscuousThreeGenes().contains(fusion.GeneNames[SE_END]))
         {
             fusion.getGeneTypes()[SE_END] = FusionGeneType.THREE_PROMISCUOUS;
         }

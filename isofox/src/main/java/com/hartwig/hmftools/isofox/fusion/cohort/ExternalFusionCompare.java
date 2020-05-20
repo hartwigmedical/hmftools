@@ -37,7 +37,7 @@ public class ExternalFusionCompare
         {
             final String outputFileName = mConfig.formCohortFilename("ext_fusions_compare.csv");
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("MatchType,ChrUp,ChrDown,PosUp,PosDown,OrientUp,OrientDown"
+            writer.write("SampleId,MatchType,ChrUp,ChrDown,PosUp,PosDown,OrientUp,OrientDown"
                     + ",SVType,GeneNameUp,GeneNameDown,JuncFrags,ExtJuncFrags,DiscFrags,ExtDiscFrags,OtherData");
             writer.newLine();
 
@@ -50,7 +50,7 @@ public class ExternalFusionCompare
         }
     }
 
-    public void compareFusions(final String sampleId, final List<FusionData> fusions)
+    public void compareFusions(final String sampleId, final List<FusionData> fusions, final List<FusionData> unfilteredFusions)
     {
         if(mWriter == null)
             return;
@@ -79,7 +79,10 @@ public class ExternalFusionCompare
             else
             {
                 ++matchedFusionCount;
-                writeMatchData(sampleId, "MATCH", fusion.Chromosomes, fusion.JunctionPositions, fusion.JunctionOrientations,
+
+                String matchType = externalFusion.IsFiltered ? "MATCH" : "MATCH_EXT_UNFILTERED";
+
+                writeMatchData(sampleId, matchType, fusion.Chromosomes, fusion.JunctionPositions, fusion.JunctionOrientations,
                         fusion.SvType, fusion.GeneNames, fusion.SplitFrags + fusion.RealignedFrags, fusion.DiscordantFrags,
                         externalFusion.SplitFragments, externalFusion.DiscordantFragments, "");
 
@@ -98,28 +101,34 @@ public class ExternalFusionCompare
         int extUnmatchedCount = 0;
         for(List<ExternalFusionData> extFusionLists : externalFusionData.values())
         {
-            for(ExternalFusionData fusion : extFusionLists)
+            for(ExternalFusionData extFusion : extFusionLists)
             {
+                if(!extFusion.IsFiltered)
+                    continue;
+
+                // check against isofox unfiltered
+                if(!unfilteredFusions.isEmpty())
+                {
+                    FusionData unfilteredFusion = unfilteredFusions.stream().filter(x -> extFusion.matches(x)).findFirst().orElse(null);
+                    if(unfilteredFusion != null)
+                    {
+                        writeMatchData(sampleId, "MATCH_ISF_UNFILTERED", extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
+                                extFusion.SvType, extFusion.GeneNames,
+                                unfilteredFusion.SplitFrags + unfilteredFusion.RealignedFrags, unfilteredFusion.DiscordantFrags,
+                                extFusion.SplitFragments, extFusion.DiscordantFragments, "");
+
+                        continue;
+                    }
+                }
+
                 ++extUnmatchedCount;
-                writeMatchData(sampleId, "EXT_ONLY", fusion.Chromosomes, fusion.JunctionPositions, fusion.JunctionOrientations,
-                        fusion.SvType, fusion.GeneNames, 0, 0, fusion.SplitFragments, fusion.DiscordantFragments, "");
+                writeMatchData(sampleId, "EXT_ONLY", extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
+                        extFusion.SvType, extFusion.GeneNames, 0, 0, extFusion.SplitFragments, extFusion.DiscordantFragments, "");
             }
         }
 
         ISF_LOGGER.info("sample({}) matched({}) from isofox fusions({}) external({})",
                 sampleId, matchedFusionCount, fusions.size(), extUnmatchedCount + matchedFusionCount);
-
-        /*
-        #ISFOX PASES
-
-        View(merge(merge(passFusions %>% mutate(breakpoint1=paste(ChrUp,PosUp,sep=":") ,breakpoint2=paste(ChrDown,PosDown,sep=":")),arriba %>% distinct(breakpoint1,breakpoint2,filters,result),by=c('breakpoint1','breakpoint2'),all.x=T),
-             arriba %>% distinct(breakpoint1,breakpoint2,filters,result) %>% mutate(revOrientation=TRUE),by.x=c('breakpoint1','breakpoint2'),by.y=c('breakpoint2','breakpoint1'),all.x=T) %>% select(CoverageUp,CoverageDown,TotalFragments,everything()))
-
-        #ARRIBA PASSES
-        View(merge(merge(passedArriba,passFusions %>% mutate(breakpoint1=paste(ChrUp,PosUp,sep=":"),breakpoint2=paste(ChrDown,PosDown,sep=":")),by=c('breakpoint1','breakpoint2'),all.x=T),
-                   passFusions %>% mutate(breakpoint1=paste(ChrUp,PosUp,sep=":"),breakpoint2=paste(ChrDown,PosDown,sep=":"),revOrientation=TRUE),by.x=c('breakpoint1','breakpoint2'),by.y=c('breakpoint2','breakpoint1'),all.x=T))# %>%
-           filter(is.na(FusionId.x),is.na(FusionId.y),!grepl("read-through",type)))
-         */
     }
 
     private void writeMatchData(
@@ -129,9 +138,9 @@ public class ExternalFusionCompare
     {
         try
         {
-            mWriter.write(String.format("%s,%s,%s,%d,%d,%d,%d",
-                    matchType, chromosomes[SE_START], chromosomes[SE_END], junctionPositions[SE_START], junctionPositions[SE_END],
-                    junctionOrientations[SE_START], junctionOrientations[SE_END]));
+            mWriter.write(String.format("%s,%s,%s,%s,%d,%d,%d,%d",
+                    sampleId, matchType, chromosomes[SE_START], chromosomes[SE_END],
+                    junctionPositions[SE_START], junctionPositions[SE_END], junctionOrientations[SE_START], junctionOrientations[SE_END]));
 
             mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%s",
                     svType, geneNames[SE_START], geneNames[SE_END], junctFrags, extJunctFrags, discFrags, extDiscFrags, otherData));
@@ -146,7 +155,7 @@ public class ExternalFusionCompare
 
     public void close() { closeBufferedWriter(mWriter); }
 
-    private final Map<String, List<ExternalFusionData>>  loadExternalFusionFiles(final String sampleId)
+    private final Map<String, List<ExternalFusionData>> loadExternalFusionFiles(final String sampleId)
     {
         final Map<String, List<ExternalFusionData>> mappedFusions = Maps.newHashMap();
 
@@ -154,23 +163,31 @@ public class ExternalFusionCompare
         {
             final String arribaMainFile = mConfig.RootDataDir + sampleId + ".fusions.tsv";
 
-            // final String arribaDiscardedFile = config.RootDataDir + sampleId + ".fusions.discarded.tsv";
-
             try
             {
                 final List<String> lines = Files.readAllLines(Paths.get(arribaMainFile));
                 lines.remove(0);
 
-                /*
-                final List<String> lines2 = Files.readAllLines(Paths.get(arribaDiscardedFile));
-                lines2.remove(0);
-                lines.addAll(lines2);
-                */
-
                 List<ExternalFusionData> sampleFusions = lines.stream()
                         .map(x -> ExternalFusionData.loadArribaFusion(x))
                         .filter(x -> x != null)
                         .collect(Collectors.toList());
+
+                if(mConfig.Fusions.CompareUnfiltered)
+                {
+                    final String arribaDiscardedFile = mConfig.RootDataDir + sampleId + ".fusions.discarded.tsv";
+                    lines.clear();
+                    lines.addAll(Files.readAllLines(Paths.get(arribaDiscardedFile)));
+                    lines.remove(0);
+
+                    List<ExternalFusionData> discardedFusions = lines.stream()
+                            .map(x -> ExternalFusionData.loadArribaFusion(x))
+                            .filter(x -> x != null)
+                            .collect(Collectors.toList());
+
+                    discardedFusions.forEach(x -> x.IsFiltered = false);
+                    sampleFusions.addAll(discardedFusions);
+                }
 
                 for(ExternalFusionData fusion : sampleFusions)
                 {

@@ -148,7 +148,7 @@ public class ChimericReadTracker
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:23308:18394:18413";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:21506:2131:4925";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
@@ -276,6 +276,8 @@ public class ChimericReadTracker
             return true;
         }
 
+        boolean spanGeneSpliceSites = hasMultipleKnownSpliceGenes(reads);
+
         if(reads.stream().anyMatch(x -> x.spansGeneCollections()))
         {
             // may turn out to just end in the next pre-gene section but cannot say at this time
@@ -308,7 +310,7 @@ public class ChimericReadTracker
 
         // check whether 2 genes must be involved, or whether just one gene can explain the junction
         // NOTE: since not all chimeric reads may be available at this point, this test is repeated in the fusion routine
-        if(hasMultipleKnownSpliceGenes(reads))
+        if(spanGeneSpliceSites)
         {
             ++mChimericStats.LocalInterGeneFrags;
             return true;
@@ -442,7 +444,7 @@ public class ChimericReadTracker
     {
         for(ReadRecord read : reads)
         {
-            if(read.hasInterGeneSplit())
+            if(read.hasInterGeneSplit() || (read.containsSplit() && read.spansGeneCollections()))
             {
                 final int[] splitJunction = findSplitReadJunction(read);
                 junctionPositions.add(splitJunction[SE_START]);

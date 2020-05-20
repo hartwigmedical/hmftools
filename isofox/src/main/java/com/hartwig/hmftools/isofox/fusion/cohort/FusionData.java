@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FUSION_ID_PREFIX;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FUSION_NONE;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_PAIR;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
@@ -40,6 +39,12 @@ public class FusionData
     private final FusionGeneType[] mGeneType;
     private final List<Integer> mRelatedFusionIds;
     private boolean mHasRelatedKnownSpliceSites;
+    private int mCohortFrequency;
+    private String mFilter;
+
+    public static final String FILTER_PASS = "PASS";
+    public static final String FILTER_COHORT = "COHORT";
+    public static final String FILTER_SUPPORT = "SUPPORT";
 
     public FusionData(int id, final String[] chromosomes, final int[] junctionPositions, final byte[] junctionOrientations,
             final FusionJunctionType[] junctionTypes, final String svType, final String[] geneIds, final String[] geneNames,
@@ -63,6 +68,8 @@ public class FusionData
         mGeneType = new FusionGeneType[] { FusionGeneType.UNKNOWN, FusionGeneType.UNKNOWN };
         mRelatedFusionIds = Lists.newArrayList();
         mHasRelatedKnownSpliceSites = false;
+        mCohortFrequency = 0;
+        mFilter = "";
     }
 
     public void cacheCsvData(final String data) { mRawData = data; }
@@ -94,6 +101,12 @@ public class FusionData
 
     public void setHasRelatedKnownSpliceSites() { mHasRelatedKnownSpliceSites = true; }
     public boolean hasRelatedKnownSpliceSites() { return mHasRelatedKnownSpliceSites; }
+
+    public void setCohortFrequency(int count) { mCohortFrequency = count; }
+    public int cohortFrequency() { return mCohortFrequency; }
+
+    public void setFilter(String filter) { mFilter = filter; }
+    public String filter() { return mFilter; }
 
     public static FusionData fromCsv(final String data, final Map<String,Integer> fieldIndexMap)
     {
@@ -153,4 +166,6 @@ public class FusionData
         double coverage = max(Coverage[SE_START], Coverage[SE_END]);
         return coverage> 0 ? (SplitFrags + RealignedFrags) / coverage : 0;
     }
+
+    public int totalFragments() { return SplitFrags + RealignedFrags + DiscordantFrags; }
 }

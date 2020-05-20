@@ -22,14 +22,21 @@ public class FusionCohortConfig
     private static final String FUSION_MIN_FRAGS = "fusion_min_frags";
     private static final String FUSION_COHORT_FILE = "fusion_cohort_file";
     private static final String WRITE_FILTERED_FUSIONS = "fusion_write_filtered";
+    private static final String COMPARE_UNFILTERED = "fusion_compare_unfiltered";
+    private static final String REWRITE_ANNOTATED = "fusion_rewrite_annotated";
 
-    // parameters to include fusion in cohort file
+    // cohort file generation and filters
+    public final boolean GenerateCohort;
     public final int MinSampleThreshold;
     public final int MinFragCount;
-    public final boolean GenerateCohort;
-    public final boolean WriteFilteredFusions;
-    public final List<String> ComparisonSources;
+
     public final String CohortFile;
+
+    public final boolean WriteFilteredFusions; // rewrite passing fusions
+    public final boolean RewriteAnnotatedFusions; // rewrite all fusions with cohort and other gene data
+
+    public final List<String> ComparisonSources;
+    public final boolean CompareUnfiltered;
 
     public FusionCohortConfig(final CommandLine cmd)
     {
@@ -37,6 +44,8 @@ public class FusionCohortConfig
         MinFragCount = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_FRAGS, "2"));
         GenerateCohort = cmd.hasOption(GENERATE_COHORT);
         WriteFilteredFusions = cmd.hasOption(WRITE_FILTERED_FUSIONS);
+        CompareUnfiltered = cmd.hasOption(COMPARE_UNFILTERED);
+        RewriteAnnotatedFusions = cmd.hasOption(REWRITE_ANNOTATED);
 
         CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
 
@@ -52,6 +61,8 @@ public class FusionCohortConfig
         options.addOption(FUSION_MIN_FRAGS, true, "Min frag count per sample to support a fusion");
         options.addOption(FUSION_COHORT_FILE, true, "Cohort file previously generated");
         options.addOption(FUSION_COMPARISONS, true, "List of sources to compare fusions between");
+        options.addOption(COMPARE_UNFILTERED, false, "Included unfiltered fusions in comparison with external tools");
+        options.addOption(REWRITE_ANNOTATED, false, "Rewrtite all fusions with cohort and other annotations");
 
         options.addOption(FUSION_PAIRS_CSV, true, "Known fusion pairs");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Promiscuous 5-prime fusion genes");

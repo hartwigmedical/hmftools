@@ -59,6 +59,7 @@ public class ResultsWriter
     private BufferedWriter mReadGcRatioWriter;
     private BufferedWriter mRetainedIntronWriter;
 
+    public static final String ISOFOX_ID = ".isf.";
     public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
     public static final String FLD_SAMPLE_ID = "SampleId";

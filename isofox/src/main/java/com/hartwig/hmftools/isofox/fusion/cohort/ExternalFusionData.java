@@ -33,6 +33,8 @@ public class ExternalFusionData
 
     public final Map<String,String> OtherData;
 
+    public boolean IsFiltered;
+
     public ExternalFusionData(final String sourceTool, final String[] chromosomes, final int[] junctionPositions,
             final byte[] junctionOrientations, final String svType, final String[] geneNames, final int splitFragments,
             final int discordantFragments, final int[] coverage, final Map<String, String> otherData)
@@ -46,6 +48,7 @@ public class ExternalFusionData
         SplitFragments = splitFragments;
         DiscordantFragments = discordantFragments;
         Coverage = coverage;
+        IsFiltered = true;
         OtherData = otherData;
     }
 

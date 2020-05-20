@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.getFileId;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.File;
@@ -160,21 +161,25 @@ public class CohortConfig
             return OutputDir + "isofox_" + fileId;
     }
 
+    public static String formSampleFilename(final CohortConfig config, final String sampleId, final CohortAnalysisType dataType)
+    {
+        String filename = config.RootDataDir;
+
+        if(config.UseSampleDirectories)
+            filename += File.separator + sampleId + File.separator;
+
+        filename += sampleId + ISOFOX_ID;
+        filename += getFileId(dataType);
+        return filename;
+    }
+
     public static boolean formSampleFilenames(final CohortConfig config, final CohortAnalysisType dataType, final List<Path> filenames)
     {
-        String rootDir = config.RootDataDir;
-
         List<String> missingSampleIds = Lists.newArrayList();
 
         for(final String sampleId : config.SampleData.SampleIds)
         {
-            String filename = rootDir;
-
-            if(config.UseSampleDirectories)
-                filename += File.separator + sampleId + File.separator;
-
-            filename += sampleId + ".isf.";
-            filename += getFileId(dataType);
+            String filename = formSampleFilename(config, sampleId, dataType);
 
             final Path path = Paths.get(filename);
 
