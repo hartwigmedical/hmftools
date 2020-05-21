@@ -13,7 +13,9 @@ import com.google.common.collect.Lists;
 public class FusionConstants
 {
     // the maximum distance upstream of a gene for a breakend to be consider a fusion candidate
-    public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
+    public static final int DEFAULT_PRE_GENE_PROMOTOR_DISTANCE = 100000;
+
+    public static int PRE_GENE_PROMOTOR_DISTANCE = DEFAULT_PRE_GENE_PROMOTOR_DISTANCE; // can be overridden in config
 
     // maximum distance from breakend to transcript start for known and other fusions
     public static final int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;

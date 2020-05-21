@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExo
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,7 +16,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
@@ -22,7 +23,7 @@ import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.GeneFusion;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
+import com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator;
 
 import org.junit.Test;
 
@@ -74,7 +75,9 @@ public class RnaFusionTest
 
         FusionFinder fusionAnalyser = new FusionFinder(null, geneTransCache);
         List<GeneFusion> dnaFusions = Lists.newArrayList();
-        RnaFusionMapper rnaFusionMapper = new RnaFusionMapper(null, geneTransCache, fusionAnalyser, dnaFusions, Maps.newHashMap());
+        // RnaFusionMapper rnaFusionMapper = new RnaFusionMapper(null, geneTransCache, fusionAnalyser, dnaFusions, Maps.newHashMap());
+        PRE_GENE_PROMOTOR_DISTANCE = DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
+        RnaFusionAnnotator rnaAnnotator = new RnaFusionAnnotator(geneTransCache);
 
         // test positive strand
 
@@ -90,7 +93,7 @@ public class RnaFusionTest
 
         // test upstream scenarios
         int rnaPosition = 12600;
-        boolean isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        boolean isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans, true, geneAnnot1.position(), rnaPosition, true);
 
         assertTrue(isValid);
@@ -99,20 +102,20 @@ public class RnaFusionTest
         svPos1 = 13500;
         geneAnnot1.setPositionalData(chromosome, svPos1, (byte)1);
 
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans, true, geneAnnot1.position(), rnaPosition, true);
 
         assertFalse(isValid);
 
         // test non-exact RNA boundary
         rnaPosition = 12550;
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans, true, geneAnnot1.position(), rnaPosition, false);
 
         assertFalse(isValid);
 
         rnaPosition = 12700;
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans, true, geneAnnot1.position(), rnaPosition, false);
 
         assertFalse(isValid);
@@ -124,7 +127,7 @@ public class RnaFusionTest
         geneAnnot1.setPositionalData(chromosome, svPos1, (byte)1);
 
         rnaPosition = 11500;
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans, false, geneAnnot1.position(), rnaPosition, true);
 
         assertTrue(isValid);
@@ -134,7 +137,7 @@ public class RnaFusionTest
         geneAnnot1.setPositionalData(chromosome, svPos1, (byte)1);
 
         rnaPosition = 13500;
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans, false, geneAnnot1.position(), rnaPosition, true);
 
         assertFalse(isValid);
@@ -144,7 +147,7 @@ public class RnaFusionTest
 
         // valid position
         rnaPosition = 13500;
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans, false, geneAnnot1.position(), rnaPosition, true);
 
         assertTrue(isValid);
@@ -169,7 +172,7 @@ public class RnaFusionTest
         svPos2 = 11600;
         geneAnnot2.setPositionalData(chromosome, svPos2, (byte)1);
 
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans2, true, geneAnnot2.position(), rnaPosition, true);
 
         assertTrue(isValid);
@@ -181,7 +184,7 @@ public class RnaFusionTest
         svPos2 = 11700;
         geneAnnot2.setPositionalData(chromosome, svPos2, (byte)1);
 
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans2, false, geneAnnot2.position(), rnaPosition, true);
 
         assertTrue(isValid);
@@ -190,7 +193,7 @@ public class RnaFusionTest
         svPos2 = 12700;
         geneAnnot2.setPositionalData(chromosome, svPos2, (byte)1);
 
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans2, false, geneAnnot2.position(), rnaPosition, true);
 
         assertFalse(isValid);
@@ -201,7 +204,7 @@ public class RnaFusionTest
         svPos2 = 130000;
         geneAnnot2.setPositionalData(chromosome, svPos2, (byte)1);
 
-        isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
+        isValid = rnaAnnotator.isTranscriptBreakendViableForRnaBoundary(
                 trans2, false, geneAnnot2.position(), rnaPosition, true);
 
         assertFalse(isValid);
