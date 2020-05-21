@@ -33,7 +33,7 @@ The following filters are applied to all variants
 
 Filter | Default | Description / purpose
 ---|---|---
-minQual | breakpoints: 350; single breakend:1000 | Minimum absolute tumor support for variant
+minQual | 350 (single breakend:1000) | Minimum absolute tumor support for variant
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
 minTumorAF | 0.5 | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   Only variants with no insert sequence or homology sequence may be filtered as imprecise.  
