@@ -6,24 +6,23 @@ import com.hartwig.hmftools.bedpe.Location
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import java.io.Serializable
 
-data class LocationStore(private val singlesMap: Map<String, LocationSeek<Breakend>>, private val pairedMap: Map<String, LocationSeek<Breakpoint>>) : Serializable {
+class LocationStore private constructor(private val singlesMap: Map<String, LocationSeek<Breakend>>, private val pairedMap: Map<String, LocationSeek<Breakpoint>>) : Serializable {
 
     private val hitcache = mutableSetOf<String>()
 
     companion object {
-        // TODO: THINK ABOUT EXPANSION
-        private const val MAX_DISTANCE = 0
-
-        operator fun invoke(single: List<Breakend>, paired: List<Breakpoint>): LocationStore {
+        operator fun invoke(single: List<Breakend>, paired: List<Breakpoint>, additionalBuffer: Int = 0): LocationStore {
 
             val singlesMap = mutableMapOf<String, MutableList<Breakend>>()
             for (bedEntry in single) {
-                bedEntry.locationKey().forEach { key -> singlesMap.computeIfAbsent(key) { mutableListOf() }.add(bedEntry) }
+                val expanded = bedEntry.expand(additionalBuffer)
+                bedEntry.locationKey().forEach { key -> singlesMap.computeIfAbsent(key) { mutableListOf() }.add(expanded) }
             }
 
             val pairedMap = mutableMapOf<String, MutableList<Breakpoint>>()
             for (bedpePair in paired) {
-                bedpePair.locationKey().forEach { key -> pairedMap.computeIfAbsent(key) { mutableListOf() }.add(bedpePair) }
+                val expanded = bedpePair.expand(additionalBuffer)
+                bedpePair.locationKey().forEach { key -> pairedMap.computeIfAbsent(key) { mutableListOf() }.add(expanded) }
             }
 
             val breakendSeeks: Map<String, LocationSeek<Breakend>> = singlesMap.entries.associate { (key: String, list: List<Breakend>) -> Pair(key, LocationSeek(list)) }

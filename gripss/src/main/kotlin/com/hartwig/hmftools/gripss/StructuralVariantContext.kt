@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.gripss
 
 import com.hartwig.hmftools.bedpe.Breakend
+import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.extensions.*
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
@@ -31,6 +32,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
+    val breakpoint: Breakpoint? = endBreakend?.let { Breakpoint(startBreakend, it) }
     val minStart = startBreakend.start
 
     val maxStart = startBreakend.end

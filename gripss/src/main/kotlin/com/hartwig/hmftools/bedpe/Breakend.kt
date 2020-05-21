@@ -27,7 +27,6 @@ data class Breakend(override val contig: String, override val start: Int, overri
         }
     }
 
-
     fun expand(distance: Int): Breakend {
         return this.copy(start = start - distance, end = end + distance)
     }
@@ -51,6 +50,10 @@ data class Breakpoint(val startBreakend: Breakend, val endBreakend: Breakend) : 
             val end = Breakend(contig2, start2.toInt() + 1, end2.toInt(), strand2.toOrientation())
             return Breakpoint(start, end);
         }
+    }
+
+    fun expand(distance: Int): Breakpoint {
+        return Breakpoint(startBreakend.expand(distance), endBreakend.expand(distance))
     }
 }
 

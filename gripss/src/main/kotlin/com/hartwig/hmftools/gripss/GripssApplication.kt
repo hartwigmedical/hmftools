@@ -34,6 +34,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
     companion object {
         private val logger = LogManager.getLogger(this::class.java)
+        const val PON_ADDITIONAL_DISTANCE = 0
     }
 
     private val startTime = System.currentTimeMillis();
@@ -45,7 +46,9 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile))
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
-        val ponStore = LocationStore(Breakend.fromBedFile(config.singlePonFile), Breakpoint.fromBedpeFile(config.pairedPonFile))
+        val breakends = Breakend.fromBedFile(config.singlePonFile)
+        val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile)
+        val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
 
         logger.info("Reading VCF file: ${config.inputVcf}")
         val variantStore = VariantStore(hardFilterVariants(fileReader))
