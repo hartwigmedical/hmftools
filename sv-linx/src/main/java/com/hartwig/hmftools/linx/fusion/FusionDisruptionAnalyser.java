@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
@@ -44,7 +43,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
 import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
-import com.hartwig.hmftools.linx.rna.RnaFusionMapper;
+import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -206,8 +205,7 @@ public class FusionDisruptionAnalyser
 
         if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
         {
-            mRnaFusionMapper = new RnaFusionMapper(mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
-            mRnaFusionMapper.setOutputDir(mOutputDir);
+            mRnaFusionMapper = new RnaFusionMapper(mOutputDir, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
             mRnaFusionMapper.loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
         }
 

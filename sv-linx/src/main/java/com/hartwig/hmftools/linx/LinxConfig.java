@@ -95,7 +95,8 @@ public class LinxConfig
     // limit batch run to first X samples
     private static final String MAX_SAMPLES = "max_samples";
 
-    private static final Logger LOGGER = LogManager.getLogger(LinxConfig.class);
+    // global Linx logger
+    public static final Logger LNX_LOGGER = LogManager.getLogger(LinxConfig.class);
 
     public LinxConfig(final CommandLine cmd)
     {
@@ -132,7 +133,7 @@ public class LinxConfig
             }
             else
             {
-                LOGGER.error("invalid ref genome version({})", cmd.getOptionValue(REF_GENOME_VERSION));
+                LNX_LOGGER.error("invalid ref genome version({})", cmd.getOptionValue(REF_GENOME_VERSION));
             }
         }
 
@@ -230,7 +231,7 @@ public class LinxConfig
         final String filePath = cmd.getOptionValue(configItem);
         if(!Files.exists(Paths.get(filePath)))
         {
-            LOGGER.error("invalid config path: {} = {}", configItem, filePath);
+            LNX_LOGGER.error("invalid config path: {} = {}", configItem, filePath);
             return false;
         }
 
@@ -291,12 +292,12 @@ public class LinxConfig
                 sampleIds.add(sampleId);
             }
 
-            LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
+            LNX_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
 
         }
         catch (IOException exception)
         {
-            LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
+            LNX_LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
         }
 
         return sampleIds;

@@ -1,8 +1,12 @@
-package com.hartwig.hmftools.linx.rna;
+package com.hartwig.hmftools.linx.fusion.rna;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
 import java.util.List;
 
@@ -15,31 +19,21 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class RnaFusionData
 {
-    // data from Star Fusion predictions output:
-    public final String RefName;
-    public final String GeneUp;
-    public final String GeneDown;
-    public final String ChrUp;
-    public final String ChrDown;
-    public final int PositionUp;
-    public final int PositionDown;
-    public final byte StrandUp;
-    public final byte StrandDown;
+    public final String[] GeneIds;
+    public final String[] GeneNames;
+    public final String[] Chromosomes;
+    public final int[] Positions;
+    public final byte[] Strands;
 
-    public final int JunctionReadCount;
-    public final int SpanningFragCount;
-    public final String SpliceType;
-
-    public static String RNA_SPLICE_TYPE_ONLY_REF = "ONLY_REF_SPLICE";
-    public static String RNA_SPLICE_TYPE_UNKONWN = "UNKNOWN"; // for read with a star-fusion prediction
+    public final int JunctionFragments;
+    public final int DiscordantFragments;
+    public final RnaJunctionType[] JunctionTypes;
 
     private boolean mIsValid;
     private List<String> mExonMatchedTransIdUp; // transcripts with an exon matching the RNA position
     private List<String> mExonMatchedTransIdDown;
 
     // annotations and matching results
-    private String mGeneIdUp;
-    private String mGeneIdDown;
 
     // transcripts matching SV breakends
     private Transcript mTransUp;
@@ -69,33 +63,25 @@ public class RnaFusionData
     private SvBreakend mBreakendUp;
     private SvBreakend mBreakendDown;
 
-    private String mCalledFusionMatch; // no match, match on gene, match on exact SVs
+    private DnaRnaMatchType mDnaFusionMatchType; // no match, match on gene, match on exact SVs
+    private String mDnaFusionMatchInfo;
 
     private String mClusterInfoUp;
     private String mClusterInfoDown;
     private String mChainInfo;
 
-    public static final String DNA_MATCH_TYPE_NONE = "NONE";
-    public static final String DNA_MATCH_TYPE_GENES = "GENES";
-    public static final String DNA_MATCH_TYPE_SVS = "SV";
-    public static final String DNA_MATCH_TYPE_INVALID = "INVALID";
-
-    public RnaFusionData(final String name, final String geneUp, final String geneDown, final String chrUp, final String chrDown,
-            int posUp, int posDown, byte strandUp, byte strandDown, int junctionReadCount, int spanningFragCount, final String spliceType)
+    public RnaFusionData(final String[] geneIds, final String[] geneNames, final String[] chromosomes, final int[] positions,
+            int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes)
     {
-        GeneUp = geneUp;
-        GeneDown = geneDown;
-        RefName = geneUp + "_" + geneDown;
+        GeneIds = geneIds;
+        GeneNames = geneNames;
+        Chromosomes = chromosomes;
+        Positions = positions;
+        JunctionFragments = junctionReadCount;
+        DiscordantFragments = spanningFragCount;
+        JunctionTypes = junctionTypes;
 
-        ChrUp = chrUp;
-        ChrDown = chrDown;
-        PositionUp = posUp;
-        PositionDown = posDown;
-        StrandUp = strandUp;
-        StrandDown = strandDown;
-        JunctionReadCount = junctionReadCount;
-        SpanningFragCount = spanningFragCount;
-        SpliceType = spliceType;
+        Strands = new byte[FS_PAIR];
 
         mIsValid = true;
         mExonRankUp = 0;
@@ -124,27 +110,20 @@ public class RnaFusionData
         mExonsSkippedUp = 0;
         mExonsSkippedDown = 0;
 
-        mCalledFusionMatch = DNA_MATCH_TYPE_NONE;
+        mDnaFusionMatchType = DnaRnaMatchType.NONE;
+        mDnaFusionMatchInfo = "";
 
         mClusterInfoUp = "";
         mClusterInfoDown = "";
         mChainInfo = "0;0";
     }
 
-    public String name() { return GeneUp + "_" + GeneDown; }
+    public String name() { return GeneNames[FS_UPSTREAM] + "_" + GeneNames[FS_DOWNSTREAM]; }
 
     public boolean isValid() { return mIsValid; }
     public void setValid(boolean toggle) { mIsValid = toggle; }
 
-    public final String getGeneId(boolean isUpstream) { return isUpstream ? mGeneIdUp : mGeneIdDown; }
-
-    public void setGeneId(final String geneId, boolean isUpstream)
-    {
-        if(isUpstream)
-            mGeneIdUp = geneId;
-        else
-            mGeneIdDown = geneId;
-    }
+    public boolean matchesKnownSpliceSite() { return JunctionTypes[FS_UPSTREAM] == KNOWN && JunctionTypes[FS_DOWNSTREAM] == KNOWN; }
 
     public void setExonData(boolean isUpstream, int rank, int phase)
     {
@@ -186,12 +165,14 @@ public class RnaFusionData
         mPhaseMatchedFusion = phaseMatched;
     }
 
-    public void setCalledFusionMatch(final String matchType)
+    public void setDnaFusionMatch(final DnaRnaMatchType matchType, final String matchInfo)
     {
-        mCalledFusionMatch = matchType;
+        mDnaFusionMatchType = matchType;
+        mDnaFusionMatchInfo = matchInfo;
     }
 
-    public final String getCalledFusionMatch() { return mCalledFusionMatch; }
+    public final DnaRnaMatchType getDnaFusionMatchType() { return mDnaFusionMatchType; }
+    public final String getDnaFusionMatchInfo() { return mDnaFusionMatchInfo; }
 
     public void setTranscriptData(boolean isUpstream, final Transcript trans, final SvBreakend breakend,
             boolean matchedRnaBoundary, boolean correctLocation, int exonsSkipped)
@@ -289,5 +270,124 @@ public class RnaFusionData
         else
             mClusterInfoDown = clusterInfo;
     }
+
+    public static String RNA_FUSION_SOURCE_ISOFOX = "ISOFOX";
+    public static String RNA_FUSION_SOURCE_ARRIBA = "ARRIBA";
+    public static String RNA_FUSION_SOURCE_STARFUSION = "STARFUSION";
+
+    public static RnaFusionData from(final String source, final String data)
+    {
+        if(source.equals(RNA_FUSION_SOURCE_ISOFOX))
+            return fromIsofox(data);
+        else if(source.equals(RNA_FUSION_SOURCE_ARRIBA))
+            return fromArriba(data);
+        else if(source.equals(RNA_FUSION_SOURCE_STARFUSION))
+            return fromStarFusion(data);
+        else
+            return null;
+    }
+
+    private static RnaFusionData fromIsofox(final String data)
+    {
+        return null;
+        // return new RnaFusionData();
+    }
+
+    private static RnaFusionData fromArriba(final String data)
+    {
+        return null;
+        // return new RnaFusionData();
+    }
+
+    private static RnaFusionData fromStarFusion(final String data)
+    {
+        final String[] items = data.split(",", -1);
+
+        final String[] geneIds = new String[FS_PAIR];
+
+        // check that gene names match Ensembl
+        final String[] geneNames = new String[] { checkAlternateGeneName(items[5]), checkAlternateGeneName(items[10]) };
+
+        final String[] chromosomes = new String[] { items[7], items[12] };
+
+        final int[] positions = new int[] { Integer.parseInt(items[8]), Integer.parseInt(items[13]) };
+
+        final RnaJunctionType[] junctionTypes = new RnaJunctionType[FS_PAIR];
+
+        if(items[4].equals("ONLY_REF_SPLICE"))
+        {
+            junctionTypes[FS_UPSTREAM] = KNOWN;
+            junctionTypes[FS_DOWNSTREAM] = KNOWN;
+        }
+
+        int junctionCount = Integer.parseInt(items[2]);
+        int spanningCount = Integer.parseInt(items[3]);
+
+        return new RnaFusionData(
+                geneIds, geneNames, chromosomes, positions, junctionCount, spanningCount, junctionTypes);
+    }
+
+    private static String checkAlternateGeneName(final String geneName)
+    {
+        if(geneName.equals("AC005152.2"))
+            return "SOX9-AS1";
+
+        if(geneName.equals("AC016683.6"))
+            return "PAX8-AS1";
+
+        if(geneName.equals("AC007092.1"))
+            return "LINC01122";
+
+        if(geneName.toUpperCase().equals("C10ORF112"))
+            return "MALRD1";
+
+        if(geneName.equals("C5orf50"))
+            return "SMIM23";
+
+        if(geneName.equals("C10orf68"))
+            return geneName.toUpperCase();
+
+        if(geneName.equals("C17orf76-AS1"))
+            return "FAM211A-AS1";
+
+        if(geneName.equals("IGH@") || geneName.equals("IGH-@"))
+            return "IGHJ6";
+
+        if(geneName.equals("IGL@") || geneName.equals("IGL-@"))
+            return "IGLC6";
+
+        if(geneName.equals("MKLN1-AS1"))
+            return "LINC-PINT";
+
+        if(geneName.equals("PHF15"))
+            return "JADE2";
+
+        if(geneName.equals("PHF17"))
+            return "JADE1";
+
+        if(geneName.equals("RP11-134P9.1"))
+            return "LINC01136";
+
+        if(geneName.equals("RP11-973F15.1"))
+            return "LINC01151";
+
+        if(geneName.equals("RP11-115K3.2"))
+            return "YWHAEP7";
+
+        if(geneName.equals("RP11-3B12.1"))
+            return "POT1-AS1";
+
+        if(geneName.equals("RP11-199O14.1"))
+            return "CASC20";
+
+        if(geneName.equals("RP11-264F23.3"))
+            return "CCND2-AS1";
+
+        if(geneName.equals("RP11-93L9.1"))
+            return "LINC01091";
+
+        return geneName;
+    }
+
 
 }

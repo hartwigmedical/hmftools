@@ -45,13 +45,6 @@ public class FusionUtils
             return Integer.parseInt(chromosome);
     }
 
-    public static String formLocationPair(final String[] chromosomes, final int[] geneCollectionIds, final boolean[] isGenic)
-    {
-        return String.format("%s_%s",
-                formLocation(chromosomes[SE_START], geneCollectionIds[SE_START], isGenic[SE_START]),
-                formLocation(chromosomes[SE_END], geneCollectionIds[SE_END], isGenic[SE_END]));
-    }
-
     public static String formLocation(final String chromosome, final int geneCollectionId, boolean isGenic)
     {
         if(isGenic)
