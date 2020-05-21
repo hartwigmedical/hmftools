@@ -3,8 +3,9 @@ package com.hartwig.hmftools.gripss
 data class GripssConfig(
         val inputVcf: String,
         val outputVcf: String,
+        val singleBreakendPonFile: String,
+        val pairedBreakpointPonFile: String,
         val filterConfig: GripssFilterConfig)
-
 
 data class GripssFilterConfig(
         val maxNormalSupport: Double,

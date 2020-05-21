@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss
 
+import com.hartwig.hmftools.bedpe.BreakendLocation
 import com.hartwig.hmftools.bedpe.dedup.DedupPair
 import com.hartwig.hmftools.bedpe.dedup.DedupSingle
 import com.hartwig.hmftools.gripss.link.AlternatePath
@@ -7,6 +8,7 @@ import com.hartwig.hmftools.gripss.link.AssemblyLink
 import com.hartwig.hmftools.gripss.link.DsbLink
 import com.hartwig.hmftools.gripss.link.LinkRescue
 import com.hartwig.hmftools.gripss.store.LinkStore
+import com.hartwig.hmftools.gripss.store.LocationStore
 import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import com.hartwig.hmftools.gripss.store.VariantStore
 import htsjdk.variant.vcf.VCFFileReader
@@ -15,10 +17,12 @@ import java.io.File
 
 fun main(args: Array<String>) {
 
+    val singleBreakendPonFile = "/Users/jon/hmf/resources/gridss_pon_single_breakend.bed"
+    val pairedBreakpointPonFile = "/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe"
     val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
     val filterConfig = GripssFilterConfig.default()
-    val config = GripssConfig(inputVCF, outputVCF, filterConfig)
+    val config = GripssConfig(inputVCF, outputVCF, singleBreakendPonFile, pairedBreakpointPonFile, filterConfig)
 
     GripssApplication(config).use { x -> x.run() }
 }
@@ -35,7 +39,10 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileWriter = GripssVCF(config.outputVcf)
 
     override fun run() {
-        logger.info("Reading file: ${config.inputVcf}")
+        logger.info("Reading PON files: ${config.singleBreakendPonFile} ${config.pairedBreakpointPonFile}")
+        val ponStore = LocationStore(BreakendLocation.fromBedFile(config.singleBreakendPonFile), BreakendLocation.fromBedpeFile(config.pairedBreakpointPonFile))
+
+        logger.info("Reading VCF file: ${config.inputVcf}")
 
         fileWriter.writeHeader(fileReader.fileHeader)
         val variantStore = VariantStore(hardFilterVariants(fileReader))

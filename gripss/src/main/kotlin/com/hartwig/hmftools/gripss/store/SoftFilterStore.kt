@@ -45,6 +45,7 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
     fun isEligibleForRescue(vcfId: String, mateId: String?): Boolean {
         return isEligibleForRescue(vcfId) && mateId?.let { isDuplicate(it) } != true
     }
+
     fun isEligibleForRescue(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == false
 
     fun isDuplicate(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == true
