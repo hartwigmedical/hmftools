@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THR
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.RNA_FUSION_SOURCE_ISOFOX;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
 
 import java.io.File;
@@ -92,7 +93,8 @@ public class FusionDisruptionAnalyser
 
     private PerformanceCounter mPerfCounter;
 
-    public static final String SAMPLE_RNA_FILE = "sample_rna_file";
+    public static final String RNA_FUSIONS_FILE = "rna_fusions_file";
+    public static final String RNA_FILE_SOURCE = "rna_file_source";
     public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
@@ -144,12 +146,15 @@ public class FusionDisruptionAnalyser
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
         options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
+
+        options.addOption(RNA_FUSIONS_FILE, true, "Sample RNA fusion data to match vs Linx fusios");
+        options.addOption(RNA_FILE_SOURCE, true, "RNA fusion source: ISOFOX, ARRIBA or STARFUSION");
+
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
         options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
         options.addOption(LOG_REPEAT_GENE_PAIRS, false, "Log sme gene-pair repeatedly if supported by different SVs");
@@ -158,7 +163,7 @@ public class FusionDisruptionAnalyser
 
     public static boolean validConfig(final CommandLine cmd)
     {
-        return(configPathValid(cmd, SAMPLE_RNA_FILE) && configPathValid(cmd, REF_GENOME_FILE)
+        return(configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, REF_GENOME_FILE)
             && configPathValid(cmd, FUSION_PAIRS_CSV) && configPathValid(cmd, PROMISCUOUS_FIVE_CSV) && configPathValid(cmd, PROMISCUOUS_THREE_CSV));
     }
 
@@ -203,10 +208,11 @@ public class FusionDisruptionAnalyser
             mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
         }
 
-        if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
+        if (cmdLineArgs.hasOption(RNA_FUSIONS_FILE))
         {
             mRnaFusionMapper = new RnaFusionMapper(mOutputDir, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
-            mRnaFusionMapper.loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
+            final String fileSource = cmdLineArgs.getOptionValue(RNA_FILE_SOURCE, RNA_FUSION_SOURCE_ISOFOX);
+            mRnaFusionMapper.loadSampleRnaData(fileSource, cmdLineArgs.getOptionValue(RNA_FUSIONS_FILE));
         }
 
         mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);

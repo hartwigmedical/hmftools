@@ -36,14 +36,17 @@ public class RnaMatchWriter
 
                 mWriter = createBufferedWriter(outputFilename, false);
 
-                mWriter.write("SampleId,FusionName,GeneNameUp,GeneNameDown,ViableFusion");
+                mWriter.write("SampleId,FusionId,FusionName,ViableFusion");
                 mWriter.write(",PhaseMatched,DnaMatchType,DnaMatchInfo,KnownType,RnaPhaseMatched");
 
-                for(int se = SE_START; se <= SE_END; ++se)
+                for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
                 {
-                    String upDown = se == SE_START ? "Up" : "Down";
+                    String upDown = fs == FS_UPSTREAM ? "Up" : "Down";
+                    String fieldsStr = "";
 
-                    String fieldsStr = ",SvId" + upDown;
+                    fieldsStr += ",GeneId" + upDown;
+                    fieldsStr += ",GeneName" + upDown;
+                    fieldsStr += ",SvId" + upDown;
                     fieldsStr += ",Chr" + upDown;
                     fieldsStr += ",Pos" + upDown;
                     fieldsStr += ",RnaPos" + upDown;
@@ -86,51 +89,47 @@ public class RnaMatchWriter
 
         try
         {
-            mWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
-                    sampleId, rnaFusion.name(), rnaFusion.GeneIds[FS_UPSTREAM], rnaFusion.GeneIds[FS_DOWNSTREAM],
-                    rnaFusion.GeneNames[FS_UPSTREAM], rnaFusion.GeneNames[FS_DOWNSTREAM],
-                    rnaFusion.isViableFusion(), rnaFusion.isPhaseMatchedFusion(), rnaFusion.getDnaFusionMatchType(),
-                    rnaFusion.getDnaFusionMatchInfo(), rnaFusion.getKnownType(), rnaFusion.hasRnaPhasedFusion()));
+            mWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s",
+                    sampleId, rnaFusion.FusionId, rnaFusion.name(), rnaFusion.isViableFusion(), rnaFusion.isPhaseMatchedFusion(),
+                    rnaFusion.getDnaFusionMatchType(), rnaFusion.getDnaFusionMatchInfo(), rnaFusion.getKnownType(), rnaFusion.hasRnaPhasedFusion()));
 
-            for(int se = SE_START; se <= SE_END; ++se)
+            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
             {
-                boolean isUpstream = (se == SE_START);
-                final Transcript trans = rnaFusion.getTrans(isUpstream);
+                boolean isUpstream = (fs == SE_START);
+                final Transcript trans = rnaFusion.getMatchedfTranscripts()[fs];
 
                 if(trans != null)
                 {
                     final GeneAnnotation gene = trans.gene();
 
-                    mWriter.write(String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
-                            gene.id(), gene.chromosome(), gene.position(),
-                            isUpstream ? rnaFusion.Positions[FS_UPSTREAM] : rnaFusion.Positions[FS_DOWNSTREAM],
-                            gene.orientation(), gene.Strand, gene.type(),
+                    mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%d,%d,%s,%s",
+                            gene.StableId, gene.GeneName, gene.id(), gene.chromosome(), gene.position(),
+                            rnaFusion.Positions[fs], gene.orientation(), gene.Strand, gene.type(),
                             rnaFusion.getClusterInfo(isUpstream)));
 
                     mWriter.write(String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",
-                            rnaFusion.isTransViable(isUpstream), rnaFusion.isTransCorrectLocation(isUpstream),
-                            trans.StableId, rnaFusion.getExonsSkipped(isUpstream),
+                            rnaFusion.isTransViable()[fs], rnaFusion.isTransCorrectLocation()[fs],
+                            trans.StableId, rnaFusion.getExonsSkipped()[fs],
                             trans.regionType(), trans.codingType(),
                             isUpstream ? trans.ExonUpstream : trans.ExonDownstream, trans.isDisruptive(), trans.prevSpliceAcceptorDistance()));
                 }
                 else
                 {
-                    mWriter.write(String.format(",%s,%s,%d,%d,%d,%d,%s,%s",
-                            "", isUpstream ? rnaFusion.Chromosomes[FS_UPSTREAM] : rnaFusion.Chromosomes[FS_DOWNSTREAM], 0,
-                            isUpstream ? rnaFusion.Positions[FS_UPSTREAM] : rnaFusion.Positions[FS_DOWNSTREAM], 0, 0, "", ""));
+                    mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%d,%d,%s,%s",
+                            "", "", 0, rnaFusion.Chromosomes[fs], 0, rnaFusion.Positions[fs], 0, 0, "", ""));
 
                     mWriter.write(String.format(",%s,%s,,,,,,,",
-                            rnaFusion.isTransViable(isUpstream), rnaFusion.isTransCorrectLocation(isUpstream)));
+                            rnaFusion.isTransViable()[fs], rnaFusion.isTransCorrectLocation()[fs]));
                 }
 
-                boolean hasExonData = rnaFusion.exonRank(isUpstream) > 0;
+                boolean hasExonData = rnaFusion.exonRank()[fs] > 0;
 
                 mWriter.write(String.format(",%s,%s,%d,%s",
-                        hasExonData ? rnaFusion.exonRank(isUpstream) :"", hasExonData ? rnaFusion.exonPhase(isUpstream) : "",
-                        rnaFusion.getExactMatchTransIds(isUpstream).size(), rnaFusion.getRnaPhasedFusionTransId(isUpstream)));
+                        hasExonData ? rnaFusion.exonRank()[fs] :"", hasExonData ? rnaFusion.exonPhase()[fs] : "",
+                        rnaFusion.getExactMatchTransIds()[fs].size(), rnaFusion.getRnaPhasedFusionTransId()[fs]));
             }
 
-            mWriter.write(String.format(",%s,%d,%d,%s,%s,%s",
+            mWriter.write(String.format(",%s,%d,%d,%s,%s",
                     !rnaFusion.getChainInfo().isEmpty() ? rnaFusion.getChainInfo() : "0;0",
                     rnaFusion.JunctionFragments, rnaFusion.DiscordantFragments,
                     rnaFusion.JunctionTypes[FS_UPSTREAM], rnaFusion.JunctionTypes[FS_DOWNSTREAM]));

@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -24,6 +23,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class RnaFusionData
 {
+    // RNA fusion data from external source
     public final String FusionId;
     public final String SampleId;
     public final String[] GeneIds;
@@ -36,39 +36,31 @@ public class RnaFusionData
     public final int DiscordantFragments;
     public final RnaJunctionType[] JunctionTypes;
 
+    // annotations
     private boolean mIsValid;
-    private List<String> mExonMatchedTransIdUp; // transcripts with an exon matching the RNA position
-    private List<String> mExonMatchedTransIdDown;
+    private final List<String>[] mExonMatchedTransIds; // transcripts with an exon matching the RNA position
 
     // annotations and matching results
 
     // transcripts matching SV breakends
-    private Transcript mTransUp;
-    private Transcript mTransDown;
+    private final Transcript[] mMatchedTranscripts;
 
     // canonical exon positions based on RNA positions
-    private int mExonRankUp;
-    private int mExonPhaseUp;
-    private int mExonRankDown;
-    private int mExonPhaseDown;
+    private final int[] mExonRanks;
+    private final int[] mExonPhases;
 
     // transcripts matching RNA positions if in a phased fusion
-    private String mRnaTransIdUp;
-    private String mRnaTransIdDown;
+    private final String[] mRnaTransIds;
 
     private boolean mViableFusion; // the pair of transcripts satisfied standard fusion rules
     private boolean mPhaseMatchedFusion;
     private String mKnownFusionType;
-    private boolean mTransViableUp; // the transcript fell in the correct location relative to the RNA position
-    private boolean mTransViableDown;
-    private boolean mTransCorrectLocationUp; // the transcript fell on the correct side and orientation for the RNA position
-    private boolean mTransCorrectLocationDown;
-    private int mExonsSkippedUp; // where no valid breakend was found, record the number of exons skipped between the breakend and the RNA
-    private int mExonsSkippedDown;
+    private final boolean[] mTransViable; // the transcript fell in the correct location relative to the RNA position
+    private final boolean[] mTransCorrectLocation; // the transcript fell on the correct side and orientation for the RNA position
+    private final int[] mExonsSkipped; // where no valid breakend was found, record the number of exons skipped between the breakend and the RNA
 
     // SVA match data
-    private SvBreakend mBreakendUp;
-    private SvBreakend mBreakendDown;
+    private final SvBreakend[] mBreakends;
 
     private DnaRnaMatchType mDnaFusionMatchType; // no match, match on gene, match on exact SVs
     private String mDnaFusionMatchInfo;
@@ -94,31 +86,23 @@ public class RnaFusionData
         Strands = new byte[FS_PAIR];
 
         mIsValid = true;
-        mExonRankUp = 0;
-        mExonPhaseUp = 0;
-        mExonRankDown = 0;
-        mExonPhaseDown = 0;
+        mExonRanks = new int[] {0, 0};
+        mExonPhases = new int[] {0, 0};
 
-        mExonMatchedTransIdDown = Lists.newArrayList();
-        mExonMatchedTransIdUp = Lists.newArrayList();
+        mExonMatchedTransIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        mExonMatchedTransIds[FS_UPSTREAM] = Lists.newArrayList();
 
-        mTransUp = null;
-        mTransDown = null;
-        mBreakendUp = null;
-        mBreakendDown = null;
+        mMatchedTranscripts = new Transcript[] { null, null};
+        mBreakends = new SvBreakend[] { null, null};
 
-        mRnaTransIdUp = "";
-        mRnaTransIdDown = "";
+        mRnaTransIds = new String[]  {"", ""};
 
         mViableFusion = false;
         mPhaseMatchedFusion = false;
         mKnownFusionType = REPORTABLE_TYPE_NONE;
-        mTransViableUp = false;
-        mTransViableDown = false;
-        mTransCorrectLocationUp = false;
-        mTransCorrectLocationDown = false;
-        mExonsSkippedUp = 0;
-        mExonsSkippedDown = 0;
+        mTransViable = new boolean[] { false, false };
+        mTransCorrectLocation = new boolean[] { false, false };
+        mExonsSkipped = new int[] {0, 0};
 
         mDnaFusionMatchType = DnaRnaMatchType.NONE;
         mDnaFusionMatchInfo = "";
@@ -135,39 +119,26 @@ public class RnaFusionData
 
     public boolean matchesKnownSpliceSite() { return JunctionTypes[FS_UPSTREAM] == KNOWN && JunctionTypes[FS_DOWNSTREAM] == KNOWN; }
 
-    public void setExonData(boolean isUpstream, int rank, int phase)
+    public void setExonData(int fs, int rank, int phase)
     {
-        if(isUpstream)
-        {
-            mExonPhaseUp = phase;
-            mExonRankUp = rank;
-        }
-        else
-        {
-            mExonPhaseDown = phase;
-            mExonRankDown = rank;
-        }
+        mExonPhases[fs] = phase;
+        mExonRanks[fs] = rank;
     }
 
-    public final List<String> getExactMatchTransIds(boolean isUpstream)
-    {
-        return isUpstream ? mExonMatchedTransIdUp : mExonMatchedTransIdDown;
-    }
+    public final List<String>[] getExactMatchTransIds() { return mExonMatchedTransIds; }
 
-    public int exonRank(boolean isUpstream) { return isUpstream ? mExonRankUp : mExonRankDown; }
-    public int exonPhase(boolean isUpstream) {return isUpstream ? mExonPhaseUp : mExonPhaseDown; }
+    public int[] exonRank() { return mExonRanks; }
+    public int[] exonPhase() {return mExonPhases; }
 
     public void setRnaPhasedFusionData(final String transIdUp, final String transIdDown)
     {
-        mRnaTransIdUp = transIdUp;
-        mRnaTransIdDown = transIdDown;
+        mRnaTransIds[FS_UPSTREAM] = transIdUp;
+        mRnaTransIds[FS_DOWNSTREAM] = transIdDown;
     }
 
-    public boolean hasRnaPhasedFusion() { return !mRnaTransIdUp.isEmpty() && !mRnaTransIdDown.isEmpty(); }
-    public String getRnaPhasedFusionTransId(boolean isUpstream)
-    {
-        return isUpstream ? mRnaTransIdUp : mRnaTransIdDown;
-    }
+    public boolean hasRnaPhasedFusion() { return !mRnaTransIds[FS_UPSTREAM].isEmpty() && !mRnaTransIds[FS_DOWNSTREAM].isEmpty(); }
+
+    public String[] getRnaPhasedFusionTransId() { return mRnaTransIds; }
 
     public void setViableFusion(boolean viable, boolean phaseMatched)
     {
@@ -184,32 +155,21 @@ public class RnaFusionData
     public final DnaRnaMatchType getDnaFusionMatchType() { return mDnaFusionMatchType; }
     public final String getDnaFusionMatchInfo() { return mDnaFusionMatchInfo; }
 
-    public void setTranscriptData(boolean isUpstream, final Transcript trans, final SvBreakend breakend,
+    public void setTranscriptData(int fs, final Transcript trans, final SvBreakend breakend,
             boolean matchedRnaBoundary, boolean correctLocation, int exonsSkipped)
     {
-        if(isUpstream)
-        {
-            mTransUp = trans;
-            mBreakendUp = breakend;
-            mTransViableUp = matchedRnaBoundary;
-            mTransCorrectLocationUp = correctLocation;
-            mExonsSkippedUp = exonsSkipped;
-        }
-        else
-        {
-            mTransDown = trans;
-            mBreakendDown = breakend;
-            mTransViableDown = matchedRnaBoundary;
-            mTransCorrectLocationDown = correctLocation;
-            mExonsSkippedDown = exonsSkipped;
-        }
+        mMatchedTranscripts[fs] = trans;
+        mBreakends[fs] = breakend;
+        mTransViable[fs] = matchedRnaBoundary;
+        mTransCorrectLocation[fs] = correctLocation;
+        mExonsSkipped[fs] = exonsSkipped;
     }
 
-    public final Transcript getTrans(boolean isUpstream) { return isUpstream ? mTransUp : mTransDown; }
-    public final SvBreakend getBreakend(boolean isUpstream) { return isUpstream ? mBreakendUp : mBreakendDown; }
-    public final boolean isTransViable(boolean isUpstream) { return isUpstream ? mTransViableUp : mTransViableDown; }
-    public final boolean isTransCorrectLocation(boolean isUpstream) { return isUpstream ? mTransCorrectLocationUp : mTransCorrectLocationDown; }
-    public final int getExonsSkipped(boolean isUpstream) { return isUpstream ? mExonsSkippedUp : mExonsSkippedDown; }
+    public final Transcript[] getMatchedfTranscripts() { return mMatchedTranscripts; }
+    public final SvBreakend[] getBreakend() { return mBreakends; }
+    public final boolean[] isTransViable() { return mTransViable; }
+    public final boolean[] isTransCorrectLocation() { return mTransCorrectLocation; }
+    public final int[] getExonsSkipped() { return mExonsSkipped; }
 
     public boolean isViableFusion() { return mViableFusion; }
     public boolean isPhaseMatchedFusion() { return mPhaseMatchedFusion; }
@@ -229,14 +189,14 @@ public class RnaFusionData
 
     public void setFusionClusterChainInfo()
     {
-        if(mBreakendUp == null && mBreakendDown == null)
+        if(mBreakends[FS_UPSTREAM] == null && mBreakends[FS_DOWNSTREAM] == null)
             return;
 
-        if(mBreakendUp != null && mBreakendDown != null)
+        if(mBreakends[FS_UPSTREAM] != null && mBreakends[FS_DOWNSTREAM] != null)
         {
-            SvVarData varUp = mBreakendUp.getSV();
+            SvVarData varUp = mBreakends[FS_UPSTREAM].getSV();
             SvCluster clusterUp = varUp.getCluster();
-            SvVarData varDown = mBreakendDown.getSV();
+            SvVarData varDown = mBreakends[FS_DOWNSTREAM].getSV();
             SvCluster clusterDown = varDown.getCluster();
 
             SvChain matchingChain = null;
@@ -249,18 +209,18 @@ public class RnaFusionData
                 if (matchingChain != null)
                 {
                     final int chainData[] =
-                            matchingChain.breakendsAreChained(varUp, !mBreakendUp.usesStart(), varDown, !mBreakendDown.usesStart());
+                            matchingChain.breakendsAreChained(varUp, !mBreakends[FS_UPSTREAM].usesStart(), varDown, !mBreakends[FS_DOWNSTREAM].usesStart());
                     mChainInfo = String.format("%d;%d", chainData[CHAIN_LINK_COUNT], chainData[CHAIN_LENGTH]);
                 }
             }
 
-            setFusionClusterInfo(mBreakendUp, true, matchingChain);
-            setFusionClusterInfo(mBreakendDown, false, matchingChain);
+            setFusionClusterInfo(mBreakends[FS_UPSTREAM], true, matchingChain);
+            setFusionClusterInfo(mBreakends[FS_DOWNSTREAM], false, matchingChain);
         }
         else
         {
-            SvBreakend breakend = mBreakendUp != null ? mBreakendUp : mBreakendDown;
-            setFusionClusterInfo(breakend, mBreakendUp != null, null);
+            SvBreakend breakend = mBreakends[FS_UPSTREAM] != null ? mBreakends[FS_UPSTREAM] : mBreakends[FS_DOWNSTREAM];
+            setFusionClusterInfo(breakend, mBreakends[FS_UPSTREAM] != null, null);
         }
     }
 

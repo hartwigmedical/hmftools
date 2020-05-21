@@ -19,8 +19,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.getRnaSourceDelimiter;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -187,7 +185,7 @@ public class RnaFusionMapper
                 {
                     if(isExactRnaExon)
                     {
-                        if(!rnaFusion.getExactMatchTransIds(isUpstream).contains(trans.StableId))
+                        if(!rnaFusion.getExactMatchTransIds()[fs].contains(trans.StableId))
                             continue;
                     }
                     else if(!trans.isCanonical())
@@ -270,11 +268,11 @@ public class RnaFusionMapper
             if(topCandidateFusion != null)
             {
                 rnaFusion.setTranscriptData(
-                        true, topCandidateFusion.upstreamTrans(), topUpBreakend,
+                        FS_UPSTREAM, topCandidateFusion.upstreamTrans(), topUpBreakend,
                         true, true,  0);
 
                 rnaFusion.setTranscriptData(
-                        false, topCandidateFusion.downstreamTrans(), topDownBreakend,
+                        FS_DOWNSTREAM, topCandidateFusion.downstreamTrans(), topDownBreakend,
                         true, true,0);
 
                 rnaFusion.setViableFusion(topCandidateFusionViable, topCandidateFusion.phaseMatched());
@@ -369,7 +367,7 @@ public class RnaFusionMapper
                         exonsSkipped = abs(rnaExonData[EXON_RANK_MIN] - svPosExonData[EXON_RANK_MIN]);
                     }
 
-                    rnaFusion.setTranscriptData(isUpstream, closestTrans, closestBreakend, isViable, correctLocation, exonsSkipped);
+                    rnaFusion.setTranscriptData(fs, closestTrans, closestBreakend, isViable, correctLocation, exonsSkipped);
 
                     LNX_LOGGER.debug("rnaFusion({}) {} closest breakend({}) distance({})",
                             rnaFusion.name(), isUpstream ? "up" :"down", closestBreakend.toString(), closestDistance);
@@ -385,8 +383,8 @@ public class RnaFusionMapper
     {
         DnaRnaMatchType matchType = DnaRnaMatchType.NONE;
 
-        final Transcript transUp = rnaFusionData.getTrans(true);
-        final Transcript transDown = rnaFusionData.getTrans(false);
+        final Transcript transUp = rnaFusionData.getMatchedfTranscripts()[FS_UPSTREAM];
+        final Transcript transDown = rnaFusionData.getMatchedfTranscripts()[FS_DOWNSTREAM];
 
         for(final GeneFusion dnaFusion : mDnaFusions)
         {
@@ -717,7 +715,7 @@ public class RnaFusionMapper
                     int[] exonMatchData = findExonMatch(transData.exons(), transData.Strand, rnaPosition);
 
                     if(exonMatchData[EXON_EXACT_MATCH] > 0)
-                        rnaFusion.getExactMatchTransIds(isUpstream).add(transData.TransName);
+                        rnaFusion.getExactMatchTransIds()[fs].add(transData.TransName);
 
                     if(exonMatchData[EXON_FOUND] > 0)
                     {
@@ -737,7 +735,7 @@ public class RnaFusionMapper
                 final String transIdUp = entryUp.getKey();
                 final int[] exonDataUp = entryUp.getValue();
 
-                if(isExactRnaExon && !rnaFusion.getExactMatchTransIds(true).contains(transIdUp))
+                if(isExactRnaExon && !rnaFusion.getExactMatchTransIds()[FS_UPSTREAM].contains(transIdUp))
                     continue;
 
                 for (Map.Entry<String, int[]> entryDown : transPhasesDown.entrySet())
@@ -745,7 +743,7 @@ public class RnaFusionMapper
                     final String transIdDown = entryDown.getKey();
                     final int[] exonDataDown = entryDown.getValue();
 
-                    if(isExactRnaExon && !rnaFusion.getExactMatchTransIds(false).contains(transIdDown))
+                    if(isExactRnaExon && !rnaFusion.getExactMatchTransIds()[FS_DOWNSTREAM].contains(transIdDown))
                         continue;
 
                     boolean phaseMatched = exonDataUp[EXON_PHASE] == exonDataDown[EXON_PHASE];
@@ -757,8 +755,8 @@ public class RnaFusionMapper
                                 transIdUp, transIdDown, exonDataUp[EXON_PHASE], phaseMatched);
 
                         rnaFusion.setRnaPhasedFusionData(transIdUp, transIdDown);
-                        rnaFusion.setExonData(true, exonDataUp[EXON_RANK], exonDataUp[EXON_PHASE]);
-                        rnaFusion.setExonData(false, exonDataDown[EXON_RANK], exonDataDown[EXON_PHASE]);
+                        rnaFusion.setExonData(FS_UPSTREAM, exonDataUp[EXON_RANK], exonDataUp[EXON_PHASE]);
+                        rnaFusion.setExonData(FS_DOWNSTREAM, exonDataDown[EXON_RANK], exonDataDown[EXON_PHASE]);
                     }
                 }
             }
@@ -870,15 +868,8 @@ public class RnaFusionMapper
         return exonMatch;
     }
 
-    private static int COL_SAMPLEID = 0;
-
-    public boolean loadSampleRnaData(final String inputData)
+    public boolean loadSampleRnaData(final String source, final String filename)
     {
-        final String[] inputItems = inputData.split("=");
-
-        final String source = inputItems[0];
-        final String filename = inputItems[1];
-
         try
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
@@ -889,10 +880,12 @@ public class RnaFusionMapper
 
             String currentSampleId = "";
             List<RnaFusionData> rnaDataList = Lists.newArrayList();
+            int recordCount = 0;
 
             for(String data : lines)
             {
-                RnaFusionData rnaData = RnaFusionData.from(source, data, fieldIndexMap);
+                RnaFusionData rnaData = RnaFusionData.from(source, recordCount, data, fieldIndexMap);
+                ++recordCount;
 
                 if(currentSampleId.isEmpty() || !currentSampleId.equals(rnaData.SampleId))
                 {
@@ -903,7 +896,6 @@ public class RnaFusionMapper
 
                 rnaDataList.add(rnaData);
             }
-
         }
         catch(IOException e)
         {
