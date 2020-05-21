@@ -2,7 +2,8 @@ package com.hartwig.hmftools.linx.gene;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
 import java.io.BufferedWriter;
@@ -23,15 +24,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerateEnsemblDataCache
 {
-    private static final Logger LOGGER = LogManager.getLogger(GenerateEnsemblDataCache.class);
-
     private static final String LOG_DEBUG = "log_debug";
     private static final String OUTPUT_DIR = "output_dir";
 
@@ -52,19 +49,19 @@ public class GenerateEnsemblDataCache
     {
         final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
-        LOGGER.info("writing Ensembl data files to {}", outputDir);
+        LNX_LOGGER.info("writing Ensembl data files to {}", outputDir);
 
         EnsemblDAO ensemblDAO = new EnsemblDAO(cmd);
 
         if(!ensemblDAO.isValid())
         {
-            LOGGER.info("invalid Ensembl DAO");
+            LNX_LOGGER.info("invalid Ensembl DAO");
             return;
         }
 
         ensemblDAO.writeDataCacheFiles(outputDir);
 
-        LOGGER.debug("reloading transcript data to generate splice acceptor positions");
+        LNX_LOGGER.debug("reloading transcript data to generate splice acceptor positions");
 
         // create the transcript splice acceptor position data
         EnsemblDataCache geneTransCache = new EnsemblDataCache(outputDir, ensemblDAO.refGenomeVersion());
@@ -73,7 +70,7 @@ public class GenerateEnsemblDataCache
         createTranscriptPreGenePositionData(
                 geneTransCache.getChrGeneDataMap(), geneTransCache.getTranscriptDataMap(), PRE_GENE_PROMOTOR_DISTANCE, outputDir);
 
-        LOGGER.info("Ensembl data cache complete");
+        LNX_LOGGER.info("Ensembl data cache complete");
     }
 
     private static void createTranscriptPreGenePositionData(
@@ -99,7 +96,7 @@ public class GenerateEnsemblDataCache
             {
                 final String chromosome = entry.getKey();
 
-                LOGGER.debug("calculating pre-gene positions for chromosome({})", chromosome);
+                LNX_LOGGER.debug("calculating pre-gene positions for chromosome({})", chromosome);
 
                 final List<EnsemblGeneData> geneList = entry.getValue();
 
@@ -157,12 +154,12 @@ public class GenerateEnsemblDataCache
                 }
             }
 
-            LOGGER.info("pre-gene positions written to file: {}", outputFile);
+            LNX_LOGGER.info("pre-gene positions written to file: {}", outputFile);
             closeBufferedWriter(writer);
         }
         catch(IOException e)
         {
-            LOGGER.error("error writing Ensembl trans splice data file: {}", e.toString());
+            LNX_LOGGER.error("error writing Ensembl trans splice data file: {}", e.toString());
         }
     }
 

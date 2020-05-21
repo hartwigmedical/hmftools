@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.isIrrelevantSameGene;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_SYMBOL;
@@ -26,9 +27,6 @@ import com.hartwig.hmftools.common.fusion.GeneFusion;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class NeoEpitopeFinder
 {
     private final EnsemblDataCache mGeneTransCache;
@@ -39,8 +37,6 @@ public class NeoEpitopeFinder
     private final List<NeoEpitopeData> mNeoEpitopeResults;
 
     private static final int AMINO_ACID_REF_COUNT = 10;
-
-    private static final Logger LOGGER = LogManager.getLogger(NeoEpitopeFinder.class);
 
     public NeoEpitopeFinder(final RefGenomeInterface refGenome, final EnsemblDataCache geneTransCache, final String outputDir)
     {
@@ -78,7 +74,7 @@ public class NeoEpitopeFinder
             int upstreamPhaseOffset = upTrans.ExonUpstreamPhase;
             int downstreamPhaseOffset = upstreamPhaseOffset == 0 || !isPhased ? 0 : 3 - upstreamPhaseOffset;
 
-            LOGGER.debug("fusion({}) SVs({} & {}) phased({}) upPhaseOffset({}) downPhaseOffset({})",
+            LNX_LOGGER.debug("fusion({}) SVs({} & {}) phased({}) upPhaseOffset({}) downPhaseOffset({})",
                     fusion.name(), fusion.svId(true), fusion.svId(false),
                     isPhased, upstreamPhaseOffset, downstreamPhaseOffset);
 
@@ -128,7 +124,7 @@ public class NeoEpitopeFinder
                 downstreamBases = "";
             }
 
-            LOGGER.debug("fusion({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
+            LNX_LOGGER.debug("fusion({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
                     fusion.name(), upstreamBases, checkTrimBases(novelCodonBases), checkTrimBases(downstreamBases), nmdBaseCount);
 
             if(upstreamBases.isEmpty() || (downstreamBases.isEmpty() && novelCodonBases.isEmpty()))
@@ -138,7 +134,7 @@ public class NeoEpitopeFinder
             final String novelAminoAcids = getAminoAcids(novelCodonBases, !isPhased);
             String downstreamRefAminoAcids = getAminoAcids(downstreamBases, !isPhased);
 
-            LOGGER.debug("fusion({}) upAA({}) novel({}) downAA({})",
+            LNX_LOGGER.debug("fusion({}) upAA({}) novel({}) downAA({})",
                     fusion.name(), upstreamRefAminoAcids, checkTrimBases(novelAminoAcids), checkTrimBases(downstreamRefAminoAcids));
 
             if(novelAminoAcids.equals(STOP_SYMBOL))
@@ -202,7 +198,7 @@ public class NeoEpitopeFinder
 
         if(transData == null)
         {
-            LOGGER.error("gene({}) transcript({}) data not found", transcript.gene().GeneName, transcript.StableId);
+            LNX_LOGGER.error("gene({}) transcript({}) data not found", transcript.gene().GeneName, transcript.StableId);
             return null;
         }
 
@@ -485,7 +481,7 @@ public class NeoEpitopeFinder
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing kataegis output file: {}", e.toString());
+            LNX_LOGGER.error("error writing kataegis output file: {}", e.toString());
         }
     }
 

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.gene;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -37,8 +38,6 @@ public class EnsemblDAO
     private final int mCoordSystemId;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    private static final Logger LOGGER = LogManager.getLogger(EnsemblDAO.class);
-
     public EnsemblDAO(final CommandLine cmd)
     {
         mRefGenomeVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(HG37)));
@@ -50,7 +49,7 @@ public class EnsemblDAO
         }
 
         mCoordSystemId = findCoordSystemId();
-        LOGGER.info("Ref genome version({}), coord system Id({})", mRefGenomeVersion, mCoordSystemId);
+        LNX_LOGGER.info("Ref genome version({}), coord system Id({})", mRefGenomeVersion, mCoordSystemId);
     }
 
     public static void addCmdLineArgs(Options options)
@@ -79,7 +78,7 @@ public class EnsemblDAO
         }
         catch(SQLException e)
         {
-            LOGGER.error("failed to connect to DB: {}", e.toString());
+            LNX_LOGGER.error("failed to connect to DB: {}", e.toString());
             return false;
         }
 
@@ -94,7 +93,7 @@ public class EnsemblDAO
                 + " where version = '" + version + "'"
                 + " order by rank  limit 1";
 
-        LOGGER.debug("gene query: {}", queryStr);
+        LNX_LOGGER.debug("gene query: {}", queryStr);
 
         Result<?> results = mDbContext.fetch(queryStr);
 
@@ -111,7 +110,7 @@ public class EnsemblDAO
     {
         if(mDbContext == null)
         {
-            LOGGER.error("failed to establish Ensembl DB connection");
+            LNX_LOGGER.error("failed to establish Ensembl DB connection");
             return;
         }
 
@@ -127,7 +126,7 @@ public class EnsemblDAO
 
     private void writeGeneData(final String outputFile)
     {
-        LOGGER.info("caching gene data to {}", outputFile);
+        LNX_LOGGER.info("caching gene data to {}", outputFile);
 
         try
         {
@@ -156,7 +155,7 @@ public class EnsemblDAO
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing Ensembl gene data file: {}", e.toString());
+            LNX_LOGGER.error("error writing Ensembl gene data file: {}", e.toString());
         }
     }
 
@@ -181,14 +180,14 @@ public class EnsemblDAO
                 + " group by Chromosome, GeneStart, GeneEnd, GeneId, GeneName, Strand"
                 + " order by Chromosome, GeneStart;";
 
-        LOGGER.debug("gene query: {}", queryStr);
+        LNX_LOGGER.debug("gene query: {}", queryStr);
 
         return mDbContext.fetch(queryStr);
     }
 
     private void writeTranscriptExonData(final String outputFile)
     {
-        LOGGER.info("caching transcript & exon data to {}", outputFile);
+        LNX_LOGGER.info("caching transcript & exon data to {}", outputFile);
 
         try
         {
@@ -231,7 +230,7 @@ public class EnsemblDAO
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing Ensembl trans-exon data file: {}", e.toString());
+            LNX_LOGGER.error("error writing Ensembl trans-exon data file: {}", e.toString());
         }
     }
 
@@ -254,14 +253,14 @@ public class EnsemblDAO
                 + " left join exon ce on ce.exon_id = tl.end_exon_id"
                 + " order by GeneId, TransId, ExonStart";
 
-        LOGGER.debug("transcript query: {}", queryStr);
+        LNX_LOGGER.debug("transcript query: {}", queryStr);
 
         return mDbContext.fetch(queryStr);
     }
 
     private void writeTranscriptProteinData(final String outputFile)
     {
-        LOGGER.info("caching protein data to {}", outputFile);
+        LNX_LOGGER.info("caching protein data to {}", outputFile);
 
         try
         {
@@ -291,7 +290,7 @@ public class EnsemblDAO
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing Ensembl trans-protein data file: {}", e.toString());
+            LNX_LOGGER.error("error writing Ensembl trans-protein data file: {}", e.toString());
         }
     }
 

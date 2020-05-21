@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF_PERC;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -111,8 +112,6 @@ public class DriverGeneAnnotator
 
     private static final String GCN_DATA_FILE = "gcn_data_file";
 
-    private static final Logger LOGGER = LogManager.getLogger(DriverGeneAnnotator.class);
-
     public DriverGeneAnnotator(DatabaseAccess dbAccess, EnsemblDataCache geneTranscriptCollection,
             final LinxConfig config, CnDataLoader cnDataLoader)
     {
@@ -187,7 +186,7 @@ public class DriverGeneAnnotator
                 .filter(x -> x.driver() != DriverType.HOM_DISRUPTION)
                 .collect(Collectors.toList()));
 
-        LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
+        LNX_LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
 
         if (!mDriverCatalog.isEmpty())
         {
@@ -223,7 +222,7 @@ public class DriverGeneAnnotator
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to load driver catalog or purity context: {}", e.toString());
+            LNX_LOGGER.error("failed to load driver catalog or purity context: {}", e.toString());
             return;
         }
     }
@@ -260,7 +259,7 @@ public class DriverGeneAnnotator
 
             if (geneData == null)
             {
-                LOGGER.warn("driver gene({}) data not found", driverGene.gene());
+                LNX_LOGGER.warn("driver gene({}) data not found", driverGene.gene());
                 continue;
             }
 
@@ -321,7 +320,7 @@ public class DriverGeneAnnotator
     {
         if (dgData.GeneCN == null)
         {
-            LOGGER.warn("sample({}) gene({}) min copy number data not found for DEL driver", mSampleId, dgData.GeneData.GeneName);
+            LNX_LOGGER.warn("sample({}) gene({}) min copy number data not found for DEL driver", mSampleId, dgData.GeneData.GeneName);
             return;
         }
 
@@ -338,7 +337,7 @@ public class DriverGeneAnnotator
             if(lohEvent.PosStart > minRegionEnd || lohEvent.PosEnd < minRegionStart)
                 continue;
 
-            LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by LOH({})",
+            LNX_LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by LOH({})",
                     dgData.GeneData.GeneName, minRegionStart, minRegionEnd, lohEvent);
 
             if((lohEvent.PosStart < minRegionEnd && lohEvent.PosEnd > minRegionStart) || !lohEvent.doubleSvEvent())
@@ -387,7 +386,7 @@ public class DriverGeneAnnotator
                 // allow there to be more than one?
                 if(homLoss.PosStart <= minRegionEnd && homLoss.PosEnd >= minRegionStart)
                 {
-                    LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by hom-loss({})",
+                    LNX_LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by hom-loss({})",
                             dgData.GeneData.GeneName, minRegionStart, minRegionEnd, homLoss);
 
                     // DEL covers the whole gene or extends to end of arm
@@ -422,7 +421,7 @@ public class DriverGeneAnnotator
             if(lohEvent.PosStart > codingEnd || lohEvent.PosEnd < codingStart)
                 continue;
 
-            LOGGER.debug("gene({}) coding region({} -> {}) covered by LOH({})",
+            LNX_LOGGER.debug("gene({}) coding region({} -> {}) covered by LOH({})",
                     dgData.GeneData.GeneName, codingStart, codingEnd, lohEvent);
 
             if(lohEvent.doubleSvEvent())
@@ -460,7 +459,7 @@ public class DriverGeneAnnotator
         if(mSamplePloidy == 0)
             return;
 
-        LOGGER.debug("gene({}) chromosome({}) position({} -> {}) minCN({})",
+        LNX_LOGGER.debug("gene({}) chromosome({}) position({} -> {}) minCN({})",
                 dgData.GeneData.GeneName, dgData.GeneData.Chromosome, dgData.TransData.TransStart, dgData.TransData.TransEnd,
                 formatPloidy(dgData.GeneCN.minCopyNumber()));
 
@@ -469,7 +468,7 @@ public class DriverGeneAnnotator
 
         if(dgData.getEvents().isEmpty())
         {
-            LOGGER.debug("gene({}) AMP gain no event found", dgData.GeneData.GeneName);
+            LNX_LOGGER.debug("gene({}) AMP gain no event found", dgData.GeneData.GeneName);
 
             // otherwise no event
             DriverGeneEvent event = new DriverGeneEvent(GAIN);
@@ -495,7 +494,7 @@ public class DriverGeneAnnotator
         {
             if (chromosomeCopyNumber / mSamplePloidy > 2)
             {
-                LOGGER.debug("gene({}) AMP gain from chromosome chChange({} telo={} centro={}) vs samplePloidy({})",
+                LNX_LOGGER.debug("gene({}) AMP gain from chromosome chChange({} telo={} centro={}) vs samplePloidy({})",
                         dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber),
                         formatPloidy(telomereCopyNumber), formatPloidy(centromereCopyNumber), formatPloidy(mSamplePloidy));
 
@@ -514,7 +513,7 @@ public class DriverGeneAnnotator
 
         if (centromereCNChange > 0 && !copyNumbersEqual(centromereCNChange, 0))
         {
-            LOGGER.debug("gene({}) AMP gain from arm({}) cnChange across centromere({} -> {} = {})",
+            LNX_LOGGER.debug("gene({}) AMP gain from arm({}) cnChange across centromere({} -> {} = {})",
                     dgData.GeneData.GeneName, dgData.Arm, formatPloidy(tcData.CentromerePArm), formatPloidy(tcData.CentromereQArm),
                     formatPloidy(centromereCNChange));
 
@@ -578,7 +577,7 @@ public class DriverGeneAnnotator
 
         opposingSegment = new OpposingSegment(startBreakend.getCluster(), segmentBreakends, -netClusterCNChange);
 
-        LOGGER.trace("added opposing segment: {}", opposingSegment);
+        LNX_LOGGER.trace("added opposing segment: {}", opposingSegment);
 
         opposingSegments.add(opposingSegment);
         return opposingSegment;
@@ -641,7 +640,7 @@ public class DriverGeneAnnotator
                     double segmentCNChange = endCopyNumber - segmentStartCopyNumber;
                     netClusterCNChange += segmentCNChange;
 
-                    LOGGER.trace("gene({}) cluster({}) adding segment CN({} -> {} chg={}) net({}) breakends({} -> {})",
+                    LNX_LOGGER.trace("gene({}) cluster({}) adding segment CN({} -> {} chg={}) net({}) breakends({} -> {})",
                             dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber), formatPloidy(endCopyNumber),
                             formatPloidy(segmentCNChange), formatPloidy(netClusterCNChange), segStartBreakend, breakend);
 
@@ -655,7 +654,7 @@ public class DriverGeneAnnotator
                 {
                     if(opposingSegment.remainingCNChange() > netClusterCNChange)
                     {
-                        LOGGER.trace("gene({}) cluster({}) netCN({}) cancelled by breakend({}) cnChange(orig={} remain={})",
+                        LNX_LOGGER.trace("gene({}) cluster({}) netCN({}) cancelled by breakend({}) cnChange(orig={} remain={})",
                                 dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(netClusterCNChange),
                                 breakend, formatPloidy(breakend.copyNumberChange()), formatPloidy(opposingSegment.remainingCNChange()));
 
@@ -664,7 +663,7 @@ public class DriverGeneAnnotator
                     }
                     else
                     {
-                        LOGGER.trace("gene({}) cluster({}) netCN({}) reducing by breakend({}) cnChange({})",
+                        LNX_LOGGER.trace("gene({}) cluster({}) netCN({}) reducing by breakend({}) cnChange({})",
                                 dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(netClusterCNChange),
                                 breakend, formatPloidy(breakend.copyNumberChange()));
 
@@ -694,14 +693,14 @@ public class DriverGeneAnnotator
         {
             clusterCNChange += geneMinCopyNumber - segmentStartCopyNumber;
 
-            LOGGER.trace("gene({}) cluster({}) open segment startCN({}) net({}) start breakend({})",
+            LNX_LOGGER.trace("gene({}) cluster({}) open segment startCN({}) net({}) start breakend({})",
                     dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber), formatPloidy(clusterCNChange),
                     segStartBreakend);
         }
 
         if(clusterCNChange > 0 && !copyNumbersEqual(clusterCNChange, 0) && !copyNumbersEqual(startCopyNumber + clusterCNChange, startCopyNumber))
         {
-            LOGGER.debug("gene({}) cluster({}) copy number gain({}) vs startCN({}) segments({}: CN={}) traversal({})",
+            LNX_LOGGER.debug("gene({}) cluster({}) copy number gain({}) vs startCN({}) segments({}: CN={}) traversal({})",
                     dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(clusterCNChange), formatPloidy(startCopyNumber),
                     segmentCount, formatPloidy(netClusterCNChange), traverseUp ? "up" : "down");
 
@@ -805,7 +804,7 @@ public class DriverGeneAnnotator
             if(ampData.NetCNChange / maxCnChange < MIN_AMP_PERCENT_VS_MAX)
                 continue;
 
-            LOGGER.debug("gene({}) cluster({}) adding AMP data: {}",
+            LNX_LOGGER.debug("gene({}) cluster({}) adding AMP data: {}",
                     dgData.GeneData.GeneName, cluster.id(), ampData);
 
             DriverGeneEvent event = new DriverGeneEvent(GAIN);
@@ -870,7 +869,7 @@ public class DriverGeneAnnotator
                         {
                             delDriverGeneIds.add(gene.StableId);
 
-                            LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozyous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
+                            LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozyous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
                                     trans.geneName(), breakend.getCluster().id(), breakend,
                                     formatPloidy(cnLowSide), dbLink.length(), formatPloidy(otherSvPloidy));
 
@@ -899,7 +898,7 @@ public class DriverGeneAnnotator
                         {
                             delDriverGeneIds.add(gene.StableId);
 
-                            LOGGER.debug("gene({}) cluster({}) DUP({}) cause homozygous disruption cnLowSide({} & {}) ploidy({})",
+                            LNX_LOGGER.debug("gene({}) cluster({}) DUP({}) cause homozygous disruption cnLowSide({} & {}) ploidy({})",
                                     trans.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
                                     formatPloidy(cnLowSideStart), formatPloidy(cnLowSideEnd), formatPloidy(ploidy));
 
@@ -1002,7 +1001,7 @@ public class DriverGeneAnnotator
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write drivers file: {}", e.toString());
+            LNX_LOGGER.error("failed to write drivers file: {}", e.toString());
         }
     }
 
@@ -1098,7 +1097,7 @@ public class DriverGeneAnnotator
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing driver data to outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing driver data to outputFile: {}", e.toString());
         }
     }
 
@@ -1114,7 +1113,7 @@ public class DriverGeneAnnotator
 
     public void close()
     {
-        if(LOGGER.isDebugEnabled() || mConfig.hasMultipleSamples())
+        if(LNX_LOGGER.isDebugEnabled() || mConfig.hasMultipleSamples())
         {
             mPerfCounter.logStats();
         }
@@ -1138,7 +1137,7 @@ public class DriverGeneAnnotator
 
             if (line == null)
             {
-                LOGGER.error("Empty gene copy number CSV file({})", gcnFileName);
+                LNX_LOGGER.error("Empty gene copy number CSV file({})", gcnFileName);
                 return;
             }
 
@@ -1152,7 +1151,7 @@ public class DriverGeneAnnotator
 
                 if (items.length != GENE_CN_DATA_FILE_ITEM_COUNT)
                 {
-                    LOGGER.error("GCN file invalid item count({}) vs expected({})", items.length, GENE_CN_DATA_FILE_ITEM_COUNT);
+                    LNX_LOGGER.error("GCN file invalid item count({}) vs expected({})", items.length, GENE_CN_DATA_FILE_ITEM_COUNT);
                     break;
                 }
 
@@ -1196,11 +1195,11 @@ public class DriverGeneAnnotator
                 gcnDataList.add(gcnData);
             }
 
-            LOGGER.info("loaded {} gene copy-number records from file", rowCount);
+            LNX_LOGGER.info("loaded {} gene copy-number records from file", rowCount);
         }
         catch (IOException e)
         {
-            LOGGER.error("Failed to read gene copy number CSV file({}): {}", gcnFileName, e.toString());
+            LNX_LOGGER.error("Failed to read gene copy number CSV file({}): {}", gcnFileName, e.toString());
         }
     }
 

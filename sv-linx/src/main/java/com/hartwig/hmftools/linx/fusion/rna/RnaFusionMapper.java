@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOW
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.THREE_GENE;

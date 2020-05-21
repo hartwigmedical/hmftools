@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.START_CODON;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_CODON_1;

@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
@@ -58,8 +58,6 @@ import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -103,11 +101,6 @@ public class FusionDisruptionAnalyser
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String NEO_EPITOPES = "neo_epitopes";
-
-    // the maximum distance upstream of a gene for a breakend to be consider a fusion candidate
-    public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
-
-    private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
     public FusionDisruptionAnalyser(final CommandLine cmdLineArgs, final LinxConfig config,
             EnsemblDataCache ensemblDataCache, VisualiserWriter writer)
@@ -184,7 +177,7 @@ public class FusionDisruptionAnalyser
             String restrictedGenesStr = cmdLineArgs.getOptionValue(RESTRICTED_GENE_LIST);
             mRestrictedGenes = Arrays.stream(restrictedGenesStr.split(";")).collect(Collectors.toList());
 
-            LOGGER.info("restricting fusion genes to: {}", restrictedGenesStr);
+            LNX_LOGGER.info("restricting fusion genes to: {}", restrictedGenesStr);
         }
 
         mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
@@ -228,7 +221,7 @@ public class FusionDisruptionAnalyser
             }
             catch(IOException e)
             {
-                LOGGER.error("failed to load ref genome: {}", e.toString());
+                LNX_LOGGER.error("failed to load ref genome: {}", e.toString());
                 mValidState = false;
             }
         }
@@ -334,14 +327,14 @@ public class FusionDisruptionAnalyser
 
         addVisualisationData(mUniqueFusions);
 
-        if(LOGGER.isDebugEnabled())
+        if(LNX_LOGGER.isDebugEnabled())
         {
             for(final GeneFusion fusion : mUniqueFusions)
             {
                 if(fusion.knownType() == REPORTABLE_TYPE_NONE)
                     continue;
 
-                LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
+                LNX_LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
                         fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
                         fusion.knownType(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
                         fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
@@ -350,7 +343,7 @@ public class FusionDisruptionAnalyser
 
         if(dbAccess != null && mConfig.UploadToDB)
         {
-            LOGGER.debug("persisting {} breakends and {} fusions to database", breakends.size(), fusions.size());
+            LNX_LOGGER.debug("persisting {} breakends and {} fusions to database", breakends.size(), fusions.size());
 
             final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
             annotationDAO.writeBreakendsAndFusions(mSampleId, breakends, fusions);
@@ -465,7 +458,7 @@ public class FusionDisruptionAnalyser
                 continue;
 
             // now all fusions have been gathered from this chain, set the reportable one (if any)
-            LOGGER.trace("cluster({}) found {} chained fusions", cluster.id(), chainFusions.size());
+            LNX_LOGGER.trace("cluster({}) found {} chained fusions", cluster.id(), chainFusions.size());
 
             // consider fusions from amongst unique gene-pairings
             List<String> genePairings = Lists.newArrayList();
@@ -594,7 +587,7 @@ public class FusionDisruptionAnalyser
                 /*
                 if(lpIndex2 > lpIndex1)
                 {
-                    LOGGER.debug("cluster({}) chain({}) testing chained fusion: be1({} {}) & be2({} {}) link indices({} -> {})",
+                    LNX_LOGGER.debug("cluster({}) chain({}) testing chained fusion: be1({} {}) & be2({} {}) link indices({} -> {})",
                             cluster.id(), chain.id(), lowerBreakend.toString(), genesListLower.get(0).GeneName,
                             upperBreakend.toString(), genesListUpper.get(0).GeneName, lpIndex1, lpIndex2);
                 }
@@ -748,7 +741,7 @@ public class FusionDisruptionAnalyser
                 {
                     // if there are no valid traversals between 2 indices, then any chain sections starting at the lower index
                     // will likewise be invalidated since can skip past this
-                    LOGGER.trace("cluster({}) chain({}) no valid traversals between({} -> {})",
+                    LNX_LOGGER.trace("cluster({}) chain({}) no valid traversals between({} -> {})",
                             cluster.id(), chain.id(), lpIndex1, lpIndex2);
 
                     break;
@@ -983,7 +976,7 @@ public class FusionDisruptionAnalyser
 
     public void close()
     {
-        if(mConfig.hasMultipleSamples() || LOGGER.isDebugEnabled())
+        if(mConfig.hasMultipleSamples() || LNX_LOGGER.isDebugEnabled())
         {
             mPerfCounter.logStats();
         }

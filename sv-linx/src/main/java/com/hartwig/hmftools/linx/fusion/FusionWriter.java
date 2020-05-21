@@ -36,7 +36,7 @@ public class FusionWriter
     private final String mOutputDir;
     private BufferedWriter mFusionWriter;
 
-    private static final Logger LOGGER = LogManager.getLogger(FusionWriter.class);
+    private static final Logger LNX_LOGGER = LogManager.getLogger(FusionWriter.class);
 
     public FusionWriter(final String outputDir)
     {
@@ -138,7 +138,7 @@ public class FusionWriter
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write fusions file: {}", e.toString());
+            LNX_LOGGER.error("failed to write fusions file: {}", e.toString());
         }
     }
 
@@ -194,7 +194,7 @@ public class FusionWriter
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing fusions: {}", e.toString());
+            LNX_LOGGER.error("error writing fusions: {}", e.toString());
         }
     }
 
@@ -211,7 +211,7 @@ public class FusionWriter
 
             if(annotations == null)
             {
-                LOGGER.error("fusion({}) annotations not set", fusion.name());
+                LNX_LOGGER.error("fusion({}) annotations not set", fusion.name());
                 return;
             }
 
@@ -271,7 +271,7 @@ public class FusionWriter
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing fusions: {}", e.toString());
+            LNX_LOGGER.error("error writing fusions: {}", e.toString());
         }
     }
 

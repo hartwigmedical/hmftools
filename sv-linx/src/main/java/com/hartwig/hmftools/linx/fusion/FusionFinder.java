@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_LINC_RNA;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_RETAINED_INTRON;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
@@ -19,6 +15,10 @@ import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 
 import java.util.List;
 import java.util.Map;
@@ -33,8 +33,6 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FusionFinder
@@ -46,14 +44,9 @@ public class FusionFinder
     private List<String> mProteinsRequiredKept;
     private List<String> mProteinsRequiredLost;
 
-    private static List<String> mRequiredBiotypes = Lists.newArrayList(
-            BIOTYPE_PROCESSED_TRANS, BIOTYPE_PROTEIN_CODING, BIOTYPE_NONSENSE_MED_DECAY, BIOTYPE_RETAINED_INTRON, BIOTYPE_LINC_RNA);
-
     private static boolean mLogInvalidReasons;
 
     private static final int EXON_THRESHOLD = 1;
-
-    private static final Logger LOGGER = LogManager.getLogger(FusionFinder.class);
 
     public FusionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache)
     {
@@ -78,7 +71,7 @@ public class FusionFinder
     {
         if(mKnownFusionData.loadFromFile(cmd))
         {
-            LOGGER.debug("loaded known fusion data");
+            LNX_LOGGER.debug("loaded known fusion data");
             mHasValidConfigData = true;
         }
     }
@@ -160,9 +153,9 @@ public class FusionFinder
             return;
 
         if(trans2 == null)
-            LOGGER.trace("transcript({}:{}) invalid({}: {})", trans1.geneName(), trans1.StableId, reasonType, reason);
+            LNX_LOGGER.trace("transcript({}:{}) invalid({}: {})", trans1.geneName(), trans1.StableId, reasonType, reason);
         else
-            LOGGER.trace("transcripts({}:{} and {}:{}) invalid({}: {})",
+            LNX_LOGGER.trace("transcripts({}:{} and {}:{}) invalid({}: {})",
                     trans1.geneName(), trans1.StableId, trans2.geneName(), trans2.StableId, reasonType, reason);
     }
 
@@ -183,7 +176,7 @@ public class FusionFinder
             if(requireUpstreamDisruptive && !transcript.isDisruptive())
                 return false;
 
-            if(requireUpstreamBiotypes && !mRequiredBiotypes.contains(transcript.bioType()))
+            if(requireUpstreamBiotypes && !REQUIRED_BIOTYPES.contains(transcript.bioType()))
                 return false;
         }
         else
@@ -534,9 +527,6 @@ public class FusionFinder
 
         return featurePreserved;
     }
-
-    private static int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
-    private static int MAX_UPSTREAM_DISTANCE_OTHER = 10000;
 
     public static boolean couldBeReportable(GeneFusion fusion)
     {

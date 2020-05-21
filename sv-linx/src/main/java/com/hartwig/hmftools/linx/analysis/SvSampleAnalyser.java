@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
-import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_LINE;
