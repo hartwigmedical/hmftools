@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.gripss
 
-import com.hartwig.hmftools.bedpe.BreakendLocation
+import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.extensions.*
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
@@ -26,16 +26,17 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val vcfId: String = context.id
     val mateId: String? = context.mate()
     val confidenceInterval = context.confidenceInterval()
-    val remoteConfidenceInterval = context.confidenceInterval()
-
     val start = context.start
-    val startLocation: BreakendLocation = BreakendLocation(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
-    val endLocation: BreakendLocation? = (variantType as? Paired)?.let { BreakendLocation(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
+    private val remoteConfidenceInterval = context.confidenceInterval()
 
-    val minStart = startLocation.start
-    val maxStart = startLocation.end
+    val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
+    val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
+    val minStart = startBreakend.start
+
+    val maxStart = startBreakend.end
     val insertSequenceLength = variantType.insertSequence.length
     val qual = context.phredScaledQual
+
 
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);

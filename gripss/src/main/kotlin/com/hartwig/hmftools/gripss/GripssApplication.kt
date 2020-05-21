@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.gripss
 
-import com.hartwig.hmftools.bedpe.BreakendLocation
+import com.hartwig.hmftools.bedpe.Breakend
+import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.bedpe.dedup.DedupPair
 import com.hartwig.hmftools.bedpe.dedup.DedupSingle
 import com.hartwig.hmftools.gripss.link.AlternatePath
@@ -17,12 +18,13 @@ import java.io.File
 
 fun main(args: Array<String>) {
 
-    val singleBreakendPonFile = "/Users/jon/hmf/resources/gridss_pon_single_breakend.bed"
-    val pairedBreakpointPonFile = "/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe"
+    val singlePonFile = "/Users/jon/hmf/resources/gridss_pon_single_breakend.bed"
+    val pairedPonFile = "/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe"
+    val pairedHotspotFile = "/Users/jon/hmf/resources/gridss_hotspot_breakpoint.bedpe"
     val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
     val filterConfig = GripssFilterConfig.default()
-    val config = GripssConfig(inputVCF, outputVCF, singleBreakendPonFile, pairedBreakpointPonFile, filterConfig)
+    val config = GripssConfig(inputVCF, outputVCF, singlePonFile, pairedPonFile, pairedHotspotFile, filterConfig)
 
     GripssApplication(config).use { x -> x.run() }
 }
@@ -39,23 +41,24 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileWriter = GripssVCF(config.outputVcf)
 
     override fun run() {
-        logger.info("Reading PON files: ${config.singleBreakendPonFile} ${config.pairedBreakpointPonFile}")
-        val ponStore = LocationStore(BreakendLocation.fromBedFile(config.singleBreakendPonFile), BreakendLocation.fromBedpeFile(config.pairedBreakpointPonFile))
+        logger.info("Reading HOTSPOT file: ${config.pairedHotspotFile}")
+        val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile))
+
+        logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
+        val ponStore = LocationStore(Breakend.fromBedFile(config.singlePonFile), Breakpoint.fromBedpeFile(config.pairedPonFile))
 
         logger.info("Reading VCF file: ${config.inputVcf}")
-
-        fileWriter.writeHeader(fileReader.fileHeader)
         val variantStore = VariantStore(hardFilterVariants(fileReader))
 
         logger.info("Initial soft filters")
-        val initialFilters = SoftFilterStore(config.filterConfig, variantStore.selectAll())
+        val initialFilters = SoftFilterStore(config.filterConfig, variantStore.selectAll(), ponStore, hotspotStore)
 
         logger.info("Finding assembly links")
         val assemblyLinks: LinkStore = AssemblyLink(variantStore.selectAll())
 
         logger.info("Finding transitive links")
         val alternatePaths: Collection<AlternatePath> = AlternatePath(assemblyLinks, variantStore)
-        val alternatePathsStringsByVcfId = alternatePaths.associate { x -> Pair(x.vcfId, x.pathString())}
+        val alternatePathsStringsByVcfId = alternatePaths.associate { x -> Pair(x.vcfId, x.pathString()) }
         val transitiveLinks = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
 
         logger.info("Paired break end de-duplication")
@@ -75,6 +78,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), linkRescues.rescues)
 
         logger.info("Writing file: ${config.outputVcf}")
+        fileWriter.writeHeader(fileReader.fileHeader)
         for (variant in variantStore.selectAll()) {
 
             val localLinkedBy = combinedLinks[variant.vcfId]
