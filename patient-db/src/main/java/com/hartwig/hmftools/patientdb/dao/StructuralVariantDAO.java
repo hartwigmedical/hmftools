@@ -242,7 +242,7 @@ class StructuralVariantDAO {
                 isSingle ? null : variant.endNormalVariantFragmentCount(),
                 isSingle ? null : variant.endNormalReferenceFragmentCount(),
                 variant.startIntervalOffsetStart(),
-                variant.startIntervalOffsetStart(),
+                variant.startIntervalOffsetEnd(),
                 isSingle ? null : variant.endIntervalOffsetStart(),
                 isSingle ? null : variant.endIntervalOffsetEnd(),
                 variant.inexactHomologyOffsetStart(),
