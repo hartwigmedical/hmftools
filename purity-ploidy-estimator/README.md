@@ -174,6 +174,8 @@ The hotspot VCF used by HMF (KnownHotspots.hg19.vcf.gz) is available to download
 A HG38 equivalent is also available. The file is used to re-annotate all somatic variants with a HOTSPOT or NEAR_HOTSPOT flag if they are on or within 5 bases of a hotspot. 
 Hotspots are assigned a driver likelihood of 1. 
 
+Note that generating the driver catalog for SNVs assumes that the VCF has been annotated with SNPEFF.
+
 ## Input
 
 The PURPLE algorithm relies on the BAF and read depth ratio output from [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber) and [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/count-bam-lines) respectively.
