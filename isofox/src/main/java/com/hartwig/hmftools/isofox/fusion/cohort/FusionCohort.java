@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -9,7 +10,6 @@ import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.PASSING_FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilename;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_PASS;

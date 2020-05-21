@@ -4,14 +4,19 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -19,6 +24,8 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class RnaFusionData
 {
+    public final String FusionId;
+    public final String SampleId;
     public final String[] GeneIds;
     public final String[] GeneNames;
     public final String[] Chromosomes;
@@ -70,9 +77,12 @@ public class RnaFusionData
     private String mClusterInfoDown;
     private String mChainInfo;
 
-    public RnaFusionData(final String[] geneIds, final String[] geneNames, final String[] chromosomes, final int[] positions,
-            int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes)
+    public RnaFusionData(
+            final String fusionId, final String sampleId, final String[] geneIds, final String[] geneNames, final String[] chromosomes,
+            final int[] positions, int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes)
     {
+        FusionId = fusionId;
+        SampleId = sampleId;
         GeneIds = geneIds;
         GeneNames = geneNames;
         Chromosomes = chromosomes;
@@ -275,56 +285,126 @@ public class RnaFusionData
     public static String RNA_FUSION_SOURCE_ARRIBA = "ARRIBA";
     public static String RNA_FUSION_SOURCE_STARFUSION = "STARFUSION";
 
-    public static RnaFusionData from(final String source, final String data)
+    public static String getRnaSourceDelimiter(final String source)
+    {
+        return source.equals(RNA_FUSION_SOURCE_ARRIBA) ? "\t" : ",";
+    }
+
+    public static RnaFusionData from(final String source, final int index, final String data, final Map<String,Integer> fieldIndexMap)
     {
         if(source.equals(RNA_FUSION_SOURCE_ISOFOX))
-            return fromIsofox(data);
+            return fromIsofox(data, fieldIndexMap);
         else if(source.equals(RNA_FUSION_SOURCE_ARRIBA))
-            return fromArriba(data);
+            return fromArriba(index, data, fieldIndexMap);
         else if(source.equals(RNA_FUSION_SOURCE_STARFUSION))
-            return fromStarFusion(data);
+            return fromStarFusion(index, data, fieldIndexMap);
         else
             return null;
     }
 
-    private static RnaFusionData fromIsofox(final String data)
+    private static RnaFusionData fromIsofox(final String data, final Map<String,Integer> fieldIndexMap)
     {
-        return null;
-        // return new RnaFusionData();
+        final String[] items = data.split(getRnaSourceDelimiter(RNA_FUSION_SOURCE_ISOFOX), -1);
+
+        final String sampleId = items[fieldIndexMap.get("SampleId")];
+
+        String fusionId = items[fieldIndexMap.get("FusionId")];
+
+        final String[] chromosomes = new String[] { items[fieldIndexMap.get("ChrUp")], items[fieldIndexMap.get("ChrDown")] };
+
+        final int[] positions =
+                new int[] { Integer.parseInt(items[fieldIndexMap.get("PosUp")]), Integer.parseInt(items[fieldIndexMap.get("PosDown")]) };
+
+        // final byte[] junctionOrientations =
+        //        new byte[] { Byte.parseByte(items[fieldIndexMap.get("OrientUp")]), Byte.parseByte(items[fieldIndexMap.get("OrientDown")]) };
+
+        final RnaJunctionType[] junctionTypes = new RnaJunctionType[] {
+                RnaJunctionType.valueOf(items[fieldIndexMap.get("JuncTypeUp")]),
+                RnaJunctionType.valueOf(items[fieldIndexMap.get("JuncTypeDown")]) };
+
+        final String[] geneIds = new String[] { items[fieldIndexMap.get("GeneIdUp")], items[fieldIndexMap.get("GeneIdDown")] };
+        final String[] geneNames = new String[] { items[fieldIndexMap.get("GeneNameUp")], items[fieldIndexMap.get("GeneNameDown")] };
+
+        int junctionFrags = Integer.parseInt(items[fieldIndexMap.get("SplitFrags")]) + Integer.parseInt(items[fieldIndexMap.get("RealignedFrags")]);
+        int discordantFrags = Integer.parseInt(items[fieldIndexMap.get("DiscordantFrags")]);
+
+        return new RnaFusionData(
+                fusionId, sampleId, geneIds, geneNames, chromosomes, positions, junctionFrags, discordantFrags, junctionTypes);
     }
 
-    private static RnaFusionData fromArriba(final String data)
+    private static RnaFusionData fromArriba(int index, final String data, final Map<String,Integer> fieldIndexMap)
     {
-        return null;
-        // return new RnaFusionData();
+        // SampleId,GeneNameUp,GeneNameDown,ChrUp,ChrDown,PosUp,PosDown,JuncTypeUp,JuncTypeDown,JunctionFrags,DiscordantFrags,CoverageUp,CoverageDown
+
+        final String[] items = data.split(getRnaSourceDelimiter(RNA_FUSION_SOURCE_ARRIBA), -1);
+
+        final String sampleId = items[fieldIndexMap.get("SampleId")];
+
+        final String[] geneIds = new String[FS_PAIR];
+
+        final String[] geneNames = new String[] {
+                items[fieldIndexMap.get("GeneNameUp")].replaceAll(",",";"),
+                items[fieldIndexMap.get("GeneNameDown")].replaceAll(",",";") };
+
+        final String[] chromosomes = new String[] { items[fieldIndexMap.get("ChrUp")], items[fieldIndexMap.get("ChrDown")] };
+
+        if(!HumanChromosome.contains(chromosomes[SE_START]) || !HumanChromosome.contains(chromosomes[SE_END]))
+            return null;
+
+        final int[] positions = new int[] {
+                Integer.parseInt(items[fieldIndexMap.get("PosUp")]), Integer.parseInt(items[fieldIndexMap.get("PosDown")]) };
+
+        int splitFragments = Integer.parseInt(items[fieldIndexMap.get("JunctionFrags")]);
+
+        int discordantFragments = Integer.parseInt(items[fieldIndexMap.get("DiscordantFrags")]);
+
+        final String[] spliceSites = new String[] { items[fieldIndexMap.get("JuncTypeUp")], items[fieldIndexMap.get("JuncTypeDown")] };
+
+        final RnaJunctionType[] junctionTypes = new RnaJunctionType[] { RnaJunctionType.UNKNOWN, RnaJunctionType.UNKNOWN };
+
+        if(spliceSites[FS_UPSTREAM].equals("splice-site"))
+            junctionTypes[FS_UPSTREAM] = KNOWN;
+
+        if(spliceSites[FS_DOWNSTREAM].equals("splice-site"))
+            junctionTypes[FS_DOWNSTREAM] = KNOWN;
+
+        return new RnaFusionData(
+                String.valueOf(index), sampleId, geneIds, geneNames, chromosomes, positions, splitFragments, discordantFragments, junctionTypes);
     }
 
-    private static RnaFusionData fromStarFusion(final String data)
+    private static RnaFusionData fromStarFusion(int index, final String data, final Map<String,Integer> fieldIndexMap)
     {
-        final String[] items = data.split(",", -1);
+        // SampleId,FusionName,JunctionReadCount,SpanningFragCount,SpliceType,GeneNameUp,GeneIdUp,ChrUp,PosUp,OrientUp,GeneNameDown,GeneIdDown,
+        // ChrDown,PosDown,OrientDown,JunctionReads,SpanningFrags,
+        // LargeAnchorSupport,FFPM,LeftBreakDinuc,LeftBreakEntropy,RightBreakDinuc,RightBreakEntropy,annots
+        final String[] items = data.split(getRnaSourceDelimiter(RNA_FUSION_SOURCE_STARFUSION), -1);
+
+        final String sampleId = items[fieldIndexMap.get("SampleId")];
 
         final String[] geneIds = new String[FS_PAIR];
 
         // check that gene names match Ensembl
-        final String[] geneNames = new String[] { checkAlternateGeneName(items[5]), checkAlternateGeneName(items[10]) };
+        final String[] geneNames = new String[] {
+                checkAlternateGeneName(items[fieldIndexMap.get("GeneNameUp")]), checkAlternateGeneName(items[fieldIndexMap.get("GeneNameDown")]) };
 
-        final String[] chromosomes = new String[] { items[7], items[12] };
+        final String[] chromosomes = new String[] { items[fieldIndexMap.get("ChrUp")], items[fieldIndexMap.get("ChrDown")] };
 
-        final int[] positions = new int[] { Integer.parseInt(items[8]), Integer.parseInt(items[13]) };
+        final int[] positions = new int[] {
+                Integer.parseInt(items[fieldIndexMap.get("PosUp")]), Integer.parseInt(items[fieldIndexMap.get("PosDown")]) };
 
         final RnaJunctionType[] junctionTypes = new RnaJunctionType[FS_PAIR];
 
-        if(items[4].equals("ONLY_REF_SPLICE"))
+        if(items[fieldIndexMap.get("SpliceType")].equals("ONLY_REF_SPLICE"))
         {
             junctionTypes[FS_UPSTREAM] = KNOWN;
             junctionTypes[FS_DOWNSTREAM] = KNOWN;
         }
 
-        int junctionCount = Integer.parseInt(items[2]);
-        int spanningCount = Integer.parseInt(items[3]);
+        int junctionCount = Integer.parseInt(items[fieldIndexMap.get("JunctionReadCount")]);
+        int spanningCount = Integer.parseInt(items[fieldIndexMap.get("SpanningFragCount")]);
 
         return new RnaFusionData(
-                geneIds, geneNames, chromosomes, positions, junctionCount, spanningCount, junctionTypes);
+                sampleId, String.valueOf(index), geneIds, geneNames, chromosomes, positions, junctionCount, spanningCount, junctionTypes);
     }
 
     private static String checkAlternateGeneName(final String geneName)

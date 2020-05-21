@@ -13,13 +13,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class ExternalFusionData
 {
-
-    /*
-    mutate(breakpoint1=paste(ChrUp,PosUp,sep=":"),breakpoint2=paste(ChrDown,PosDown,sep=":")),by=c('breakpoint1','breakpoint2'),all.x=T),
-           passFusions %>% mutate(breakpoint1=paste(ChrUp,PosUp,sep=":"),breakpoint2=paste(ChrDown,PosDown,sep=":"),revOrientation=TRUE),by.x=c('breakpoint1','breakpoint2'),by.y=c('breakpoint2','breakpoint1'),all.x=T))# %>%
-       filter(is.na(FusionId.x),is.na(FusionId.y),!grepl("read-through",type)))
-     */
-
     public static final String FUSION_SOURCE_ARRIBA = "ARRIBA";
 
     public final String SourceTool;

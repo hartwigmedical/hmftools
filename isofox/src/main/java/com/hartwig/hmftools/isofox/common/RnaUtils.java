@@ -210,19 +210,6 @@ public class RnaUtils
         return matched;
     }
 
-    public static Map<String,Integer> createFieldsIndexMap(final String fieldsHeader, final String delimiter)
-    {
-        final String[] items = fieldsHeader.split(delimiter,-1);
-        final Map<String,Integer> fieldsIndexMap = Maps.newHashMap();
-
-        for(int i = 0; i < items.length; ++i)
-        {
-            fieldsIndexMap.put(items[i], i);
-        }
-
-        return fieldsIndexMap;
-    }
-
     public static void calcPercentileValues(final List<Double> values, final double[] percentileValues)
     {
         int sampleCount = values.size();

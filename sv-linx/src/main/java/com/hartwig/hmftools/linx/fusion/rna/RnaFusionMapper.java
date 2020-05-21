@@ -11,11 +11,13 @@ import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_5P_P
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.THREE_GENE;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.getRnaSourceDelimiter;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -877,43 +879,29 @@ public class RnaFusionMapper
         final String source = inputItems[0];
         final String filename = inputItems[1];
 
-        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
-            return false;
-
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            String line = fileReader.readLine();
+            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(lines.get(0), getRnaSourceDelimiter(source));
 
-            if (line == null)
-            {
-                LNX_LOGGER.error("empty RNA data file({})", filename);
-                return false;
-            }
-
-            line = fileReader.readLine(); // skip header
+            lines.remove(0);
 
             String currentSampleId = "";
             List<RnaFusionData> rnaDataList = Lists.newArrayList();
 
-            while (line != null)
+            for(String data : lines)
             {
-                // parse CSV data
-                String[] items = line.split(",");
+                RnaFusionData rnaData = RnaFusionData.from(source, data, fieldIndexMap);
 
-                // check if still on the same variant
-                final String sampleId = items[COL_SAMPLEID];
-
-                if(currentSampleId.isEmpty() || !currentSampleId.equals(sampleId))
+                if(currentSampleId.isEmpty() || !currentSampleId.equals(rnaData.SampleId))
                 {
-                    currentSampleId = sampleId;
+                    currentSampleId = rnaData.SampleId;
                     rnaDataList = Lists.newArrayList();
                     mSampleRnaData.put(currentSampleId, rnaDataList);
                 }
 
-                rnaDataList.add(RnaFusionData.from(source, line));
-                line = fileReader.readLine();
+                rnaDataList.add(rnaData);
             }
 
         }

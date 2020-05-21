@@ -3,6 +3,10 @@ package com.hartwig.hmftools.isofox.fusion;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -22,11 +26,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_PAIR;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.FS_UPSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.switchStream;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
