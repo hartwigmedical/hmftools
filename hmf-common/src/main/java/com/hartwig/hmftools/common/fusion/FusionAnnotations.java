@@ -15,10 +15,7 @@ public abstract class FusionAnnotations
     public abstract FusionChainInfo chainInfo();
 
     // info about whether the fusion is valid to the end of the transcript via the chain
-    @Nullable
-    public abstract FusionTermination disruptionUp();
-
-    @Nullable
-    public abstract FusionTermination disruptionDown();
+    public abstract boolean terminatedUp();
+    public abstract boolean terminatedDown();
 
 }

@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.fusion.FusionChainInfo;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.GeneFusion;
 import com.hartwig.hmftools.common.fusion.ImmutableFusionAnnotations;
-import com.hartwig.hmftools.common.fusion.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
@@ -186,10 +185,8 @@ public class FusionTest
 
         FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
                 .clusterId(1).clusterCount(10).resolvedType("")
-                .disruptionUp(ImmutableFusionTermination.builder()
-                         .allLinksAssembled(true).facingBreakends(0).disruptedExons(0).totalBreakends(1).minDistance(100)
-                        .transcriptTerminated(true)
-                        .build())
+                .terminatedUp(true)
+                .terminatedDown(false)
                 .build();
 
         fusion1.setAnnotations(annotations);
@@ -606,8 +603,8 @@ public class FusionTest
             return false;
 
         // test the exons disrupted and terminated fields
-        boolean validUp = annotations.disruptionUp() != null && !annotations.disruptionUp().transcriptTerminated();
-        boolean validDown = annotations.disruptionDown() != null && !annotations.disruptionDown().transcriptTerminated();
+        boolean validUp = !annotations.terminatedUp();
+        boolean validDown = !annotations.terminatedDown();
 
         if(validEnds)
             return !fusion.isTerminated();

@@ -278,7 +278,7 @@ public class FusionFinder
             }
         }
 
-        if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
+        if (isIrrelevantSameGene(upstreamTrans, downstreamTrans))
         {
             logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "irrelevant fusion");
             return null;
@@ -394,23 +394,23 @@ public class FusionFinder
         return ((upPhase + 1) % 3) == (downPhase % 3);
     }
 
-    public static boolean isPotentiallyRelevantFusion(final Transcript upTrans, final Transcript downTrans)
+    public static boolean isIrrelevantSameGene(final Transcript upTrans, final Transcript downTrans)
     {
         if(!upTrans.geneName().equals(downTrans.geneName()))
-            return true;
+            return false;
 
         // skip fusions between different transcripts in the same gene,
         if (!upTrans.StableId.equals(downTrans.StableId))
-            return false;
+            return true;
 
         if(upTrans.nonCoding())
-            return false;
+            return true;
 
         // skip fusions within the same intron
         if(upTrans.isIntronic() && downTrans.isIntronic() && upTrans.ExonUpstream == downTrans.ExonUpstream)
-            return false;
+            return true;
 
-        return true;
+        return false;
     }
 
     private void setRequiredProteins()
@@ -572,8 +572,6 @@ public class FusionFinder
 
     public static GeneFusion determineReportableFusion(final List<GeneFusion> fusions, boolean requireReportable)
     {
-        boolean useOldScheme = false;
-
         GeneFusion reportableFusion = null;
 
         // form a score by allocating 0/1 or length value to each power of 10 descending
@@ -584,7 +582,7 @@ public class FusionFinder
             if(requireReportable && !couldBeReportable(fusion))
                 continue;
 
-            double fusionPriorityScore = useOldScheme ? calcFusionPriorityOld(fusion) : calcFusionPriority(fusion);
+            double fusionPriorityScore = calcFusionPriority(fusion);
             fusion.setPriority(fusionPriorityScore);
 
             if(fusionPriorityScore > highestScore)
@@ -659,71 +657,6 @@ public class FusionFinder
         factor /= 10;
 
         // 6. Best 5' partner
-        if(upTrans.isCanonical())
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        if(upTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
-            fusionPriorityScore += factor;
-
-        factor /= 100;
-
-        length = upTrans.isCoding() ? upTrans.calcCodingBases() : upTrans.ExonMax;
-        length = min(round(length/10), 99);
-        fusionPriorityScore += length * factor;
-
-        return fusionPriorityScore;
-    }
-
-    private static double calcFusionPriorityOld(final GeneFusion fusion)
-    {
-        // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-        final Transcript upTrans = fusion.upstreamTrans();
-        final Transcript downTrans = fusion.downstreamTrans();
-
-            /* prioritisation rules:
-            1. No exons skipped
-            2. Both canonical
-            3. Best 3' partner by canonical, not NMD then coding bases (or exon count if not coding)
-            4. Best 5' partner by canonical, protein-coding then coding bases
-            */
-
-        double fusionPriorityScore = 0;
-        double factor = 1000000;
-
-        // 1. Not skipping exons
-        if(fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0)
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        // 2. both canonical
-        if(upTrans.isCanonical() && downTrans.isCanonical())
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        // 3. Best 3' partner
-        if(downTrans.isCanonical())
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        if(downTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
-            fusionPriorityScore += factor;
-
-        factor /= 100;
-
-        int length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
-
-        // will be a range between 1-99 * current factor
-        length = min(round(length/10), 99);
-        fusionPriorityScore += length * factor;
-
-        factor /= 10;
-
-        // 4. Best 5' partner
         if(upTrans.isCanonical())
             fusionPriorityScore += factor;
 

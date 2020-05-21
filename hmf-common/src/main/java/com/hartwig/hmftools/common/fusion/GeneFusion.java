@@ -98,16 +98,7 @@ public class GeneFusion
 
     public boolean isTerminated()
     {
-        if(mAnnotations == null)
-            return false;
-
-        if((mAnnotations.disruptionUp() != null && mAnnotations.disruptionUp().transcriptTerminated())
-        || (mAnnotations.disruptionDown() != null && mAnnotations.disruptionDown().transcriptTerminated()))
-        {
-            return true;
-        }
-
-        return false;
+        return mAnnotations != null && (mAnnotations.terminatedUp() || mAnnotations.terminatedDown());
     }
 
     // convenience functions

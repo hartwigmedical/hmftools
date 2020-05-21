@@ -35,12 +35,10 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.fusion.FusionAnnotations;
 import com.hartwig.hmftools.common.fusion.FusionChainInfo;
-import com.hartwig.hmftools.common.fusion.FusionTermination;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.GeneFusion;
 import com.hartwig.hmftools.common.fusion.ImmutableFusionAnnotations;
 import com.hartwig.hmftools.common.fusion.ImmutableFusionChainInfo;
-import com.hartwig.hmftools.common.fusion.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -426,28 +424,13 @@ public class FusionDisruptionAnalyser
             // check transcript disruptions
             for (final GeneFusion fusion : fusions)
             {
-                FusionTermination[] terminationInfo = {null, null};
-
-                for(int i = 0; i <=1; ++i)
-                {
-                    boolean isUpstream = (i == 0);
-
-                    // look at each gene in turn
-                    Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                    GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
-
-                    SvBreakend breakend = var.getBreakend(gene.isStart());
-
-                    terminationInfo[i] = checkTranscriptDisruptionInfo(breakend, transcript);
-                }
-
                 FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
                         .clusterId(cluster.id())
                         .clusterCount(cluster.getSvCount())
                         .resolvedType(cluster.getResolvedType().toString())
                         .chainInfo(null)
-                        .disruptionUp(terminationInfo[0])
-                        .disruptionDown(terminationInfo[1])
+                        .terminatedUp(false)
+                        .terminatedDown(false)
                         .build();
 
                 fusion.setAnnotations(annotations);
@@ -688,7 +671,7 @@ public class FusionDisruptionAnalyser
 
                     ++validTraversalFusionCount;
 
-                    FusionTermination[] terminationInfo = {null, null};
+                    boolean[] transTerminated = { false, false};
 
                     for (int se = SE_START; se <= SE_END; ++se)
                     {
@@ -705,13 +688,13 @@ public class FusionDisruptionAnalyser
 
                         if (isChainEnd)
                         {
-                            terminationInfo[se] = checkTranscriptDisruptionInfo(breakend, transcript);
+                            transTerminated[se] = false;
                         }
                         else
                         {
                             // looks from this link outwards past the end of the transcript for any invalidation of the transcript
                             int linkIndex = breakend == lowerBreakend ? lpIndex1 - 1 : lpIndex2;
-                            terminationInfo[se] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
+                            transTerminated[se] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
                         }
                     }
 
@@ -730,8 +713,8 @@ public class FusionDisruptionAnalyser
                             .clusterCount(cluster.getSvCount())
                             .resolvedType(cluster.getResolvedType().toString())
                             .chainInfo(chainInfo)
-                            .disruptionUp(terminationInfo[SE_START])
-                            .disruptionDown(terminationInfo[SE_END])
+                            .terminatedUp(transTerminated[SE_START])
+                            .terminatedDown(transTerminated[SE_END])
                             .build();
 
                     fusion.setAnnotations(annotations);
@@ -817,96 +800,23 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private FusionTermination checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript)
-    {
-        // check all breakends which fall within the bounds of this transcript, including any which are exonic
-        List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
-
-        int totalBreakends = 0;
-        int facingBreakends = 0;
-        int disruptedExons = 0;
-        long minDistance = -1;
-
-        final SvCluster cluster = breakend.getCluster();
-
-        int index = breakend.getChrPosIndex();
-
-        while(true)
-        {
-            index += breakend.orientation() == -1 ? +1 : -1;
-
-            if (index < 0 || index >= breakendList.size())
-                break;
-
-            SvBreakend nextBreakend = breakendList.get(index);
-
-            // exit once the next breakend extends beyond the gene bounds
-            if((breakend.orientation() == 1 && nextBreakend.position() < transcript.TranscriptStart)
-            || (breakend.orientation() == -1 && nextBreakend.position() > transcript.TranscriptEnd))
-            {
-                break;
-            }
-
-            ++totalBreakends;
-
-            if (nextBreakend.orientation() != breakend.orientation())
-            {
-                // skip breakends which cannot be chained by min TI length
-                int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
-                int breakendDistance = abs(breakend.position() - nextBreakend.position());
-
-                if(breakendDistance < minTiLength)
-                    continue;
-
-                if (minDistance == -1)
-                    minDistance = breakendDistance;
-
-                ++facingBreakends;
-            }
-        }
-
-        boolean allLinksAssembled = false;
-
-        if(facingBreakends > 0)
-        {
-            // is any facing breakend assembled?
-            final SvLinkedPair tiLink = breakend.getSV().getLinkedPair(breakend.usesStart());
-            allLinksAssembled = tiLink != null && tiLink.isAssembled();
-        }
-
-        return ImmutableFusionTermination.builder()
-                .allLinksAssembled(allLinksAssembled)
-                .facingBreakends(facingBreakends)
-                .disruptedExons(disruptedExons)
-                .totalBreakends(totalBreakends)
-                .minDistance(minDistance)
-                .transcriptTerminated(false)
-                .build();
-    }
-
-    private FusionTermination checkTranscriptDisruptionInfo(
+    private boolean checkTranscriptDisruptionInfo(
             final SvBreakend breakend, final Transcript transcript, final SvChain chain, int linkIndex)
     {
+        // return true if the transcript is disrupted before the chain leaves it
+
         // starting with this breakend and working onwards from it in the chain, check for any disruptions to the transcript
         // this includes subsequent links within the same chain and transcript
         SvLinkedPair startPair = chain.getLinkedPairs().get(linkIndex);
         boolean traverseUp = startPair.firstBreakend() == breakend; // whether to search up or down the chain
 
-        int totalBreakends = 0;
-        int facingBreakends = 0;
-        int disruptedExons = 0;
         boolean transcriptTerminated = false;
-        int minDistance = startPair.length();
-        boolean allLinksAssembled = startPair.isAssembled();
 
         boolean isUpstream = transcript.isUpstream();
 
         while(linkIndex >= 0 && linkIndex <= chain.getLinkedPairs().size() - 1)
         {
             SvLinkedPair pair = chain.getLinkedPairs().get(linkIndex);
-
-            if(pair.isInferred())
-                allLinksAssembled = false;
 
             // identify next exon after this TI
             // the breakend's transcript info cannot be used because it faces the opposite way from the fusing breakend
@@ -929,23 +839,12 @@ public class FusionDisruptionAnalyser
             }
 
             transcriptTerminated = true;
-
-            ++totalBreakends;
-            ++facingBreakends;
-
             break;
 
             // no longer check that subsequent links within the same transcript are valid
         }
 
-        return ImmutableFusionTermination.builder()
-                .allLinksAssembled(allLinksAssembled)
-                .facingBreakends(facingBreakends)
-                .disruptedExons(disruptedExons)
-                .totalBreakends(totalBreakends)
-                .minDistance(minDistance)
-                .transcriptTerminated(transcriptTerminated)
-                .build();
+        return transcriptTerminated;
     }
 
     private final List<GeneFusion> extractUniqueFusions()

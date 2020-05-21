@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.isPotentiallyRelevantFusion;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.isIrrelevantSameGene;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertDnaCodonToAminoAcid;
@@ -415,7 +415,7 @@ public class NeoEpitopeFinder
         if(!validTranscripts(upstreamTrans, downstreamTrans))
             return null;
 
-        if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
+        if (isIrrelevantSameGene(upstreamTrans, downstreamTrans))
             return null;
 
         boolean phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;

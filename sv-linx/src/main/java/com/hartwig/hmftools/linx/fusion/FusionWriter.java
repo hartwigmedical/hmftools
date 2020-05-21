@@ -252,32 +252,7 @@ public class FusionWriter
                         fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
                         fusion.priority()));
 
-            String chainInfo = "";
-            String defaultValues = ",0:false;0;0;0;false";
-            if(annotations.disruptionUp() != null)
-            {
-                chainInfo += String.format(",%d;%s;%d;%d;%d;%s",
-                        annotations.disruptionUp().facingBreakends(), annotations.disruptionUp().allLinksAssembled(),
-                        annotations.disruptionUp().totalBreakends(), annotations.disruptionUp().minDistance(),
-                        annotations.disruptionUp().disruptedExons(), annotations.disruptionUp().transcriptTerminated());
-            }
-            else
-            {
-                chainInfo += defaultValues;
-
-            }
-
-            if(annotations.disruptionDown() != null)
-            {
-                chainInfo += String.format(",%d;%s;%d;%d;%d;%s",
-                        annotations.disruptionDown().facingBreakends(), annotations.disruptionDown().allLinksAssembled(),
-                        annotations.disruptionDown().totalBreakends(), annotations.disruptionDown().minDistance(),
-                        annotations.disruptionDown().disruptedExons(), annotations.disruptionDown().transcriptTerminated());
-            }
-            else
-            {
-                chainInfo += defaultValues;
-            }
+            String chainInfo = String.format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
 
             if(annotations.chainInfo() != null)
             {
