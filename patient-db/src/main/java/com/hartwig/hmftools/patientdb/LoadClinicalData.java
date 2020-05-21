@@ -345,6 +345,7 @@ public final class LoadClinicalData {
         for (String patientId : sequencedPatientIds) {
             Patient patient = patients.get(patientId);
             if (patient == null) {
+                LOGGER.warn("No clinical data found for patient {}", patientId);
                 missingPatients++;
                 List<SampleData> sequencedSamples = sequencedOnly(sampleDataPerPatient.get(patientId));
                 missingSamples += sequencedSamples.size();
