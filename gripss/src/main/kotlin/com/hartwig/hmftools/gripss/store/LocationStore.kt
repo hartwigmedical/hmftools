@@ -66,9 +66,11 @@ class LocationStore private constructor(private val singlesMap: Map<String, Loca
         }
     }
 
+    fun matching(variants: List<StructuralVariantContext>): List<StructuralVariantContext> {
+        return variants.filter { contains(it) }
+    }
+
     fun contains(variant: StructuralVariantContext): Boolean {
-
-
         if (variant.isSingle) {
             return contains(variant.startBreakend)
         } else {

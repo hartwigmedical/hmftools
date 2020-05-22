@@ -10,20 +10,18 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
         private val logger = LogManager.getLogger(this::class.java)
         private val mateFiltered = setOf(MATE)
 
-        operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>, ponStore: LocationStore, hotspotStore: LocationStore): SoftFilterStore {
+        operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>, ponFiltered: Set<String>, hotspots: Set<String>): SoftFilterStore {
             val filters = mutableMapOf<String, Set<String>>()
             for (variant in variants) {
-                if (!hotspotStore.contains(variant)) {
+                if (!hotspots.contains(variant.vcfId)) {
                     val variantFilters = mutableSetOf<String>()
-                    if (ponStore.contains(variant)) {
+                    if (ponFiltered.contains(variant.vcfId)) {
                         variantFilters.add(PON)
                     }
                     variantFilters.addAll(variant.softFilters(config))
                     if (variantFilters.isNotEmpty()) {
                         filters[variant.vcfId] = variantFilters
                     }
-                } else {
-                    logger.debug("Found hotspot: $variant")
                 }
             }
 

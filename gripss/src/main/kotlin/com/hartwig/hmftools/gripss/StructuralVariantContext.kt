@@ -49,15 +49,15 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
     }
 
-    fun context(localLink: String, remoteLink: String, altPath: String?, filters: Set<String>): VariantContext {
+    fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
         builder.attribute(TAF, tumorAF)
                 .attribute(LOCAL_LINKED_BY, localLink)
                 .attribute(REMOTE_LINKED_BY, remoteLink)
+                .attribute(HOTSPOT, isHotspot)
 
         altPath?.let { x -> builder.attribute(ALT_PATH, x) }
-
         filters.forEach { x -> builder.filter(x) }
         if (filters.isEmpty()) {
             builder.filter(PASS)

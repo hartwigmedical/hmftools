@@ -31,7 +31,6 @@ fun main(args: Array<String>) {
 
 
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
-
     companion object {
         private val logger = LogManager.getLogger(this::class.java)
         const val PON_ADDITIONAL_DISTANCE = 0
@@ -42,7 +41,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileWriter = GripssVCF(config.outputVcf)
 
     override fun run() {
-        logger.info("Reading HOTSPOT file: ${config.pairedHotspotFile}")
+        logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
         val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile))
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
@@ -53,8 +52,14 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         logger.info("Reading VCF file: ${config.inputVcf}")
         val variantStore = VariantStore(hardFilterVariants(fileReader))
 
-        logger.info("Initial soft filters")
-        val initialFilters = SoftFilterStore(config.filterConfig, variantStore.selectAll(), ponStore, hotspotStore)
+        logger.info("Identifying hotspot variants")
+        val hotspots = hotspotStore.matching(variantStore.selectAll()).map { it.vcfId }.toSet()
+
+        logger.info("Identifying PON filtered variants")
+        val ponFiltered = ponStore.matching(variantStore.selectAll()).map { it.vcfId }.toSet()
+
+        logger.info("Applying initial soft filters")
+        val initialFilters = SoftFilterStore(config.filterConfig, variantStore.selectAll(), ponFiltered, hotspots)
 
         logger.info("Finding assembly links")
         val assemblyLinks: LinkStore = AssemblyLink(variantStore.selectAll())
@@ -89,7 +94,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
             val altPath = alternatePathsStringsByVcfId[variant.vcfId]
 
             val filters = finalFilters.filters(variant.vcfId, variant.mateId)
-            fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, filters))
+            fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
         }
 
     }
