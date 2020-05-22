@@ -2,6 +2,7 @@ package com.hartwig.hmftools.store
 
 import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
+import com.hartwig.hmftools.gripss.ContigComparator
 import com.hartwig.hmftools.gripss.store.LocationStore
 import junit.framework.Assert.assertTrue
 import org.junit.Assert
@@ -45,8 +46,9 @@ class LocationStoreTest {
 
     @Ignore
     fun testStuff() {
+        val contigComparator = ContigComparator(null)
         val breakEnds = Breakend.fromBedFile("/Users/jon/hmf/resources/gridss_pon_single_breakend.bed")
-        val breakpoints = Breakpoint.fromBedpeFile("/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe")
+        val breakpoints = Breakpoint.fromBedpeFile("/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe", contigComparator)
 
         val ponStore = LocationStore(breakEnds, breakpoints)
         for (breakEnd in breakEnds) {

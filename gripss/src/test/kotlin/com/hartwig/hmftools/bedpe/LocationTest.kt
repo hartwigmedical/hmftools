@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bedpe
 
+import com.hartwig.hmftools.gripss.ContigComparator
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -11,7 +12,7 @@ class LocationTest {
         val start = Breakend("1", 9999, 10008, -1)
         val end = Breakend("5", 18606943, 18606952, -1)
 
-        assertEquals(Breakpoint(start, end), Breakpoint.fromBedpe(entry))
+        assertEquals(Breakpoint(start, end), Breakpoint.fromBedpe(entry, ContigComparator(null)))
     }
 
     @Test
@@ -28,11 +29,21 @@ class LocationTest {
     }
 
     @Test
-    fun testReSort() {
+    fun testReSortOnSameChromosome() {
         val correctEntry = "1\t9997\t9999\t1\t9998\t10008\t.\t9\t-\t+"
         val reverseEntry = "1\t9998\t10008\t1\t9997\t9999\t.\t9\t+\t-"
+        val contigComparator = ContigComparator(null)
 
-        assertEquals(Breakpoint.fromBedpe(correctEntry), Breakpoint.fromBedpe(reverseEntry))
+        assertEquals(Breakpoint.fromBedpe(correctEntry, contigComparator), Breakpoint.fromBedpe(reverseEntry, contigComparator))
+    }
+
+    @Test
+    fun testReSortOnDiffernthromosome() {
+        val correctEntry = "1\t9997\t9999\t3\t9998\t10008\t.\t9\t-\t+"
+        val reverseEntry = "3\t9998\t10008\t1\t9997\t9999\t.\t9\t+\t-"
+        val contigComparator = ContigComparator(null)
+
+        assertEquals(Breakpoint.fromBedpe(correctEntry, contigComparator), Breakpoint.fromBedpe(reverseEntry, contigComparator))
     }
 
 }

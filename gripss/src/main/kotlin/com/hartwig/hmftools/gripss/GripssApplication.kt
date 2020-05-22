@@ -41,16 +41,17 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileWriter = GripssVCF(config.outputVcf)
 
     override fun run() {
+        logger.info("Reading VCF file: ${config.inputVcf}")
+        val contigComparator = ContigComparator(fileReader.fileHeader.sequenceDictionary)
+        val variantStore = VariantStore(hardFilterVariants(fileReader))
+
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
-        val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile))
+        val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
         val breakends = Breakend.fromBedFile(config.singlePonFile)
-        val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile)
+        val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
         val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
-
-        logger.info("Reading VCF file: ${config.inputVcf}")
-        val variantStore = VariantStore(hardFilterVariants(fileReader))
 
         logger.info("Identifying hotspot variants")
         val hotspots = hotspotStore.matching(variantStore.selectAll()).map { it.vcfId }.toSet()

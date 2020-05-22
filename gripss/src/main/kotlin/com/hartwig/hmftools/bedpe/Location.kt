@@ -41,14 +41,18 @@ data class Breakpoint(val startBreakend: Breakend, val endBreakend: Breakend) : 
     override val orientation = startBreakend.orientation
 
     companion object {
-        fun fromBedpeFile(file: String): List<Breakpoint> {
-            return Files.readAllLines(File(file).toPath()).map { fromBedpe(it) }
+        fun fromBedpeFile(file: String, contigComparator: ContigComparator): List<Breakpoint> {
+            return Files.readAllLines(File(file).toPath()).map { fromBedpe(it, contigComparator) }
         }
 
-        fun fromBedpe(line: String): Breakpoint {
+        fun fromBedpe(line: String, contigComparator: ContigComparator): Breakpoint {
             val (contig1, start1, end1, contig2, start2, end2, _, _, strand1, strand2) = line.split("\t")
             val start = Breakend(contig1, start1.toInt() + 1, end1.toInt(), strand1.toOrientation())
             val end = Breakend(contig2, start2.toInt() + 1, end2.toInt(), strand2.toOrientation())
+
+            if (contigComparator.compare(end.contig, start.contig) < 0 || start.contig == end.contig && start.start > end.start) {
+                return Breakpoint(end, start)
+            }
             return Breakpoint(start, end);
         }
     }
