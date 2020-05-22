@@ -11,7 +11,9 @@ import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOW
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.THREE_GENE;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
@@ -31,7 +33,7 @@ public class RnaFusionAnnotator
 
     public static RnaExonMatchData findExonMatch(final TranscriptData transData, int rnaPosition)
     {
-        RnaExonMatchData exonMatch = new RnaExonMatchData(transData.TransId);
+        RnaExonMatchData exonMatch = new RnaExonMatchData(transData.TransName);
 
         for (int i = 0; i < transData.exons().size(); ++i)
         {
@@ -93,6 +95,35 @@ public class RnaFusionAnnotator
         return exonMatch;
     }
 
+    public static void checkRnaPhasedTranscripts(RnaFusionData rnaFusion)
+    {
+        if(rnaFusion.getTransExonData()[FS_UPSTREAM].isEmpty() || rnaFusion.getTransExonData()[FS_DOWNSTREAM].isEmpty())
+            return;
+
+        for (RnaExonMatchData exonDataUp : rnaFusion.getTransExonData()[FS_UPSTREAM])
+        {
+            if(rnaFusion.JunctionTypes[FS_UPSTREAM] == KNOWN && !exonDataUp.BoundaryMatch)
+                continue;
+
+            for(RnaExonMatchData exonDataDown : rnaFusion.getTransExonData()[FS_DOWNSTREAM])
+            {
+                if(rnaFusion.JunctionTypes[FS_DOWNSTREAM] == KNOWN && !exonDataDown.BoundaryMatch)
+                    continue;
+
+                boolean phaseMatched = exonDataUp.ExonPhase == exonDataDown.ExonPhase;
+
+                if(phaseMatched && !rnaFusion.hasRnaPhasedFusion())
+                {
+                    LNX_LOGGER.debug("rnaFusion({}) juncTypes(up={} down={}) transUp({}) transDown({} phase({}) matched({})",
+                            rnaFusion.name(), rnaFusion.JunctionTypes[FS_UPSTREAM], rnaFusion.JunctionTypes[FS_DOWNSTREAM],
+                            exonDataUp.TransName, exonDataDown.TransName, exonDataUp.ExonPhase, phaseMatched);
+
+                    rnaFusion.setRnaPhasedFusionData(exonDataUp, exonDataDown);
+                }
+            }
+        }
+    }
+
     public static void setReferenceFusionData(final KnownFusionData refFusionData, RnaFusionData rnaFusion)
     {
         if(refFusionData == null)
@@ -140,7 +171,7 @@ public class RnaFusionAnnotator
         int offsetMargin = breakend.usesStart() ?
                 breakend.getSV().getSvData().startHomologySequence().length() : breakend.getSV().getSvData().endHomologySequence().length();
 
-        offsetMargin = offsetMargin / 2 + 1;
+        offsetMargin = (offsetMargin / 2) +  (offsetMargin % 1);
 
         // the interval offset could be used in place of half the homology but interpretation of the GRIDSS value needs to be understood first
         /*

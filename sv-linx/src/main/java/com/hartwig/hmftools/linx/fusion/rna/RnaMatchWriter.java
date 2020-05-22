@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
@@ -36,41 +37,43 @@ public class RnaMatchWriter
 
                 mWriter = createBufferedWriter(outputFilename, false);
 
-                mWriter.write("SampleId,FusionId,FusionName,ViableFusion");
+                mWriter.write("SampleId,Source,FusionId,FusionName,ViableFusion");
                 mWriter.write(",PhaseMatched,DnaMatchType,DnaMatchInfo,KnownType,RnaPhaseMatched");
+                mWriter.write(",JunctionFrags,DiscordantFrags");
 
                 for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
                 {
                     String upDown = fs == FS_UPSTREAM ? "Up" : "Down";
-                    String fieldsStr = "";
+                    StringJoiner fieldsStr = new StringJoiner(",");
 
-                    fieldsStr += ",GeneId" + upDown;
-                    fieldsStr += ",GeneName" + upDown;
-                    fieldsStr += ",SvId" + upDown;
-                    fieldsStr += ",Chr" + upDown;
-                    fieldsStr += ",Pos" + upDown;
-                    fieldsStr += ",RnaPos" + upDown;
-                    fieldsStr += ",Orient" + upDown;
-                    fieldsStr += ",Strand" + upDown;
-                    fieldsStr += ",Type" + upDown;
-                    fieldsStr += ",ClusterInfo" + upDown;
-                    fieldsStr += ",TransViable" + upDown;
-                    fieldsStr += ",TransValidLoc" + upDown;
-                    fieldsStr += ",TransId" + upDown;
-                    fieldsStr += ",ExonsSkipped" + upDown;
-                    fieldsStr += ",RegionType" + upDown;
-                    fieldsStr += ",CodingType" + upDown;
-                    fieldsStr += ",Exon" + upDown;
-                    fieldsStr += ",Disruptive" + upDown;
-                    fieldsStr += ",DistancePrev" + upDown;
-                    fieldsStr += ",RnaExonRank" + upDown;
-                    fieldsStr += ",RnaExonPhase" + upDown;
-                    fieldsStr += ",RnaExonMatch" + upDown;
-                    fieldsStr += ",RnaTransId" + upDown;
-                    mWriter.write(fieldsStr);
+                    fieldsStr.add("GeneId" + upDown);
+                    fieldsStr.add("GeneName" + upDown);
+                    fieldsStr.add("Chr" + upDown);
+                    fieldsStr.add("RnaPos" + upDown);
+                    fieldsStr.add("RnaJunc" + upDown);
+                    fieldsStr.add("Strand" + upDown);
+                    fieldsStr.add("SvId" + upDown);
+                    fieldsStr.add("SvPos" + upDown);
+                    fieldsStr.add("Orient" + upDown);
+                    fieldsStr.add("Type" + upDown);
+                    fieldsStr.add("ClusterInfo" + upDown);
+                    fieldsStr.add("TransViable" + upDown);
+                    fieldsStr.add("TransValidLoc" + upDown);
+                    fieldsStr.add("TransId" + upDown);
+                    fieldsStr.add("ExonsSkipped" + upDown);
+                    fieldsStr.add("RegionType" + upDown);
+                    fieldsStr.add("CodingType" + upDown);
+                    fieldsStr.add("Exon" + upDown);
+                    fieldsStr.add("Disruptive" + upDown);
+                    fieldsStr.add("DistancePrev" + upDown);
+                    fieldsStr.add("RnaTransId" + upDown);
+                    fieldsStr.add("RnaExonMatch" + upDown);
+                    fieldsStr.add("RnaExonRank" + upDown);
+                    fieldsStr.add("RnaExonPhase" + upDown);
+                    mWriter.write(String.format(",%s", fieldsStr.toString()));
                 }
 
-                mWriter.write(",ChainInfo,JunctionReadCount,SpanningFragCount,JuncTypeUp,JuncTypeDown");
+                mWriter.write(",ChainInfo");
 
                 mWriter.newLine();
             }
@@ -79,61 +82,74 @@ public class RnaMatchWriter
         {
             LNX_LOGGER.error("error writing RNA match data: {}", e.toString());
         }
-
     }
 
-    public void writeRnaMatchData(final String sampleId, final RnaFusionData rnaFusion)
+    public void writeRnaMatchData(final RnaFusionData rnaFusion)
     {
         if(mWriter == null)
             return;
 
         try
         {
-            mWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s",
-                    sampleId, rnaFusion.FusionId, rnaFusion.name(), rnaFusion.isViableFusion(), rnaFusion.isPhaseMatchedFusion(),
-                    rnaFusion.getDnaFusionMatchType(), rnaFusion.getDnaFusionMatchInfo(), rnaFusion.getKnownType(), rnaFusion.hasRnaPhasedFusion()));
+            mWriter.write(String.format("%s,%s,%s,%s",
+                    rnaFusion.SampleId, rnaFusion.Source, rnaFusion.FusionId, rnaFusion.name()));
+
+            mWriter.write(String.format(",%s,%s,%s,%s,%s,%s",
+                    rnaFusion.isViableFusion(), rnaFusion.isPhaseMatchedFusion(), rnaFusion.getDnaFusionMatchType(),
+                    rnaFusion.getDnaFusionMatchInfo(), rnaFusion.getKnownType(), rnaFusion.hasRnaPhasedFusion()));
+
+            mWriter.write(String.format(",%d,%d",
+                    rnaFusion.JunctionFragments, rnaFusion.DiscordantFragments));
 
             for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
             {
                 boolean isUpstream = (fs == SE_START);
+
+                mWriter.write(String.format(",%s,%s,%s,%d,%s,%d",
+                        rnaFusion.GeneIds[fs], rnaFusion.GeneNames[fs], rnaFusion.Chromosomes[fs],
+                        rnaFusion.Positions[fs], rnaFusion.JunctionTypes[fs], rnaFusion.Strands[fs]));
+
                 final Transcript trans = rnaFusion.getMatchedfTranscripts()[fs];
 
                 if(trans != null)
                 {
                     final GeneAnnotation gene = trans.gene();
 
-                    mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%d,%d,%s,%s",
-                            gene.StableId, gene.GeneName, gene.id(), gene.chromosome(), gene.position(),
-                            rnaFusion.Positions[fs], gene.orientation(), gene.Strand, gene.type(),
-                            rnaFusion.getClusterInfo(isUpstream)));
+                    // SV breakend info
+                    mWriter.write(String.format(",%d,%d,%d,%s,%s",
+                            gene.id(), gene.position(), gene.orientation(), gene.type(), rnaFusion.getClusterInfo(isUpstream)));
 
+                    // transcript info and viability
                     mWriter.write(String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",
                             rnaFusion.isTransViable()[fs], rnaFusion.isTransCorrectLocation()[fs],
                             trans.StableId, rnaFusion.getExonsSkipped()[fs],
                             trans.regionType(), trans.codingType(),
-                            isUpstream ? trans.ExonUpstream : trans.ExonDownstream, trans.isDisruptive(), trans.prevSpliceAcceptorDistance()));
+                            isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
+                            trans.isDisruptive(), trans.prevSpliceAcceptorDistance()));
                 }
                 else
                 {
-                    mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%d,%d,%s,%s",
-                            "", "", 0, rnaFusion.Chromosomes[fs], 0, rnaFusion.Positions[fs], 0, 0, "", ""));
+                    mWriter.write(String.format(",%d,%d,%d,%s,%s",
+                            0, 0, 0, "", ""));
 
                     mWriter.write(String.format(",%s,%s,,,,,,,",
                             rnaFusion.isTransViable()[fs], rnaFusion.isTransCorrectLocation()[fs]));
                 }
 
-                boolean hasExonData = rnaFusion.exonRank()[fs] > 0;
+                RnaExonMatchData rnaExonData = rnaFusion.getBestExonMatch(fs);
 
-                mWriter.write(String.format(",%s,%s,%d,%s",
-                        hasExonData ? rnaFusion.exonRank()[fs] :"", hasExonData ? rnaFusion.exonPhase()[fs] : "",
-                        rnaFusion.getExactMatchTransIds()[fs].size(), rnaFusion.getRnaPhasedFusionTransId()[fs]));
+                if(rnaExonData != null)
+                {
+                    mWriter.write(String.format(",%s,%s,%d,%d",
+                            rnaExonData.TransName, rnaExonData.BoundaryMatch, rnaExonData.ExonRank, rnaExonData.ExonPhase));
+                }
+                else
+                {
+                    mWriter.write(",NONE,false,0,0");
+                }
             }
 
-            mWriter.write(String.format(",%s,%d,%d,%s,%s",
-                    !rnaFusion.getChainInfo().isEmpty() ? rnaFusion.getChainInfo() : "0;0",
-                    rnaFusion.JunctionFragments, rnaFusion.DiscordantFragments,
-                    rnaFusion.JunctionTypes[FS_UPSTREAM], rnaFusion.JunctionTypes[FS_DOWNSTREAM]));
-
+            mWriter.write(String.format(",%s", !rnaFusion.getChainInfo().isEmpty() ? rnaFusion.getChainInfo() : "0;0"));
             mWriter.newLine();
         }
         catch (final IOException e)

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.Transcript;
@@ -24,8 +25,9 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 public class RnaFusionData
 {
     // RNA fusion data from external source
-    public final String FusionId;
     public final String SampleId;
+    public final String FusionId;
+    public final String Source;
     public final String[] GeneIds;
     public final String[] GeneNames;
     public final String[] Chromosomes;
@@ -38,19 +40,16 @@ public class RnaFusionData
 
     // annotations
     private boolean mIsValid;
-    private final List<String>[] mExonMatchedTransIds; // transcripts with an exon matching the RNA position
 
     // annotations and matching results
 
     // transcripts matching SV breakends
     private final Transcript[] mMatchedTranscripts;
 
-    // canonical exon positions based on RNA positions
-    private final int[] mExonRanks;
-    private final int[] mExonPhases;
+    private List<RnaExonMatchData>[] mTransExonData;
 
     // transcripts matching RNA positions if in a phased fusion
-    private final String[] mRnaTransIds;
+    private final RnaExonMatchData[] mRnaPhasedTranscriptExons;
 
     private boolean mViableFusion; // the pair of transcripts satisfied standard fusion rules
     private boolean mPhaseMatchedFusion;
@@ -70,11 +69,12 @@ public class RnaFusionData
     private String mChainInfo;
 
     public RnaFusionData(
-            final String fusionId, final String sampleId, final String[] geneIds, final String[] geneNames, final String[] chromosomes,
+            final String sampleId, final String source, final String fusionId, final String[] geneIds, final String[] geneNames, final String[] chromosomes,
             final int[] positions, int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes)
     {
-        FusionId = fusionId;
         SampleId = sampleId;
+        Source = source;
+        FusionId = fusionId;
         GeneIds = geneIds;
         GeneNames = geneNames;
         Chromosomes = chromosomes;
@@ -86,16 +86,12 @@ public class RnaFusionData
         Strands = new byte[FS_PAIR];
 
         mIsValid = true;
-        mExonRanks = new int[] {0, 0};
-        mExonPhases = new int[] {0, 0};
+        mRnaPhasedTranscriptExons = new RnaExonMatchData[] {null, null};
 
-        mExonMatchedTransIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-        mExonMatchedTransIds[FS_UPSTREAM] = Lists.newArrayList();
+        mTransExonData = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         mMatchedTranscripts = new Transcript[] { null, null};
         mBreakends = new SvBreakend[] { null, null};
-
-        mRnaTransIds = new String[]  {"", ""};
 
         mViableFusion = false;
         mPhaseMatchedFusion = false;
@@ -117,28 +113,39 @@ public class RnaFusionData
     public boolean isValid() { return mIsValid; }
     public void setValid(boolean toggle) { mIsValid = toggle; }
 
-    public boolean matchesKnownSpliceSite() { return JunctionTypes[FS_UPSTREAM] == KNOWN && JunctionTypes[FS_DOWNSTREAM] == KNOWN; }
+    public boolean matchesKnownSpliceSites() { return JunctionTypes[FS_UPSTREAM] == KNOWN && JunctionTypes[FS_DOWNSTREAM] == KNOWN; }
 
-    public void setExonData(int fs, int rank, int phase)
+    public List<RnaExonMatchData>[] getTransExonData() { return mTransExonData; }
+
+    public final List<String> getExactMatchTransIds(int fs)
     {
-        mExonPhases[fs] = phase;
-        mExonRanks[fs] = rank;
+        return mTransExonData[fs].stream().filter(x -> x.BoundaryMatch).map(x -> x.TransName).collect(Collectors.toList());
     }
 
-    public final List<String>[] getExactMatchTransIds() { return mExonMatchedTransIds; }
-
-    public int[] exonRank() { return mExonRanks; }
-    public int[] exonPhase() {return mExonPhases; }
-
-    public void setRnaPhasedFusionData(final String transIdUp, final String transIdDown)
+    public RnaExonMatchData getBestExonMatch(int fs)
     {
-        mRnaTransIds[FS_UPSTREAM] = transIdUp;
-        mRnaTransIds[FS_DOWNSTREAM] = transIdDown;
+        if(mRnaPhasedTranscriptExons[fs] != null)
+            return mRnaPhasedTranscriptExons[fs];
+
+        for(RnaExonMatchData exonData : mTransExonData[fs])
+        {
+            if(exonData.BoundaryMatch)
+                return exonData;
+        }
+
+        return mTransExonData[fs].isEmpty() ? null : mTransExonData[fs].get(0);
     }
 
-    public boolean hasRnaPhasedFusion() { return !mRnaTransIds[FS_UPSTREAM].isEmpty() && !mRnaTransIds[FS_DOWNSTREAM].isEmpty(); }
+    public void setRnaPhasedFusionData(final RnaExonMatchData up, final RnaExonMatchData down)
+    {
+        mRnaPhasedTranscriptExons[FS_UPSTREAM] = up;
+        mRnaPhasedTranscriptExons[FS_DOWNSTREAM] = down;
+    }
 
-    public String[] getRnaPhasedFusionTransId() { return mRnaTransIds; }
+    public boolean hasRnaPhasedFusion()
+    {
+        return mRnaPhasedTranscriptExons[FS_UPSTREAM] != null && mRnaPhasedTranscriptExons[FS_DOWNSTREAM] != null;
+    }
 
     public void setViableFusion(boolean viable, boolean phaseMatched)
     {
@@ -289,7 +296,8 @@ public class RnaFusionData
         int discordantFrags = Integer.parseInt(items[fieldIndexMap.get("DiscordantFrags")]);
 
         return new RnaFusionData(
-                fusionId, sampleId, geneIds, geneNames, chromosomes, positions, junctionFrags, discordantFrags, junctionTypes);
+                sampleId, RNA_FUSION_SOURCE_ISOFOX, fusionId, geneIds, geneNames, chromosomes, positions,
+                junctionFrags, discordantFrags, junctionTypes);
     }
 
     private static RnaFusionData fromArriba(int index, final String data, final Map<String,Integer> fieldIndexMap)
@@ -320,7 +328,7 @@ public class RnaFusionData
 
         final String[] spliceSites = new String[] { items[fieldIndexMap.get("JuncTypeUp")], items[fieldIndexMap.get("JuncTypeDown")] };
 
-        final RnaJunctionType[] junctionTypes = new RnaJunctionType[] { RnaJunctionType.UNKNOWN, RnaJunctionType.UNKNOWN };
+        final RnaJunctionType[] junctionTypes = new RnaJunctionType[] { RnaJunctionType.NOT_SET, RnaJunctionType.NOT_SET };
 
         if(spliceSites[FS_UPSTREAM].equals("splice-site"))
             junctionTypes[FS_UPSTREAM] = KNOWN;
@@ -329,7 +337,8 @@ public class RnaFusionData
             junctionTypes[FS_DOWNSTREAM] = KNOWN;
 
         return new RnaFusionData(
-                String.valueOf(index), sampleId, geneIds, geneNames, chromosomes, positions, splitFragments, discordantFragments, junctionTypes);
+                sampleId, RNA_FUSION_SOURCE_ARRIBA, String.valueOf(index), geneIds, geneNames, chromosomes, positions,
+                splitFragments, discordantFragments, junctionTypes);
     }
 
     private static RnaFusionData fromStarFusion(int index, final String data, final Map<String,Integer> fieldIndexMap)
@@ -352,7 +361,7 @@ public class RnaFusionData
         final int[] positions = new int[] {
                 Integer.parseInt(items[fieldIndexMap.get("PosUp")]), Integer.parseInt(items[fieldIndexMap.get("PosDown")]) };
 
-        final RnaJunctionType[] junctionTypes = new RnaJunctionType[FS_PAIR];
+        final RnaJunctionType[] junctionTypes = new RnaJunctionType[] { RnaJunctionType.NOT_SET, RnaJunctionType.NOT_SET };
 
         if(items[fieldIndexMap.get("SpliceType")].equals("ONLY_REF_SPLICE"))
         {
@@ -364,7 +373,8 @@ public class RnaFusionData
         int spanningCount = Integer.parseInt(items[fieldIndexMap.get("SpanningFragCount")]);
 
         return new RnaFusionData(
-                sampleId, String.valueOf(index), geneIds, geneNames, chromosomes, positions, junctionCount, spanningCount, junctionTypes);
+                sampleId, RNA_FUSION_SOURCE_STARFUSION, String.valueOf(index), geneIds, geneNames, chromosomes, positions,
+                junctionCount, spanningCount, junctionTypes);
     }
 
     private static String checkAlternateGeneName(final String geneName)

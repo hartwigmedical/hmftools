@@ -2,15 +2,15 @@ package com.hartwig.hmftools.linx.fusion.rna;
 
 public class RnaExonMatchData
 {
-    public final int TransId;
+    public final String TransName;
     public boolean ExonFound;
     public int ExonRank;
     public int ExonPhase;
     public boolean BoundaryMatch;
 
-    public RnaExonMatchData(final int transId)
+    public RnaExonMatchData(final String transName)
     {
-        TransId = transId;
+        TransName = transName;
         ExonPhase = -1;
         ExonRank = 0;
         ExonFound = false;
