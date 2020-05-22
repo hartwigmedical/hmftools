@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.gripss.store
 
 import com.hartwig.hmftools.gripss.*
+import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     companion object {
-        val mateFiltered = setOf(MATE)
+        private val logger = LogManager.getLogger(this::class.java)
+        private val mateFiltered = setOf(MATE)
 
         operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>, ponStore: LocationStore, hotspotStore: LocationStore): SoftFilterStore {
             val filters = mutableMapOf<String, Set<String>>()
@@ -20,6 +22,8 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
                     if (variantFilters.isNotEmpty()) {
                         filters[variant.vcfId] = variantFilters
                     }
+                } else {
+                    logger.debug("Found hotspot: $variant")
                 }
             }
 
