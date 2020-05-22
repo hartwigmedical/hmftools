@@ -1,24 +1,14 @@
 package com.hartwig.hmftools.gripss.link
 
-import com.google.common.collect.Sets
 import com.hartwig.hmftools.gripss.StructuralVariantContext
+import com.hartwig.hmftools.gripss.VariantContextTestFactory
 import com.hartwig.hmftools.gripss.store.LinkStore
 import htsjdk.variant.variantcontext.VariantContext
-import htsjdk.variant.vcf.VCFCodec
-import htsjdk.variant.vcf.VCFHeader
-import htsjdk.variant.vcf.VCFHeaderVersion
 import junit.framework.Assert.assertEquals
 import org.apache.logging.log4j.util.Strings
 import org.junit.Test
 
 class AssemblyLinkTest {
-
-    private val codec: VCFCodec by lazy {
-        val codec = VCFCodec()
-        val header = VCFHeader(Sets.newHashSet(), Sets.newHashSet("NORMAL", "TUMOR"))
-        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2)
-        return@lazy codec
-    }
 
     @Test
     fun testNonMatesAreLinked() {
@@ -63,7 +53,7 @@ class AssemblyLinkTest {
 
     fun createVariant(pos: Int, vcfId: String, ref: String, alt: String, mate: String, beid: String, beidl: String): VariantContext {
         val line = "1\t${pos}\t${vcfId}\t${ref}\t${alt}\t100\tPASS\tMATEID=${mate};BEID=${beid};BEIDL=${beidl};AS=10\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
-        return codec.decode(line);
+        return VariantContextTestFactory.decode(line);
     }
 
     private fun VariantContext.toSv(): StructuralVariantContext = StructuralVariantContext(this)

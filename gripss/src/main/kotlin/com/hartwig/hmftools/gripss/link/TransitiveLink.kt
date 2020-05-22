@@ -92,11 +92,14 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     }
 
     private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): List<StructuralVariantContext> {
+        //TODO: INS vs DUP DEDUP Case
         val alternativeFilter = { other: StructuralVariantContext -> other.orientation == variant.orientation && !other.imprecise && !other.isSingle }
         return selectOthersNearby(variant, 0) { x -> alternativeFilter(x)}
     }
 
     private fun VariantStore.selectTransitive(variant: StructuralVariantContext): List<StructuralVariantContext> {
+        // TODO: Allow imprecise variants but don't use CIPOS
+
         val leftFilter = {other: StructuralVariantContext -> other.minStart <= variant.maxStart}
         val rightFilter = {other: StructuralVariantContext -> other.maxStart >= variant.minStart}
         val directionFilter = if (variant.orientation == 1.toByte()) leftFilter else rightFilter

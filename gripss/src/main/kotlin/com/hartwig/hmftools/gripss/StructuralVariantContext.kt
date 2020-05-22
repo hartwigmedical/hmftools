@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss
 
+import com.hartwig.hmftools.bedpe.Breakend
+import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.extensions.*
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
@@ -23,14 +25,20 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val isShortIns = variantType is Insertion && variantType.length < SHORT_EVENT_SIZE
     val isShort = isShortDup || isShortDel || isShortIns
     val vcfId: String = context.id
-    val mateId: String? = context.mate();
-
+    val mateId: String? = context.mate()
+    val confidenceInterval = context.confidenceInterval()
     val start = context.start
-    val confidenceInterval = context.confidenceInterval();
-    val minStart = start + confidenceInterval.first
-    val maxStart = start + confidenceInterval.second
+    private val remoteConfidenceInterval = context.confidenceInterval()
+
+    val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
+    val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
+    val breakpoint: Breakpoint? = endBreakend?.let { Breakpoint(startBreakend, it) }
+    val minStart = startBreakend.start
+
+    val maxStart = startBreakend.end
     val insertSequenceLength = variantType.insertSequence.length
     val qual = context.phredScaledQual
+
 
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
@@ -41,16 +49,16 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
     }
 
-    fun context(localLink: String, remoteLink: String, altPath: String?, filters: Set<String>): VariantContext {
+    fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
         builder.attribute(TAF, tumorAF)
                 .attribute(LOCAL_LINKED_BY, localLink)
                 .attribute(REMOTE_LINKED_BY, remoteLink)
+                .attribute(HOTSPOT, isHotspot)
 
         altPath?.let { x -> builder.attribute(ALT_PATH, x) }
-
-        filters.forEach { x -> builder.filter(x)}
+        filters.forEach { x -> builder.filter(x) }
         if (filters.isEmpty()) {
             builder.filter(PASS)
         }

@@ -3,8 +3,10 @@ package com.hartwig.hmftools.gripss
 data class GripssConfig(
         val inputVcf: String,
         val outputVcf: String,
+        val singlePonFile: String,
+        val pairedPonFile: String,
+        val pairedHotspotFile: String,
         val filterConfig: GripssFilterConfig)
-
 
 data class GripssFilterConfig(
         val maxNormalSupport: Double,

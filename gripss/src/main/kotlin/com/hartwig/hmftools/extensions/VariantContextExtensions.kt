@@ -6,6 +6,9 @@ import org.apache.logging.log4j.util.Strings
 import java.util.*
 import kotlin.math.max
 
+const val CIPOS = "CIPOS"
+const val CIRPOS = "CIRPOS"
+
 fun VariantContext.breakendAssemblyReadPairs(): Int {
     return this.getAttributeAsInt("BASRP", 0)
 }
@@ -59,8 +62,12 @@ fun VariantContext.mate(): String? {
     return null
 }
 
-fun VariantContext.confidenceInterval(): Pair<Int, Int> {
-    val (start, end) = this.getAttributeAsString("CIPOS", "0,0")
+fun VariantContext.confidenceInterval(): Pair<Int, Int> = this.confidenceInterval(CIPOS)
+
+fun VariantContext.remoteConfidenceInterval(): Pair<Int, Int> = this.confidenceInterval(CIRPOS)
+
+private fun VariantContext.confidenceInterval(attribute: String): Pair<Int, Int> {
+    val (start, end) = this.getAttributeAsString(attribute, "0,0")
             .replace("[", "")
             .replace("]", "")
             .split(",")
@@ -69,11 +76,11 @@ fun VariantContext.confidenceInterval(): Pair<Int, Int> {
 }
 
 fun VariantContext.isConfidenceIntervalUnbalanced(): Boolean {
-    if (!this.hasAttribute("CIPOS")) {
+    if (!this.hasAttribute(CIPOS)) {
         return false;
     }
 
-    val (startOffset, endOffset) = this.getAttributeAsString("CIPOS", "0,0").split(",").map { x -> x.toInt() }
+    val (startOffset, endOffset) = this.getAttributeAsString(CIPOS, "0,0").split(",").map { x -> x.toInt() }
     return endOffset.toInt() + startOffset.toInt() > 1
 }
 

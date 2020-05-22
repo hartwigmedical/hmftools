@@ -1,20 +1,28 @@
 package com.hartwig.hmftools.gripss.store
 
-import com.hartwig.hmftools.gripss.DEDUP
-import com.hartwig.hmftools.gripss.GripssFilterConfig
-import com.hartwig.hmftools.gripss.MATE
-import com.hartwig.hmftools.gripss.StructuralVariantContext
+import com.hartwig.hmftools.gripss.*
+import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     companion object {
-        val mateFiltered = setOf(MATE)
+        private val logger = LogManager.getLogger(this::class.java)
+        private val mateFiltered = setOf(MATE)
 
-        operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>): SoftFilterStore {
+        operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>, ponFiltered: Set<String>, hotspots: Set<String>): SoftFilterStore {
             val filters = mutableMapOf<String, Set<String>>()
             for (variant in variants) {
-                filters[variant.vcfId] = variant.softFilters(config)
+                if (!hotspots.contains(variant.vcfId)) {
+                    val variantFilters = mutableSetOf<String>()
+                    if (ponFiltered.contains(variant.vcfId)) {
+                        variantFilters.add(PON)
+                    }
+                    variantFilters.addAll(variant.softFilters(config))
+                    if (variantFilters.isNotEmpty()) {
+                        filters[variant.vcfId] = variantFilters
+                    }
+                }
             }
 
             return SoftFilterStore(filters)
@@ -45,6 +53,7 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
     fun isEligibleForRescue(vcfId: String, mateId: String?): Boolean {
         return isEligibleForRescue(vcfId) && mateId?.let { isDuplicate(it) } != true
     }
+
     fun isEligibleForRescue(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == false
 
     fun isDuplicate(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == true
