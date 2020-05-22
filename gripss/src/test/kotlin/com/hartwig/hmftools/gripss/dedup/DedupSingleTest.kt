@@ -13,7 +13,7 @@ import org.junit.Test
 class DedupSingleTest {
 
     private val fail: Set<String> = setOf("FAIL")
-    private val range = 10
+    private val cipos = 10
 
     @Test
     fun testSingleDedup() {
@@ -23,6 +23,7 @@ class DedupSingleTest {
         val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
 
         val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("pair"))
         assertTrue(victim.duplicates.contains("sgl"))
     }
 
@@ -34,6 +35,7 @@ class DedupSingleTest {
         val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
 
         val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("pair"))
         assertTrue(victim.duplicates.contains("sgl"))
     }
 
@@ -45,6 +47,7 @@ class DedupSingleTest {
         val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
 
         val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("pair"))
         assertTrue(victim.duplicates.isEmpty())
     }
 
@@ -57,6 +60,7 @@ class DedupSingleTest {
         val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
 
         val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("pair"))
         assertTrue(victim.duplicates.contains("sgl1"))
         assertTrue(victim.duplicates.contains("sgl2"))
     }
@@ -74,7 +78,7 @@ class DedupSingleTest {
     }
 
     @Test
-    fun testChooseHighestQualirt() {
+    fun testChooseHighestQuality() {
         val passingSingle1 = create("sgl1", 100, "A.", 1000)
         val passingSingle2 = create("sgl2", 102, "A.", 1001)
         val variantStore = VariantStore(listOf(passingSingle1, passingSingle2))
@@ -86,19 +90,20 @@ class DedupSingleTest {
     }
 
     @Test
-    fun testDifferntOrientation() {
+    fun testDifferentOrientation() {
         val passingSingle = create("sgl", 100, "A.", 1000)
         val failingPair = create("pair", 100, "[2:222[A", 1)
         val variantStore = VariantStore(listOf(passingSingle, failingPair))
         val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
 
         val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("pair"))
         assertTrue(victim.duplicates.isEmpty())
     }
 
     private fun create(id: String, pos: Int, alt: String, qual: Int): StructuralVariantContext {
         return VariantContextTestFactory.createVariant("1", pos, id, "A", alt, qual, setOf("."))
-                .cipos(Pair(-range, range), Pair(-range, range))
+                .cipos(Pair(-cipos, cipos), Pair(-cipos, cipos))
                 .toSv()
     }
 
