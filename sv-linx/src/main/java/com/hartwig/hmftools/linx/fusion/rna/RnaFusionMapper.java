@@ -5,16 +5,22 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MIN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.checkRnaPhasedTranscripts;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.findExonMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.isViableBreakend;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.positionMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.setReferenceFusionData;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.getRnaSourceDelimiter;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.isUnspliced;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -137,14 +143,10 @@ public class RnaFusionMapper
             boolean isUpstream = (fs == 0);
             final String chromosome = rnaFusion.Chromosomes[fs];
             int rnaPosition = rnaFusion.Positions[fs];
-            byte geneStrand = rnaFusion.Strands[fs];
-            List<SvBreakend> viableBreakends = viableBreakendPair[fs];
-            List<SvBreakend> nearBreakends = nearBreakendPair[fs];
-            List<SvBreakend> genicBreakends = genicBreakendPair[fs];
-            List<Transcript> viableTranscripts = viableTranscriptPair[fs];
-            List<Transcript> nearTranscripts = nearTranscriptPair[fs];
-            List<Transcript> genicTranscripts = genicTranscriptPair[fs];
+            byte rnaOrient = rnaFusion.Orientations[fs];
+            byte requiredGeneStrand = isUpstream ? rnaOrient : (byte)-rnaOrient;
             String geneName = rnaFusion.GeneNames[fs];
+            boolean unsplicedJunction = isUnspliced(rnaFusion.JunctionTypes[fs]);
 
             final List<SvBreakend> breakendList = chrBreakendMap.get(chromosome);
 
@@ -153,52 +155,83 @@ public class RnaFusionMapper
 
             for(final SvBreakend breakend : breakendList)
             {
+                if(breakend.orientation() != rnaOrient)
+                     continue;
+
                 final SvVarData var = breakend.getSV();
 
                 if(var.isInferredSgl())
                     continue;
 
-                // check whether breakend falls in genic region
-                List<GeneAnnotation> genesList = var.getGenesList(breakend.usesStart())
-                        .stream()
-                        .filter(x -> x.GeneName.equals(geneName))
-                        .collect(Collectors.toList());
+                // breakend must be within a max distance of the RNA breakend or if it's unspliced, at its exact location
+                if(unsplicedJunction)
+                {
+                    if(!positionMatch(breakend, rnaPosition))
+                        continue;
+                }
+                else
+                {
+                    if(!isViableBreakend(breakend, rnaPosition, requiredGeneStrand, isUpstream))
+                        continue;
 
-                if(genesList.isEmpty())
+                    if(abs(breakend.position() - rnaPosition) > PRE_GENE_PROMOTOR_DISTANCE)
+                        continue;
+                }
+
+                final List<GeneAnnotation> svGenesList = var.getGenesList(breakend.usesStart());
+
+                if(svGenesList.isEmpty())
                     continue;
 
+                final List<GeneAnnotation> genesList = Lists.newArrayList();
+
+                if(!geneName.isEmpty())
+                {
+                    genesList.addAll(svGenesList.stream().filter(x -> x.GeneName.equals(geneName)).collect(Collectors.toList()));
+
+                    if(genesList.isEmpty())
+                        continue;
+                }
+                else if(!isUpstream)
+                {
+                    genesList.addAll(svGenesList);
+                }
+
                 // check that breakend has correct orientation and position relative to RNA breakend
-                boolean correctLocation = isViableBreakend(breakend, rnaPosition, geneStrand, isUpstream);
+                boolean correctLocation = true; // established above
+                // boolean correctLocation = isViableBreakend(breakend, rnaPosition, requiredGeneStrand, isUpstream);
 
                 // check whether any of the breakend's transcripts match the exon (exact or nearest) of the RNA fusion breakpoint
-                for(final Transcript trans : genesList.get(0).transcripts())
+                for(final GeneAnnotation gene : genesList)
                 {
-                    if(isExactRnaExon)
+                    for(final Transcript trans : gene.transcripts())
                     {
-                        if(!rnaFusion.getExactMatchTransIds(fs).contains(trans.StableId))
-                            continue;
-                    }
-                    else if(!trans.isCanonical())
-                    {
-                        continue;
-                    }
+                        if(isExactRnaExon)
+                        {
+                            if(!rnaFusion.getExactMatchTransIds(fs).contains(trans.StableId))
+                                continue;
+                        }
 
-                    if(correctLocation)
-                    {
-                        nearBreakends.add(breakend);
-                        nearTranscripts.add(trans);
-                    }
-                    else
-                    {
-                        genicBreakends.add(breakend);
-                        genicTranscripts.add(trans);
-                    }
+                        if(correctLocation)
+                        {
+                            nearBreakendPair[fs].add(breakend);
+                            nearTranscriptPair[fs].add(trans);
+                        }
 
-                    if(correctLocation && mAnnotator.isTranscriptBreakendViableForRnaBoundary(
-                            trans, isUpstream,  breakend.position(), rnaPosition, isExactRnaExon))
-                    {
-                        viableBreakends.add(breakend);
-                        viableTranscripts.add(trans);
+                        /*
+                        else
+                        {
+                            genicBreakends.add(breakend);
+                            genicTranscripts.add(trans);
+                        }
+                        */
+
+                        if(correctLocation && mAnnotator.isTranscriptBreakendViableForRnaBoundary(
+                                trans, isUpstream, breakend.position(), rnaPosition, isExactRnaExon))
+                        {
+                            viableBreakendPair[fs].add(breakend);
+                            viableTranscriptPair[fs].add(trans);
+                        }
                     }
                 }
             }
@@ -297,8 +330,9 @@ public class RnaFusionMapper
                 }
                 else
                 {
-                    transcriptList = genicTranscriptPair[fs];
-                    breakendList = genicBreakendPair[fs];
+                    continue;
+                    // transcriptList = genicTranscriptPair[fs];
+                    // breakendList = genicBreakendPair[fs];
                 }
 
                 Transcript closestTrans = null;
@@ -465,8 +499,6 @@ public class RnaFusionMapper
     private void setRnaFusionData(final RnaFusionData rnaFusion)
     {
         // find transcripts which match the RNA positions
-        boolean isExactRnaExon = rnaFusion.matchesKnownSpliceSites();
-
         for(int fs = FS_UPSTREAM; fs <= 1; ++fs)
         {
             boolean isUpstream = (fs == 0);
@@ -480,9 +512,10 @@ public class RnaFusionMapper
 
                 if(geneData == null)
                 {
-                    LNX_LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.name(), isUpstream ? "up" : "down");
-                    rnaFusion.setValid(false);
-                    return;
+                    //LNX_LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.name(), isUpstream ? "up" : "down");
+                    //rnaFusion.setValid(false);
+                    //return;
+                    continue;
                 }
 
                 rnaFusion.GeneIds[fs] = geneData.GeneId;

@@ -6,4 +6,6 @@ public enum RnaJunctionType
     KNOWN, // matches known exon boundary (ie from Ensembl)
     CANONICAL, // matches known motif
     UNKNOWN;
+
+    public static boolean isUnspliced(RnaJunctionType type) { return type == UNKNOWN || type == NOT_SET; }
 }

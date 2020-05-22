@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
@@ -45,7 +49,7 @@ public class RnaFusionAnnotator
                 // skip matches on the last exon
                 if(i == 0 && transData.Strand == -1 && rnaPosition == exonData.ExonStart)
                     return exonMatch;
-                else if(i == transData.exons().size() - 1 && transData.Strand == 1 && rnaPosition == exonData.ExonEnd)
+                else if(i == transData.exons().size() - 1 && transData.Strand == POS_STRAND && rnaPosition == exonData.ExonEnd)
                     return exonMatch;
 
                 // position exactly matches the bounds of an exon
@@ -53,7 +57,7 @@ public class RnaFusionAnnotator
                 exonMatch.BoundaryMatch = true;
                 exonMatch.ExonRank = exonData.ExonRank;
 
-                if ((transData.Strand == 1) == (rnaPosition == exonData.ExonStart))
+                if ((transData.Strand == POS_STRAND) == (rnaPosition == exonData.ExonStart))
                 {
                     exonMatch.ExonPhase = exonData.ExonPhase;
                 }
@@ -77,7 +81,7 @@ public class RnaFusionAnnotator
             {
                 exonMatch.ExonFound = true;
 
-                if (transData.Strand == 1)
+                if (transData.Strand == POS_STRAND)
                 {
                     exonMatch.ExonRank = exonData.ExonRank;
                     exonMatch.ExonPhase = exonData.ExonPhaseEnd;
@@ -168,21 +172,11 @@ public class RnaFusionAnnotator
 
         int position = breakend.position();
 
-        int offsetMargin = breakend.usesStart() ?
-                breakend.getSV().getSvData().startHomologySequence().length() : breakend.getSV().getSvData().endHomologySequence().length();
-
-        offsetMargin = (offsetMargin / 2) +  (offsetMargin % 1);
-
-        // the interval offset could be used in place of half the homology but interpretation of the GRIDSS value needs to be understood first
-        /*
-        int offsetMargin = requireHigherBreakendPos ?
-                (breakend.usesStart() ? breakend.getSV().getSvData().startIntervalOffsetEnd() : breakend.getSV().getSvData().endIntervalOffsetEnd())
-                : (breakend.usesStart() ? breakend.getSV().getSvData().startIntervalOffsetStart() : breakend.getSV().getSvData().endIntervalOffsetStart());
-        */
+        int offsetMargin = getHomologyMargin(breakend);
 
         if(requireHigherBreakendPos)
         {
-            if(breakend.orientation() != 1)
+            if(breakend.orientation() != POS_ORIENT)
                 return false;
 
             // factor in any uncertainty around the precise breakend, eg from homology
@@ -190,11 +184,34 @@ public class RnaFusionAnnotator
         }
         else
         {
-            if(breakend.orientation() != -1)
+            if(breakend.orientation() != NEG_ORIENT)
                 return false;
 
             return (position - offsetMargin <= rnaPosition);
         }
+    }
+
+    private static int getHomologyMargin(final SvBreakend breakend)
+    {
+        // the interval offset could be used in place of half the homology but interpretation of the GRIDSS value needs to be understood first
+        /*
+        int offsetMargin = requireHigherBreakendPos ?
+                (breakend.usesStart() ? breakend.getSV().getSvData().startIntervalOffsetEnd() : breakend.getSV().getSvData().endIntervalOffsetEnd())
+                : (breakend.usesStart() ? breakend.getSV().getSvData().startIntervalOffsetStart() : breakend.getSV().getSvData().endIntervalOffsetStart());
+        */
+
+        int homologyLength = breakend.usesStart() ?
+                breakend.getSV().getSvData().startHomologySequence().length() : breakend.getSV().getSvData().endHomologySequence().length();
+
+        return (homologyLength / 2) + (homologyLength % 2);
+    }
+
+    public static boolean positionMatch(final SvBreakend breakend, int rnaPosition)
+    {
+        // checks for a position match within the bounds of uncertainty
+        int offsetMargin = getHomologyMargin(breakend);
+
+        return abs(breakend.position() - rnaPosition) <= offsetMargin;
     }
 
     public boolean isTranscriptBreakendViableForRnaBoundary(
@@ -222,10 +239,10 @@ public class RnaFusionAnnotator
             if (isUpstream)
             {
                 // first check if at an exon boundary or before the start of the next exon and after the start of this one
-                if(strand == 1)
+                if(strand == POS_STRAND)
                 {
                     if ((rnaPosition == exonData.ExonEnd)
-                            || (!exactRnaPosition && nextExonData != null && rnaPosition > exonData.ExonStart && rnaPosition < nextExonData.ExonStart))
+                    || (!exactRnaPosition && nextExonData != null && rnaPosition > exonData.ExonStart && rnaPosition < nextExonData.ExonStart))
                     {
                         // in which case check whether the breakend is before the next exon's splice acceptor
                         if (nextExonData != null)
@@ -253,8 +270,8 @@ public class RnaFusionAnnotator
             }
             else
             {
-                if((strand == 1 && rnaPosition <= exonData.ExonStart && exonData.ExonRank <= 2)
-                        || (strand == -1 && rnaPosition >= exonData.ExonEnd && exonData.ExonRank <= 2))
+                if((strand == POS_STRAND && rnaPosition <= exonData.ExonStart && exonData.ExonRank <= 2)
+                || (strand == NEG_STRAND && rnaPosition >= exonData.ExonEnd && exonData.ExonRank <= 2))
                 {
                     int breakendDistance = abs(breakendPosition - rnaPosition);
 
@@ -264,10 +281,10 @@ public class RnaFusionAnnotator
                         return true;
                 }
 
-                if(strand == 1)
+                if(strand == POS_STRAND)
                 {
                     if ((rnaPosition == exonData.ExonStart)
-                            || (!exactRnaPosition && prevExonData != null && rnaPosition > prevExonData.ExonStart && rnaPosition < exonData.ExonStart))
+                    || (!exactRnaPosition && prevExonData != null && rnaPosition > prevExonData.ExonStart && rnaPosition < exonData.ExonStart))
                     {
                         if(prevExonData != null)
                         {
@@ -281,7 +298,7 @@ public class RnaFusionAnnotator
                 else
                 {
                     if ((rnaPosition == exonData.ExonEnd)
-                            || (!exactRnaPosition && nextExonData != null && rnaPosition < nextExonData.ExonEnd && rnaPosition > exonData.ExonEnd))
+                    || (!exactRnaPosition && nextExonData != null && rnaPosition < nextExonData.ExonEnd && rnaPosition > exonData.ExonEnd))
                     {
                         if(nextExonData != null)
                         {

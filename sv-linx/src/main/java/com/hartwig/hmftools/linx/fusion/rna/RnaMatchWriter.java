@@ -50,11 +50,11 @@ public class RnaMatchWriter
                     fieldsStr.add("GeneName" + upDown);
                     fieldsStr.add("Chr" + upDown);
                     fieldsStr.add("RnaPos" + upDown);
+                    fieldsStr.add("RnaOrient" + upDown);
                     fieldsStr.add("RnaJunc" + upDown);
                     fieldsStr.add("Strand" + upDown);
                     fieldsStr.add("SvId" + upDown);
                     fieldsStr.add("SvPos" + upDown);
-                    fieldsStr.add("Orient" + upDown);
                     fieldsStr.add("Type" + upDown);
                     fieldsStr.add("ClusterInfo" + upDown);
                     fieldsStr.add("TransViable" + upDown);
@@ -105,9 +105,9 @@ public class RnaMatchWriter
             {
                 boolean isUpstream = (fs == SE_START);
 
-                mWriter.write(String.format(",%s,%s,%s,%d,%s,%d",
+                mWriter.write(String.format(",%s,%s,%s,%d,%d,%s,%d",
                         rnaFusion.GeneIds[fs], rnaFusion.GeneNames[fs], rnaFusion.Chromosomes[fs],
-                        rnaFusion.Positions[fs], rnaFusion.JunctionTypes[fs], rnaFusion.Strands[fs]));
+                        rnaFusion.Positions[fs], rnaFusion.Orientations[fs], rnaFusion.JunctionTypes[fs], rnaFusion.Strands[fs]));
 
                 final Transcript trans = rnaFusion.getMatchedfTranscripts()[fs];
 
@@ -116,8 +116,8 @@ public class RnaMatchWriter
                     final GeneAnnotation gene = trans.gene();
 
                     // SV breakend info
-                    mWriter.write(String.format(",%d,%d,%d,%s,%s",
-                            gene.id(), gene.position(), gene.orientation(), gene.type(), rnaFusion.getClusterInfo(isUpstream)));
+                    mWriter.write(String.format(",%d,%d,%s,%s",
+                            gene.id(), gene.position(), gene.type(), rnaFusion.getClusterInfo(isUpstream)));
 
                     // transcript info and viability
                     mWriter.write(String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",
@@ -129,8 +129,8 @@ public class RnaMatchWriter
                 }
                 else
                 {
-                    mWriter.write(String.format(",%d,%d,%d,%s,%s",
-                            0, 0, 0, "", ""));
+                    mWriter.write(String.format(",%d,%d,%s,%s",
+                            0, 0, "", ""));
 
                     mWriter.write(String.format(",%s,%s,,,,,,,",
                             rnaFusion.isTransViable()[fs], rnaFusion.isTransCorrectLocation()[fs]));
