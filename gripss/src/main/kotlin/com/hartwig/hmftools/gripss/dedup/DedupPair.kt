@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bedpe.dedup
+package com.hartwig.hmftools.gripss.dedup
 
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import com.hartwig.hmftools.gripss.link.AlternatePath
@@ -39,16 +39,16 @@ data class DedupPair(val duplicates: Set<String>, val rescue: Set<String>) {
             return DedupPair(duplicates, rescues)
         }
 
-        private fun keepOriginal(variant: StructuralVariantContext, other: StructuralVariantContext, variantPass: Boolean, otherPass: Boolean): Boolean {
-            if (!variant.imprecise && other.imprecise) {
-                return true;
+        private fun keepOriginal(original: StructuralVariantContext, other: StructuralVariantContext, variantPass: Boolean, otherPass: Boolean): Boolean {
+            if (original.imprecise != other.imprecise) {
+                return !original.imprecise
             }
 
-            if (variantPass && !otherPass) {
-                return true
+            if (variantPass != otherPass) {
+                return variantPass
             }
 
-            return variant.qual > other.qual
+            return original.qual > other.qual
         }
     }
 

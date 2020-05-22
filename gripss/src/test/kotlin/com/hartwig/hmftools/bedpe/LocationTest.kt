@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bedpe
 import org.junit.Assert.*
 import org.junit.Test
 
-class BreakendLocationTest {
+class LocationTest {
 
     @Test
     fun testDecode() {
@@ -25,6 +25,14 @@ class BreakendLocationTest {
         assertFalse(victim.isEquivalent(victim.copy(orientation = 1)))
         assertFalse(victim.isEquivalent(victim.copy(start = 999, end = 999)))
         assertFalse(victim.isEquivalent(victim.copy(start = 1011, end = 1011)))
+    }
+
+    @Test
+    fun testReSort() {
+        val correctEntry = "1\t9997\t9999\t1\t9998\t10008\t.\t9\t-\t+"
+        val reverseEntry = "1\t9998\t10008\t1\t9997\t9999\t.\t9\t+\t-"
+
+        assertEquals(Breakpoint.fromBedpe(correctEntry), Breakpoint.fromBedpe(reverseEntry))
     }
 
 }

@@ -1,0 +1,105 @@
+package com.hartwig.hmftools.gripss.dedup
+
+import com.hartwig.hmftools.gripss.StructuralVariantContext
+import com.hartwig.hmftools.gripss.VariantContextTestFactory
+import com.hartwig.hmftools.gripss.VariantContextTestFactory.cipos
+import com.hartwig.hmftools.gripss.VariantContextTestFactory.toSv
+import com.hartwig.hmftools.gripss.store.SoftFilterStore
+import com.hartwig.hmftools.gripss.store.VariantStore
+import junit.framework.Assert.assertFalse
+import junit.framework.Assert.assertTrue
+import org.junit.Test
+
+class DedupSingleTest {
+
+    private val fail: Set<String> = setOf("FAIL")
+    private val range = 10
+
+    @Test
+    fun testSingleDedup() {
+        val passingSingle = create("sgl", 100, "A.", 1000)
+        val failingPair = create("pair", 100, "A[2:222[", 1)
+        val variantStore = VariantStore(listOf(passingSingle, failingPair))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertTrue(victim.duplicates.contains("sgl"))
+    }
+
+    @Test
+    fun testWithinRange() {
+        val passingSingle = create("sgl", 90, "A.", 1000)
+        val failingPair = create("pair", 110, "A[2:222[", 1)
+        val variantStore = VariantStore(listOf(passingSingle, failingPair))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertTrue(victim.duplicates.contains("sgl"))
+    }
+
+    @Test
+    fun testOutsideRange() {
+        val passingSingle = create("sgl", 89, "A.", 1000)
+        val failingPair = create("pair", 110, "A[2:222[", 1)
+        val variantStore = VariantStore(listOf(passingSingle, failingPair))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertTrue(victim.duplicates.isEmpty())
+    }
+
+    @Test
+    fun testMutlipleSinglesAndPair() {
+        val passingSingle1 = create("sgl1", 100, "A.", 1000)
+        val passingSingle2 = create("sgl2", 102, "A.", 1000)
+        val failingPair = create("pair", 103, "A[2:222[", 1)
+        val variantStore = VariantStore(listOf(passingSingle1, passingSingle2, failingPair))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertTrue(victim.duplicates.contains("sgl1"))
+        assertTrue(victim.duplicates.contains("sgl2"))
+    }
+
+    @Test
+    fun testChoosePassingSingle() {
+        val passingSingle = create("sgl1", 100, "A.", 1000)
+        val failingSingle = create("sgl2", 102, "A.", 1000)
+        val variantStore = VariantStore(listOf(passingSingle, failingSingle))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("sgl2", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("sgl1"))
+        assertTrue(victim.duplicates.contains("sgl2"))
+    }
+
+    @Test
+    fun testChooseHighestQualirt() {
+        val passingSingle1 = create("sgl1", 100, "A.", 1000)
+        val passingSingle2 = create("sgl2", 102, "A.", 1001)
+        val variantStore = VariantStore(listOf(passingSingle1, passingSingle2))
+        val softFilterStore = SoftFilterStore(mapOf())
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertTrue(victim.duplicates.contains("sgl1"))
+        assertFalse(victim.duplicates.contains("sgl2"))
+    }
+
+    @Test
+    fun testDifferntOrientation() {
+        val passingSingle = create("sgl", 100, "A.", 1000)
+        val failingPair = create("pair", 100, "[2:222[A", 1)
+        val variantStore = VariantStore(listOf(passingSingle, failingPair))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertTrue(victim.duplicates.isEmpty())
+    }
+
+    private fun create(id: String, pos: Int, alt: String, qual: Int): StructuralVariantContext {
+        return VariantContextTestFactory.createVariant("1", pos, id, "A", alt, qual, setOf("."))
+                .cipos(Pair(-range, range), Pair(-range, range))
+                .toSv()
+    }
+
+}

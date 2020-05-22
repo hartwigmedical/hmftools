@@ -2,8 +2,8 @@ package com.hartwig.hmftools.gripss
 
 import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
-import com.hartwig.hmftools.bedpe.dedup.DedupPair
-import com.hartwig.hmftools.bedpe.dedup.DedupSingle
+import com.hartwig.hmftools.gripss.dedup.DedupPair
+import com.hartwig.hmftools.gripss.dedup.DedupSingle
 import com.hartwig.hmftools.gripss.link.AlternatePath
 import com.hartwig.hmftools.gripss.link.AssemblyLink
 import com.hartwig.hmftools.gripss.link.DsbLink

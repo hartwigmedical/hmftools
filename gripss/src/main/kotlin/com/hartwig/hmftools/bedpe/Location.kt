@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bedpe
 
+import com.hartwig.hmftools.gripss.ContigComparator
 import java.io.File
 import java.nio.file.Files
 
@@ -50,6 +51,11 @@ data class Breakpoint(val startBreakend: Breakend, val endBreakend: Breakend) : 
             val end = Breakend(contig2, start2.toInt() + 1, end2.toInt(), strand2.toOrientation())
             return Breakpoint(start, end);
         }
+    }
+
+    fun isValid(comparator: ContigComparator): Boolean {
+        val contigDiff =  comparator.compare(this.startBreakend.contig, this.endBreakend.contig)
+        return contigDiff < 0 || contigDiff == 0 && startBreakend.start <= startBreakend.end
     }
 
     fun expand(distance: Int): Breakpoint {
