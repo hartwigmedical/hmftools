@@ -162,7 +162,12 @@ public class RnaFusionData
     }
 
     public final DnaRnaMatchType getDnaFusionMatchType() { return mDnaFusionMatchType; }
-    public final String getDnaFusionMatchInfo() { return mDnaFusionMatchInfo; }
+
+    public final String getDnaFusionMatchInfo()
+    {
+        return mDnaFusionMatchInfo.isEmpty() ?
+                mDnaFusionMatchType.toString() : String.format("%s_%s", mDnaFusionMatchType, mDnaFusionMatchInfo);
+    }
 
     public void setTranscriptData(int fs, final Transcript trans, final SvBreakend breakend,
             boolean matchedRnaBoundary, boolean correctLocation, int exonsSkipped)
