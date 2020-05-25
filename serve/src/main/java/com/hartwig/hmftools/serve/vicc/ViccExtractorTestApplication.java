@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.vicc.cnv.CnvExtractor;
+import com.hartwig.hmftools.serve.vicc.cnv.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
@@ -50,7 +50,7 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Read {} entries", viccEntries.size());
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile);
-        CnvExtractor cnvExtractor = new CnvExtractor();
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor();
         FusionExtractor fusionExtractor = new FusionExtractor();
 
         Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
@@ -58,7 +58,7 @@ public class ViccExtractorTestApplication {
         Map<Feature, String> allKnownFusions = Maps.newHashMap();
         for (ViccEntry viccEntry : viccEntries) {
             allHotspotsPerFeature.putAll(hotspotExtractor.extractHotspots(viccEntry));
-            allKnownAmpsDelsPerFeature.putAll(cnvExtractor.extractKnownAmplificationsDeletions(viccEntry));
+            allKnownAmpsDelsPerFeature.putAll(copyNumberExtractor.extractKnownAmplificationsDeletions(viccEntry));
             allKnownFusions.putAll(fusionExtractor.extractKnownFusions(viccEntry));
         }
 

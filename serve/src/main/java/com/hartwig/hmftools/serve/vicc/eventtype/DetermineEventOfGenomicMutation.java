@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.GenomicEvents;
 import com.hartwig.hmftools.serve.vicc.cnv.ActionableAmplificationDeletion;
-import com.hartwig.hmftools.serve.vicc.cnv.CnvExtractor;
+import com.hartwig.hmftools.serve.vicc.cnv.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.cnv.ImmutableActionableAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.cnv.ImmutableKnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.cnv.KnownAmplificationDeletion;
@@ -45,7 +45,7 @@ public class DetermineEventOfGenomicMutation {
             @NotNull String event) {
         if (AMPLIFICATION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-            return CnvExtractor.determineKnownAmplificationDeletion(viccEntry.source(), typeEvent.toString(), gene);
+            return CopyNumberExtractor.determineKnownAmplificationDeletion(viccEntry.source(), typeEvent.toString(), gene);
         }
         return ImmutableKnownAmplificationDeletion.builder().gene("").eventType("").source("").sourceLink("").build();
     }
@@ -54,7 +54,7 @@ public class DetermineEventOfGenomicMutation {
     public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull String gene, @NotNull String event) {
         if (DELETION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-            return CnvExtractor.determineKnownAmplificationDeletion(viccEntry.source(), typeEvent.toString(), gene);
+            return CopyNumberExtractor.determineKnownAmplificationDeletion(viccEntry.source(), typeEvent.toString(), gene);
         }
         return ImmutableKnownAmplificationDeletion.builder().gene("").eventType("").source("").sourceLink("").build();
     }
@@ -64,7 +64,7 @@ public class DetermineEventOfGenomicMutation {
             @NotNull String event) {
         if (AMPLIFICATION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-            return CnvExtractor.determineActionableAmplificationDeletion(viccEntry.source(), typeEvent.toString(), gene, viccEntry);
+            return CopyNumberExtractor.determineActionableAmplificationDeletion(viccEntry.source(), typeEvent.toString(), gene, viccEntry);
 
         }
         return ImmutableActionableAmplificationDeletion.builder()
@@ -85,7 +85,7 @@ public class DetermineEventOfGenomicMutation {
             @NotNull String event) {
         if (DELETION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-            return CnvExtractor.determineActionableAmplificationDeletion(viccEntry.source(), typeEvent.toString(), gene, viccEntry);
+            return CopyNumberExtractor.determineActionableAmplificationDeletion(viccEntry.source(), typeEvent.toString(), gene, viccEntry);
         }
         return ImmutableActionableAmplificationDeletion.builder()
                 .gene("")
