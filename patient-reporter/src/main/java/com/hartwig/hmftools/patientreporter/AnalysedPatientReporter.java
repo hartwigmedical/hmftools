@@ -9,7 +9,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
+import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
+import com.hartwig.hmftools.common.actionability.ReportableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.chord.ChordStatus;
@@ -112,7 +117,9 @@ class AnalysedPatientReporter {
         allEvidenceItems.addAll(purpleAnalysis.evidenceItems());
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
-        List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
+        List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItem.extractAllReportableEvidenceItems(allEvidenceItems);
+
+        List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItemsFiltered);
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .impliedPurity(purpleAnalysis.purity())
@@ -121,7 +128,7 @@ class AnalysedPatientReporter {
                 .averageTumorPloidy(purpleAnalysis.ploidy())
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
-                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))
+                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItemsFiltered))
                 .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
                 .reportableVariants(reportableVariantsAnalysis.variantsToReport())
                 .microsatelliteIndelsPerMb(purpleAnalysis.purpleSignatures().microsatelliteIndelsPerMb())
