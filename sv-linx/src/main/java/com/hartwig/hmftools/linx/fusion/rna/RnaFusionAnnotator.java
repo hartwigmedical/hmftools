@@ -17,7 +17,10 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.isIsofoxFusion;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
+
+import java.util.Arrays;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
@@ -128,6 +131,118 @@ public class RnaFusionAnnotator
         }
     }
 
+    public void correctGeneNames(final KnownFusionData refFusionData, RnaFusionData rnaFusion)
+    {
+        // take the first gene where multiple are listed unless one features in the known or promiscuous lists
+        final String[] geneNames = rnaFusion.GeneNames;
+
+        for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        {
+            if(!rnaFusion.GeneIds[fs].isEmpty())
+                continue;
+
+            if(rnaFusion.GeneNames[fs].isEmpty())
+                continue;
+
+            if(geneNames[fs].contains(";"))
+            {
+                //	Arriba example: RP11-123H22.1(13969);ATP6V1G1P7(2966)
+                String[] genes = geneNames[fs].split(";");
+                String selectGene = "";
+
+                for(int i = 0; i < genes.length; ++i)
+                {
+                    String geneName = genes[i];
+                    geneName = geneName.replaceAll("\\([0-9]*\\)", "");
+
+                    if(anyReferenceGeneMatch(refFusionData, geneName))
+                    {
+                        selectGene = geneName;
+                    }
+                    else if(selectGene.isEmpty())
+                    {
+                        selectGene = geneName;
+                    }
+                }
+
+                geneNames[fs] = selectGene;
+            }
+
+            // check that gene names match Ensembl - applicable for StarFusion
+            geneNames[fs] = checkAlternateGeneName(geneNames[fs]);
+        }
+    }
+
+    private boolean anyReferenceGeneMatch(final KnownFusionData refFusionData, final String geneName)
+    {
+        if(refFusionData.knownPairs().stream().anyMatch(x -> x[FIVE_GENE].equals(geneName) || x[THREE_GENE].equals(geneName)))
+            return true;
+
+        return refFusionData.promiscuousFiveGenes().contains(geneName) || refFusionData.promiscuousThreeGenes().contains(geneName);
+    }
+
+    private static String checkAlternateGeneName(final String geneName)
+    {
+        if(geneName.equals("AC005152.2"))
+            return "SOX9-AS1";
+
+        if(geneName.equals("AC016683.6"))
+            return "PAX8-AS1";
+
+        if(geneName.equals("AC007092.1"))
+            return "LINC01122";
+
+        if(geneName.toUpperCase().equals("C10ORF112"))
+            return "MALRD1";
+
+        if(geneName.equals("C5orf50"))
+            return "SMIM23";
+
+        if(geneName.equals("C10orf68"))
+            return geneName.toUpperCase();
+
+        if(geneName.equals("C17orf76-AS1"))
+            return "FAM211A-AS1";
+
+        if(geneName.equals("IGH@") || geneName.equals("IGH-@"))
+            return "IGHJ6";
+
+        if(geneName.equals("IGL@") || geneName.equals("IGL-@"))
+            return "IGLC6";
+
+        if(geneName.equals("MKLN1-AS1"))
+            return "LINC-PINT";
+
+        if(geneName.equals("PHF15"))
+            return "JADE2";
+
+        if(geneName.equals("PHF17"))
+            return "JADE1";
+
+        if(geneName.equals("RP11-134P9.1"))
+            return "LINC01136";
+
+        if(geneName.equals("RP11-973F15.1"))
+            return "LINC01151";
+
+        if(geneName.equals("RP11-115K3.2"))
+            return "YWHAEP7";
+
+        if(geneName.equals("RP11-3B12.1"))
+            return "POT1-AS1";
+
+        if(geneName.equals("RP11-199O14.1"))
+            return "CASC20";
+
+        if(geneName.equals("RP11-264F23.3"))
+            return "CCND2-AS1";
+
+        if(geneName.equals("RP11-93L9.1"))
+            return "LINC01091";
+
+        return geneName;
+    }
+
     public static void setReferenceFusionData(final KnownFusionData refFusionData, RnaFusionData rnaFusion)
     {
         if(refFusionData == null)
@@ -143,9 +258,20 @@ public class RnaFusionAnnotator
                 rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
                 return;
             }
+
+            if(!isIsofoxFusion(rnaFusion.Source))
+            {
+                // try the other gene combo
+                if (genePair[FIVE_GENE].equals(rnaFusion.GeneNames[FS_DOWNSTREAM]) && genePair[THREE_GENE].equals(rnaFusion.GeneNames[FS_UPSTREAM]))
+                {
+                    rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
+                    return;
+                }
+            }
         }
 
         boolean fivePrimeProm = refFusionData.hasPromiscuousFiveGene(rnaFusion.GeneNames[FS_UPSTREAM]);
+
         boolean threePrimeProm = refFusionData.hasPromiscuousThreeGene(rnaFusion.GeneNames[FS_DOWNSTREAM]);
 
         if(fivePrimeProm && threePrimeProm)

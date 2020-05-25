@@ -57,17 +57,6 @@ public class MiscTest
     }
 
     @Test
-    public void testMiscMethods()
-    {
-        assertTrue(makeChrArmStr("1", "P").equals("1_P"));
-
-        String test = "something";
-        test = appendStr(test, "else", ';');
-
-        assertEquals("something;else", test);
-    }
-
-    @Test
     public void testChromosomeConversion()
     {
         String chr37 = "10";

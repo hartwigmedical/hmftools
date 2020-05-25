@@ -5,33 +5,30 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MIN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.RNA_FUSION_SOURCE_ISOFOX;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.getRnaSourceDelimiter;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.loadRnaFusion;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.checkRnaPhasedTranscripts;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.findExonMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.isViableBreakend;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.positionMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.setReferenceFusionData;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.getRnaSourceDelimiter;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.isUnspliced;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.UNKNOWN;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -47,6 +44,8 @@ import com.hartwig.hmftools.linx.fusion.FusionParameters;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.commons.cli.CommandLine;
+
 public class RnaFusionMapper
 {
     private String mSampleId;
@@ -61,8 +60,11 @@ public class RnaFusionMapper
     private final List<GeneFusion> mDnaFusions;
     private final Map<GeneFusion,String> mDnaInvalidFusions;
 
-    public RnaFusionMapper(final String outputDir, final EnsemblDataCache geneTransCache, FusionFinder fusionFinder,
-            final List<GeneFusion> dnaFusions, final Map<GeneFusion,String> dnaInvalidFusions)
+    public static final String RNA_FUSIONS_FILE = "rna_fusions_file";
+    public static final String RNA_FILE_SOURCE = "rna_file_source";
+
+    public RnaFusionMapper(final String outputDir, final CommandLine cmdLineArgs, final EnsemblDataCache geneTransCache,
+            FusionFinder fusionFinder, final List<GeneFusion> dnaFusions, final Map<GeneFusion,String> dnaInvalidFusions)
     {
         mSampleRnaData = Maps.newHashMap();
         mFusionFinder = fusionFinder;
@@ -70,7 +72,16 @@ public class RnaFusionMapper
         mDnaFusions = dnaFusions;
         mDnaInvalidFusions = dnaInvalidFusions;
         mAnnotator = new RnaFusionAnnotator(geneTransCache);
-        mWriter = new RnaMatchWriter(outputDir);
+
+        final String fileSource = cmdLineArgs.getOptionValue(RNA_FILE_SOURCE, RNA_FUSION_SOURCE_ISOFOX);
+
+        if(cmdLineArgs != null)
+        {
+            final String rnaDataFile = cmdLineArgs.getOptionValue(RNA_FUSIONS_FILE);
+            loadSampleRnaData(fileSource, rnaDataFile);
+        }
+
+        mWriter = new RnaMatchWriter(outputDir, fileSource);
 
         mFusionParams = new FusionParameters();
         mFusionParams.RequirePhaseMatch = false;
@@ -136,6 +147,8 @@ public class RnaFusionMapper
         final List<Transcript>[] nearTranscriptPair = new List[] { Lists.newArrayList(), Lists.newArrayList() };
         final List<SvBreakend>[] nearBreakendPair = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
+        boolean requireExactMatch = rnaFusion.JunctionTypes[FS_UPSTREAM] == UNKNOWN || rnaFusion.JunctionTypes[FS_DOWNSTREAM] == UNKNOWN;
+
         for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM ; ++fs)
         {
             boolean isUpstream = (fs == 0);
@@ -144,7 +157,6 @@ public class RnaFusionMapper
             byte rnaOrient = rnaFusion.Orientations[fs];
             byte requiredGeneStrand = isUpstream ? rnaOrient : (byte)-rnaOrient;
             String geneName = rnaFusion.GeneNames[fs];
-            boolean unsplicedJunction = isUnspliced(rnaFusion.JunctionTypes[fs]);
             boolean isKnownJunction = rnaFusion.JunctionTypes[fs] == KNOWN;
             int maxPreGeneDistance = isKnownJunction ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
 
@@ -169,7 +181,7 @@ public class RnaFusionMapper
                     continue;
 
                 // breakend must be within a max distance of the RNA breakend or if it's unspliced, at its exact location
-                if(unsplicedJunction)
+                if(requireExactMatch)
                 {
                     if(!positionMatch(breakend, rnaPosition))
                         continue;
@@ -485,6 +497,9 @@ public class RnaFusionMapper
 
     private void setRnaFusionData(final RnaFusionData rnaFusion)
     {
+        // correct gene names
+        mAnnotator.correctGeneNames(mFusionFinder.getKnownFusionData(), rnaFusion);
+
         // find transcripts which match the RNA positions
         for(int fs = FS_UPSTREAM; fs <= 1; ++fs)
         {
@@ -497,11 +512,10 @@ public class RnaFusionMapper
             {
                 geneData = mGeneTransCache.getGeneDataByName(rnaFusion.GeneNames[fs]);
 
-                if(geneData == null)
+                if(geneData == null && !rnaFusion.GeneNames[fs].isEmpty())
                 {
-                    //LNX_LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.name(), isUpstream ? "up" : "down");
-                    //rnaFusion.setValid(false);
-                    //return;
+                    LNX_LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.name(), isUpstream ? "up" : "down");
+                    // rnaFusion.setValid(false);
                     continue;
                 }
 
@@ -514,6 +528,7 @@ public class RnaFusionMapper
 
             rnaFusion.Strands[fs] = geneData.Strand;
 
+            /* doesn't seem relevant anymore
             if (rnaFusion.JunctionTypes[fs] == KNOWN)
             {
                 // check that the RNA position is within the bounds of the gene before proceeding
@@ -536,24 +551,31 @@ public class RnaFusionMapper
                     return;
                 }
             }
+            */
 
-            List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
-
-            if(transDataList != null)
+            if(rnaFusion.JunctionTypes[fs] != KNOWN)
             {
-                for(final TranscriptData transData : transDataList)
+                List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
+
+                if(transDataList != null)
                 {
-                    RnaExonMatchData exonMatchData = findExonMatch(transData, rnaPosition);
-
-                    if(exonMatchData.ExonFound)
+                    for(final TranscriptData transData : transDataList)
                     {
-                        rnaFusion.getTransExonData()[fs].add(exonMatchData);
+                        RnaExonMatchData exonMatchData = findExonMatch(transData, rnaPosition);
 
-                        // override for external fusion source data which doesn't set this or set it correctly
-                        if(exonMatchData.BoundaryMatch && rnaFusion.JunctionTypes[fs] != KNOWN)
-                            rnaFusion.JunctionTypes[fs] = KNOWN;
+                        if(exonMatchData.ExonFound)
+                        {
+                            rnaFusion.getTransExonData()[fs].add(exonMatchData);
+
+                            // override for external fusion source data which doesn't set this or set it correctly
+                            if(exonMatchData.BoundaryMatch && rnaFusion.JunctionTypes[fs] != KNOWN)
+                                rnaFusion.JunctionTypes[fs] = KNOWN;
+                        }
                     }
                 }
+
+                if(rnaFusion.JunctionTypes[fs] != KNOWN)
+                    rnaFusion.JunctionTypes[fs] = UNKNOWN;
             }
 
             LNX_LOGGER.debug("rnaFusion({}) juncType({}) {} position({}) matched {} transcript exons",
@@ -581,7 +603,7 @@ public class RnaFusionMapper
 
             for(String data : lines)
             {
-                RnaFusionData rnaData = RnaFusionData.from(source, recordCount, data, fieldIndexMap);
+                RnaFusionData rnaData = loadRnaFusion(source, recordCount, data, fieldIndexMap);
                 ++recordCount;
 
                 if(currentSampleId.isEmpty() || !currentSampleId.equals(rnaData.SampleId))

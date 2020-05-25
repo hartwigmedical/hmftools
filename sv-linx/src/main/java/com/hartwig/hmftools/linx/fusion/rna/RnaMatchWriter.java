@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.NO_CLUSTER_INFO;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -19,13 +19,13 @@ public class RnaMatchWriter
 {
     private BufferedWriter mWriter;
 
-    public RnaMatchWriter(final String outputDir)
+    public RnaMatchWriter(final String outputDir, final String outputId)
     {
         if(outputDir != null)
-            initialiseWriter(outputDir);
+            initialiseWriter(outputDir, outputId);
     }
 
-    private void initialiseWriter(final String outputDir)
+    private void initialiseWriter(final String outputDir, final String outputId)
     {
         try
         {
@@ -33,13 +33,13 @@ public class RnaMatchWriter
             {
                 String outputFilename = outputDir;
 
-                outputFilename += "LNX_RNA_FUSION_MATCH.csv";
+                outputFilename += String.format("LNX_RNA_FUSION_MATCH_%s.csv", outputId);
 
                 mWriter = createBufferedWriter(outputFilename, false);
 
                 mWriter.write("SampleId,Source,FusionId,FusionName,ViableFusion");
                 mWriter.write(",PhaseMatched,DnaFusionMatchType,KnownType,RnaPhaseMatched");
-                mWriter.write(",JunctionFrags,DiscordantFrags");
+                mWriter.write(",RnaSvType,JunctionFrags,DiscordantFrags");
 
                 for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
                 {
@@ -55,7 +55,7 @@ public class RnaMatchWriter
                     fieldsStr.add("Strand" + upDown);
                     fieldsStr.add("SvId" + upDown);
                     fieldsStr.add("SvPos" + upDown);
-                    fieldsStr.add("Type" + upDown);
+                    fieldsStr.add("SvType" + upDown);
                     fieldsStr.add("ClusterInfo" + upDown);
                     fieldsStr.add("TransViable" + upDown);
                     fieldsStr.add("TransValidLoc" + upDown);
@@ -98,8 +98,8 @@ public class RnaMatchWriter
                     rnaFusion.isViableFusion(), rnaFusion.isPhaseMatchedFusion(), rnaFusion.getDnaFusionMatchInfo(),
                     rnaFusion.getKnownType(), rnaFusion.hasRnaPhasedFusion()));
 
-            mWriter.write(String.format(",%d,%d",
-                    rnaFusion.JunctionFragments, rnaFusion.DiscordantFragments));
+            mWriter.write(String.format(",%s,%d,%d",
+                    rnaFusion.rnaSvType(), rnaFusion.JunctionFragments, rnaFusion.DiscordantFragments));
 
             for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
             {
@@ -130,7 +130,7 @@ public class RnaMatchWriter
                 else
                 {
                     mWriter.write(String.format(",%d,%d,%s,%s",
-                            0, 0, "", ""));
+                            0, 0, "", NO_CLUSTER_INFO));
 
                     mWriter.write(String.format(",%s,%s,,,,,,,",
                             rnaFusion.isTransViable()[fs], rnaFusion.isTransCorrectLocation()[fs]));
@@ -149,7 +149,7 @@ public class RnaMatchWriter
                 }
             }
 
-            mWriter.write(String.format(",%s", !rnaFusion.getChainInfo().isEmpty() ? rnaFusion.getChainInfo() : "0;0"));
+            mWriter.write(String.format(",%s", rnaFusion.getChainInfo()));
             mWriter.newLine();
         }
         catch (final IOException e)

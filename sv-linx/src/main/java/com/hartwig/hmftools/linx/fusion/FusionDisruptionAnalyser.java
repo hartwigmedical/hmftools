@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.RNA_FUSION_SOURCE_ISOFOX;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
 
 import java.io.File;
@@ -91,8 +93,6 @@ public class FusionDisruptionAnalyser
 
     private PerformanceCounter mPerfCounter;
 
-    public static final String RNA_FUSIONS_FILE = "rna_fusions_file";
-    public static final String RNA_FILE_SOURCE = "rna_file_source";
     public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
@@ -203,9 +203,8 @@ public class FusionDisruptionAnalyser
 
         if (cmdLineArgs.hasOption(RNA_FUSIONS_FILE))
         {
-            mRnaFusionMapper = new RnaFusionMapper(mOutputDir, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
-            final String fileSource = cmdLineArgs.getOptionValue(RNA_FILE_SOURCE, RNA_FUSION_SOURCE_ISOFOX);
-            mRnaFusionMapper.loadSampleRnaData(fileSource, cmdLineArgs.getOptionValue(RNA_FUSIONS_FILE));
+            mRnaFusionMapper = new RnaFusionMapper(
+                    mOutputDir, cmdLineArgs, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
         }
 
         mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
