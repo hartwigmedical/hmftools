@@ -12,7 +12,7 @@ public class ReportableEvidenceItem {
     public static List<EvidenceItem> extractAllReportableEvidenceItems(@NotNull List<EvidenceItem> allEvidenceItems) {
         List<EvidenceItem> allEvidenceItemsFiltered = Lists.newArrayList();
         for (EvidenceItem evidenceItem: allEvidenceItems) {
-            if (!evidenceItem.event().split(" ")[0].equals("TP53") && !evidenceItem.drug().equals("Tamoxifen")) {
+            if (!evidenceItem.event().contains("TP53") && !evidenceItem.drug().equals("Tamoxifen")) {
                 allEvidenceItemsFiltered.add(ImmutableEvidenceItem.builder()
                         .event(evidenceItem.event())
                         .isOnLabel(evidenceItem.isOnLabel())
