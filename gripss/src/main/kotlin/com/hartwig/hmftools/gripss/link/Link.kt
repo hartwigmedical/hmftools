@@ -9,7 +9,8 @@ data class Link(val link: String, val vcfId: String, val otherVcfId: String, val
 
     companion object {
         operator fun invoke(variant: StructuralVariantContext): Link {
-            return Link("PAIR", variant.vcfId, variant.mateId!!, variant.insertSequenceLength, variant.insertSequenceLength)
+            val distance = variant.duplicationLength + variant.insertSequenceLength
+            return Link("PAIR", variant.vcfId, variant.mateId!!, distance, distance)
         }
 
         operator fun invoke(link: String, variants: Pair<StructuralVariantContext, StructuralVariantContext>): Link {

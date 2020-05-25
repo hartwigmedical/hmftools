@@ -38,12 +38,16 @@ class VariantStore(
         return variantsByChromosome.getOrDefault(contig, Collections.emptyList())
     }
 
-    fun selectOthersNearby(variant: StructuralVariantContext, maxDistance: Int, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
-        val minStart = variant.minStart - maxDistance
-        val maxStart = variant.maxStart + maxDistance
+    fun selectOthersNearby(variant: StructuralVariantContext, maxDistance: Pair<Int, Int>, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
+        val minStart = variant.minStart - maxDistance.first
+        val maxStart = variant.maxStart + maxDistance.second
         val idFilter = { other: StructuralVariantContext -> variant.vcfId != other.vcfId && variant.mateId?.equals(other.vcfId) != true }
         val overlapFilter = { other: StructuralVariantContext -> other.minStart <= maxStart && other.maxStart >= minStart }
         return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter { x -> idFilter(x) && overlapFilter(x) && filter(x) }
+    }
+
+    fun selectOthersNearby(variant: StructuralVariantContext, maxDistance: Int, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
+        return selectOthersNearby(variant, Pair(maxDistance, maxDistance), filter)
     }
 
 }
