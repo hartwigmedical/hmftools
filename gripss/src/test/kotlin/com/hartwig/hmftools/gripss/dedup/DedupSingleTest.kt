@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss.dedup
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import com.hartwig.hmftools.gripss.VariantContextTestFactory
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.cipos
+import com.hartwig.hmftools.gripss.VariantContextTestFactory.setAttribute
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.toSv
 import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import com.hartwig.hmftools.gripss.store.VariantStore
@@ -18,7 +19,7 @@ class DedupSingleTest {
     @Test
     fun testSingleDedup() {
         val passingSingle = create("sgl", 100, "A.", 1000)
-        val failingPair = create("pair", 100, "A[2:222[", 1)
+        val failingPair = create("pair", 101, "A[2:222[", 1)
         val variantStore = VariantStore(listOf(passingSingle, failingPair))
         val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
 
@@ -101,8 +102,33 @@ class DedupSingleTest {
         assertTrue(victim.duplicates.isEmpty())
     }
 
-    private fun create(id: String, pos: Int, alt: String, qual: Int): StructuralVariantContext {
+    @Test
+    fun testDoNotUseConfidenceIntervalOfImprecise() {
+        val passingSingle = create("sgl", 90, "A.", 1000)
+        val imprecise = create("pair", 101, "A[2:222[", 1, precise = false)
+        val variantStore = VariantStore(listOf(passingSingle, imprecise))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("pair"))
+        assertFalse(victim.duplicates.contains("sgl"))
+    }
+
+    @Test
+    fun testCanStillMatchAgainstImprecise() {
+        val passingSingle = create("sgl", 90, "A.", 1000)
+        val imprecise = create("pair", 100, "A[2:222[", 1, precise = false)
+        val variantStore = VariantStore(listOf(passingSingle, imprecise))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("pair"))
+        assertTrue(victim.duplicates.contains("sgl"))
+    }
+
+    private fun create(id: String, pos: Int, alt: String, qual: Int, precise: Boolean = true): StructuralVariantContext {
         return VariantContextTestFactory.createVariant("1", pos, id, "A", alt, qual, setOf("."))
+                .setAttribute("IMPRECISE", !precise)
                 .cipos(Pair(-cipos, cipos), Pair(-cipos, cipos))
                 .toSv()
     }
