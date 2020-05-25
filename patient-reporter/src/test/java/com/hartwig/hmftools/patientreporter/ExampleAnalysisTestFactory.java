@@ -56,7 +56,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829() {
+    public static AnalysedPatientReport buildCOLO829(boolean correctionReport, @NotNull String commentString) {
         boolean hasReliablePurity = true;
         double impliedTumorPurity = 1D;
         double averageTumorPloidy = 3.1;
@@ -112,8 +112,8 @@ public final class ExampleAnalysisTestFactory {
                 .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
-                .comments(Optional.of("This is a test report and is based off COLO829"))
-                .isCorrectedReport(false)
+                .comments(Optional.of(commentString))
+                .isCorrectedReport(correctionReport)
                 .isUnofficialReport(false)
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
