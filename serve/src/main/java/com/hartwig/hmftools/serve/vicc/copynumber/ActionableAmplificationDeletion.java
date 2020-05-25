@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc.cnv;
+package com.hartwig.hmftools.serve.vicc.copynumber;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc.cnv;
+package com.hartwig.hmftools.serve.vicc.copynumber;
 
 import java.util.Map;
 import java.util.Set;

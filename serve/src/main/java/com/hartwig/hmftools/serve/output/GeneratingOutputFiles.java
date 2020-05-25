@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.serve.AllGenomicEvents;
-import com.hartwig.hmftools.serve.vicc.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.eventtype.EventType;
 import com.hartwig.hmftools.serve.vicc.fusion.KnownFusions;
 import com.hartwig.hmftools.serve.vicc.signatures.Signatures;
