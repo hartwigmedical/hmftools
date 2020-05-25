@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ReportableEvidenceItemFactoryTest {
@@ -71,14 +70,13 @@ public class ReportableEvidenceItemFactoryTest {
     public void canFilterEvidenceItemsWithFiltering() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
-        evidenceItems.add(testEvidenceBuilder().event("TP53 p.Val600Glu").drug("Tamoxifen").build());
+        evidenceItems.add(testEvidenceBuilder().event("TP53 Deletion").drug("Tamoxifen").build());
         evidenceItems.add(testEvidenceBuilder().event("BRAF p.Val600Glu").drug("Cobimetinib + Vemurafenib").build());
 
         assertEquals(1, ReportableEvidenceItemFactory.extractAllReportableEvidenceItems(evidenceItems).size());
     }
 
     @Test
-    @Ignore
     public void canFilterEvidenceItemsWithoutFiltering() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
