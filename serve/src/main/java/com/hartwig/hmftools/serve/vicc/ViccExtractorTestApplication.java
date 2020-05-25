@@ -10,13 +10,16 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.vicc.cnv.CnvExtractor;
 import com.hartwig.hmftools.serve.vicc.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class ViccExtractorTestApplication {
@@ -26,7 +29,7 @@ public class ViccExtractorTestApplication {
     private static final boolean RUN_ON_SERVER = false;
 
     public static void main(String[] args) throws IOException, InterruptedException {
-//        Configurator.setRootLevel(Level.DEBUG);
+        Configurator.setRootLevel(Level.DEBUG);
 
         String viccJsonPath;
         String refGenomeFastaFile;
@@ -48,19 +51,23 @@ public class ViccExtractorTestApplication {
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile);
         CnvExtractor cnvExtractor = new CnvExtractor();
+        FusionExtractor fusionExtractor = new FusionExtractor();
 
         Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
         Map<Feature, KnownAmplificationDeletion> allKnownAmpsDelsPerFeature = Maps.newHashMap();
+        Map<Feature, String> allKnownFusions = Maps.newHashMap();
         for (ViccEntry viccEntry : viccEntries) {
             allHotspotsPerFeature.putAll(hotspotExtractor.extractHotspots(viccEntry));
             allKnownAmpsDelsPerFeature.putAll(cnvExtractor.extractKnownAmplificationsDeletions(viccEntry));
+            allKnownFusions.putAll(fusionExtractor.extractKnownFusions(viccEntry));
         }
 
         List<Feature> featuresWithoutGenomicEvents = Lists.newArrayList();
         int totalFeatureCount = 0;
         for (ViccEntry viccEntry : viccEntries) {
             for (Feature feature : viccEntry.features()) {
-                if (!allHotspotsPerFeature.containsKey(feature) && !allKnownAmpsDelsPerFeature.containsKey(feature)) {
+                if (!allHotspotsPerFeature.containsKey(feature) && !allKnownAmpsDelsPerFeature.containsKey(feature)
+                        && !allKnownFusions.containsKey(feature)) {
                     featuresWithoutGenomicEvents.add(feature);
                 }
                 totalFeatureCount++;
@@ -70,6 +77,7 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extraction performed on {} features from {} entries", totalFeatureCount, viccEntries.size());
         LOGGER.info(" Extracted {} hotspots for {} features", valuesCount(allHotspotsPerFeature), allHotspotsPerFeature.size());
         LOGGER.info(" Extracted {} known amps and dels", allKnownAmpsDelsPerFeature.size());
+        LOGGER.info(" Extracted {} fusions", allKnownFusions.size());
 
         LOGGER.info("Could not resolve hotspots for {} features", hotspotExtractor.unresolvableFeatures().size());
         for (String feature : hotspotExtractor.unresolvableFeatures()) {
