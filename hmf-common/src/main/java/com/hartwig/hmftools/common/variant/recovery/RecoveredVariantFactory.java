@@ -92,9 +92,12 @@ class RecoveredVariantFactory implements AutoCloseable {
             final Long matePosition = matePosition(mateLocation);
             final int uncertainty = uncertainty(potentialVariant);
 
-            final boolean mateValid =
-                    mateChromosome != null && matePosition != null && mateId != null && HumanChromosome.contains(mateChromosome);
-            final VariantContext mate = mateValid
+            final boolean mateExists = mateChromosome != null && matePosition != null && mateId != null;
+            if (mateExists && !HumanChromosome.contains(mateChromosome)) {
+                continue;
+            }
+
+            final VariantContext mate = mateExists
                     ? findMate(mateId, mateChromosome, Math.max(1, matePosition - uncertainty), matePosition + uncertainty)
                     : null;
 
