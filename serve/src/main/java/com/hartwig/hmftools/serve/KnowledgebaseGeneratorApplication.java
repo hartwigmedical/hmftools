@@ -76,7 +76,8 @@ public class KnowledgebaseGeneratorApplication {
         assert refVersionString.equals("hg19");
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
 
-        HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
+        HotspotExtractor hotspotExtractor =
+                HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE), false);
 
         ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
 
@@ -156,7 +157,6 @@ public class KnowledgebaseGeneratorApplication {
         List<String> sortedUniqueDels = Lists.newArrayList(uniqueDels);
         Collections.sort(sortedUniqueDels);
 
-
         List<Signatures> listSignaturesFilter = Lists.newArrayList();
         for (Signatures signatures : listSignatures) {
             if (!signatures.eventType().isEmpty()) {
@@ -188,7 +188,7 @@ public class KnowledgebaseGeneratorApplication {
         Collections.sort(sortedUniqueKnownFusionPairs);
 
         Map<String, Integer> countsPromiscuousFive = Maps.newHashMap();
-        for (String five: promiscuosFive) {
+        for (String five : promiscuosFive) {
             if (countsPromiscuousFive.containsKey(five)) {
                 int count = countsPromiscuousFive.get(five) + 1;
                 countsPromiscuousFive.put(five, count);
@@ -209,7 +209,7 @@ public class KnowledgebaseGeneratorApplication {
         }
 
         Map<String, Integer> countsPromiscuousThree = Maps.newHashMap();
-        for (String three: promiscusThree) {
+        for (String three : promiscusThree) {
             if (countsPromiscuousThree.containsKey(three)) {
                 int count = countsPromiscuousThree.get(three) + 1;
                 countsPromiscuousThree.put(three, count);

@@ -34,18 +34,20 @@ public class HotspotExtractor {
 
     @NotNull
     private final Transvar transvar;
+    private final boolean transvarEnabled; // TODO Remove -> Just for testing during development
     @NotNull
     private final Set<String> unresolvableFeatures = Sets.newHashSet();
 
     @NotNull
-    public static HotspotExtractor withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
-            throws FileNotFoundException {
+    public static HotspotExtractor withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile,
+            boolean transvarEnabled) throws FileNotFoundException {
         LOGGER.info("Creating hotspot extractor with ref genome version '{}' and fasta path '{}'", refGenomeVersion, refGenomeFastaFile);
-        return new HotspotExtractor(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile));
+        return new HotspotExtractor(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile), transvarEnabled);
     }
 
-    private HotspotExtractor(@NotNull Transvar transvar) {
+    private HotspotExtractor(@NotNull final Transvar transvar, final boolean transvarEnabled) {
         this.transvar = transvar;
+        this.transvarEnabled = transvarEnabled;
     }
 
     @NotNull
@@ -55,13 +57,15 @@ public class HotspotExtractor {
             for (Feature feature : viccEntry.features()) {
                 String featureKey = feature.geneSymbol() + ":p." + feature.name();
                 if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType()) || isProteinAnnotation(feature.name())) {
-//                    List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name());
-//                    LOGGER.info("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
-//                    if (hotspots.isEmpty()) {
-//                        unresolvableFeatures.add(featureKey);
-//                    }
-
-                    allHotspotsPerFeature.put(feature, Lists.newArrayList());
+                    List<VariantHotspot> hotspots = Lists.newArrayList();
+                    if (transvarEnabled) {
+                        hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name());
+                        LOGGER.info("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
+                        if (hotspots.isEmpty()) {
+                            unresolvableFeatures.add(featureKey);
+                        }
+                    }
+                    allHotspotsPerFeature.put(feature, hotspots);
                 }
             }
         }
@@ -93,8 +97,7 @@ public class HotspotExtractor {
         } else if (featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX)) {
             // Frameshifts are ignored for hotspot determination
             return false;
-        }
-        else {
+        } else {
             featureToTest = featureName;
         }
 
