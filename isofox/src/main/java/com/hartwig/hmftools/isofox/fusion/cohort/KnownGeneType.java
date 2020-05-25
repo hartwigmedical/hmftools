@@ -10,4 +10,9 @@ public enum KnownGeneType
     PROM5_OTHER,
     OTHER_PROM3,
     OTHER;
+
+    public static boolean hasKnownPairGene(final KnownGeneType type)
+    {
+        return type == KNOWN_PAIR || type == KNOWN_PROM3 || type == KNOWN_OTHER || type == PROM5_KNOWN;
+    }
 }

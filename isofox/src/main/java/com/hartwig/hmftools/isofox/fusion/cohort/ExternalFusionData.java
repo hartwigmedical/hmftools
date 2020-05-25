@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 public class ExternalFusionData
 {
@@ -19,6 +20,8 @@ public class ExternalFusionData
     public final String[] Chromosomes;
     public final int[] JunctionPositions;
     public final byte[] JunctionOrientations;
+    public final FusionJunctionType[] JunctionTypes;
+
     public final String SvType;
     public final String[] GeneNames;
 
@@ -31,13 +34,14 @@ public class ExternalFusionData
     public boolean IsFiltered;
 
     public ExternalFusionData(final String sourceTool, final String[] chromosomes, final int[] junctionPositions,
-            final byte[] junctionOrientations, final String svType, final String[] geneNames, final int splitFragments,
-            final int discordantFragments, final int[] coverage, final Map<String, String> otherData)
+            final byte[] junctionOrientations, final FusionJunctionType[] junctionTypes, final String svType, final String[] geneNames,
+            final int splitFragments,final int discordantFragments, final int[] coverage, final Map<String, String> otherData)
     {
         SourceTool = sourceTool;
         Chromosomes = chromosomes;
         JunctionPositions = junctionPositions;
         JunctionOrientations = junctionOrientations;
+        JunctionTypes = junctionTypes;
         SvType = svType;
         GeneNames = geneNames;
         SplitFragments = splitFragments;
@@ -69,6 +73,14 @@ public class ExternalFusionData
         final byte[] orientations = {0, 0};
         String svType = items[8];
 
+        FusionJunctionType[] junctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
+
+        if(items[6].equals("splice-site"))
+            junctionTypes[0] = FusionJunctionType.KNOWN;
+
+        if(items[7].equals("splice-site"))
+            junctionTypes[1] = FusionJunctionType.KNOWN;
+
         int splitFragments = Integer.parseInt(items[11]) + Integer.parseInt(items[12]);
         int discordantFragments = Integer.parseInt(items[13]);
 
@@ -81,7 +93,7 @@ public class ExternalFusionData
         otherData.put("Conf", items[16]);
         otherData.put("Filters", items[19].replaceAll(",",";"));
 
-        return new ExternalFusionData(FUSION_SOURCE_ARRIBA, chromosomes, positions, orientations, svType, geneNames,
+        return new ExternalFusionData(FUSION_SOURCE_ARRIBA, chromosomes, positions, orientations, junctionTypes, svType, geneNames,
                 splitFragments, discordantFragments, coverage, otherData);
     }
 

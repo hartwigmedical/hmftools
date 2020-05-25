@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
+import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 public class ExternalFusionCompare
 {
@@ -81,8 +82,8 @@ public class ExternalFusionCompare
                 String matchType = extFusion.IsFiltered ? "MATCH" : "MATCH_EXT_UNFILTERED";
 
                 writeMatchData(sampleId, matchType, fusion.Id, fusion.Chromosomes, fusion.JunctionPositions, fusion.JunctionOrientations,
-                        fusion.SvType, fusion.GeneNames, fusion.SplitFrags + fusion.RealignedFrags, fusion.DiscordantFrags,
-                        extFusion.SplitFragments, extFusion.DiscordantFragments,
+                        fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames, fusion.SplitFrags + fusion.RealignedFrags,
+                        fusion.DiscordantFrags, extFusion.SplitFragments, extFusion.DiscordantFragments,
                         extFusion.IsFiltered ? "" : extFusion.otherDataStr());
             }
         }
@@ -90,9 +91,11 @@ public class ExternalFusionCompare
         for(FusionData fusion : unmatchedFusions)
         {
             writeMatchData(sampleId, "ISOFOX_ONLY", fusion.Id, fusion.Chromosomes, fusion.JunctionPositions,
-                    fusion.JunctionOrientations, fusion.SvType, fusion.GeneNames, fusion.SplitFrags + fusion.RealignedFrags,
-                    fusion.DiscordantFrags,0, 0, fusionId(fusion.Id));
+                    fusion.JunctionOrientations,fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames,
+                    fusion.SplitFrags + fusion.RealignedFrags, fusion.DiscordantFrags,0, 0, fusionId(fusion.Id));
         }
+
+        final String[] noGeneIds = new String[] {"", ""};
 
         int extUnmatchedCount = 0;
         for(List<ExternalFusionData> extFusionLists : externalFusionData.values())
@@ -109,8 +112,8 @@ public class ExternalFusionCompare
                     if(unfilteredFusion != null)
                     {
                         writeMatchData(sampleId, "MATCH_ISF_UNFILTERED", unfilteredFusion.Id,
-                                extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
-                                extFusion.SvType, extFusion.GeneNames,
+                                extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations, unfilteredFusion.JunctionTypes,
+                                extFusion.SvType, unfilteredFusion.GeneIds, extFusion.GeneNames,
                                 unfilteredFusion.SplitFrags + unfilteredFusion.RealignedFrags, unfilteredFusion.DiscordantFrags,
                                 extFusion.SplitFragments, extFusion.DiscordantFragments, "");
 
@@ -119,8 +122,10 @@ public class ExternalFusionCompare
                 }
 
                 ++extUnmatchedCount;
-                writeMatchData(sampleId, "EXT_ONLY", -1, extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
-                        extFusion.SvType, extFusion.GeneNames, 0, 0, extFusion.SplitFragments, extFusion.DiscordantFragments, "");
+
+                writeMatchData(sampleId, "EXT_ONLY", -1, extFusion.Chromosomes, extFusion.JunctionPositions,
+                        extFusion.JunctionOrientations, extFusion.JunctionTypes, extFusion.SvType, noGeneIds, extFusion.GeneNames,
+                        0, 0, extFusion.SplitFragments, extFusion.DiscordantFragments, "");
             }
         }
 
@@ -134,8 +139,8 @@ public class ExternalFusionCompare
         {
             final String outputFileName = mConfig.formCohortFilename("ext_fusions_compare.csv");
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("SampleId,MatchType,FusionId,ChrUp,ChrDown,PosUp,PosDown,OrientUp,OrientDown"
-                    + ",SVType,GeneNameUp,GeneNameDown,JuncFrags,ExtJuncFrags,DiscFrags,ExtDiscFrags,OtherData");
+            writer.write("SampleId,MatchType,FusionId,ChrUp,ChrDown,PosUp,PosDown,OrientUp,OrientDown,JuncTypeUp,JuncTypeDown"
+                    + ",SVType,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown,JuncFrags,ExtJuncFrags,DiscFrags,ExtDiscFrags,OtherData");
             writer.newLine();
 
             return writer;
@@ -149,18 +154,19 @@ public class ExternalFusionCompare
 
     private void writeMatchData(
             final String sampleId, final String matchType, int fusionsId, final String[] chromosomes, final int[] junctionPositions,
-            final byte[] junctionOrientations, final String svType, final String[] geneNames, int junctFrags, int discFrags,
-            int extJunctFrags, int extDiscFrags, final String otherData)
+            final byte[] junctionOrientations, final FusionJunctionType[] junctionTypes, final String svType, final String[] geneIds,
+            final String[] geneNames, int junctFrags, int discFrags, int extJunctFrags, int extDiscFrags, final String otherData)
     {
         try
         {
-            mWriter.write(String.format("%s,%s,%s,%s,%s,%d,%d,%d,%d",
+            mWriter.write(String.format("%s,%s,%s,%s,%s,%d,%d,%d,%d,%s,%s",
                     sampleId, matchType, fusionsId >= 0 ? fusionId(fusionsId) : "NONE",
-                    chromosomes[SE_START], chromosomes[SE_END],
-                    junctionPositions[SE_START], junctionPositions[SE_END], junctionOrientations[SE_START], junctionOrientations[SE_END]));
+                    chromosomes[SE_START], chromosomes[SE_END], junctionPositions[SE_START], junctionPositions[SE_END],
+                    junctionOrientations[SE_START], junctionOrientations[SE_END], junctionTypes[SE_START], junctionTypes[SE_END]));
 
-            mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%s",
-                    svType, geneNames[SE_START], geneNames[SE_END], junctFrags, extJunctFrags, discFrags, extDiscFrags, otherData));
+            mWriter.write(String.format(",%s,%s,%s,%s,%s,%d,%d,%d,%d,%s",
+                    svType, geneIds[SE_START], geneIds[SE_END], geneNames[SE_START], geneNames[SE_END],
+                    junctFrags, extJunctFrags, discFrags, extDiscFrags, otherData));
 
             mWriter.newLine();
         }

@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.OTHER_PROM
 import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_OTHER;
 import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.hasKnownPairGene;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
@@ -120,10 +121,13 @@ public class FusionFilters
             return false;
         }
 
-        if(fusion.cohortFrequency() > 0 || matchesCohortFusion(fusion))
+        if(!hasKnownPairGene(fusion.getKnownFusionType()))
         {
-            fusion.setFilter(FILTER_COHORT);
-            return false;
+            if(fusion.cohortFrequency() > 0 || matchesCohortFusion(fusion))
+            {
+                fusion.setFilter(FILTER_COHORT);
+                return false;
+            }
         }
 
         return true;
