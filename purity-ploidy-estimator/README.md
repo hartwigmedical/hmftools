@@ -1004,9 +1004,10 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- [2.42](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.42) 
+  - Fix bug when trying to recover structural variant in alt contig
 - [2.41](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.41) 
   - Fix bug when trying to recover structural variant without allelic frequency
-  - Fix bug when trying to recover structural variant in alt contig
   - Updated fitting deviation to aggressively penalise highly negative implied copy number
 - [2.40](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.40) 
   - Increase default value of min_diploid_tumor_ratio_count_centromere to 150
