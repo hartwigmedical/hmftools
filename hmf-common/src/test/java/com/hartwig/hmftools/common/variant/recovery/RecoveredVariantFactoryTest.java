@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.variant.recovery;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
@@ -14,7 +13,6 @@ import org.junit.Test;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
-import mockit.Tested;
 
 public class RecoveredVariantFactoryTest {
 
@@ -31,14 +29,6 @@ public class RecoveredVariantFactoryTest {
     public void testMateLocation() {
         assertEquals("17:59493156", RecoveredVariantFactory.mateLocation("C[17:59493156["));
         assertEquals("17:59493156", RecoveredVariantFactory.mateLocation("]17:59493156]C"));
-    }
-
-    @Tested
-    public void testMateChromosome() {
-        assertEquals("17", RecoveredVariantFactory.mateChromosome("17:12345"));
-        assertEquals("17", RecoveredVariantFactory.mateChromosome("chr17:12345"));
-        assertNull( RecoveredVariantFactory.mateChromosome("12345"));
-        assertNull( RecoveredVariantFactory.mateChromosome("altconfig:12345"));
     }
 
     @Test
