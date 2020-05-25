@@ -8,10 +8,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
+import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ReportableEvidenceItemFactoryTest {
@@ -57,5 +65,39 @@ public class ReportableEvidenceItemFactoryTest {
         assertFalse(ReportableEvidenceItemFactory.hasReportableEvidenceLevel(item3));
         assertFalse(ReportableEvidenceItemFactory.hasReportableEvidenceLevel(item4));
         assertFalse(ReportableEvidenceItemFactory.hasReportableEvidenceLevel(item5));
+    }
+
+    @Test
+    public void canFilterEvidenceItemsWithFiltering() {
+        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+
+        evidenceItems.add(testEvidenceBuilder().event("TP53 p.Val600Glu").drug("Tamoxifen").build());
+        evidenceItems.add(testEvidenceBuilder().event("BRAF p.Val600Glu").drug("Cobimetinib + Vemurafenib").build());
+
+        assertEquals(1, ReportableEvidenceItemFactory.extractAllReportableEvidenceItems(evidenceItems).size());
+    }
+
+    @Test
+    @Ignore
+    public void canFilterEvidenceItemsWithoutFiltering() {
+        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+
+        evidenceItems.add(testEvidenceBuilder().event("TP53 Deletion").drug("Nivolumab").build());
+        evidenceItems.add(testEvidenceBuilder().event("BRAF p.Val600Glu").drug("Tamoxifen").build());
+
+        assertEquals(2, ReportableEvidenceItemFactory.extractAllReportableEvidenceItems(evidenceItems).size());
+    }
+
+    @NotNull
+    private static ImmutableEvidenceItem.Builder testEvidenceBuilder() {
+        return ImmutableEvidenceItem.builder()
+                .isOnLabel(true)
+                .drugsType(Strings.EMPTY)
+                .cancerType(Strings.EMPTY)
+                .response(Strings.EMPTY)
+                .level(EvidenceLevel.LEVEL_A)
+                .reference(Strings.EMPTY)
+                .source(ActionabilitySource.CIVIC)
+                .scope(EvidenceScope.SPECIFIC);
     }
 }

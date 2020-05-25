@@ -9,12 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.actionability.EvidenceScope;
-import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.actionability.ReportableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.chord.ChordStatus;
@@ -117,7 +112,7 @@ class AnalysedPatientReporter {
         allEvidenceItems.addAll(purpleAnalysis.evidenceItems());
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
-        List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItem.extractAllReportableEvidenceItems(allEvidenceItems);
+        List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItemFactory.extractAllReportableEvidenceItems(allEvidenceItems);
 
         List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItemsFiltered);
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
