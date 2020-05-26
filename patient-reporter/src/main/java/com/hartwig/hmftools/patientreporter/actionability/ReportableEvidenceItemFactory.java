@@ -9,7 +9,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,21 +19,11 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @NotNull
-    public static List<EvidenceItem> extractAllReportableEvidenceItems(@NotNull List<EvidenceItem> allEvidenceItems) {
+    public static List<EvidenceItem> filterBlacklistedEvidence(@NotNull List<EvidenceItem> allEvidenceItems) {
         List<EvidenceItem> allEvidenceItemsFiltered = Lists.newArrayList();
         for (EvidenceItem evidenceItem: allEvidenceItems) {
             if (!(evidenceItem.event().contains("TP53") && evidenceItem.drug().equals("Tamoxifen"))) {
-                allEvidenceItemsFiltered.add(ImmutableEvidenceItem.builder()
-                        .event(evidenceItem.event())
-                        .isOnLabel(evidenceItem.isOnLabel())
-                        .reference(evidenceItem.reference())
-                        .source(evidenceItem.source())
-                        .drug(evidenceItem.drug())
-                        .drugsType(evidenceItem.drugsType())
-                        .level(evidenceItem.level())
-                        .response(evidenceItem.response())
-                        .cancerType(evidenceItem.cancerType())
-                        .scope(evidenceItem.scope()).build());
+                allEvidenceItemsFiltered.add(evidenceItem);
             }
         }
         return allEvidenceItemsFiltered;

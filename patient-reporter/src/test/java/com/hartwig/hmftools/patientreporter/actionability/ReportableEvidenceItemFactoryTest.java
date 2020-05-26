@@ -52,12 +52,12 @@ public class ReportableEvidenceItemFactoryTest {
     }
 
     @Test
-    public void hasKnownLevel() {
-        EvidenceItem item1 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_A).isOnLabel(true).build();
-        EvidenceItem item2 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_B).isOnLabel(true).build();
-        EvidenceItem item3 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_C).isOnLabel(false).build();
-        EvidenceItem item4 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_D).isOnLabel(false).build();
-        EvidenceItem item5 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_E).isOnLabel(false).build();
+    public void canFilterCorrectlyOnEvidenceLevel() {
+        EvidenceItem item1 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_A).build();
+        EvidenceItem item2 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_B).build();
+        EvidenceItem item3 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_C).build();
+        EvidenceItem item4 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_D).build();
+        EvidenceItem item5 = createTestEvidenceBuilder().level(EvidenceLevel.LEVEL_E).build();
 
         assertTrue(ReportableEvidenceItemFactory.hasReportableEvidenceLevel(item1));
         assertTrue(ReportableEvidenceItemFactory.hasReportableEvidenceLevel(item2));
@@ -67,23 +67,15 @@ public class ReportableEvidenceItemFactoryTest {
     }
 
     @Test
-    public void canFilterEvidenceItemsWithFiltering() {
+    public void canFilterBlacklistedEvidence() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
         evidenceItems.add(testEvidenceBuilder().event("TP53 Deletion").drug("Tamoxifen").build());
         evidenceItems.add(testEvidenceBuilder().event("BRAF p.Val600Glu").drug("Cobimetinib + Vemurafenib").build());
-
-        assertEquals(1, ReportableEvidenceItemFactory.extractAllReportableEvidenceItems(evidenceItems).size());
-    }
-
-    @Test
-    public void canFilterEvidenceItemsWithoutFiltering() {
-        List<EvidenceItem> evidenceItems = Lists.newArrayList();
-
         evidenceItems.add(testEvidenceBuilder().event("TP53 Deletion").drug("Nivolumab").build());
         evidenceItems.add(testEvidenceBuilder().event("BRAF p.Val600Glu").drug("Tamoxifen").build());
 
-        assertEquals(2, ReportableEvidenceItemFactory.extractAllReportableEvidenceItems(evidenceItems).size());
+        assertEquals(3, ReportableEvidenceItemFactory.filterBlacklistedEvidence(evidenceItems).size());
     }
 
     @NotNull
