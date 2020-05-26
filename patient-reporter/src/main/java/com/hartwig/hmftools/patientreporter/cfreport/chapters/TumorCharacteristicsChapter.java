@@ -118,7 +118,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     private void renderMutationalLoadCharacteristic(@NotNull Document reportDocument) {
         boolean hasReliablePurity = patientReport.hasReliablePurity();
         int mutationalLoad = patientReport.tumorMutationalLoad();
-        TumorMutationalStatus tmlStatus = patientReport.tumorMutationalLoadStatus();
+        String tmlStatus = patientReport.tumorMutationalLoadStatus().display();
 
         String mutationalLoadString = hasReliablePurity ? tmlStatus + " " + NO_DECIMAL_FORMAT.format(mutationalLoad) : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =

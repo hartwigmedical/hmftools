@@ -58,7 +58,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     public static AnalysedPatientReport buildCOLO829(boolean correctionReport, @NotNull String commentString) {
         boolean hasReliablePurity = true;
-        double impliedTumorPurity = 0.99;
+        double impliedTumorPurity = 1D;
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 180;
         double tumorMutationalBurden = 13.6;
