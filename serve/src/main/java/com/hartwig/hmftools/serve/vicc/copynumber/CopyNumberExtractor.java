@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc.cnv;
+package com.hartwig.hmftools.serve.vicc.copynumber;
 
 import java.util.Map;
 import java.util.Set;
@@ -25,9 +25,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class CnvExtractor {
+public class CopyNumberExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(CnvExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(CopyNumberExtractor.class);
 
     private static final Set<String> ONCOKB_AMPLIFICATIONS =
             Sets.newHashSet("Amplification", "AMPLIFICATION", "amplification");

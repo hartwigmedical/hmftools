@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.serve.vicc.fusion;
 
+import java.util.Map;
+
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
+import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,10 +16,21 @@ public class FusionExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
+    public Map<Feature, String> extractKnownFusions(@NotNull ViccEntry viccEntry) {
+        Map<Feature, String> fusionsPerFeature = Maps.newHashMap();
+        if (viccEntry.source() == ViccSource.ONCOKB) {
+            for (Feature feature : viccEntry.features()) {
+                if (feature.name().toLowerCase().contains("fusion")) {
+                    fusionsPerFeature.put(feature, feature.name());
+                }
+            }
+        }
+        return fusionsPerFeature;
+    }
+
     @NotNull
     public static KnownFusions determinePromiscuousFusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene,
             @NotNull String function) {
-
         if (function.equals("Likely Loss-of-function")) {
             gene = Strings.EMPTY;
             typeEvent = Strings.EMPTY;

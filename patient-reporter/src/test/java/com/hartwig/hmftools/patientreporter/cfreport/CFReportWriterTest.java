@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -35,13 +34,26 @@ public class CFReportWriterTest {
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+    private static final String COMMENT_STRING = "This is a test report and is based off COLO829";
+    private static final String COMMENT_STRING_CORRECTED = "This is a test corrected report and is based off COLO829";
+
+    private static final String COMMENT_STRING_FAIL = "This is a test qc fail report";
+    private static final String COMMENT_STRING_FAIL_CORRECTED = "This is a test corrected qc fail report";
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829();
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829(false, COMMENT_STRING);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath("hmf_colo829_sequence_report.pdf"));
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829(true, COMMENT_STRING_CORRECTED);
+
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath("hmf_colo829_sequence_report_corrected.pdf"));
     }
 
     @Test
@@ -79,7 +91,22 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateLowDNAYieldReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T", "60%", QCFailReason.LOW_DNA_YIELD, testReportFilePath("hmf_low_dna_yield_report.pdf"));
+        generateQCFailCPCTReport("CPCT01000001T",
+                "60%",
+                QCFailReason.LOW_DNA_YIELD,
+                testReportFilePath("hmf_low_dna_yield_report.pdf"),
+                false,
+                COMMENT_STRING_FAIL);
+    }
+
+    @Test
+    public void canGenerateLowDNAYieldReportCorrected() throws IOException {
+        generateQCFailCPCTReport("CPCT01000001T",
+                "60%",
+                QCFailReason.LOW_DNA_YIELD,
+                testReportFilePath("hmf_low_dna_yield_report_corrected.pdf"),
+                true,
+                COMMENT_STRING_FAIL_CORRECTED);
     }
 
     @Test
@@ -87,12 +114,19 @@ public class CFReportWriterTest {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",
                 QCFailReason.BELOW_DETECTION_THRESHOLD,
-                testReportFilePath("hmf_below_detection_without_genomic_alteration_report.pdf"));
+                testReportFilePath("hmf_below_detection_without_genomic_alteration_report.pdf"),
+                false,
+                COMMENT_STRING_FAIL);
     }
 
     @Test
     public void canGenerateLabFailureReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T", "60%", QCFailReason.LAB_FAILURE, testReportFilePath("hmf_lab_failure_report.pdf"));
+        generateQCFailCPCTReport("CPCT01000001T",
+                "60%",
+                QCFailReason.LAB_FAILURE,
+                testReportFilePath("hmf_lab_failure_report.pdf"),
+                false,
+                COMMENT_STRING_FAIL);
     }
 
     @Test
@@ -100,7 +134,9 @@ public class CFReportWriterTest {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",
                 QCFailReason.INSUFFICIENT_TISSUE,
-                testReportFilePath("hmf_insufficient_tissue_report.pdf"));
+                testReportFilePath("hmf_insufficient_tissue_report.pdf"),
+                false,
+                COMMENT_STRING_FAIL);
     }
 
     @Test
@@ -108,7 +144,9 @@ public class CFReportWriterTest {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",
                 QCFailReason.POST_ANALYSIS_FAIL,
-                testReportFilePath("hmf_post_dna_isolation_fail_report.pdf"));
+                testReportFilePath("hmf_post_dna_isolation_fail_report.pdf"),
+                false,
+                COMMENT_STRING_FAIL);
     }
 
     @Test
@@ -116,7 +154,9 @@ public class CFReportWriterTest {
         generateQCFailCPCTReport("CORE01000001T",
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
-                testReportFilePath("hmf_low_molecular_tumor_percentage_core_report.pdf"));
+                testReportFilePath("hmf_low_molecular_tumor_percentage_core_report.pdf"),
+                false,
+                COMMENT_STRING_FAIL);
     }
 
     @Test
@@ -124,7 +164,9 @@ public class CFReportWriterTest {
         generateQCFailCPCTReport("WIDE01000001T",
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
-                testReportFilePath("hmf_low_molecular_tumor_percentage_wide_report.pdf"));
+                testReportFilePath("hmf_low_molecular_tumor_percentage_wide_report.pdf"),
+                false,
+                COMMENT_STRING_FAIL);
     }
 
     @Test
@@ -132,7 +174,9 @@ public class CFReportWriterTest {
         generateQCFailCPCTReport("CPCT01000001T",
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
-                testReportFilePath("hmf_low_molecular_tumor_percentage_cpct_report.pdf"));
+                testReportFilePath("hmf_low_molecular_tumor_percentage_cpct_report.pdf"),
+                false,
+                COMMENT_STRING_FAIL);
     }
 
     @NotNull
@@ -147,7 +191,7 @@ public class CFReportWriterTest {
     }
 
     private static void generateQCFailCPCTReport(@NotNull String sampleId, @Nullable String shallowSeqPurity, @NotNull QCFailReason reason,
-            @NotNull String filename) throws IOException {
+            @NotNull String filename, boolean correctedReport, @NotNull String comments) throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId("x")
                 .refSampleBarcode("FR12123488")
@@ -174,8 +218,8 @@ public class CFReportWriterTest {
                 .sampleReport(sampleReport)
                 .reason(reason)
                 .wgsPurityString(null)
-                .comments(Optional.empty())
-                .isCorrectedReport(false)
+                .comments(comments)
+                .isCorrectedReport(correctedReport)
                 .signaturePath(testReportData().signaturePath())
                 .logoRVAPath(testReportData().logoRVAPath())
                 .logoCompanyPath(testReportData().logoCompanyPath())

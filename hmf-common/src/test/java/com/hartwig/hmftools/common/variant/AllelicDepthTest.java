@@ -25,4 +25,12 @@ public class AllelicDepthTest {
         assertEquals(0.2, victim.alleleFrequency(), 0.01);
     }
 
+    @Test
+    public void useADIfLargerThanDP() {
+        final Genotype genotype = new GenotypeBuilder("SAMPLE").AD(new int[] { 6, 4 }).DP(5).make();
+        final AllelicDepth victim = AllelicDepth.fromGenotype(genotype);
+        assertEquals(10, victim.totalReadCount());
+        assertEquals(0.4, victim.alleleFrequency(), 0.01);
+    }
+
 }

@@ -13,7 +13,8 @@ class DedupSingle(val duplicates: Set<String>) {
             for (sgl in variantStore.selectAll().filter { x -> x.isSingle }) {
                 val sglPasses = softFilterStore.isPassing(sgl.vcfId)
 
-                val duplicateFilter = { other: StructuralVariantContext -> other.orientation == sgl.orientation }
+                val exactPositionFilter = { other: StructuralVariantContext -> other.start >= sgl.minStart && other.start <= sgl.maxStart }
+                val duplicateFilter = { other: StructuralVariantContext -> other.orientation == sgl.orientation && (other.precise || exactPositionFilter(other)) }
                 val others = variantStore.selectOthersNearby(sgl, 0, duplicateFilter)
                 if (!others.all { x -> keepOriginal(sglPasses, sgl, x, softFilterStore) }) {
                     duplicates.add(sgl.vcfId)
@@ -28,7 +29,6 @@ class DedupSingle(val duplicates: Set<String>) {
             }
 
             val alternativePass = softFilterStore.isPassing(alternative.vcfId)
-
             if (originalPass != alternativePass) {
                 return originalPass
             }

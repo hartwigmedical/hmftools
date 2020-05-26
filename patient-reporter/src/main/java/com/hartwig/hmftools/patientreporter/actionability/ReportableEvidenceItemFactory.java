@@ -19,6 +19,17 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @NotNull
+    public static List<EvidenceItem> filterBlacklistedEvidence(@NotNull List<EvidenceItem> allEvidenceItems) {
+        List<EvidenceItem> allEvidenceItemsFiltered = Lists.newArrayList();
+        for (EvidenceItem evidenceItem: allEvidenceItems) {
+            if (!(evidenceItem.event().contains("TP53") && evidenceItem.drug().equals("Tamoxifen"))) {
+                allEvidenceItemsFiltered.add(evidenceItem);
+            }
+        }
+        return allEvidenceItemsFiltered;
+    }
+
+    @NotNull
     public static List<EvidenceItem> extractNonTrials(@NotNull List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().filter(evidenceItem -> !evidenceItem.source().isTrialSource()).collect(Collectors.toList());
     }

@@ -265,7 +265,7 @@ CREATE TABLE metric
 
 DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
-(   id int NOT NULL AUTO_INCREMENT,
+(   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
@@ -428,7 +428,7 @@ CREATE TABLE copyNumberGermline
 
 DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
-(   id int NOT NULL AUTO_INCREMENT,
+(   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,

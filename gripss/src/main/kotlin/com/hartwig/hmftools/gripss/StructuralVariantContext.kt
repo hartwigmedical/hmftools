@@ -17,6 +17,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val contig = context.contig!!
 
     val imprecise = context.imprecise()
+    val precise = !imprecise
     val variantType = context.toVariantType()
     val orientation = variantType.startOrientation
     val isSingle = variantType is Single
@@ -37,6 +38,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     val maxStart = startBreakend.end
     val insertSequenceLength = variantType.insertSequence.length
+    val duplicationLength = (variantType as? Duplication)?.let { it.length + 1 } ?: 0
     val qual = context.phredScaledQual
 
 

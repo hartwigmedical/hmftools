@@ -31,7 +31,6 @@ public class ReadContextEvidence {
 
     private static final Logger LOGGER = LogManager.getLogger(ReadContextEvidence.class);
 
-    private final int minQuality;
     private final int typicalReadLength;
     private final SageConfig sageConfig;
     private final SamSlicerFactory samSlicerFactory;
@@ -40,7 +39,6 @@ public class ReadContextEvidence {
 
     public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
             @NotNull final ReferenceSequenceFile refGenome, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
-        this.minQuality = config.minMapQuality();
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
         this.refGenome = refGenome;
@@ -72,10 +70,8 @@ public class ReadContextEvidence {
                 .open(new File(bam))) {
             slicer.slice(tumorReader, samRecord -> {
 
-                if (samRecord.getMappingQuality() >= minQuality) {
-                    int numberOfEvents = NumberEvents.numberOfEvents(samRecord);
-                    consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig, numberOfEvents));
-                }
+                int numberOfEvents = NumberEvents.numberOfEvents(samRecord);
+                consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig, numberOfEvents));
 
             });
         } catch (IOException e) {

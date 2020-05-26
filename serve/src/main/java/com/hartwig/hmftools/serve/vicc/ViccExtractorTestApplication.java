@@ -5,18 +5,20 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.vicc.cnv.CnvExtractor;
-import com.hartwig.hmftools.serve.vicc.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
+import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class ViccExtractorTestApplication {
@@ -26,7 +28,7 @@ public class ViccExtractorTestApplication {
     private static final boolean RUN_ON_SERVER = false;
 
     public static void main(String[] args) throws IOException, InterruptedException {
-//        Configurator.setRootLevel(Level.DEBUG);
+        Configurator.setRootLevel(Level.DEBUG);
 
         String viccJsonPath;
         String refGenomeFastaFile;
@@ -46,47 +48,59 @@ public class ViccExtractorTestApplication {
         List<ViccEntry> viccEntries = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
         LOGGER.info(" Read {} entries", viccEntries.size());
 
-        HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile);
-        CnvExtractor cnvExtractor = new CnvExtractor();
+        ViccExtractor viccExtractor = new ViccExtractor(HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile, false),
+                new CopyNumberExtractor(),
+                new FusionExtractor());
 
-        Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
-        Map<Feature, KnownAmplificationDeletion> allKnownAmpsDelsPerFeature = Maps.newHashMap();
-        for (ViccEntry viccEntry : viccEntries) {
-            allHotspotsPerFeature.putAll(hotspotExtractor.extractHotspots(viccEntry));
-            allKnownAmpsDelsPerFeature.putAll(cnvExtractor.extractKnownAmplificationsDeletions(viccEntry));
-        }
+        Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
+        analyzeExtractionResults(resultsPerEntry);
+    }
+
+    private static void analyzeExtractionResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         List<Feature> featuresWithoutGenomicEvents = Lists.newArrayList();
         int totalFeatureCount = 0;
-        for (ViccEntry viccEntry : viccEntries) {
+        int featuresWithHotspotsCount = 0;
+        int totalHotspotsCount = 0;
+        int featuresWithCopyNumberCount = 0;
+        int featuresWithFusionCount = 0;
+
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            ViccEntry viccEntry = entry.getKey();
+            ViccExtractionResult viccExtractionResult = entry.getValue();
             for (Feature feature : viccEntry.features()) {
-                if (!allHotspotsPerFeature.containsKey(feature) && !allKnownAmpsDelsPerFeature.containsKey(feature)) {
+                List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
+                KnownAmplificationDeletion ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
+                String fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
+
+                if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null) {
                     featuresWithoutGenomicEvents.add(feature);
+                } else {
+                    if (hotspotsForFeature != null) {
+                        featuresWithHotspotsCount++;
+                        totalHotspotsCount += hotspotsForFeature.size();
+                    }
+
+                    if (ampDelForFeature != null) {
+                        featuresWithCopyNumberCount++;
+                    }
+
+                    if (fusionForFeature != null) {
+                        featuresWithFusionCount++;
+                    }
                 }
+
                 totalFeatureCount++;
             }
         }
-        LOGGER.info("Done extraction from '{}'", source);
-        LOGGER.info(" Extraction performed on {} features from {} entries", totalFeatureCount, viccEntries.size());
-        LOGGER.info(" Extracted {} hotspots for {} features", valuesCount(allHotspotsPerFeature), allHotspotsPerFeature.size());
-        LOGGER.info(" Extracted {} known amps and dels", allKnownAmpsDelsPerFeature.size());
-
-        LOGGER.info("Could not resolve hotspots for {} features", hotspotExtractor.unresolvableFeatures().size());
-        for (String feature : hotspotExtractor.unresolvableFeatures()) {
-            LOGGER.debug(" {}", feature);
-        }
+        LOGGER.info("Extraction performed on {} features from {} entries", totalFeatureCount, resultsPerEntry.size());
+        LOGGER.info(" Extracted {} hotspots for {} features", totalHotspotsCount, featuresWithHotspotsCount);
+        LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
+        LOGGER.info(" Extracted {} fusions", featuresWithFusionCount);
 
         LOGGER.info("No genomic events found for {} features", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             LOGGER.debug(" {}", feature);
         }
-    }
-
-    private static <T, Y> int valuesCount(@NotNull Map<T, List<Y>> map) {
-        int valuesCount = 0;
-        for (Map.Entry<T, List<Y>> entry : map.entrySet()) {
-            valuesCount += entry.getValue().size();
-        }
-        return valuesCount;
     }
 }

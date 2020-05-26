@@ -23,19 +23,23 @@ public interface AllelicDepth {
     @NotNull
     static AllelicDepth fromGenotype(@NotNull final Genotype genotype) {
         Preconditions.checkArgument(genotype.hasAD());
-
         int[] adFields = genotype.getAD();
         final int alleleReadCount = adFields[1];
-
-        int totalReadCount = 0;
-        if (genotype.hasDP()) {
-            totalReadCount = genotype.getDP();
-        } else {
-            for (final int afField : adFields) {
-                totalReadCount += afField;
-            }
-        }
-
+        int totalReadCount = totalReadCount(genotype);
         return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
     }
+
+    static int totalReadCount(@NotNull final Genotype genotype) {
+        // Note: this is a workaround of strelka's DP being only Tier 1
+        return genotype.hasAD() ? Math.max(genotype.getDP(), sumReadCount(genotype.getAD())) : sumReadCount(genotype.getAD());
+    }
+
+    static int sumReadCount(int[] adFields) {
+        int totalReadCount = 0;
+        for (final int afField : adFields) {
+            totalReadCount += afField;
+        }
+        return totalReadCount;
+    }
+
 }
