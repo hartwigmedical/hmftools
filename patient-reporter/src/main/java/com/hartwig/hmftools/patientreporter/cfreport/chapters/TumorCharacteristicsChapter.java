@@ -120,7 +120,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         int mutationalLoad = patientReport.tumorMutationalLoad();
         String tmlStatus = patientReport.tumorMutationalLoadStatus().display();
 
-        String mutationalLoadString = hasReliablePurity ? tmlStatus + " " + NO_DECIMAL_FORMAT.format(mutationalLoad) : DataUtil.NA_STRING;
+        String mutationalLoadString =
+                hasReliablePurity ? tmlStatus.display() + " " + NO_DECIMAL_FORMAT.format(mutationalLoad) : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =
                 new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", false);
         mutationalLoadChart.enabled(hasReliablePurity);
