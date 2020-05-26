@@ -325,8 +325,7 @@ public class ReadContextCounter implements VariantHotspot {
         final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
-
-        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, numberOfEvents, record.getProperPairFlag());
+        int modifiedMapQuality = qualityConfig.modifiedMapQuality(variant, mapQuality, numberOfEvents, record.getProperPairFlag());
         double modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));

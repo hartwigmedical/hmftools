@@ -76,6 +76,7 @@ public class SageConfigTest {
 
     public static QualityConfig defaultQualityConfig() {
         return ImmutableQualityConfig.builder()
+                .highlyPolymorphicGenes(Lists.newArrayList())
                 .jitterPenalty(DEFAULT_JITTER_PENALTY)
                 .jitterMinRepeatCount(DEFAULT_JITTER_MIN_REPEAT_COUNT)
                 .baseQualityFixedPenalty(DEFAULT_BASE_QUAL_FIXED_PENALTY)

@@ -2,6 +2,15 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.cli.Configs.defaultStringValue;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -20,6 +29,7 @@ public interface QualityConfig {
     String MAP_QUAL_FIXED_PENALTY = "map_qual_fixed_penalty";
     String MAP_QUAL_IMPROPER_PAIR_PENALTY = "map_qual_improper_pair_penalty";
     String MAP_QUAL_READ_EVENTS_PENALTY = "map_qual_read_events_penalty";
+    String HIGHLY_POLYMORHIC_GENES = "highly_polymorphic_genes";
 
     double DEFAULT_JITTER_PENALTY = 0.25;
     int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -28,6 +38,8 @@ public interface QualityConfig {
     int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 8;
+    String DEFAULT_HIGHLY_POLYMORHIC_GENES = "HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DRB1";
+    int MAX_HIGHLY_POLYMORHIC_GENES_QUALITY = 10;
 
     double jitterPenalty();
 
@@ -41,11 +53,29 @@ public interface QualityConfig {
 
     int mapQualityReadEventsPenalty();
 
+    @NotNull
+    List<HmfTranscriptRegion> highlyPolymorphicGenes();
+
+
     int mapQualityImproperPairPenalty();
 
-    default int modifiedMapQuality(int mapQuality, int readEvents, boolean properPairFlag) {
+    default boolean isHighlyPolymorphic(@NotNull final GenomePosition position) {
+        for (HmfTranscriptRegion highlyPolymorphicGene : highlyPolymorphicGenes()) {
+            if (highlyPolymorphicGene.contains(position)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    default int modifiedMapQuality(@NotNull final GenomePosition position, int mapQuality, int readEvents, boolean properPairFlag) {
+        if (isHighlyPolymorphic(position)) {
+            return Math.min(MAX_HIGHLY_POLYMORHIC_GENES_QUALITY, mapQuality - mapQualityFixedPenalty());
+        }
+
         int improperPairPenalty = mapQualityImproperPairPenalty() * (properPairFlag ? 0 : 1);
-        int distancePenalty = (readEvents - 1) * mapQualityReadEventsPenalty();
+        int distancePenalty = Math.max(0, readEvents - 1) * mapQualityReadEventsPenalty();
         return mapQuality - mapQualityFixedPenalty() - improperPairPenalty - distancePenalty;
     }
 
@@ -60,6 +90,9 @@ public interface QualityConfig {
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
+        options.addOption(HIGHLY_POLYMORHIC_GENES,
+                true,
+                "Genes to exclude event distance penalty [" + DEFAULT_HIGHLY_POLYMORHIC_GENES + "]");
 
         options.addOption(JITTER_PENALTY,
                 true,
@@ -86,16 +119,22 @@ public interface QualityConfig {
     }
 
     @NotNull
-    static QualityConfig createConfig(@NotNull final CommandLine cmd) {
+    static QualityConfig createConfig(@NotNull final CommandLine cmd, @NotNull final List<HmfTranscriptRegion> allTranscripts) {
+        final Set<String> highlyPolymorphicGeneNames =
+                Arrays.stream(defaultStringValue(cmd, HIGHLY_POLYMORHIC_GENES, DEFAULT_HIGHLY_POLYMORHIC_GENES).split(","))
+                        .collect(Collectors.toSet());
+
+        final List<HmfTranscriptRegion> highlyPolymorphicGeneTranscripts =
+                allTranscripts.stream().filter(x -> highlyPolymorphicGeneNames.contains(x.gene())).collect(Collectors.toList());
 
         return ImmutableQualityConfig.builder()
+                .highlyPolymorphicGenes(highlyPolymorphicGeneTranscripts)
                 .jitterPenalty(defaultDoubleValue(cmd, JITTER_PENALTY, DEFAULT_JITTER_PENALTY))
                 .jitterMinRepeatCount(defaultIntValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT))
                 .baseQualityFixedPenalty(defaultIntValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY))
                 .distanceFromReadEdgeFixedPenalty(defaultIntValue(cmd, READ_EDGE_FIXED_PENALTY, DEFAULT_READ_EDGE_FIXED_PENALTY))
                 .mapQualityFixedPenalty(defaultIntValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY))
-                .mapQualityReadEventsPenalty(defaultIntValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY,
-                        DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY))
+                .mapQualityReadEventsPenalty(defaultIntValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY, DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY))
                 .mapQualityImproperPairPenalty(defaultIntValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY))
                 .build();
 
