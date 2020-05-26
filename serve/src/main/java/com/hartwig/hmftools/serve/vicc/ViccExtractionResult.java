@@ -25,4 +25,13 @@ public abstract class ViccExtractionResult {
     @NotNull
     public abstract Map<Feature, String> fusionsPerFeature();
 
+    @NotNull
+    public abstract Map<Feature, String> geneLevelEventsPerFeature();
+
+    @NotNull
+    public abstract Map<Feature, String> geneRangesPerFeature();
+
+    @NotNull
+    public abstract Map<Feature, String> signaturesPerFeature();
+
 }
