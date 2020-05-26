@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 
 import java.util.List;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
@@ -16,9 +16,6 @@ import htsjdk.samtools.CigarOperator;
 
 public class FusionUtils
 {
-    public static final byte POS_ORIENT = 1;
-    public static final byte NEG_ORIENT = -1;
-
     public static boolean lowerChromosome(final String chr, final String otherChr)
     {
         return chromosomeRank(chr) < chromosomeRank(otherChr);

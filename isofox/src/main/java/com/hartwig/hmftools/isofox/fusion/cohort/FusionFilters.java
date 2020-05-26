@@ -121,13 +121,12 @@ public class FusionFilters
             return false;
         }
 
-        if(!hasKnownPairGene(fusion.getKnownFusionType()))
+        int cohortFreqLimit = hasKnownPairGene(fusion.getKnownFusionType()) ? 5 : 2;
+
+        if(fusion.cohortFrequency() >= cohortFreqLimit)
         {
-            if(fusion.cohortFrequency() > 0 || matchesCohortFusion(fusion))
-            {
-                fusion.setFilter(FILTER_COHORT);
-                return false;
-            }
+            fusion.setFilter(FILTER_COHORT);
+            return false;
         }
 
         return true;

@@ -248,13 +248,10 @@ public class FusionCohort
         {
             mFilters.markKnownGeneTypes(fusion);
 
-            if(mConfig.Fusions.RewriteAnnotatedFusions)
-            {
-                FusionCohortData cohortMatch = mFilters.findCohortFusion(fusion);
+            FusionCohortData cohortMatch = mFilters.findCohortFusion(fusion);
 
-                if(cohortMatch != null)
-                    fusion.setCohortFrequency(cohortMatch.sampleCount());
-            }
+            if(cohortMatch != null)
+                fusion.setCohortFrequency(cohortMatch.sampleCount());
 
             if(mFilters.isPassingFusion(fusion))
             {
