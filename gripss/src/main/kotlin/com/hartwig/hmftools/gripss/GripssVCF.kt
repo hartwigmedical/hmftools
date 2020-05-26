@@ -32,6 +32,7 @@ const val MIN_SIZE = "minSize"
 const val TAF = "TAF";
 const val ALT_PATH = "ALTP";
 const val HOTSPOT = "HOTSPOT";
+const val REALIGN = "REALIGN";
 const val LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
 const val REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
 
@@ -71,6 +72,7 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
         header.addMetaDataLine(VCFInfoHeaderLine(LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Breakend linking information"))
         header.addMetaDataLine(VCFInfoHeaderLine(REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend linking information"))
         header.addMetaDataLine(VCFInfoHeaderLine(HOTSPOT, 1, VCFHeaderLineType.Flag, "Variant is a hotspot"))
+        header.addMetaDataLine(VCFInfoHeaderLine(REALIGN, 1, VCFHeaderLineType.Flag, "Variant was realigned"))
 
         writer.writeHeader(header)
     }
