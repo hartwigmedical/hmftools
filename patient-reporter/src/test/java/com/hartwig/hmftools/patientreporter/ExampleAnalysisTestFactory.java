@@ -58,7 +58,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     public static AnalysedPatientReport buildCOLO829(boolean correctionReport, @NotNull String commentString) {
         boolean hasReliablePurity = true;
-        double impliedTumorPurity = 1D;
+        double impliedTumorPurity = 0.99;
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 180;
         double tumorMutationalBurden = 13.6;
@@ -368,6 +368,16 @@ public final class ExampleAnalysisTestFactory {
 
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.GENE_LEVEL)
+                .acronym("CLXH254X2101")
+                .reference("EXT10453 (NL55506.078.15)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.SPECIFIC)
+                .acronym("COWBOY")
+                .reference("EXT12301 (NL71732.091.19)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("DRUP")
                 .reference("EXT10299 (NL54757.031.16)")
                 .build());
@@ -378,23 +388,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.GENE_LEVEL)
-                .acronym("LXH254 in tumors with MAPK pathway alterations")
-                .reference("EXT10453 (NL55506.078.15)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("POLARIS")
                 .reference("EXT11388 (NL69569.028.19)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.SPECIFIC)
-                .acronym("PROCLAIM-001")
-                .reference("EXT10241 (NL59299.042.17)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.SPECIFIC)
-                .acronym("REDUCTOR")
-                .reference("EXT6690 (NL45261.031.13)")
                 .build());
         trials.add(iclusionBuilder.event("CDKN2A p.Ala68fs")
                 .scope(EvidenceScope.GENE_LEVEL)
@@ -547,8 +542,8 @@ public final class ExampleAnalysisTestFactory {
                 .gDNA("7:140453136")
                 .alleleReadCount(154)
                 .totalReadCount(225)
-                .allelePloidy(4.1)
-                .totalPloidy(6.1)
+                .allelePloidy(4.0842)
+                .totalPloidy(6.0)
                 .hotspot(Hotspot.HOTSPOT)
                 .biallelic(false)
                 .driverLikelihood(1D)
@@ -569,8 +564,8 @@ public final class ExampleAnalysisTestFactory {
                 .gDNA("9:21971153")
                 .alleleReadCount(95)
                 .totalReadCount(95)
-                .allelePloidy(2D)
-                .totalPloidy(2D)
+                .allelePloidy(1.854083)
+                .totalPloidy(1.99)
                 .hotspot(Hotspot.NEAR_HOTSPOT)
                 .biallelic(true)
                 .clonalLikelihood(1D)
@@ -591,8 +586,8 @@ public final class ExampleAnalysisTestFactory {
                 .gDNA("5:1295228")
                 .alleleReadCount(49)
                 .totalReadCount(49)
-                .allelePloidy(2D)
-                .totalPloidy(2D)
+                .allelePloidy(1.5468)
+                .totalPloidy(2.0)
                 .hotspot(Hotspot.HOTSPOT)
                 .biallelic(false)
                 .clonalLikelihood(1D)
@@ -613,8 +608,8 @@ public final class ExampleAnalysisTestFactory {
                 .gDNA("2:198266779")
                 .alleleReadCount(76)
                 .totalReadCount(115)
-                .allelePloidy(2D)
-                .totalPloidy(3.1)
+                .allelePloidy(2.009206)
+                .totalPloidy(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .biallelic(false)
                 .clonalLikelihood(1D)
@@ -635,8 +630,8 @@ public final class ExampleAnalysisTestFactory {
                 .gDNA("3:189604330")
                 .alleleReadCount(52)
                 .totalReadCount(119)
-                .allelePloidy(1.8)
-                .totalPloidy(4D)
+                .allelePloidy(1.748016)
+                .totalPloidy(3.98)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .biallelic(false)
                 .clonalLikelihood(1D)
