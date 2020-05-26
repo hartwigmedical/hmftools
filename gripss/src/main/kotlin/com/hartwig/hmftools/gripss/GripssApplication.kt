@@ -12,6 +12,7 @@ import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.LocationStore
 import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import com.hartwig.hmftools.gripss.store.VariantStore
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.vcf.VCFFileReader
 import org.apache.logging.log4j.LogManager
 import java.io.File
@@ -22,9 +23,11 @@ fun main(args: Array<String>) {
     val pairedPonFile = "/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe"
     val pairedHotspotFile = "/Users/jon/hmf/resources/gridss_hotspot_breakpoint.bedpe"
     val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
+//    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.chr1.vcf"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
+    val refGenome = "/Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta"
     val filterConfig = GripssFilterConfig.default()
-    val config = GripssConfig(inputVCF, outputVCF, singlePonFile, pairedPonFile, pairedHotspotFile, filterConfig)
+    val config = GripssConfig(inputVCF, outputVCF, singlePonFile, pairedPonFile, pairedHotspotFile, refGenome, filterConfig)
 
     GripssApplication(config).use { x -> x.run() }
 }
@@ -39,6 +42,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val startTime = System.currentTimeMillis();
     private val fileReader = VCFFileReader(File(config.inputVcf), false)
     private val fileWriter = GripssVCF(config.outputVcf)
+    private val refGenome = IndexedFastaSequenceFile(File(config.refGenome))
 
     override fun run() {
         logger.info("Reading VCF file: ${config.inputVcf}")
@@ -52,6 +56,9 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val breakends = Breakend.fromBedFile(config.singlePonFile)
         val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
         val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
+//        val ponStore = LocationStore(listOf(), listOf(), PON_ADDITIONAL_DISTANCE)
+
+
 
         logger.info("Identifying hotspot variants")
         val hotspots = hotspotStore.matching(variantStore.selectAll()).map { it.vcfId }.toSet()
@@ -111,7 +118,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
                 structuralVariant.mateId?.let { hardFilter.add(it) }
             } else {
                 unfiltered.add(variantContext.id)
-                structuralVariants.add(structuralVariant)
+                structuralVariants.add(structuralVariant.realign(refGenome))
             }
         }
 
@@ -119,7 +126,9 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         return structuralVariants.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }
     }
 
+
     override fun close() {
+        refGenome.close()
         fileReader.close()
         fileWriter.close()
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")

@@ -3,12 +3,15 @@ package com.hartwig.hmftools.gripss
 import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.extensions.*
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
+import kotlin.math.abs
 
 const val SHORT_EVENT_SIZE = 1000
 
-class StructuralVariantContext(private val context: VariantContext, normalOrdinal: Int = 0, tumorOrdinal: Int = 1) {
+class StructuralVariantContext(private val context: VariantContext, private val normalOrdinal: Int = 0, private val tumorOrdinal: Int = 1) {
     private companion object {
         private val polyG = "G".repeat(16);
         private val polyC = "C".repeat(16);
@@ -41,14 +44,103 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val duplicationLength = (variantType as? Duplication)?.let { it.length + 1 } ?: 0
     val qual = context.phredScaledQual
 
-
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 
+    fun realign(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
+        if (insertSequenceLength > 0) {
+            return this
+        }
 
-    fun confidenceIntervalsOverlap(other: StructuralVariantContext, additionalDistance: Pair<Int, Int> = Pair(0, 0)): Boolean {
-        return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
+        if (precise && abs(confidenceInterval.first - confidenceInterval.second) > 1) {
+            if (!isSingle) {
+                return centreAlignPaired(refGenome)
+            }
+        }
+
+        if (imprecise && (confidenceInterval.first != 0 || confidenceInterval.second != 0)) {
+            return if (isSingle) {
+                sideAlignSingle(refGenome)
+            } else {
+                sideAlignPaired(refGenome)
+            }
+        }
+
+        return this;
+    }
+
+    private fun sideAlignPaired(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
+        val mate = variantType as Paired
+        val newCipos = sideAlignConfidenceInterval(orientation, confidenceInterval)
+        val newRemoteCipos = sideAlignConfidenceInterval(mate.endOrientation, remoteConfidenceInterval)
+        return realignPaired(refGenome, newCipos, newRemoteCipos)
+    }
+
+    private fun centreAlignPaired(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
+        val newCipos = centreAlignConfidenceInterval(confidenceInterval)
+        val newRemoteCipos = centreAlignConfidenceInterval(remoteConfidenceInterval)
+        return realignPaired(refGenome, newCipos, newRemoteCipos)
+    }
+
+    private fun realignPaired(refGenome: IndexedFastaSequenceFile, newCipos: Pair<Int, Int>, newRemoteCipos: Pair<Int, Int>): StructuralVariantContext {
+        val newStart = updatedPosition(start, confidenceInterval, newCipos)
+        val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).baseString
+
+        val mate = variantType as Paired
+        val newRemoteStart = updatedPosition(mate.otherPosition, remoteConfidenceInterval, newRemoteCipos)
+        val newRemoteRef = refGenome.getSubsequenceAt(mate.otherChromosome, newRemoteStart.toLong(), newRemoteStart.toLong()).baseString
+        val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(newRemoteStart, newRemoteRef)))
+
+        val variantContextBuilder = VariantContextBuilder(context)
+                .start(newStart.toLong())
+                .stop(newStart.toLong())
+                .alleles(alleles)
+                .attribute(REALIGN, true)
+                .attribute("CIPOS", "[${newCipos.first},${newCipos.second}]")
+                .attribute("CIRPOS", "[${newRemoteCipos.first},${newRemoteCipos.second}]")
+                .make()
+
+        return StructuralVariantContext(variantContextBuilder, normalOrdinal, tumorOrdinal)
+    }
+
+    private fun sideAlignSingle(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
+        val newCipos = sideAlignConfidenceInterval(orientation, confidenceInterval)
+        val newStart = updatedPosition(start, confidenceInterval, newCipos)
+        val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).baseString
+
+        val mate = variantType as Single
+        val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(newRef)))
+
+        val variantContextBuilder = VariantContextBuilder(context)
+                .start(newStart.toLong())
+                .stop(newStart.toLong())
+                .alleles(alleles)
+                .attribute(REALIGN, true)
+                .attribute("CIPOS", "[${newCipos.first},${newCipos.second}]")
+                .make()
+
+        return StructuralVariantContext(variantContextBuilder, normalOrdinal, tumorOrdinal)
+    }
+
+
+    private fun updatedPosition(position: Int, oldCipos: Pair<Int, Int>, newCipos: Pair<Int, Int>): Int {
+        return position + oldCipos.first - newCipos.first
+    }
+
+    private fun centreAlignConfidenceInterval(cipos: Pair<Int, Int>): Pair<Int, Int> {
+        val totalRange = cipos.second - cipos.first
+        val newCiposStart = -totalRange / 2
+        val newCiposEnd = totalRange + newCiposStart
+        return Pair(newCiposStart, newCiposEnd)
+    }
+
+    private fun sideAlignConfidenceInterval(orientation: Byte, cipos: Pair<Int, Int>): Pair<Int, Int> {
+        return if (orientation == 1.toByte()) {
+            Pair(0, cipos.second - cipos.first)
+        } else {
+            Pair(cipos.first - cipos.second, 0)
+        }
     }
 
     fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {

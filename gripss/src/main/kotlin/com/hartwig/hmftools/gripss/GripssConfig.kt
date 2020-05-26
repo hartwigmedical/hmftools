@@ -6,6 +6,7 @@ data class GripssConfig(
         val singlePonFile: String,
         val pairedPonFile: String,
         val pairedHotspotFile: String,
+        val refGenome: String,
         val filterConfig: GripssFilterConfig)
 
 data class GripssFilterConfig(
