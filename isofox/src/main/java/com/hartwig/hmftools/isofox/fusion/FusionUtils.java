@@ -52,9 +52,44 @@ public class FusionUtils
 
     public static boolean isInversion(final List<ReadRecord> reads)
     {
+        // an inversion must a) be same chromosome b) have supplementary alignment c) have same orientations around the chimeric junction
+        if(!reads.stream().anyMatch(x -> x.hasSuppAlignment()) || reads.size() != 3)
+            return false;
+
+        byte existingOrient = 0;
+        String existingChromosome = "";
+
+        for(ReadRecord read : reads)
+        {
+            if (!read.hasSuppAlignment())
+                continue;
+
+            if(existingChromosome.equals(""))
+                existingChromosome = read.Chromosome;
+            else if(!existingChromosome.equals(read.Chromosome))
+                return false;
+
+            int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
+            int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
+
+            if (scLeft == 0 && scRight == 0)
+                return false;
+
+            byte orientation = scLeft >= scRight ? POS_ORIENT : NEG_ORIENT;
+
+            if(existingOrient == 0)
+                existingOrient = orientation;
+            else if(existingOrient == orientation)
+                return true;
+        }
+
+        return false;
+
+        /*
         Set<Byte> orientations = Sets.newHashSet();
         reads.stream().filter(x -> !x.isSupplementaryAlignment()).forEach(x -> orientations.add(x.orientation()));
         return orientations.size() == 1;
+         */
     }
 
     public static int[] findSplitReadJunction(final ReadRecord read)

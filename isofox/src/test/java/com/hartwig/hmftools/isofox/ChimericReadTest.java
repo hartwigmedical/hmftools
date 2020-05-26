@@ -289,7 +289,7 @@ public class ChimericReadTest
         // will also be skipped since relates to next gene collection
         ReadRecord read4 = createMappedRead(++readId, gc1, 2000, 2019, createCigar(20, 20, 0));
 
-        // will be processed and the post gene read cached so as not to handle again in gc2
+        // will be processed (as local alt-SJ candidates) and the post gene read cached so as not to handle again in gc2
         ReadRecord read5 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         ReadRecord read6 = createMappedRead(readId, gc1, 2100, 2119, createCigar(20, 20, 0));
 
@@ -300,16 +300,17 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(2, chimericRT.getReadMap().size());
+        assertEquals(1, chimericRT.getReadMap().size());
         assertTrue(chimericRT.getReadMap().containsKey(read1.Id));
-        assertTrue(chimericRT.getReadMap().containsKey(read5.Id));
         assertFalse(chimericRT.getReadMap().containsKey(read2.Id));
         assertFalse(chimericRT.getReadMap().containsKey(read4.Id));
-        assertTrue(chimericRT.getLocalChimericReads().isEmpty());
+        assertFalse(chimericRT.getReadMap().containsKey(read5.Id));
+
+        assertEquals(1, chimericRT.getLocalChimericReads().size());
+        assertTrue(chimericRT.getLocalChimericReads().get(0).contains(read5));
+
         assertTrue(chimericRT.getJunctionPositions().contains(500));
-        assertTrue(chimericRT.getJunctionPositions().contains(1100));
         assertFalse(chimericRT.getJunctionPositions().contains(2000));
-        assertTrue(chimericRT.getJunctionPositions().contains(2100));
 
         chimericRT.clear();
         fragTracker.clear();

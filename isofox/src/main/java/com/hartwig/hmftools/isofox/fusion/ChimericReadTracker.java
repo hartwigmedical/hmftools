@@ -148,7 +148,7 @@ public class ChimericReadTracker
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:21506:2131:4925";
+    // private static final String LOG_READ_ID = "NB500901:83:HC3NFBGX9:2:12311:8336:12110";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {

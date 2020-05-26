@@ -215,16 +215,6 @@ public class ReadRecord
             return mTransExonRefs;
     }
 
-    public static boolean isTranslocation(@NotNull final SAMRecord record)
-    {
-        return !record.getReferenceName().equals(record.getMateReferenceName());
-    }
-
-    public static boolean isInversion(@NotNull final SAMRecord record)
-    {
-        return record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag();
-    }
-
     public boolean isChimeric()
     {
         if(isTranslocation() || isInversion())
