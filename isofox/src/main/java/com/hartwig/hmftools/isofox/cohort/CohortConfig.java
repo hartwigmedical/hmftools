@@ -49,6 +49,7 @@ public class CohortConfig
     public static final String CANCER_TRANS_FILE = "cancer_trans_file";
 
     public static final String SAMPLE_MUT_FILE = "sample_mut_file";
+    private static final String THREADS = "threads";
 
     public final String RootDataDir;
     public final String OutputDir;
@@ -77,6 +78,8 @@ public class CohortConfig
     public final double TpmRounding;
 
     public final FusionCohortConfig Fusions;
+
+    public final int Threads;
 
     public CohortConfig(final CommandLine cmd)
     {
@@ -140,6 +143,8 @@ public class CohortConfig
         SampleMutationsFile = cmd.getOptionValue(SAMPLE_MUT_FILE);
 
         Fusions = LoadTypes.contains(FUSION) ? new FusionCohortConfig(cmd) : null;
+
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
 
     public static boolean isValid(final CommandLine cmd)
@@ -236,6 +241,7 @@ public class CohortConfig
         FusionCohortConfig.addCmdLineOptions(options);
 
         options.addOption(LOG_DEBUG, false, "Log verbose");
+        options.addOption(THREADS, true, "Number of threads for task execution, default is 0 (off)");
 
         return options;
     }

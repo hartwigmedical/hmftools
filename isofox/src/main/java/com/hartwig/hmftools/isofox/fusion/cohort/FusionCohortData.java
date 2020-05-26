@@ -182,36 +182,4 @@ public class FusionCohortData
         return fusion;
     }
 
-    public static void writeCohortFusions(
-            final Map<String, Map<Integer,List<FusionCohortData>>> fusions, final CohortConfig config, final FusionCohortConfig fusionConfig)
-    {
-        try
-        {
-            final String outputFileName = config.formCohortFilename("fusion_cohort.csv");
-            final BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write(FusionCohortData.header());
-            writer.newLine();
-
-            for(Map<Integer, List<FusionCohortData>> chrPairLists : fusions.values())
-            {
-                for (List<FusionCohortData> fusionLists : chrPairLists.values())
-                {
-                    for (FusionCohortData fusion : fusionLists)
-                    {
-                        if (fusion.sampleCount() < fusionConfig.MinSampleThreshold)
-                            continue;
-
-                        writer.write(FusionCohortData.toCsv(fusion));
-                        writer.newLine();
-                    }
-                }
-            }
-
-            closeBufferedWriter(writer);
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write fusion cohort file: {}", e.toString());
-        }
-    }
 }

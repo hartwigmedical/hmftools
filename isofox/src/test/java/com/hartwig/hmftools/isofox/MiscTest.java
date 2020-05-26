@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
+import static java.lang.Math.ceil;
+
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;

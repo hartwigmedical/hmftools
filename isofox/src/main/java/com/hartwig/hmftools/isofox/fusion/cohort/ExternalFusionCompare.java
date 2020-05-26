@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.fusionId;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.cohort.ExternalFusionData.FUSION_SOURCE_ARRIBA;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -152,7 +151,7 @@ public class ExternalFusionCompare
         }
     }
 
-    private void writeMatchData(
+    private synchronized void writeMatchData(
             final String sampleId, final String matchType, int fusionsId, final String[] chromosomes, final int[] junctionPositions,
             final byte[] junctionOrientations, final FusionJunctionType[] junctionTypes, final String svType, final String[] geneIds,
             final String[] geneNames, int junctFrags, int discFrags, int extJunctFrags, int extDiscFrags, final String otherData)

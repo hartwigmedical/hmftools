@@ -1,31 +1,28 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static java.lang.Math.ceil;
+
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.PASSING_FUSION;
-import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilename;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.FUSION_FILE_ID;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_PASS;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -36,14 +33,11 @@ public class FusionCohort
     private final CohortConfig mConfig;
 
     private final FusionFilters mFilters;
-    private final Map<String,Integer> mFieldsMap;
     private String mFilteredFusionHeader;
     private final ExternalFusionCompare mExternalFusionCompare;
 
-    // map of chromosome-pair to start position to list of fusion junctions
-    private final Map<String, Map<Integer,List<FusionCohortData>>> mFusions;
+    private final FusionCollection mFusionCollection;
 
-    private int mFusionCount;
     private BufferedWriter mWriter;
 
     public static final String PASS_FUSION_FILE_ID = "pass_fusions.csv";
@@ -58,12 +52,13 @@ public class FusionCohort
     {
         mConfig = config;
         mFilters = new FusionFilters(mConfig.Fusions, cmd);
-        mFusions = Maps.newHashMap();
-        mFieldsMap = Maps.newHashMap();
-        mFusionCount = 0;
         mFilteredFusionHeader = null;
         mExternalFusionCompare = !mConfig.Fusions.ComparisonSources.isEmpty() ? new ExternalFusionCompare(mConfig) : null;
+        mFusionCollection = new FusionCollection(mConfig);
         mWriter = null;
+
+        if(mConfig.Fusions.WriteCombinedFusions)
+            intialiseCombinedWriter();
     }
 
     public void processFusionFiles()
@@ -81,59 +76,42 @@ public class FusionCohort
         if(!formSampleFilenames(mConfig, fileType, filenames))
             return;
 
-        ISF_LOGGER.info("loading {} sample fusion files", mConfig.SampleData.SampleIds.size());
+        int totalSampleCount = mConfig.SampleData.SampleIds.size();
 
-        int totalProcessed = 0;
-        int nextLog = 100000;
+        int taskId = 0;
+        int sampleCount = 0;
+        int pairsPerThread = mConfig.Threads > 1 ? (int)ceil(totalSampleCount / (double)mConfig.Threads) : totalSampleCount;
 
-        // load each sample's fusions and consolidate into a single list
-        for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
+        List<FusionCohortTask> fusionTasks = Lists.newArrayList();
+
+        Map<String,Path> sampleFileMap = Maps.newHashMap();
+
+        for(int i = 0; i < totalSampleCount; ++i)
         {
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path fusionFile = filenames.get(i);
 
-            ISF_LOGGER.debug("{}: sample({}) loading fusion data", i, sampleId);
+            sampleFileMap.put(sampleId, fusionFile);
 
-            final List<FusionData> sampleFusions = loadSampleFile(fusionFile);
-
-            ISF_LOGGER.info("{}: sample({}) loaded {} fusions", i, sampleId, sampleFusions.size());
-
-            if(mConfig.Fusions.WriteFilteredFusions)
+            ++sampleCount;
+            if(sampleCount >= pairsPerThread || i == totalSampleCount - 1)
             {
-                writeFilteredFusion(sampleId, sampleFusions);
-                continue;
-            }
+                fusionTasks.add(new FusionCohortTask(
+                        taskId++, mConfig, sampleFileMap,
+                        mFilters, mFusionCollection, mExternalFusionCompare, mWriter));
 
-            // add to the fusion cohort collection
-            if(mConfig.Fusions.GenerateCohort)
-            {
-                sampleFusions.forEach(x -> addToCohortCache(x, sampleId));
-            }
-
-            if(!mConfig.Fusions.ComparisonSources.isEmpty())
-            {
-                final List<FusionData> unfilteredFusions = Lists.newArrayList();
-
-                if(mConfig.Fusions.CompareUnfiltered)
-                {
-                    final String unfilteredFile = formSampleFilename(mConfig, sampleId, FUSION);
-                    unfilteredFusions.addAll(loadSampleFile(Paths.get(unfilteredFile)));
-                }
-
-                mExternalFusionCompare.compareFusions(sampleId, sampleFusions, unfilteredFusions);
-            }
-
-            if(mFusionCount > nextLog)
-            {
-                nextLog += 100000;
-                ISF_LOGGER.info("total fusion count({})", mFusionCount);
+                sampleFileMap = Maps.newHashMap();
+                sampleCount = 0;
             }
         }
 
+        ISF_LOGGER.info("loading {} sample fusion files, allocating to {} task(s)", totalSampleCount, fusionTasks.size());
+
+        executeTasks(fusionTasks);
+
         if(mConfig.Fusions.GenerateCohort)
         {
-            ISF_LOGGER.info("loaded {} fusion records, total fusion count({})", totalProcessed, mFusionCount);
-            FusionCohortData.writeCohortFusions(mFusions, mConfig, mConfig.Fusions);
+            mFusionCollection.writeCohortFusions();
             return;
         }
 
@@ -143,222 +121,88 @@ public class FusionCohort
         closeBufferedWriter(mWriter);
     }
 
-    private List<FusionData> loadSampleFile(final Path filename)
+    private boolean executeTasks(final List<FusionCohortTask> fusionTasks)
+    {
+        if(mConfig.Threads <= 1)
+        {
+            fusionTasks.forEach(x -> x.call());
+            return true;
+        }
+
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Isofox-%d").build();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+        List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
+
+        for(FusionCohortTask fusionTask : fusionTasks)
+        {
+            FutureTask futureTask = new FutureTask(fusionTask);
+
+            threadTaskList.add(futureTask);
+            executorService.execute(futureTask);
+        }
+
+        if(!checkThreadCompletion(threadTaskList))
+            return false;
+
+        executorService.shutdown();
+        return true;
+    }
+
+    private boolean checkThreadCompletion(final List<FutureTask> taskList)
     {
         try
         {
-            final List<String> lines = Files.readAllLines(filename);
-
-            if(mFieldsMap.isEmpty())
+            for (FutureTask futureTask : taskList)
             {
-                mFilteredFusionHeader = lines.get(0);
-                mFieldsMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
+                futureTask.get();
             }
-
-            lines.remove(0);
-
-            List<FusionData> fusions = Lists.newArrayList();
-
-            for(String data : lines)
-            {
-                FusionData fusion = FusionData.fromCsv(data, mFieldsMap);
-
-                if(mConfig.Fusions.WriteFilteredFusions || mConfig.Fusions.WriteCombinedFusions)
-                    fusion.cacheCsvData(data);
-
-                fusions.add(fusion);
-            }
-
-            return fusions;
         }
-        catch(IOException e)
+        catch (Exception e)
         {
-            ISF_LOGGER.error("failed to load fusion file({}): {}", filename.toString(), e.toString());
-            return Lists.newArrayList();
+            ISF_LOGGER.error("task execution error: {}", e.toString());
+            e.printStackTrace();
+            return false;
         }
+
+        return true;
     }
 
-    private void addToCohortCache(final FusionData fusion, final String sampleId)
-    {
-        if(fusion.SplitFrags < mConfig.Fusions.MinFragCount)
-            return;
-
-        if(!mConfig.RestrictedGeneIds.isEmpty())
-        {
-            if(!mConfig.RestrictedGeneIds.contains(fusion.GeneIds[SE_START]) || !mConfig.RestrictedGeneIds.contains(fusion.GeneIds[SE_END]))
-                return;
-        }
-
-        if(!mConfig.ExcludedGeneIds.isEmpty())
-        {
-            if(mConfig.ExcludedGeneIds.contains(fusion.GeneIds[SE_START]) || mConfig.ExcludedGeneIds.contains(fusion.GeneIds[SE_END]))
-                return;
-        }
-
-        final String chrPair = formChromosomePair(fusion.Chromosomes[SE_START], fusion.Chromosomes[SE_END]);
-
-        Map<Integer,List<FusionCohortData>> chrPairFusions = mFusions.get(chrPair);
-        List<FusionCohortData> fusionsByPosition = null;
-
-        int fusionStartPos = fusion.JunctionPositions[SE_START];
-
-        if(chrPairFusions == null)
-        {
-            chrPairFusions = Maps.newHashMap();
-            mFusions.put(chrPair, chrPairFusions);
-
-            fusionsByPosition = Lists.newArrayList();
-            chrPairFusions.put(fusionStartPos, fusionsByPosition);
-        }
-        else
-        {
-            fusionsByPosition = chrPairFusions.get(fusionStartPos);
-
-            if(fusionsByPosition == null)
-            {
-                fusionsByPosition = Lists.newArrayList();
-                chrPairFusions.put(fusionStartPos, fusionsByPosition);
-            }
-            else
-            {
-                // check for a match
-                FusionCohortData existingFusion = fusionsByPosition.stream().filter(x -> x.matches(fusion)).findFirst().orElse(null);
-
-                if(existingFusion != null)
-                {
-                    existingFusion.addSample(sampleId, fusion.SplitFrags);
-                    return;
-                }
-            }
-        }
-
-        FusionCohortData fusionCohortData = FusionCohortData.from(fusion);
-        fusionCohortData.addSample(sampleId, fusion.SplitFrags);
-        fusionsByPosition.add(fusionCohortData);
-        ++mFusionCount;
-    }
-
-    private void writeFilteredFusion(final String sampleId, final List<FusionData> sampleFusions)
-    {
-        // mark passing fusions, and then include any which are related to them
-        final List<FusionData> passingFusions = Lists.newArrayList();
-        final List<FusionData> nonPassingFusionsWithRelated = Lists.newArrayList();
-
-        for (FusionData fusion : sampleFusions)
-        {
-            mFilters.markKnownGeneTypes(fusion);
-
-            FusionCohortData cohortMatch = mFilters.findCohortFusion(fusion);
-
-            if(cohortMatch != null)
-                fusion.setCohortFrequency(cohortMatch.sampleCount());
-
-            if(mFilters.isPassingFusion(fusion))
-            {
-                passingFusions.add(fusion);
-            }
-            else
-            {
-                if(!fusion.relatedFusionIds().isEmpty())
-                    nonPassingFusionsWithRelated.add(fusion);
-            }
-        }
-
-        int relatedToPassing = 0;
-        for (FusionData fusion : nonPassingFusionsWithRelated)
-        {
-            boolean matchesPassing = false;
-            for(FusionData passingFusion : passingFusions)
-            {
-                if(fusion.isRelated(passingFusion))
-                {
-                    matchesPassing = true;
-
-                    if(passingFusion.hasKnownSpliceSites())
-                    {
-                        fusion.setHasRelatedKnownSpliceSites();
-                        break;
-                    }
-                }
-            }
-
-           if(matchesPassing)
-           {
-               ++relatedToPassing;
-               passingFusions.add(fusion);
-           }
-        }
-
-        passingFusions.forEach(x -> x.setFilter(FILTER_PASS));
-
-        ISF_LOGGER.info("sample({}) passing fusions({}) from total({} relatedToPass={})",
-                sampleId, passingFusions.size(), sampleFusions.size(), relatedToPassing);
-
-        writeFusions(sampleId, passingFusions, PASS_FUSION_FILE_ID);
-
-        if(mConfig.Fusions.RewriteAnnotatedFusions)
-        {
-            writeFusions(sampleId, sampleFusions, FUSION_FILE_ID);
-        }
-
-        if(mConfig.Fusions.WriteCombinedFusions)
-        {
-            writeCombinedFusions(sampleId, passingFusions);
-        }
-    }
-
-    private void writeFusions(final String sampleId, final List<FusionData> fusions, final String fileId)
-    {
-        String outputFile = mConfig.OutputDir + sampleId + ISOFOX_ID + fileId;
-
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(outputFile, false);
-            writer.write(mFilteredFusionHeader);
-            writer.write(",Filter,CohortCount,KnownFusionType");
-            writer.newLine();
-
-            for (FusionData fusion : fusions)
-            {
-                writer.write(fusion.rawData());
-                writer.write(String.format(",%s,%d,%s",
-                        fusion.filter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
-                writer.newLine();
-            }
-
-            closeBufferedWriter(writer);
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write filtered fusion file({}): {}", outputFile, e.toString());
-        }
-    }
-
-    private void writeCombinedFusions(final String sampleId, final List<FusionData> fusions)
+    private void intialiseCombinedWriter()
     {
         final String outputFile = mConfig.formCohortFilename("combined_fusions.csv");
 
         try
         {
-            if(mWriter == null)
-            {
-                mWriter = createBufferedWriter(outputFile, false);
-                mWriter.write(String.format("SampleId,%s", mFilteredFusionHeader));
-                mWriter.write(",Filter,CohortCount,KnownFusionType");
-                mWriter.newLine();
-            }
+            mWriter = createBufferedWriter(outputFile, false);
+            mWriter.write(String.format("SampleId,%s", mFilteredFusionHeader));
+            mWriter.write(",Filter,CohortCount,KnownFusionType");
+            mWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to initialise combined fusion file({}): {}", outputFile, e.toString());
+        }
+    }
 
+    public synchronized static void writeCombinedFusions(final BufferedWriter writer, final String sampleId, final List<FusionData> fusions)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
             for (FusionData fusion : fusions)
             {
-                mWriter.write(String.format("%s,%s", sampleId, fusion.rawData()));
-                mWriter.write(String.format(",%s,%d,%s",
+                writer.write(String.format("%s,%s", sampleId, fusion.rawData()));
+                writer.write(String.format(",%s,%d,%s",
                         fusion.filter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
-                mWriter.newLine();
+                writer.newLine();
             }
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to write combined fusion file({}): {}", outputFile, e.toString());
+            ISF_LOGGER.error("failed to write combined fusion file: {}", e.toString());
         }
     }
 
