@@ -229,7 +229,7 @@ Alternatively a lightweight version of GRIDSS can be used to re-analyse a set of
 
 ### Somatic Variant Input VCF (optional)
 An high quality set of somatic SNV and INDEL calls can also improve the accuracy and utility of PURPLE. 
-If provided, the variants are used for enhancing the purity and ploidy fit in 2 ways. 
+If provided, passing (or unfiltered) variants enhance the purity and ploidy fit in 2 ways. 
 Firstly, each solution receives a penalty for the proportion of somatic variants which have implied ploidies that are inconsistent with the minor and major allele ploidy. 
 Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
@@ -428,7 +428,7 @@ Note that a segment is diploid only if both the major and minor allele are betwe
 If any of the candidate solutions are highly diploid (>= 0.97) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. 
 Once in this mode, the sample status will be changed from NORMAL to one of HIGHLY_DIPLOID, NO_TUMOR or SOMATIC according to the logic described below.  
 
-First we calculate a somatic purity. 
+First we calculate a somatic purity from all passing or unfiltered variants. 
 To do this, we use a kernel density estimator to find significant (n >= 50) somatic variant allele frequency peaks. 
 Each peak implies a tumor purity of twice the frequency. 
 We select the peak that implies the largest purity within the candidate solutions as the somatic purity.
@@ -694,7 +694,7 @@ If structural or somatic VCF files have been supplied to PURPLE then correspondi
 
 ####  Structural Variant VCF
 
-The output VCF `TUMOR.purple.sv.vcf.gz` will contain all entries from the input structural variant VCF and also any entries recovered from the recovery VCF 
+The output VCF `TUMOR.purple.sv.vcf.gz` will contain all (filtered and unfiltered) entries from the input structural variant VCF and also any entries recovered from the recovery VCF 
 enriched with the following fields:
 
 Field | Count | Description 
@@ -710,7 +710,7 @@ REFG | 1 | Ref genome surrounding break point
 
 #### Somatic Variant VCF
 
-The output VCF `TUMOR.purple.somatic.vcf.gz` will contain all entries from the input somatic VCF enriched with the following fields:
+The output VCF `TUMOR.purple.somatic.vcf.gz` will contain all (filtered and unfiltered) entries from the input somatic VCF enriched with the following fields:
 
 Field | Count | Description 
 --- | --- | ---
