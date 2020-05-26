@@ -90,7 +90,6 @@ public class RnaDataLoader
         final byte[] orientations =
                 new byte[] { Byte.parseByte(items[fieldIndexMap.get("OrientUp")]), Byte.parseByte(items[fieldIndexMap.get("OrientDown")]) };
 
-        // not currently written to file
         final RnaJunctionType[] junctionTypes = new RnaJunctionType[] {
                 RnaJunctionType.valueOf(items[fieldIndexMap.get("JuncTypeUp")]),
                 RnaJunctionType.valueOf(items[fieldIndexMap.get("JuncTypeDown")]) };

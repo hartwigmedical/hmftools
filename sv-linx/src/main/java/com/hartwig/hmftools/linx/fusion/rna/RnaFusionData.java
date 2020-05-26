@@ -69,6 +69,7 @@ public class RnaFusionData
 
     private DnaRnaMatchType mDnaFusionMatchType; // no match, match on gene, match on exact SVs
     private String mDnaFusionMatchInfo;
+    private boolean mDnaReportableFusion;
 
     private String mClusterInfoUp;
     private String mClusterInfoDown;
@@ -109,6 +110,7 @@ public class RnaFusionData
 
         mDnaFusionMatchType = DnaRnaMatchType.NONE;
         mDnaFusionMatchInfo = "";
+        mDnaReportableFusion = false;
 
         mClusterInfoUp = NO_CLUSTER_INFO;
         mClusterInfoDown = NO_CLUSTER_INFO;
@@ -176,13 +178,15 @@ public class RnaFusionData
         mPhaseMatchedFusion = phaseMatched;
     }
 
-    public void setDnaFusionMatch(final DnaRnaMatchType matchType, final String matchInfo)
+    public void setDnaFusionMatch(final DnaRnaMatchType matchType, final String matchInfo, boolean reportableFusion)
     {
         mDnaFusionMatchType = matchType;
         mDnaFusionMatchInfo = matchInfo;
+        mDnaReportableFusion = reportableFusion;
     }
 
     public final DnaRnaMatchType getDnaFusionMatchType() { return mDnaFusionMatchType; }
+    public final boolean hasDnaReportableFusion() { return mDnaReportableFusion; }
 
     public final String getDnaFusionMatchInfo()
     {

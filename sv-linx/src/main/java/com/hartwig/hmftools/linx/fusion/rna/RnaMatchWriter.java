@@ -38,7 +38,7 @@ public class RnaMatchWriter
                 mWriter = createBufferedWriter(outputFilename, false);
 
                 mWriter.write("SampleId,Source,FusionId,FusionName,ViableFusion");
-                mWriter.write(",PhaseMatched,DnaFusionMatchType,KnownType,RnaPhaseMatched");
+                mWriter.write(",PhaseMatched,DnaFusionMatchType,Reportable,KnownType,RnaPhaseMatched");
                 mWriter.write(",RnaSvType,JunctionFrags,DiscordantFrags");
 
                 for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
@@ -94,9 +94,9 @@ public class RnaMatchWriter
             mWriter.write(String.format("%s,%s,%s,%s",
                     rnaFusion.SampleId, rnaFusion.Source, rnaFusion.FusionId, rnaFusion.name()));
 
-            mWriter.write(String.format(",%s,%s,%s,%s,%s",
+            mWriter.write(String.format(",%s,%s,%s,%s,%s,%s",
                     rnaFusion.isViableFusion(), rnaFusion.isPhaseMatchedFusion(), rnaFusion.getDnaFusionMatchInfo(),
-                    rnaFusion.getKnownType(), rnaFusion.hasRnaPhasedFusion()));
+                    rnaFusion.hasDnaReportableFusion(), rnaFusion.getKnownType(), rnaFusion.hasRnaPhasedFusion()));
 
             mWriter.write(String.format(",%s,%d,%d",
                     rnaFusion.rnaSvType(), rnaFusion.JunctionFragments, rnaFusion.DiscordantFragments));

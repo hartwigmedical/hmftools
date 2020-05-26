@@ -199,11 +199,14 @@ public class RnaFusionMapper
                     if(!geneName.isEmpty() && !geneName.equals(gene.GeneName))
                         continue;
 
-                    // breakends cannot be too far upstream from any gene being considered
-                    if(gene.Strand == POS_STRAND && gene.getGeneData().GeneStart - breakend.position() > maxPreGeneDistance)
-                        continue;
-                    else if(gene.Strand == NEG_STRAND && breakend.position() - gene.getGeneData().GeneEnd > maxPreGeneDistance)
-                        continue;
+                    if(!requireExactMatch)
+                    {
+                        // breakends cannot be too far upstream from any gene being considered
+                        if(gene.Strand == POS_STRAND && gene.getGeneData().GeneStart - breakend.position() > maxPreGeneDistance)
+                            continue;
+                        else if(gene.Strand == NEG_STRAND && breakend.position() - gene.getGeneData().GeneEnd > maxPreGeneDistance)
+                            continue;
+                    }
 
                     genesList.add(gene);
                 }
@@ -381,6 +384,7 @@ public class RnaFusionMapper
     private void setDnaFusionMatch(final RnaFusionData rnaFusionData)
     {
         DnaRnaMatchType matchType = DnaRnaMatchType.NONE;
+        boolean reportableFusion = false;
 
         final Transcript transUp = rnaFusionData.getMatchedfTranscripts()[FS_UPSTREAM];
         final Transcript transDown = rnaFusionData.getMatchedfTranscripts()[FS_DOWNSTREAM];
@@ -394,18 +398,19 @@ public class RnaFusionMapper
             }
 
             matchType = DnaRnaMatchType.GENES;
+            reportableFusion = dnaFusion.reportable();
 
             if(transUp != null && dnaFusion.upstreamTrans().gene().id() == transUp.gene().id()
             && transDown != null && dnaFusion.downstreamTrans().gene().id() == transDown.gene().id())
             {
                 matchType = DnaRnaMatchType.SVS;
-                break;
+               break;
             }
         }
 
         if(matchType != DnaRnaMatchType.NONE)
         {
-            rnaFusionData.setDnaFusionMatch(matchType, "");
+            rnaFusionData.setDnaFusionMatch(matchType, "", reportableFusion);
             return;
         }
 
@@ -413,7 +418,7 @@ public class RnaFusionMapper
         {
             if(entry.getKey().name().equals(rnaFusionData.name()))
             {
-                rnaFusionData.setDnaFusionMatch(DnaRnaMatchType.INVALID, entry.getValue());
+                rnaFusionData.setDnaFusionMatch(DnaRnaMatchType.INVALID, entry.getValue(), false);
             }
         }
     }
@@ -498,32 +503,22 @@ public class RnaFusionMapper
     private void setRnaFusionData(final RnaFusionData rnaFusion)
     {
         // correct gene names
-        mAnnotator.correctGeneNames(mFusionFinder.getKnownFusionData(), rnaFusion);
+        mAnnotator.correctGeneNames(mGeneTransCache, mFusionFinder.getKnownFusionData(), rnaFusion);
 
         // find transcripts which match the RNA positions
         for(int fs = FS_UPSTREAM; fs <= 1; ++fs)
         {
-            boolean isUpstream = (fs == 0);
             int rnaPosition = rnaFusion.Positions[fs];
 
-            EnsemblGeneData geneData = null;
-
             if(rnaFusion.GeneIds[fs].isEmpty())
-            {
-                geneData = mGeneTransCache.getGeneDataByName(rnaFusion.GeneNames[fs]);
+                continue;
 
-                if(geneData == null && !rnaFusion.GeneNames[fs].isEmpty())
-                {
-                    LNX_LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.name(), isUpstream ? "up" : "down");
-                    // rnaFusion.setValid(false);
-                    continue;
-                }
+            EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(rnaFusion.GeneIds[fs]);
 
-                rnaFusion.GeneIds[fs] = geneData.GeneId;
-            }
-            else
+            if(geneData == null)
             {
-                geneData = mGeneTransCache.getGeneDataById(rnaFusion.GeneIds[fs]);
+                LNX_LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.name(), streamStr(fs));
+                continue;
             }
 
             rnaFusion.Strands[fs] = geneData.Strand;

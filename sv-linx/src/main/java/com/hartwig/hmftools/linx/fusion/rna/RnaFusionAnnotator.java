@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
@@ -23,6 +24,7 @@ import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 import java.util.Arrays;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
@@ -131,7 +133,7 @@ public class RnaFusionAnnotator
         }
     }
 
-    public void correctGeneNames(final KnownFusionData refFusionData, RnaFusionData rnaFusion)
+    public void correctGeneNames(final EnsemblDataCache geneDataCache, final KnownFusionData refFusionData, RnaFusionData rnaFusion)
     {
         // take the first gene where multiple are listed unless one features in the known or promiscuous lists
         final String[] geneNames = rnaFusion.GeneNames;
@@ -170,6 +172,18 @@ public class RnaFusionAnnotator
 
             // check that gene names match Ensembl - applicable for StarFusion
             geneNames[fs] = checkAlternateGeneName(geneNames[fs]);
+
+            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(geneNames[fs]);
+
+            if(geneData == null)
+            {
+                LNX_LOGGER.warn("geneName({}) gene not found", geneNames[fs]);
+                geneNames[fs] = "";
+            }
+            else
+            {
+                rnaFusion.GeneIds[fs] = geneData.GeneId;
+            }
         }
     }
 
@@ -197,6 +211,15 @@ public class RnaFusionAnnotator
 
         if(geneName.equals("C5orf50"))
             return "SMIM23";
+
+        if(geneName.equals("CTC-349C3.1"))
+            return "C5orf66";
+
+        if(geneName.equals("RP11-500G22.2"))
+            return "ATE1-AS1";
+
+        if(geneName.equals("AC018865.8"))
+            return "FAR2P1";
 
         if(geneName.equals("C10orf68"))
             return geneName.toUpperCase();
@@ -328,6 +351,12 @@ public class RnaFusionAnnotator
 
         int homologyLength = breakend.usesStart() ?
                 breakend.getSV().getSvData().startHomologySequence().length() : breakend.getSV().getSvData().endHomologySequence().length();
+
+        if(homologyLength == 0)
+        {
+            // the insert sequence may explain the difference
+            return breakend.getSV().getSvData().insertSequence().length();
+        }
 
         return (homologyLength / 2) + (homologyLength % 2);
     }

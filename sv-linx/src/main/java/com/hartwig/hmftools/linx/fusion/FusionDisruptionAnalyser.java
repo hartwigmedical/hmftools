@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THR
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.RNA_FUSION_SOURCE_ISOFOX;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
