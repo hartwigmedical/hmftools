@@ -62,8 +62,7 @@ public class ReportingDbTest {
                 writer.close();
             }
 
-            // TODO Fix
-//            ReportingDb.addSequenceReportToReportingDb(reportDatesTsv.getPath(), ExampleAnalysisTestFactory.buildCOLO829());
+            ReportingDb.addSequenceReportToReportingDb(reportDatesTsv.getPath(), ExampleAnalysisTestFactory.buildCOLO829(false, ""));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
                     ExampleAnalysisTestFactory.buildQCFailReport("LowMolecularTumorSample", QCFailReason.SHALLOW_SEQ_LOW_PURITY));
