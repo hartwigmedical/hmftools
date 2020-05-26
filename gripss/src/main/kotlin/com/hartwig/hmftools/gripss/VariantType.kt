@@ -11,6 +11,10 @@ data class Single(
     override fun toString(): String {
         return if (startOrientation == 1.toByte()) "${alt}${insertSequence}." else ".${insertSequence}${alt}"
     }
+
+    fun altString(alt: String): String {
+        return if (startOrientation == 1.toByte()) "${alt}${insertSequence}." else ".${insertSequence}${alt}"
+    }
 }
 
 data class Translocation(
@@ -83,6 +87,11 @@ sealed class Paired : VariantType() {
             else -> "]$otherChromosome:$otherPosition]$insertSequence$alt"
         }
     }
+
+    fun altString(position: Int, alt: String): String {
+        return Insertion(alt, insertSequence, otherChromosome, position, startOrientation, endOrientation, 0).altString()
+    }
+
 }
 
 sealed class VariantType {
