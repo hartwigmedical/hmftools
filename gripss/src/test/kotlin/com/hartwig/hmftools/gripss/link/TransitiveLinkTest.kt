@@ -10,7 +10,6 @@ import org.junit.Test
 
 class TransitiveLinkTest {
 
-
     @Test
     fun testDUPvsINScase() {
         val v1 = VariantContextTestFactory.decode("4\t7873818\tgridss23_17823o\tA\tAAGAGGAAGAGTATTATTAGACCCAGTGATTTGC[4:7873819[\t4572.04\tPASS\tAS=1;ASQ=2268.61;ASRP=1;ASSR=176;BA=0;BANRP=0;BANRPQ=0.00;BANSR=0;BANSRQ=0.00;BAQ=0.00;BASRP=0;BASSR=0;BEALN=4:7873819|+|33M|60;BEID=asm23-312191,asm23-82937;BEIDH=0,0;BEIDL=0,0;BQ=0.00;BSC=0;BSCQ=0.00;BUM=0;BUMQ=0.00;BVF=0;CAS=0;CASQ=0.00;CQ=4572.04;EVENT=gridss23_17823;IC=11;IHOMPOS=0,0;IQ=586.76;LOCAL_LINKED_BY=dsb671;PARID=gridss23_17823h;RAS=1;RASQ=1716.68;REF=206;REFPAIR=123;REMOTE_LINKED_BY;RP=0;RPQ=0.00;SB=0.5205479;SC=114M1X;SR=0;SRQ=0.00;SVTYPE=BND;TAF=0.353;VF=104\tGT:ASQ:ASRP:ASSR:BANRP:BANRPQ:BANSR:BANSRQ:BAQ:BASRP:BASSR:BQ:BSC:BSCQ:BUM:BUMQ:BVF:CASQ:IC:IQ:QUAL:RASQ:REF:REFPAIR:RP:RPQ:SR:SRQ:VF\t.:33.56:0:2:0:0.00:0:0.00:0.00:0:0:0.00:0:0.00:0:0.00:0:0.00:0:0.00:33.56:0.00:19:25:0:0.00:0:0.00:2\t.:2235.05:1:174:0:0.00:0:0.00:0.00:0:0:0.00:0:0.00:0:0.00:0:0.00:11:586.76:4538.48:1716.68:187:98:0:0.00:0:0.00:102").toSv()
@@ -24,15 +23,11 @@ class TransitiveLinkTest {
         assertTrue(result.isNotEmpty())
         assertEquals("gridss23_35386h<PAIR>gridss23_35386o", result[0].toString())
 
-        println(victim.transitiveLink(v1))
-        println(victim.transitiveLink(v2))
-        println(victim.transitiveLink(v3))
-        println(victim.transitiveLink(v4))
-
-//        assertTrue(victim.transitiveLink(v1).isNotEmpty())
-//        assertTrue(victim.transitiveLink(v2).isNotEmpty())
-//        assertTrue(victim.transitiveLink(v3).isNotEmpty())
-//        assertTrue(victim.transitiveLink(v4).isNotEmpty())
+        // Check it is all symmetric
+        assertTrue(victim.transitiveLink(v1).isNotEmpty())
+        assertTrue(victim.transitiveLink(v2).isNotEmpty())
+        assertTrue(victim.transitiveLink(v3).isNotEmpty())
+        assertTrue(victim.transitiveLink(v4).isNotEmpty())
 
     }
 

@@ -47,7 +47,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 
 
-    fun confidenceIntervalsOverlap(other: StructuralVariantContext): Boolean {
+    fun confidenceIntervalsOverlap(other: StructuralVariantContext, additionalDistance: Pair<Int, Int> = Pair(0, 0)): Boolean {
         return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
     }
 

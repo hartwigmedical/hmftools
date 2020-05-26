@@ -26,16 +26,12 @@ class VariantStore(
         return variants
     }
 
+    fun selectAllInContig(contig: String): List<StructuralVariantContext> {
+        return variantsByChromosome.getOrDefault(contig, Collections.emptyList())
+    }
+
     fun select(vcfId: String): StructuralVariantContext {
         return variantsById[vcfId]!!
-    }
-
-    fun contigsWithVariants(): Set<String> {
-        return variantsByChromosome.keys
-    }
-
-    fun selectContigVariants(contig: String): List<StructuralVariantContext> {
-        return variantsByChromosome.getOrDefault(contig, Collections.emptyList())
     }
 
     fun selectOthersNearby(variant: StructuralVariantContext, maxDistance: Pair<Int, Int>, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
