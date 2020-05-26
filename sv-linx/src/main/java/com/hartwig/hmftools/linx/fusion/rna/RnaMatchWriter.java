@@ -73,7 +73,7 @@ public class RnaMatchWriter
                     mWriter.write(String.format(",%s", fieldsStr.toString()));
                 }
 
-                mWriter.write(",ChainInfo");
+                mWriter.write(",ChainInfo,OtherRnaData");
 
                 mWriter.newLine();
             }
@@ -149,7 +149,7 @@ public class RnaMatchWriter
                 }
             }
 
-            mWriter.write(String.format(",%s", rnaFusion.getChainInfo()));
+            mWriter.write(String.format(",%s,%s", rnaFusion.getChainInfo(), rnaFusion.OtherData));
             mWriter.newLine();
         }
         catch (final IOException e)

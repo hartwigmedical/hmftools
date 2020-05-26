@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -43,6 +42,8 @@ public class RnaFusionData
     public final int JunctionFragments;
     public final int DiscordantFragments;
     public final RnaJunctionType[] JunctionTypes;
+
+    public final String OtherData;
 
     // annotations
     private boolean mIsValid;
@@ -76,8 +77,9 @@ public class RnaFusionData
     private String mChainInfo;
 
     public RnaFusionData(
-            final String sampleId, final String source, final String fusionId, final String[] geneIds, final String[] geneNames, final String[] chromosomes,
-            final int[] positions, final byte[] orientations, int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes)
+            final String sampleId, final String source, final String fusionId, final String[] geneIds, final String[] geneNames,
+            final String[] chromosomes, final int[] positions, final byte[] orientations,
+            int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes, final String otherData)
     {
         SampleId = sampleId;
         Source = source;
@@ -90,6 +92,7 @@ public class RnaFusionData
         JunctionFragments = junctionReadCount;
         DiscordantFragments = spanningFragCount;
         JunctionTypes = junctionTypes;
+        OtherData = otherData;
 
         Strands = new byte[FS_PAIR];
 

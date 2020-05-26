@@ -67,9 +67,11 @@ public class RnaDataLoader
         int junctionFrags = Integer.parseInt(items[fieldIndexMap.get("SplitFrags")]) + Integer.parseInt(items[fieldIndexMap.get("RealignedFrags")]);
         int discordantFrags = Integer.parseInt(items[fieldIndexMap.get("DiscordantFrags")]);
 
+        final String otherData = "";
+
         return new RnaFusionData(
                 sampleId, RNA_FUSION_SOURCE_ISOFOX, fusionId, geneIds, geneNames, chromosomes, positions, orientations,
-                junctionFrags, discordantFrags, junctionTypes);
+                junctionFrags, discordantFrags, junctionTypes, otherData);
     }
 
     private static RnaFusionData fromMatched(final String data, final Map<String,Integer> fieldIndexMap)
@@ -112,9 +114,11 @@ public class RnaDataLoader
             discordantFrags = Integer.parseInt(items[fieldIndexMap.get("ExtDiscFrags")]);
         }
 
+        final String otherData = items[fieldIndexMap.get("OtherData")];
+
         return new RnaFusionData(
                 sampleId, matchType, fusionId, geneIds, geneNames, chromosomes, positions, orientations,
-                junctionFrags, discordantFrags, junctionTypes);
+                junctionFrags, discordantFrags, junctionTypes, otherData);
     }
 
     private static RnaFusionData fromArriba(int index, final String data, final Map<String,Integer> fieldIndexMap)
@@ -154,9 +158,11 @@ public class RnaDataLoader
         if(spliceSites[FS_DOWNSTREAM].equals("splice-site"))
             junctionTypes[FS_DOWNSTREAM] = KNOWN;
 
+        final String otherData = "";
+
         return new RnaFusionData(
                 sampleId, RNA_FUSION_SOURCE_ARRIBA, String.valueOf(index), geneIds, geneNames, chromosomes, positions, orientations,
-                splitFragments, discordantFragments, junctionTypes);
+                splitFragments, discordantFragments, junctionTypes, otherData);
     }
 
     private static RnaFusionData fromStarFusion(int index, final String data, final Map<String,Integer> fieldIndexMap)
@@ -193,6 +199,6 @@ public class RnaDataLoader
 
         return new RnaFusionData(
                 sampleId, RNA_FUSION_SOURCE_STARFUSION, String.valueOf(index), geneIds, geneNames, chromosomes, positions, orientations,
-                junctionCount, spanningCount, junctionTypes);
+                junctionCount, spanningCount, junctionTypes, "");
     }
 }

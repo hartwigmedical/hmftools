@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
@@ -262,6 +261,12 @@ public class RnaFusionAnnotator
 
         if(geneName.equals("RP11-93L9.1"))
             return "LINC01091";
+
+        if(geneName.equals("AC129929.5"))
+            return "CD81-AS1";
+
+        if(geneName.equals("GOLGA2B"))
+            return "GOLGA2P5";
 
         return geneName;
     }

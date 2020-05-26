@@ -391,6 +391,29 @@ public class RnaFusionMapper
 
         for(final GeneFusion dnaFusion : mDnaFusions)
         {
+            if(transUp != null && dnaFusion.upstreamTrans().gene().id() == transUp.gene().id()
+            && transDown != null && dnaFusion.downstreamTrans().gene().id() == transDown.gene().id())
+            {
+                matchType = DnaRnaMatchType.SVS;
+                reportableFusion = dnaFusion.reportable();
+
+                if(!rnaFusionData.GeneNames[FS_UPSTREAM].isEmpty() && !rnaFusionData.GeneNames[FS_DOWNSTREAM].isEmpty()
+                && (!dnaFusion.upstreamTrans().geneName().equals(rnaFusionData.GeneNames[FS_UPSTREAM])
+                || !dnaFusion.downstreamTrans().geneName().equals(rnaFusionData.GeneNames[FS_DOWNSTREAM])))
+                {
+                    LNX_LOGGER.debug("genePair rna({}-{}) differs from dna({}-{}) for same SVs({} & {})",
+                            rnaFusionData.GeneNames[FS_UPSTREAM], rnaFusionData.GeneNames[FS_DOWNSTREAM],
+                            dnaFusion.upstreamTrans().geneName(), dnaFusion.downstreamTrans().geneName(),
+                            transUp.gene().id(), transDown.gene().id());
+
+                    // override the gene selection for downstream analysis
+                    rnaFusionData.GeneNames[FS_UPSTREAM] = dnaFusion.upstreamTrans().geneName();
+                    rnaFusionData.GeneNames[FS_DOWNSTREAM] = dnaFusion.downstreamTrans().geneName();
+                }
+
+                break;
+            }
+
             if(!dnaFusion.upstreamTrans().geneName().equals(rnaFusionData.GeneNames[FS_UPSTREAM])
             || !dnaFusion.downstreamTrans().geneName().equals(rnaFusionData.GeneNames[FS_DOWNSTREAM]))
             {
@@ -399,13 +422,6 @@ public class RnaFusionMapper
 
             matchType = DnaRnaMatchType.GENES;
             reportableFusion = dnaFusion.reportable();
-
-            if(transUp != null && dnaFusion.upstreamTrans().gene().id() == transUp.gene().id()
-            && transDown != null && dnaFusion.downstreamTrans().gene().id() == transDown.gene().id())
-            {
-                matchType = DnaRnaMatchType.SVS;
-               break;
-            }
         }
 
         if(matchType != DnaRnaMatchType.NONE)
