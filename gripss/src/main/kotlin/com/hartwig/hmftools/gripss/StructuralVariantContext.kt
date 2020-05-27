@@ -7,9 +7,10 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
-import kotlin.math.abs
 
 const val SHORT_EVENT_SIZE = 1000
+
+typealias Cipos = Pair<Int, Int>
 
 class StructuralVariantContext(private val context: VariantContext, private val normalOrdinal: Int = 0, private val tumorOrdinal: Int = 1) {
     private companion object {
@@ -48,15 +49,19 @@ class StructuralVariantContext(private val context: VariantContext, private val 
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 
-    fun realign(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
+    fun realign(refGenome: IndexedFastaSequenceFile, comparator: ContigComparator): StructuralVariantContext {
         if (insertSequenceLength > 0) {
             return this
         }
 
-        if (precise && abs(confidenceInterval.first - confidenceInterval.second) > 1) {
-            if (!isSingle) {
-
-                return centreAlignPaired(refGenome)
+        if (precise && !isSingle) {
+            val mate = variantType as Paired
+            val invertStart = orientation == mate.endOrientation && comparator.compare(contig, start, mate.otherChromosome, mate.otherPosition) > 1
+            val invertEnd = orientation == mate.endOrientation && !invertStart
+            val centeredCipos = centreAlignConfidenceInterval(invertStart, confidenceInterval)
+            val centeredRemoteCipos = centreAlignConfidenceInterval(invertEnd, remoteConfidenceInterval)
+            if (centeredCipos != confidenceInterval || centeredRemoteCipos != remoteConfidenceInterval) {
+                return realignPaired(refGenome, centeredCipos, centeredRemoteCipos)
             }
         }
 
@@ -78,13 +83,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
         return realignPaired(refGenome, newCipos, newRemoteCipos)
     }
 
-    private fun centreAlignPaired(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
-        val newCipos = centreAlignConfidenceInterval(confidenceInterval)
-        val newRemoteCipos = centreAlignConfidenceInterval(remoteConfidenceInterval)
-        return realignPaired(refGenome, newCipos, newRemoteCipos)
-    }
-
-    private fun realignPaired(refGenome: IndexedFastaSequenceFile, newCipos: Pair<Int, Int>, newRemoteCipos: Pair<Int, Int>): StructuralVariantContext {
+    private fun realignPaired(refGenome: IndexedFastaSequenceFile, newCipos: Cipos, newRemoteCipos: Cipos): StructuralVariantContext {
         val newStart = updatedPosition(start, confidenceInterval, newCipos)
         val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).baseString
 
@@ -123,19 +122,22 @@ class StructuralVariantContext(private val context: VariantContext, private val 
         return StructuralVariantContext(variantContextBuilder, normalOrdinal, tumorOrdinal)
     }
 
-
-    private fun updatedPosition(position: Int, oldCipos: Pair<Int, Int>, newCipos: Pair<Int, Int>): Int {
+    private fun updatedPosition(position: Int, oldCipos: Cipos, newCipos: Cipos): Int {
         return position + oldCipos.first - newCipos.first
     }
 
-    private fun centreAlignConfidenceInterval(cipos: Pair<Int, Int>): Pair<Int, Int> {
+    private fun centreAlignConfidenceInterval(invert: Boolean, cipos: Cipos): Cipos {
         val totalRange = cipos.second - cipos.first
         val newCiposStart = -totalRange / 2
         val newCiposEnd = totalRange + newCiposStart
-        return Pair(newCiposStart, newCiposEnd)
+        return if (invert) {
+            Pair(-newCiposEnd, -newCiposStart)
+        } else {
+            Pair(newCiposStart, newCiposEnd)
+        }
     }
 
-    private fun sideAlignConfidenceInterval(orientation: Byte, cipos: Pair<Int, Int>): Pair<Int, Int> {
+    private fun sideAlignConfidenceInterval(orientation: Byte, cipos: Cipos): Cipos {
         return if (orientation == 1.toByte()) {
             Pair(0, cipos.second - cipos.first)
         } else {
@@ -316,4 +318,9 @@ class StructuralVariantContext(private val context: VariantContext, private val 
     override fun toString(): String {
         return "${context.id} ${context.contig}:${context.start} QUAL:${context.phredScaledQual} Orientation:${variantType.startOrientation} ${context.alleles[0].displayString}  > ${context.alleles[1].displayString}"
     }
+
+    private fun Cipos.invert(): Cipos {
+        return Pair(-this.second, -this.first)
+    }
+
 }

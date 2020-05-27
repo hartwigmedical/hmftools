@@ -22,7 +22,7 @@ fun main(args: Array<String>) {
     val pairedPonFile = "/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe"
     val pairedHotspotFile = "/Users/jon/hmf/resources/gridss_hotspot_breakpoint.bedpe"
 //    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
-    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.chr2.vcf"
+    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.chr8.vcf"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
     val refGenome = "/Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta"
     val filterConfig = GripssFilterConfig.default()
@@ -46,7 +46,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     override fun run() {
         logger.info("Reading VCF file: ${config.inputVcf}")
         val contigComparator = ContigComparator(fileReader.fileHeader.sequenceDictionary)
-        val variantStore = VariantStore(hardFilterVariants(fileReader))
+        val variantStore = VariantStore(hardFilterVariants(fileReader, contigComparator))
 
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
         val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
@@ -104,7 +104,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
     }
 
-    private fun hardFilterVariants(fileReader: VCFFileReader): List<StructuralVariantContext> {
+    private fun hardFilterVariants(fileReader: VCFFileReader, contigComparator: ContigComparator): List<StructuralVariantContext> {
         val unfiltered: MutableSet<String> = mutableSetOf()
         val hardFilter: MutableSet<String> = mutableSetOf()
         val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()
@@ -115,7 +115,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
                 structuralVariant.mateId?.let { hardFilter.add(it) }
             } else {
                 unfiltered.add(variantContext.id)
-                structuralVariants.add(structuralVariant.realign(refGenome))
+                structuralVariants.add(structuralVariant.realign(refGenome, contigComparator))
             }
         }
 
