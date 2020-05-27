@@ -51,12 +51,12 @@ We also have 7 special filters applying to specific short variant categories:
 
 Filter | Default | Scope | Description 
 ---|---|---|---
-minDelDupLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
-shortInvMaxHomLength | 6 | INV(<40b) | Very short INV with high homology are a common sequencer artefact
-shortDelMaxHomLength | 6 | DEL(<1kb) | Short DEL with high homology are a common mapping artefact
-shortDelDupStrandBias | TRUE | DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
-shortDelDupSRSupport | TRUE | DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read
-shortDelDupNormalSRSupport | FALSE | DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read in the normal
+minLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
+maxHomLengthShortInv | 6 | INV(<40b) | Very short INV with high homology are a common sequencer artefact
+maxInexactHomLengthShortDel | 6 | DEL(<1kb) | Short DEL with high homology are a common mapping artefact
+shortStrandBias | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
+shortSRTumorSupport | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read
+shortSRNormalSupport | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read in the normal
 small.replacement.fp | | DEL(<1kb) | *TO DO!!!*
 
 ## 4. Linkage, deduplication and rescue
