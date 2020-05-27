@@ -90,5 +90,4 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is not filtered as DEDUP is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocaitons or intrachromosomal variants of length greater than 10kb regardless of soft filtering.
 
-<JON - please add details of known file>
 
