@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc;
+package com.hartwig.hmftools.vicc;
 
 import java.io.IOException;
 import java.util.List;
