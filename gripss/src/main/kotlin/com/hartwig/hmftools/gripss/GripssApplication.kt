@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.gripss
 
-import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.gripss.dedup.DedupPair
 import com.hartwig.hmftools.gripss.dedup.DedupSingle
@@ -22,8 +21,8 @@ fun main(args: Array<String>) {
     val singlePonFile = "/Users/jon/hmf/resources/gridss_pon_single_breakend.bed"
     val pairedPonFile = "/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe"
     val pairedHotspotFile = "/Users/jon/hmf/resources/gridss_hotspot_breakpoint.bedpe"
-    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
-//    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.chr1.vcf"
+//    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
+    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.chr2.vcf"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
     val refGenome = "/Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta"
     val filterConfig = GripssFilterConfig.default()
@@ -53,12 +52,10 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
-        val breakends = Breakend.fromBedFile(config.singlePonFile)
-        val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
-        val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
-//        val ponStore = LocationStore(listOf(), listOf(), PON_ADDITIONAL_DISTANCE)
-
-
+//        val breakends = Breakend.fromBedFile(config.singlePonFile)
+//        val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
+//        val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
+        val ponStore = LocationStore(listOf(), listOf(), PON_ADDITIONAL_DISTANCE)
 
         logger.info("Identifying hotspot variants")
         val hotspots = hotspotStore.matching(variantStore.selectAll()).map { it.vcfId }.toSet()

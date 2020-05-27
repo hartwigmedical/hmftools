@@ -97,8 +97,8 @@ class StructuralVariantContext(private val context: VariantContext, private val 
                 .stop(newStart.toLong())
                 .alleles(alleles)
                 .attribute(REALIGN, true)
-                .attribute("CIPOS", "[${newCipos.first},${newCipos.second}]")
-                .attribute("CIRPOS", "[${newRemoteCipos.first},${newRemoteCipos.second}]")
+                .attribute("CIPOS", listOf(newCipos.first, newCipos.second))
+                .attribute("CIRPOS", listOf(newRemoteCipos.first, newRemoteCipos.second))
                 .make()
 
         return StructuralVariantContext(variantContextBuilder, normalOrdinal, tumorOrdinal)
@@ -117,7 +117,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
                 .stop(newStart.toLong())
                 .alleles(alleles)
                 .attribute(REALIGN, true)
-                .attribute("CIPOS", "[${newCipos.first},${newCipos.second}]")
+                .attribute("CIPOS", listOf(newCipos.first, newCipos.second))
                 .make()
 
         return StructuralVariantContext(variantContextBuilder, normalOrdinal, tumorOrdinal)
