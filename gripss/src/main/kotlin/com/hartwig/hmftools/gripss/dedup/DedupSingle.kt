@@ -18,16 +18,17 @@ class DedupSingle(val duplicates: Set<String>) {
                 val others = variantStore.selectOthersNearby(sgl, 0, duplicateFilter)
                 if (!others.all { x -> keepOriginal(sglPasses, sgl, x, softFilterStore) }) {
                     duplicates.add(sgl.vcfId)
+                } else {
+                    others.forEach { x ->
+                        x.vcfId.let { duplicates.add(it) }
+                        x.mateId?.let {  duplicates.add(it)}
+                    }
                 }
             }
             return DedupSingle(duplicates)
         }
 
         private fun keepOriginal(originalPass: Boolean, original: StructuralVariantContext, alternative: StructuralVariantContext, softFilterStore: SoftFilterStore): Boolean {
-            if (!alternative.isSingle) {
-                return false
-            }
-
             val alternativePass = softFilterStore.isPassing(alternative.vcfId)
             if (originalPass != alternativePass) {
                 return originalPass

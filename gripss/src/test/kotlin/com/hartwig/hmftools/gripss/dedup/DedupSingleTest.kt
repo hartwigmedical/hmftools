@@ -19,9 +19,9 @@ class DedupSingleTest {
     @Test
     fun testSingleDedup() {
         val passingSingle = create("sgl", 100, "A.", 1000)
-        val failingPair = create("pair", 101, "A[2:222[", 1)
-        val variantStore = VariantStore(listOf(passingSingle, failingPair))
-        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+        val passingPair = create("pair", 101, "A[2:222[", 1000)
+        val variantStore = VariantStore(listOf(passingSingle, passingPair))
+        val softFilterStore = SoftFilterStore(mapOf())
 
         val victim = DedupSingle(variantStore, softFilterStore)
         assertFalse(victim.duplicates.contains("pair"))
@@ -29,11 +29,36 @@ class DedupSingleTest {
     }
 
     @Test
+    fun testKeepSingleOverPairBecauseOfQual() {
+        val passingSingle = create("sgl", 100, "A.", 1001)
+        val passingPair = create("pair", 101, "A[2:222[", 1000)
+        val variantStore = VariantStore(listOf(passingSingle, passingPair))
+        val softFilterStore = SoftFilterStore(mapOf())
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("sgl"))
+        assertTrue(victim.duplicates.contains("pair"))
+    }
+
+    @Test
+    fun testKeepSingleOverPairBecauseOfPairFailing() {
+        val passingSingle = create("sgl", 100, "A.", 1)
+        val passingPair = create("pair", 101, "A[2:222[", 1000)
+        val variantStore = VariantStore(listOf(passingSingle, passingPair))
+        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+
+        val victim = DedupSingle(variantStore, softFilterStore)
+        assertFalse(victim.duplicates.contains("sgl"))
+        assertTrue(victim.duplicates.contains("pair"))
+    }
+
+
+    @Test
     fun testWithinRange() {
         val passingSingle = create("sgl", 90, "A.", 1000)
-        val failingPair = create("pair", 110, "A[2:222[", 1)
-        val variantStore = VariantStore(listOf(passingSingle, failingPair))
-        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+        val passingPair = create("pair", 110, "A[2:222[", 1000)
+        val variantStore = VariantStore(listOf(passingSingle, passingPair))
+        val softFilterStore = SoftFilterStore(mapOf())
 
         val victim = DedupSingle(variantStore, softFilterStore)
         assertFalse(victim.duplicates.contains("pair"))
@@ -117,9 +142,9 @@ class DedupSingleTest {
     @Test
     fun testCanStillMatchAgainstImprecise() {
         val passingSingle = create("sgl", 90, "A.", 1000)
-        val imprecise = create("pair", 100, "A[2:222[", 1, precise = false)
+        val imprecise = create("pair", 100, "A[2:222[", 1001, precise = false)
         val variantStore = VariantStore(listOf(passingSingle, imprecise))
-        val softFilterStore = SoftFilterStore(mapOf(Pair("pair", fail)))
+        val softFilterStore = SoftFilterStore(mapOf())
 
         val victim = DedupSingle(variantStore, softFilterStore)
         assertFalse(victim.duplicates.contains("pair"))
