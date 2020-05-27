@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 import com.hartwig.hmftools.vicc.selection.ImmutableViccQuerySelection;
+import com.hartwig.hmftools.vicc.selection.ViccQuerySelection;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -28,18 +30,20 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class ViccExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
     private static final boolean RUN_ON_SERVER = false;
-    private static final boolean TRANSVAR_ENABLED = false;
-    private static final boolean WRITE_HOTSPOTS_TO_VCF = false;
+    private static final boolean TRANSVAR_ENABLED = true;
+    private static final boolean WRITE_HOTSPOTS_TO_VCF = true;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -62,8 +66,9 @@ public class ViccExtractorTestApplication {
 
         ViccSource source = ViccSource.ONCOKB;
         LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
-        List<ViccEntry> viccEntries =
-                ViccJsonReader.readSelection(viccJsonPath, ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).build());
+        ViccQuerySelection querySelection = ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).maxEntriesToInclude(2).
+                build();
+        List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJsonPath, querySelection);
         LOGGER.info(" Read {} entries", viccEntries.size());
 
         ViccExtractor viccExtractor =
@@ -156,7 +161,11 @@ public class ViccExtractorTestApplication {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
                 .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .build();
+
+        VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
+        writer.writeHeader(header);
 
         for (ViccExtractionResult result : extractionResults) {
             for (Map.Entry<Feature, List<VariantHotspot>> entry : result.hotspotsPerFeature().entrySet()) {
@@ -165,16 +174,21 @@ public class ViccExtractorTestApplication {
                 for (VariantHotspot hotspot : entry.getValue()) {
                     List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
-                    writer.add(new VariantContextBuilder().noGenotypes()
+                    VariantContext variantContext = new VariantContextBuilder().noGenotypes()
+                            .source("VICC")
                             .chr(hotspot.chromosome())
                             .start(hotspot.position())
                             .alleles(hotspotAlleles)
                             .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
                             .attribute("feature", featureAttribute)
-                            .make());
+                            .make();
+
+                    LOGGER.debug("Writing {}", variantContext);
+                    writer.add(variantContext);
                 }
             }
         }
+        writer.close();
     }
 
     @NotNull
