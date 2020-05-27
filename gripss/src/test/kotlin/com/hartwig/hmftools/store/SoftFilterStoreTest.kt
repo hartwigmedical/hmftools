@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.store
 
 import com.hartwig.hmftools.gripss.DEDUP
+import com.hartwig.hmftools.gripss.MIN_LENGTH
 import com.hartwig.hmftools.gripss.MIN_QUAL
-import com.hartwig.hmftools.gripss.MIN_SIZE
 import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import junit.framework.Assert.assertFalse
 import junit.framework.Assert.assertTrue
@@ -13,8 +13,8 @@ class SoftFilterStoreTest {
     @Test
     fun testEligibleForRescue() {
         val filters: MutableMap<String, Set<String>> = HashMap()
-        filters["id1"] = setOf(MIN_QUAL, MIN_SIZE)
-        filters["id2"] = setOf(MIN_SIZE, DEDUP)
+        filters["id1"] = setOf(MIN_QUAL, MIN_LENGTH)
+        filters["id2"] = setOf(MIN_LENGTH, DEDUP)
         filters["id3"] = setOf(MIN_QUAL)
         val victim = SoftFilterStore(filters)
         assertTrue(victim.isEligibleForRescue("id1"))
@@ -39,8 +39,8 @@ class SoftFilterStoreTest {
     @Test
     fun testIsPassing() {
         val filters: MutableMap<String, Set<String>> = HashMap()
-        filters["id1"] = setOf(MIN_QUAL, MIN_SIZE)
-        filters["id2"] = setOf(MIN_SIZE, DEDUP)
+        filters["id1"] = setOf(MIN_QUAL, MIN_LENGTH)
+        filters["id2"] = setOf(MIN_LENGTH, DEDUP)
         val victim = SoftFilterStore(filters)
         assertFalse(victim.isPassing("id1"))
         assertFalse(victim.isPassing("id2"))
@@ -50,8 +50,8 @@ class SoftFilterStoreTest {
     @Test
     fun testMateFilters() {
         val filters: MutableMap<String, Set<String>> = HashMap()
-        filters["id1"] = setOf(MIN_QUAL, MIN_SIZE)
-        filters["id2"] = setOf(MIN_SIZE, DEDUP)
+        filters["id1"] = setOf(MIN_QUAL, MIN_LENGTH)
+        filters["id2"] = setOf(MIN_LENGTH, DEDUP)
         val victim = SoftFilterStore(filters)
         assertTrue(victim.filters("id1", null).isNotEmpty())
         assertTrue(victim.filters("id2", null).isNotEmpty())

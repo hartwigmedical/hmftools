@@ -178,9 +178,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
             result.add(MIN_TUMOR_AF)
         }
 
-        if (strandBiasFilter(config.maxShortStrandBias)) {
-            result.add(SHORT_STRAND_BIAS)
-        }
+
 
         if (qualFilter(config.minQualBreakEnd, config.minQualBreakPoint)) {
             result.add(MIN_QUAL)
@@ -192,10 +190,6 @@ class StructuralVariantContext(private val context: VariantContext, private val 
 
         if (polyGCFilter()) {
             result.add(MAX_POLY_G_LENGTH)
-        }
-
-        if (homologyLengthFilter(config.maxHomLength)) {
-            result.add(MAX_HOM_LENGTH)
         }
 
         if (homologyLengthFilterShortInversion(config.maxHomLengthShortInversion)) {
@@ -218,16 +212,17 @@ class StructuralVariantContext(private val context: VariantContext, private val 
             result.add(SHORT_SR_NORMAL)
         }
 
-        if (longDPSupportFilter()) {
-            result.add(LONG_DP_SUPPORT)
+        if (strandBiasFilter(config.maxShortStrandBias)) {
+            result.add(SHORT_STRAND_BIAS)
         }
 
-        if (breakendAssemblyReadPairsFilter()) {
-            result.add(BREAK_END_ASSEMBLY_READ_PAIR)
+        if (discordantPairSupportFilter() || breakendAssemblyReadPairsFilter()) {
+            result.add(DISCORDANT_PAIR_SUPPORT)
         }
 
-        if (minSizeFilter(config.minSize)) {
-            result.add(MIN_SIZE)
+
+        if (minLengthFilter(config.minSize)) {
+            result.add(MIN_LENGTH)
         }
 
         return result
@@ -254,18 +249,13 @@ class StructuralVariantContext(private val context: VariantContext, private val 
         return isSingle && context.breakendAssemblyReadPairs() == 0
     }
 
-    fun minSizeFilter(minSize: Int): Boolean {
+    fun minLengthFilter(minSize: Int): Boolean {
         return when (variantType) {
             is Deletion -> variantType.length + variantType.insertSequence.length - 1 < minSize
             is Insertion -> variantType.length + variantType.insertSequence.length + 1 < minSize
             is Duplication -> variantType.length + variantType.insertSequence.length < minSize
             else -> false
         }
-    }
-
-
-    fun homologyLengthFilter(maxHomLength: Int): Boolean {
-        return !isSingle && context.homologyLength() > maxHomLength
     }
 
     fun homologyLengthFilterShortInversion(maxHomLength: Int, maxInversionLength: Int = 40): Boolean {
@@ -280,7 +270,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
         return isShort && normalGenotype.splitRead() > 0
     }
 
-    fun longDPSupportFilter(): Boolean {
+    fun discordantPairSupportFilter(): Boolean {
         return !isSingle && !isShort
                 && normalGenotype.readPairs() == 0
                 && normalGenotype.assemblyReadPairs() == 0

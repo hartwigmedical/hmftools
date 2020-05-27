@@ -6,28 +6,28 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.*
 
 
+const val PON = "PON"
 const val MIN_QUAL = "minQual";
 const val IMPRECISE = "imprecise";
 const val MIN_TUMOR_AF = "minTumorAF";
-const val SHORT_SR_NORMAL = "shortSRNormal"
-const val LONG_DP_SUPPORT = "longDPSupport"
-const val SHORT_SR_SUPPORT = "shortSRSupport"
-const val MAX_POLY_G_LENGTH = "maxPolyGLength"
+const val SHORT_SR_NORMAL = "shortSRNormalSupport"
+const val SHORT_SR_SUPPORT = "shortSRTumorSupport"
 const val SHORT_STRAND_BIAS = "shortStrandBias"
+
+const val MAX_POLY_G_LENGTH = "maxPolyGLength"
+
 const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
 const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
-const val MAX_HOM_LENGTH = "maxHomLength"
+const val DISCORDANT_PAIR_SUPPORT = "discordantPairSupport"
 
 const val MAX_HOM_LENGTH_SHORT_INV = "maxHomLengthShortInv"
 const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
 const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
-const val BREAK_END_ASSEMBLY_READ_PAIR = "breakendAssemblyReadPair"
-const val PON = "PON"
 
 const val MATE = "mate"
 const val PASS = "PASS"
 const val DEDUP = "dedup"
-const val MIN_SIZE = "minSize"
+const val MIN_LENGTH = "minLength"
 
 const val TAF = "TAF";
 const val ALT_PATH = "ALTP";
@@ -48,15 +48,13 @@ class GripssVCF(outputVCF: String) : AutoCloseable {
 
         header.addMetaDataLine(VCFFilterHeaderLine(MATE, "Mate is filtered"))
         header.addMetaDataLine(VCFFilterHeaderLine(DEDUP, "Event is duplicate of another"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MIN_SIZE, "Event is too short"))
-        header.addMetaDataLine(VCFFilterHeaderLine(BREAK_END_ASSEMBLY_READ_PAIR, "Breakend supported by 0 assembled read pairs"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MAX_HOM_LENGTH, "Breakpoint homology length too long"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MIN_LENGTH, "Event is too short"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH, "Inexact breakpoint homology length too long"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH_SHORT_DEL, "Short deletion that appears to be a ligation artifact"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_HOM_LENGTH_SHORT_INV, "Short inversion with significant sequence homology"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_SUPPORT, "Short event not supported by any split reads either directly or via assembly"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_NORMAL, "Short event with split reads support in the normal sample"))
-        header.addMetaDataLine(VCFFilterHeaderLine(LONG_DP_SUPPORT, "Large event not supported by any read pairs either directly or via assembly"))
+        header.addMetaDataLine(VCFFilterHeaderLine(DISCORDANT_PAIR_SUPPORT, "Large event not supported by any read pairs either directly or via assembly"))
         header.addMetaDataLine(VCFFilterHeaderLine(PON, "Found in panel of normals"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_TUMOR_AF, "Variant allele fraction too low"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_NORMAL_SUPPORT, "Too many support reads from the normal sample"))

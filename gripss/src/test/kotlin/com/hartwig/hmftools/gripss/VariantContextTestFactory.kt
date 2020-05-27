@@ -31,8 +31,8 @@ object VariantContextTestFactory {
 
     fun VariantContext.cipos(cipos: Pair<Int, Int>, cirpos: Pair<Int, Int>): VariantContext {
         val builder = VariantContextBuilder(this)
-        builder.attribute(CIPOS, "${-abs(cipos.first)},${abs(cipos.second)}")
-        builder.attribute(CIRPOS, "${-abs(cirpos.first)},${abs(cirpos.second)}")
+        builder.attribute(CIPOS, listOf(-abs(cipos.first), abs(cipos.second)))
+        builder.attribute(CIRPOS, listOf(-abs(cirpos.first), abs(cirpos.second)))
         return builder.make();
     }
 

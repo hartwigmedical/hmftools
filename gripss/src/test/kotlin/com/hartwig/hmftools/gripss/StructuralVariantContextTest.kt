@@ -65,25 +65,6 @@ class StructuralVariantContextTest {
     }
 
     @Test
-    fun testHomologyLengthFilter() {
-        val attribute = "HOMLEN"
-        val single = sgl().setAttribute(attribute, 1000).toSv()
-        assertFalse(single.homologyLengthFilter(1))
-
-        val dup = shortDup().setAttribute(attribute, 50).toSv()
-        assertFalse(dup.homologyLengthFilter(50))
-        assertTrue(dup.homologyLengthFilter(49))
-        assertFalse(dup.homologyLengthFilterShortInversion(50))
-        assertFalse(dup.homologyLengthFilterShortInversion(49))
-
-        val inv = shortInv().setAttribute(attribute, 50).toSv()
-        assertFalse(inv.homologyLengthFilter(50))
-        assertTrue(inv.homologyLengthFilter(49))
-        assertFalse(inv.homologyLengthFilterShortInversion(50))
-        assertTrue(inv.homologyLengthFilterShortInversion(49))
-    }
-
-    @Test
     fun testInexactHomologyLengthFilter() {
         val attribute = "IHOMPOS"
         assertFalse(sgl().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(1))
@@ -112,13 +93,13 @@ class StructuralVariantContextTest {
 
     @Test
     fun testLongDPSupport() {
-        assertFalse(sgl().toSv().longDPSupportFilter())
-        assertFalse(shortDel().toSv().longDPSupportFilter())
-        assertTrue(bnd().toSv().longDPSupportFilter())
-        assertFalse(bnd().addGenotypeAttribute("RP", 1, 0).toSv().longDPSupportFilter())
-        assertFalse(bnd().addGenotypeAttribute("RP", 0, 1).toSv().longDPSupportFilter())
-        assertFalse(bnd().addGenotypeAttribute("ASRP", 1, 0).toSv().longDPSupportFilter())
-        assertFalse(bnd().addGenotypeAttribute("ASRP", 0, 1).toSv().longDPSupportFilter())
+        assertFalse(sgl().toSv().discordantPairSupportFilter())
+        assertFalse(shortDel().toSv().discordantPairSupportFilter())
+        assertTrue(bnd().toSv().discordantPairSupportFilter())
+        assertFalse(bnd().addGenotypeAttribute("RP", 1, 0).toSv().discordantPairSupportFilter())
+        assertFalse(bnd().addGenotypeAttribute("RP", 0, 1).toSv().discordantPairSupportFilter())
+        assertFalse(bnd().addGenotypeAttribute("ASRP", 1, 0).toSv().discordantPairSupportFilter())
+        assertFalse(bnd().addGenotypeAttribute("ASRP", 0, 1).toSv().discordantPairSupportFilter())
     }
 
     @Test
