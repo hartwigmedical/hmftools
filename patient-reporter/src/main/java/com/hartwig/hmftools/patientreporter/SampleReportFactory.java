@@ -72,7 +72,9 @@ public final class SampleReportFactory {
                             tumorSampleId,
                             hospitalPathologySampleId);
                 } else {
-                    LOGGER.warn("No valid hospital pathology sample ID found for '{}': {}", tumorSampleId, hospitalPathologySampleId);
+                    if (!hospitalPathologySampleId.isEmpty()) {
+                        LOGGER.warn("No valid hospital pathology sample ID found for '{}': {}", tumorSampleId, hospitalPathologySampleId);
+                    }
                 }
                 return null;
             }
