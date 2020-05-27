@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.gripss.store
 
 import com.hartwig.hmftools.gripss.*
-import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     companion object {
-        private val logger = LogManager.getLogger(this::class.java)
         private val mateFiltered = setOf(MATE)
 
         operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>, ponFiltered: Set<String>, hotspots: Set<String>): SoftFilterStore {

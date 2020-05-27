@@ -38,6 +38,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         private val logger = LogManager.getLogger(this::class.java)
         const val PON_ADDITIONAL_DISTANCE = 0
         const val MIN_HOTSPOT_DISTANCE = 1000
+        const val MIN_RESCUE_QUAL = 100
     }
 
     private val startTime = System.currentTimeMillis();
@@ -62,6 +63,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         logger.info("Identifying hotspot variants")
         val hotspots = hotspotStore.matching(variantStore.selectAll())
                 .filter { x -> x.isSingle || x.isTranslocation || (x.variantType as Paired).length > MIN_HOTSPOT_DISTANCE }
+                .filter { x -> x.qual >= MIN_RESCUE_QUAL  }
                 .map { it.vcfId }.toSet()
 
         logger.info("Identifying PON filtered variants")
@@ -91,8 +93,8 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val combinedLinks = LinkStore(assemblyLinks, transitiveLinks, dsbLinks)
 
         logger.info("Rescuing linked variants")
-        val linkRescues = LinkRescue(combinedLinks, softFiltersAfterSingleDedup, variantStore)
-        val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), linkRescues.rescues)
+        val linkRescues = LinkRescue(MIN_RESCUE_QUAL, combinedLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), linkRescues)
 
         logger.info("Writing file: ${config.outputVcf}")
         fileWriter.writeHeader(fileReader.fileHeader)
