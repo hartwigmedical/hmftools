@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.round;
+import static java.lang.Math.ceil;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -231,24 +231,32 @@ public class FusionFinder
             }
         }
 
-        int chrPairCount = 0;
-        int taskId = 0;
-        int pairsPerThread = mConfig.Threads > 1 ? round(chrPairFragments.size() / mConfig.Threads) : chrPairFragments.size();
-
-        List<FusionFragment> allFragments = Lists.newArrayList();
+        // allocate fusion pairs evenly amongst threads (if multi-thread)
         mFusionTasks.clear();
 
-        for(Map.Entry<String,List<FusionFragment>> entry : chrPairFragments.entrySet())
+        for(int taskId = 0; taskId < max(mConfig.Threads, 1); ++taskId)
         {
-            allFragments.addAll(entry.getValue());
+            mFusionTasks.add(new FusionTask(taskId, mConfig, mGeneTransCache, mChrGeneDepthMap, mFusionWriter));
+        }
 
-            ++chrPairCount;
-            if(chrPairCount >= pairsPerThread || chrPairCount == chrPairFragments.size())
+        for(List<FusionFragment> chrPairFrags : chrPairFragments.values())
+        {
+            // allocate the next chr-pair fragment batch to the task with the least
+            FusionTask leastAllocated = null;
+            int minAllocated = 0;
+
+            for(FusionTask fusionTask : mFusionTasks)
             {
-                mFusionTasks.add(new FusionTask(taskId++, mConfig, mGeneTransCache, mChrGeneDepthMap, allFragments, mFusionWriter));
-                allFragments = Lists.newArrayList();
-                chrPairCount = 0;
+                if(minAllocated == 0 || fusionTask.getFragments().size() < minAllocated)
+                {
+                    leastAllocated = fusionTask;
+                    minAllocated = fusionTask.getFragments().size();
+                    if(minAllocated == 0)
+                        break;
+                }
             }
+
+            leastAllocated.getFragments().addAll(chrPairFrags);
         }
 
         ISF_LOGGER.info("chimeric groups({} skipped={} dups=({} existing={}) invalid={} recov={} miss={} candidates={}) chrPairs({}) tasks({})",

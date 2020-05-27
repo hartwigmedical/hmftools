@@ -55,14 +55,14 @@ public class FusionTask implements Callable
 
     public FusionTask(
             int taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
-            final Map<String,Map<Integer,BaseDepth>> geneDepthMap, final List<FusionFragment> fragments, final FusionWriter fusionWriter)
+            final Map<String,Map<Integer,BaseDepth>> geneDepthMap, final FusionWriter fusionWriter)
     {
         mTaskId = taskId;
         mConfig = config;
         mGeneTransCache = geneTransCache;
         mChrGeneDepthMap = geneDepthMap;
 
-        mAllFragments = Lists.newArrayList(fragments);
+        mAllFragments = Lists.newArrayList();
 
         mNextFusionId = 0;
         mFusionCandidates = Maps.newHashMap();
@@ -79,6 +79,7 @@ public class FusionTask implements Callable
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
     public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mDiscordantFragments; }
+    public final List<FusionFragment> getFragments() { return mAllFragments; }
 
     @Override
     public Long call()
