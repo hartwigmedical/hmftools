@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.vicc;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ public class ViccExtractorTestApplication {
 
     private static final boolean RUN_ON_SERVER = false;
     private static final boolean TRANSVAR_ENABLED = false;
+    private static final boolean WRITE_HOTSPOTS_TO_VCF = false;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -75,6 +77,10 @@ public class ViccExtractorTestApplication {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
         analyzeExtractionResults(resultsPerEntry);
+
+        if (WRITE_HOTSPOTS_TO_VCF) {
+            writeHotspots(hotspotVcf, resultsPerEntry.values());
+        }
     }
 
     private static void analyzeExtractionResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
@@ -146,25 +152,27 @@ public class ViccExtractorTestApplication {
         }
     }
 
-    private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<Feature, List<VariantHotspot>> hotspots) {
+    private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Collection<ViccExtractionResult> extractionResults) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
                 .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                 .build();
 
-        for (Map.Entry<Feature, List<VariantHotspot>> entry : hotspots.entrySet()) {
-            String featureAttribute = entry.getKey().geneSymbol() + ":p." + entry.getKey().name();
+        for (ViccExtractionResult result : extractionResults) {
+            for (Map.Entry<Feature, List<VariantHotspot>> entry : result.hotspotsPerFeature().entrySet()) {
+                String featureAttribute = entry.getKey().geneSymbol() + ":p." + entry.getKey().name();
 
-            for (VariantHotspot hotspot : entry.getValue()) {
-                List<Allele> hotspotAlleles = buildAlleles(hotspot);
+                for (VariantHotspot hotspot : entry.getValue()) {
+                    List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
-                writer.add(new VariantContextBuilder().noGenotypes()
-                        .chr(hotspot.chromosome())
-                        .start(hotspot.position())
-                        .alleles(hotspotAlleles)
-                        .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                        .attribute("feature", featureAttribute)
-                        .make());
+                    writer.add(new VariantContextBuilder().noGenotypes()
+                            .chr(hotspot.chromosome())
+                            .start(hotspot.position())
+                            .alleles(hotspotAlleles)
+                            .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
+                            .attribute("feature", featureAttribute)
+                            .make());
+                }
             }
         }
     }
