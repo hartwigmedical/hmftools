@@ -5,10 +5,12 @@ import java.time.LocalDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,6 +43,16 @@ public final class SampleReportFactory {
 
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
+        String cohort = lims.cohort(tumorSampleBarcode);
+        LimsStudy type = LimsStudy.fromSampleId(tumorSampleId);
+        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(tumorSampleId);
+
+        if (cohort.isEmpty()) {
+            if (coreCohort.equals(LimsCoreCohort.NON_CORE)) {
+                cohort = type.toString();
+            }
+        }
+
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(patientTumorLocation)
@@ -48,7 +60,7 @@ public final class SampleReportFactory {
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
-                .cohort(lims.cohort(tumorSampleBarcode))
+                .cohort(cohort)
                 .projectName(lims.projectName(tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
