@@ -50,6 +50,8 @@ public final class SampleReportFactory {
         if (cohort.isEmpty()) {
             if (coreCohort.equals(LimsCoreCohort.NON_CORE)) {
                 cohort = type.toString();
+            } else {
+                cohort = coreCohort.toString();
             }
         }
 
