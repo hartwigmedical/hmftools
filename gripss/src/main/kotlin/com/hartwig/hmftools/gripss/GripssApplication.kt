@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss
 
+import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.gripss.dedup.DedupPair
 import com.hartwig.hmftools.gripss.dedup.DedupSingle
@@ -21,8 +22,8 @@ fun main(args: Array<String>) {
     val singlePonFile = "/Users/jon/hmf/resources/gridss_pon_single_breakend.bed"
     val pairedPonFile = "/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe"
     val pairedHotspotFile = "/Users/jon/hmf/resources/gridss_hotspot_breakpoint.bedpe"
-//    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
-    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.chr8.vcf"
+    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
+//    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.chr8.vcf"
     val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
     val refGenome = "/Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta"
     val filterConfig = GripssFilterConfig.default()
@@ -36,6 +37,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     companion object {
         private val logger = LogManager.getLogger(this::class.java)
         const val PON_ADDITIONAL_DISTANCE = 0
+        const val MIN_HOTSPOT_DISTANCE = 1000
     }
 
     private val startTime = System.currentTimeMillis();
@@ -46,19 +48,21 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     override fun run() {
         logger.info("Reading VCF file: ${config.inputVcf}")
         val contigComparator = ContigComparator(fileReader.fileHeader.sequenceDictionary)
-        val variantStore = VariantStore(hardFilterVariants(fileReader, contigComparator))
+        val variantStore = VariantStore(hardFilterAndRealign(fileReader, contigComparator))
 
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
         val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
-//        val breakends = Breakend.fromBedFile(config.singlePonFile)
-//        val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
-//        val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
-        val ponStore = LocationStore(listOf(), listOf(), PON_ADDITIONAL_DISTANCE)
+        val breakends = Breakend.fromBedFile(config.singlePonFile)
+        val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
+        val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
+//        val ponStore = LocationStore(listOf(), listOf(), PON_ADDITIONAL_DISTANCE)
 
         logger.info("Identifying hotspot variants")
-        val hotspots = hotspotStore.matching(variantStore.selectAll()).map { it.vcfId }.toSet()
+        val hotspots = hotspotStore.matching(variantStore.selectAll())
+                .filter { x -> x.isSingle || x.isTranslocation || (x.variantType as Paired).length > MIN_HOTSPOT_DISTANCE }
+                .map { it.vcfId }.toSet()
 
         logger.info("Identifying PON filtered variants")
         val ponFiltered = ponStore.matching(variantStore.selectAll()).map { it.vcfId }.toSet()
@@ -104,7 +108,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
     }
 
-    private fun hardFilterVariants(fileReader: VCFFileReader, contigComparator: ContigComparator): List<StructuralVariantContext> {
+    private fun hardFilterAndRealign(fileReader: VCFFileReader, contigComparator: ContigComparator): List<StructuralVariantContext> {
         val unfiltered: MutableSet<String> = mutableSetOf()
         val hardFilter: MutableSet<String> = mutableSetOf()
         val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()

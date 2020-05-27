@@ -26,6 +26,8 @@ data class Translocation(
         override val endOrientation: Byte)
     : Paired() {
     override fun toString(): String = altString()
+
+    override val length: Int = -1
 }
 
 data class Inversion(
@@ -35,7 +37,7 @@ data class Inversion(
         override val otherPosition: Int,
         override val startOrientation: Byte,
         override val endOrientation: Byte,
-        val length: Int)
+        override val length: Int)
     : Paired() {
     override fun toString(): String = altString()
 }
@@ -47,7 +49,7 @@ data class Deletion(
         override val otherPosition: Int,
         override val startOrientation: Byte,
         override val endOrientation: Byte,
-        val length: Int)
+        override val length: Int)
     : Paired() {
     override fun toString(): String = altString()
 }
@@ -59,7 +61,7 @@ data class Duplication(
         override val otherPosition: Int,
         override val startOrientation: Byte,
         override val endOrientation: Byte,
-        val length: Int) : Paired() {
+        override val length: Int) : Paired() {
     override fun toString(): String = altString()
 }
 
@@ -70,7 +72,7 @@ data class Insertion(
         override val otherPosition: Int,
         override val startOrientation: Byte,
         override val endOrientation: Byte,
-        val length: Int) : Paired() {
+        override val length: Int) : Paired() {
     override fun toString(): String = altString()
 }
 
@@ -78,6 +80,7 @@ sealed class Paired : VariantType() {
     abstract val otherChromosome: String
     abstract val otherPosition: Int
     abstract val endOrientation: Byte
+    abstract val length: Int
 
     fun altString(): String {
         return when(Pair(startOrientation, endOrientation)) {

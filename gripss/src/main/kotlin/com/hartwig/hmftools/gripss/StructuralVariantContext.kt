@@ -25,6 +25,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
     val variantType = context.toVariantType()
     val orientation = variantType.startOrientation
     val isSingle = variantType is Single
+    val isTranslocation = variantType is Translocation
     val isShortDup = variantType is Duplication && variantType.length < SHORT_EVENT_SIZE
     val isShortDel = variantType is Deletion && variantType.length < SHORT_EVENT_SIZE
     val isShortIns = variantType is Insertion && variantType.length < SHORT_EVENT_SIZE
