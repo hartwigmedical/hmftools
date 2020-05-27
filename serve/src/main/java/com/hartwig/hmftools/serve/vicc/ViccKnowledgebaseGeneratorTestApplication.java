@@ -17,7 +17,9 @@ import com.hartwig.hmftools.serve.vicc.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.serve.vicc.fusion.KnownFusions;
 import com.hartwig.hmftools.serve.vicc.signatures.Signatures;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
+import com.hartwig.hmftools.vicc.selection.ImmutableViccQuerySelection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,9 +31,10 @@ public class ViccKnowledgebaseGeneratorTestApplication {
     public static void main(String[] args) throws IOException {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
 
-        String source = "oncokb";
+        ViccSource source = ViccSource.ONCOKB;
         LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
-        List<ViccEntry> viccEntries = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
+        List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJsonPath,
+                ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).build());
         LOGGER.info("Read {} entries", viccEntries.size());
 
         //Lists of known genomic events

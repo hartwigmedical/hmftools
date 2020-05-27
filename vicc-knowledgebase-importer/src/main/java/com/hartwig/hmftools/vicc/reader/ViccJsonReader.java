@@ -51,6 +51,8 @@ import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
+import com.hartwig.hmftools.vicc.selection.ImmutableViccQuerySelection;
+import com.hartwig.hmftools.vicc.selection.ViccQuerySelection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,47 +66,26 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    public static List<ViccEntry> readSingleKnowledgebase(@NotNull String jsonPath, @NotNull String knowledgebase) throws IOException {
-        return readSingleKnowledgebaseWithMaxEntries(jsonPath, knowledgebase, Integer.MAX_VALUE);
+    public static List<ViccEntry> readAll(@NotNull String jsonPath) throws IOException {
+        ViccQuerySelection includeAll = ImmutableViccQuerySelection.builder().build();
+        return readSelection(jsonPath, includeAll);
     }
 
     @NotNull
-    public static List<ViccEntry> readSingleKnowledgebaseWithMaxEntries(@NotNull String jsonPath, @NotNull String knowledgebase,
-            int maxEntries) throws IOException {
+    public static List<ViccEntry> readSelection(@NotNull String jsonPath, @NotNull ViccQuerySelection querySelection) throws IOException {
         List<ViccEntry> entries = Lists.newArrayList();
 
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(jsonPath));
         reader.setLenient(true);
 
-        while (reader.peek() != JsonToken.END_DOCUMENT && entries.size() < maxEntries) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && (querySelection.maxEntriesToInclude() == null
+                || entries.size() < querySelection.maxEntriesToInclude())) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
-            if (string(viccEntryObject, "source").equals(knowledgebase)) {
+            ViccSource source = ViccSource.fromViccKnowledgebaseString(string(viccEntryObject, "source"));
+            if (querySelection.sourcesToFilterOn() == null || querySelection.sourcesToFilterOn().contains(source)) {
                 entries.add(createViccEntry(viccEntryObject));
             }
-        }
-
-        reader.close();
-
-        return entries;
-    }
-
-    @NotNull
-    public static List<ViccEntry> readViccKnowledgebaseJsonFile(@NotNull String jsonPath) throws IOException {
-        return readViccKnowledgebaseJsonFileWithMaxEntries(jsonPath, Integer.MAX_VALUE);
-    }
-
-    @NotNull
-    public static List<ViccEntry> readViccKnowledgebaseJsonFileWithMaxEntries(@NotNull String jsonPath, int maxEntries) throws IOException {
-        List<ViccEntry> entries = Lists.newArrayList();
-
-        JsonParser parser = new JsonParser();
-        JsonReader reader = new JsonReader(new FileReader(jsonPath));
-        reader.setLenient(true);
-
-        while (reader.peek() != JsonToken.END_DOCUMENT && entries.size() < maxEntries) {
-            JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
-            entries.add(createViccEntry(viccEntryObject));
         }
 
         reader.close();
