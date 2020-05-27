@@ -8,12 +8,10 @@ import org.junit.Test;
 
 public class ActionabilityAnalyzerTest {
 
-    private static final String KNOWLEDGEBASE_DIRECTORY_V2 = Resources.getResource("actionabilty").getPath();
+    private static final String KNOWLEDGEBASE_DIRECTORY_V2 = Resources.getResource("actionability").getPath();
 
     @Test
     public void canGenerateFromTestKnowledgebase() throws IOException {
-         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY_V2);
-
+         ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY_V2);
     }
-
 }

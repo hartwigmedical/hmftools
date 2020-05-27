@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
@@ -118,9 +117,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     private void renderMutationalLoadCharacteristic(@NotNull Document reportDocument) {
         boolean hasReliablePurity = patientReport.hasReliablePurity();
         int mutationalLoad = patientReport.tumorMutationalLoad();
-        TumorMutationalStatus tmlStatus = patientReport.tumorMutationalLoadStatus();
+        String tmlStatus = patientReport.tumorMutationalLoadStatus().display();
 
-        String mutationalLoadString = hasReliablePurity ? tmlStatus + " " + NO_DECIMAL_FORMAT.format(mutationalLoad) : DataUtil.NA_STRING;
+        String mutationalLoadString =
+                hasReliablePurity ? tmlStatus + " " + NO_DECIMAL_FORMAT.format(mutationalLoad) : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =
                 new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", false);
         mutationalLoadChart.enabled(hasReliablePurity);

@@ -11,6 +11,9 @@ import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
+import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
+import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
+import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
@@ -50,7 +53,10 @@ public class ViccExtractorTestApplication {
 
         ViccExtractor viccExtractor = new ViccExtractor(HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile, false),
                 new CopyNumberExtractor(),
-                new FusionExtractor());
+                new FusionExtractor(),
+                new GeneLevelEventExtractor(),
+                new GeneRangeExtractor(),
+                new SignaturesExtractor());
 
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
@@ -64,6 +70,9 @@ public class ViccExtractorTestApplication {
         int totalHotspotsCount = 0;
         int featuresWithCopyNumberCount = 0;
         int featuresWithFusionCount = 0;
+        int featuresWithGeneLevelEventCount = 0;
+        int featuresWithGeneRangeCount = 0;
+        int featuresWithSignatureCount = 0;
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             ViccEntry viccEntry = entry.getKey();
@@ -72,8 +81,12 @@ public class ViccExtractorTestApplication {
                 List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
                 KnownAmplificationDeletion ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
                 String fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
+                String geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
+                String geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
+                String signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
 
-                if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null) {
+                if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null && geneLevelEventForFeature == null
+                        && geneRangeForFeature == null && signatureForFeature == null) {
                     featuresWithoutGenomicEvents.add(feature);
                 } else {
                     if (hotspotsForFeature != null) {
@@ -88,6 +101,18 @@ public class ViccExtractorTestApplication {
                     if (fusionForFeature != null) {
                         featuresWithFusionCount++;
                     }
+
+                    if (geneLevelEventForFeature != null) {
+                        featuresWithGeneLevelEventCount++;
+                    }
+
+                    if (geneRangeForFeature != null) {
+                        featuresWithGeneRangeCount++;
+                    }
+
+                    if (signatureForFeature != null) {
+                        featuresWithSignatureCount++;
+                    }
                 }
 
                 totalFeatureCount++;
@@ -97,10 +122,14 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} hotspots for {} features", totalHotspotsCount, featuresWithHotspotsCount);
         LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
         LOGGER.info(" Extracted {} fusions", featuresWithFusionCount);
+        LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
+        LOGGER.info(" Extracted {} gene ranges", featuresWithGeneRangeCount);
+        LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
 
         LOGGER.info("No genomic events found for {} features", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
-            LOGGER.debug(" {}", feature);
+            LOGGER.debug(" {} in {}: {}", feature.name(), feature.geneSymbol(), feature);
         }
     }
+
 }
