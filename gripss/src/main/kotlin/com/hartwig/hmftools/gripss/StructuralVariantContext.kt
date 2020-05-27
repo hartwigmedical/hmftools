@@ -32,7 +32,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
     val mateId: String? = context.mate()
     val confidenceInterval = context.confidenceInterval()
     val start = context.start
-    private val remoteConfidenceInterval = context.confidenceInterval()
+    private val remoteConfidenceInterval = context.remoteConfidenceInterval()
 
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
@@ -55,6 +55,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
 
         if (precise && abs(confidenceInterval.first - confidenceInterval.second) > 1) {
             if (!isSingle) {
+
                 return centreAlignPaired(refGenome)
             }
         }
@@ -89,8 +90,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
 
         val mate = variantType as Paired
         val newRemoteStart = updatedPosition(mate.otherPosition, remoteConfidenceInterval, newRemoteCipos)
-        val newRemoteRef = refGenome.getSubsequenceAt(mate.otherChromosome, newRemoteStart.toLong(), newRemoteStart.toLong()).baseString
-        val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(newRemoteStart, newRemoteRef)))
+        val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(newRemoteStart, newRef)))
 
         val variantContextBuilder = VariantContextBuilder(context)
                 .start(newStart.toLong())
