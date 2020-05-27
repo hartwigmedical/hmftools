@@ -165,7 +165,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
 
     fun assemblies(): List<String> = context.assemblies();
 
-    fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupport)
+    fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupportProportion)
 
     fun softFilters(config: GripssFilterConfig): Set<String> {
         val result = mutableSetOf<String>()
@@ -221,7 +221,7 @@ class StructuralVariantContext(private val context: VariantContext, private val 
         }
 
 
-        if (minLengthFilter(config.minSize)) {
+        if (minLengthFilter(config.minLength)) {
             result.add(MIN_LENGTH)
         }
 
