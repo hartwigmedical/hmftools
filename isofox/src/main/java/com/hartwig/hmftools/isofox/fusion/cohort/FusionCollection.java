@@ -52,7 +52,7 @@ public class FusionCollection
 
     private void addToCohortCache(final FusionData fusion, final String sampleId)
     {
-        if(fusion.SplitFrags < mConfig.Fusions.MinFragCount)
+        if(fusion.supportingFragments() < mConfig.Fusions.MinFragCount)
             return;
 
         if(!mConfig.RestrictedGeneIds.isEmpty())
@@ -98,14 +98,14 @@ public class FusionCollection
 
                 if(existingFusion != null)
                 {
-                    existingFusion.addSample(sampleId, fusion.SplitFrags);
+                    existingFusion.addSample(sampleId, fusion.supportingFragments());
                     return;
                 }
             }
         }
 
         FusionCohortData fusionCohortData = FusionCohortData.from(fusion);
-        fusionCohortData.addSample(sampleId, fusion.SplitFrags);
+        fusionCohortData.addSample(sampleId, fusion.supportingFragments());
         fusionsByPosition.add(fusionCohortData);
         ++mFusionCount;
     }
