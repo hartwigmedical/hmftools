@@ -63,11 +63,13 @@ public class ViccExtractorTestApplication {
         }
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
+        LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
+        LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
+        LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
 
         ViccSource source = ViccSource.ONCOKB;
         LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
-        ViccQuerySelection querySelection = ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).maxEntriesToInclude(2).
-                build();
+        ViccQuerySelection querySelection = ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).build();
         List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJsonPath, querySelection);
         LOGGER.info(" Read {} entries", viccEntries.size());
 
