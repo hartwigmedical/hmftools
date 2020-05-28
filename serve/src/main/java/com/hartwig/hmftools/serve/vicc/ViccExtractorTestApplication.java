@@ -1,13 +1,16 @@
 package com.hartwig.hmftools.serve.vicc;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
@@ -41,9 +44,9 @@ public class ViccExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
-    private static final boolean RUN_ON_SERVER = false;
     private static final boolean TRANSVAR_ENABLED = true;
     private static final boolean WRITE_HOTSPOTS_TO_VCF = true;
+    private static final Integer MAX_ENTRIES = null;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -52,7 +55,10 @@ public class ViccExtractorTestApplication {
         String refGenomeFastaFile;
         String hotspotVcf;
 
-        if (RUN_ON_SERVER) {
+        String hostname = InetAddress.getLocalHost().getHostName();
+        LOGGER.debug("Running on '{}'", hostname);
+
+        if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
             hotspotVcf = System.getProperty("user.home") + "/hotspotsVicc.vcf";
@@ -68,8 +74,9 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
 
         ViccSource source = ViccSource.ONCOKB;
-        LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
-        ViccQuerySelection querySelection = ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).build();
+        LOGGER.info("Reading VICC json from '{}' with source '{}'", viccJsonPath, source);
+        ViccQuerySelection querySelection =
+                ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).maxEntriesToInclude(MAX_ENTRIES).build();
         List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJsonPath, querySelection);
         LOGGER.info(" Read {} entries", viccEntries.size());
 
@@ -169,26 +176,25 @@ public class ViccExtractorTestApplication {
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
         writer.writeHeader(header);
 
-        for (ViccExtractionResult result : extractionResults) {
-            for (Map.Entry<Feature, List<VariantHotspot>> entry : result.hotspotsPerFeature().entrySet()) {
-                String featureAttribute = entry.getKey().geneSymbol() + ":p." + entry.getKey().name();
+        for (Map.Entry<VariantHotspot, Feature> entry : convertAndSort(extractionResults).entrySet()) {
+            Feature feature = entry.getValue();
+            String featureAttribute = toAttribute(feature);
 
-                for (VariantHotspot hotspot : entry.getValue()) {
-                    List<Allele> hotspotAlleles = buildAlleles(hotspot);
+            VariantHotspot hotspot = entry.getKey();
+            List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
-                    VariantContext variantContext = new VariantContextBuilder().noGenotypes()
-                            .source("VICC")
-                            .chr(hotspot.chromosome())
-                            .start(hotspot.position())
-                            .alleles(hotspotAlleles)
-                            .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                            .attribute("feature", featureAttribute)
-                            .make();
+            VariantContext variantContext = new VariantContextBuilder().noGenotypes()
+                    .source("VICC")
+                    .chr(hotspot.chromosome())
+                    .start(hotspot.position())
+                    .alleles(hotspotAlleles)
+                    .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
+                    .attribute("feature", featureAttribute)
+                    .make();
 
-                    LOGGER.debug("Writing {}", variantContext);
-                    writer.add(variantContext);
-                }
-            }
+            LOGGER.debug("Writing {}", variantContext);
+            writer.add(variantContext);
+
         }
         writer.close();
     }
@@ -201,4 +207,31 @@ public class ViccExtractorTestApplication {
         return Lists.newArrayList(ref, alt);
     }
 
+    @NotNull
+    private static Map<VariantHotspot, Feature> convertAndSort(@NotNull Collection<ViccExtractionResult> extractionResults) {
+        Map<VariantHotspot, Feature> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
+        for (ViccExtractionResult result : extractionResults) {
+            for (Map.Entry<Feature, List<VariantHotspot>> entry : result.hotspotsPerFeature().entrySet()) {
+                Feature feature = entry.getKey();
+                for (VariantHotspot hotspot : entry.getValue()) {
+                    Feature existingFeature = convertedMap.get(hotspot);
+                    if (existingFeature != null) {
+                        LOGGER.warn("Hotspot {} already recorded. Skipping! Existing feature={}, new feature={}",
+                                hotspot,
+                                toAttribute(existingFeature),
+                                toAttribute(feature));
+                    } else {
+                        convertedMap.put(hotspot, feature);
+                    }
+                }
+            }
+        }
+
+        return convertedMap;
+    }
+
+    @NotNull
+    private static String toAttribute(@NotNull Feature feature) {
+        return feature.geneSymbol() + ":p." + feature.name();
+    }
 }
