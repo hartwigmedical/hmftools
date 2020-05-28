@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.isViableBr
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.positionMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.setReferenceFusionData;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.NOT_SET;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.UNKNOWN;
 
 import java.io.IOException;
@@ -539,55 +540,27 @@ public class RnaFusionMapper
 
             rnaFusion.Strands[fs] = geneData.Strand;
 
-            /* doesn't seem relevant anymore
-            if (rnaFusion.JunctionTypes[fs] == KNOWN)
+            List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
+
+            if(transDataList != null)
             {
-                // check that the RNA position is within the bounds of the gene before proceeding
-                int upPosLimit = geneData.GeneEnd;
-                int downPosLimit = geneData.GeneStart;
-
-                if(!isUpstream)
+                for(final TranscriptData transData : transDataList)
                 {
-                    if(geneData.Strand == 1)
-                        downPosLimit -= PRE_GENE_PROMOTOR_DISTANCE;
-                    else
-                        upPosLimit += PRE_GENE_PROMOTOR_DISTANCE;
-                }
+                    RnaExonMatchData exonMatchData = findExonMatch(transData, rnaPosition);
 
-                if(rnaPosition < downPosLimit || rnaPosition > upPosLimit)
-                {
-                    LNX_LOGGER.warn("sample({}) rnaFusion({}) {} position({}) outside geneBounds({} -> {})",
-                            mSampleId, rnaFusion.name(), isUpstream ? "upstream" : "downstream", rnaPosition, downPosLimit, upPosLimit);
-                    rnaFusion.setValid(false);
-                    return;
-                }
-            }
-            */
-
-            if(rnaFusion.JunctionTypes[fs] != KNOWN)
-            {
-                List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
-
-                if(transDataList != null)
-                {
-                    for(final TranscriptData transData : transDataList)
+                    if(exonMatchData.ExonFound)
                     {
-                        RnaExonMatchData exonMatchData = findExonMatch(transData, rnaPosition);
+                        rnaFusion.getTransExonData()[fs].add(exonMatchData);
 
-                        if(exonMatchData.ExonFound)
-                        {
-                            rnaFusion.getTransExonData()[fs].add(exonMatchData);
-
-                            // override for external fusion source data which doesn't set this or set it correctly
-                            if(exonMatchData.BoundaryMatch && rnaFusion.JunctionTypes[fs] != KNOWN)
-                                rnaFusion.JunctionTypes[fs] = KNOWN;
-                        }
+                        // override for external fusion source data which doesn't set this or set it correctly
+                        if(exonMatchData.BoundaryMatch && rnaFusion.JunctionTypes[fs] != KNOWN)
+                            rnaFusion.JunctionTypes[fs] = KNOWN;
                     }
                 }
-
-                if(rnaFusion.JunctionTypes[fs] != KNOWN)
-                    rnaFusion.JunctionTypes[fs] = UNKNOWN;
             }
+
+            if(rnaFusion.JunctionTypes[fs] == NOT_SET)
+                rnaFusion.JunctionTypes[fs] = UNKNOWN;
 
             LNX_LOGGER.debug("rnaFusion({}) juncType({}) {} position({}) matched {} transcript exons",
                     rnaFusion.name(), rnaFusion.JunctionTypes[fs], streamStr(fs), rnaPosition, rnaFusion.getTransExonData()[fs].size());

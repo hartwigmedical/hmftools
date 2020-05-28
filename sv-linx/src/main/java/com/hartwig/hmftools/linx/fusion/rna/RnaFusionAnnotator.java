@@ -286,16 +286,6 @@ public class RnaFusionAnnotator
                 rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
                 return;
             }
-
-            if(!isIsofoxFusion(rnaFusion.Source))
-            {
-                // try the other gene combo
-                if (genePair[FIVE_GENE].equals(rnaFusion.GeneNames[FS_DOWNSTREAM]) && genePair[THREE_GENE].equals(rnaFusion.GeneNames[FS_UPSTREAM]))
-                {
-                    rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
-                    return;
-                }
-            }
         }
 
         boolean fivePrimeProm = refFusionData.hasPromiscuousFiveGene(rnaFusion.GeneNames[FS_UPSTREAM]);
