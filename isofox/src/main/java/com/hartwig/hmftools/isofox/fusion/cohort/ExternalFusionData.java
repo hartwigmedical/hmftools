@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
@@ -53,6 +54,9 @@ public class ExternalFusionData
         OtherData = otherData;
     }
 
+    public static final int COL_BREAKEND_1 = 4;
+    public static final int COL_BREAKEND_2 = 5;
+
     public static ExternalFusionData loadArribaFusion(final String data)
     {
         final String[] items = data.split("\t", -1);
@@ -66,12 +70,13 @@ public class ExternalFusionData
         // reading_frame   peptide_sequence        read_identifiers
 
         final String[] geneNames = new String[] { items[0].replaceAll(",",";"), items[1].replaceAll(",",";") };
-        final String[] chromosomes = { items[4].split(":")[0], items[5].split(":")[0] };
+        final String[] chromosomes = { items[COL_BREAKEND_1].split(":")[0], items[COL_BREAKEND_2].split(":")[0] };
 
         if(!HumanChromosome.contains(chromosomes[SE_START]) || !HumanChromosome.contains(chromosomes[SE_END]))
             return null;
 
-        final int[] positions = { Integer.parseInt(items[4].split(":")[1]), Integer.parseInt(items[5].split(":")[1]) };
+        final int[] positions = {
+                Integer.parseInt(items[COL_BREAKEND_1].split(":")[1]), Integer.parseInt(items[COL_BREAKEND_2].split(":")[1]) };
 
         final byte[] orientations = {0, 0};
 
@@ -122,8 +127,21 @@ public class ExternalFusionData
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            if(Chromosomes[se].equals(other.Chromosomes[SE_START]) && Chromosomes[switchIndex(se)].equals(other.Chromosomes[SE_END])
-            && JunctionPositions[se] == other.JunctionPositions[SE_START] && JunctionPositions[switchIndex(se)] == other.JunctionPositions[SE_END])
+            if(junctionMatch(Chromosomes, other.Chromosomes, JunctionPositions, other.JunctionPositions))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean junctionMatch(final String[] chromosomes1, final String[] chromosomes2, final int[] positions1, final int[] positions2)
+    {
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(chromosomes1[se].equals(chromosomes2[SE_START]) && chromosomes1[switchIndex(se)].equals(chromosomes2[SE_END])
+            && positions1[se] == positions2[SE_START] && positions1[switchIndex(se)] == positions2[SE_END])
             {
                 return true;
             }

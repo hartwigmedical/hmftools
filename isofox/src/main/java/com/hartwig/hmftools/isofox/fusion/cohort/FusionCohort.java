@@ -34,7 +34,7 @@ public class FusionCohort
 
     private final FusionFilters mFilters;
     private String mFilteredFusionHeader;
-    private final ExternalFusionCompare mExternalFusionCompare;
+    private final BufferedWriter mExternalCompareWriter;
 
     private final FusionCollection mFusionCollection;
 
@@ -53,7 +53,7 @@ public class FusionCohort
         mConfig = config;
         mFilters = new FusionFilters(mConfig.Fusions, cmd);
         mFilteredFusionHeader = null;
-        mExternalFusionCompare = !mConfig.Fusions.ComparisonSources.isEmpty() ? new ExternalFusionCompare(mConfig) : null;
+        mExternalCompareWriter = !mConfig.Fusions.ComparisonSources.isEmpty() ? ExternalFusionCompare.initialiseWriter(mConfig) : null;
         mFusionCollection = new FusionCollection(mConfig);
         mWriter = null;
 
@@ -97,8 +97,7 @@ public class FusionCohort
             if(sampleCount >= pairsPerThread || i == totalSampleCount - 1)
             {
                 fusionTasks.add(new FusionCohortTask(
-                        taskId++, mConfig, sampleFileMap,
-                        mFilters, mFusionCollection, mExternalFusionCompare, mWriter));
+                        taskId++, mConfig, sampleFileMap, mFilters, mFusionCollection, mWriter, mExternalCompareWriter));
 
                 sampleFileMap = Maps.newHashMap();
                 sampleCount = 0;
@@ -115,10 +114,13 @@ public class FusionCohort
             return;
         }
 
-        if(mExternalFusionCompare != null)
-            mExternalFusionCompare.close();
-
         closeBufferedWriter(mWriter);
+
+        if(mExternalCompareWriter != null)
+        {
+            fusionTasks.forEach(x -> ExternalFusionCompare.writeResults(mExternalCompareWriter, x.getExternalCompare().getResults()));
+            closeBufferedWriter(mExternalCompareWriter);
+        }
     }
 
     private boolean executeTasks(final List<FusionCohortTask> fusionTasks)

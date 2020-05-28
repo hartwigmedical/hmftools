@@ -41,7 +41,7 @@ public class FusionCohortTask implements Callable
 
     public FusionCohortTask(
             int taskId, final CohortConfig config, final Map<String,Path> sampleFileMap, final FusionFilters filters,
-            final FusionCollection fusionCollection, final ExternalFusionCompare fusionCompare, final BufferedWriter combinedFusionWriter)
+            final FusionCollection fusionCollection, final BufferedWriter combinedFusionWriter, final BufferedWriter extCompareWriter)
     {
         mTaskId = taskId;
         mConfig = config;
@@ -51,8 +51,11 @@ public class FusionCohortTask implements Callable
         mFilters = filters;
         mFusionCollection = fusionCollection;
         mCombinedFusionWriter = combinedFusionWriter;
-        mExternalFusionCompare = fusionCompare;
+
+        mExternalFusionCompare = extCompareWriter != null ? new ExternalFusionCompare(mConfig, extCompareWriter) : null;
     }
+
+    public final ExternalFusionCompare getExternalCompare() { return mExternalFusionCompare; }
 
     @Override
     public Long call()
@@ -91,15 +94,7 @@ public class FusionCohortTask implements Callable
 
             if(!mConfig.Fusions.ComparisonSources.isEmpty())
             {
-                final List<FusionData> unfilteredFusions = Lists.newArrayList();
-
-                if(mConfig.Fusions.CompareUnfiltered)
-                {
-                    final String unfilteredFile = formSampleFilename(mConfig, sampleId, FUSION);
-                    unfilteredFusions.addAll(loadSampleFile(Paths.get(unfilteredFile)));
-                }
-
-                mExternalFusionCompare.compareFusions(sampleId, sampleFusions, unfilteredFusions);
+                mExternalFusionCompare.compareFusions(sampleId, sampleFusions);
             }
         }
 
