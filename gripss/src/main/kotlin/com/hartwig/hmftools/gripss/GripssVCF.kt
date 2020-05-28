@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.gripss
 
+import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.variant.variantcontext.VariantContext
-import htsjdk.variant.variantcontext.writer.Options
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.*
 
@@ -36,8 +36,8 @@ const val REALIGN = "REALIGN";
 const val LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
 const val REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
 
-class GripssVCF(outputVCF: String) : AutoCloseable {
-    val writer = VariantContextWriterBuilder().setOutputFile(outputVCF).unsetOption(Options.INDEX_ON_THE_FLY).build()
+class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoCloseable {
+    val writer = VariantContextWriterBuilder().setReferenceDictionary(dictionary).setOutputFile(outputVCF).build()
 
 
     fun writeHeader(header: VCFHeader) {

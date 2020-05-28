@@ -47,9 +47,9 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
     private val startTime = System.currentTimeMillis();
     private val fileReader = VCFFileReader(File(config.inputVcf), false)
-    private val fileWriter = GripssVCF(config.outputVcf)
-    private val refGenome = IndexedFastaSequenceFile(File(config.refGenome))
     private val dictionary = fileReader.fileHeader.sequenceDictionary
+    private val fileWriter = GripssVCF(config.outputVcf, dictionary)
+    private val refGenome = IndexedFastaSequenceFile(File(config.refGenome))
 
     override fun run() {
         logger.info("Config ${config.filterConfig}")
