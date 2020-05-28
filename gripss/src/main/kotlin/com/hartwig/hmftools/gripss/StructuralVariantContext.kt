@@ -12,14 +12,13 @@ const val SHORT_EVENT_SIZE = 1000
 
 typealias Cipos = Pair<Int, Int>
 
-class StructuralVariantContext(private val context: VariantContext, private val normalOrdinal: Int = 0, private val tumorOrdinal: Int = 1) {
+class StructuralVariantContext(val context: VariantContext, private val normalOrdinal: Int = 0, private val tumorOrdinal: Int = 1) {
     private companion object {
         private val polyG = "G".repeat(16);
         private val polyC = "C".repeat(16);
     }
 
     val contig = context.contig!!
-
     val imprecise = context.imprecise()
     val precise = !imprecise
     val variantType = context.toVariantType()

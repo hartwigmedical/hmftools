@@ -14,6 +14,7 @@ import com.hartwig.hmftools.gripss.store.LocationStore
 import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import com.hartwig.hmftools.gripss.store.VariantStore
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.variant.variantcontext.VariantContextComparator
 import htsjdk.variant.vcf.VCFFileReader
 import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
@@ -21,21 +22,6 @@ import java.io.File
 import java.io.IOException
 
 fun main(args: Array<String>) {
-
-
-//
-//    val singlePonFile = "/Users/jon/hmf/resources/gridss_pon_single_breakend.bed"
-//    val pairedPonFile = "/Users/jon/hmf/resources/gridss_pon_breakpoint.bedpe"
-//    val pairedHotspotFile = "/Users/jon/hmf/resources/gridss_hotspot_breakpoint.bedpe"
-//    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.vcf.gz"
-////    val inputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893R_CPCT02010893T.gridss.chr8.vcf"
-//    val outputVCF = "/Users/jon/hmf/analysis/gridss/CPCT02010893T.post.vcf"
-//    val refGenome = "/Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta"
-//    val filterConfig = GripssFilterConfig.default()
-
-
-//    args.forEach { println(it + "") }
-//    val config = GripssConfig(inputVCF, outputVCF, singlePonFile, pairedPonFile, pairedHotspotFile, refGenome, filterConfig)
 
     val options = GripssConfig.createOptions()
     try {
@@ -51,12 +37,6 @@ fun main(args: Array<String>) {
     }
 }
 
-@Throws(ParseException::class)
-fun createCommandLine(args: Array<String>, options: Options): CommandLine {
-    val parser: CommandLineParser = DefaultParser()
-    return parser.parse(options, args)
-}
-
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
     companion object {
         val logger = LogManager.getLogger(this::class.java)
@@ -69,12 +49,13 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileReader = VCFFileReader(File(config.inputVcf), false)
     private val fileWriter = GripssVCF(config.outputVcf)
     private val refGenome = IndexedFastaSequenceFile(File(config.refGenome))
+    private val dictionary = fileReader.fileHeader.sequenceDictionary
 
     override fun run() {
         logger.info("Config ${config.filterConfig}")
 
         logger.info("Reading VCF file: ${config.inputVcf}")
-        val contigComparator = ContigComparator(fileReader.fileHeader.sequenceDictionary)
+        val contigComparator = ContigComparator(dictionary)
         val variantStore = VariantStore(hardFilterAndRealign(fileReader, contigComparator))
 
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
@@ -84,7 +65,6 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val breakends = Breakend.fromBedFile(config.singlePonFile)
         val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
         val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
-//        val ponStore = LocationStore(listOf(), listOf(), PON_ADDITIONAL_DISTANCE)
 
         logger.info("Identifying hotspot variants")
         val hotspots = hotspotStore.matching(variantStore.selectAll())
@@ -151,8 +131,10 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
             }
         }
 
+        val contextComparator = VariantContextComparator(dictionary)
+        val comparator: Comparator<StructuralVariantContext> =  Comparator { x, y -> contextComparator.compare(x.context, y.context)}
         val mateIsValidOrNull = { x: StructuralVariantContext -> x.mateId?.let { unfiltered.contains(it) } != false }
-        return structuralVariants.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }
+        return structuralVariants.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }.sortedWith(comparator)
     }
 
 
@@ -162,5 +144,11 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         fileWriter.close()
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
     }
+}
+
+@Throws(ParseException::class)
+fun createCommandLine(args: Array<String>, options: Options): CommandLine {
+    val parser: CommandLineParser = DefaultParser()
+    return parser.parse(options, args)
 }
 
