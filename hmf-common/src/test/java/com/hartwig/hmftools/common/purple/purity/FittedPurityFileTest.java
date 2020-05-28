@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Random;
+import java.util.StringJoiner;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -22,23 +23,23 @@ import org.junit.Test;
 public class FittedPurityFileTest {
 
     @Test
+    public void testStripDecimalInTumorMutationalLoad() {
+        PurityContext victim = createRandomContext(new Random());
+        String line = FittedPurityFile.toString(victim);
+        String[] array = line.split("\t");
+        array[19] = array[19] + ".9892ADV";
+        StringJoiner joiner = new StringJoiner("\t");
+        for (String s : array) {
+            joiner.add(s);
+        }
+
+        assertEquals(victim, FittedPurityFile.fromLine(joiner.toString()));
+    }
+
+    @Test
     public void testInputAndOutput() {
         final Random random = new Random();
-        final PurityContext input = ImmutablePurityContext.builder()
-                .version(random.nextInt() + "a")
-                .bestFit(createRandomPurity(random))
-                .score(createRandomScore(random))
-                .gender(Gender.values()[random.nextInt(Gender.values().length)])
-                .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])
-                .polyClonalProportion(nextDouble(random))
-                .wholeGenomeDuplication(random.nextBoolean())
-                .microsatelliteIndelsPerMb(random.nextDouble())
-                .microsatelliteStatus(MicrosatelliteStatus.MSI)
-                .tumorMutationalBurdenPerMb(random.nextDouble())
-                .tumorMutationalBurdenStatus(TumorMutationalStatus.HIGH)
-                .tumorMutationalLoad(random.nextDouble())
-                .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
-                .build();
+        final PurityContext input = createRandomContext(random);
 
         final List<String> lines = toLines(input);
         assertEquals(2, lines.size());
@@ -52,6 +53,24 @@ public class FittedPurityFileTest {
     public void testCompatibilityWith2_14() throws IOException {
         FittedPurityFile.fromLine(Resources.readLines(Resources.getResource("purple/v2-14.purple.purity"), Charset.defaultCharset())
                 .get(1));
+    }
+
+    private static PurityContext createRandomContext(@NotNull Random random) {
+        return ImmutablePurityContext.builder()
+                .version(random.nextInt() + "a")
+                .bestFit(createRandomPurity(random))
+                .score(createRandomScore(random))
+                .gender(Gender.values()[random.nextInt(Gender.values().length)])
+                .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])
+                .polyClonalProportion(nextDouble(random))
+                .wholeGenomeDuplication(random.nextBoolean())
+                .microsatelliteIndelsPerMb(random.nextDouble())
+                .microsatelliteStatus(MicrosatelliteStatus.MSI)
+                .tumorMutationalBurdenPerMb(random.nextDouble())
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.HIGH)
+                .tumorMutationalLoad(random.nextInt(100_000_000))
+                .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
+                .build();
     }
 
     @NotNull
