@@ -260,21 +260,21 @@ public class CnDataLoader
         return (svData.startPosition() == svPosStart && svData.endPosition() == svPosEnd);
     }
 
-    private boolean skipMaleChromosomes(final String chromosome)
+    public static boolean isMaleSample(final PurityContext purityContext)
     {
-        if(chromosome.equals("X") || chromosome.equals("Y"))
-        {
-            if (mPurityContext != null && mPurityContext.gender().toString().startsWith("MALE"))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return purityContext != null && purityContext.gender().toString().startsWith("MALE");
     }
 
-    // private static String SPECIFIC_CHR = "9";
-    private static String SPECIFIC_CHR = "";
+    private boolean expectSingleChromosome(final String chromosome)
+    {
+        return expectSingleChromosome(isMaleSample(mPurityContext), chromosome);
+    }
+
+    public static boolean expectSingleChromosome(boolean isMale, final String chromosome)
+    {
+        return isMale && (chromosome.equals("X") || chromosome.equals("Y"));
+    }
+
     private static int REMOTE_SV_DISTANCE = 1000000;
 
     private void findLohEvents(final String sampleId)
@@ -300,8 +300,7 @@ public class CnDataLoader
         {
             final String chromosome = entry.getKey();
 
-            if(skipMaleChromosomes(chromosome))
-                continue;
+            boolean expectSingleChromosomeCN = expectSingleChromosome(chromosome);
 
             final List<SvCNData> cnDataList = entry.getValue();
 
@@ -313,11 +312,6 @@ public class CnDataLoader
 
                 boolean newChromosome = (index == 0);
                 boolean reset = newChromosome;
-
-                if (newChromosome && cnData.Chromosome.equals(SPECIFIC_CHR))
-                {
-                    LOGGER.debug("spec chr({})", SPECIFIC_CHR);
-                }
 
                 if (cnData.CopyNumber < TOTAL_CN_LOSS)
                 {
@@ -505,9 +499,12 @@ public class CnDataLoader
             return null;
     }
 
-    private int processLOHData(final String chr, SvCNData startData, SvCNData endData,
+    private int processLOHData(final String chromosome, SvCNData startData, SvCNData endData,
             int segCount, boolean incomplete, List<HomLossEvent> lohHomLossEvents)
     {
+        if(expectSingleChromosome(chromosome))
+            return 0;
+
         StructuralVariantData startSvData = findSvData(startData, 1);
 
         StructuralVariantData endSvData = null;
@@ -519,7 +516,7 @@ public class CnDataLoader
             lohLength = endData.EndPos - startData.StartPos;
             endSvData = null;
         }
-        else if(endData.Chromosome.equals(chr) && !startData.matchesSegment(TELOMERE, false))
+        else if(endData.Chromosome.equals(chromosome) && !startData.matchesSegment(TELOMERE, false))
         {
             lohLength = endData.StartPos - startData.StartPos;
             endSvData = findSvData(endData, -1);
@@ -606,7 +603,7 @@ public class CnDataLoader
         }
 
         LohEvent lohData = new LohEvent(
-                chr,
+                chromosome,
                 startData.StartPos, incomplete ? endData.EndPos : endData.StartPos,
                 startData.SegStart, incomplete ? endData.SegEnd : endData.SegStart, segCount,
                 startSvData != null ? startSvData.id() : CN_DATA_NO_SV, endSvData != null ? endSvData.id() : CN_DATA_NO_SV);

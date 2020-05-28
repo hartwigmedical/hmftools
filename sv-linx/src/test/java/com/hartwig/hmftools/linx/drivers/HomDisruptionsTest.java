@@ -63,7 +63,7 @@ public class HomDisruptionsTest
         addGeneData(geneTransCache, chromosome, geneList);
 
         DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
-        driverAnnotator.setSamplePloidy(2);
+        driverAnnotator.setSamplePurityData(2, false);
 
         // make a chain of SVs which contain one or more deletion bridges affecting the gene
         SvVarData var1 = createInv(tester.nextVarId(), chromosome, 15000, 25000, 1);
@@ -158,7 +158,7 @@ public class HomDisruptionsTest
         addGeneData(geneTransCache, chromosome, geneList);
 
         DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
-        driverAnnotator.setSamplePloidy(2);
+        driverAnnotator.setSamplePurityData(2, false);
 
         // the DUP must be disruptive, ie duplicating at least 1 exon
         SvVarData var1 = createDup(tester.nextVarId(), chromosome, 15000, 35000);

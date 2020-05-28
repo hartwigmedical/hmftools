@@ -44,7 +44,7 @@ public class AmpDriversTest
 
         DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
 
-        driverAnnotator.setSamplePloidy(2);
+        driverAnnotator.setSamplePurityData(2, false);
 
         String geneName = "GENE1";
         String geneId = "ENSG0001";

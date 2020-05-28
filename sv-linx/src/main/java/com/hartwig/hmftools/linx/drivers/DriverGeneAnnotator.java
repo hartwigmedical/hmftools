@@ -17,6 +17,8 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isShortArmChromosome;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.TOTAL_CN_LOSS;
+import static com.hartwig.hmftools.linx.cn.CnDataLoader.expectSingleChromosome;
+import static com.hartwig.hmftools.linx.cn.CnDataLoader.isMaleSample;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_CHR;
@@ -82,8 +84,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class DriverGeneAnnotator
 {
@@ -96,6 +96,7 @@ public class DriverGeneAnnotator
     private BufferedWriter mFileWriter;
     private String mOutputDir;
     private double mSamplePloidy;
+    private boolean mIsMale;
     private List<DriverGeneData> mDriverGeneDataList;
     final List<String> mReportableDelGeneIds;
 
@@ -129,6 +130,7 @@ public class DriverGeneAnnotator
         mFileWriter = null;
         mOutputDir = mConfig.OutputDataPath;
         mSamplePloidy = 0;
+        mIsMale = false;
 
         mGeneTransCache.createGeneNameIdMap();
         mVisWriter = null;
@@ -158,9 +160,10 @@ public class DriverGeneAnnotator
         return true;
     }
 
-    public void setSamplePloidy(double ploidy)
+    public void setSamplePurityData(double ploidy, boolean isMale)
     {
         mSamplePloidy = ploidy;
+        mIsMale = isMale;
     }
 
     public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
@@ -176,7 +179,7 @@ public class DriverGeneAnnotator
         final PurityContext purityContext = mDbAccess.readPurityContext(mSampleId);
 
         if(purityContext != null)
-            setSamplePloidy(purityContext.bestFit().ploidy());
+            setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
         mDriverCatalog.clear();
 
@@ -213,7 +216,7 @@ public class DriverGeneAnnotator
         try
         {
             final PurityContext purityContext = FittedPurityFile.read(mConfig.PurpleDataPath, mSampleId);
-            setSamplePloidy(purityContext.bestFit().ploidy());
+            setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
             mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateFilename(mConfig.PurpleDataPath, mSampleId)));
 
@@ -327,6 +330,30 @@ public class DriverGeneAnnotator
         // find the LOH and hom-loss events which caused this DEL
         int minRegionStart = (int)dgData.GeneCN.minRegionStart();
         int minRegionEnd = (int)dgData.GeneCN.minRegionEnd();
+
+        if(expectSingleChromosome(mIsMale, dgData.GeneData.Chromosome))
+        {
+            for(final HomLossEvent homLoss : mCopyNumberData.getHomLossData())
+            {
+                // allow there to be more than one?
+                if(homLoss.PosStart <= minRegionEnd && homLoss.PosEnd >= minRegionStart)
+                {
+                    LNX_LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by hom-loss({})",
+                            dgData.GeneData.GeneName, minRegionStart, minRegionEnd, homLoss);
+
+                    // DEL covers the whole gene or extends to end of arm
+                    DriverGeneEvent event = new DriverGeneEvent(DriverEventType.DEL);
+                    event.setHomLossEvent(homLoss);
+
+                    // one or both breakends can be null if not matched
+                    event.addSvBreakendPair(homLoss.getBreakend(true), homLoss.getBreakend(false), SV_DRIVER_TYPE_DEL);
+                    dgData.addEvent(event);
+                    break;
+                }
+            }
+
+            return;
+        }
 
         for(final LohEvent lohEvent : mCopyNumberData.getLohData())
         {
