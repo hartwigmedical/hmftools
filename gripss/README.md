@@ -36,32 +36,28 @@ Filter | Default | Description / purpose
 minQual | 350 (single breakend:1000) | Minimum absolute tumor support for variant
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
 minTumorAF | 0.5 | Low AF variants in high depth regions may be artefacts
-imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   Only variants with no insert sequence or homology sequence may be filtered as imprecise.  
-maxInexactHomologyLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
-DPsupport | TRUE | Variants (except for DEL and DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mapability.   Not suitable for non paired reads or very short fragment sizes.  
+imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
+maxInexactHomLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
+discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mapability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
 PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
 
-Single breakends have 2 additional filters:
+Single breakends have an additional filter:
 
 Filter | Default | Description 
 ---|---|---
-breakendAssemblyReadPair | TRUE | ???
 maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts
 
 We also have 7 special filters applying to specific short variant categories:
 
 Filter | Default | Scope | Description 
 ---|---|---|---
-minDelDupLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
-shortInvMaxHomLength | 6 | INV(<40b) | 
-shortDelMaxHomLength | 6 | DEL(<1kb) | 
-shortDelDupStrandBias | TRUE | DEL & DUP(<1kb) | Enable base quality recalibration
-shortDelDupSRSupport | TRUE | DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read
-shortDelDupNormalSRSupport | FALSE | DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read in the normal
+minLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
+maxHomLengthShortInv | 6 | INV(<40b) | Very short INV with high homology are a common sequencer artefact
+maxInexactHomLengthShortDel | 6 | DEL(<1kb) | Short DEL with high homology are a common mapping artefact
+shortStrandBias | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
+shortSRTumorSupport | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read
+shortSRNormalSupport | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read in the normal
 small.replacement.fp | | DEL(<1kb) | *TO DO!!!*
-
-
-
 
 ## 4. Linkage, deduplication and rescue
 
@@ -92,7 +88,6 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 ### D. Rescue
 
-Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is not filtered as DEDUP is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued regardless of soft filtering.
+Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is not filtered as DEDUP is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocaitons or intrachromosomal variants of length greater than 10kb regardless of soft filtering.
 
-<JON - please add details of known file>
 

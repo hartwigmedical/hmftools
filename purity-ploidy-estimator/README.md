@@ -623,9 +623,9 @@ MinPloidy | 3.08 | Minimum ploidy with score within 10% of best
 MaxPloidy | 3.13 | Maximum ploidy with score within 10% of best
 msIndelsPerMb | 0.1186 | Microsatellite indels per mega base
 msStatus | MSS | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if somatic variants not supplied
-tmbPerMb | 13.6352 | Tumor mutational burden per mega base
-tmbStatus | HIGH | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
-tml | 182 | Tumor mutational load
+tmbPerMb | 13.6352 | Tumor mutational burden (#passing variants per Mb) per mega base
+tmbStatus | HIGH | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb
+tml | 182 | Tumor mutational load (# of missense variants in sample)
 tmlStatus | HIGH | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
 
 #### Purity Range File

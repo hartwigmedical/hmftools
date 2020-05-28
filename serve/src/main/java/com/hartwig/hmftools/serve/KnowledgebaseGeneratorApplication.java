@@ -285,7 +285,7 @@ public class KnowledgebaseGeneratorApplication {
     @NotNull
     private static List<ViccEntry> readViccEntries(@NotNull String viccJson) throws IOException {
         LOGGER.info("Reading VICC entries from {}", viccJson);
-        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(viccJson);
+        List<ViccEntry> viccEntries = ViccJsonReader.readAll(viccJson);
         LOGGER.info(" Read {} VICC entries", viccEntries.size());
         return viccEntries;
     }

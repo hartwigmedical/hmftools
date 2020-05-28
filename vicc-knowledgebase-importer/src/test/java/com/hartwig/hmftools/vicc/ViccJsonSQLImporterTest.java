@@ -19,7 +19,7 @@ public class ViccJsonSQLImporterTest {
     @Ignore
     public void readViccJson() throws IOException {
         // This function exists just for fast local testing.
-        List<ViccEntry> entries = ViccJsonReader.readViccKnowledgebaseJsonFile(VICC_JSON_FILE);
+        List<ViccEntry> entries = ViccJsonReader.readAll(VICC_JSON_FILE);
         assertNotNull(entries);
     }
 }
