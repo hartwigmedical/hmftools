@@ -132,11 +132,6 @@ public class FusionFilters
         return true;
     }
 
-    public boolean matchesCohortFusion(final FusionData fusion)
-    {
-        return findCohortFusion(fusion) != null;
-    }
-
     public FusionCohortData findCohortFusion(final FusionData fusion)
     {
         final String chrPair = formChromosomePair(fusion.Chromosomes[SE_START], fusion.Chromosomes[SE_END]);
