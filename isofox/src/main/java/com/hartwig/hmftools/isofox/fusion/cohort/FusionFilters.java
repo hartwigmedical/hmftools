@@ -63,20 +63,16 @@ public class FusionFilters
 
     public boolean isPassingFusion(final FusionData fusion)
     {
-
-        /*
-        - AlleleFrequency = SplitFrags+RealignedFrags)/pmax(CoverageUp,CoverageDown)
-        - Length = if not BND then abs(PosUp-PosDown)
-        - not in PON until in a Known/Promiscuous category above
-        - MaxAnchorLengthUp>20&MaxAnchorLengthDown>20)|DiscordantFrags>0),
-        - (JuncTypeUp=='KNOWN'&JuncTypeDown=='KNOWN'&AF>=0.005&TotalFragments>=2)|  #splice site - splice site
-      (((JuncTypeUp=='CANONICAL'&JuncTypeDown=='KNOWN')|(JuncTypeUp=='KNOWN'&JuncTypeDown=='CANONICAL'))&AF>=0.005&TotalFragments>=3)|  #canonical - splice
-      (JuncTypeUp=='CANONICAL'&JuncTypeDown=='CANONICAL'&AF>=0.005&TotalFragments>=4)|  #canonical - canonical
-      (AF>=0.05&TotalFragments>=10)) %>% select(len,SVType,everything()))
-         */
-
         if(fusion.getKnownFusionType() == KNOWN_PAIR)
+        {
+            if(!fusion.hasKnownSpliceSites() && fusion.totalFragments() < 2)
+            {
+                fusion.setFilter(FILTER_SUPPORT);
+                return false;
+            }
+
             return true;
+        }
 
         if(min(fusion.AnchorDistance[SE_START], fusion.AnchorDistance[SE_END]) < MIN_ANCHOR_DISTANCE && fusion.DiscordantFrags == 0)
         {
