@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TransvarInterpreterTest {
@@ -104,6 +105,13 @@ public class TransvarInterpreterTest {
 
         assertHotspot(baseHotspot().position(4).ref("C").alt("CAAA").build(), reverseHotspots.get(0));
         assertHotspot(baseHotspot().position(4).ref("C").alt("CGAA").build(), reverseHotspots.get(1));
+    }
+
+    @Test
+    @Ignore
+    public void canConvertCombinedDeletionsInsertionsToHotspot() {
+        // TODO
+        // See for example EGFR:p.L747_A750delinsP
     }
 
     @Test

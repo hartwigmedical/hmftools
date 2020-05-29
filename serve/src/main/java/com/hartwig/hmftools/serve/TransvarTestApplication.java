@@ -26,12 +26,14 @@ public class TransvarTestApplication {
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
         // These 2 variants are identical (the trinucleotide is repeated)
-        extractAndPrintHotspots(transvar, "KIT", null, "V560del");
-        extractAndPrintHotspots(transvar, "KIT", null, "V559del");
+//        extractAndPrintHotspots(transvar, "KIT", null, "V560del");
+//        extractAndPrintHotspots(transvar, "KIT", null, "V559del");
 
         // These variants lead to the same gDNA because D1739Y is not defined on the canonical transcript of BRCA1
-        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1739Y");
-        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1692Y");
+//        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1739Y");
+//        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1692Y");
+
+        extractAndPrintHotspots(transvar, "EGFR", null, "L747_A750delinsP");
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String transcriptId,

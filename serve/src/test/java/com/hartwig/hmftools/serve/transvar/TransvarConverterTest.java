@@ -101,6 +101,21 @@ public class TransvarConverterTest {
     }
 
     @Test
+    public void canConvertInsertionAndDeletionToRecord() {
+        // TODO
+        String delInsLine = "EGFR:p.L747_A750delinsP\tENST00000275493 (protein_coding)\tEGFR\t+\tchr7:g.55242469_55242480delinsCCT/"
+                + "c.2239_2250delinsCCT/p.L747_A750delinsP\tinside_[cds_in_exon_19]\tCSQN=MultiAAMissense;" +
+                "candidate_alternative_sequence=CCT/CCG/CCA/CCC;aliases=ENSP00000275493;source=Ensembl";
+
+        TransvarRecord delins = TransvarConverter.toTransvarRecord(delInsLine);
+
+        assertNotNull(delins);
+        assertEquals("ENST00000275493", delins.transcript());
+        assertEquals("7", delins.chromosome());
+        assertEquals(55242469, delins.gdnaPosition());
+    }
+
+    @Test
     public void canConvertDuplicationToRecord() {
         String dupLineNoBases = "ERBB2:p.Y772_A775dup\tENST00000584450 (protein_coding)\tERBB2\t+\tchr17:g.37880985_37880996/"
                 + "c.2314_2325/p.Y772_A775\tinside_[cds_in_exon_20]\tprotein_sequence=YVMA;cDNA_sequence=TAC..GCT;"
