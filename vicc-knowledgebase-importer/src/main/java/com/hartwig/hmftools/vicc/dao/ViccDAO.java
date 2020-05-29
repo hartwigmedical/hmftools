@@ -114,7 +114,7 @@ public class ViccDAO {
         writeFeatureNames(id, viccEntry.featureNames());
         writeFeatures(id, viccEntry.features());
         writeAssociation(id, viccEntry.association());
-        writeKbSpecificObject(id, viccEntry.KbSpecificObject());
+        writeKbSpecificObject(id, viccEntry.kbSpecificObject());
     }
 
     public void deleteAll() {

@@ -35,7 +35,7 @@ public abstract class ViccEntry {
     public abstract List<String> devTags();
 
     @NotNull
-    public abstract KbSpecificObject KbSpecificObject();
+    public abstract KbSpecificObject kbSpecificObject();
 
 }
 
