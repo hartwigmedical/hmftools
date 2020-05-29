@@ -40,12 +40,7 @@ imprecise | FALSE | Imprecise variants may be artefacts linking low mappability 
 maxInexactHomLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
 discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mapability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
 PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
-
-Single breakends have an additional filter:
-
-Filter | Default | Description 
----|---|---
-maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts
+maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (hg38: chr2:32,916,198-32,916,650; GRCH37: 2:33,141,260-33,141,700).
 
 We also have 7 special filters applying to specific short variant categories:
 
