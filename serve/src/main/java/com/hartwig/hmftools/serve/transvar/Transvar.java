@@ -61,6 +61,8 @@ public class Transvar {
 
         TransvarRecord best = pickBestRecord(records, transcriptID, canonicalTranscript.transcriptID());
 
+        // TODO (if best is not on preferred transcript -> error
+
         LOGGER.debug("Interpreting transvar record: '{}'", best);
         // This is assuming every transcript on a gene lies on the same strand.
         List<VariantHotspot> hotspots = interpreter.convertRecordToHotspots(best, canonicalTranscript.strand());
