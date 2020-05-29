@@ -45,6 +45,8 @@ import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class FusionReadData
 {
     private final int mId;
@@ -63,6 +65,9 @@ public class FusionReadData
     private final int[] mGeneCollections;
     private final int[] mJunctionPositions;
     private final byte[] mJunctionOrientations;
+    private final String[] mJunctionBases; // the 10 bases leading up to the junction if it exists
+    private final String[] mJunctionSpliceBases; // the 2 donor/acceptor bases
+
     private final List<TransExonRef>[] mTransExonRefs;
     private final int[] mReadDepth;
 
@@ -82,6 +87,9 @@ public class FusionReadData
         mGeneCollections = new int[] { fragment.geneCollections()[SE_START], fragment.geneCollections()[SE_END] };
         mJunctionPositions = new int[] { fragment.junctionPositions()[SE_START], fragment.junctionPositions()[SE_END] };
         mJunctionOrientations = new byte[]{ fragment.junctionOrientations()[SE_START], fragment.junctionOrientations()[SE_END] };
+
+        mJunctionBases = new String[] {"", ""};
+        mJunctionSpliceBases = new String[] {"", ""};
 
         mFragments = Maps.newHashMap();
         addFusionFragment(fragment);
@@ -112,7 +120,8 @@ public class FusionReadData
     public final int[] geneCollections() { return mGeneCollections; }
     public final int[] junctionPositions() { return mJunctionPositions; }
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
-    private final String[] junctionBases() { return mFragment.junctionBases(); }
+    public final String[] junctionBases() { return mJunctionBases; }
+    public final String[] junctionSpliceBases() { return mJunctionSpliceBases; }
 
     public boolean hasIncompleteData() { return mIncompleteData; }
     public void setIncompleteData() { mIncompleteData = true; }
@@ -137,8 +146,6 @@ public class FusionReadData
         return fragments;
     }
 
-    public int fragmentCount() { return mFragments.values().stream().mapToInt(x -> x.size()).sum(); }
-
     public final Map<FusionFragmentType,List<FusionFragment>> getFragments() { return mFragments; }
     public final List<FusionFragment> getFragments(FusionFragmentType type)
     {
@@ -158,14 +165,104 @@ public class FusionReadData
         fragments.add(fragment);
     }
 
-    public boolean hasJunctionFragments() { return mFragments.containsKey(MATCHED_JUNCTION); }
-
     public boolean isKnownSpliced() { return getInitialFragment().isSpliced(); }
     public boolean isUnspliced() { return getInitialFragment().isUnspliced() && getInitialFragment().type() == MATCHED_JUNCTION; }
 
     public boolean hasViableGenes() { return !mCandidateGenes[FS_UPSTREAM].isEmpty() && !mCandidateGenes[FS_DOWNSTREAM].isEmpty(); }
 
     public boolean isValid() { return hasViableGenes() && !hasIncompleteData(); }
+
+    public void setJunctionBases(final IndexedFastaSequenceFile refGenome)
+    {
+        if(mFragment.type() != MATCHED_JUNCTION)
+            return;
+
+        if(refGenome != null)
+        {
+            try
+            {
+                for (int se = SE_START; se <= SE_END; ++se)
+                {
+                    int junctionBase = mJunctionPositions[se];
+
+                    if (junctionOrientations()[se] == 1)
+                    {
+                        String junctionBases = refGenome.getSubsequenceAt(
+                                mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH + 1, junctionBase + 2).getBaseString();
+
+                        mJunctionBases[se] = junctionBases.substring(0, JUNCTION_BASE_LENGTH);
+                        mJunctionSpliceBases[se] = junctionBases.substring(JUNCTION_BASE_LENGTH);
+                    }
+                    else
+                    {
+                        String junctionBases = refGenome.getSubsequenceAt(
+                                mChromosomes[se], junctionBase - 2, junctionBase + JUNCTION_BASE_LENGTH - 1).getBaseString();
+
+                        mJunctionBases[se] = junctionBases.substring(2);
+                        mJunctionSpliceBases[se] = junctionBases.substring(0, 2);
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                // junction may be in an invalid region, just ignore these
+            }
+        }
+        else
+        {
+            for (int se = SE_START; se <= SE_END; ++se)
+            {
+                final int seIndex = se;
+                int junctionBase = mJunctionPositions[se];
+
+                ReadRecord read = mFragment.reads().stream()
+                        .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]))
+                        .filter(x -> x.getMappedRegionCoords().stream().anyMatch(y -> positionWithin(junctionBase, y[SE_START], y[SE_END])))
+                        // .filter(x -> x.getCoordsBoundary(junctionOrientations()[seIndex] == 1 ? SE_END : SE_START) == junctionBase)
+                        .findFirst().orElse(null);
+
+                if(read.getCoordsBoundary(junctionOrientations()[seIndex] == 1 ? SE_END : SE_START) == junctionBase)
+                {
+                    if (junctionOrientations()[se] == 1)
+                    {
+                        mJunctionBases[se] = read.ReadBases.substring(read.Length - JUNCTION_BASE_LENGTH, read.Length);
+                    }
+                    else
+                    {
+                        mJunctionBases[se] = read.ReadBases.substring(0, JUNCTION_BASE_LENGTH);
+                    }
+                }
+                else
+                {
+                    // find the read bases around the junction manually
+                    int baseIndex = 0;
+                    for(int[] coord : read.getMappedRegionCoords())
+                    {
+                        if(junctionBase > coord[SE_END])
+                        {
+                            baseIndex += coord[SE_END] - coord[SE_START] + 1;
+                        }
+                        else
+                        {
+                            baseIndex += junctionBase - coord[SE_START];
+                            break;
+                        }
+                    }
+
+                    if (junctionOrientations()[se] == 1)
+                    {
+                        ++baseIndex;
+                        mJunctionBases[se] = read.ReadBases.substring(baseIndex - JUNCTION_BASE_LENGTH, baseIndex);
+                    }
+                    else
+                    {
+                        mJunctionBases[se] = read.ReadBases.substring(baseIndex, baseIndex + JUNCTION_BASE_LENGTH);
+                    }
+                }
+            }
+        }
+    }
+
 
     public void setStreamData(final List<EnsemblGeneData> upstreamGenes, final List<EnsemblGeneData> downstreamGenes, boolean startIsUpstream)
     {

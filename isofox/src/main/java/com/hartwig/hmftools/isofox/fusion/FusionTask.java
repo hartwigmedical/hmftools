@@ -128,8 +128,6 @@ public class FusionTask implements Callable
         {
             if (fragment.type() == MATCHED_JUNCTION)
             {
-                fragment.setJunctionBases(mConfig.RefFastaSeqFile);
-
                 if(fragment.hasSuppAlignment())
                 {
                     ++junctioned;
@@ -225,6 +223,8 @@ public class FusionTask implements Callable
 
         int fusionId = mTaskId * 1000000 + mNextFusionId++; // keep unique across threaded tasks
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
+
+        fusionData.setJunctionBases(mConfig.RefFastaSeqFile);
 
         setGeneData(fusionData);
 
@@ -347,7 +347,7 @@ public class FusionTask implements Callable
 
         fusionData.cacheTranscriptData();
 
-        initialFragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands());
+        initialFragment.setJunctionTypes(mConfig.RefFastaSeqFile, fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
     }
 
     private static final int POSITION_REALIGN_DISTANCE = 20;
