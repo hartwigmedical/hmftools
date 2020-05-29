@@ -34,6 +34,7 @@ public class FusionData
     public final int SplitFrags;
     public final int RealignedFrags;
     public final int DiscordantFrags;
+    public final int CohortCount;
 
     private String mRawData;
     private KnownGeneType mKnownFusionType;
@@ -48,7 +49,7 @@ public class FusionData
 
     public FusionData(int id, final String[] chromosomes, final int[] junctionPositions, final byte[] junctionOrientations,
             final FusionJunctionType[] junctionTypes, final String svType, final String[] geneIds, final String[] geneNames,
-            int splitFrags, int realignedFrags, int discordantFrags, final int[] coverage, final int[] anchorDistance)
+            int splitFrags, int realignedFrags, int discordantFrags, final int[] coverage, final int[] anchorDistance, int cohortCount)
     {
         Id = id;
         Chromosomes = chromosomes;
@@ -63,6 +64,7 @@ public class FusionData
         DiscordantFrags = discordantFrags;
         Coverage = coverage;
         AnchorDistance = anchorDistance;
+        CohortCount = cohortCount;
 
         mRawData = null;
         mKnownFusionType = KnownGeneType.OTHER;
@@ -133,12 +135,15 @@ public class FusionData
         final int[] anchorDistance = new int[] {
                 Integer.parseInt(items[fieldIndexMap.get("MaxAnchorLengthUp")]), Integer.parseInt(items[fieldIndexMap.get("MaxAnchorLengthDown")]) };
 
+        final int cohortCount = fieldIndexMap.containsKey("CohortCount") ?
+                Integer.parseInt(items[fieldIndexMap.get("CohortCount")]) : 0;
+
         FusionData fusion = new FusionData(
                 fusionId, chromosomes, junctionPositions, junctionOrientations, junctionTypes, svType, geneIds, geneNames,
                 Integer.parseInt(items[fieldIndexMap.get("SplitFrags")]),
                 Integer.parseInt(items[fieldIndexMap.get("RealignedFrags")]),
                 Integer.parseInt(items[fieldIndexMap.get("DiscordantFrags")]),
-                coverage, anchorDistance);
+                coverage, anchorDistance, cohortCount);
 
         final String[] relatedFusionIdStr = fieldIndexMap.containsKey("RelatedSplicedIds") ?
                 items[fieldIndexMap.get("RelatedSplicedIds")].split(ITEM_DELIM, -1) :

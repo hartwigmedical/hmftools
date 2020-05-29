@@ -96,7 +96,7 @@ public class ExternalFusionCompare
 
                 cacheMatchResults(sampleId, "MATCH", fusion.Id, fusion.Chromosomes, fusion.JunctionPositions, fusion.JunctionOrientations,
                         fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames, fusion.SplitFrags + fusion.RealignedFrags,
-                        fusion.DiscordantFrags, extFusion.SplitFragments, extFusion.DiscordantFragments, "");
+                        fusion.DiscordantFrags, extFusion.SplitFragments, extFusion.DiscordantFragments, fusion.CohortCount, "");
             }
         }
 
@@ -134,7 +134,7 @@ public class ExternalFusionCompare
             final String outputFileName = config.formCohortFilename("ext_fusions_compare.csv");
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("SampleId,MatchType,FusionId,ChrUp,ChrDown,PosUp,PosDown,OrientUp,OrientDown,JuncTypeUp,JuncTypeDown"
-                    + ",SVType,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown,JuncFrags,ExtJuncFrags,DiscFrags,ExtDiscFrags,OtherData");
+                    + ",SVType,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown,JuncFrags,ExtJuncFrags,DiscFrags,ExtDiscFrags,CohortCount,OtherData");
             writer.newLine();
 
             return writer;
@@ -149,16 +149,16 @@ public class ExternalFusionCompare
     private void cacheMatchResults(
             final String sampleId, final String matchType, int fusionsId, final String[] chromosomes, final int[] junctionPositions,
             final byte[] junctionOrientations, final FusionJunctionType[] junctionTypes, final String svType, final String[] geneIds,
-            final String[] geneNames, int junctFrags, int discFrags, int extJunctFrags, int extDiscFrags, final String otherData)
+            final String[] geneNames, int junctFrags, int discFrags, int extJunctFrags, int extDiscFrags, int cohortCount, final String otherData)
     {
         String matchResultStr = String.format("%s,%s,%s,%s,%s,%d,%d,%d,%d,%s,%s",
                 sampleId, matchType, fusionsId >= 0 ? fusionId(fusionsId) : "NONE",
                 chromosomes[SE_START], chromosomes[SE_END], junctionPositions[SE_START], junctionPositions[SE_END],
                 junctionOrientations[SE_START], junctionOrientations[SE_END], junctionTypes[SE_START], junctionTypes[SE_END]);
 
-        matchResultStr += String.format(",%s,%s,%s,%s,%s,%d,%d,%d,%d,%s",
+        matchResultStr += String.format(",%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%s",
                 svType, geneIds[SE_START], geneIds[SE_END], geneNames[SE_START], geneNames[SE_END],
-                junctFrags, extJunctFrags, discFrags, extDiscFrags, otherData);
+                junctFrags, extJunctFrags, discFrags, extDiscFrags, cohortCount, otherData);
 
         mSampleResults.add(matchResultStr);
     }
@@ -232,7 +232,7 @@ public class ExternalFusionCompare
                                     extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
                                     unfilteredFusion.JunctionTypes, extFusion.SvType, unfilteredFusion.GeneIds, extFusion.GeneNames,
                                     unfilteredFusion.supportingFragments(), unfilteredFusion.DiscordantFrags,
-                                    extFusion.SplitFragments, extFusion.DiscordantFragments, "");
+                                    extFusion.SplitFragments, extFusion.DiscordantFragments, unfilteredFusion.CohortCount, "");
 
                             unmatchedExternalFusions.remove(index);
 
@@ -258,7 +258,7 @@ public class ExternalFusionCompare
         {
             cacheMatchResults(sampleId, "EXT_ONLY", -1, extFusion.Chromosomes, extFusion.JunctionPositions,
                     extFusion.JunctionOrientations, extFusion.JunctionTypes, extFusion.SvType, noGeneIds, extFusion.GeneNames,
-                    0, 0, extFusion.SplitFragments, extFusion.DiscordantFragments, "");
+                    0, 0, extFusion.SplitFragments, extFusion.DiscordantFragments, 0, "");
         }
 
     }
@@ -339,9 +339,10 @@ public class ExternalFusionCompare
                             final String otherData = String.format("Conf=%s;Filters=%s",
                                     items[16], items[19].replaceAll(",",";"));
 
-                            cacheMatchResults(sampleId, "MATCH_EXT_UNFILTERED", fusion.Id, fusion.Chromosomes, fusion.JunctionPositions,
-                                    fusion.JunctionOrientations, fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames,
-                                    fusion.supportingFragments(), fusion.DiscordantFrags, splitFragments, discordantFragments, otherData);
+                            cacheMatchResults(sampleId, "MATCH_EXT_UNFILTERED", fusion.Id, fusion.Chromosomes,
+                                    fusion.JunctionPositions, fusion.JunctionOrientations, fusion.JunctionTypes, fusion.SvType,
+                                    fusion.GeneIds, fusion.GeneNames, fusion.supportingFragments(), fusion.DiscordantFrags,
+                                    splitFragments, discordantFragments, fusion.CohortCount, otherData);
 
                             fusions.remove(index);
 
@@ -365,7 +366,8 @@ public class ExternalFusionCompare
         {
             cacheMatchResults(sampleId, "ISOFOX_ONLY", fusion.Id, fusion.Chromosomes, fusion.JunctionPositions,
                     fusion.JunctionOrientations, fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames,
-                    fusion.SplitFrags + fusion.RealignedFrags, fusion.DiscordantFrags, 0, 0, fusionId(fusion.Id));
+                    fusion.SplitFrags + fusion.RealignedFrags, fusion.DiscordantFrags, 0, 0,
+                    fusion.CohortCount, fusionId(fusion.Id));
         }
     }
 
