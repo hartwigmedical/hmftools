@@ -1004,6 +1004,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Fix bug where driver likelihood of having multiple variants can be less than having single variant
 - [2.43](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.43) 
   - Update allelic frequency calculation
 - [2.42](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.42) 
