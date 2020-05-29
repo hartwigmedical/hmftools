@@ -8,6 +8,7 @@ import java.util.*
 class TransitiveLink(private val assemblyLinkStore: LinkStore, private val variantStore: VariantStore) {
 
     companion object {
+        const val MAX_ALTERNATIVES = 25
         const val MAX_TRANSITIVE_JUMPS = 2
         const val MAX_TRANSITIVE_DISTANCE = 1000
     }
@@ -16,12 +17,15 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
 
         if (!variant.isSingle) {
             val target = variantStore.select(variant.mateId!!)
-
             val alternativeStart = variantStore.selectAlternatives(variant)
-            for (alternative in alternativeStart) {
-                val assemblyLinks = findLinks("trs_${variant.vcfId}_", alternative, target, maxTransitiveJumps, mutableListOf())
-                if (assemblyLinks.isNotEmpty()) {
-                    return assemblyLinks
+            // Note: we really shouldn't expect to see that many variants within the CIPOS. If we do it is likely that it is a large
+            // poly-G region or something equally messy.
+            if (alternativeStart.size <= MAX_ALTERNATIVES) {
+                for (alternative in alternativeStart) {
+                    val assemblyLinks = findLinks("trs_${variant.vcfId}_", alternative, target, maxTransitiveJumps, mutableListOf())
+                    if (assemblyLinks.isNotEmpty()) {
+                        return assemblyLinks
+                    }
                 }
             }
         }
@@ -99,7 +103,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): List<StructuralVariantContext> {
         val isMatchingPositionAndOrientation = { other: StructuralVariantContext -> isAlternative(variant, other) }
         val alternativeFilter = { other: StructuralVariantContext -> !other.imprecise && !other.isSingle }
-        return selectAllInContig(variant.contig).filter { other ->  isMatchingPositionAndOrientation(other) && alternativeFilter(other) }
+        return selectAllInContig(variant.contig).filter { other -> isMatchingPositionAndOrientation(other) && alternativeFilter(other) }
     }
 
     private fun VariantStore.selectTransitive(variant: StructuralVariantContext): List<StructuralVariantContext> {
