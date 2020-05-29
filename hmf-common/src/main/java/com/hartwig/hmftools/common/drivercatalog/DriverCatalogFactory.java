@@ -60,7 +60,8 @@ final class DriverCatalogFactory {
         double lambda1 = firstVariantTypeCount * firstLikelihood.pVariantNonDriverFactor();
         double lambda2 = secondVariantTypeCount * secondLikelihood.pVariantNonDriverFactor();
         if (Doubles.isZero(lambda1) || Doubles.isZero(lambda2)) {
-            return Math.max(firstLikelihood.dndsLikelihood(), secondLikelihood.dndsLikelihood());
+            return Math.max(probabilityDriverVariant(firstVariantTypeCount, firstLikelihood),
+                    probabilityDriverVariant(secondVariantTypeCount, secondLikelihood));
         }
 
         final double pDriver = Math.max(firstLikelihood.pDriver(), secondLikelihood.pDriver());
