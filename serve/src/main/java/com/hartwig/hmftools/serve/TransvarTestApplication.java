@@ -25,15 +25,39 @@ public class TransvarTestApplication {
 
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
-        // These 2 variants are identical (the trinucleotide is repeated)
-//        extractAndPrintHotspots(transvar, "KIT", null, "V560del");
-//        extractAndPrintHotspots(transvar, "KIT", null, "V559del");
+        // Repeat issue - These 2 variants are identical (the trinucleotide is repeated)
+        extractAndPrintHotspots(transvar, "KIT", null, "V560del");
+        extractAndPrintHotspots(transvar, "KIT", null, "V559del");
 
-        // These variants lead to the same gDNA because D1739Y is not defined on the canonical transcript of BRCA1
-//        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1739Y");
-//        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1692Y");
+        // Transcript issue - These variants lead to the same gDNA because D1739Y is not defined on the canonical transcript of BRCA1
+        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1739Y");
+        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1692Y");
 
+        // This variant doesn't work properly yet (complex del-then-insertion)
         extractAndPrintHotspots(transvar, "EGFR", null, "L747_A750delinsP");
+
+        // Transcript issue
+        extractAndPrintHotspots(transvar, "FBXW7", null, "R658Q");
+        extractAndPrintHotspots(transvar, "FBXW7", null, "R482Q");
+
+        // Transcript issue
+        extractAndPrintHotspots(transvar, "FGFR2", null, "M537I");
+        extractAndPrintHotspots(transvar, "FGFR2", null, "M535I");
+
+        // Transcript issue
+        extractAndPrintHotspots(transvar, "GNAS", null, "R201H");
+        extractAndPrintHotspots(transvar, "GNAS", null, "R844H");
+
+        // Repeat issue
+        extractAndPrintHotspots(transvar, "PTEN", null, "I33del");
+        extractAndPrintHotspots(transvar, "PTEN", null, "I32del");
+
+        // Transcript issue - Complex?
+        extractAndPrintHotspots(transvar, "RUNX1", null, "R174*");
+        extractAndPrintHotspots(transvar, "RUNX1", null, "R177*");
+        extractAndPrintHotspots(transvar, "RUNX1", null, "R177Q");
+        extractAndPrintHotspots(transvar, "RUNX1", null, "R201Q");
+        extractAndPrintHotspots(transvar, "RUNX1", null, "R174Q");
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String transcriptId,
