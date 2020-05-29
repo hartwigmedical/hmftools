@@ -16,7 +16,7 @@ There are 5 steps in GRIPSS described in detail below:
 
 Two hard filters are applied upfront before other processing occurs:
 * NO_MATE - Any non single breakend with no mate is filtered
-* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3% of tumor support is filtered as likely germline or artefact.  Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
+* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3% of tumor support is filtered as likely germline or artefact (note -due to occasional alignment artefacts in GRIDSS we also require at least 1 split or discordant read to be found as support ie SR+RP > 0 or the equivalent for single breakend counts: BUM+BSC>0). Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
 
 ## 2. Realignment
 
