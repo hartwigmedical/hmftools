@@ -43,56 +43,62 @@ public class Transvar {
     }
 
     @NotNull
-    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String proteinAnnotation)
-            throws IOException, InterruptedException {
-        HmfTranscriptRegion transcript = transcriptPerGeneMap.get(gene);
-        if (transcript == null) {
-            LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping hotspot extraction for 'p.{}'", gene, proteinAnnotation);
-            return Lists.newArrayList();
-        }
-
+    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String transcriptID,
+            @NotNull String proteinAnnotation) throws IOException, InterruptedException {
         List<TransvarRecord> records = process.runTransvarPanno(gene, proteinAnnotation);
         if (records.isEmpty()) {
-            LOGGER.warn("Transvar could not resolve genomic coordinates for '{}:p.{}'", gene, proteinAnnotation);
+            LOGGER.warn("Transvar could not resolve any genomic coordinates for '{}:p.{}'", gene, proteinAnnotation);
             return Lists.newArrayList();
         }
 
-        TransvarRecord best = pickBestRecord(records, transcript.transcriptID());
-        if (best == null) {
-            LOGGER.warn("Could not find acceptable record amongst {} records for '{}:p.{}'", records.size(), gene, proteinAnnotation);
+        HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
+        if (canonicalTranscript == null) {
+            LOGGER.warn("Could not find canonical transcript for '{}' in HMF gene panel. Skipping hotspot extraction for 'p.{}'",
+                    gene,
+                    proteinAnnotation);
             return Lists.newArrayList();
         }
 
-        if (!best.transcript().equals(transcript.transcriptID())) {
-            LOGGER.debug("Best transvar record not on canonical transcript for '{}:p.{}'", gene, proteinAnnotation);
-        }
+        TransvarRecord best = pickBestRecord(records, transcriptID, canonicalTranscript.transcriptID());
 
         LOGGER.debug("Interpreting transvar record: '{}'", best);
         // This is assuming every transcript on a gene lies on the same strand.
-        List<VariantHotspot> hotspots = interpreter.convertRecordToHotspots(best, transcript.strand());
+        List<VariantHotspot> hotspots = interpreter.convertRecordToHotspots(best, canonicalTranscript.strand());
 
         if (hotspots.isEmpty()) {
-            LOGGER.warn("Could not derive any hotspots from record {} for  '{}:p.{}'", best, gene, proteinAnnotation);
+            LOGGER.warn("Could not derive any hotspots from record {} for '{}:p.{}'", best, gene, proteinAnnotation);
         }
 
         return hotspots;
     }
 
-    @Nullable
-    private TransvarRecord pickBestRecord(@NotNull List<TransvarRecord> records, @NotNull String preferredTranscriptID) {
-        TransvarRecord best = null;
+    @NotNull
+    private TransvarRecord pickBestRecord(@NotNull List<TransvarRecord> records, @Nullable String preferredTranscriptId,
+            @NotNull String canonicalTranscriptId) {
+        assert !records.isEmpty();
 
-        // We pick a random transcript if the preferred (canonical) transcript is not found.
-        // Ideally we follow "representative transcript from CiViC here
-        // See also https://civic.readthedocs.io/en/latest/model/variants/coordinates.html#understanding-coordinates
+        TransvarRecord preferredRecord = null;
+        TransvarRecord canonicalRecord = null;
+        TransvarRecord bestRecord = null;
         for (TransvarRecord record : records) {
-            if (record.transcript().equals(preferredTranscriptID)) {
-                return record;
+            if (preferredTranscriptId != null && record.transcript().equals(preferredTranscriptId)) {
+                preferredRecord = record;
+            } else if (record.transcript().equals(canonicalTranscriptId)) {
+                canonicalRecord = record;
             } else {
-                best = record;
+                bestRecord = record;
             }
         }
 
-        return best;
+        if (preferredRecord != null) {
+            return preferredRecord;
+        }
+
+        if (canonicalRecord != null) {
+            return canonicalRecord;
+        }
+
+        assert bestRecord != null;
+        return bestRecord;
     }
 }

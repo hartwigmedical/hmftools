@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class TransvarTestApplication {
 
@@ -25,17 +26,17 @@ public class TransvarTestApplication {
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
         // These 2 variants are identical (the trinucleotide is repeated)
-        extractAndPrintHotspots(transvar, "KIT", "V560del");
-        extractAndPrintHotspots(transvar, "KIT", "V559del");
+        extractAndPrintHotspots(transvar, "KIT", null, "V560del");
+        extractAndPrintHotspots(transvar, "KIT", null, "V559del");
 
         // These variants lead to the same gDNA because D1739Y is not defined on the canonical transcript of BRCA1
-        extractAndPrintHotspots(transvar, "BRCA1", "D1739Y");
-        extractAndPrintHotspots(transvar, "BRCA1", "D1692Y");
+        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1739Y");
+        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1692Y");
     }
 
-    private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @NotNull String proteinAnnotation)
-            throws IOException, InterruptedException {
-        List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(gene,  proteinAnnotation);
+    private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String transcriptId,
+            @NotNull String proteinAnnotation) throws IOException, InterruptedException {
+        List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(gene, transcriptId, proteinAnnotation);
 
         LOGGER.info("Printing hotspots for '{}:p.{}'", gene, proteinAnnotation);
         for (VariantHotspot hotspot : hotspots) {

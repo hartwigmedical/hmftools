@@ -55,11 +55,13 @@ public class HotspotExtractor {
         Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
         if (viccEntry.source() == ViccSource.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
-                String featureKey = feature.geneSymbol() + ":p." + feature.name();
+                String featureKey = feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
                 if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType()) || isProteinAnnotation(feature.name())) {
                     List<VariantHotspot> hotspots = Lists.newArrayList();
                     if (transvarEnabled) {
-                        hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name());
+                        hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
+                                viccEntry.transcriptId(),
+                                feature.name());
                         LOGGER.info("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
                         if (hotspots.isEmpty()) {
                             unresolvableFeatures.add(featureKey);

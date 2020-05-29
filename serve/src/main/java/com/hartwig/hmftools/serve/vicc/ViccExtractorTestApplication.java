@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.vicc;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -93,7 +92,7 @@ public class ViccExtractorTestApplication {
         analyzeExtractionResults(resultsPerEntry);
 
         if (WRITE_HOTSPOTS_TO_VCF) {
-            writeHotspots(hotspotVcf, resultsPerEntry.values());
+            writeHotspots(hotspotVcf, resultsPerEntry);
         }
     }
 
@@ -166,7 +165,7 @@ public class ViccExtractorTestApplication {
         }
     }
 
-    private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Collection<ViccExtractionResult> extractionResults) {
+    private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
                 .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
@@ -176,10 +175,7 @@ public class ViccExtractorTestApplication {
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
         writer.writeHeader(header);
 
-        for (Map.Entry<VariantHotspot, Feature> entry : convertAndSort(extractionResults).entrySet()) {
-            Feature feature = entry.getValue();
-            String featureAttribute = toAttribute(feature);
-
+        for (Map.Entry<VariantHotspot, String> entry : convertAndSort(resultsPerEntry).entrySet()) {
             VariantHotspot hotspot = entry.getKey();
             List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
@@ -189,7 +185,7 @@ public class ViccExtractorTestApplication {
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                    .attribute("feature", featureAttribute)
+                    .attribute("feature", entry.getValue())
                     .make();
 
             LOGGER.debug("Writing {}", variantContext);
@@ -208,20 +204,20 @@ public class ViccExtractorTestApplication {
     }
 
     @NotNull
-    private static Map<VariantHotspot, Feature> convertAndSort(@NotNull Collection<ViccExtractionResult> extractionResults) {
-        Map<VariantHotspot, Feature> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
-        for (ViccExtractionResult result : extractionResults) {
-            for (Map.Entry<Feature, List<VariantHotspot>> entry : result.hotspotsPerFeature().entrySet()) {
-                Feature feature = entry.getKey();
-                for (VariantHotspot hotspot : entry.getValue()) {
-                    Feature existingFeature = convertedMap.get(hotspot);
-                    if (existingFeature != null) {
-                        LOGGER.warn("Hotspot {} already recorded. Skipping! Existing feature={}, new feature={}",
+    private static Map<VariantHotspot, String> convertAndSort(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        Map<VariantHotspot, String> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
+            for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
+                String newFeatureAttribute = toAttribute(entryResult.getKey(), featureResult.getKey());
+                for (VariantHotspot hotspot : featureResult.getValue()) {
+                    String existingFeatureAttribute = convertedMap.get(hotspot);
+                    if (existingFeatureAttribute != null && !existingFeatureAttribute.equals(newFeatureAttribute)) {
+                        LOGGER.warn("Hotspot {} already recorded but for different feature! Existing feature={}, new feature={}",
                                 hotspot,
-                                toAttribute(existingFeature),
-                                toAttribute(feature));
+                                existingFeatureAttribute,
+                                newFeatureAttribute);
                     } else {
-                        convertedMap.put(hotspot, feature);
+                        convertedMap.put(hotspot, newFeatureAttribute);
                     }
                 }
             }
@@ -231,7 +227,7 @@ public class ViccExtractorTestApplication {
     }
 
     @NotNull
-    private static String toAttribute(@NotNull Feature feature) {
-        return feature.geneSymbol() + ":p." + feature.name();
+    private static String toAttribute(@NotNull ViccEntry viccEntry, @NotNull Feature feature) {
+        return feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
     }
 }
