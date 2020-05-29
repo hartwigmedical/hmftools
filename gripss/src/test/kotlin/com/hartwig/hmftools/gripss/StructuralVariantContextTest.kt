@@ -5,6 +5,7 @@ import com.hartwig.hmftools.gripss.VariantContextTestFactory.fragmentSupport
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.setAttribute
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.splitReads
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.toSv
+import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import org.junit.Assert.assertFalse
@@ -62,14 +63,29 @@ class StructuralVariantContextTest {
 
     @Test
     fun testPolyGFilters() {
-        assertFalse(createVariant(100, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter())
+        val polyGRegion = Interval("1", 1000, 1010)
 
-        assertTrue(createVariant(100, "A", "A" + "G".repeat(16) + ".").toSv().polyGCFilter())
-        assertTrue(createVariant(100, "A", "A" + "C".repeat(16) + ".").toSv().polyGCFilter())
-        assertFalse(createVariant(100, "A", "A" + "G".repeat(15) + ".").toSv().polyGCFilter())
-        assertFalse(createVariant(100, "A", "A" + "C".repeat(15) + ".").toSv().polyGCFilter())
-        assertFalse(createVariant(100, "A", "A" + "A".repeat(16) + ".").toSv().polyGCFilter())
-        assertFalse(createVariant(100, "A", "A" + "T".repeat(16) + ".").toSv().polyGCFilter())
+        assertFalse(createVariant(999, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter(polyGRegion))
+        assertTrue(createVariant(1000, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter(polyGRegion))
+        assertTrue(createVariant(1010, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(1011, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter(polyGRegion))
+
+        assertFalse(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:999[").toSv().polyGCFilter(polyGRegion))
+        assertTrue(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1000[").toSv().polyGCFilter(polyGRegion))
+        assertTrue(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1010[").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1011[").toSv().polyGCFilter(polyGRegion))
+
+        assertTrue(createVariant(100, "A", "A" + "G".repeat(16) + ".").toSv().polyGCFilter(polyGRegion))
+        assertTrue(createVariant(100, "A", "A" + "C".repeat(16) + ".").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(100, "A", "A" + "G".repeat(15) + ".").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(100, "A", "A" + "C".repeat(15) + ".").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(100, "A", "A" + "A".repeat(16) + ".").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(100, "A", "A" + "T".repeat(16) + ".").toSv().polyGCFilter(polyGRegion))
+
+        assertFalse(createVariant(999, "A", "A.").toSv().polyGCFilter(polyGRegion))
+        assertTrue(createVariant(1000, "A", "A.").toSv().polyGCFilter(polyGRegion))
+        assertTrue(createVariant(1010, "A", "A.").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(1011, "A", "A.").toSv().polyGCFilter(polyGRegion))
     }
 
     @Test

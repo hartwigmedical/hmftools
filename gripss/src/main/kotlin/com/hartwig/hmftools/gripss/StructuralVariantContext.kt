@@ -4,6 +4,8 @@ import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.extensions.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.samtools.util.Interval
+import htsjdk.samtools.util.Locatable
 import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
@@ -187,7 +189,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(IMPRECISE)
         }
 
-        if (polyGCFilter()) {
+        if (polyGCFilter(config.polyGCRegion)) {
             result.add(MAX_POLY_G_LENGTH)
         }
 
@@ -232,8 +234,12 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return context.phredScaledQual < minQual.toDouble()
     }
 
-    fun polyGCFilter(): Boolean {
-        return isSingle && variantType.insertSequence.contains(polyG) || variantType.insertSequence.contains(polyC)
+    fun polyGCFilter(polyGRegion: Locatable): Boolean {
+        return if (isSingle) {
+            variantType.insertSequence.contains(polyG) || variantType.insertSequence.contains(polyC) or polyGRegion.contains(context)
+        } else {
+            polyGRegion.contains(context) || polyGRegion.contains((variantType as Paired).let { Interval(it.otherChromosome, it.otherPosition, it.otherPosition) })
+        }
     }
 
     fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {

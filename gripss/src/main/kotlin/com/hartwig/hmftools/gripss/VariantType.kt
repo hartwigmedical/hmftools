@@ -94,7 +94,6 @@ sealed class Paired : VariantType() {
     fun altString(position: Int, alt: String): String {
         return Insertion(alt, insertSequence, otherChromosome, position, startOrientation, endOrientation, 0).altString()
     }
-
 }
 
 sealed class VariantType {

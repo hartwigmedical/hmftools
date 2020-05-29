@@ -2,6 +2,9 @@ package com.hartwig.hmftools.gripss
 
 import com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue
 import com.hartwig.hmftools.common.cli.Configs.defaultIntValue
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.samtools.util.Interval
+import htsjdk.samtools.util.Locatable
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
@@ -40,7 +43,6 @@ data class GripssConfig(
 
         @Throws(ParseException::class, IOException::class)
         fun createConfig(cmd: CommandLine): GripssConfig {
-            val filterConfig = GripssFilterConfig.createConfig(cmd)
             val inputVcf = requiredFile(cmd, INPUT_VCF_OPTION)
             val refGenome = requiredFile(cmd, REF_GENOME_OPTION)
             val singlePon = requiredFile(cmd, SINGLE_PON_OPTION)
@@ -53,7 +55,17 @@ data class GripssConfig(
                 throw IOException("Unable to write to directory ${outputDir.absolutePath}")
             }
 
+            val isGRCh38 = isGRCh38(refGenome)
+            val filterConfig = GripssFilterConfig.createConfig(cmd, isGRCh38)
+
             return GripssConfig(inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, refGenome, filterConfig)
+        }
+
+        private fun isGRCh38(refGenome: String): Boolean {
+            IndexedFastaSequenceFile(File(refGenome)).use {
+                val dict = it.sequenceDictionary
+                return dict.getSequence("chr2")?.sequenceLength == 242_193_529
+            }
         }
 
         @Throws(IOException::class)
@@ -97,9 +109,14 @@ data class GripssFilterConfig(
         val maxHomLengthShortInversion: Int,
         val maxInexactHomLength: Int,
         val maxInexactHomLengthShortDel: Int,
-        val minLength: Int) {
+        val minLength: Int,
+        val polyGCRegion: Locatable) {
 
     companion object {
+
+        private val linc00486Definition37 = Interval("2", 33_141_260, 33_141_700)
+        private val linc00486Definition38 = Interval("2", 32_916_190, 32_916_630)
+
         fun createOptions(): Options {
             val defaultConfig = default()
             val options = Options()
@@ -117,7 +134,7 @@ data class GripssFilterConfig(
             return options
         }
 
-        fun createConfig(cmd: CommandLine): GripssFilterConfig {
+        fun createConfig(cmd: CommandLine, isGRCh38: Boolean): GripssFilterConfig {
             val defaultConfig = default()
             val maxNormalSupportProportion = defaultDoubleValue(cmd, MAX_NORMAL_SUPPORT_PROPORTION_OPTION, defaultConfig.maxNormalSupportProportion)
             val minNormalCoverage = defaultIntValue(cmd, MIN_NORMAL_COVERAGE_OPTION, defaultConfig.minNormalCoverage)
@@ -129,6 +146,7 @@ data class GripssFilterConfig(
             val maxInexactHomLength = defaultIntValue(cmd, MAX_INEXACT_HOM_LENGTH_OPTION, defaultConfig.maxInexactHomLength)
             val maxInexactHomLengthShortDel = defaultIntValue(cmd, MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, defaultConfig.maxInexactHomLengthShortDel)
             val minLength = defaultIntValue(cmd, MIN_LENGTH_OPTION, defaultConfig.minLength)
+            val linc00486Definition = if (isGRCh38) linc00486Definition38 else linc00486Definition37
 
             return GripssFilterConfig(
                     maxNormalSupportProportion,
@@ -140,7 +158,8 @@ data class GripssFilterConfig(
                     maxHomLengthShortInversion,
                     maxInexactHomLength,
                     maxInexactHomLengthShortDel,
-                    minLength)
+                    minLength,
+                    linc00486Definition)
         }
 
         private fun default(): GripssFilterConfig {
@@ -154,7 +173,9 @@ data class GripssFilterConfig(
                     6,
                     50,
                     5,
-                    32)
+                    32,
+                    linc00486Definition37)
         }
     }
+
 }
