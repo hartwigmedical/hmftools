@@ -42,6 +42,7 @@ public class RnaFusionData
     public final int DiscordantFragments;
     public final RnaJunctionType[] JunctionTypes;
 
+    public final int CohortCount;
     public final String OtherData;
 
     // annotations
@@ -78,7 +79,7 @@ public class RnaFusionData
     public RnaFusionData(
             final String sampleId, final String source, final String fusionId, final String[] geneIds, final String[] geneNames,
             final String[] chromosomes, final int[] positions, final byte[] orientations,
-            int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes, final String otherData)
+            int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes, int cohortCount, final String otherData)
     {
         SampleId = sampleId;
         Source = source;
@@ -91,6 +92,7 @@ public class RnaFusionData
         JunctionFragments = junctionReadCount;
         DiscordantFragments = spanningFragCount;
         JunctionTypes = junctionTypes;
+        CohortCount = cohortCount;
         OtherData = otherData;
 
         Strands = new byte[FS_PAIR];

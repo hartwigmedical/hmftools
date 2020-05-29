@@ -382,13 +382,15 @@ public class RnaFusionMapper
         rnaFusion.setFusionClusterChainInfo();
     }
 
-    private void setDnaFusionMatch(final RnaFusionData rnaFusionData)
+    private void setDnaFusionMatch(final RnaFusionData rnaFusion)
     {
         DnaRnaMatchType matchType = DnaRnaMatchType.NONE;
         boolean reportableFusion = false;
 
-        final Transcript transUp = rnaFusionData.getMatchedfTranscripts()[FS_UPSTREAM];
-        final Transcript transDown = rnaFusionData.getMatchedfTranscripts()[FS_DOWNSTREAM];
+        boolean isUnspliced = rnaFusion.JunctionTypes[FS_UPSTREAM] == UNKNOWN && rnaFusion.JunctionTypes[FS_DOWNSTREAM] == UNKNOWN;
+
+        final Transcript transUp = rnaFusion.getMatchedfTranscripts()[FS_UPSTREAM];
+        final Transcript transDown = rnaFusion.getMatchedfTranscripts()[FS_DOWNSTREAM];
 
         for(final GeneFusion dnaFusion : mDnaFusions)
         {
@@ -398,25 +400,25 @@ public class RnaFusionMapper
                 matchType = DnaRnaMatchType.SVS;
                 reportableFusion = dnaFusion.reportable();
 
-                if(!rnaFusionData.GeneNames[FS_UPSTREAM].isEmpty() && !rnaFusionData.GeneNames[FS_DOWNSTREAM].isEmpty()
-                && (!dnaFusion.upstreamTrans().geneName().equals(rnaFusionData.GeneNames[FS_UPSTREAM])
-                || !dnaFusion.downstreamTrans().geneName().equals(rnaFusionData.GeneNames[FS_DOWNSTREAM])))
+                if(!rnaFusion.GeneNames[FS_UPSTREAM].isEmpty() && !rnaFusion.GeneNames[FS_DOWNSTREAM].isEmpty()
+                && (!dnaFusion.upstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_UPSTREAM])
+                || !dnaFusion.downstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_DOWNSTREAM])))
                 {
                     LNX_LOGGER.debug("genePair rna({}-{}) differs from dna({}-{}) for same SVs({} & {})",
-                            rnaFusionData.GeneNames[FS_UPSTREAM], rnaFusionData.GeneNames[FS_DOWNSTREAM],
+                            rnaFusion.GeneNames[FS_UPSTREAM], rnaFusion.GeneNames[FS_DOWNSTREAM],
                             dnaFusion.upstreamTrans().geneName(), dnaFusion.downstreamTrans().geneName(),
                             transUp.gene().id(), transDown.gene().id());
 
                     // override the gene selection for downstream analysis
-                    rnaFusionData.GeneNames[FS_UPSTREAM] = dnaFusion.upstreamTrans().geneName();
-                    rnaFusionData.GeneNames[FS_DOWNSTREAM] = dnaFusion.downstreamTrans().geneName();
+                    rnaFusion.GeneNames[FS_UPSTREAM] = dnaFusion.upstreamTrans().geneName();
+                    rnaFusion.GeneNames[FS_DOWNSTREAM] = dnaFusion.downstreamTrans().geneName();
                 }
 
                 break;
             }
 
-            if(!dnaFusion.upstreamTrans().geneName().equals(rnaFusionData.GeneNames[FS_UPSTREAM])
-            || !dnaFusion.downstreamTrans().geneName().equals(rnaFusionData.GeneNames[FS_DOWNSTREAM]))
+            if(!dnaFusion.upstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_UPSTREAM])
+            || !dnaFusion.downstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_DOWNSTREAM]))
             {
                 continue;
             }
@@ -427,15 +429,34 @@ public class RnaFusionMapper
 
         if(matchType != DnaRnaMatchType.NONE)
         {
-            rnaFusionData.setDnaFusionMatch(matchType, "", reportableFusion);
+            rnaFusion.setDnaFusionMatch(matchType, "", reportableFusion);
             return;
         }
 
+        if(isUnspliced)
+            return; // cannot match an invalid chained fusion
+
+        // search amongst the invalid chained fusions for a match on SVs
         for(Map.Entry<GeneFusion,String> entry : mDnaInvalidFusions.entrySet())
         {
-            if(entry.getKey().name().equals(rnaFusionData.name()))
+            final GeneFusion fusion = entry.getKey();
+
+            if(transUp != null && fusion.upstreamTrans().gene().id() == transUp.gene().id()
+            && transDown != null && fusion.downstreamTrans().gene().id() == transDown.gene().id())
             {
-                rnaFusionData.setDnaFusionMatch(DnaRnaMatchType.INVALID, entry.getValue(), false);
+                rnaFusion.setDnaFusionMatch(DnaRnaMatchType.INVALID, entry.getValue(), false);
+                return;
+            }
+        }
+
+        // then by gene pair
+        for(Map.Entry<GeneFusion,String> entry : mDnaInvalidFusions.entrySet())
+        {
+            final GeneFusion fusion = entry.getKey();
+
+            if(fusion.name().equals(rnaFusion.name()))
+            {
+                rnaFusion.setDnaFusionMatch(DnaRnaMatchType.INVALID, entry.getValue(), false);
             }
         }
     }
