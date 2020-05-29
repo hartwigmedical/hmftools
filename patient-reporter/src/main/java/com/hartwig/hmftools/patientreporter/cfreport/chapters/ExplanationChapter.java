@@ -96,7 +96,7 @@ public class ExplanationChapter implements ReportChapter {
 
         table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
 
-        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported tumor specific viral insertions")));
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported viral insertions")));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
         table.addCell(TableUtil.createLayoutCell());
