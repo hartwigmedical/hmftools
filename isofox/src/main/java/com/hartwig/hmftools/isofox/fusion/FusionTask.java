@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,7 @@ public class FusionTask implements Callable
 
     private int mNextFusionId;
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
+    private Map<String,Map<String,FusionReadData>> mFusionsByLocation;
     private final Map<String,List<FusionReadData>> mFusionsByGene; // keyed by the locationId
     private final Map<String,List<FusionFragment>> mDiscordantFragments; // keyed by the chromosome pair
     private final Map<String,List<FusionFragment>> mRealignCandidateFragments; // keyed by chromosome, since single-sided
@@ -66,6 +68,7 @@ public class FusionTask implements Callable
 
         mNextFusionId = 0;
         mFusionCandidates = Maps.newHashMap();
+        mFusionsByLocation = Maps.newHashMap();
         mFusionsByGene = Maps.newHashMap();
         mDiscordantFragments = Maps.newHashMap();
         mRealignCandidateFragments = Maps.newHashMap();
@@ -155,6 +158,7 @@ public class FusionTask implements Callable
 
         // free up the set of initial fragments now they've all been assigned
         mAllFragments.clear();
+        mFusionsByLocation.clear();
     }
 
     private void annotateFusions()
@@ -181,6 +185,16 @@ public class FusionTask implements Callable
         mFusionWriter.writeUnfusedFragments(mRealignCandidateFragments);
     }
 
+    private FusionReadData findExistingFusion(final FusionFragment fragment)
+    {
+        final Map<String,FusionReadData> fusionsByPosition = mFusionsByLocation.get(formChromosomePair(fragment.chromosomes()));
+
+        if(fusionsByPosition == null)
+            return null;
+
+        return fusionsByPosition.get(fragment.positionHash());
+    }
+
     private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
     {
         // scenarios:
@@ -188,27 +202,25 @@ public class FusionTask implements Callable
         // 2. Potential discordant or realigned fragment
 
         // fusions will be stored in a map keyed by their location pair (chromosome + geneCollectionId)
+        // and in an additional map of precise positions to avoid mismatches on gene collections
+        FusionReadData existingFusion = findExistingFusion(fragment);
+
+        if(existingFusion != null)
+        {
+            existingFusion.addFusionFragment(fragment);
+
+            // mark donor-acceptor types whether strands are known or not
+            fragment.junctionTypes()[SE_START] = existingFusion.getInitialFragment().junctionTypes()[SE_START];
+            fragment.junctionTypes()[SE_END] = existingFusion.getInitialFragment().junctionTypes()[SE_END];
+            return existingFusion;
+        }
+
         List<FusionReadData> fusions = mFusionCandidates.get(fragment.locationPair());
 
         if(fusions == null)
         {
             fusions = Lists.newArrayList();
             mFusionCandidates.put(fragment.locationPair(), fusions);
-        }
-        else
-        {
-            for (final FusionReadData fusionData : fusions)
-            {
-                if (fusionData.junctionMatch(fragment))
-                {
-                    fusionData.addFusionFragment(fragment);
-
-                    // mark donor-acceptor types whether strands are known or not
-                    fragment.junctionTypes()[SE_START] = fusionData.getInitialFragment().junctionTypes()[SE_START];
-                    fragment.junctionTypes()[SE_END] = fusionData.getInitialFragment().junctionTypes()[SE_END];
-                    return fusionData;
-                }
-            }
         }
 
         int fusionId = mTaskId * 1000000 + mNextFusionId++; // keep unique across threaded tasks
@@ -218,6 +230,18 @@ public class FusionTask implements Callable
 
         fusions.add(fusionData);
 
+        // add to precise-location store
+        Map<String,FusionReadData> fusionsByPosition = mFusionsByLocation.get(formChromosomePair(fragment.chromosomes()));
+
+        if(fusionsByPosition == null)
+        {
+            fusionsByPosition = Maps.newHashMap();
+            mFusionsByLocation.put(formChromosomePair(fragment.chromosomes()), fusionsByPosition);
+        }
+
+        fusionsByPosition.put(fragment.positionHash(), fusionData);
+
+        // add to the cache by gene for later assignment or realigned fragments
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(se == SE_END && fragment.locationIds()[SE_START].equals(fragment.locationIds()[SE_END]))

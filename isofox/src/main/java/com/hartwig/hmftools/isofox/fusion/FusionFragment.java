@@ -124,6 +124,21 @@ public class FusionFragment
             return String.format("%s_%s", mLocationIds[SE_START], mLocationIds[SE_END]);
     }
 
+    public String positionHash()
+    {
+        if(isSingleGeneCollection())
+        {
+            return String.format("%d_%d",
+                    mJunctionPositions[SE_START], mJunctionOrientations[SE_START]);
+        }
+        else
+        {
+            return String.format("%d_%d_%d_%d",
+                    mJunctionPositions[SE_START], mJunctionOrientations[SE_START],
+                    mJunctionPositions[SE_END], mJunctionOrientations[SE_END]);
+        }
+    }
+
     public void setType(FusionFragmentType type) { mType = type; }
 
     public StructuralVariantType getImpliedSvType()
