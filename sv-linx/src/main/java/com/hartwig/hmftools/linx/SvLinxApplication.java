@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromGermlineVcf;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
+import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_SAMPLE_DATA_DIR;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
+import com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -129,6 +131,8 @@ public class SvLinxApplication
 
         FusionDisruptionAnalyser fusionAnalyser = null;
         boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
+
+        ChainFinderCompare chainFinderCompare = cmd.hasOption(CHAIN_FINDER_SAMPLE_DATA_DIR) ? new ChainFinderCompare(cmd) : null;
 
         boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
         boolean applyPromotorDistance = checkFusions;
@@ -248,6 +252,11 @@ public class SvLinxApplication
 
             prefCounter.stop();
 
+            if(chainFinderCompare != null)
+            {
+                chainFinderCompare.processSample(sampleId, svDataList, sampleAnalyser.getChrBreakendMap());
+            }
+
             if(config.MaxSamples > 0 && count >= config.MaxSamples)
             {
                 LOGGER.info("exiting after max sample count {} reached", count);
@@ -337,6 +346,7 @@ public class SvLinxApplication
         FusionFinder.addCmdLineArgs(options);
         DriverGeneAnnotator.addCmdLineArgs(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);
+        ChainFinderCompare.addCmdLineArgs(options);
 
         return options;
     }

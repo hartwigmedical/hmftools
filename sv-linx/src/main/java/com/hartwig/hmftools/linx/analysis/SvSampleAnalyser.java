@@ -96,7 +96,7 @@ public class SvSampleAnalyser {
 
     // data per run (ie sample)
     private String mSampleId;
-    private final List<SvVarData> mAllVariants; // the original list to analyse
+    private final List<SvVarData> mAllVariants; // full list of SVs
 
     private BufferedWriter mSvFileWriter;
     private BufferedWriter mClusterFileWriter;
