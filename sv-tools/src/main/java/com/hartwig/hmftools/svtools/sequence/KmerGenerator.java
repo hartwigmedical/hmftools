@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.sequence;
 
+import static com.hartwig.hmftools.common.utils.Strings.reverseString;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
@@ -129,18 +130,6 @@ public class KmerGenerator
             return mRefGenome.getBaseString(chromosome, position - length, position);
         else
             return mRefGenome.getBaseString(chromosome, position, position + length);
-    }
-
-    public static final String reverseString(final String str)
-    {
-        String reverse = "";
-
-        for(int i = str.length() - 1; i >= 0; --i)
-        {
-            reverse += str.charAt(i);
-        }
-
-        return reverse;
     }
 
     private static final String KMER_INPUT_FILE = "kmer_input_file";
