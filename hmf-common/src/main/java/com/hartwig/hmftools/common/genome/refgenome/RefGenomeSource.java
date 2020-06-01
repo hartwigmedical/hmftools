@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.neoepitope;
+package com.hartwig.hmftools.common.genome.refgenome;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 

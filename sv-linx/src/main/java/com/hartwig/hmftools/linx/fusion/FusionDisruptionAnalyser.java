@@ -44,7 +44,7 @@ import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
-import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;

@@ -13,8 +13,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import com.hartwig.hmftools.linx.neoepitope.RefGenomeInterface;
-import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

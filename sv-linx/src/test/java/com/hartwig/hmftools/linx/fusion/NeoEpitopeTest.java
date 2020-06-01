@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeData;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
 import com.hartwig.hmftools.linx.utils.LinxTester;
-import com.hartwig.hmftools.linx.utils.MockRefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 
 import org.junit.Test;
 

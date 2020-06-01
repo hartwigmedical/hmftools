@@ -25,6 +25,6 @@ public class CfChainClusterOverlap
 
     public static String formClusterChainId(int clusterId, int chainId) { return String.format("%d_%d", clusterId, chainId); }
 
-    public String hasdId() { return mHashId; }
+    public String hashId() { return mHashId; }
 
 }

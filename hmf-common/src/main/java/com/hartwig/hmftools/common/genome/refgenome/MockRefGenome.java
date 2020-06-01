@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.linx.utils;
+package com.hartwig.hmftools.common.genome.refgenome;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.linx.neoepitope.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
+// test implementation of the ref genome
 public class MockRefGenome implements RefGenomeInterface
 {
     public final Map<String,String> RefGenomeMap;
@@ -13,7 +14,6 @@ public class MockRefGenome implements RefGenomeInterface
     {
         RefGenomeMap = Maps.newHashMap();
     }
-
 
     @Override
     public String getBaseString(final String chromosome, int posStart, int posEnd)
