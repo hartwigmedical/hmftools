@@ -36,11 +36,11 @@ class VariantStore(
         return variants[variantIndexesById[vcfId]!!]
     }
 
-    fun selectOthersNearby(variant: StructuralVariantContext, additionalDistance: Int, seekDistance: Int, filter: (StructuralVariantContext) -> Boolean): List<StructuralVariantContext> {
+    fun selectOthersNearby(variant: StructuralVariantContext, additionalDistance: Int, seekDistance: Int, filter: (StructuralVariantContext) -> Boolean): Collection<StructuralVariantContext> {
         return selectOthersNearby(variantIndexesById[variant.vcfId]!!, additionalDistance, seekDistance, filter)
     }
 
-    private fun selectOthersNearby(i: Int, additionalDistance: Int,  maxSeekDistance: Int, filter: (StructuralVariantContext) -> Boolean): List<StructuralVariantContext> {
+    private fun selectOthersNearby(i: Int, additionalDistance: Int,  maxSeekDistance: Int, filter: (StructuralVariantContext) -> Boolean): Collection<StructuralVariantContext> {
         val variant = variants[i]
         val minStart = variant.minStart - additionalDistance
         val maxStart = variant.maxStart + additionalDistance
@@ -48,7 +48,7 @@ class VariantStore(
         val overlapFilter = { other: StructuralVariantContext -> other.minStart <= maxStart && other.maxStart >= minStart }
         val allFilters = { other: StructuralVariantContext -> idFilter(other) && overlapFilter(other) && filter(other) }
 
-        val result = mutableListOf<StructuralVariantContext>()
+        val result = ArrayDeque<StructuralVariantContext>()
 
         // Look backwards
         for (j in max(0, i - 1) downTo 0) {
@@ -56,7 +56,7 @@ class VariantStore(
             if (other.maxStart < variant.minStart - maxSeekDistance) {
                 break
             } else if (allFilters(other)) {
-                result.add(0, other)
+                result.addFirst(other)
             }
         }
 
@@ -66,7 +66,7 @@ class VariantStore(
             if (other.minStart > variant.maxStart + maxSeekDistance) {
                 break
             } else if (allFilters(other)) {
-                result.add(other)
+                result.addLast(other)
             }
         }
 

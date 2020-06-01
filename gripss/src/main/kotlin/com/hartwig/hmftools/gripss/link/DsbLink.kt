@@ -31,7 +31,7 @@ class DsbLink(private val duplicates: Set<String>, private val variantStore: Var
     fun dsbLinks(linkId: Int, variant: StructuralVariantContext): List<Link> {
         val nearby = findNearby(variant)
         if (nearby.size == 1) {
-            val other = nearby[0]
+            val other = nearby.iterator().next()
             val linkIsSymmetric = findNearby(other).size == 1
             if (!linkIsSymmetric) {
                 return Collections.emptyList()
@@ -48,7 +48,7 @@ class DsbLink(private val duplicates: Set<String>, private val variantStore: Var
         return Collections.emptyList()
     }
 
-    private fun findNearby(variant: StructuralVariantContext): List<StructuralVariantContext> {
+    private fun findNearby(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
         val orientationFilter = { other: StructuralVariantContext -> other.orientation != variant.orientation }
         val duplicateFilter = { other: StructuralVariantContext -> !duplicates.contains(other.vcfId) }
         val allFilters = { other: StructuralVariantContext -> orientationFilter(other) && duplicateFilter(other) }
