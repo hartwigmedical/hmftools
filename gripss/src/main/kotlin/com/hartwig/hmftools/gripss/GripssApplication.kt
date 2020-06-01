@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
     companion object {
         val logger = LogManager.getLogger(this::class.java)
-        const val PON_ADDITIONAL_DISTANCE = 0
+        const val PON_ADDITIONAL_DISTANCE = 1
         const val MIN_HOTSPOT_DISTANCE = 1000
         const val MIN_RESCUE_QUAL = 100
     }
