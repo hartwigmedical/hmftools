@@ -1,6 +1,16 @@
 package com.hartwig.hmftools.serve.transvar;
 
-import org.apache.logging.log4j.util.Strings;
+import java.util.Arrays;
+import java.util.List;
+
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarObject;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarObject;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +34,7 @@ final class TransvarConverter {
     }
 
     @Nullable
-    static TransvarRecord toTransvarRecord(@NotNull String transvarLine) {
+    static TransvarObject toTransvarRecord(@NotNull String transvarLine) {
         String[] fields = transvarLine.split(FIELD_DELIMITER);
 
         String message = fields[MESSAGE_COLUMN];
@@ -32,58 +42,52 @@ final class TransvarConverter {
             return null;
         }
 
-        ImmutableTransvarRecord.Builder builder = ImmutableTransvarRecord.builder();
-
-        populateTranscript(builder, fields[TRANSCRIPT_COLUMN]);
-        populateCoordinatesRefAlt(builder, fields[COORDINATES_COLUMN]);
-        populateCodonInfo(builder, message);
-
-        TransvarRecord record = builder.build();
-
-        if (isLong(record.gdnaRef()) || isLong(record.gdnaAlt())) {
-            // For long indels, transvar gives the length of the indel rather than the exact bases. We ignore such records.
-            return null;
-        }
-
-        return record;
+        return createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], message);
     }
 
-    private static void populateTranscript(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
+    @Nullable
+    private static TransvarObject createRecord(@NotNull String transcriptField, @NotNull String coordinateField,
+            @NotNull String messageField) {
+        ImmutableTransvarObject.Builder recordBuilder = ImmutableTransvarObject.builder();
+
         // Field looks like "${transcript} (protein_coding)"
-        String[] parts = field.trim().split(" ");
-        builder.transcript(parts[0]);
-    }
+        recordBuilder.transcript(transcriptField.trim().split(" ")[0]);
 
-    private static void populateCoordinatesRefAlt(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
         // General case: "chr${chr}:g.${gdnaPos}${gdnaRef}>${dnaAlt}/c.${cdnaPos}${cdnaRef}>${cdnaAlt}/p.${aaRef}${aaPos}{aaAlt}"
         //  For MNV the g. part looks like ${gdnaPosStart}_${gdnaPosEnd}del${ref}ins${alt}
-        String[] chromosomeAndGDNA = (field.split("/")[0]).split(":");
+        //  For any type of indel there will be an _ in the range of the gdna coordinates.
+        String[] chromosomeAndGDNA = (coordinateField.split("/")[0]).split(":");
 
         // Remove "chr" from the chromosome
-        builder.chromosome(chromosomeAndGDNA[0].substring(3));
+        recordBuilder.chromosome(chromosomeAndGDNA[0].substring(3));
 
         // Remove "g." from the gdna annotation
         String gdna = chromosomeAndGDNA[1].substring(2);
 
         if (gdna.contains(RANGE_INDICATOR)) {
+            recordBuilder.gdnaPosition(Long.parseLong(gdna.split(RANGE_INDICATOR)[0]));
+            TransvarAnnotation annotation;
             if (gdna.contains(INSERTION) || gdna.contains(DELETION)) {
-                populateForInsertionDeletion(builder, gdna);
+                annotation = annotationForInsertionDeletion(gdna, messageField);
             } else {
-                populateForDuplication(builder, gdna);
+                annotation = annotationForDuplication(gdna);
+            }
+
+            if (annotation == null) {
+                return null;
+            } else {
+                return recordBuilder.annotation(annotation).build();
             }
         } else {
-            populateForSNV(builder, gdna);
+            return createForSNV(recordBuilder, gdna, messageField);
         }
     }
 
-    private static void populateForInsertionDeletion(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+    @Nullable
+    private static TransvarAnnotation annotationForInsertionDeletion(@NotNull String gdna, @NotNull String messageField) {
         assert gdna.contains(RANGE_INDICATOR);
 
-        String[] gdnaParts = gdna.split(RANGE_INDICATOR);
-        long start = Long.parseLong(gdnaParts[0]);
-        builder.gdnaPosition(start);
-
-        String delInsPart = gdnaParts[1];
+        String delInsPart = gdna.split(RANGE_INDICATOR)[1];
         int delStart = delInsPart.indexOf(DELETION);
         int insStart = delInsPart.indexOf(INSERTION);
 
@@ -91,63 +95,68 @@ final class TransvarConverter {
             throw new IllegalStateException("Cannot process range gDNA as no '" + DELETION + "' or  '" + INSERTION + "' found: " + gdna);
         }
 
-        String gdnaRef = Strings.EMPTY;
-        String gdnaAlt = Strings.EMPTY;
         if (insStart >= 0) {
-            gdnaAlt = delInsPart.substring(insStart + INSERTION.length());
+            String insertedBases = delInsPart.substring(insStart + INSERTION.length());
 
             if (delStart >= 0) {
-                // This should look like '123delCinsG'
-                gdnaRef = delInsPart.substring(delStart + DELETION.length(), insStart);
+                if (delStart + DELETION.length() == insStart) {
+                    // This should look like 123delinsGGT
+                    // TODO support complex deletions+insertions
+                    return null;
+                } else {
+                    // This should look like '123delCinsG'
+                    String deletedBases = delInsPart.substring(delStart + DELETION.length(), insStart);
+                    assert deletedBases.length() == insertedBases.length();
+
+                    return ImmutableTransvarSnvMnv.builder()
+                            .gdnaRef(deletedBases)
+                            .gdnaAlt(insertedBases)
+                            .referenceCodon(extractReferenceCodonFromMessageField(messageField))
+                            .candidateCodons(extractCandidateCodonsFromMessageField(messageField))
+                            .build();
+                }
+            } else {
+                if (isLong(insertedBases)) {
+                    // For very long inserts, transvar gives the length of the insert rather than bases inserted. We ignore these.
+                    return null;
+                } else {
+                    return ImmutableTransvarInsertion.builder().insertedBases(insertedBases).build();
+                }
             }
         } else {
             // This should look like '123delC'
-            gdnaRef = delInsPart.substring(delStart + DELETION.length());
+            String deletedBases = delInsPart.substring(delStart + DELETION.length());
+            if (isLong(deletedBases)) {
+                // For very long deletes, transvar gives the length of the delete rather than bases deleted. We ignore these.
+                return null;
+            } else {
+                return ImmutableTransvarDeletion.builder().deletedBases(deletedBases).build();
+            }
         }
-
-        // Fill in the indel length in case of an indel
-        if (!gdnaRef.isEmpty() && gdnaAlt.isEmpty()) {
-            builder.indelLength(gdnaRef.length());
-        } else if (gdnaRef.isEmpty() && !gdnaAlt.isEmpty()) {
-            builder.indelLength(gdnaAlt.length());
-        }
-
-        builder.gdnaRef(gdnaRef);
-        builder.gdnaAlt(gdnaAlt);
     }
 
-    private static void populateForDuplication(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+    @NotNull
+    private static TransvarAnnotation annotationForDuplication(@NotNull String gdna) {
         assert gdna.contains(RANGE_INDICATOR);
 
         String[] gdnaParts = gdna.split(RANGE_INDICATOR);
-        long start = Long.parseLong(gdnaParts[0]);
-        builder.gdnaPosition(start);
-
-        // DUPs simply look like 'start_end' and come with no ref/alt information, but some come with something "dupTTT" appended to it.
-        // In both cases we ignore the "dup" part.
-        builder.gdnaRef(Strings.EMPTY);
-        builder.gdnaAlt(Strings.EMPTY);
+        long position = Long.parseLong(gdnaParts[0]);
 
         String dupPart = gdnaParts[1];
+        int duplicatedBaseCount;
         if (dupPart.contains(DUPLICATION)) {
-            builder.indelLength(1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(DUPLICATION))) - start));
+            duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(DUPLICATION))) - position);
         } else if (isLong(dupPart)) {
-            builder.indelLength(1 + (int) (Long.parseLong(dupPart) - start));
+            duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart) - position);
         } else {
             throw new IllegalStateException("Cannot process duplication for gDNA: " + gdna);
         }
+        return ImmutableTransvarDuplication.builder().duplicatedBaseCount(duplicatedBaseCount).build();
     }
 
-    private static boolean isLong(@NotNull String value) {
-        try {
-            Long.parseLong(value);
-            return true;
-        } catch (NumberFormatException exp) {
-            return false;
-        }
-    }
-
-    private static void populateForSNV(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+    @NotNull
+    private static TransvarObject createForSNV(@NotNull ImmutableTransvarObject.Builder recordBuilder, @NotNull String gdna,
+            @NotNull String messageField) {
         // SNVs look like 1234T>C
         StringBuilder gdnaPos = new StringBuilder();
         StringBuilder gdnaRef = new StringBuilder();
@@ -177,23 +186,53 @@ final class TransvarConverter {
             }
         }
 
-        builder.gdnaPosition(Long.parseLong(gdnaPos.toString()));
-        builder.gdnaRef(gdnaRef.toString());
-        builder.gdnaAlt(gdnaAlt.toString());
+        TransvarAnnotation snvAnnotation = ImmutableTransvarSnvMnv.builder()
+                .gdnaRef(gdnaRef.toString())
+                .gdnaAlt(gdnaAlt.toString())
+                .referenceCodon(extractReferenceCodonFromMessageField(messageField))
+                .candidateCodons(extractCandidateCodonsFromMessageField(messageField))
+                .build();
+
+        return recordBuilder.gdnaPosition(Long.parseLong(gdnaPos.toString())).annotation(snvAnnotation).build();
     }
 
-    private static void populateCodonInfo(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
+    @NotNull
+    private static String extractReferenceCodonFromMessageField(@NotNull String messageField) {
         // Field is semicolon-separated.
-        //  SNV relevant fields look like "reference_codon=${ref};candidate_codons=${alt1},${alt2},...,${altN};"
-        String[] infoFields = field.split(";");
+        //  Relevant fields look like "reference_codon=${ref};candidate_codons=${alt1},${alt2},...,${altN};"
+        String[] infoFields = messageField.split(";");
 
         for (String infoField : infoFields) {
             if (infoField.contains("reference_codon")) {
-                builder.referenceCodon(infoField.split("=")[1]);
-            } else if (infoField.contains("candidate_codons")) {
-                String candidates = infoField.split("=")[1];
-                builder.addCandidateCodons(candidates.split(","));
+                return infoField.split("=")[1];
             }
+        }
+
+        throw new IllegalStateException("No reference_codon found in message field: " + messageField);
+    }
+
+    @Nullable
+    private static List<String> extractCandidateCodonsFromMessageField(@NotNull String messageField) {
+        // Field is semicolon-separated.
+        //  Relevant fields look like "reference_codon=${ref};candidate_codons=${alt1},${alt2},...,${altN};"
+        String[] infoFields = messageField.split(";");
+
+        for (String infoField : infoFields) {
+            if (infoField.contains("candidate_codons")) {
+                String candidates = infoField.split("=")[1];
+                return Arrays.asList(candidates.split(","));
+            }
+        }
+
+        throw new IllegalStateException("No candidate_codons found in message field: " + messageField);
+    }
+
+    private static boolean isLong(@NotNull String value) {
+        try {
+            Long.parseLong(value);
+            return true;
+        } catch (NumberFormatException exp) {
+            return false;
         }
     }
 }

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarObject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,7 +33,7 @@ class TransvarProcess {
     }
 
     @NotNull
-    List<TransvarRecord> runTransvarPanno(@NotNull String gene, @NotNull String proteinAnnotation)
+    List<TransvarObject> runTransvarPanno(@NotNull String gene, @NotNull String proteinAnnotation)
             throws InterruptedException, IOException {
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
@@ -75,10 +76,10 @@ class TransvarProcess {
             }
         }
 
-        List<TransvarRecord> records = Lists.newArrayList();
+        List<TransvarObject> records = Lists.newArrayList();
         for (String stdoutLine : captureStdout(process)) {
             LOGGER.debug("Converting transvar output line to TransvarRecord: '{}'", stdoutLine);
-            TransvarRecord record = TransvarConverter.toTransvarRecord(stdoutLine);
+            TransvarObject record = TransvarConverter.toTransvarRecord(stdoutLine);
             if (record != null) {
                 records.add(record);
             }

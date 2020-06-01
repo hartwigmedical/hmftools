@@ -9,6 +9,12 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarObject;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarObject;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
@@ -20,11 +26,13 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertSnvToHotspots() {
-        TransvarRecord record = baseRecord().gdnaPosition(10)
-                .gdnaRef("A")
-                .gdnaAlt("C")
-                .referenceCodon("TTA")
-                .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
+        TransvarObject record = baseRecord().gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("A")
+                        .gdnaAlt("C")
+                        .referenceCodon("TTA")
+                        .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
+                        .build())
                 .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
@@ -39,11 +47,13 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertMnvForwardStrandToHotspots() {
-        TransvarRecord record = baseRecord().gdnaPosition(10)
-                .gdnaRef("TA")
-                .gdnaAlt("GC")
-                .referenceCodon("TAC")
-                .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
+        TransvarObject record = baseRecord().gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("TA")
+                        .gdnaAlt("GC")
+                        .referenceCodon("TAC")
+                        .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
+                        .build())
                 .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
@@ -58,11 +68,13 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertMnvReverseStrandToHotspots() {
-        TransvarRecord record = baseRecord().gdnaPosition(10)
-                .gdnaRef("CA")
-                .gdnaAlt("GC")
-                .referenceCodon("TGG")
-                .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
+        TransvarObject record = baseRecord().gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("CA")
+                        .gdnaAlt("GC")
+                        .referenceCodon("TGG")
+                        .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
+                        .build())
                 .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
@@ -77,7 +89,8 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertDeletionToHotspots() {
-        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("GAT").gdnaAlt("").indelLength(3).build();
+        TransvarObject record =
+                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarDeletion.builder().deletedBases("GAT").build()).build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
@@ -88,7 +101,8 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertInsertionToHotspots() {
-        TransvarRecord forwardRecord = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("GAA").indelLength(3).build();
+        TransvarObject forwardRecord =
+                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
 
         List<VariantHotspot> forwardHotspots = testInterpreter().convertRecordToHotspots(forwardRecord, Strand.FORWARD);
 
@@ -97,7 +111,8 @@ public class TransvarInterpreterTest {
         assertHotspot(baseHotspot().position(4).ref("C").alt("CGAG").build(), forwardHotspots.get(0));
         assertHotspot(baseHotspot().position(4).ref("C").alt("CGAA").build(), forwardHotspots.get(1));
 
-        TransvarRecord reverseRecord = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("GAA").indelLength(3).build();
+        TransvarObject reverseRecord =
+                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
 
         List<VariantHotspot> reverseHotspots = testInterpreter().convertRecordToHotspots(reverseRecord, Strand.REVERSE);
 
@@ -116,7 +131,8 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertDuplicationToHotspot() {
-        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("").indelLength(3).build();
+        TransvarObject record =
+                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarDuplication.builder().duplicatedBaseCount(3).build()).build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
@@ -133,8 +149,8 @@ public class TransvarInterpreterTest {
     }
 
     @NotNull
-    private static ImmutableTransvarRecord.Builder baseRecord() {
-        return ImmutableTransvarRecord.builder().transcript("irrelevant").chromosome("1");
+    private static ImmutableTransvarObject.Builder baseRecord() {
+        return ImmutableTransvarObject.builder().transcript("irrelevant").chromosome("1");
     }
 
     @NotNull
