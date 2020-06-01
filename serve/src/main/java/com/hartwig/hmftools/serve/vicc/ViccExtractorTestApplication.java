@@ -50,17 +50,17 @@ public class ViccExtractorTestApplication {
     public static void main(String[] args) throws IOException, InterruptedException {
         Configurator.setRootLevel(Level.DEBUG);
 
+        String hostname = InetAddress.getLocalHost().getHostName();
+        LOGGER.debug("Running on '{}'", hostname);
+
         String viccJsonPath;
         String refGenomeFastaFile;
         String hotspotVcf;
 
-        String hostname = InetAddress.getLocalHost().getHostName();
-        LOGGER.debug("Running on '{}'", hostname);
-
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            hotspotVcf = System.getProperty("user.home") + "/hotspotsVicc.vcf";
+            hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
