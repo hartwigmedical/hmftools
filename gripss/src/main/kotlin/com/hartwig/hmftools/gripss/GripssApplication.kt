@@ -53,13 +53,15 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
     override fun run() {
         logger.info("Config ${config.filterConfig}")
-
-        logger.info("Reading VCF file: ${config.inputVcf}")
         val contigComparator = ContigComparator(dictionary)
-        val variantStore = VariantStore(hardFilterAndRealign(fileReader, contigComparator))
 
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
-        val hotspots = hotspots(contigComparator, variantStore.selectAll())
+        val hotspotStore = LocationStore(contigComparator, listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
+        val hotspotFilter = hotspotFilter(hotspotStore)
+
+        logger.info("Reading VCF file: ${config.inputVcf}")
+        val variantStore = VariantStore(hardFilterAndRealign(fileReader, hotspotFilter, contigComparator))
+        val hotspots = variantStore.selectAll().filter(hotspotFilter).map { x -> x.vcfId}.toSet()
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
         val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll());
@@ -104,32 +106,33 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         }
     }
 
-    private fun hotspots(contigComparator: ContigComparator, variants: List<StructuralVariantContext>): Set<String> {
-        val hotspotStore = LocationStore(listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
+    private fun hotspotFilter(hotspotStore: LocationStore): (StructuralVariantContext) -> Boolean {
         val minQualFilter = { x: StructuralVariantContext -> x.qual >= MIN_RESCUE_QUAL }
         val minDistanceFilter = { x: StructuralVariantContext -> x.isSingle || x.isTranslocation || (x.variantType as Paired).length > MIN_HOTSPOT_DISTANCE }
-
-        return hotspotStore.matching(variants)
-                .filter { x -> minQualFilter(x) && minDistanceFilter(x) }
-                .map { it.vcfId }.toSet()
+        return {variant -> minQualFilter(variant) && minDistanceFilter(variant) && hotspotStore.contains(variant)}
     }
 
     private fun ponFiltered(contigComparator: ContigComparator, variants: List<StructuralVariantContext>): Set<String> {
         val breakends = Breakend.fromBedFile(config.singlePonFile)
         val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
-        val ponStore = LocationStore(breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
+        val ponStore = LocationStore(contigComparator, breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
 
+        logger.info("Applying PON file")
         return ponStore.matching(variants).map { it.vcfId }.toSet()
     }
 
-    private fun hardFilterAndRealign(fileReader: VCFFileReader, contigComparator: ContigComparator): List<StructuralVariantContext> {
+    private fun hardFilterAndRealign(fileReader: VCFFileReader, hotspotFilter: (StructuralVariantContext) -> Boolean, contigComparator: ContigComparator): List<StructuralVariantContext> {
         val unfiltered: MutableSet<String> = mutableSetOf()
         val hardFilter: MutableSet<String> = mutableSetOf()
         val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()
 
         for (variantContext in fileReader) {
             val structuralVariant = StructuralVariantContext(variantContext)
-            if (hardFilter.contains(structuralVariant.vcfId) || structuralVariant.isHardFilter(config.filterConfig)) {
+            val isHotspot = hotspotFilter(structuralVariant)
+            val isMateFiltered = hardFilter.contains(structuralVariant.vcfId)
+            val isHardFiltered = isMateFiltered || (!isHotspot && structuralVariant.isHardFilter(config.filterConfig))
+
+            if (isHardFiltered) {
                 structuralVariant.mateId?.let { hardFilter.add(it) }
             } else {
                 unfiltered.add(variantContext.id)
