@@ -24,4 +24,16 @@ public class Strings
         return combinedStr.toString();
     }
 
+    public static final String reverseString(final String str)
+    {
+        String reverse = "";
+
+        for(int i = str.length() - 1; i >= 0; --i)
+        {
+            reverse += str.charAt(i);
+        }
+
+        return reverse;
+    }
+
 }
