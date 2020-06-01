@@ -390,7 +390,7 @@ public class AltSpliceJunctionFinder
 
     public void prioritiseGenes()
     {
-        mAltSpliceJunctions.forEach(x -> x.setBaseContext(mConfig.RefFastaSeqFile, mGenes.chromosome()));
+        mAltSpliceJunctions.forEach(x -> x.setBaseContext(mConfig.RefGenome, mGenes.chromosome()));
 
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {

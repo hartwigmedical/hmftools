@@ -22,6 +22,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -177,6 +179,14 @@ public class TestUtils
         addTransExonData(geneTransCache, GENE_ID_6, transDataList);
     }
 
+    public static void populateRefGenome(final RefGenomeInterface refGenome)
+    {
+        final MockRefGenome mockRefGenome = (MockRefGenome)refGenome;
+        final String refBases = generateRandomBases(GENE_START_3 + 10000);
+        mockRefGenome.RefGenomeMap.put(CHR_1, refBases);
+        mockRefGenome.RefGenomeMap.put(CHR_2, refBases);
+    }
+
     public static Cigar createCigar(int preSc, int match, int postSc)
     {
         if (preSc == 0 && match == 0 && postSc == 0)
@@ -194,7 +204,6 @@ public class TestUtils
             cigar.add(new CigarElement(postSc, CigarOperator.SOFT_CLIP));
 
         return cigar;
-
     }
 
     public static Cigar createCigar(int preSc, int preMatch, int nonRef, int postMatch, int postSc)
@@ -340,7 +349,6 @@ public class TestUtils
     {
         char[] str = new char[length];
         String bases = "ACGT";
-
 
         int baseIndex = 0;
         for(int i = 0; i < length; ++i)

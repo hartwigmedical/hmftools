@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
@@ -9,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.lowerChromosome;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
@@ -17,7 +16,6 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJuncti
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
 import java.util.List;
 import java.util.Map;
@@ -25,8 +23,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-
-import htsjdk.samtools.CigarOperator;
 
 public class FusionFragmentBuilder
 {

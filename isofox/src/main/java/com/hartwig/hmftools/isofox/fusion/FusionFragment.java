@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
@@ -264,7 +265,7 @@ public class FusionFragment
         }
     }
 
-    public void setJunctionTypes(final IndexedFastaSequenceFile refGenome, final byte[] junctionStrands, final String[] junctionSpliceBases)
+    public void setJunctionTypes(final RefGenomeInterface refGenome, final byte[] junctionStrands, final String[] junctionSpliceBases)
     {
         if(refGenome == null)
             return;

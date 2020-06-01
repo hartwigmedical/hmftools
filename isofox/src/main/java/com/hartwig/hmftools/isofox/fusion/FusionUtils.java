@@ -16,26 +16,6 @@ import htsjdk.samtools.CigarOperator;
 
 public class FusionUtils
 {
-    public static boolean lowerChromosome(final String chr, final String otherChr)
-    {
-        return chromosomeRank(chr) < chromosomeRank(otherChr);
-    }
-
-    public static int chromosomeRank(final String chromosome)
-    {
-        if(!HumanChromosome.contains(chromosome))
-            return -1;
-
-        if(chromosome.equals("X"))
-            return 23;
-        else if(chromosome.equals("Y"))
-            return 24;
-        else if(chromosome.equals("MT"))
-            return 25;
-        else
-            return Integer.parseInt(chromosome);
-    }
-
     public static String formLocation(final String chromosome, final int geneCollectionId, boolean isGenic)
     {
         if(isGenic)

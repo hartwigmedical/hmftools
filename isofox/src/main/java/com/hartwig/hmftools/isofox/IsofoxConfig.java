@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
 
@@ -94,7 +97,7 @@ public class IsofoxConfig
     public final boolean CanonicalTranscriptOnly;
     public final String BamFile;
     public final File RefGenomeFile;
-    public IndexedFastaSequenceFile RefFastaSeqFile;
+    public RefGenomeInterface RefGenome;
     public final int GeneReadLimit;
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
@@ -189,20 +192,24 @@ public class IsofoxConfig
 
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenomeFile = refGenomeFilename != null ? new File(refGenomeFilename) : null;
-
-        RefFastaSeqFile = null;
+        RefGenome = null;
 
         if(RefGenomeFile != null)
         {
             try
             {
                 ISF_LOGGER.debug("loading indexed fasta reference file");
-                RefFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFilename));
+                IndexedFastaSequenceFile refFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFilename));
+                RefGenome = new RefGenomeSource(refFastaSeqFile);
             }
             catch (IOException e)
             {
                 ISF_LOGGER.error("Reference file loading failed: {}", e.toString());
             }
+        }
+        else
+        {
+            RefGenome = null;
         }
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
@@ -287,7 +294,7 @@ public class IsofoxConfig
 
         if(runFunction(EXPECTED_GC_COUNTS))
         {
-            if(ReadLength == 0 || RefFastaSeqFile == null)
+            if(ReadLength == 0 || RefGenomeFile == null)
             {
                 ISF_LOGGER.error("invalid read length or ref genome for generating expected GC ratio counts");
                 return false;
@@ -330,7 +337,7 @@ public class IsofoxConfig
             return false;
         }
 
-        if(RefFastaSeqFile == null)
+        if(RefGenomeFile == null)
         {
             ISF_LOGGER.error("ref genome missing");
             return false;
@@ -407,7 +414,7 @@ public class IsofoxConfig
         OutputDir = null;
         BamFile = null;
         RefGenomeFile = null;
-        RefFastaSeqFile = null;
+        RefGenome = new MockRefGenome();
         CanonicalTranscriptOnly = false;
         GeneReadLimit = 0;
         GcAdjustmentsFile = "";

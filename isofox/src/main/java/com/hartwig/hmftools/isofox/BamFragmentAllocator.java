@@ -598,7 +598,7 @@ public class BamFragmentAllocator
         CategoryCountsData catCounts = getCategoryCountsData(transIds, unsplicedGeneIds);
 
         // compute and cache GC data
-        double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), Lists.newArrayList(mCurrentGenes.getEnrichedRegion()));
+        double gcRatio = calcGcRatioFromReadRegions(mConfig.RefGenome, mCurrentGenes.chromosome(), Lists.newArrayList(mCurrentGenes.getEnrichedRegion()));
 
         int[] gcRatioIndices = { -1, -1 };
         double[] gcRatioCounts = { 0, 0 };
@@ -717,7 +717,7 @@ public class BamFragmentAllocator
 
         if (mGcRatioCounts != null)
         {
-            double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), readRegions);
+            double gcRatio = calcGcRatioFromReadRegions(mConfig.RefGenome, mCurrentGenes.chromosome(), readRegions);
             mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
         }
 

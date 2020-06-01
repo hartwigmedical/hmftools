@@ -133,7 +133,7 @@ public class GcTranscriptCalculator
 
         if(geneData.length() - 1 < readLength)
         {
-            final String bases = mConfig.RefFastaSeqFile.getSubsequenceAt(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd).getBaseString();
+            final String bases = mConfig.RefGenome.getBaseString(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd);
             gcRatioCounts.addGcRatio(calcGcRatio(bases));
         }
         else
@@ -143,8 +143,7 @@ public class GcTranscriptCalculator
             int[] geneRegion = new int[] { 0, 0 };
             readRegions.add(geneRegion);
 
-            final String geneBases =
-                    mConfig.RefFastaSeqFile.getSubsequenceAt(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd).getBaseString();
+            final String geneBases = mConfig.RefGenome.getBaseString(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd);
 
             final String initialBases = geneBases.substring(0, readLength);
             int gcCount = calcGcCount(initialBases);
@@ -195,7 +194,7 @@ public class GcTranscriptCalculator
                     break;
                 }
 
-                double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, chromosome, readRegions);
+                double gcRatio = calcGcRatioFromReadRegions(mConfig.RefGenome, chromosome, readRegions);
 
                 gcRatioCounts.addGcRatio(gcRatio);
             }

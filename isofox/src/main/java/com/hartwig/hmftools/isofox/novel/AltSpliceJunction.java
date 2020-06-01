@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
@@ -190,7 +191,7 @@ public class AltSpliceJunction
         return nearestBoundary;
     }
 
-    public void setBaseContext(final IndexedFastaSequenceFile refGenome, final String chromosome)
+    public void setBaseContext(final RefGenomeInterface refGenome, final String chromosome)
     {
         // get the 2 bases leading up to and including the splice junction base, and 10 bases into the unspliced region
         // the donor/acceptor bases are the 2 bases leading up to the junction from the unspliced side
@@ -199,8 +200,8 @@ public class AltSpliceJunction
             int startOffset = (se == SE_START) ? 1 : 10;
             int endOffset = startOffset == 1 ? 10: 1;
 
-            mBaseContext[se] = refGenome.getSubsequenceAt(
-                    chromosome, SpliceJunction[se] - startOffset, SpliceJunction[se] + endOffset).getBaseString();
+            mBaseContext[se] = refGenome.getBaseString(
+                    chromosome, SpliceJunction[se] - startOffset, SpliceJunction[se] + endOffset);
         }
     }
 

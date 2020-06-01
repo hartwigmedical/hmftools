@@ -17,6 +17,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -159,13 +160,13 @@ public class GcRatioCounts
     }
 
     public static double calcGcRatioFromReadRegions(
-            final IndexedFastaSequenceFile refFastaSeqFile, final String chromosome, final List<int[]> readRegions)
+            final RefGenomeInterface refGenome, final String chromosome, final List<int[]> readRegions)
     {
         double gcRatioTotal = 0;
         int basesTotal = 0;
         for(final int[] region : readRegions)
         {
-            final String bases = refFastaSeqFile.getSubsequenceAt(chromosome, region[SE_START], region[SE_END]).getBaseString();
+            final String bases = refGenome.getBaseString(chromosome, region[SE_START], region[SE_END]);
             basesTotal += bases.length();
             gcRatioTotal += calcGcRatio(bases) * bases.length();
         }

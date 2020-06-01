@@ -286,19 +286,6 @@ public class RnaUtils
         }
     }
 
-    public static void setJunctionBaseContext(
-            final IndexedFastaSequenceFile refGenome, final String[] chromosomes, final int[] junctions, final String[] baseContext)
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            int startOffset = (se == SE_START) ? 1 : 10;
-            int endOffset = startOffset == 1 ? 10: 1;
-
-            baseContext[se] = refGenome.getSubsequenceAt(
-                    chromosomes[se], junctions[se] - startOffset, junctions[se] + endOffset).getBaseString();
-        }
-    }
-
     public static final String SP_SEQ_DONOR_1 = "GT";
     public static final String SP_SEQ_DONOR_2 = "GC";
     public static final String SP_SEQ_ACCEPTOR = "AG";

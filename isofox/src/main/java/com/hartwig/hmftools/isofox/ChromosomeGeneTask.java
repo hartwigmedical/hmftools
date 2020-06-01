@@ -390,12 +390,11 @@ public class ChromosomeGeneTask implements Callable
     private void analyseBamReads(final GeneCollection geneCollection)
     {
         // cache reference bases for comparison with read bases
-        if(mConfig.RefFastaSeqFile != null)
+        if(mConfig.RefGenomeFile != null)
         {
             for (RegionReadData region : geneCollection.getExonRegions())
             {
-                final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
-                        region.Chromosome, region.PosStart, region.PosEnd).getBaseString();
+                final String regionRefBases = mConfig.RefGenome.getBaseString(region.Chromosome, region.PosStart, region.PosEnd);
 
                 region.setRefBases(regionRefBases);
             }
