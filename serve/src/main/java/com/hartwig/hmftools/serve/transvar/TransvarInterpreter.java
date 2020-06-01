@@ -68,7 +68,7 @@ class TransvarInterpreter {
                 TransvarInsertion insertion = (TransvarInsertion) record.annotation();
                 hotspotBuilder.ref(preMutatedSequence);
 
-                // We assume inserts of length 3 are always (inframe) amino acid inserts.
+                // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
                 if (insertion.insertedBases().length() == 3) {
                     for (String trinucleotide : AminoAcidLookup.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
                         hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
@@ -76,10 +76,11 @@ class TransvarInterpreter {
                 } else {
                     hotspots.add(hotspotBuilder.alt(preMutatedSequence + insertion.insertedBases()).build());
                 }
-            } else {
-                assert record.annotation() instanceof TransvarDeletion;
+            } else if (record.annotation() instanceof TransvarDeletion) {
                 TransvarDeletion deletion = (TransvarDeletion) record.annotation();
                 hotspots.add(hotspotBuilder.ref(preMutatedSequence + deletion.deletedBases()).alt(preMutatedSequence).build());
+            } else {
+                LOGGER.warn("Unrecognized annotation type in transvar record: '{}'", record.annotation().getClass().toString());
             }
         }
 

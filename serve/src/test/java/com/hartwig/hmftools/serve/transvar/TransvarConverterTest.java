@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
@@ -108,7 +109,7 @@ public class TransvarConverterTest {
 
         TransvarRecord object = TransvarConverter.toTransvarRecord(delInsLine);
 
-        assertNull(object);
+        assertNotNull(object);
 //        assertEquals("ENST00000275493", object.transcript());
 //        assertEquals("7", object.chromosome());
 //        assertEquals(55242469, object.gdnaPosition());

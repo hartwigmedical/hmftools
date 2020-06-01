@@ -9,6 +9,8 @@ import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,10 +44,19 @@ final class TransvarConverter {
             return null;
         }
 
-        return createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], message);
+        TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], message);
+
+        // (Very) long insertions and deletions report a deleted count rather than a list of bases. We ignore these.
+        if (record.annotation() instanceof TransvarDeletion && isLong(((TransvarDeletion) record.annotation()).deletedBases())) {
+            return null;
+        } else if (record.annotation() instanceof TransvarInsertion && isLong(((TransvarInsertion) record.annotation()).insertedBases())) {
+            return null;
+        }
+
+        return record;
     }
 
-    @Nullable
+    @NotNull
     private static TransvarRecord createRecord(@NotNull String transcriptField, @NotNull String coordinateField,
             @NotNull String messageField) {
         ImmutableTransvarRecord.Builder recordBuilder = ImmutableTransvarRecord.builder();
@@ -73,17 +84,13 @@ final class TransvarConverter {
                 annotation = annotationForDuplication(gdna);
             }
 
-            if (annotation == null) {
-                return null;
-            } else {
-                return recordBuilder.annotation(annotation).build();
-            }
+            return recordBuilder.annotation(annotation).build();
         } else {
             return createForSNV(recordBuilder, gdna, messageField);
         }
     }
 
-    @Nullable
+    @NotNull
     private static TransvarAnnotation annotationForInsertionDeletion(@NotNull String gdna, @NotNull String messageField) {
         assert gdna.contains(RANGE_INDICATOR);
 
@@ -102,7 +109,7 @@ final class TransvarConverter {
                 if (delStart + DELETION.length() == insStart) {
                     // This should look like 123delinsGGT
                     // TODO support complex deletions+insertions
-                    return null;
+                    return new TransvarAnnotation() {};
                 } else {
                     // This should look like '123delCinsG'
                     String deletedBases = delInsPart.substring(delStart + DELETION.length(), insStart);
@@ -116,22 +123,12 @@ final class TransvarConverter {
                             .build();
                 }
             } else {
-                if (isLong(insertedBases)) {
-                    // For very long inserts, transvar gives the length of the insert rather than bases inserted. We ignore these.
-                    return null;
-                } else {
-                    return ImmutableTransvarInsertion.builder().insertedBases(insertedBases).build();
-                }
+                return ImmutableTransvarInsertion.builder().insertedBases(insertedBases).build();
             }
         } else {
             // This should look like '123delC'
             String deletedBases = delInsPart.substring(delStart + DELETION.length());
-            if (isLong(deletedBases)) {
-                // For very long deletes, transvar gives the length of the delete rather than bases deleted. We ignore these.
-                return null;
-            } else {
-                return ImmutableTransvarDeletion.builder().deletedBases(deletedBases).build();
-            }
+            return ImmutableTransvarDeletion.builder().deletedBases(deletedBases).build();
         }
     }
 
@@ -211,7 +208,7 @@ final class TransvarConverter {
         throw new IllegalStateException("No reference_codon found in message field: " + messageField);
     }
 
-    @Nullable
+    @NotNull
     private static List<String> extractCandidateCodonsFromMessageField(@NotNull String messageField) {
         // Field is semicolon-separated.
         //  Relevant fields look like "reference_codon=${ref};candidate_codons=${alt1},${alt2},...,${altN};"
