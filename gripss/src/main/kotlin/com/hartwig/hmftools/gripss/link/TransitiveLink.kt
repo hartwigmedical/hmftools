@@ -8,9 +8,10 @@ import java.util.*
 class TransitiveLink(private val assemblyLinkStore: LinkStore, private val variantStore: VariantStore) {
 
     companion object {
-        const val MAX_ALTERNATIVES = 25
-        const val MAX_TRANSITIVE_JUMPS = 2
-        const val MAX_TRANSITIVE_DISTANCE = 1000
+        private const val MAX_ALTERNATIVES = 25
+        private const val MAX_TRANSITIVE_JUMPS = 2
+        private const val MAX_TRANSITIVE_SEEK_DISTANCE = 2000
+        private const val MAX_TRANSITIVE_ADDITIONAL_DISTANCE = 1000
     }
 
     fun transitiveLink(variant: StructuralVariantContext, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
@@ -106,13 +107,13 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         return selectAllInContig(variant.contig).filter { other -> isMatchingPositionAndOrientation(other) && alternativeFilter(other) }
     }
 
-    private fun VariantStore.selectTransitive(variant: StructuralVariantContext): List<StructuralVariantContext> {
+    private fun VariantStore.selectTransitive(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
         val leftFilter = { other: StructuralVariantContext -> other.minStart <= variant.maxStart }
         val rightFilter = { other: StructuralVariantContext -> other.maxStart >= variant.minStart }
         val directionFilter = if (variant.orientation == 1.toByte()) leftFilter else rightFilter
         val transitiveFilter = { other: StructuralVariantContext -> other.orientation != variant.orientation && !other.imprecise && !other.isSingle }
 
-        return selectOthersNearby(variant, MAX_TRANSITIVE_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x) }
+        return selectOthersNearby(variant, MAX_TRANSITIVE_ADDITIONAL_DISTANCE, MAX_TRANSITIVE_SEEK_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x) }
     }
 
     private fun isMatchingPosition(target: StructuralVariantContext, other: StructuralVariantContext): Boolean {

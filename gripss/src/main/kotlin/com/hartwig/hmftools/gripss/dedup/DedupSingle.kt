@@ -7,6 +7,9 @@ import com.hartwig.hmftools.gripss.store.VariantStore
 class DedupSingle(val duplicates: Set<String>) {
 
     companion object {
+        private const val MAX_DEDUP_SGL_SEEK_DISTANCE = 1000
+        private const val MAX_DEDUP_SGL_ADDITIONAL_DISTANCE = 0
+
         operator fun invoke(variantStore: VariantStore, softFilterStore: SoftFilterStore): DedupSingle {
             val duplicates = mutableSetOf<String>()
 
@@ -15,7 +18,7 @@ class DedupSingle(val duplicates: Set<String>) {
 
                 val exactPositionFilter = { other: StructuralVariantContext -> other.start >= sgl.minStart && other.start <= sgl.maxStart }
                 val duplicateFilter = { other: StructuralVariantContext -> other.orientation == sgl.orientation && (other.precise || exactPositionFilter(other)) }
-                val others = variantStore.selectOthersNearby(sgl, 0, duplicateFilter)
+                val others = variantStore.selectOthersNearby(sgl, MAX_DEDUP_SGL_ADDITIONAL_DISTANCE, MAX_DEDUP_SGL_SEEK_DISTANCE, duplicateFilter)
                 if (!others.all { x -> keepOriginal(sglPasses, sgl, x, softFilterStore) }) {
                     duplicates.add(sgl.vcfId)
                 } else {

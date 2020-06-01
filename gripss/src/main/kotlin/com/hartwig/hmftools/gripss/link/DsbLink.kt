@@ -9,8 +9,8 @@ import kotlin.collections.HashMap
 class DsbLink(private val duplicates: Set<String>, private val variantStore: VariantStore, private val assemblyLinkStore: LinkStore) {
 
     companion object {
-        const val MAX_FIND_DISTANCE = 1000
-        val MAX_DSB_DISTANCE = Pair(30, 30)
+        private const val MAX_DSB_SEEK_DISTANCE = 1000
+        private const val MAX_DSB_ADDITIONAL_DISTANCE = 30
 
         operator fun invoke(variantStore: VariantStore, assemblyLinkStore: LinkStore, duplicates: Set<String>): LinkStore {
 
@@ -52,6 +52,6 @@ class DsbLink(private val duplicates: Set<String>, private val variantStore: Var
         val orientationFilter = { other: StructuralVariantContext -> other.orientation != variant.orientation }
         val duplicateFilter = { other: StructuralVariantContext -> !duplicates.contains(other.vcfId) }
         val allFilters = { other: StructuralVariantContext -> orientationFilter(other) && duplicateFilter(other) }
-        return variantStore.selectOthersNearby(variant, MAX_DSB_DISTANCE, MAX_FIND_DISTANCE, allFilters)
+        return variantStore.selectOthersNearby(variant, MAX_DSB_ADDITIONAL_DISTANCE, MAX_DSB_SEEK_DISTANCE, allFilters)
     }
 }
