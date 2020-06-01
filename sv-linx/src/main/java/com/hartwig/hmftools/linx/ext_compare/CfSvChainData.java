@@ -1,20 +1,22 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.lowerChromosome;
+import static com.hartwig.hmftools.linx.ext_compare.CfBreakendData.NO_ID;
+import static com.hartwig.hmftools.linx.ext_compare.CfChainClusterOverlap.formClusterChainId;
+import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.CF_ONLY;
+import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.DIFF;
+import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
+import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.MATCH;
+import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class CfSvChainData
 {
@@ -28,6 +30,8 @@ public class CfSvChainData
     public final List<Integer>[] AdjacentBreakendIds;
 
     private SvVarData mSvData;
+    private final SvVarData[] mDbSvData;
+    private final int[] mDbLengths;
 
     public CfSvChainData(final CfBreakendData[] breakends)
     {
@@ -49,13 +53,29 @@ public class CfSvChainData
         Orientations = new byte[] { breakends[startIndex].Orientation, breakends[endIndex].Orientation};
         DbBreakendIds = new int[] { breakends[startIndex].DbBreakendId, breakends[endIndex].DbBreakendId };
         AdjacentBreakendIds = new List[] { breakends[startIndex].AdjacentBreakendIds, breakends[endIndex].AdjacentBreakendIds };
+
         mSvData = null;
+        mDbSvData = new SvVarData[] { null, null };
+        mDbLengths = new int[] { NO_DB_MARKER, NO_DB_MARKER };
     }
 
     public static final String CF_DATA_DELIMITER = "\t\\s*";
 
     public final SvVarData getSvData() { return mSvData; }
     public void setSvData(final SvVarData var) { mSvData = var; }
+
+    public final SvVarData[] getDbSvData() { return mDbSvData; }
+    public final int[] getDbLengths() { return mDbLengths; }
+
+    public void setDbSvData(int se, final SvVarData var, int length)
+    {
+        mDbSvData[se] = var;
+        mDbLengths[se] = length;
+    }
+
+    public boolean svMatched() { return mSvData != null; }
+
+    public String clusterChainId() { return formClusterChainId(mSvData.getCluster().id(), ChainId); };
 
     public boolean matches(final SvVarData var)
     {
@@ -74,9 +94,55 @@ public class CfSvChainData
         return true;
     }
 
+    public int calcDbLength(final CfSvChainData other, int se, int seOther)
+    {
+        if(Orientations[se] == other.Orientations[seOther])
+            return NO_DB_MARKER;
+
+        if(Orientations[se] == POS_ORIENT)
+            return other.Positions[seOther] - Positions[se];
+        else
+            return Positions[se] - other.Positions[seOther];
+    }
+
+    public CfDbMatchType[] getDeletionBridgeMatchTypes()
+    {
+        final CfDbMatchType[] dbMatchTypes = new CfDbMatchType[] { CfDbMatchType.NONE, CfDbMatchType.NONE };
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            final SvLinkedPair dbLink = mSvData.getDBLink(isStart(se));
+
+            if(dbLink == null)
+            {
+                if(DbBreakendIds[se] == NO_ID)
+                    continue;
+
+                dbMatchTypes[se] = CF_ONLY;
+            }
+            else if(DbBreakendIds[se] == NO_ID)
+            {
+                dbMatchTypes[se] = LINX_ONLY;
+            }
+            else
+            {
+                if(dbLink.getOtherSV(mSvData) == mDbSvData[se])
+                {
+                    dbMatchTypes[se] = MATCH;
+                }
+                else
+                {
+                    dbMatchTypes[se] = DIFF;
+                }
+            }
+        }
+
+        return dbMatchTypes;
+    }
+
     public String toString()
     {
-        return String.format("id(%d) chain(%d) pos(%s:%d:%d -> %s:%d:%d) bnds(%d % %d) svId(%d)",
+        return String.format("id(%d) chain(%d) pos(%s:%d:%d -> %s:%d:%d) bnds(%d & %d) svId(%d)",
                 RearrangeId, ChainId, Chromosomes[SE_START], Orientations[SE_START], Positions[SE_START],
                 Chromosomes[SE_END], Orientations[SE_END], Positions[SE_END],
                 BreakpointIds[SE_START], BreakpointIds[SE_END], mSvData != null ? mSvData.id() : -1);

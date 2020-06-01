@@ -132,7 +132,8 @@ public class SvLinxApplication
         FusionDisruptionAnalyser fusionAnalyser = null;
         boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
 
-        ChainFinderCompare chainFinderCompare = cmd.hasOption(CHAIN_FINDER_SAMPLE_DATA_DIR) ? new ChainFinderCompare(cmd) : null;
+        ChainFinderCompare chainFinderCompare = cmd.hasOption(CHAIN_FINDER_SAMPLE_DATA_DIR) ?
+                new ChainFinderCompare(config.OutputDataPath, cmd) : null;
 
         boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
         boolean applyPromotorDistance = checkFusions;
@@ -276,6 +277,9 @@ public class SvLinxApplication
 
         if(driverGeneAnnotator != null)
             driverGeneAnnotator.close();
+
+        if(chainFinderCompare != null)
+            chainFinderCompare.close();
 
         if(config.isSingleSample())
         {

@@ -24,6 +24,8 @@ public class CfBreakendData
     public final int DbBreakendId;
     public final List<Integer> AdjacentBreakendIds;
 
+    public static final int NO_ID = -1;
+
     public CfBreakendData(int chainId, int breakpointId, int rearrangeId, final String chromosome, int position,
             byte orientation, final boolean[] chromosomeEndLoss,
             int dbBreakendId, final List<Integer> adjacentBreakendIds)
@@ -63,7 +65,7 @@ public class CfBreakendData
                 items[fieldIndexMap.get("Potential chromosomal end loss (right)")].equals("1") };
 
         final int dbBreakendId = items.length == fieldIndexMap.size() ?
-                Integer.parseInt(items[fieldIndexMap.get("Deletion bridge partner breakpoint")]) : 0;
+                Integer.parseInt(items[fieldIndexMap.get("Deletion bridge partner breakpoint")]) : NO_ID;
 
         int adjBndIndex = fieldIndexMap.get("Adjacent breakpoint(s)");
         final String adjacentBreakendData = items.length == fieldIndexMap.size() ? items[adjBndIndex] : items[adjBndIndex - 1];
