@@ -6,10 +6,10 @@ import java.util.List;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
-import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarObject;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
-import com.hartwig.hmftools.serve.transvar.datamodel.TransvarObject;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +34,7 @@ final class TransvarConverter {
     }
 
     @Nullable
-    static TransvarObject toTransvarRecord(@NotNull String transvarLine) {
+    static TransvarRecord toTransvarRecord(@NotNull String transvarLine) {
         String[] fields = transvarLine.split(FIELD_DELIMITER);
 
         String message = fields[MESSAGE_COLUMN];
@@ -46,9 +46,9 @@ final class TransvarConverter {
     }
 
     @Nullable
-    private static TransvarObject createRecord(@NotNull String transcriptField, @NotNull String coordinateField,
+    private static TransvarRecord createRecord(@NotNull String transcriptField, @NotNull String coordinateField,
             @NotNull String messageField) {
-        ImmutableTransvarObject.Builder recordBuilder = ImmutableTransvarObject.builder();
+        ImmutableTransvarRecord.Builder recordBuilder = ImmutableTransvarRecord.builder();
 
         // Field looks like "${transcript} (protein_coding)"
         recordBuilder.transcript(transcriptField.trim().split(" ")[0]);
@@ -155,7 +155,7 @@ final class TransvarConverter {
     }
 
     @NotNull
-    private static TransvarObject createForSNV(@NotNull ImmutableTransvarObject.Builder recordBuilder, @NotNull String gdna,
+    private static TransvarRecord createForSNV(@NotNull ImmutableTransvarRecord.Builder recordBuilder, @NotNull String gdna,
             @NotNull String messageField) {
         // SNVs look like 1234T>C
         StringBuilder gdnaPos = new StringBuilder();

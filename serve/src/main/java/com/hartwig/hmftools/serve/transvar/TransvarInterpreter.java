@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
-import com.hartwig.hmftools.serve.transvar.datamodel.TransvarObject;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarSnvMnv;
 import com.hartwig.hmftools.serve.util.AminoAcidLookup;
 
@@ -38,7 +38,7 @@ class TransvarInterpreter {
     }
 
     @NotNull
-    List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarObject record, @NotNull Strand strand) {
+    List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
         if (record.annotation() instanceof TransvarSnvMnv) {
@@ -120,7 +120,7 @@ class TransvarInterpreter {
     }
 
     @NotNull
-    private static VariantHotspot fromCandidateCodon(@NotNull TransvarObject record, @NotNull String referenceCodon,
+    private static VariantHotspot fromCandidateCodon(@NotNull TransvarRecord record, @NotNull String referenceCodon,
             @NotNull String candidateCodon, int gdnaCodonIndex, @NotNull Strand strand) {
         String strandAdjustedRefCodon = strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon);
         String strandAdjustedCandidateCodon = strand == Strand.FORWARD ? candidateCodon : reverseAndFlip(candidateCodon);

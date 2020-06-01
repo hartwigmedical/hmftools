@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.transvar.datamodel.TransvarObject;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,7 +46,7 @@ public class Transvar {
     @NotNull
     public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String transcriptID,
             @NotNull String proteinAnnotation) throws IOException, InterruptedException {
-        List<TransvarObject> records = process.runTransvarPanno(gene, proteinAnnotation);
+        List<TransvarRecord> records = process.runTransvarPanno(gene, proteinAnnotation);
         if (records.isEmpty()) {
             LOGGER.warn("Transvar could not resolve any genomic coordinates for '{}:p.{}'", gene, proteinAnnotation);
             return Lists.newArrayList();
@@ -60,7 +60,7 @@ public class Transvar {
             return Lists.newArrayList();
         }
 
-        TransvarObject best = pickBestRecord(records, transcriptID, canonicalTranscript.transcriptID());
+        TransvarRecord best = pickBestRecord(records, transcriptID, canonicalTranscript.transcriptID());
 
         // TODO (if best is not on preferred transcript -> error
 
@@ -76,14 +76,14 @@ public class Transvar {
     }
 
     @NotNull
-    private TransvarObject pickBestRecord(@NotNull List<TransvarObject> records, @Nullable String preferredTranscriptId,
+    private TransvarRecord pickBestRecord(@NotNull List<TransvarRecord> records, @Nullable String preferredTranscriptId,
             @NotNull String canonicalTranscriptId) {
         assert !records.isEmpty();
 
-        TransvarObject preferredRecord = null;
-        TransvarObject canonicalRecord = null;
-        TransvarObject bestRecord = null;
-        for (TransvarObject record : records) {
+        TransvarRecord preferredRecord = null;
+        TransvarRecord canonicalRecord = null;
+        TransvarRecord bestRecord = null;
+        for (TransvarRecord record : records) {
             if (preferredTranscriptId != null && record.transcript().equals(preferredTranscriptId)) {
                 preferredRecord = record;
             } else if (record.transcript().equals(canonicalTranscriptId)) {

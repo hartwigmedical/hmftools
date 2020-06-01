@@ -12,9 +12,9 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
-import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarObject;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
-import com.hartwig.hmftools.serve.transvar.datamodel.TransvarObject;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
@@ -26,7 +26,7 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertSnvToHotspots() {
-        TransvarObject record = baseRecord().gdnaPosition(10)
+        TransvarRecord record = baseRecord().gdnaPosition(10)
                 .annotation(ImmutableTransvarSnvMnv.builder()
                         .gdnaRef("A")
                         .gdnaAlt("C")
@@ -47,7 +47,7 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertMnvForwardStrandToHotspots() {
-        TransvarObject record = baseRecord().gdnaPosition(10)
+        TransvarRecord record = baseRecord().gdnaPosition(10)
                 .annotation(ImmutableTransvarSnvMnv.builder()
                         .gdnaRef("TA")
                         .gdnaAlt("GC")
@@ -68,7 +68,7 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertMnvReverseStrandToHotspots() {
-        TransvarObject record = baseRecord().gdnaPosition(10)
+        TransvarRecord record = baseRecord().gdnaPosition(10)
                 .annotation(ImmutableTransvarSnvMnv.builder()
                         .gdnaRef("CA")
                         .gdnaAlt("GC")
@@ -89,7 +89,7 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertDeletionToHotspots() {
-        TransvarObject record =
+        TransvarRecord record =
                 baseRecord().gdnaPosition(5).annotation(ImmutableTransvarDeletion.builder().deletedBases("GAT").build()).build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
@@ -101,7 +101,7 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertInsertionToHotspots() {
-        TransvarObject forwardRecord =
+        TransvarRecord forwardRecord =
                 baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
 
         List<VariantHotspot> forwardHotspots = testInterpreter().convertRecordToHotspots(forwardRecord, Strand.FORWARD);
@@ -111,7 +111,7 @@ public class TransvarInterpreterTest {
         assertHotspot(baseHotspot().position(4).ref("C").alt("CGAG").build(), forwardHotspots.get(0));
         assertHotspot(baseHotspot().position(4).ref("C").alt("CGAA").build(), forwardHotspots.get(1));
 
-        TransvarObject reverseRecord =
+        TransvarRecord reverseRecord =
                 baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
 
         List<VariantHotspot> reverseHotspots = testInterpreter().convertRecordToHotspots(reverseRecord, Strand.REVERSE);
@@ -131,7 +131,7 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertDuplicationToHotspot() {
-        TransvarObject record =
+        TransvarRecord record =
                 baseRecord().gdnaPosition(5).annotation(ImmutableTransvarDuplication.builder().duplicatedBaseCount(3).build()).build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
@@ -149,8 +149,8 @@ public class TransvarInterpreterTest {
     }
 
     @NotNull
-    private static ImmutableTransvarObject.Builder baseRecord() {
-        return ImmutableTransvarObject.builder().transcript("irrelevant").chromosome("1");
+    private static ImmutableTransvarRecord.Builder baseRecord() {
+        return ImmutableTransvarRecord.builder().transcript("irrelevant").chromosome("1");
     }
 
     @NotNull
