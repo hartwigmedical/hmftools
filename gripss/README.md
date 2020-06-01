@@ -16,7 +16,7 @@ There are 5 steps in GRIPSS described in detail below:
 
 Two hard filters are applied upfront before other processing occurs:
 * NO_MATE - Any non single breakend with no mate is filtered
-* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3% of tumor support is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
+* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3% of tumor support is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
 
 ## 2. Realignment
 
@@ -83,6 +83,6 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 ### D. Rescue
 
-Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is not filtered as DEDUP is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocaitons or intrachromosomal variants of length greater than 10kb regardless of soft filtering.
+Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is not filtered as DEDUP is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocations or intrachromosomal variants of length greater than 10kb regardless of soft filtering.
 
 
