@@ -3,15 +3,14 @@ package com.hartwig.hmftools.gripss.store
 import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.bedpe.Location
+import com.hartwig.hmftools.gripss.ContigComparator
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import java.io.Serializable
 
-class LocationStore private constructor(private val singlesMap: Map<String, LocationSeek<Breakend>>, private val pairedMap: Map<String, LocationSeek<Breakpoint>>) : Serializable {
-
-    private val hitcache = mutableSetOf<String>()
+class LocationStore private constructor(private val compare: ContigComparator, private val singlesMap: Map<String, LocationSeek<Breakend>>, private val pairedMap: Map<String, LocationSeek<Breakpoint>>) : Serializable {
 
     companion object {
-        operator fun invoke(single: List<Breakend>, paired: List<Breakpoint>, additionalBuffer: Int = 0): LocationStore {
+        operator fun invoke(compare: ContigComparator, single: List<Breakend>, paired: List<Breakpoint>, additionalBuffer: Int = 0): LocationStore {
 
             val singlesMap = mutableMapOf<String, MutableList<Breakend>>()
             for (bedEntry in single) {
@@ -28,7 +27,7 @@ class LocationStore private constructor(private val singlesMap: Map<String, Loca
             val breakendSeeks: Map<String, LocationSeek<Breakend>> = singlesMap.entries.associate { (key: String, list: List<Breakend>) -> Pair(key, LocationSeek(list)) }
             val breakpointSeeks: Map<String, LocationSeek<Breakpoint>> = pairedMap.entries.associate { (key: String, list: List<Breakpoint>) -> Pair(key, LocationSeek(list)) }
 
-            return LocationStore(breakendSeeks, breakpointSeeks)
+            return LocationStore(compare, breakendSeeks, breakpointSeeks)
         }
 
         private fun Breakend.locationKey(): List<String> {
@@ -71,28 +70,28 @@ class LocationStore private constructor(private val singlesMap: Map<String, Loca
     }
 
     fun contains(variant: StructuralVariantContext): Boolean {
-        if (variant.isSingle) {
-            return contains(variant.startBreakend)
+        return if (variant.isSingle) {
+            contains(variant.startBreakend)
         } else {
-            if (hitcache.contains(variant.vcfId)) {
-                return true
-            }
-            val result = contains(variant.breakpoint!!)
-            if (result) {
-                hitcache.add(variant.mateId!!)
-            }
-
-            return result
+            contains(variant.breakpoint!!)
         }
     }
 
     fun contains(start: Breakend): Boolean {
         val keys = start.locationKey()
-        return keys.any() {singlesMap[it]?.any { x -> x.overlaps(start) } == true}
+        return keys.any() { singlesMap[it]?.any { x -> x.overlaps(start) } == true }
     }
 
     fun contains(breakpoint: Breakpoint): Boolean {
+        if (compare.compare(breakpoint.startBreakend, breakpoint.endBreakend) > 0) {
+            return contains(Breakpoint(breakpoint.endBreakend, breakpoint.startBreakend))
+        }
+
         val keys = breakpoint.locationKey()
-        return keys.any() {pairedMap[it]?.any { x -> x.startBreakend.overlaps(breakpoint.startBreakend) && x.endBreakend.overlaps(breakpoint.endBreakend) } == true}
+        return keys.any() { pairedMap[it]?.any { x -> x.startBreakend.overlaps(breakpoint.startBreakend) && x.endBreakend.overlaps(breakpoint.endBreakend) } == true }
+    }
+
+    private fun ContigComparator.compare(breakend1: Breakend, breakend2: Breakend): Int {
+        return compare(breakend1.contig, breakend1.start, breakend2.contig, breakend2.start)
     }
 }
