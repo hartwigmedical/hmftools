@@ -308,13 +308,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         val normalSupport = normalGenotype.fragmentSupport(isSingle)
         val tumorSupport = tumorGenotype.fragmentSupport(isSingle)
 
-        val normalReadSupport = if (isSingle) {
-            normalGenotype.attributeAsInt("BUM", 0) + normalGenotype.attributeAsInt("BSC", 0)
-        } else {
-            normalGenotype.splitRead() + normalGenotype.readPairs()
-        }
-
-        return normalSupport > maxNormalSupport * tumorSupport && normalReadSupport > 0
+        return normalSupport > maxNormalSupport * tumorSupport;
     }
 
     override fun toString(): String {

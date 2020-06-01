@@ -35,17 +35,9 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportFilter() {
-        assertFalse(sgl().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
-        assertTrue(sgl().fragmentSupport(3, 9).addGenotypeAttribute("BUM", 1, 0).toSv().normalSupportFilter(0.03))
-        assertTrue(sgl().fragmentSupport(3, 9).addGenotypeAttribute("BSC", 1, 0).toSv().normalSupportFilter(0.03))
-        assertFalse(sgl().fragmentSupport(3, 100).addGenotypeAttribute("BUM", 1, 0).toSv().normalSupportFilter(0.03))
-        assertTrue(sgl().fragmentSupport(3, 100).addGenotypeAttribute("BUM", 1, 0).toSv().normalSupportFilter(0.0299))
-
-        assertFalse(bnd().fragmentSupport(3, 9).splitReads(0, 0).toSv().normalSupportFilter(0.03))
-        assertTrue(bnd().fragmentSupport(3, 9).splitReads(1, 0).toSv().normalSupportFilter(0.03))
-        assertTrue(bnd().fragmentSupport(3, 9).splitReads(0, 0).addGenotypeAttribute("RP", 1, 0).toSv().normalSupportFilter(0.03))
-        assertFalse(bnd().fragmentSupport(3, 100).splitReads(1, 0).toSv().normalSupportFilter(0.03))
-        assertTrue(bnd().fragmentSupport(3, 100).splitReads(1, 0).toSv().normalSupportFilter(0.0299))
+        assertTrue(sgl().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
+        assertFalse(sgl().fragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
+        assertTrue(sgl().fragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
     }
 
     @Test
