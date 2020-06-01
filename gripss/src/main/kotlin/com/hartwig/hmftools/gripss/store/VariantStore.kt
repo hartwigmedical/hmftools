@@ -5,31 +5,22 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.math.max
 
-class VariantStore(
-        private val variants: List<StructuralVariantContext>,
-        private val variantIndexesById: Map<String, Int>,
-        private val variantsByChromosome: Map<String, List<StructuralVariantContext>>) {
+class VariantStore(private val variants: List<StructuralVariantContext>, private val variantIndexesById: Map<String, Int>) {
 
     companion object Factory {
         operator fun invoke(variants: List<StructuralVariantContext>): VariantStore {
             val variantIndexesById = HashMap<String, Int>()
-            val variantsByChromosome = HashMap<String, MutableList<StructuralVariantContext>>()
             for (i in variants.indices) {
                 val variant = variants[i]
                 variantIndexesById[variant.vcfId] = i
-                variantsByChromosome.computeIfAbsent(variant.contig) { mutableListOf() }.add(variant)
             }
 
-            return VariantStore(variants, variantIndexesById, variantsByChromosome)
+            return VariantStore(variants, variantIndexesById)
         }
     }
 
     fun selectAll(): List<StructuralVariantContext> {
         return variants
-    }
-
-    fun selectAllInContig(contig: String): List<StructuralVariantContext> {
-        return variantsByChromosome.getOrDefault(contig, Collections.emptyList())
     }
 
     fun select(vcfId: String): StructuralVariantContext {
@@ -40,7 +31,7 @@ class VariantStore(
         return selectOthersNearby(variantIndexesById[variant.vcfId]!!, additionalDistance, seekDistance, filter)
     }
 
-    private fun selectOthersNearby(i: Int, additionalDistance: Int,  maxSeekDistance: Int, filter: (StructuralVariantContext) -> Boolean): Collection<StructuralVariantContext> {
+    private fun selectOthersNearby(i: Int, additionalDistance: Int, maxSeekDistance: Int, filter: (StructuralVariantContext) -> Boolean): Collection<StructuralVariantContext> {
         val variant = variants[i]
         val minStart = variant.minStart - additionalDistance
         val maxStart = variant.maxStart + additionalDistance
