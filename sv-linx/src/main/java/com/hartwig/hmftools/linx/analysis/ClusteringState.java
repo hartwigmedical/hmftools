@@ -36,7 +36,6 @@ public class ClusteringState
     public static String CR_SATELLITE_SGL = "SatelliteSgl";
     public static String CR_MAJOR_AP_PLOIDY = "MajorAP";
     public static String CR_TI_PLOIDY_MATCH = "TiPloidyMatch";
-    public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
 
     public ClusteringState()
     {
