@@ -26,6 +26,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.Nullable;
 
 public class ChainFinderCompare
@@ -58,7 +59,7 @@ public class ChainFinderCompare
 
         if(!Files.exists(Paths.get(resultsDir)))
         {
-            LNX_LOGGER.error("sample({}) invalid file path({}) to results data", sampleId, resultsDir);
+            LNX_LOGGER.error("sample({}) invalid path({}) to chain-finder results data", sampleId, resultsDir);
             return;
         }
 
@@ -66,13 +67,16 @@ public class ChainFinderCompare
 
         if(!Files.exists(Paths.get(resultsDir + chainDataFile)))
         {
-            LNX_LOGGER.error("sample({}) invalid file path to chain results data({} + {})", sampleId, resultsDir, chainDataFile);
+            LNX_LOGGER.error("sample({}) invalid chain-finder results file({} + {})", sampleId, resultsDir, chainDataFile);
             return;
         }
 
-        mSampleData = new CfSampleData(sampleId);
-
         final List<CfBreakendData> breakendDataList = loadChainFinderData(sampleId, resultsDir + chainDataFile);
+
+        if(breakendDataList.isEmpty())
+            return;
+
+        mSampleData = new CfSampleData(sampleId);
 
         mSampleData.UnchainedSvList.addAll(svDataList.stream()
                 .filter(x -> !x.isSglBreakend()) // SGLs aren't handled by CF and so are considered out of scope
@@ -82,6 +86,9 @@ public class ChainFinderCompare
 
         for(CfSvChainData cfSvData : mSampleData.CfSvList)
         {
+            if(cfSvData.getSvData() == null)
+                continue;
+
             writeMatchData(cfSvData.getSvData(), cfSvData);
         }
 
@@ -96,6 +103,25 @@ public class ChainFinderCompare
 
     private void mapChainSvData(final List<CfBreakendData> breakendDataList, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
+        // first correct the NaN chromosomes which should be either X or Y
+        for(CfBreakendData breakend : breakendDataList)
+        {
+            if(breakend.Chromosome.equals("NaN"))
+            {
+                List<SvBreakend> breakends = chrBreakendMap.get("X");
+                if(breakends != null && breakends.stream().anyMatch(x -> x.position() == breakend.Position))
+                {
+                    breakend.Chromosome = "X";
+                }
+
+                breakends = chrBreakendMap.get("Y");
+                if(breakends != null && breakends.stream().anyMatch(x -> x.position() == breakend.Position))
+                {
+                    breakend.Chromosome = "Y";
+                }
+            }
+        }
+
         // put chained breakend data pairs together
         int index = 0;
         while(index < breakendDataList.size())
@@ -130,7 +156,8 @@ public class ChainFinderCompare
         {
             if(!mapToLinx(cfSvData, chrBreakendMap))
             {
-                LNX_LOGGER.warn("CF sv({}) not matched with actual SV", cfSvData);
+                // likely due to Linx filtering
+                LNX_LOGGER.debug("CF sv({}) not matched with actual SV", cfSvData);
                 continue;
             }
 
@@ -170,14 +197,6 @@ public class ChainFinderCompare
 
         LNX_LOGGER.info("sample({}) SVs chaining matched({}) cfOnly({}) linxOnly({})",
                 mSampleData.SampleId, mSampleData.CfSvList.size(), cfChainedOnly, linxChainedOnly);
-    }
-
-    private void reportSvData()
-    {
-        for(CfSvChainData cfSvData : mSampleData.CfSvList)
-        {
-            
-        }
     }
 
     private void initialiseSvDataWriter(final String outputDir)
@@ -244,36 +263,14 @@ public class ChainFinderCompare
         }
     }
 
-
-
-
-    public void reportClusteringStats()
-    {
-
-    }
-
-    public void reportChainingStats()
-    {
-
-    }
-
-    public void reportDeletionBridges()
-    {
-
-
-    }
-
-    private void writeSvMatchData(final SvVarData var, final CfSvChainData cfSvData)
-    {
-
-
-    }
-
     private final List<CfBreakendData> loadChainFinderData(final String sampleId, final String chainDataFile)
     {
         try
         {
             final List<String> lines = Files.readAllLines(Paths.get(chainDataFile));
+
+            if(lines.size() <= 2)
+                return Lists.newArrayList();
 
             final Map<String,Integer> fielIndexMap = createFieldsIndexMap(lines.get(0), CF_DATA_DELIMITER);
             lines.remove(0); // header

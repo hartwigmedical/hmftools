@@ -20,9 +20,11 @@ import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTIO
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -66,7 +68,7 @@ public class SvFilters
 
         // filter out duplicate breakends and low-CN change support INVs and BNDs
         // breakends aren't actually removed until all chromosomes have been processed so that the indices can be preserved for various tests
-        Map<String,List<SvBreakend>> breakendRemovalMap = Maps.newHashMap();
+        Map<String,Set<SvBreakend>> breakendRemovalMap = Maps.newHashMap();
 
         for(Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
@@ -75,11 +77,11 @@ public class SvFilters
 
             int breakendCount = breakendList.size();
 
-            List<SvBreakend> removalList = breakendRemovalMap.get(chromosome);
+            Set<SvBreakend> removalList = breakendRemovalMap.get(chromosome);
 
             if(removalList == null)
             {
-                removalList = Lists.newArrayList();
+                removalList = Sets.newHashSet();
                 breakendRemovalMap.put(chromosome, removalList);
             }
 
@@ -221,9 +223,9 @@ public class SvFilters
         }
 
         // now remove filtered breakends
-        for(Map.Entry<String,List<SvBreakend>> entry : breakendRemovalMap.entrySet())
+        for(Map.Entry<String,Set<SvBreakend>> entry : breakendRemovalMap.entrySet())
         {
-            final List<SvBreakend> removalList = entry.getValue();
+            final Set<SvBreakend> removalList = entry.getValue();
 
             if(removalList.isEmpty())
                 continue;
@@ -311,7 +313,7 @@ public class SvFilters
     }
 
     private void checkCandidateSpanningVariant(final SvBreakend breakend, final SvBreakend nextBreakend,
-            List<SvBreakend> removalList, Map<String,List<SvBreakend>> breakendRemovalMap)
+            final Set<SvBreakend> removalList, Map<String, Set<SvBreakend>> breakendRemovalMap)
     {
         // one variant has an insert sequence potentially matching the assembled TI of another
         if(breakend.getSV().getSvData().insertSequence().length() >= MIN_TEMPLATED_INSERTION_LENGTH
@@ -352,18 +354,15 @@ public class SvFilters
         }
     }
 
-    private void removeRemoteBreakend(final SvBreakend breakend, Map<String,List<SvBreakend>> breakendRemovalMap)
+    private void removeRemoteBreakend(final SvBreakend breakend, Map<String,Set<SvBreakend>> breakendRemovalMap)
     {
-        List<SvBreakend> otherList = breakendRemovalMap.get(breakend.chromosome());
+        Set<SvBreakend> otherList = breakendRemovalMap.get(breakend.chromosome());
         if(otherList == null)
         {
-            otherList = Lists.newArrayList();
+            otherList = Sets.newHashSet();
             breakendRemovalMap.put(breakend.chromosome(), otherList);
-
         }
 
         otherList.add(breakend);
     }
-
-
 }

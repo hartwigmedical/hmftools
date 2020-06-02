@@ -17,7 +17,7 @@ public class CfBreakendData
     public final int ChainId;
     public final int BreakpointId;
     public final int RearrangeId;
-    public final String Chromosome;
+    public String Chromosome; // not final since can be set to Nan for X or Y and then corrected
     public final int Position;
     public final byte Orientation;
     public final boolean[] ChromosomeEndLoss;
@@ -52,7 +52,7 @@ public class CfBreakendData
 
         final int chainId = Integer.parseInt(items[fieldIndexMap.get("Chain")]);
         final int breakpointId = Integer.parseInt(items[fieldIndexMap.get("Breakpoint")]);
-        final int svId = Integer.parseInt(items[fieldIndexMap.get("Rearrangement")]);
+        final int rearrangeId = Integer.parseInt(items[fieldIndexMap.get("Rearrangement")]);
 
         final String breakendData = items[fieldIndexMap.get("Chromosome:position")];
         final String chromosome = breakendData.split(":")[0];
@@ -75,7 +75,7 @@ public class CfBreakendData
                 Arrays.stream(adjacentBreakendData.substring(0, abLength - 1).substring(1).split("\\|"))
                         .map(x -> Integer.parseInt(x)).collect(Collectors.toList()) : Lists.newArrayList();
 
-        return new CfBreakendData(chainId, breakpointId, svId, chromosome, position, orientation, chromosomeEndLoss, dbBreakendId, adjacentBreakendIds);
+        return new CfBreakendData(chainId, breakpointId, rearrangeId, chromosome, position, orientation, chromosomeEndLoss, dbBreakendId, adjacentBreakendIds);
     }
 
 
