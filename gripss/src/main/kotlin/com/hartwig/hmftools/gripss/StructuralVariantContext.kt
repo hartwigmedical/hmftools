@@ -3,24 +3,30 @@ package com.hartwig.hmftools.gripss
 import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.extensions.*
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.samtools.util.Interval
+import htsjdk.samtools.util.Locatable
+import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 
 const val SHORT_EVENT_SIZE = 1000
 
-class StructuralVariantContext(private val context: VariantContext, normalOrdinal: Int = 0, tumorOrdinal: Int = 1) {
+typealias Cipos = Pair<Int, Int>
+
+class StructuralVariantContext(val context: VariantContext, private val normalOrdinal: Int = 0, private val tumorOrdinal: Int = 1) {
     private companion object {
         private val polyG = "G".repeat(16);
         private val polyC = "C".repeat(16);
     }
 
     val contig = context.contig!!
-
     val imprecise = context.imprecise()
     val precise = !imprecise
     val variantType = context.toVariantType()
     val orientation = variantType.startOrientation
     val isSingle = variantType is Single
+    val isTranslocation = variantType is Translocation
     val isShortDup = variantType is Duplication && variantType.length < SHORT_EVENT_SIZE
     val isShortDel = variantType is Deletion && variantType.length < SHORT_EVENT_SIZE
     val isShortIns = variantType is Insertion && variantType.length < SHORT_EVENT_SIZE
@@ -29,7 +35,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val mateId: String? = context.mate()
     val confidenceInterval = context.confidenceInterval()
     val start = context.start
-    private val remoteConfidenceInterval = context.confidenceInterval()
+    private val remoteConfidenceInterval = context.remoteConfidenceInterval()
 
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
@@ -41,14 +47,104 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     val duplicationLength = (variantType as? Duplication)?.let { it.length + 1 } ?: 0
     val qual = context.phredScaledQual
 
-
     private val normalGenotype = context.getGenotype(normalOrdinal);
     private val tumorGenotype = context.getGenotype(tumorOrdinal);
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 
+    fun realign(refGenome: IndexedFastaSequenceFile, comparator: ContigComparator): StructuralVariantContext {
+        if (insertSequenceLength > 0) {
+            return this
+        }
 
-    fun confidenceIntervalsOverlap(other: StructuralVariantContext): Boolean {
-        return contig == other.contig && other.minStart <= maxStart && other.maxStart >= minStart
+        if (precise && !isSingle) {
+            val mate = variantType as Paired
+            val invertStart = orientation == mate.endOrientation && comparator.compare(contig, start, mate.otherChromosome, mate.otherPosition) > 1
+            val invertEnd = orientation == mate.endOrientation && !invertStart
+            val centeredCipos = centreAlignConfidenceInterval(invertStart, confidenceInterval)
+            val centeredRemoteCipos = centreAlignConfidenceInterval(invertEnd, remoteConfidenceInterval)
+            if (centeredCipos != confidenceInterval || centeredRemoteCipos != remoteConfidenceInterval) {
+                return realignPaired(refGenome, centeredCipos, centeredRemoteCipos)
+            }
+        }
+
+        if (imprecise && (confidenceInterval.first != 0 || confidenceInterval.second != 0)) {
+            return if (isSingle) {
+                sideAlignSingle(refGenome)
+            } else {
+                sideAlignPaired(refGenome)
+            }
+        }
+
+        return this;
+    }
+
+    private fun sideAlignPaired(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
+        val mate = variantType as Paired
+        val newCipos = sideAlignConfidenceInterval(orientation, confidenceInterval)
+        val newRemoteCipos = sideAlignConfidenceInterval(mate.endOrientation, remoteConfidenceInterval)
+        return realignPaired(refGenome, newCipos, newRemoteCipos)
+    }
+
+    private fun realignPaired(refGenome: IndexedFastaSequenceFile, newCipos: Cipos, newRemoteCipos: Cipos): StructuralVariantContext {
+        val newStart = updatedPosition(start, confidenceInterval, newCipos)
+        val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).baseString
+
+        val mate = variantType as Paired
+        val newRemoteStart = updatedPosition(mate.otherPosition, remoteConfidenceInterval, newRemoteCipos)
+        val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(newRemoteStart, newRef)))
+
+        val variantContextBuilder = VariantContextBuilder(context)
+                .start(newStart.toLong())
+                .stop(newStart.toLong())
+                .alleles(alleles)
+                .attribute(REALIGN, true)
+                .attribute("CIPOS", listOf(newCipos.first, newCipos.second))
+                .attribute("CIRPOS", listOf(newRemoteCipos.first, newRemoteCipos.second))
+                .make()
+
+        return StructuralVariantContext(variantContextBuilder, normalOrdinal, tumorOrdinal)
+    }
+
+    private fun sideAlignSingle(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
+        val newCipos = sideAlignConfidenceInterval(orientation, confidenceInterval)
+        val newStart = updatedPosition(start, confidenceInterval, newCipos)
+        val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).baseString
+
+        val mate = variantType as Single
+        val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(newRef)))
+
+        val variantContextBuilder = VariantContextBuilder(context)
+                .start(newStart.toLong())
+                .stop(newStart.toLong())
+                .alleles(alleles)
+                .attribute(REALIGN, true)
+                .attribute("CIPOS", listOf(newCipos.first, newCipos.second))
+                .make()
+
+        return StructuralVariantContext(variantContextBuilder, normalOrdinal, tumorOrdinal)
+    }
+
+    private fun updatedPosition(position: Int, oldCipos: Cipos, newCipos: Cipos): Int {
+        return position + oldCipos.first - newCipos.first
+    }
+
+    private fun centreAlignConfidenceInterval(invert: Boolean, cipos: Cipos): Cipos {
+        val totalRange = cipos.second - cipos.first
+        val newCiposStart = -totalRange / 2
+        val newCiposEnd = totalRange + newCiposStart
+        return if (invert) {
+            Pair(-newCiposEnd, -newCiposStart)
+        } else {
+            Pair(newCiposStart, newCiposEnd)
+        }
+    }
+
+    private fun sideAlignConfidenceInterval(orientation: Byte, cipos: Cipos): Cipos {
+        return if (orientation == 1.toByte()) {
+            Pair(0, cipos.second - cipos.first)
+        } else {
+            Pair(cipos.first - cipos.second, 0)
+        }
     }
 
     fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
@@ -70,7 +166,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
 
     fun assemblies(): List<String> = context.assemblies();
 
-    fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupport)
+    fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupportProportion)
 
     fun softFilters(config: GripssFilterConfig): Set<String> {
         val result = mutableSetOf<String>()
@@ -83,9 +179,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             result.add(MIN_TUMOR_AF)
         }
 
-        if (strandBiasFilter(config.maxShortStrandBias)) {
-            result.add(SHORT_STRAND_BIAS)
-        }
+
 
         if (qualFilter(config.minQualBreakEnd, config.minQualBreakPoint)) {
             result.add(MIN_QUAL)
@@ -95,12 +189,8 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             result.add(IMPRECISE)
         }
 
-        if (polyGCFilter()) {
+        if (polyGCFilter(config.polyGCRegion)) {
             result.add(MAX_POLY_G_LENGTH)
-        }
-
-        if (homologyLengthFilter(config.maxHomLength)) {
-            result.add(MAX_HOM_LENGTH)
         }
 
         if (homologyLengthFilterShortInversion(config.maxHomLengthShortInversion)) {
@@ -123,16 +213,17 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
             result.add(SHORT_SR_NORMAL)
         }
 
-        if (longDPSupportFilter()) {
-            result.add(LONG_DP_SUPPORT)
+        if (strandBiasFilter(config.maxShortStrandBias)) {
+            result.add(SHORT_STRAND_BIAS)
         }
 
-        if (breakendAssemblyReadPairsFilter()) {
-            result.add(BREAK_END_ASSEMBLY_READ_PAIR)
+        if (discordantPairSupportFilter() || breakendAssemblyReadPairsFilter()) {
+            result.add(DISCORDANT_PAIR_SUPPORT)
         }
 
-        if (minSizeFilter(config.minSize)) {
-            result.add(MIN_SIZE)
+
+        if (minLengthFilter(config.minLength)) {
+            result.add(MIN_LENGTH)
         }
 
         return result
@@ -143,8 +234,12 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return context.phredScaledQual < minQual.toDouble()
     }
 
-    fun polyGCFilter(): Boolean {
-        return isSingle && variantType.insertSequence.contains(polyG) || variantType.insertSequence.contains(polyC)
+    fun polyGCFilter(polyGRegion: Locatable): Boolean {
+        return if (isSingle) {
+            variantType.insertSequence.contains(polyG) || variantType.insertSequence.contains(polyC) or polyGRegion.contains(context)
+        } else {
+            polyGRegion.contains(context) || polyGRegion.contains((variantType as Paired).let { Interval(it.otherChromosome, it.otherPosition, it.otherPosition) })
+        }
     }
 
     fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
@@ -159,18 +254,13 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return isSingle && context.breakendAssemblyReadPairs() == 0
     }
 
-    fun minSizeFilter(minSize: Int): Boolean {
+    fun minLengthFilter(minSize: Int): Boolean {
         return when (variantType) {
             is Deletion -> variantType.length + variantType.insertSequence.length - 1 < minSize
             is Insertion -> variantType.length + variantType.insertSequence.length + 1 < minSize
             is Duplication -> variantType.length + variantType.insertSequence.length < minSize
             else -> false
         }
-    }
-
-
-    fun homologyLengthFilter(maxHomLength: Int): Boolean {
-        return !isSingle && context.homologyLength() > maxHomLength
     }
 
     fun homologyLengthFilterShortInversion(maxHomLength: Int, maxInversionLength: Int = 40): Boolean {
@@ -185,7 +275,7 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
         return isShort && normalGenotype.splitRead() > 0
     }
 
-    fun longDPSupportFilter(): Boolean {
+    fun discordantPairSupportFilter(): Boolean {
         return !isSingle && !isShort
                 && normalGenotype.readPairs() == 0
                 && normalGenotype.assemblyReadPairs() == 0
@@ -224,4 +314,9 @@ class StructuralVariantContext(private val context: VariantContext, normalOrdina
     override fun toString(): String {
         return "${context.id} ${context.contig}:${context.start} QUAL:${context.phredScaledQual} Orientation:${variantType.startOrientation} ${context.alleles[0].displayString}  > ${context.alleles[1].displayString}"
     }
+
+    private fun Cipos.invert(): Cipos {
+        return Pair(-this.second, -this.first)
+    }
+
 }

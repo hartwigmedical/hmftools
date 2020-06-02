@@ -16,4 +16,15 @@ public abstract class OncoKb implements KbSpecificObject {
     @Nullable
     public abstract OncoKbClinical oncoKbClinical();
 
+    @NotNull
+    @Value.Derived
+    public String transcriptID() {
+        if (oncoKbClinical() != null) {
+            return oncoKbClinical().isoform();
+        } else if (oncoKbBiological() != null) {
+            return oncoKbBiological().isoform();
+        } else {
+            throw new IllegalStateException("Both biological and clinical record null in OncoKB record!");
+        }
+    }
 }

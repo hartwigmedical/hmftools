@@ -68,7 +68,7 @@ public final class FittedPurityFile {
         }
 
         if (values.length > 22) {
-            builder.tumorMutationalLoad(Double.parseDouble(values[19]));
+            builder.tumorMutationalLoad(tumorMutationalLoad(values[19]));
             builder.tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(values[20]));
             builder.tumorMutationalBurdenPerMb(Double.parseDouble(values[21]));
             builder.tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]));
@@ -128,7 +128,7 @@ public final class FittedPurityFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final PurityContext context) {
+    static String toString(@NotNull final PurityContext context) {
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore score = context.score();
         return new StringJoiner(DELIMITER).add(FORMAT.format(purity.purity()))
@@ -199,4 +199,13 @@ public final class FittedPurityFile {
     private static double polyClonalProportion(@NotNull final String[] values) {
         return Double.parseDouble(values[7]);
     }
+
+    private static int tumorMutationalLoad(@NotNull final String tml) {
+        if (tml.contains(".")) {
+            return Integer.parseInt(tml.substring(0, tml.indexOf(".")));
+        }
+
+        return Integer.parseInt(tml);
+    }
+
 }

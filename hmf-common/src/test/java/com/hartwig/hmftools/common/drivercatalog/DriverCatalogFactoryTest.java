@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -49,6 +50,25 @@ public class DriverCatalogFactoryTest {
                 ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(1).pDriver(0.01).pVariantNonDriverFactor(0).build();
         double value = DriverCatalogFactory.probabilityDriverVariant(1000, 1000, indelLikelihood, indelLikelihood);
         assertEquals(1, value, EPSILON);
+    }
+
+    @Test
+    public void testFallBackOnSingleProbabilityIfMultiFailsDueToZeroValues() {
+        DndsDriverImpactLikelihood nonsense =
+                ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(0.7).pDriver(2E-4).pVariantNonDriverFactor(4E-9).build();
+        double singleNonsenseLikelihood = DriverCatalogFactory.probabilityDriverVariant(1, nonsense);
+        assertTrue(singleNonsenseLikelihood - 0.1 > nonsense.dndsLikelihood());
+
+        DndsDriverImpactLikelihood splice =
+                ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(0).pDriver(0).pVariantNonDriverFactor(0).build();
+        assertEquals(0, splice.dndsLikelihood(), EPSILON);
+        assertEquals(0, DriverCatalogFactory.probabilityDriverVariant(1, splice), EPSILON);
+
+        double victim = DriverCatalogFactory.probabilityDriverVariant(1, 1, nonsense, splice);
+        assertEquals(singleNonsenseLikelihood, victim, EPSILON);
+
+        victim = DriverCatalogFactory.probabilityDriverVariant(1, 1, splice, nonsense);
+        assertEquals(singleNonsenseLikelihood, victim, EPSILON);
     }
 
     @Test

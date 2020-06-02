@@ -260,7 +260,7 @@ public interface SageConfig {
                 .panelBed(cmd.getOptionValue(PANEL_BED, Strings.EMPTY))
                 .highConfidenceBed(cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY))
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
-                .qualityConfig(QualityConfig.createConfig(cmd))
+                .qualityConfig(QualityConfig.createConfig(cmd, transcripts))
                 .baseQualityRecalibrationConfig(BaseQualityRecalibrationConfig.createConfig(cmd))
                 .panelOnly(Configs.containsFlag(cmd, PANEL_ONLY))
                 .build();

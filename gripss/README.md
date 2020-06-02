@@ -16,7 +16,7 @@ There are 5 steps in GRIPSS described in detail below:
 
 Two hard filters are applied upfront before other processing occurs:
 * NO_MATE - Any non single breakend with no mate is filtered
-* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3% of tumor support is filtered as likely germline or artefact.  Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
+* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3% of tumor support is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
 
 ## 2. Realignment
 
@@ -33,19 +33,14 @@ The following filters are applied to all variants
 
 Filter | Default | Description / purpose
 ---|---|---
-minQual | 350 (single breakend:1000) | Minimum absolute tumor support for variant
+minQual | 400 (single breakend:1000) | Minimum absolute tumor support for variant
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
 minTumorAF | 0.5 | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
 maxInexactHomLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
 discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mapability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
 PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
-
-Single breakends have an additional filter:
-
-Filter | Default | Description 
----|---|---
-maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts
+maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (hg38: chr2:32,916,190-32,916,630; GRCH37: 2:33,141,260-33,141,700).
 
 We also have 7 special filters applying to specific short variant categories:
 
@@ -88,6 +83,6 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 ### D. Rescue
 
-Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is not filtered as DEDUP is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocaitons or intrachromosomal variants of length greater than 10kb regardless of soft filtering.
+Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is not filtered as DEDUP is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocations or intrachromosomal variants of length greater than 10kb regardless of soft filtering.
 
 

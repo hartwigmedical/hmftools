@@ -55,6 +55,8 @@ public final class SampleReportFactory {
             }
         }
 
+        String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), type, tumorSampleId);
+
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(patientTumorLocation)
@@ -66,9 +68,19 @@ public final class SampleReportFactory {
                 .projectName(lims.projectName(tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
-                .hospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode))
+                .hospitalPatientId(hospitalPatientId)
                 .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId))
                 .build();
+    }
+
+    @VisibleForTesting
+    static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull LimsStudy type, @NotNull String sampleId) {
+        if (type == LimsStudy.CORE) {
+            if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
+                LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
+            }
+        }
+        return hospitalPatientId;
     }
 
     @VisibleForTesting

@@ -114,7 +114,7 @@ public class CopyNumberExtractor {
     @NotNull
     private static ActionableAmplificationDeletion actionableInformation(@NotNull ViccSource source, @NotNull String typeEvent,
             @NotNull String gene, @NotNull ViccEntry viccEntry) {
-        KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
+        KbSpecificObject kbSpecificObject = viccEntry.kbSpecificObject();
         String drug = Strings.EMPTY;
         String drugType = Strings.EMPTY;
         String cancerType = Strings.EMPTY;

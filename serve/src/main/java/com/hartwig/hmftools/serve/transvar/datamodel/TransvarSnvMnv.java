@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.transvar;
+package com.hartwig.hmftools.serve.transvar.datamodel;
 
 import java.util.List;
 
@@ -9,15 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TransvarRecord {
-
-    @NotNull
-    public abstract String transcript();
-
-    @NotNull
-    public abstract String chromosome();
-
-    public abstract long gdnaPosition();
+public abstract class TransvarSnvMnv implements TransvarAnnotation {
 
     @NotNull
     public abstract String gdnaRef();
@@ -25,16 +17,9 @@ public abstract class TransvarRecord {
     @NotNull
     public abstract String gdnaAlt();
 
-    // Field is only populated for SNV/MNV
-    @Nullable
+    @NotNull
     public abstract String referenceCodon();
 
-    // Field is only populated for SNV/MNV
-    @Nullable
+    @NotNull
     public abstract List<String> candidateCodons();
-
-    // Field is only populated for Indels
-    @Nullable
-    public abstract Integer indelLength();
-
 }

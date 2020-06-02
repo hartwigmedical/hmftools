@@ -8,6 +8,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDuplication;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarSnvMnv;
 import com.hartwig.hmftools.serve.util.AminoAcidLookup;
 
 import org.apache.logging.log4j.LogManager;
@@ -36,16 +41,13 @@ class TransvarInterpreter {
     List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
-        if (isSnvOrMnv(record)) {
-            if (record.gdnaRef().length() > 1) {
-                LOGGER.debug("Entering MNV interpretation mode on {} strand for {}", strand, record);
-            }
-
+        if (record.annotation() instanceof TransvarSnvMnv) {
             // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
-            int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
+            TransvarSnvMnv snvMnv = (TransvarSnvMnv) record.annotation();
+            int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(snvMnv, strand);
 
-            for (String candidateCodon : record.candidateCodons()) {
-                hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
+            for (String candidateCodon : snvMnv.candidateCodons()) {
+                hotspots.add(fromCandidateCodon(record, snvMnv.referenceCodon(), candidateCodon, gdnaCodonIndex, strand));
             }
         } else {
             // For indels we assume we have to look up the base in front of the del/ins/dup and set the position 1 before the actual ref/alt
@@ -55,53 +57,53 @@ class TransvarInterpreter {
             ImmutableVariantHotspotImpl.Builder hotspotBuilder =
                     ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
 
-            if (record.gdnaRef().isEmpty() && record.gdnaAlt().isEmpty()) {
+            if (record.annotation() instanceof TransvarDuplication) {
                 // Dups don't have ref and alt information so need to look it up in ref genome.
-                String dupBases =
-                        refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + record.indelLength()).getBaseString();
+                TransvarDuplication dup = (TransvarDuplication) record.annotation();
+                String dupBases = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + dup.duplicatedBaseCount())
+                        .getBaseString();
                 hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
                 hotspots.add(hotspotBuilder.build());
-            } else if (record.gdnaRef().isEmpty()) {
+            } else if (record.annotation() instanceof TransvarInsertion) {
+                TransvarInsertion insertion = (TransvarInsertion) record.annotation();
                 hotspotBuilder.ref(preMutatedSequence);
 
-                // We assume inserts of length 3 are always amino acid inserts.
-                if (record.gdnaAlt().length() == 3) {
-                    for (String trinucleotide : AminoAcidLookup.allTrinucleotidesForSameAminoAcid(record.gdnaAlt(), strand)) {
+                // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
+                if (insertion.insertedBases().length() == 3) {
+                    for (String trinucleotide : AminoAcidLookup.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
                         hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
                     }
                 } else {
-                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + record.gdnaAlt()).build());
+                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + insertion.insertedBases()).build());
                 }
+            } else if (record.annotation() instanceof TransvarDeletion) {
+                TransvarDeletion deletion = (TransvarDeletion) record.annotation();
+                hotspots.add(hotspotBuilder.ref(preMutatedSequence + deletion.deletedBases()).alt(preMutatedSequence).build());
             } else {
-                assert record.gdnaAlt().isEmpty();
-                hotspots.add(hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence).build());
+                LOGGER.warn("Unrecognized annotation type in transvar record: '{}'", record.annotation().getClass().toString());
             }
         }
 
         return hotspots;
     }
 
-    private static boolean isSnvOrMnv(@NotNull TransvarRecord record) {
-        return record.gdnaRef().length() == record.gdnaAlt().length() && !record.gdnaRef().isEmpty();
-    }
-
-    private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarRecord record, @NotNull Strand strand) {
-        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? record.gdnaRef() : reverseAndFlip(record.gdnaRef());
-        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : reverseAndFlip(record.gdnaAlt());
+    private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarSnvMnv snvMnv, @NotNull Strand strand) {
+        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? snvMnv.gdnaRef() : reverseAndFlip(snvMnv.gdnaRef());
+        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? snvMnv.gdnaAlt() : reverseAndFlip(snvMnv.gdnaAlt());
 
         // Function only supports SNV and MNV
         assert codonCompatibleRef.length() == codonCompatibleAlt.length();
 
         // We look for the candidate codon where the mutation is exclusively the mutation implied by the ref>alt
         int mutLength = codonCompatibleRef.length();
-        for (String candidateCodon : record.candidateCodons()) {
+        for (String candidateCodon : snvMnv.candidateCodons()) {
             for (int i = 0; i < 4 - mutLength; i++) {
-                if (record.referenceCodon().substring(i, i + mutLength).equals(codonCompatibleRef) && candidateCodon.substring(i,
+                if (snvMnv.referenceCodon().substring(i, i + mutLength).equals(codonCompatibleRef) && candidateCodon.substring(i,
                         i + mutLength).equals(codonCompatibleAlt)) {
                     boolean match = true;
                     for (int j = 0; j < 3; j++) {
                         // No match if we find another mismatch outside of the ref->alt range.
-                        if ((j - i >= mutLength || j - i < 0) && !record.referenceCodon()
+                        if ((j - i >= mutLength || j - i < 0) && !snvMnv.referenceCodon()
                                 .substring(j, j + 1)
                                 .equals(candidateCodon.substring(j, j + 1))) {
                             match = false;
@@ -115,13 +117,13 @@ class TransvarInterpreter {
             }
         }
 
-        throw new IllegalStateException("Could not find codon index for gDNA match for " + record);
+        throw new IllegalStateException("Could not find codon index for gDNA match for " + snvMnv);
     }
 
     @NotNull
-    private static VariantHotspot fromCandidateCodon(@NotNull TransvarRecord record, @NotNull String candidateCodon, int gdnaCodonIndex,
-            @NotNull Strand strand) {
-        String strandAdjustedRefCodon = strand == Strand.FORWARD ? record.referenceCodon() : reverseAndFlip(record.referenceCodon());
+    private static VariantHotspot fromCandidateCodon(@NotNull TransvarRecord record, @NotNull String referenceCodon,
+            @NotNull String candidateCodon, int gdnaCodonIndex, @NotNull Strand strand) {
+        String strandAdjustedRefCodon = strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon);
         String strandAdjustedCandidateCodon = strand == Strand.FORWARD ? candidateCodon : reverseAndFlip(candidateCodon);
         int strandAdjustedGdnaCodingIndex = strand == Strand.FORWARD ? gdnaCodonIndex : 2 - gdnaCodonIndex;
 

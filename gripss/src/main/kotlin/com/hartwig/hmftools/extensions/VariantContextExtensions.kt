@@ -67,24 +67,9 @@ fun VariantContext.confidenceInterval(): Pair<Int, Int> = this.confidenceInterva
 fun VariantContext.remoteConfidenceInterval(): Pair<Int, Int> = this.confidenceInterval(CIRPOS)
 
 private fun VariantContext.confidenceInterval(attribute: String): Pair<Int, Int> {
-    val (start, end) = this.getAttributeAsString(attribute, "0,0")
-            .replace("[", "")
-            .replace("]", "")
-            .split(",")
-            .map { x -> x.trim().toInt() }
-    return Pair(start, end)
-}
-
-fun VariantContext.isConfidenceIntervalUnbalanced(): Boolean {
-    if (!this.hasAttribute(CIPOS)) {
-        return false;
+    if (this.hasAttribute(attribute)) {
+        val (start, end) = this.getAttributeAsIntList(attribute, 0)
+        return Pair(start, end)
     }
-
-    val (startOffset, endOffset) = this.getAttributeAsString(CIPOS, "0,0").split(",").map { x -> x.toInt() }
-    return endOffset.toInt() + startOffset.toInt() > 1
-}
-
-fun VariantContext.centreInMicrohomology(): VariantContext {
-
-    return this;
+    return Pair(0, 0)
 }

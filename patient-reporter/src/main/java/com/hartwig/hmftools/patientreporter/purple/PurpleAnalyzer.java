@@ -41,7 +41,7 @@ public final class PurpleAnalyzer {
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purityContext.microsatelliteStatus())
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
-                .tumorMutationalLoad((int) Math.round(purityContext.tumorMutationalLoad()))
+                .tumorMutationalLoad(purityContext.tumorMutationalLoad())
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
                 .build();
 

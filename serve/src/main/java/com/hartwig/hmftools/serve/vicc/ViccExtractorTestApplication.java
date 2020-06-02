@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.serve.vicc;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
@@ -41,21 +43,24 @@ public class ViccExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
-    private static final boolean RUN_ON_SERVER = false;
     private static final boolean TRANSVAR_ENABLED = true;
     private static final boolean WRITE_HOTSPOTS_TO_VCF = true;
+    private static final Integer MAX_ENTRIES = null;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Configurator.setRootLevel(Level.DEBUG);
+
+        String hostname = InetAddress.getLocalHost().getHostName();
+        LOGGER.debug("Running on '{}'", hostname);
 
         String viccJsonPath;
         String refGenomeFastaFile;
         String hotspotVcf;
 
-        if (RUN_ON_SERVER) {
+        if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            hotspotVcf = System.getProperty("user.home") + "/hotspotsVicc.vcf";
+            hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
@@ -68,8 +73,9 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
 
         ViccSource source = ViccSource.ONCOKB;
-        LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
-        ViccQuerySelection querySelection = ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).build();
+        LOGGER.info("Reading VICC json from '{}' with source '{}'", viccJsonPath, source);
+        ViccQuerySelection querySelection =
+                ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).maxEntriesToInclude(MAX_ENTRIES).build();
         List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJsonPath, querySelection);
         LOGGER.info(" Read {} entries", viccEntries.size());
 
@@ -86,7 +92,7 @@ public class ViccExtractorTestApplication {
         analyzeExtractionResults(resultsPerEntry);
 
         if (WRITE_HOTSPOTS_TO_VCF) {
-            writeHotspots(hotspotVcf, resultsPerEntry.values());
+            writeHotspots(hotspotVcf, resultsPerEntry);
         }
     }
 
@@ -159,7 +165,7 @@ public class ViccExtractorTestApplication {
         }
     }
 
-    private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Collection<ViccExtractionResult> extractionResults) {
+    private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
                 .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
@@ -169,26 +175,22 @@ public class ViccExtractorTestApplication {
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
         writer.writeHeader(header);
 
-        for (ViccExtractionResult result : extractionResults) {
-            for (Map.Entry<Feature, List<VariantHotspot>> entry : result.hotspotsPerFeature().entrySet()) {
-                String featureAttribute = entry.getKey().geneSymbol() + ":p." + entry.getKey().name();
+        for (Map.Entry<VariantHotspot, String> entry : convertAndSort(resultsPerEntry).entrySet()) {
+            VariantHotspot hotspot = entry.getKey();
+            List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
-                for (VariantHotspot hotspot : entry.getValue()) {
-                    List<Allele> hotspotAlleles = buildAlleles(hotspot);
+            VariantContext variantContext = new VariantContextBuilder().noGenotypes()
+                    .source("VICC")
+                    .chr(hotspot.chromosome())
+                    .start(hotspot.position())
+                    .alleles(hotspotAlleles)
+                    .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
+                    .attribute("feature", entry.getValue())
+                    .make();
 
-                    VariantContext variantContext = new VariantContextBuilder().noGenotypes()
-                            .source("VICC")
-                            .chr(hotspot.chromosome())
-                            .start(hotspot.position())
-                            .alleles(hotspotAlleles)
-                            .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                            .attribute("feature", featureAttribute)
-                            .make();
+            LOGGER.debug("Writing {}", variantContext);
+            writer.add(variantContext);
 
-                    LOGGER.debug("Writing {}", variantContext);
-                    writer.add(variantContext);
-                }
-            }
         }
         writer.close();
     }
@@ -201,4 +203,31 @@ public class ViccExtractorTestApplication {
         return Lists.newArrayList(ref, alt);
     }
 
+    @NotNull
+    private static Map<VariantHotspot, String> convertAndSort(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        Map<VariantHotspot, String> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
+            for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
+                String newFeatureAttribute = toAttribute(entryResult.getKey(), featureResult.getKey());
+                for (VariantHotspot hotspot : featureResult.getValue()) {
+                    String existingFeatureAttribute = convertedMap.get(hotspot);
+                    if (existingFeatureAttribute != null && !existingFeatureAttribute.equals(newFeatureAttribute)) {
+                        LOGGER.warn("Hotspot {} already recorded but for different feature! Existing feature={}, new feature={}",
+                                hotspot,
+                                existingFeatureAttribute,
+                                newFeatureAttribute);
+                    } else {
+                        convertedMap.put(hotspot, newFeatureAttribute);
+                    }
+                }
+            }
+        }
+
+        return convertedMap;
+    }
+
+    @NotNull
+    private static String toAttribute(@NotNull ViccEntry viccEntry, @NotNull Feature feature) {
+        return feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
+    }
 }

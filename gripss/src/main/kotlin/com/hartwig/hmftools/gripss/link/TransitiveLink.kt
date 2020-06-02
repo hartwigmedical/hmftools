@@ -8,20 +8,28 @@ import java.util.*
 class TransitiveLink(private val assemblyLinkStore: LinkStore, private val variantStore: VariantStore) {
 
     companion object {
-        const val MAX_TRANSITIVE_JUMPS = 2
-        const val MAX_TRANSITIVE_DISTANCE = 1000
+        private const val MAX_ALTERNATIVES = 25
+        private const val MAX_ALTERNATIVES_SEEK_DISTANCE = 1000
+        private const val MAX_ALTERNATIVES_ADDITIONAL_DISTANCE = MAX_ALTERNATIVES_SEEK_DISTANCE // This needs to be high to account for insert sequences
+
+        private const val MAX_TRANSITIVE_JUMPS = 2
+        private const val MAX_TRANSITIVE_SEEK_DISTANCE = 2000
+        private const val MAX_TRANSITIVE_ADDITIONAL_DISTANCE = 1000
     }
 
     fun transitiveLink(variant: StructuralVariantContext, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
 
         if (!variant.isSingle) {
             val target = variantStore.select(variant.mateId!!)
-
             val alternativeStart = variantStore.selectAlternatives(variant)
-            for (alternative in alternativeStart) {
-                val assemblyLinks = findLinks("trs_${variant.vcfId}_", alternative, target, maxTransitiveJumps, mutableListOf())
-                if (assemblyLinks.isNotEmpty()) {
-                    return assemblyLinks
+            // Note: we really shouldn't expect to see that many variants within the CIPOS. If we do it is likely that it is a large
+            // poly-G region or something equally messy.
+            if (alternativeStart.size <= MAX_ALTERNATIVES) {
+                for (alternative in alternativeStart) {
+                    val assemblyLinks = findLinks("trs_${variant.vcfId}_", alternative, target, maxTransitiveJumps, mutableListOf())
+                    if (assemblyLinks.isNotEmpty()) {
+                        return assemblyLinks
+                    }
                 }
             }
         }
@@ -33,10 +41,11 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
             : List<Link> {
         val mate = variantStore.select(current.mateId!!)
         val newPath: List<Link> = path + Link(current)
-        if (isMatch(mate, target)) {
+        if (isAlternative(target, mate)) {
             if (!target.imprecise) {
+                val targetDistance = target.insertSequenceLength + target.duplicationLength
                 val (minTotalDistance, maxTotalDistance) = newPath.totalDistance()
-                if (target.insertSequenceLength < minTotalDistance || target.insertSequenceLength > maxTotalDistance) {
+                if (targetDistance < minTotalDistance || targetDistance > maxTotalDistance) {
                     return Collections.emptyList()
                 }
             }
@@ -71,13 +80,13 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     }
 
 
-    private fun isMatch(current: StructuralVariantContext, target: StructuralVariantContext): Boolean {
-        return current.vcfId != target.vcfId
-                && current.mateId!! != target.vcfId
-                && current.orientation == target.orientation
-                && target.confidenceIntervalsOverlap(current)
+    private fun insertSequenceAdditionalDistance(variant: StructuralVariantContext): Pair<Int, Int> {
+        return if (variant.orientation == 1.toByte()) {
+            Pair(0, variant.insertSequenceLength)
+        } else {
+            Pair(variant.insertSequenceLength, 0)
+        }
     }
-
 
     private fun List<Link>.totalDistance(): Pair<Int, Int> {
         var minDistance = 0
@@ -91,24 +100,38 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         return Pair(minDistance, maxDistance)
     }
 
-    private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): List<StructuralVariantContext> {
-        val maxDistance = if (variant.orientation == 1.toByte()) {
-            Pair(0, variant.insertSequenceLength)
-        } else {
-            Pair(variant.insertSequenceLength, 0)
-        }
-
-        val alternativeFilter = { other: StructuralVariantContext -> other.orientation == variant.orientation && !other.imprecise && !other.isSingle }
-        return selectOthersNearby(variant, maxDistance) { x -> alternativeFilter(x) }
+    private fun isAlternative(target: StructuralVariantContext, other: StructuralVariantContext): Boolean {
+        return target.orientation == other.orientation && isMatchingPosition(target, other)
     }
 
-    private fun VariantStore.selectTransitive(variant: StructuralVariantContext): List<StructuralVariantContext> {
+    private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
+        val isMatchingPositionAndOrientation = { other: StructuralVariantContext -> isAlternative(variant, other) }
+        val alternativeFilter = { other: StructuralVariantContext -> !other.imprecise && !other.isSingle }
+        return selectOthersNearby(variant, MAX_ALTERNATIVES_ADDITIONAL_DISTANCE, MAX_ALTERNATIVES_SEEK_DISTANCE) {other -> isMatchingPositionAndOrientation(other) && alternativeFilter(other) }
+    }
+
+    private fun VariantStore.selectTransitive(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
         val leftFilter = { other: StructuralVariantContext -> other.minStart <= variant.maxStart }
         val rightFilter = { other: StructuralVariantContext -> other.maxStart >= variant.minStart }
         val directionFilter = if (variant.orientation == 1.toByte()) leftFilter else rightFilter
         val transitiveFilter = { other: StructuralVariantContext -> other.orientation != variant.orientation && !other.imprecise && !other.isSingle }
 
-        return selectOthersNearby(variant, MAX_TRANSITIVE_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x) }
+        return selectOthersNearby(variant, MAX_TRANSITIVE_ADDITIONAL_DISTANCE, MAX_TRANSITIVE_SEEK_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x) }
+    }
+
+    private fun isMatchingPosition(target: StructuralVariantContext, other: StructuralVariantContext): Boolean {
+        val targetInsDistance = insertSequenceAdditionalDistance(target)
+        val minStart = target.minStart - targetInsDistance.first
+        val maxStart = target.maxStart + targetInsDistance.second
+
+        val otherInsDistance = insertSequenceAdditionalDistance(other);
+        val otherMinStart = other.minStart - otherInsDistance.first
+        val otherMaxStart = other.maxStart + otherInsDistance.second
+
+        return target.vcfId != other.vcfId
+                && target.mateId!! != other.vcfId
+                && otherMinStart <= maxStart
+                && otherMaxStart >= minStart
     }
 
 }

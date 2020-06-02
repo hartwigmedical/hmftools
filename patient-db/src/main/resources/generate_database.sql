@@ -355,7 +355,7 @@ CREATE TABLE purity
     msStatus varchar(10) not null,
     tmbPerMb DOUBLE PRECISION not null,
     tmbStatus varchar(10) not null,
-    tml DOUBLE PRECISION not null,
+    tml INT not null,
     tmlStatus varchar(10) not null,
     PRIMARY KEY (id),
     INDEX(sampleId)

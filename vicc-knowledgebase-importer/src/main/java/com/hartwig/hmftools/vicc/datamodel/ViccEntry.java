@@ -2,6 +2,8 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +37,19 @@ public abstract class ViccEntry {
     public abstract List<String> devTags();
 
     @NotNull
-    public abstract KbSpecificObject KbSpecificObject();
+    public abstract KbSpecificObject kbSpecificObject();
+
+    @Nullable
+    @Value.Derived
+    public String transcriptId() {
+        if (source() == ViccSource.ONCOKB) {
+            String transcriptId = ((OncoKb)kbSpecificObject()).transcriptID();
+            return !transcriptId.isEmpty() ? transcriptId : null;
+        }
+
+        // TODO Implemented for all sources.
+        return null;
+    }
 
 }
 

@@ -534,9 +534,8 @@ If only one leg of a structural variant is unbalanced but no suitable candidate 
 Eligible recovery candidates must:
 
 1. Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant (if not a single breakend, the other breakpoint must also be within 1 kb of the min-max range of a copy number breakpoint)
-2. Not be “AF” filtered in GRIDSS (ie. excluding variants with an allelic fraction of less than 0.5% in the tumor)
-3. Have a minimum qual score of 1000 for single breakends and 350 for all others.
-4. Have a ploidy of at least 50% of the unexplained copy number change and of at least 0.5.
+2. Not be “minTumorAF” or "minQual" filtered in GRIDSS 
+3. Have a ploidy of at least 50% of the unexplained copy number change and of at least 0.5.
 
 Following the successful recovery any structural variants we will rerun the segmentation, copy number smoothing and minor allele ploidy smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. 
 Note that the purity estimation does not change.
@@ -1004,6 +1003,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Fix bug where driver likelihood of having multiple variants can be less than having single variant
+  - Change tumor mutational load to be int rather than double (requires database [patch](../patient-db/src/main/resources/patches/purple2.43_to_2.44_migration.sql))
 - [2.43](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.43) 
   - Update allelic frequency calculation
 - [2.42](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.42) 
@@ -1057,7 +1059,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Added variant rainfall plot
 - [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.30)
   - Removed FittedSegment file and db table
-  - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)
+  - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have average major allele ploidy > 1.5)
   - Improved logging of missing arguments
   - Added support for new AMBER and COBALT file names and formats
 - [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.29)

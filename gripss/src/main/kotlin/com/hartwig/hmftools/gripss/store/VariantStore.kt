@@ -3,22 +3,19 @@ package com.hartwig.hmftools.gripss.store
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.math.max
 
-class VariantStore(
-        private val variants: List<StructuralVariantContext>,
-        private val variantsById: Map<String, StructuralVariantContext>,
-        private val variantsByChromosome: Map<String, List<StructuralVariantContext>>) {
+class VariantStore(private val variants: List<StructuralVariantContext>, private val variantIndexesById: Map<String, Int>) {
 
     companion object Factory {
         operator fun invoke(variants: List<StructuralVariantContext>): VariantStore {
-            val variantsById = HashMap<String, StructuralVariantContext>()
-            val variantsByChromosome = HashMap<String, MutableList<StructuralVariantContext>>()
-            for (variant in variants) {
-                variantsById[variant.vcfId] = variant
-                variantsByChromosome.computeIfAbsent(variant.contig) { mutableListOf() }.add(variant)
+            val variantIndexesById = HashMap<String, Int>()
+            for (i in variants.indices) {
+                val variant = variants[i]
+                variantIndexesById[variant.vcfId] = i
             }
 
-            return VariantStore(variants, variantsById, variantsByChromosome)
+            return VariantStore(variants, variantIndexesById)
         }
     }
 
@@ -27,27 +24,44 @@ class VariantStore(
     }
 
     fun select(vcfId: String): StructuralVariantContext {
-        return variantsById[vcfId]!!
+        return variants[variantIndexesById[vcfId]!!]
     }
 
-    fun contigsWithVariants(): Set<String> {
-        return variantsByChromosome.keys
+    fun selectOthersNearby(variant: StructuralVariantContext, additionalDistance: Int, seekDistance: Int, filter: (StructuralVariantContext) -> Boolean): Collection<StructuralVariantContext> {
+        return selectOthersNearby(variantIndexesById[variant.vcfId]!!, additionalDistance, seekDistance, filter)
     }
 
-    fun selectContigVariants(contig: String): List<StructuralVariantContext> {
-        return variantsByChromosome.getOrDefault(contig, Collections.emptyList())
-    }
-
-    fun selectOthersNearby(variant: StructuralVariantContext, maxDistance: Pair<Int, Int>, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
-        val minStart = variant.minStart - maxDistance.first
-        val maxStart = variant.maxStart + maxDistance.second
+    private fun selectOthersNearby(i: Int, additionalDistance: Int, maxSeekDistance: Int, filter: (StructuralVariantContext) -> Boolean): Collection<StructuralVariantContext> {
+        val variant = variants[i]
+        val minStart = variant.minStart - additionalDistance
+        val maxStart = variant.maxStart + additionalDistance
         val idFilter = { other: StructuralVariantContext -> variant.vcfId != other.vcfId && variant.mateId?.equals(other.vcfId) != true }
         val overlapFilter = { other: StructuralVariantContext -> other.minStart <= maxStart && other.maxStart >= minStart }
-        return variantsByChromosome.getOrDefault(variant.contig, Collections.emptyList()).filter { x -> idFilter(x) && overlapFilter(x) && filter(x) }
-    }
+        val allFilters = { other: StructuralVariantContext -> idFilter(other) && overlapFilter(other) && filter(other) }
 
-    fun selectOthersNearby(variant: StructuralVariantContext, maxDistance: Int, filter: (StructuralVariantContext) -> Boolean = { _ -> true }): List<StructuralVariantContext> {
-        return selectOthersNearby(variant, Pair(maxDistance, maxDistance), filter)
+        val result = ArrayDeque<StructuralVariantContext>()
+
+        // Look backwards
+        for (j in max(0, i - 1) downTo 0) {
+            val other = variants[j]
+            if (other.maxStart < variant.minStart - maxSeekDistance) {
+                break
+            } else if (allFilters(other)) {
+                result.addFirst(other)
+            }
+        }
+
+        // Look forwards
+        for (j in i + 1 until variants.size) {
+            val other = variants[j]
+            if (other.minStart > variant.maxStart + maxSeekDistance) {
+                break
+            } else if (allFilters(other)) {
+                result.addLast(other)
+            }
+        }
+
+        return result
     }
 
 }

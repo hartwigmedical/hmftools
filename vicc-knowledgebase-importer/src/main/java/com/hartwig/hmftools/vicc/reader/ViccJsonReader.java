@@ -108,26 +108,26 @@ public final class ViccJsonReader {
         viccEntryBuilder.devTags(stringList(viccEntryObject, "dev_tags"));
 
         if (viccEntryObject.has("cgi")) {
-            viccEntryBuilder.KbSpecificObject(CgiObjectFactory.create(viccEntryObject.getAsJsonObject("cgi")));
+            viccEntryBuilder.kbSpecificObject(CgiObjectFactory.create(viccEntryObject.getAsJsonObject("cgi")));
         } else if (viccEntryObject.has("brca")) {
-            viccEntryBuilder.KbSpecificObject(BRCAObjectFactory.create(viccEntryObject.getAsJsonObject("brca")));
+            viccEntryBuilder.kbSpecificObject(BRCAObjectFactory.create(viccEntryObject.getAsJsonObject("brca")));
         } else if (viccEntryObject.has("sage")) {
-            viccEntryBuilder.KbSpecificObject(SageObjectFactory.create(viccEntryObject.getAsJsonObject("sage")));
+            viccEntryBuilder.kbSpecificObject(SageObjectFactory.create(viccEntryObject.getAsJsonObject("sage")));
         } else if (viccEntryObject.has("pmkb")) {
-            viccEntryBuilder.KbSpecificObject(PmkbObjectFactory.create(viccEntryObject.getAsJsonObject("pmkb")));
+            viccEntryBuilder.kbSpecificObject(PmkbObjectFactory.create(viccEntryObject.getAsJsonObject("pmkb")));
         } else if (viccEntryObject.has("oncokb")) {
-            viccEntryBuilder.KbSpecificObject(OncokbObjectFactory.create(viccEntryObject.getAsJsonObject("oncokb")));
+            viccEntryBuilder.kbSpecificObject(OncokbObjectFactory.create(viccEntryObject.getAsJsonObject("oncokb")));
         } else if (viccEntryObject.has("jax")) {
-            viccEntryBuilder.KbSpecificObject(JaxObjectFactory.create(viccEntryObject.getAsJsonObject("jax")));
+            viccEntryBuilder.kbSpecificObject(JaxObjectFactory.create(viccEntryObject.getAsJsonObject("jax")));
         } else if (viccEntryObject.has("jax_trials")) {
-            viccEntryBuilder.KbSpecificObject(JaxTrialsObjectFactory.create(viccEntryObject.getAsJsonObject("jax_trials")));
+            viccEntryBuilder.kbSpecificObject(JaxTrialsObjectFactory.create(viccEntryObject.getAsJsonObject("jax_trials")));
         } else if (viccEntryObject.has("molecularmatch")) {
-            viccEntryBuilder.KbSpecificObject(MolecularMatchObjectFactory.create(viccEntryObject.getAsJsonObject("molecularmatch")));
+            viccEntryBuilder.kbSpecificObject(MolecularMatchObjectFactory.create(viccEntryObject.getAsJsonObject("molecularmatch")));
         } else if (viccEntryObject.has("molecularmatch_trials")) {
-            viccEntryBuilder.KbSpecificObject(MolecularMatchTrialsObjectFactory.create(viccEntryObject.getAsJsonObject(
+            viccEntryBuilder.kbSpecificObject(MolecularMatchTrialsObjectFactory.create(viccEntryObject.getAsJsonObject(
                     "molecularmatch_trials")));
         } else if (viccEntryObject.has("civic")) {
-            viccEntryBuilder.KbSpecificObject(CivicObjectFactory.create(viccEntryObject.getAsJsonObject("civic")));
+            viccEntryBuilder.kbSpecificObject(CivicObjectFactory.create(viccEntryObject.getAsJsonObject("civic")));
         } else {
             throw new IllegalStateException("Could not resolve kb specific object for " + viccEntryObject);
         }
