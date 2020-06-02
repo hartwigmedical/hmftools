@@ -106,7 +106,7 @@ public abstract class SampleReport {
         if (!hospitalContactData().hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
             return hospitalContactData().hospitalPI() + ", " + hospitalContactData().hospitalName() + ", " + hospitalContactData().hospitalAddress();
         } else {
-            return hospitalContactData().hospitalAddress();
+            return hospitalContactData().hospitalName() + ", " + hospitalContactData().hospitalAddress();
         }
     }
 }
