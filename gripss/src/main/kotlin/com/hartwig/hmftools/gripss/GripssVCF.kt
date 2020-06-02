@@ -40,7 +40,8 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
     val writer = VariantContextWriterBuilder().setReferenceDictionary(dictionary).setOutputFile(outputVCF).build()
 
 
-    fun writeHeader(header: VCFHeader) {
+    fun writeHeader(version:String, header: VCFHeader) {
+        header.addMetaDataLine(VCFHeaderLine("gripssVersion", version))
 
         //TODO:
         //        ##FILTER=<ID=small.replacement.fp,Description="Deletion with insertion of the same length that is not a simple inversion.">

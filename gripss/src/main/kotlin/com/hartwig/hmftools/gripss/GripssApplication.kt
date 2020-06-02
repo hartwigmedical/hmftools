@@ -2,6 +2,7 @@ package com.hartwig.hmftools.gripss
 
 import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
+import com.hartwig.hmftools.common.utils.version.VersionInfo
 import com.hartwig.hmftools.gripss.GripssApplication.Companion.logger
 import com.hartwig.hmftools.gripss.dedup.DedupPair
 import com.hartwig.hmftools.gripss.dedup.DedupSingle
@@ -39,10 +40,12 @@ fun main(args: Array<String>) {
 
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
     companion object {
-        val logger = LogManager.getLogger(this::class.java)
         const val PON_ADDITIONAL_DISTANCE = 1
         const val MIN_HOTSPOT_DISTANCE = 1000
         const val MIN_RESCUE_QUAL = 100
+
+        val logger = LogManager.getLogger(this::class.java)
+        val version = VersionInfo("gripss.version")
     }
 
     private val startTime = System.currentTimeMillis();
@@ -94,7 +97,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), linkRescues)
 
         logger.info("Writing file: ${config.outputVcf}")
-        fileWriter.writeHeader(fileReader.fileHeader)
+        fileWriter.writeHeader(version.version(), fileReader.fileHeader)
         for (variant in variantStore.selectAll()) {
 
             val localLinkedBy = combinedLinks[variant.vcfId]
