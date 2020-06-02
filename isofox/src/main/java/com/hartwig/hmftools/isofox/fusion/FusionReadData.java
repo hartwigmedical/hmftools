@@ -293,7 +293,8 @@ public class FusionReadData
         return true;
     }
 
-    private static final int CLOSE_MATCH_BASES = 1;
+    private static final int CLOSE_MATCH_BASES = 10;
+    private static final double CLOSE_MATCH_FRAG_RATIO = 0.2;
 
     public boolean isCloseMatch(final FusionReadData other)
     {
@@ -303,7 +304,9 @@ public class FusionReadData
                return false;
         }
 
-        return true;
+        double fragmentsRatio = getFragments(MATCHED_JUNCTION).size() / (double)other.getFragments(MATCHED_JUNCTION).size();
+
+        return fragmentsRatio >= 1/CLOSE_MATCH_FRAG_RATIO || fragmentsRatio <= CLOSE_MATCH_FRAG_RATIO;
     }
 
     public void setStreamData(final List<EnsemblGeneData> upstreamGenes, final List<EnsemblGeneData> downstreamGenes, boolean startIsUpstream)

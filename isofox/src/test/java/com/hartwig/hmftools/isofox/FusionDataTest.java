@@ -724,15 +724,18 @@ public class FusionDataTest
 
         chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
 
-        // more support
-        read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        // more support - needs to be 5x or more
+        for(int i = 0; i < 4; ++i)
+        {
+            read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
-        readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
-                createCigar(0, 20, 20), createCigar(20, 20, 0), true);
+            readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+                    createCigar(0, 20, 20), createCigar(20, 20, 0), true);
 
-        readPair[1].setStrand(true, false);
+            readPair[1].setStrand(true, false);
 
-        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
+            chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
+        }
 
         // another close by
         read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
@@ -764,7 +767,9 @@ public class FusionDataTest
 
         FusionReadData fusion = fusions.get(0);
         assertTrue(fusion != null);
-        assertEquals(2, fusion.getFragments(MATCHED_JUNCTION).size());
+        assertEquals(5, fusion.getFragments(MATCHED_JUNCTION).size());
         assertEquals(0, fusion.getFragments(REALIGNED).size());
+        assertEquals(1100, fusion.junctionPositions()[SE_START]);
+        assertEquals(10200, fusion.junctionPositions()[SE_END]);
     }
 }

@@ -365,12 +365,12 @@ public class FusionTask implements Callable
                     {
                         ISF_LOGGER.info("fusion({}) homology merge with fusion({})", fusion1.id(), fusion2.id());
 
-                        ISF_LOGGER.info("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
+                        ISF_LOGGER.debug("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                 fusion1.toString(), fusion1.junctionHomology()[SE_START], fusion1.junctionHomology()[SE_END],
                                 fusion1.junctionBases()[SE_START], fusion1.adjacentJunctionBases()[SE_START],
                                 fusion1.junctionBases()[SE_END], fusion1.adjacentJunctionBases()[SE_END]);
 
-                        ISF_LOGGER.info("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
+                        ISF_LOGGER.debug("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                 fusion2.toString(), fusion2.junctionHomology()[SE_START], fusion2.junctionHomology()[SE_END],
                                 fusion2.junctionBases()[SE_START], fusion2.adjacentJunctionBases()[SE_START],
                                 fusion2.junctionBases()[SE_END], fusion2.adjacentJunctionBases()[SE_END]);
@@ -378,8 +378,10 @@ public class FusionTask implements Callable
                         final FusionReadData fusion1Const = fusion1;
                         fusion2.getFragments(MATCHED_JUNCTION).forEach(x -> fusion1Const.addFusionFragment(x));
                         fusions.remove(j);
+                        continue;
                     }
-                    else if(fusion1.isCloseMatch(fusion2))
+
+                    if(fusion1.isCloseMatch(fusion2))
                     {
                         // keep the fusion with more support, discard the other
                         if(fusion1.getFragments(MATCHED_JUNCTION).size() < fusion2.getFragments(MATCHED_JUNCTION).size())
