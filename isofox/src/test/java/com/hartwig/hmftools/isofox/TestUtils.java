@@ -187,6 +187,19 @@ public class TestUtils
         mockRefGenome.RefGenomeMap.put(CHR_2, refBases);
     }
 
+    public static void overrideRefGenome(final RefGenomeInterface refGenome, final String chromosome, int posStart, final String bases)
+    {
+        final MockRefGenome mockRefGenome = (MockRefGenome)refGenome;
+        final String refBases = mockRefGenome.RefGenomeMap.get(chromosome);
+
+        if(refBases == null || posStart + bases.length() > refBases.length())
+            return;
+
+        int posEnd = posStart + bases.length();
+        final String newRefBases = refBases.substring(0, posStart) + bases + refBases.substring(posEnd);
+        mockRefGenome.RefGenomeMap.put(chromosome, newRefBases);
+    }
+
     public static Cigar createCigar(int preSc, int match, int postSc)
     {
         if (preSc == 0 && match == 0 && postSc == 0)

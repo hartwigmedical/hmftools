@@ -590,19 +590,15 @@ public class FusionFinder
         if(!ISF_LOGGER.isDebugEnabled() && mConfig.Functions.size() > 1)
             return;
 
-        final PerformanceCounter[] perfCounters = mFusionTasks.get(0).getPerfCounters();
+        final PerformanceCounter perfCounter = mFusionTasks.get(0).getPerfCounter();
 
         for (int i = 1; i < mFusionTasks.size(); ++i)
         {
-            final PerformanceCounter[] taskPCs = mFusionTasks.get(i).getPerfCounters();
-
-            for (int j = 0; j < perfCounters.length; ++j)
-            {
-                perfCounters[j].merge(taskPCs[j]);
-            }
+            final PerformanceCounter taskPC = mFusionTasks.get(i).getPerfCounter();
+            perfCounter.merge(mFusionTasks.get(i).getPerfCounter());
         }
 
-        Arrays.stream(perfCounters).forEach(x -> x.logStats());
+        perfCounter.logStats();
     }
 
     @VisibleForTesting

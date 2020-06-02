@@ -24,12 +24,15 @@ import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.generateRandomBases;
+import static com.hartwig.hmftools.isofox.TestUtils.overrideRefGenome;
 import static com.hartwig.hmftools.isofox.TestUtils.populateRefGenome;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 
+import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
+import static htsjdk.samtools.SAMFlag.SECOND_OF_PAIR;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -598,4 +601,170 @@ public class FusionDataTest
         // assertEquals(1, fusion.getFragments(DISCORDANT).size()); // not yet handled
     }
 
+    @Test
+    public void testHomologyMerging()
+    {
+        Configurator.setRootLevel(Level.DEBUG);
+
+        final EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = new IsofoxConfig();
+        populateRefGenome(config.RefGenome);
+
+        FusionFinder finder = new FusionFinder(config, geneTransCache);
+
+        int gcId = 0;
+        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        Map<Integer,List<EnsemblGeneData>> gcMap = Maps.newHashMap();
+
+        gcMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
+        gcMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
+        finder.addChromosomeGeneCollections(CHR_1, gcMap);
+
+        final Map<String,List<ReadRecord>> chimericReadMap = Maps.newHashMap();
+
+        // a spliced fragment to establish the fusion
+        int readId = 0;
+        ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        // create 3 bases of homology around the junction
+        overrideRefGenome(config.RefGenome, CHR_1, 1101, "AGT");
+        overrideRefGenome(config.RefGenome, CHR_1, 10200, "AGT");
+
+        String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10209);
+
+        ReadRecord read2 = createMappedRead(readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10229);
+
+        ReadRecord read3 = createMappedRead(readId, gc2, 10200, 102929, createCigar(10, 30, 0), junctionBases);
+
+        read2.setFlag(FIRST_OF_PAIR, true);
+        read3.setFlag(SECOND_OF_PAIR, false);
+        read3.setStrand(true, false);
+        read2.setSuppAlignment(String.format("%s;%d;%s", read3.Chromosome, read3.PosStart, read3.Cigar.toString()));
+        read3.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
+
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2, read3));
+
+        // a second fragment with 2 bases difference due to homology
+        read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1073, 1102)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10202, 10211);
+
+        read2 = createMappedRead(readId, gc1, 1073, 1102, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1093, 1102)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10202, 10231);
+
+        read3 = createMappedRead(readId, gc2, 10202, 102931, createCigar(10, 30, 0), junctionBases);
+
+        read2.setFlag(FIRST_OF_PAIR, true);
+        read3.setFlag(SECOND_OF_PAIR, false);
+        read3.setStrand(true, false);
+        read2.setSuppAlignment(String.format("%s;%d;%s", read3.Chromosome, read3.PosStart, read3.Cigar.toString()));
+        read3.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
+
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2, read3));
+        finder.addChimericReads(chimericReadMap);
+
+        finder.findFusions();
+
+        assertEquals(1, finder.getFusionCandidates().size());
+        List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
+        assertEquals(1, fusions.size());
+
+        FusionReadData fusion = fusions.get(0);
+        assertTrue(fusion != null);
+        assertEquals(2, fusion.getFragments(MATCHED_JUNCTION).size());
+    }
+
+    @Test
+    public void testCloseMatchFiltering()
+    {
+        Configurator.setRootLevel(Level.DEBUG);
+
+        final EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = new IsofoxConfig();
+        FusionFinder finder = new FusionFinder(config, geneTransCache);
+
+        int gcId = 0;
+
+        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        Map<Integer,List<EnsemblGeneData>> gcMap = Maps.newHashMap();
+
+        gcMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
+        gcMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
+        finder.addChromosomeGeneCollections(CHR_1, gcMap);
+
+        final Map<String,List<ReadRecord>> chimericReadMap = Maps.newHashMap();
+
+        // 3 different but close spliced fragments, one of them with more support than the others
+        int readId = 0;
+        ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+                createCigar(0, 20, 20), createCigar(20, 20, 0), true);
+
+        readPair[1].setStrand(true, false);
+
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
+
+        // more support
+        read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+                createCigar(0, 20, 20), createCigar(20, 20, 0), true);
+
+        readPair[1].setStrand(true, false);
+
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
+
+        // another close by
+        read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        readPair = createSupplementaryReadPair(readId, gc1, gc2, 1080, 1099, 10199, 10218,
+                createCigar(0, 20, 20), createCigar(20, 20, 0), true);
+
+        readPair[1].setStrand(true, false);
+
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
+
+        // and another
+        read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        readPair = createSupplementaryReadPair(readId, gc1, gc2, 1082, 1101, 10201, 10220,
+                createCigar(0, 20, 20), createCigar(20, 20, 0), true);
+
+        readPair[1].setStrand(true, false);
+
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
+
+        finder.addChimericReads(chimericReadMap);
+
+        finder.findFusions();
+
+        assertEquals(1, finder.getFusionCandidates().size());
+        List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
+        assertEquals(1, fusions.size());
+
+        FusionReadData fusion = fusions.get(0);
+        assertTrue(fusion != null);
+        assertEquals(2, fusion.getFragments(MATCHED_JUNCTION).size());
+        assertEquals(0, fusion.getFragments(REALIGNED).size());
+    }
 }

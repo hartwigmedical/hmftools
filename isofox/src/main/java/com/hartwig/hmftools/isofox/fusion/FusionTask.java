@@ -50,10 +50,7 @@ public class FusionTask implements Callable
 
     private final FusionWriter mFusionWriter;
 
-    private final PerformanceCounter[] mPerfCounters;
-
-    private static final int PC_DISCOVERY = 0;
-    private static final int PC_ANNOTATE = 1;
+    private final PerformanceCounter mPerfCounter;
 
     public FusionTask(
             int taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
@@ -75,9 +72,7 @@ public class FusionTask implements Callable
 
         mFusionWriter = fusionWriter;
 
-        mPerfCounters = new PerformanceCounter[PC_ANNOTATE + 1];
-        mPerfCounters[PC_DISCOVERY] = new PerformanceCounter("Discovery");
-        mPerfCounters[PC_ANNOTATE] = new PerformanceCounter("Annotate");
+        mPerfCounter = new PerformanceCounter("FusionTask");
    }
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
@@ -91,9 +86,10 @@ public class FusionTask implements Callable
 
         ISF_LOGGER.info("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
 
-        mPerfCounters[PC_DISCOVERY].start();;
+        mPerfCounter.start();;
 
         formInitialFusions();
+        reconcileFusions();
 
         // assign any discordant reads
         ISF_LOGGER.debug("{}: assigning unfused fragments", mTaskId);
@@ -101,13 +97,9 @@ public class FusionTask implements Callable
         createLocalFusions();
         assignRealignedFragments();
 
-        mPerfCounters[PC_DISCOVERY].stop();
-
-        mPerfCounters[PC_ANNOTATE].start();
-
         annotateFusions();
 
-        mPerfCounters[PC_ANNOTATE].stop();
+        mPerfCounter.stop();
 
         writeData();
 
@@ -119,7 +111,7 @@ public class FusionTask implements Callable
         return (long)1;
     }
 
-    public final PerformanceCounter[] getPerfCounters() { return mPerfCounters; }
+    public final PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     private void formInitialFusions()
     {
@@ -350,13 +342,69 @@ public class FusionTask implements Callable
         initialFragment.setJunctionTypes(mConfig.RefGenome, fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
     }
 
+    private void reconcileFusions()
+    {
+        // merge fusions if they match on homology
+        // otherwise if fusion junctions are close enough, take the one with largest amount of support
+        for(List<FusionReadData> fusions : mFusionCandidates.values())
+        {
+            if(fusions.size() == 1)
+                continue;
+
+            // annotate similar fusions for post-run analysis
+            for(int i = 0; i < fusions.size() - 1; ++i)
+            {
+                FusionReadData fusion1 = fusions.get(i);
+
+                int j = i + 1;
+                while(j < fusions.size())
+                {
+                    FusionReadData fusion2 = fusions.get(j);
+
+                    if(fusion1.matchWithinHomology(fusion2))
+                    {
+                        ISF_LOGGER.info("fusion({}) homology merge with fusion({})", fusion1.id(), fusion2.id());
+
+                        ISF_LOGGER.info("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
+                                fusion1.toString(), fusion1.junctionHomology()[SE_START], fusion1.junctionHomology()[SE_END],
+                                fusion1.junctionBases()[SE_START], fusion1.adjacentJunctionBases()[SE_START],
+                                fusion1.junctionBases()[SE_END], fusion1.adjacentJunctionBases()[SE_END]);
+
+                        ISF_LOGGER.info("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
+                                fusion2.toString(), fusion2.junctionHomology()[SE_START], fusion2.junctionHomology()[SE_END],
+                                fusion2.junctionBases()[SE_START], fusion2.adjacentJunctionBases()[SE_START],
+                                fusion2.junctionBases()[SE_END], fusion2.adjacentJunctionBases()[SE_END]);
+
+                        final FusionReadData fusion1Const = fusion1;
+                        fusion2.getFragments(MATCHED_JUNCTION).forEach(x -> fusion1Const.addFusionFragment(x));
+                        fusions.remove(j);
+                    }
+                    else if(fusion1.isCloseMatch(fusion2))
+                    {
+                        // keep the fusion with more support, discard the other
+                        if(fusion1.getFragments(MATCHED_JUNCTION).size() < fusion2.getFragments(MATCHED_JUNCTION).size())
+                        {
+                            fusions.set(i, fusion2);
+                            fusion1 = fusion2;
+                        }
+
+                        fusions.remove(j);
+                    }
+                    else
+                    {
+                        ++j;
+                    }
+                }
+            }
+        }
+    }
+
     private static final int POSITION_REALIGN_DISTANCE = 20;
 
     private void markRelatedFusions()
     {
         for( Map.Entry<String,List<FusionReadData>> entry : mFusionCandidates.entrySet())
         {
-            // final String locationId = entry.getKey();
             final List<FusionReadData> fusions = entry.getValue();
 
             if(fusions.size() == 1)
