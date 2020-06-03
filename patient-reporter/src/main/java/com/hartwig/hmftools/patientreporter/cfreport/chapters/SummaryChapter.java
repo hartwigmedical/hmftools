@@ -10,6 +10,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -34,6 +35,7 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryChapter implements ReportChapter {
@@ -153,7 +155,16 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
 
-        String hrdString = hasReliablePurity ? patientReport.chordHrdStatus().display() : DataUtil.NA_STRING;
+        String hrdString = Strings.EMPTY;
+
+        if (hasReliablePurity) {
+            hrdString = patientReport.chordHrdStatus().display();
+        } else if (patientReport.microsatelliteStatus() == MicrosatelliteStatus.MSS) {
+            hrdString = patientReport.chordHrdStatus().display();
+        } else {
+            hrdString = DataUtil.NA_STRING;
+        }
+
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));
 
