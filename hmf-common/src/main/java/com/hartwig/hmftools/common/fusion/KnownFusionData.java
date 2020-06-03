@@ -65,7 +65,7 @@ public class KnownFusionData
 
     public static KnownFusionData fromCsv(final String data, final Map<String,Integer> fieldIndexMap)
     {
-        final String[] items = data.split(FILE_DELIMITER);
+        final String[] items = data.split(FILE_DELIMITER, -1);
 
         return new KnownFusionData(
                 KnownFusionType.valueOf(items[fieldIndexMap.get(FLD_TYPE)]),

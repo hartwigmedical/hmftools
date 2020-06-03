@@ -31,6 +31,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 import org.apache.commons.cli.CommandLine;
@@ -149,27 +151,27 @@ public class FusionFilters
     {
         boolean[] isKnown = {false, false};
 
-        for(final String[] knownPair : mKnownFusionCache.knownPairs())
+        for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(KnownFusionType.KNOWN_PAIR))
         {
-            if(knownPair[FIVE_GENE].equals(fusion.GeneNames[SE_START]) && knownPair[THREE_GENE].equals(fusion.GeneNames[SE_END]))
+            if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]) && knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))
             {
                 fusion.setKnownFusionType(KNOWN_PAIR);
                 return;
             }
 
-            if(knownPair[FIVE_GENE].equals(fusion.GeneNames[SE_START]))
+            if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]))
                 isKnown[SE_START] = true;
 
-            if(knownPair[THREE_GENE].equals(fusion.GeneNames[SE_END]))
+            if(knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))
                 isKnown[SE_END] = true;
         }
 
         boolean[] isProm = { false, false };
 
-        if(!isKnown[SE_START] && mKnownFusionCache.promiscuousFiveGenes().contains(fusion.GeneNames[SE_START]))
+        if(!isKnown[SE_START] && mKnownFusionCache.hasPromiscuousFiveGene(fusion.GeneNames[SE_START]))
             isProm[SE_START] = true;
 
-        if(!isKnown[SE_END] && mKnownFusionCache.promiscuousThreeGenes().contains(fusion.GeneNames[SE_END]))
+        if(!isKnown[SE_END] && mKnownFusionCache.hasPromiscuousThreeGene(fusion.GeneNames[SE_END]))
             isProm[SE_END] = true;
 
         if(isKnown[SE_START])

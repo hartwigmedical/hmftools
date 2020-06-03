@@ -773,7 +773,7 @@ public class FusionReadData
 
         // csvData.add(ISF_LOGGER.isDebugEnabled() ? getInitialFragment().readId() : "-");
         csvData.add(getInitialFragment().readId()); // very handy for now
-        csvData.add(String.valueOf(mJunctionHomology));
+        csvData.add(String.format("%d-%d", mJunctionHomology[SE_START], mJunctionHomology[SE_END]));
 
         return csvData.toString();
     }

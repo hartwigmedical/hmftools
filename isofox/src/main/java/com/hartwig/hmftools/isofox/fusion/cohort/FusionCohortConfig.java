@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
@@ -68,6 +69,7 @@ public class FusionCohortConfig
         options.addOption(REWRITE_ANNOTATED, false, "Rewrtite all fusions with cohort and other annotations");
         options.addOption(WRITE_COMBINED_FUSIONS, false, "Write a combined file with passing fusion");
 
+        options.addOption(KNOWN_FUSIONS_FILE, true, "Known fusion file");
         options.addOption(FUSION_PAIRS_CSV, true, "Known fusion pairs");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Promiscuous 5-prime fusion genes");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Promiscuous 3-prime fusion genes");

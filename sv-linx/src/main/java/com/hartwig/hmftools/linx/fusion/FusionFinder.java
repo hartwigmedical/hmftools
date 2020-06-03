@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOW
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -83,6 +84,7 @@ public class FusionFinder
 
     public static void addCmdLineArgs(Options options)
     {
+        options.addOption(KNOWN_FUSIONS_FILE, true, "Known fusion file");
         options.addOption(FUSION_PAIRS_CSV, true, "Known gene fusion pairs");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Promiscuous 5' genes");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Promiscuous 3' genes");

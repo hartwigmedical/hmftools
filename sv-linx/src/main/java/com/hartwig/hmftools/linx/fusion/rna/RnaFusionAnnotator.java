@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOW
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.THREE_GENE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
@@ -25,6 +26,7 @@ import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
@@ -186,10 +188,10 @@ public class RnaFusionAnnotator
 
     private boolean anyReferenceGeneMatch(final KnownFusionCache refFusionData, final String geneName)
     {
-        if(refFusionData.knownPairs().stream().anyMatch(x -> x[FIVE_GENE].equals(geneName) || x[THREE_GENE].equals(geneName)))
+        if(refFusionData.getDataByType(KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(geneName) || x.ThreeGene.equals(geneName)))
             return true;
 
-        return refFusionData.promiscuousFiveGenes().contains(geneName) || refFusionData.promiscuousThreeGenes().contains(geneName);
+        return refFusionData.hasPromiscuousFiveGene(geneName) || refFusionData.hasPromiscuousThreeGene(geneName);
     }
 
     private static String checkAlternateGeneName(final String geneName)
@@ -277,13 +279,10 @@ public class RnaFusionAnnotator
             return;
         }
 
-        for(final String[] genePair : refFusionData.knownPairs())
+        if(refFusionData.hasKnownFusion(rnaFusion.GeneNames[FS_UPSTREAM], rnaFusion.GeneNames[FS_DOWNSTREAM]))
         {
-            if (genePair[FIVE_GENE].equals(rnaFusion.GeneNames[FS_UPSTREAM]) && genePair[THREE_GENE].equals(rnaFusion.GeneNames[FS_DOWNSTREAM]))
-            {
-                rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
-                return;
-            }
+            rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
+            return;
         }
 
         boolean fivePrimeProm = refFusionData.hasPromiscuousFiveGene(rnaFusion.GeneNames[FS_UPSTREAM]);

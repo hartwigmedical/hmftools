@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -27,7 +26,7 @@ public class KnownFusionCache
     private final Map<KnownFusionType,List<KnownFusionData>> mDataByType;
 
     // new-style combined input file
-    public static final String KNOWN_FUSIONS_FILE = "known_fusion_data";
+    public static final String KNOWN_FUSIONS_FILE = "known_fusion_file";
 
     // old-style file names
     public static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
@@ -52,21 +51,8 @@ public class KnownFusionCache
         }
     }
 
-    // to be deprecated
-    public final List<String[]> knownPairs()
-    {
-        return mDataByType.get(KNOWN_PAIR).stream().map(x -> new String[] {x.FiveGene, x.ThreeGene }).collect(Collectors.toList());
-    }
-
-    public final List<String> promiscuousThreeGenes()
-    {
-        return mDataByType.get(PROMISCUOUS_3).stream().map(x -> x.FiveGene).collect(Collectors.toList());
-    }
-
-    public final List<String> promiscuousFiveGenes()
-    {
-        return mDataByType.get(PROMISCUOUS_5).stream().map(x -> x.FiveGene).collect(Collectors.toList());
-    }
+    public final List<KnownFusionData> getData() { return mData; }
+    public final List<KnownFusionData> getDataByType(final KnownFusionType type) { return mDataByType.get(type); }
 
     public boolean hasKnownFusion(final String fiveGene, final String threeGene)
     {
@@ -138,7 +124,10 @@ public class KnownFusionCache
 
         for(Map.Entry<KnownFusionType,List<KnownFusionData>> entry : mDataByType.entrySet())
         {
-            LOGGER.info("loaded {} {} known-fusion records", entry.getKey(), entry.getValue().size());
+            if(!entry.getValue().isEmpty())
+            {
+                LOGGER.info("loaded {} {} known-fusion records", entry.getValue().size(), entry.getKey());
+            }
         }
 
         return true;
@@ -147,13 +136,7 @@ public class KnownFusionCache
     public void addData(final KnownFusionData data)
     {
         mData.add(data);
-
-        final List<KnownFusionData> dataByType = mDataByType.get(data.Type);
-
-        if(dataByType != null)
-            dataByType.add(data);
-        else
-            mDataByType.put(data.Type, Lists.newArrayList(data));
+        mDataByType.get(data.Type).add(data);
     }
 
     private boolean loadFile(final String filename)
