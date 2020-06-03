@@ -356,12 +356,14 @@ public class RnaFusionAnnotator
         return (homologyLength / 2) + (homologyLength % 2);
     }
 
-    public static boolean positionMatch(final SvBreakend breakend, int rnaPosition)
+    private static final int MAX_BASE_DIFF = 5;
+
+    public static boolean unsplicedPositionMatch(final SvBreakend breakend, int rnaPosition)
     {
         // checks for a position match within the bounds of uncertainty
         int offsetMargin = getHomologyMargin(breakend);
 
-        return abs(breakend.position() - rnaPosition) <= offsetMargin;
+        return abs(breakend.position() - rnaPosition) <= offsetMargin + MAX_BASE_DIFF;
     }
 
     public boolean isTranscriptBreakendViableForRnaBoundary(

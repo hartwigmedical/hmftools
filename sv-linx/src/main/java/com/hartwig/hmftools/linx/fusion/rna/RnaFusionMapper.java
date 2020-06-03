@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.loadRnaFusion;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.checkRnaPhasedTranscripts;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.findExonMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.isViableBreakend;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.positionMatch;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.unsplicedPositionMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.setReferenceFusionData;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.NOT_SET;
@@ -184,7 +184,7 @@ public class RnaFusionMapper
                 // breakend must be within a max distance of the RNA breakend or if it's unspliced, at its exact location
                 if(requireExactMatch)
                 {
-                    if(!positionMatch(breakend, rnaPosition))
+                    if(!unsplicedPositionMatch(breakend, rnaPosition))
                         continue;
                 }
                 else
