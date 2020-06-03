@@ -574,7 +574,7 @@ public class RnaFusionMapper
                         rnaFusion.getTransExonData()[fs].add(exonMatchData);
 
                         // override for external fusion source data which doesn't set this or set it correctly
-                        if(exonMatchData.BoundaryMatch && rnaFusion.JunctionTypes[fs] != KNOWN)
+                        if(exonMatchData.BoundaryMatch && rnaFusion.JunctionTypes[fs] == NOT_SET)
                             rnaFusion.JunctionTypes[fs] = KNOWN;
                     }
                 }
