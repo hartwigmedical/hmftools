@@ -8,6 +8,7 @@ More detailed descriptions of the following algorithms are available from the li
 - [SAGE](./sage/README.md)
 - [AMBER](./amber/README.md)
 - [COBALT](./count-bam-lines/README.md)
+- [GRIPSS](./gripss/README.md)
 - [PURPLE](./purity-ploidy-estimator/README.md)
 - [LINX](./sv-linx/README.md)
 - [ISOFOX](./isofox/README.md)

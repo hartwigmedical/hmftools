@@ -104,9 +104,9 @@ public abstract class SampleReport {
     @Value.Derived
     public String addressee() {
         if (!hospitalContactData().hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
-            return hospitalContactData().hospitalPI() + ", " + hospitalContactData().hospitalAddress();
+            return hospitalContactData().hospitalPI() + ", " + hospitalContactData().hospitalName() + ", " + hospitalContactData().hospitalAddress();
         } else {
-            return hospitalContactData().hospitalAddress();
+            return hospitalContactData().hospitalName() + ", " + hospitalContactData().hospitalAddress();
         }
     }
 }

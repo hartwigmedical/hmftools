@@ -332,7 +332,7 @@ public class QCFailChapter implements ReportChapter {
         String effectivePurity =
                 failReport.wgsPurityString() != null ? failReport.wgsPurityString() : failReport.sampleReport().shallowSeqPurityString();
         if (effectivePurity.equals(Lims.PURITY_NOT_RELIABLE_STRING) || effectivePurity.equals(Lims.NOT_PERFORMED_STRING)) {
-            return createContentParagraph("The tumor percentage based on molecular estimation could not be determined");
+            return createContentParagraph("The tumor percentage based on molecular estimation", " could not be determined");
         } else {
             return createContentParagraph("The tumor percentage based on molecular estimation is ", effectivePurity);
         }
