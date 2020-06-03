@@ -157,9 +157,7 @@ public class SummaryChapter implements ReportChapter {
 
         String hrdString = Strings.EMPTY;
 
-        if (hasReliablePurity) {
-            hrdString = patientReport.chordHrdStatus().display();
-        } else if (patientReport.microsatelliteStatus() == MicrosatelliteStatus.MSS) {
+        if (hasReliablePurity && patientReport.microsatelliteStatus() == MicrosatelliteStatus.MSS) {
             hrdString = patientReport.chordHrdStatus().display();
         } else {
             hrdString = DataUtil.NA_STRING;
