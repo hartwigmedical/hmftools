@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.FUSION_PAIRS_CSV;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.Arrays;

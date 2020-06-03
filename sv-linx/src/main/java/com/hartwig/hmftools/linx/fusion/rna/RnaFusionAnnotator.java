@@ -17,15 +17,13 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.isIsofoxFusion;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
-
-import java.util.Arrays;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -132,7 +130,7 @@ public class RnaFusionAnnotator
         }
     }
 
-    public void correctGeneNames(final EnsemblDataCache geneDataCache, final KnownFusionData refFusionData, RnaFusionData rnaFusion)
+    public void correctGeneNames(final KnownFusionCache refFusionData, RnaFusionData rnaFusion)
     {
         // take the first gene where multiple are listed unless one features in the known or promiscuous lists
         final String[] geneNames = rnaFusion.GeneNames;
@@ -186,7 +184,7 @@ public class RnaFusionAnnotator
         }
     }
 
-    private boolean anyReferenceGeneMatch(final KnownFusionData refFusionData, final String geneName)
+    private boolean anyReferenceGeneMatch(final KnownFusionCache refFusionData, final String geneName)
     {
         if(refFusionData.knownPairs().stream().anyMatch(x -> x[FIVE_GENE].equals(geneName) || x[THREE_GENE].equals(geneName)))
             return true;
@@ -271,7 +269,7 @@ public class RnaFusionAnnotator
         return geneName;
     }
 
-    public static void setReferenceFusionData(final KnownFusionData refFusionData, RnaFusionData rnaFusion)
+    public static void setReferenceFusionData(final KnownFusionCache refFusionData, RnaFusionData rnaFusion)
     {
         if(refFusionData == null)
         {

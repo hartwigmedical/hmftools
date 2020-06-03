@@ -1,142 +1,115 @@
 package com.hartwig.hmftools.common.fusion;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
-import com.google.common.collect.Lists;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import java.util.Map;
 
 public class KnownFusionData
 {
+    public final KnownFusionType Type;
+    public final String FiveGene;
+    public final String ThreeGene;
+    public final String CancerTypes;
+    public final String PubMedId;
 
-    private final List<String[]> mKnownPairs;
-    private final List<String> mPromiscuousThreeGenes;
-    private final List<String> mPromiscuousFiveGenes;
+    private boolean mValidData;
+    private final String mOtherData;
 
-    public static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
-    public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
-    public static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
+    // exon deletion
+    private String mSpecificTransName;
+    private int[] mMinFusedExons;
+    private int[] mMaxFusedExons;
+
+    // IG region
+    private int[] mIgRegionBounds;
 
     public static final int FIVE_GENE = 0;
     public static final int THREE_GENE = 1;
+
     private static final String FILE_DELIMITER = ",";
+    private static final String OTHER_DATA_DELIMITER = ";";
+    private static final String FLD_TYPE = "Type";
+    private static final String FLD_FIVE_GENE = "FiveGene";
+    private static final String FLD_THREE_GENE = "ThreeGene";
+    private static final String FLD_PUB_MED = "PubMedId";
+    private static final String FLD_CANCER_TYPES = "CancerTypes";
+    private static final String FLD_OTHER_DATA = "OtherData";
 
-    private static final Logger LOGGER = LogManager.getLogger(KnownFusionData.class);
-
-    public KnownFusionData()
+    public KnownFusionData(
+            final KnownFusionType type, final String fiveGene, final String threeGene, final String cancerTypes,
+            final String pubMedId, final String otherData)
     {
-        mKnownPairs = Lists.newArrayList();
-        mPromiscuousThreeGenes = Lists.newArrayList();
-        mPromiscuousFiveGenes = Lists.newArrayList();
+        Type = type;
+        FiveGene = fiveGene;
+        ThreeGene = threeGene;
+        CancerTypes = cancerTypes;
+        PubMedId = pubMedId;
+        mOtherData = otherData;
+
+        mSpecificTransName = "";
+        mMinFusedExons = new int[FS_PAIR];
+        mMaxFusedExons = new int[FS_PAIR];
+        mIgRegionBounds = new int[FS_PAIR];
+        mValidData = true;
+
+        setTypeInfo();
     }
 
-    public final List<String[]> knownPairs() { return mKnownPairs; }
-    public final List<String> promiscuousThreeGenes() { return mPromiscuousThreeGenes; }
-    public final List<String> promiscuousFiveGenes() { return mPromiscuousFiveGenes; }
+    public boolean validData() { return mValidData; }
 
-    public boolean hasKnownFusion(final String fiveGene, final String threeGene)
+    public static KnownFusionData fromCsv(final String data, final Map<String,Integer> fieldIndexMap)
     {
-        return mKnownPairs.stream().anyMatch(x -> x[FIVE_GENE].equals(fiveGene) && x[THREE_GENE].equals(threeGene));
+        final String[] items = data.split(FILE_DELIMITER);
+
+        return new KnownFusionData(
+                KnownFusionType.valueOf(items[fieldIndexMap.get(FLD_TYPE)]),
+                items[fieldIndexMap.get(FLD_FIVE_GENE)],
+                items[fieldIndexMap.get(FLD_THREE_GENE)],
+                items[fieldIndexMap.get(FLD_CANCER_TYPES)],
+                items[fieldIndexMap.get(FLD_PUB_MED)],
+                items[fieldIndexMap.get(FLD_OTHER_DATA)]);
     }
 
-    public boolean hasPromiscuousFiveGene(final String gene) { return mPromiscuousFiveGenes.contains(gene); }
-    public boolean hasPromiscuousThreeGene(final String gene) { return mPromiscuousThreeGenes.contains(gene); }
-
-    public boolean intergenicPromiscuousMatch(final String fiveGene, final String threeGene)
+    private void setTypeInfo()
     {
-        // cannot be same gene
-        if(fiveGene.equals(threeGene))
-            return false;
-
-        return hasPromiscuousFiveGene(fiveGene) || hasPromiscuousThreeGene(threeGene);
-    }
-
-    public boolean intragenicPromiscuousMatch(final String fiveGene, final String threeGene)
-    {
-        return fiveGene.equals(threeGene) && hasPromiscuousThreeGene(threeGene);
-    }
-
-    public boolean loadFromFile(@NotNull final CommandLine cmd)
-    {
-        if(!cmd.hasOption(PROMISCUOUS_THREE_CSV) && !cmd.hasOption(PROMISCUOUS_FIVE_CSV) && !cmd.hasOption(FUSION_PAIRS_CSV))
-            return false;
-
-        try
+        if(Type == EXON_DEL_DUP)
         {
-            if(cmd.hasOption(PROMISCUOUS_THREE_CSV))
+            final String[] items = mOtherData.split(OTHER_DATA_DELIMITER);
+            if(items.length != 5)
             {
-                final String threeGenesFile = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
-                mPromiscuousThreeGenes.addAll(loadFile(threeGenesFile, 1));
-                LOGGER.info("loaded {} 3-prime promiscous genes from file: {}", mPromiscuousThreeGenes.size(), threeGenesFile);
+                mValidData = false;
+                return;
             }
 
-            if(cmd.hasOption(PROMISCUOUS_FIVE_CSV))
-            {
-                final String fiveGenesFile = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
-                mPromiscuousFiveGenes.addAll(loadFile(fiveGenesFile, 1));
-                LOGGER.info("loaded {} 5-prime promiscous genes from file: {}", mPromiscuousFiveGenes.size(), fiveGenesFile);
-            }
-
-            if(cmd.hasOption(FUSION_PAIRS_CSV))
-            {
-                final String knownPairsFile = cmd.getOptionValue(FUSION_PAIRS_CSV);
-                final List<String> knownPairs = loadFile(knownPairsFile, 2);
-                mKnownPairs.addAll(knownPairs.stream().map(x -> x.split(FILE_DELIMITER)).collect(Collectors.toList()));
-                LOGGER.info("loaded {} known fusion gene-pairs from file: {}", mKnownPairs.size(), knownPairsFile);
-            }
+            mSpecificTransName = items[0];
+            mMinFusedExons[FS_UPSTREAM] = Integer.parseInt(items[1]);
+            mMaxFusedExons[FS_UPSTREAM] = Integer.parseInt(items[2]);
+            mMinFusedExons[FS_DOWNSTREAM] = Integer.parseInt(items[3]);
+            mMaxFusedExons[FS_DOWNSTREAM] = Integer.parseInt(items[4]);
         }
-        catch(IOException e)
+        else if(Type == IG_KNOWN_PAIR || Type == IG_KNOWN_PAIR)
         {
-            LOGGER.warn("failed to load known fusion data: {}", e.toString());
-            return false;
-        }
+            final String[] items = mOtherData.split(OTHER_DATA_DELIMITER);
+            if(items.length != 2)
+            {
+                mValidData = false;
+                return;
+            }
 
-        return true;
+            mIgRegionBounds[SE_START] = Integer.parseInt(items[0]);
+            mIgRegionBounds[SE_END] = Integer.parseInt(items[1]);
+        }
     }
 
-    private final List<String> loadFile(final String filename, int expectedDataCount) throws IOException
+    public String toString()
     {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            LOGGER.error("file({}) not found", filename);
-            throw new IOException();
-        }
-
-        List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-        if(!fileContents.isEmpty())
-        {
-            // assumes a header row
-            fileContents.remove(0);
-        }
-
-        if(!fileContents.isEmpty())
-        {
-            int index = 0;
-
-            while (index < fileContents.size())
-            {
-                if (fileContents.get(index).split(FILE_DELIMITER).length != expectedDataCount)
-                {
-                    LOGGER.error("file({}) invalid data will be skipped: {}", filename, fileContents.get(index));
-                    fileContents.remove(index);
-                }
-                else
-                {
-                    ++index;
-                }
-            }
-        }
-
-        return fileContents;
+        return String.format("%s: genes(%s - %s) ct(%s) otherData(%s)",
+                Type, FiveGene, ThreeGene, CancerTypes, mOtherData);
     }
-
 }

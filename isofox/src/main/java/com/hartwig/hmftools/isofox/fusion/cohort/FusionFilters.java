@@ -30,7 +30,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 import org.apache.commons.cli.CommandLine;
@@ -40,7 +40,7 @@ public class FusionFilters
     private final FusionCohortConfig mConfig;
 
     private final Map<String, Map<Integer, List<FusionCohortData>>> mCohortFusions;
-    private final KnownFusionData mKnownFusionData;
+    private final KnownFusionCache mKnownFusionCache;
 
     public FusionFilters(final FusionCohortConfig config, final CommandLine cmd)
     {
@@ -53,8 +53,8 @@ public class FusionFilters
             loadCohortFile();
         }
 
-        mKnownFusionData = new KnownFusionData();
-        mKnownFusionData.loadFromFile(cmd);
+        mKnownFusionCache = new KnownFusionCache();
+        mKnownFusionCache.loadFromFile(cmd);
     }
 
     private static final int MIN_ANCHOR_DISTANCE = 20;
@@ -149,7 +149,7 @@ public class FusionFilters
     {
         boolean[] isKnown = {false, false};
 
-        for(final String[] knownPair : mKnownFusionData.knownPairs())
+        for(final String[] knownPair : mKnownFusionCache.knownPairs())
         {
             if(knownPair[FIVE_GENE].equals(fusion.GeneNames[SE_START]) && knownPair[THREE_GENE].equals(fusion.GeneNames[SE_END]))
             {
@@ -166,10 +166,10 @@ public class FusionFilters
 
         boolean[] isProm = { false, false };
 
-        if(!isKnown[SE_START] && mKnownFusionData.promiscuousFiveGenes().contains(fusion.GeneNames[SE_START]))
+        if(!isKnown[SE_START] && mKnownFusionCache.promiscuousFiveGenes().contains(fusion.GeneNames[SE_START]))
             isProm[SE_START] = true;
 
-        if(!isKnown[SE_END] && mKnownFusionData.promiscuousThreeGenes().contains(fusion.GeneNames[SE_END]))
+        if(!isKnown[SE_END] && mKnownFusionCache.promiscuousThreeGenes().contains(fusion.GeneNames[SE_END]))
             isProm[SE_END] = true;
 
         if(isKnown[SE_START])

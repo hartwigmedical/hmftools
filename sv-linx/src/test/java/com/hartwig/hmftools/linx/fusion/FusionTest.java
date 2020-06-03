@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
@@ -31,6 +33,8 @@ import com.hartwig.hmftools.common.fusion.FusionChainInfo;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.GeneFusion;
 import com.hartwig.hmftools.common.fusion.ImmutableFusionAnnotations;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
@@ -322,7 +326,8 @@ public class FusionTest
         PRE_GENE_PROMOTOR_DISTANCE = 200;
 
         // set known fusion genes
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionData().knownPairs().add(new String[] {geneName1, geneName2});
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
+                .addData(new KnownFusionData(KNOWN_PAIR, geneName1, geneName2, "", "", ""));
 
         // test 1: create a chain of DELs with a single-SV fusion which link between exon 2-3 of upstream to 2-3 of downstream
 
@@ -553,7 +558,8 @@ public class FusionTest
         addTransExonData(geneTransCache, geneId1, transDataList);
 
         // mark as 3' promiscuous
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionData().promiscuousThreeGenes().add(geneName);
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
+                .addData(new KnownFusionData(PROMISCUOUS_3, "", geneName, "", "", ""));
 
         byte posOrient = 1;
         byte negOrient = -1;
@@ -573,8 +579,6 @@ public class FusionTest
         params.AllowExonSkipping = true;
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true);
-        // fusions.forEach(x -> x.setKnownType(REPORTABLE_TYPE_KNOWN));
-        // tester.FusionAnalyser.getFusionFinder().setReportableGeneFusions(fusions);
 
         assertEquals(1, fusions.size());
         final GeneFusion fusion = fusions.get(0);
@@ -585,7 +589,6 @@ public class FusionTest
         assertEquals(0, fusion.getExonsSkipped(true));
         assertEquals(0, fusion.getExonsSkipped(false));
         assertTrue(!fusion.reportable());
-
     }
 
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)

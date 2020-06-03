@@ -2,6 +2,10 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
@@ -11,9 +15,6 @@ import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableF
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.FUSION_PAIRS_CSV;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
@@ -156,7 +157,8 @@ public class FusionDisruptionAnalyser
     public static boolean validConfig(final CommandLine cmd)
     {
         return(configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, REF_GENOME_FILE)
-            && configPathValid(cmd, FUSION_PAIRS_CSV) && configPathValid(cmd, PROMISCUOUS_FIVE_CSV) && configPathValid(cmd, PROMISCUOUS_THREE_CSV));
+                && configPathValid(cmd, FUSION_PAIRS_CSV) && configPathValid(cmd, KNOWN_FUSIONS_FILE)
+                && configPathValid(cmd, PROMISCUOUS_FIVE_CSV) && configPathValid(cmd, PROMISCUOUS_THREE_CSV));
     }
 
 

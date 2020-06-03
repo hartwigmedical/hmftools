@@ -541,7 +541,7 @@ public class RnaFusionMapper
     private void setRnaFusionData(final RnaFusionData rnaFusion)
     {
         // correct gene names
-        mAnnotator.correctGeneNames(mGeneTransCache, mFusionFinder.getKnownFusionData(), rnaFusion);
+        mAnnotator.correctGeneNames(mFusionFinder.getKnownFusionCache(), rnaFusion);
 
         // find transcripts which match the RNA positions
         for(int fs = FS_UPSTREAM; fs <= 1; ++fs)
@@ -589,7 +589,7 @@ public class RnaFusionMapper
 
         checkRnaPhasedTranscripts(rnaFusion);
 
-        setReferenceFusionData(mFusionFinder.getKnownFusionData(), rnaFusion);
+        setReferenceFusionData(mFusionFinder.getKnownFusionCache(), rnaFusion);
     }
 
     public boolean loadSampleRnaData(final String source, final String filename)

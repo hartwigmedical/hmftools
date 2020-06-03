@@ -12,9 +12,9 @@ import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_BOTH
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.FUSION_PAIRS_CSV;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.GeneFusion;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
@@ -37,7 +38,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusionFinder
 {
-    private final KnownFusionData mKnownFusionData;
+    private final KnownFusionCache mKnownFusionCache;
     private boolean mHasValidConfigData;
 
     private EnsemblDataCache mGeneTransCache;
@@ -52,7 +53,7 @@ public class FusionFinder
     {
         mGeneTransCache = geneTransCache;
 
-        mKnownFusionData = new KnownFusionData();
+        mKnownFusionCache = new KnownFusionCache();
         mHasValidConfigData = false;
 
         mProteinsRequiredKept = Lists.newArrayList();
@@ -69,7 +70,7 @@ public class FusionFinder
 
     private void initialise(@NotNull final CommandLine cmd)
     {
-        if(mKnownFusionData.loadFromFile(cmd))
+        if(mKnownFusionCache.loadFromFile(cmd))
         {
             LNX_LOGGER.debug("loaded known fusion data");
             mHasValidConfigData = true;
@@ -87,7 +88,7 @@ public class FusionFinder
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Promiscuous 3' genes");
     }
 
-    public final KnownFusionData getKnownFusionData() { return mKnownFusionData; }
+    public final KnownFusionCache getKnownFusionCache() { return mKnownFusionCache; }
 
     public static final String INVALID_REASON_ORIENTATION = "Orientation";
     public static final String INVALID_REASON_PHASING = "Unphased";
@@ -122,7 +123,7 @@ public class FusionFinder
                 final GeneAnnotation upGene = startUpstream ? startGene : endGene;
                 final GeneAnnotation downGene = !startUpstream ? startGene : endGene;
 
-                boolean knownPair = mKnownFusionData != null && mKnownFusionData.hasKnownFusion(upGene.GeneName, downGene.GeneName);
+                boolean knownPair = mKnownFusionCache != null && mKnownFusionCache.hasKnownFusion(upGene.GeneName, downGene.GeneName);
 
                 for (final Transcript upstreamTrans : upGene.transcripts())
                 {
@@ -669,15 +670,15 @@ public class FusionFinder
         final String upGene = upTrans.gene().GeneName;
         final String downGene = downTrans.gene().GeneName;
 
-        if(mKnownFusionData.hasKnownFusion(upGene, downGene))
+        if(mKnownFusionCache.hasKnownFusion(upGene, downGene))
             return REPORTABLE_TYPE_KNOWN;
 
-        boolean fivePrimeMatch = mKnownFusionData.hasPromiscuousFiveGene(upGene);
-        boolean threePrimeMatch = mKnownFusionData.hasPromiscuousThreeGene(downGene);
+        boolean fivePrimeMatch = mKnownFusionCache.hasPromiscuousFiveGene(upGene);
+        boolean threePrimeMatch = mKnownFusionCache.hasPromiscuousThreeGene(downGene);
 
-        boolean intergenicPromiscuousMatch = mKnownFusionData.intergenicPromiscuousMatch(upGene, downGene);
+        boolean intergenicPromiscuousMatch = mKnownFusionCache.intergenicPromiscuousMatch(upGene, downGene);
 
-        boolean intragenicPromiscuousMatch = mKnownFusionData.intragenicPromiscuousMatch(upGene, downGene)
+        boolean intragenicPromiscuousMatch = mKnownFusionCache.intragenicPromiscuousMatch(upGene, downGene)
                 && downTrans.ExonDownstream - upTrans.ExonUpstream > EXON_THRESHOLD;
 
         if(intergenicPromiscuousMatch || intragenicPromiscuousMatch)
