@@ -67,6 +67,12 @@ public class SampleGenePercentiles
 
     public void processSampleFiles()
     {
+        if(mCancerTypesGeneDistribution.isEmpty())
+        {
+            ISF_LOGGER.warn("sample gene percentile routine won't run without valid distribution data");
+            return;
+        }
+
         final List<Path> filenames = Lists.newArrayList();
 
         if(!formSampleFilenames(mConfig, CohortAnalysisType.GENE_DISTRIBUTION, filenames))
@@ -89,53 +95,6 @@ public class SampleGenePercentiles
         closeBufferedWriter(mWriter);
     }
 
-    private void initialiseWriter()
-    {
-        try
-        {
-            final String outputFileName = mConfig.formCohortFilename("sample_gene_perc_data.csv");
-            mWriter = createBufferedWriter(outputFileName, false);
-
-            mWriter.write("SampleId,GeneId,GeneName,TPM,CohortMedianTPM,CancerMedianTPM,CohortPercentile,CancerPercentile");
-            mWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write gene data file: {}", e.toString());
-        }
-    }
-
-    private void writeSamplePercentileData(final String sampleId, final String geneId, final String geneName, double tpm)
-    {
-        try
-        {
-            final String cancerType = mConfig.SampleData.SampleCancerType.get(sampleId);
-
-            try
-            {
-                double panCancerPerc = getTpmPercentile(mCancerTypesGeneDistribution.get(PAN_CANCER), geneId, tpm);
-                double cancerPerc = getTpmPercentile(mCancerTypesGeneDistribution.get(cancerType), geneId, tpm);
-
-                double panCancerMedian = getTpmMedian(mCancerTypesGeneDistribution.get(PAN_CANCER), geneId);
-                double cancerMedian = getTpmMedian(mCancerTypesGeneDistribution.get(cancerType), geneId);
-
-                mWriter.write(String.format("%s,%s,%s,%6.3e", sampleId, geneId, geneName, tpm));
-
-                mWriter.write(String.format(",%6.3e,%6.3e,%.1f,%.1f", panCancerMedian, cancerMedian, panCancerPerc, cancerPerc));
-                mWriter.newLine();
-            }
-            catch (NullPointerException e)
-            {
-                ISF_LOGGER.error("sampleId({}) geneId({}) cancerType({}) missing data", sampleId, geneId, cancerType, e.toString());
-                return;
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write sample gene percentile data file: {}", e.toString());
-        }
-    }
-
     private void processSampleFile(final String sampleId, final Path filename)
     {
         try
@@ -144,6 +103,8 @@ public class SampleGenePercentiles
 
             final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
             lines.remove(0);
+
+            final String cancerType = mConfig.SampleData.SampleCancerType.get(sampleId);
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
@@ -160,13 +121,62 @@ public class SampleGenePercentiles
 
                 final String geneName = items[geneNameIndex];
                 double tpm = Double.parseDouble(items[tpmIndex]);
-                writeSamplePercentileData(sampleId, geneId, geneName, tpm);
+
+                try
+                {
+                    double panCancerPerc = getTpmPercentile(mCancerTypesGeneDistribution.get(PAN_CANCER), geneId, tpm);
+                    double cancerPerc = getTpmPercentile(mCancerTypesGeneDistribution.get(cancerType), geneId, tpm);
+
+                    double panCancerMedian = getTpmMedian(mCancerTypesGeneDistribution.get(PAN_CANCER), geneId);
+                    double cancerMedian = getTpmMedian(mCancerTypesGeneDistribution.get(cancerType), geneId);
+
+                    writeSamplePercentileData(
+                            sampleId, cancerType, geneId, geneName, tpm, panCancerPerc, cancerPerc, panCancerMedian, cancerMedian);
+                }
+                catch (NullPointerException e)
+                {
+                    ISF_LOGGER.error("sampleId({}) geneId({}) cancerType({}) missing data", sampleId, geneId, cancerType, e.toString());
+                    return;
+                }
             }
         }
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to load gene data file({}): {}", filename.toString(), e.toString());
             return;
+        }
+    }
+
+    private void initialiseWriter()
+    {
+        try
+        {
+            final String outputFileName = mConfig.formCohortFilename("sample_gene_perc_data.csv");
+            mWriter = createBufferedWriter(outputFileName, false);
+
+            mWriter.write("SampleId,CancerType,GeneId,GeneName,TPM,CohortMedianTPM,CancerMedianTPM,CohortPercentile,CancerPercentile");
+            mWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write gene data file: {}", e.toString());
+        }
+    }
+
+    private void writeSamplePercentileData(
+            final String sampleId, final String cancerType, final String geneId, final String geneName, double tpm,
+            double panCancerPerc, double cancerPerc, double panCancerMedian, double cancerMedian)
+    {
+        try
+        {
+            mWriter.write(String.format("%s,%s,%s,%s,%6.3e", sampleId, cancerType, geneId, geneName, tpm));
+
+            mWriter.write(String.format(",%6.3e,%6.3e,%.1f,%.1f", panCancerMedian, cancerMedian, panCancerPerc, cancerPerc));
+            mWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write sample gene percentile data file: {}", e.toString());
         }
     }
 
