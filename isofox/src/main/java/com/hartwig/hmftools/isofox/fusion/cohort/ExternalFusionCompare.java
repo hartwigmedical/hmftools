@@ -113,8 +113,16 @@ public class ExternalFusionCompare
         {
             for(ExternalFusionData extFusion : extFusionList)
             {
-                if(!matchedExtFusions.contains(extFusion))
-                    unmatchedExtFusions.add(extFusion);
+                // Arriba can have duplicates so de-deup for these
+                if(matchedExtFusions.stream().anyMatch(x -> junctionMatch(
+                        x.Chromosomes, extFusion.Chromosomes, x.JunctionPositions, extFusion.JunctionPositions))
+                || unmatchedExtFusions.stream().anyMatch(x -> junctionMatch(
+                        x.Chromosomes, extFusion.Chromosomes, x.JunctionPositions, extFusion.JunctionPositions)))
+                {
+                    continue;
+                }
+
+                unmatchedExtFusions.add(extFusion);
             }
         }
 
