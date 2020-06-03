@@ -12,7 +12,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.GeneFusion;
 import com.hartwig.hmftools.common.fusion.Transcript;
 
 import org.junit.Test;

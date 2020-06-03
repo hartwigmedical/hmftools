@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+// class linking an SV breakend to a potentially impacted gene
 public class GeneAnnotation {
 
     public final String GeneName;

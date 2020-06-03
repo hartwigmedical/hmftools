@@ -1,18 +1,23 @@
-package com.hartwig.hmftools.common.fusion;
+package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.UPSTREAM_STR;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
+
+import com.hartwig.hmftools.common.fusion.Transcript;
+
 public class GeneFusion
 {
-    private final Transcript mUpstreamTrans;
-
-    private final Transcript mDownstreamTrans;
+    private final Transcript[] mTranscripts;
+    private final String mName;
 
     private boolean mIsReportable;
     private boolean mPhaseMatched;
-    private int mExonsSkippedUp;
-    private int mExonsSkippedDown;
+    private int[] mExonsSkipped;
     private String mKnownType;
     private boolean mNeoEpitopeOnly;
 
@@ -27,26 +32,26 @@ public class GeneFusion
     public static String REPORTABLE_TYPE_5P_PROM = "5P-Prom";
     public static String REPORTABLE_TYPE_3P_PROM = "3P-Prom";
 
-    public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, boolean phaseMatched)
+    public GeneFusion(final Transcript upstreamTrans, final Transcript downstreamTrans, boolean phaseMatched)
     {
-        mUpstreamTrans = upstreamTrans;
-        mDownstreamTrans = downstream;
+        mTranscripts = new Transcript[] { upstreamTrans, downstreamTrans };
+        mName = mTranscripts[FS_UPSTREAM].geneName() + "_" + mTranscripts[FS_DOWNSTREAM].geneName();
         mIsReportable = false;
         mKnownType = REPORTABLE_TYPE_NONE;
         mPhaseMatched = phaseMatched;
-        mExonsSkippedUp = 0;
-        mExonsSkippedDown = 0;
+        mExonsSkipped = new int[] { 0, 0 };
         mNeoEpitopeOnly = false;
         mAnnotations = null;
         mPriority = 0;
     }
 
-    public String name() { return mUpstreamTrans.geneName() + "_" + mDownstreamTrans.geneName(); }
+    public String name() { return mName; }
 
-    public int svId(boolean isUpstream) { return isUpstream ? mUpstreamTrans.gene().id() : mDownstreamTrans.gene().id(); }
+    public int svId(boolean isUpstream) { return mTranscripts[fsIndex(isUpstream)].gene().id(); }
 
-    public Transcript upstreamTrans() { return mUpstreamTrans; }
-    public Transcript downstreamTrans() { return mDownstreamTrans; }
+    public Transcript transcript(int fs) { return mTranscripts[fs]; }
+    public Transcript upstreamTrans() { return mTranscripts[FS_UPSTREAM]; }
+    public Transcript downstreamTrans() { return mTranscripts[FS_DOWNSTREAM]; }
 
     public boolean reportable(){ return mIsReportable; }
     public void setReportable(boolean toggle) { mIsReportable = toggle; }
@@ -60,34 +65,35 @@ public class GeneFusion
     public final String toString()
     {
         return String.format("%s %s phased(%s) known(%s)",
-                mUpstreamTrans.toString(), mDownstreamTrans.toString(), mPhaseMatched, mKnownType);
+                mTranscripts[FS_UPSTREAM].toString(), mTranscripts[FS_DOWNSTREAM].toString(), mPhaseMatched, mKnownType);
     }
 
     public boolean phaseMatched(){ return mPhaseMatched; }
 
     public void setExonsSkipped(int exonsUp, int exonsDown)
     {
-        mExonsSkippedUp = exonsUp;
-        mExonsSkippedDown = exonsDown;
+        mExonsSkipped[FS_UPSTREAM] = exonsUp;
+        mExonsSkipped[FS_DOWNSTREAM] = exonsDown;
     }
 
-    public int getExonsSkipped(boolean isUpstream) { return isUpstream ? mExonsSkippedUp : mExonsSkippedDown; }
+    public int getExonsSkipped(boolean isUpstream) { return mExonsSkipped[fsIndex(isUpstream)]; }
+    public int[] getExonsSkipped() { return mExonsSkipped; }
 
     public int getFusedExon(boolean isUpstream)
     {
         if(isUpstream)
         {
-            return max(mUpstreamTrans.ExonUpstream - mExonsSkippedUp, 1);
+            return max(mTranscripts[FS_UPSTREAM].ExonUpstream - mExonsSkipped[FS_UPSTREAM], 1);
         }
         else
         {
-            return min(mDownstreamTrans.ExonDownstream + mExonsSkippedDown, mDownstreamTrans.ExonMax);
+            return min(mTranscripts[FS_DOWNSTREAM].ExonDownstream + mExonsSkipped[FS_DOWNSTREAM], mTranscripts[FS_DOWNSTREAM].ExonMax);
         }
     }
 
     public boolean isExonic()
     {
-        return mUpstreamTrans.isExonic() &&mDownstreamTrans.isExonic();
+        return mTranscripts[FS_UPSTREAM].isExonic() && mTranscripts[FS_DOWNSTREAM].isExonic();
     }
 
     public final FusionAnnotations getAnnotations() { return mAnnotations; }
@@ -125,7 +131,7 @@ public class GeneFusion
         if(!validChainTraversal() || isTerminated())
             return false;
 
-        if(mDownstreamTrans.hasNegativePrevSpliceAcceptorDistance())
+        if(mTranscripts[FS_DOWNSTREAM].hasNegativePrevSpliceAcceptorDistance())
             return false;
 
         return true;

@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+// class linking an SV breakend to a potentially impacted transcript
 public class Transcript {
 
     public final int TransId;

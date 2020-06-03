@@ -6,11 +6,11 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
-import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
-import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
-import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.common.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
+import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
+import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
+import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
@@ -27,9 +27,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.GeneFusion;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 

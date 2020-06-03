@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.fusion;
+package com.hartwig.hmftools.linx.fusion;
 
 import org.immutables.value.Value;
 

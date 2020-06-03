@@ -15,6 +15,8 @@ public class FusionCommon
     public static final String UPSTREAM_STR = "upstream";
     public static final String DOWNSTREAM_STR = "downstream";
 
+    public static int fsIndex(boolean isUpstream) { return isUpstream ? FS_UPSTREAM : FS_DOWNSTREAM; }
+
     public static int switchStream(int iter) { return iter == FS_UPSTREAM ? FS_DOWNSTREAM : FS_UPSTREAM; }
     public static String streamStr(int iter) { return iter == FS_UPSTREAM ? UPSTREAM_STR : DOWNSTREAM_STR; }
 
