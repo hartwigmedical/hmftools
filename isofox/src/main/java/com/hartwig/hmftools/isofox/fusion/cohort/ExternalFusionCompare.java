@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -163,23 +165,6 @@ public class ExternalFusionCompare
         mSampleResults.add(matchResultStr);
     }
 
-    private synchronized void writeResults()
-    {
-        try
-        {
-            for(String result : mSampleResults)
-            {
-                mWriter.write(result);
-                mWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write fusion comparison file: {}", e.toString());
-        }
-
-    }
-
     public static void writeResults(final BufferedWriter writer, final List<String> results)
     {
         try
@@ -194,7 +179,6 @@ public class ExternalFusionCompare
         {
             ISF_LOGGER.error("failed to write fusion comparison file: {}", e.toString());
         }
-
     }
 
     private void checkUnfilteredFusionData(
@@ -228,11 +212,14 @@ public class ExternalFusionCompare
                         if(junctionMatch(
                                 extFusion.Chromosomes, unfilteredFusion.Chromosomes, extFusion.JunctionPositions, unfilteredFusion.JunctionPositions))
                         {
+                            final String otherData = String.format("anchorDistance=%d",
+                                    min(unfilteredFusion.AnchorDistance[SE_START], unfilteredFusion.AnchorDistance[SE_START]));
+
                             cacheMatchResults(sampleId, "MATCH_ISF_UNFILTERED", unfilteredFusion.Id,
                                     extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
                                     unfilteredFusion.JunctionTypes, extFusion.SvType, unfilteredFusion.GeneIds, extFusion.GeneNames,
                                     unfilteredFusion.supportingFragments(), unfilteredFusion.DiscordantFrags,
-                                    extFusion.SplitFragments, extFusion.DiscordantFragments, unfilteredFusion.CohortCount, "");
+                                    extFusion.SplitFragments, extFusion.DiscordantFragments, unfilteredFusion.CohortCount, otherData);
 
                             unmatchedExternalFusions.remove(index);
 
