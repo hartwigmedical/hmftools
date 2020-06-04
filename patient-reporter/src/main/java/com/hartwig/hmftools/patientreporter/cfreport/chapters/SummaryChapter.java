@@ -141,6 +141,9 @@ public class SummaryChapter implements ReportChapter {
                 table);
 
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
+        Style dataHighluightNaStyle = patientReport.microsatelliteStatus() == MicrosatelliteStatus.MSS
+                ? ReportResources.dataHighlightStyle()
+                : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Average tumor ploidy").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.ploidyToCopiesString(patientReport.averageTumorPloidy(),
@@ -164,7 +167,7 @@ public class SummaryChapter implements ReportChapter {
         }
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataHighluightNaStyle)));
 
         reportDocument.add(div);
     }
