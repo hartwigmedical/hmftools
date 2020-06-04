@@ -55,7 +55,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
     private void renderHrdCharacteristic(@NotNull Document reportDocument) {
         boolean hasReliablePurity = patientReport.hasReliablePurity();
-        boolean isMicrosatelliteStable = patientReport.microsatelliteStatus() == MicrosatelliteStatus.MSS;
+        boolean isMicrosatelliteStable = ChordStatus.reliableHRD(patientReport.microsatelliteStatus());
 
         double hrdValue = patientReport.chordHrdValue();
         ChordStatus hrdStatus = patientReport.chordHrdStatus();

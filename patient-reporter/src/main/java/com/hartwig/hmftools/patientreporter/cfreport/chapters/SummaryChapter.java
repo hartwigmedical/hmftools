@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -160,7 +161,9 @@ public class SummaryChapter implements ReportChapter {
 
         String hrdString = Strings.EMPTY;
 
-        if (hasReliablePurity && patientReport.microsatelliteStatus() == MicrosatelliteStatus.MSS) {
+
+
+        if (hasReliablePurity && ChordStatus.reliableHRD(patientReport.microsatelliteStatus())) {
             hrdString = patientReport.chordHrdStatus().display();
         } else {
             hrdString = DataUtil.NA_STRING;
