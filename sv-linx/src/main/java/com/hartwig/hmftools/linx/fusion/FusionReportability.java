@@ -167,7 +167,7 @@ public class FusionReportability
 
     public static boolean allowExonSkipping(final KnownFusionType type)
     {
-        return (type == KNOWN_PAIR || type == EXON_DEL_DUP || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS);
+        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS);
     }
 
 }

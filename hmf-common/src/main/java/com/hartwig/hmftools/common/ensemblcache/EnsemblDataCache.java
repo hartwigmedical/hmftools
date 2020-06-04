@@ -784,16 +784,8 @@ public class EnsemblDataCache
             if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
                 return false;
 
-            if(mRequireSplicePositions)
-            {
-                final String transSpliceFile = mDataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
-
-                if (Files.exists(Paths.get(transSpliceFile)))
-                {
-                    if (!loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
-                        return false;
-                }
-            }
+            if(mRequireSplicePositions && !loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
+                return false;
         }
 
         return true;
