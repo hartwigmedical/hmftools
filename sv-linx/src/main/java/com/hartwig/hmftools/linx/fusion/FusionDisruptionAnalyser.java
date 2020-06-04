@@ -1,18 +1,20 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.couldBeReportable;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -34,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
@@ -326,12 +329,12 @@ public class FusionDisruptionAnalyser
         {
             for(final GeneFusion fusion : mUniqueFusions)
             {
-                if(fusion.knownType() == REPORTABLE_TYPE_NONE)
+                if(fusion.knownType() == KnownFusionType.NONE)
                     continue;
 
                 LNX_LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
                         fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
-                        fusion.knownType(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
+                        fusion.knownTypeStr(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
                         fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
             }
         }
@@ -712,11 +715,10 @@ public class FusionDisruptionAnalyser
                     fusion.setAnnotations(annotations);
 
                     // accept invalidated chains and transcripts for known fusions
-                    boolean isKnown = fusion.knownType() == REPORTABLE_TYPE_KNOWN;
                     boolean chainLengthOk =  totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
                     boolean notTerminated = !fusion.isTerminated();
 
-                    if(validTraversal && ((chainLengthOk && notTerminated) || isKnown))
+                    if(validTraversal && ((chainLengthOk && notTerminated) || allowSuspectChains(fusion.knownType())))
                     {
                         if(!hasIdenticalFusion(fusion, chainFusions))
                         {
@@ -743,6 +745,11 @@ public class FusionDisruptionAnalyser
                 }
             }
         }
+    }
+
+    private static boolean allowSuspectChains(final KnownFusionType type)
+    {
+        return (type == KNOWN_PAIR || type == EXON_DEL_DUP || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS);
     }
 
     private void recordInvalidFusion(final GeneFusion fusion, final String reason)

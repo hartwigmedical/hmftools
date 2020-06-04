@@ -107,6 +107,12 @@ public class KnownFusionData
         }
     }
 
+    public String specificTransName() { return mSpecificTransName; }
+    public int[] minFusedExons() { return mMinFusedExons; }
+    public int[] maxFusedExons() { return mMaxFusedExons; }
+    public int[] igRegionBounds() { return mIgRegionBounds; }
+
+
     public String toString()
     {
         return String.format("%s: genes(%s - %s) ct(%s) otherData(%s)",

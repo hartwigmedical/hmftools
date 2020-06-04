@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.fusion.rna;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -105,7 +105,7 @@ public class RnaFusionData
 
         mViableFusion = false;
         mPhaseMatchedFusion = false;
-        mKnownFusionType = REPORTABLE_TYPE_NONE;
+        mKnownFusionType = KnownFusionType.NONE.toString();
         mTransViable = new boolean[] { false, false };
         mTransCorrectLocation = new boolean[] { false, false };
         mExonsSkipped = new int[] {0, 0};

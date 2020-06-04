@@ -6,11 +6,13 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
@@ -20,6 +22,9 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.couldBeReportable;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportableFusion;
 
 import java.util.List;
 import java.util.Map;
@@ -134,8 +139,7 @@ public class FusionFinder
                         if(geneFusion == null)
                             continue;
 
-                        geneFusion.setKnownType(getKnownFusionType(upstreamTrans, downstreamTrans));
-
+                        setKnownFusionType(geneFusion);
                         potentialFusions.add(geneFusion);
                     }
                 }
@@ -435,7 +439,7 @@ public class FusionFinder
         // check impact on protein regions
         setFusionProteinFeatures(reportableFusion);
 
-        if (reportableFusion.knownType() != REPORTABLE_TYPE_KNOWN)
+        if (checkProteinDomains(reportableFusion.knownType()))
         {
             final Transcript downTrans = reportableFusion.downstreamTrans();
             long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
@@ -529,173 +533,43 @@ public class FusionFinder
         return featurePreserved;
     }
 
-    public static boolean couldBeReportable(GeneFusion fusion)
+    private void setKnownFusionType(GeneFusion geneFusion)
     {
-        if(!fusion.phaseMatched() || fusion.neoEpitopeOnly())
-            return false;
-
-        // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-        if (fusion.knownType() == REPORTABLE_TYPE_NONE)
-            return false;
-
-        // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-        int maxUpstreamDistance = fusion.knownType() == REPORTABLE_TYPE_KNOWN ?
-                MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
-
-        final Transcript upTrans = fusion.upstreamTrans();
-        final Transcript downTrans = fusion.downstreamTrans();
-
-        if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
-            return false;
-
-        if(downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
-            return false;
-
-        if(downTrans.hasNegativePrevSpliceAcceptorDistance())
-            return false;
-
-        if(fusion.knownType() != REPORTABLE_TYPE_KNOWN
-        && (fusion.getExonsSkipped(true) > 0 || fusion.getExonsSkipped(false) > 0))
-            return false;
-
-        return true;
-    }
-
-    public static GeneFusion determineReportableFusion(final List<GeneFusion> fusions, boolean requireReportable)
-    {
-        GeneFusion reportableFusion = null;
-
-        // form a score by allocating 0/1 or length value to each power of 10 descending
-        double highestScore = 0;
-
-        for(final GeneFusion fusion : fusions)
-        {
-            if(requireReportable && !couldBeReportable(fusion))
-                continue;
-
-            double fusionPriorityScore = calcFusionPriority(fusion);
-            fusion.setPriority(fusionPriorityScore);
-
-            if(fusionPriorityScore > highestScore)
-            {
-                reportableFusion = fusion;
-                highestScore = fusionPriorityScore;
-            }
-        }
-
-        return reportableFusion;
-    }
-
-    private static double calcFusionPriority(final GeneFusion fusion)
-    {
-        // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-        final Transcript upTrans = fusion.upstreamTrans();
-        final Transcript downTrans = fusion.downstreamTrans();
-
-            /* prioritisation rules:
-            1. inframe
-            2. chain not terminated for known fusions
-            3. 3’ partner biotype is protein_coding
-            4. No exons skipped
-            5. Best 3' partner by canonical, not NMD then coding bases (or exon count if not coding)
-            6. Best 5' partner by canonical, protein-coding then coding bases
-            */
-
-        double fusionPriorityScore = 0;
-        double factor = 1000000;
-
-        // 1. Phase matched
-        if(fusion.phaseMatched())
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        // 2. Chain not terminated (only applicable for chained & known fusions)
-        if(!fusion.isTerminated())
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        // 3' protein coding
-        if(downTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        // 4. Not skipping exons
-        if(fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0)
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        // 5. Best 3' partner
-        if(downTrans.isCanonical())
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        if(!downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
-            fusionPriorityScore += factor;
-
-        factor /= 100;
-
-        int length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
-
-        // will be a range between 1-99 * current factor
-        length = min(round(length/10), 99);
-        fusionPriorityScore += length * factor;
-
-        factor /= 10;
-
-        // 6. Best 5' partner
-        if(upTrans.isCanonical())
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-
-        if(upTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
-            fusionPriorityScore += factor;
-
-        factor /= 100;
-
-        length = upTrans.isCoding() ? upTrans.calcCodingBases() : upTrans.ExonMax;
-        length = min(round(length/10), 99);
-        fusionPriorityScore += length * factor;
-
-        return fusionPriorityScore;
-    }
-
-    public String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
-    {
-        final String upGene = upTrans.gene().GeneName;
-        final String downGene = downTrans.gene().GeneName;
+        final String upGene = geneFusion.transcripts()[FS_UPSTREAM].gene().GeneName;
+        final String downGene = geneFusion.transcripts()[FS_DOWNSTREAM].gene().GeneName;
 
         if(mKnownFusionCache.hasKnownFusion(upGene, downGene))
-            return REPORTABLE_TYPE_KNOWN;
-
-        boolean fivePrimeMatch = mKnownFusionCache.hasPromiscuousFiveGene(upGene);
-        boolean threePrimeMatch = mKnownFusionCache.hasPromiscuousThreeGene(downGene);
-
-        boolean intergenicPromiscuousMatch = mKnownFusionCache.intergenicPromiscuousMatch(upGene, downGene);
-
-        boolean intragenicPromiscuousMatch = mKnownFusionCache.intragenicPromiscuousMatch(upGene, downGene)
-                && downTrans.ExonDownstream - upTrans.ExonUpstream > EXON_THRESHOLD;
-
-        if(intergenicPromiscuousMatch || intragenicPromiscuousMatch)
         {
-            if (fivePrimeMatch && threePrimeMatch)
-                return REPORTABLE_TYPE_BOTH_PROM;
-            else if (fivePrimeMatch)
-                return REPORTABLE_TYPE_5P_PROM;
-            else if (threePrimeMatch)
-                return REPORTABLE_TYPE_3P_PROM;
-            else
-                return REPORTABLE_TYPE_NONE;
+            geneFusion.setKnownType(KNOWN_PAIR);
+            return;
         }
 
-        return REPORTABLE_TYPE_NONE;
+        if(upGene.equals(downGene))
+        {
+            if(mKnownFusionCache.isExonDelDup(
+                    upGene, geneFusion.transcripts()[FS_UPSTREAM].StableId,
+                    geneFusion.getFusedExon(true), geneFusion.getFusedExon(false)))
+            {
+                geneFusion.setKnownType(EXON_DEL_DUP);
+                return;
+            }
+
+            // cannot be anything else, including promiscuous
+            geneFusion.setKnownType(NONE);
+            return;
+        }
+
+        if(mKnownFusionCache.hasPromiscuousThreeGene(downGene))
+        {
+            geneFusion.setKnownType(PROMISCUOUS_3);
+            geneFusion.isPromiscuous()[FS_DOWNSTREAM] = true;
+        }
+
+        if(mKnownFusionCache.hasPromiscuousFiveGene(upGene))
+        {
+            // will override promiscuous 3 but will show as PROM_BOTH in subsequent output
+            geneFusion.setKnownType(PROMISCUOUS_5);
+            geneFusion.isPromiscuous()[FS_UPSTREAM] = true;
+        }
     }
-
-
-
 }

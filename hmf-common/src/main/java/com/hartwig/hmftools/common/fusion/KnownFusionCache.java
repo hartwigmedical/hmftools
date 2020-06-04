@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.common.fusion;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -11,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -61,7 +66,7 @@ public class KnownFusionCache
 
     public boolean hasPromiscuousFiveGene(final String gene)
     {
-        return mDataByType.get(PROMISCUOUS_5).stream().anyMatch(x -> x.ThreeGene.equals(gene));
+        return mDataByType.get(PROMISCUOUS_5).stream().anyMatch(x -> x.FiveGene.equals(gene));
     }
 
     public boolean hasPromiscuousThreeGene(final String gene)
@@ -69,18 +74,21 @@ public class KnownFusionCache
         return mDataByType.get(PROMISCUOUS_3).stream().anyMatch(x -> x.ThreeGene.equals(gene));
     }
 
-    public boolean intergenicPromiscuousMatch(final String fiveGene, final String threeGene)
+    public boolean isExonDelDup(final String geneName, final String transName, int fusedExonUp, int fusedExonDown)
     {
-        // cannot be same gene
-        if(fiveGene.equals(threeGene))
-            return false;
+        for(final KnownFusionData knownData : mDataByType.get(EXON_DEL_DUP))
+        {
+            if(!knownData.FiveGene.equals(geneName) || !knownData.specificTransName().equals(transName))
+                continue;
 
-        return hasPromiscuousFiveGene(fiveGene) || hasPromiscuousThreeGene(threeGene);
-    }
+            if(fusedExonUp >= knownData.minFusedExons()[FS_UPSTREAM] && fusedExonUp <= knownData.maxFusedExons()[FS_UPSTREAM]
+            && fusedExonDown >= knownData.minFusedExons()[FS_DOWNSTREAM] && fusedExonDown <= knownData.maxFusedExons()[FS_DOWNSTREAM])
+            {
+                return true;
+            }
+        }
 
-    public boolean intragenicPromiscuousMatch(final String fiveGene, final String threeGene)
-    {
-        return fiveGene.equals(threeGene) && hasPromiscuousThreeGene(threeGene);
+        return false;
     }
 
     public boolean loadFromFile(@NotNull final CommandLine cmd)

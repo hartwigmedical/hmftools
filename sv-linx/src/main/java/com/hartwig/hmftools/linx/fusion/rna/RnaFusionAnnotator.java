@@ -8,12 +8,10 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_3P_PROM;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_5P_PROM;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOTH;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
@@ -23,6 +21,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
@@ -271,13 +270,13 @@ public class RnaFusionAnnotator
     {
         if(refFusionData == null)
         {
-            rnaFusion.setKnownType(REPORTABLE_TYPE_NONE);
+            rnaFusion.setKnownType(KnownFusionType.NONE.toString());
             return;
         }
 
         if(refFusionData.hasKnownFusion(rnaFusion.GeneNames[FS_UPSTREAM], rnaFusion.GeneNames[FS_DOWNSTREAM]))
         {
-            rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
+            rnaFusion.setKnownType(KNOWN_PAIR.toString());
             return;
         }
 
@@ -287,19 +286,15 @@ public class RnaFusionAnnotator
 
         if(fivePrimeProm && threePrimeProm)
         {
-            rnaFusion.setKnownType(REPORTABLE_TYPE_BOTH_PROM);
+            rnaFusion.setKnownType(PROMISCUOUS_BOTH);
         }
         else if(fivePrimeProm)
         {
-            rnaFusion.setKnownType(REPORTABLE_TYPE_5P_PROM);
+            rnaFusion.setKnownType(PROMISCUOUS_5.toString());
         }
         else if(threePrimeProm)
         {
-            rnaFusion.setKnownType(REPORTABLE_TYPE_3P_PROM);
-        }
-        else
-        {
-            rnaFusion.setKnownType(REPORTABLE_TYPE_NONE);
+            rnaFusion.setKnownType(PROMISCUOUS_3.toString());
         }
     }
 

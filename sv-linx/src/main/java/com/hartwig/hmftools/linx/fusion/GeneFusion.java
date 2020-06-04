@@ -7,7 +7,11 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.UPSTREAM_STR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOTH;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 
 public class GeneFusion
@@ -18,7 +22,8 @@ public class GeneFusion
     private boolean mIsReportable;
     private boolean mPhaseMatched;
     private int[] mExonsSkipped;
-    private String mKnownType;
+    private KnownFusionType mKnownFusionType;
+    private final boolean[] mIsPromiscuous;
     private boolean mNeoEpitopeOnly;
 
     private FusionAnnotations mAnnotations;
@@ -26,18 +31,13 @@ public class GeneFusion
     // calculated priority accoriding to scheme for selecting fusions
     private double mPriority;
 
-    public static String REPORTABLE_TYPE_NONE = "";
-    public static String REPORTABLE_TYPE_KNOWN = "Known";
-    public static String REPORTABLE_TYPE_BOTH_PROM = "Both-Prom";
-    public static String REPORTABLE_TYPE_5P_PROM = "5P-Prom";
-    public static String REPORTABLE_TYPE_3P_PROM = "3P-Prom";
-
     public GeneFusion(final Transcript upstreamTrans, final Transcript downstreamTrans, boolean phaseMatched)
     {
         mTranscripts = new Transcript[] { upstreamTrans, downstreamTrans };
         mName = mTranscripts[FS_UPSTREAM].geneName() + "_" + mTranscripts[FS_DOWNSTREAM].geneName();
         mIsReportable = false;
-        mKnownType = REPORTABLE_TYPE_NONE;
+        mKnownFusionType = KnownFusionType.NONE;
+        mIsPromiscuous = new boolean[] { false, false };
         mPhaseMatched = phaseMatched;
         mExonsSkipped = new int[] { 0, 0 };
         mNeoEpitopeOnly = false;
@@ -49,7 +49,7 @@ public class GeneFusion
 
     public int svId(boolean isUpstream) { return mTranscripts[fsIndex(isUpstream)].gene().id(); }
 
-    public Transcript transcript(int fs) { return mTranscripts[fs]; }
+    public Transcript[] transcripts() { return mTranscripts; }
     public Transcript upstreamTrans() { return mTranscripts[FS_UPSTREAM]; }
     public Transcript downstreamTrans() { return mTranscripts[FS_DOWNSTREAM]; }
 
@@ -59,13 +59,23 @@ public class GeneFusion
     public boolean neoEpitopeOnly(){ return mNeoEpitopeOnly; }
     public void setNeoEpitopeOnly(boolean toggle) { mNeoEpitopeOnly = toggle; }
 
-    public final String knownType(){ return mKnownType; }
-    public void setKnownType(final String type) { mKnownType = type; }
-
-    public final String toString()
+    public final String knownTypeStr()
     {
-        return String.format("%s %s phased(%s) known(%s)",
-                mTranscripts[FS_UPSTREAM].toString(), mTranscripts[FS_DOWNSTREAM].toString(), mPhaseMatched, mKnownType);
+        if(mKnownFusionType == PROMISCUOUS_5 || mKnownFusionType == PROMISCUOUS_3)
+        {
+            if(mIsPromiscuous[FS_UPSTREAM] && mIsPromiscuous[FS_DOWNSTREAM])
+                return PROMISCUOUS_BOTH;
+        }
+
+        return mKnownFusionType.toString();
+    }
+
+    public KnownFusionType knownType() { return mKnownFusionType; }
+    public boolean[] isPromiscuous() { return mIsPromiscuous; }
+
+    public void setKnownType(KnownFusionType type)
+    {
+        mKnownFusionType = type;
     }
 
     public boolean phaseMatched(){ return mPhaseMatched; }
@@ -137,4 +147,9 @@ public class GeneFusion
         return true;
     }
 
+    public final String toString()
+    {
+        return String.format("%s %s phased(%s) type(%s)",
+                mTranscripts[FS_UPSTREAM].toString(), mTranscripts[FS_DOWNSTREAM].toString(), mPhaseMatched, knownTypeStr());
+    }
 }

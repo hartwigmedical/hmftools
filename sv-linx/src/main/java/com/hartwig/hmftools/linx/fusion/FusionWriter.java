@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile.context;
@@ -85,7 +87,7 @@ public class FusionWriter
                     .threePrimeBreakendId(downBreakendId)
                     .name(geneFusion.name())
                     .reported(geneFusion.reportable())
-                    .reportedType(geneFusion.knownType())
+                    .reportedType(geneFusion.knownTypeStr())
                     .phased(geneFusion.phaseMatched())
                     .chainLength(geneFusion.getChainLength())
                     .chainLinks(geneFusion.getChainLinks())
@@ -214,16 +216,16 @@ public class FusionWriter
             }
 
             writer.write(String.format("%s,%s,%s",
-                    sampleId, fusion.reportable(), fusion.knownType()));
+                    sampleId, fusion.reportable(), fusion.knownTypeStr()));
 
             writer.write(String.format(",%s,%d,%d,%s",
                     fusion.phaseMatched(), annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
 
             // write upstream SV, transcript and exon info
-            for(int se = SE_START; se <= SE_END; ++se)
+            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
             {
-                boolean isUpstream = (se == SE_START);
-                final Transcript trans = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
+                boolean isUpstream = (fs == FS_UPSTREAM);
+                final Transcript trans = fusion.transcripts()[fs];
                 final GeneAnnotation gene = trans.gene();
 
                 writer.write(String.format(",%d,%s,%d,%d,%s,%.6f",
@@ -236,7 +238,7 @@ public class FusionWriter
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%s",
                         isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
-                        fusion.getFusedExon(isUpstream), fusion.getExonsSkipped(isUpstream),
+                        fusion.getFusedExon(isUpstream), fusion.getExonsSkipped()[fs],
                         isUpstream ? trans.ExonUpstreamPhase : trans.ExonDownstreamPhase,
                         trans.ExonMax, trans.isDisruptive()));
 

@@ -2,13 +2,12 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.linx.fusion.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportableFusion;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
@@ -123,7 +122,7 @@ public class FusionTest
         params.AllowExonSkipping = true;
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
-        fusions.forEach(x -> x.setKnownType(REPORTABLE_TYPE_KNOWN));
+        fusions.forEach(x -> x.setKnownType(KNOWN_PAIR));
         tester.FusionAnalyser.getFusionFinder().setReportableGeneFusions(fusions);
 
         assertEquals(6, fusions.size());
