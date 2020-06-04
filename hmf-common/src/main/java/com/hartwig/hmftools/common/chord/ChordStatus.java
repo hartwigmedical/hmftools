@@ -25,11 +25,7 @@ public enum ChordStatus {
     }
 
     public static boolean reliableHRD(@NotNull MicrosatelliteStatus microsatelliteStatus) {
-        if (microsatelliteStatus == MicrosatelliteStatus.MSS) {
-            return true;
-        } else {
-            return false;
-        }
+        return microsatelliteStatus == MicrosatelliteStatus.MSS;
     }
 
     @NotNull

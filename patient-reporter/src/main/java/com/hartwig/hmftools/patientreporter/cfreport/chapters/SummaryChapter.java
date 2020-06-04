@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -36,7 +35,6 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryChapter implements ReportChapter {
@@ -142,9 +140,6 @@ public class SummaryChapter implements ReportChapter {
                 table);
 
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
-        Style dataHighluightNaStyle = patientReport.microsatelliteStatus() == MicrosatelliteStatus.MSS
-                ? ReportResources.dataHighlightStyle()
-                : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Average tumor ploidy").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.ploidyToCopiesString(patientReport.averageTumorPloidy(),
@@ -159,18 +154,19 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
 
-        String hrdString = Strings.EMPTY;
-
-
+        String hrdString;
+        Style hrdStyle;
 
         if (hasReliablePurity && ChordStatus.reliableHRD(patientReport.microsatelliteStatus())) {
             hrdString = patientReport.chordHrdStatus().display();
+            hrdStyle = ReportResources.dataHighlightStyle();
         } else {
             hrdString = DataUtil.NA_STRING;
+            hrdStyle = ReportResources.dataHighlightNaStyle();
         }
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataHighluightNaStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
         reportDocument.add(div);
     }
