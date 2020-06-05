@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
@@ -39,49 +40,75 @@ class TransvarInterpreter {
 
     @NotNull
     List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
+        if (record.annotation() instanceof TransvarSnvMnv) {
+           return convertSnvMnvRecordToHotspots(record, strand);
+        } else {
+            return convertIndelRecordToHotspots(record, strand);
+        }
+    }
+
+    @NotNull
+    private List<VariantHotspot> convertSnvMnvRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
+        assert record.annotation() instanceof TransvarSnvMnv;
+
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
-        if (record.annotation() instanceof TransvarSnvMnv) {
-            // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
-            TransvarSnvMnv snvMnv = (TransvarSnvMnv) record.annotation();
-            int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(snvMnv, strand);
+        // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
+        TransvarSnvMnv snvMnv = (TransvarSnvMnv) record.annotation();
+        int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(snvMnv, strand);
 
-            for (String candidateCodon : snvMnv.candidateCodons()) {
-                hotspots.add(fromCandidateCodon(record, snvMnv.referenceCodon(), candidateCodon, gdnaCodonIndex, strand));
+        for (String candidateCodon : snvMnv.candidateCodons()) {
+            hotspots.add(fromCandidateCodon(record, snvMnv.referenceCodon(), candidateCodon, gdnaCodonIndex, strand));
+        }
+
+        return hotspots;
+    }
+
+    @NotNull
+    private List<VariantHotspot> convertIndelRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
+        assert !(record.annotation() instanceof TransvarSnvMnv);
+
+        List<VariantHotspot> hotspots = Lists.newArrayList();
+
+        // For indels we assume we have to look up the base in front of the del/ins/dup and set the position 1 before the actual ref/alt
+        long position = record.gdnaPosition() - 1;
+        String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+
+        ImmutableVariantHotspotImpl.Builder hotspotBuilder =
+                ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
+
+        if (record.annotation() instanceof TransvarDuplication) {
+            // Dups don't have ref and alt information so need to look it up in ref genome.
+            TransvarDuplication dup = (TransvarDuplication) record.annotation();
+            String dupBases =
+                    refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + dup.duplicatedBaseCount()).getBaseString();
+            hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
+            hotspots.add(hotspotBuilder.build());
+        } else if (record.annotation() instanceof TransvarInsertion) {
+            TransvarInsertion insertion = (TransvarInsertion) record.annotation();
+            hotspotBuilder.ref(preMutatedSequence);
+
+            // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
+            if (insertion.insertedBases().length() == 3) {
+                for (String trinucleotide : AminoAcidLookup.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
+                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
+                }
+            } else {
+                hotspots.add(hotspotBuilder.alt(preMutatedSequence + insertion.insertedBases()).build());
+            }
+        } else if (record.annotation() instanceof TransvarDeletion) {
+            TransvarDeletion deletion = (TransvarDeletion) record.annotation();
+            hotspots.add(hotspotBuilder.ref(preMutatedSequence + deletion.deletedBases()).alt(preMutatedSequence).build());
+        } else if (record.annotation() instanceof TransvarComplexInsertDelete) {
+            TransvarComplexInsertDelete insDel = (TransvarComplexInsertDelete) record.annotation();
+            String deletedBases =
+                    refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + insDel.deletedBaseCount()).getBaseString();
+            hotspotBuilder.ref(preMutatedSequence + deletedBases);
+            for (String candidateAlternativeSequence : insDel.candidateAlternativeSequences()) {
+                hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
             }
         } else {
-            // For indels we assume we have to look up the base in front of the del/ins/dup and set the position 1 before the actual ref/alt
-            long position = record.gdnaPosition() - 1;
-            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
-
-            ImmutableVariantHotspotImpl.Builder hotspotBuilder =
-                    ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
-
-            if (record.annotation() instanceof TransvarDuplication) {
-                // Dups don't have ref and alt information so need to look it up in ref genome.
-                TransvarDuplication dup = (TransvarDuplication) record.annotation();
-                String dupBases = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + dup.duplicatedBaseCount())
-                        .getBaseString();
-                hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
-                hotspots.add(hotspotBuilder.build());
-            } else if (record.annotation() instanceof TransvarInsertion) {
-                TransvarInsertion insertion = (TransvarInsertion) record.annotation();
-                hotspotBuilder.ref(preMutatedSequence);
-
-                // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
-                if (insertion.insertedBases().length() == 3) {
-                    for (String trinucleotide : AminoAcidLookup.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
-                        hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
-                    }
-                } else {
-                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + insertion.insertedBases()).build());
-                }
-            } else if (record.annotation() instanceof TransvarDeletion) {
-                TransvarDeletion deletion = (TransvarDeletion) record.annotation();
-                hotspots.add(hotspotBuilder.ref(preMutatedSequence + deletion.deletedBases()).alt(preMutatedSequence).build());
-            } else {
-                LOGGER.warn("Unrecognized annotation type in transvar record: '{}'", record.annotation().getClass().toString());
-            }
+            LOGGER.warn("Unrecognized annotation type in transvar record: '{}'", record.annotation().getClass().toString());
         }
 
         return hotspots;

@@ -9,6 +9,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
@@ -17,7 +18,6 @@ import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TransvarInterpreterTest {
@@ -123,10 +123,21 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    @Ignore
-    public void canConvertCombinedDeletionsInsertionsToHotspot() {
-        // TODO
-        // See for example EGFR:p.L747_A750delinsP
+    public void canConvertComplexDeletionInsertionToHotspot() {
+        TransvarRecord complexRecord = baseRecord().gdnaPosition(2)
+                .annotation(ImmutableTransvarComplexInsertDelete.builder()
+                        .deletedBaseCount(4)
+                        .addCandidateAlternativeSequences("GGG")
+                        .addCandidateAlternativeSequences("CCC")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(complexRecord, Strand.FORWARD);
+
+        assertEquals(2, hotspots.size());
+
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGG").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GCCC").build(), hotspots.get(1));
     }
 
     @Test
