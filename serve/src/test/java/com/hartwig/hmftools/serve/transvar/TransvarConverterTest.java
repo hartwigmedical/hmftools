@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarComplexInsertDelete;
@@ -79,6 +78,7 @@ public class TransvarConverterTest {
 
         TransvarDeletion deletion = (TransvarDeletion) record.annotation();
         assertEquals("CCA", deletion.deletedBases());
+        assertEquals(139399409, deletion.unalignedGDNAPosition());
     }
 
     @Test

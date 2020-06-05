@@ -11,4 +11,6 @@ public abstract class TransvarDeletion implements TransvarAnnotation {
 
     @NotNull
     public abstract String deletedBases();
+
+    public abstract long unalignedGDNAPosition();
 }
