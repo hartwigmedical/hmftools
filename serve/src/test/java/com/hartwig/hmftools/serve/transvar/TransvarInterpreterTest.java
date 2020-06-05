@@ -87,14 +87,33 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertDeletionToHotspots() {
-        TransvarRecord record =
-                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarDeletion.builder().deletedBases("GAT").build()).build();
+        TransvarRecord record = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarDeletion.builder().deletedBases("GAT").unalignedGDNAPosition(5).build())
+                .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(1, hotspots.size());
 
         assertHotspot(baseHotspot().position(4).ref("CGAT").alt("C").build(), hotspots.get(0));
+    }
+
+    @Test
+    public void canConvertDeletionWithMultipleAlignmentsToHotspots() {
+        // In this situation the mutation is "GATCGATC -> GATC",
+        //  Normally the unaligned DNA would be 1 here but that would imply we need to read the 0th ref base.
+        TransvarRecord record = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarDeletion.builder().deletedBases("GATC").unalignedGDNAPosition(2).build())
+                .build();
+
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
+
+        assertEquals(4, hotspots.size());
+
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("G").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATCGA").alt("A").build(), hotspots.get(1));
+        assertHotspot(baseHotspot().position(3).ref("TCGAT").alt("T").build(), hotspots.get(2));
+        assertHotspot(baseHotspot().position(4).ref("CGATC").alt("C").build(), hotspots.get(3));
     }
 
     @Test

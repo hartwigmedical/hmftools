@@ -41,7 +41,7 @@ class TransvarInterpreter {
     @NotNull
     List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
         if (record.annotation() instanceof TransvarSnvMnv) {
-           return convertSnvMnvRecordToHotspots(record, strand);
+            return convertSnvMnvRecordToHotspots(record, strand);
         } else {
             return convertIndelRecordToHotspots(record, strand);
         }
@@ -70,23 +70,24 @@ class TransvarInterpreter {
 
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
-        // For indels we assume we have to look up the base in front of the del/ins/dup and set the position 1 before the actual ref/alt
-        long position = record.gdnaPosition() - 1;
-        String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
-
-        ImmutableVariantHotspotImpl.Builder hotspotBuilder =
-                ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
+        ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome());
 
         if (record.annotation() instanceof TransvarDuplication) {
             // Dups don't have ref and alt information so need to look it up in ref genome.
+            long position = record.gdnaPosition() - 1;
+            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+
             TransvarDuplication dup = (TransvarDuplication) record.annotation();
             String dupBases =
                     refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + dup.duplicatedBaseCount()).getBaseString();
-            hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
-            hotspots.add(hotspotBuilder.build());
+            hotspotBuilder.position(position).ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
+            hotspots.add(hotspotBuilder.position(position).ref(preMutatedSequence).alt(preMutatedSequence + dupBases).build());
         } else if (record.annotation() instanceof TransvarInsertion) {
+            long position = record.gdnaPosition() - 1;
+            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+
             TransvarInsertion insertion = (TransvarInsertion) record.annotation();
-            hotspotBuilder.ref(preMutatedSequence);
+            hotspotBuilder.position(position).ref(preMutatedSequence);
 
             // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
             if (insertion.insertedBases().length() == 3) {
@@ -98,12 +99,31 @@ class TransvarInterpreter {
             }
         } else if (record.annotation() instanceof TransvarDeletion) {
             TransvarDeletion deletion = (TransvarDeletion) record.annotation();
-            hotspots.add(hotspotBuilder.ref(preMutatedSequence + deletion.deletedBases()).alt(preMutatedSequence).build());
+            if (deletion.unalignedGDNAPosition() <= record.gdnaPosition()) {
+                for (long start = deletion.unalignedGDNAPosition(); start <= record.gdnaPosition(); start++) {
+                    long adjustedPosition = start - 1;
+                    String preMutatedSequence =
+                            refGenome.getSubsequenceAt(record.chromosome(), adjustedPosition, adjustedPosition).getBaseString();
+                    String deletedSequence = refGenome.getSubsequenceAt(record.chromosome(),
+                            adjustedPosition + 1,
+                            adjustedPosition + deletion.deletedBases().length()).getBaseString();
+
+                    hotspots.add(hotspotBuilder.position(adjustedPosition)
+                            .ref(preMutatedSequence + deletedSequence)
+                            .alt(preMutatedSequence)
+                            .build());
+                }
+            } else {
+                LOGGER.warn("Unaligned GDNA higher than position. Unsure why: {}", record);
+            }
         } else if (record.annotation() instanceof TransvarComplexInsertDelete) {
+            long position = record.gdnaPosition() - 1;
+            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+
             TransvarComplexInsertDelete insDel = (TransvarComplexInsertDelete) record.annotation();
             String deletedBases =
                     refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + insDel.deletedBaseCount()).getBaseString();
-            hotspotBuilder.ref(preMutatedSequence + deletedBases);
+            hotspotBuilder.position(position).ref(preMutatedSequence + deletedBases);
             for (String candidateAlternativeSequence : insDel.candidateAlternativeSequences()) {
                 hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
             }
