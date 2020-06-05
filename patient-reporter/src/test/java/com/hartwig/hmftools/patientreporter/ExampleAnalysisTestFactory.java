@@ -75,7 +75,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<ViralInsertion> viralInsertions = null;
+        List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         String sampleId = "PNT00012345T";
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -541,7 +541,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("7:140453136")
                 .alleleReadCount(154)
-                .totalReadCount(225)
+                .totalReadCount(227)
                 .allelePloidy(4.0842)
                 .totalPloidy(6.0)
                 .hotspot(Hotspot.HOTSPOT)
@@ -563,7 +563,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
                 .alleleReadCount(95)
-                .totalReadCount(95)
+                .totalReadCount(103)
                 .allelePloidy(1.854083)
                 .totalPloidy(1.99)
                 .hotspot(Hotspot.NEAR_HOTSPOT)
@@ -585,7 +585,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("5:1295228")
                 .alleleReadCount(49)
-                .totalReadCount(49)
+                .totalReadCount(64)
                 .allelePloidy(1.5468)
                 .totalPloidy(2.0)
                 .hotspot(Hotspot.HOTSPOT)

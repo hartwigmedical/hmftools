@@ -230,7 +230,7 @@ Alternatively a lightweight version of GRIDSS can be used to re-analyse a set of
 ### Somatic Variant Input VCF (optional)
 An high quality set of somatic SNV and INDEL calls can also improve the accuracy and utility of PURPLE. 
 If provided, passing (or unfiltered) variants enhance the purity and ploidy fit in 2 ways. 
-Firstly, each solution receives a penalty for the proportion of somatic variants which have implied ploidies that are inconsistent with the minor and major allele ploidy. 
+Firstly, each solution receives a penalty for the proportion of somatic variants which have implied ploidies that are inconsistent with the minor and major allele copy number. 
 Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
 For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Allelic Depth) field in the vcf.
@@ -291,28 +291,21 @@ There are 10 key steps in the PURPLE pipeline described in detail below:
 3. Sample purity and ploidy fitting
 4. Copy number smoothing
 5. Inferring copy number for regions without read depth
-6. Allele specific ploidy inferring
+6. Allele specific copy number inferring
 7. Recovery of structural variants and filtering of single breakends
 8. Identification of germline copy number alterations that are homozygously deleted in the tumor
 9. QC Status for the tumor
 10. Somatic enrichment
 
-### 1. Gender
-We examine both the AMBER and COBALT data to independently determine and validate the gender of the sample. 
-This includes detecting the presence of Klinefelter syndrome: a chromosomal disorder resulting in 2 or more X chromosome in a male and which we have found to affect 0.2% of the male samples in our cohort. 
+### 1. Sex determination
 
-To determine the AMBER gender of a sample we examine the number of BAF loci outside the pseudoautosomal region of the X chromosome, anything less than 1k BAF loci is considered male. 
-A typical female has 12-13k BAF loci on the X chromosome using our provided BED file. 
+We examine both the AMBER and COBALT data to independently determine and validate the sex of the patient. This includes detecting the presence of Klinefelter syndrome: a chromosomal disorder resulting in 2 or more X chromosome in a male and which we have found to affect 0.2% of the male samples in our cohort.
 
-To determine the COBALT gender we first use the reference ratio to determine the number of copies of the X chromosome. 
-A median X ratio greater than 0.65 is interpreted as 2 copies (note that nearly all female samples are very close to a ratio of 1, but a handful are significantly lower with mosaic X loss). 
-If there is only one copy of the X chromosome the sample is male. 
-Otherwise, we check for the presence of the Y chromosome as determined by at least 1000 data points with a median ratio > 0.05. 
-If the Y chromosome is present (in addition to the 2 copies of the X chromosome), then the sample is male with Klinefelter syndrome. 
-In the absence of the Y chromosome the sample is female. 
+To determine the sex of a sample with AMBER, we examine the number of heterozygous loci in our provided BED file of 1.3 million common germline SNPs on the X chromosome, outside the pseudoautosomal region.   Anything less than 1k heterozygous loci is considered male. A typical female has 12-13k heterozygous loci.
 
-Finally we compare the AMBER and COBALT genders. 
-If they are inconsistent we use the COBALT gender and flag the sample has having failed gender validation. 
+To determine sex using COBALT, we first use the reference ratio to determine the number of copies of the X chromosome. A median X ratio greater than 0.65 is interpreted as 2 copies (note that nearly all female samples are very close to a ratio of 1, but a handful are significantly lower with mosaic X loss). If there is only one copy of the X chromosome the sample is male. Otherwise, we check for the presence of the Y chromosome as determined by at least 1000 data points with a median ratio > 0.05. If the Y chromosome is present (in addition to the 2 copies of the X chromosome), then the sample is male with Klinefelter syndrome. In the absence of the Y chromosome the sample is female.
+
+Finally we compare the AMBER and COBALT sexes. If they are inconsistent we use the COBALT sex and flag the sample has having failed sex validation.
 
 
 ### 2. Segmentation
@@ -321,16 +314,11 @@ We segment the genome into regions of uniform copy number by combining segments 
 1. Every structural variant break starts a new segment, as does chromosome starts, ends and centromeres. 
 2. Ratio and BAF segment breaks are only included if they are at least one complete mappable read depth window away from an existing segment. 
 
-If the segments identified by the PCF algorithm are not contiguous, then there remains some uncertainty about the actual start position of the segment. 
-To address this, we use the PCF break as the start position but also include a min and max start position to capture the uncertainty. 
-Segments with SV support are never uncertain. 
+If the segments identified by the PCF algorithm are not contiguous, then there remains some uncertainty about the actual start position of the segment. To address this, we use the PCF break as the start position but also include a min and max start position to capture the uncertainty. Segments with SV support are never uncertain. 
 
-Once the segments have been established we map our observations to them. 
-In each segment we take the median BAF of the tumor sample and the median read ratio of both the tumor and reference samples. 
-We also record the number of BAF points within the segment as the BAFCount and the number of tumor read depth windows within the segment as the depth window count.
+Once the segments have been established we map our observations to them.  In each segment we take the median BAF of the tumor sample and the median read ratio of both the tumor and reference samples.  We also record the number of BAF points within the segment as the BAFCount and the number of tumor read depth windows within the segment as the depth window count.
 
-A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.8<= read depth ratio<=1.2), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.8), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.2<ratio<=2.2) or ‘NOISE’ (ratio>2.2). 
-The purity fitting and smoothing steps below use only the DIPLOID germline segments.
+A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.8<= read depth ratio<=1.2), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.8), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.2<ratio<=2.2) or ‘NOISE’ (ratio>2.2).  The purity fitting and smoothing steps below use only the DIPLOID germline segments.
 
 ### 3. Sample Purity and Ploidy
 
@@ -338,11 +326,9 @@ To estimate purity and sample ploidy, we use a model which considers a matrix of
 possible combination on a segment by segment basis, based on a set of principles which aim to choose the most parsimonious solution for the fit.      
 
 The specific scoring principles applied are the following:
-1. **Penalise sub-clonality**:   The major and minor allele of each segment should be close to an integer ploidy for clonal solutions. 
-Due to sampling noise, small deviations from integer ploidies will be observed even, but larger deviations require subclonal features and are penalised.
-2. **Penalise higher ploidy solutions**:  Higher ploidies have more degenerate fits but are less biologically plausible and are given an event penalty.
-3. **Penalise solutions with implausible somatic SNV ploidies**: SNVs in principle occur on only one chromatid and should not be found on both alleles.   
-Therefore we penalise solutions where SNV ploidies exceed the major allele ploidy.   
+1. **Penalise sub-clonality**:   The major and minor allele of each segment should be close to an integer ploidy for clonal solutions. Due to sampling noise, small deviations from integer ploidies will be observed even, but larger deviations require subclonal features and are penalised.
+2. **Penalise solutions which deviate from diploid heterozygous copy number**:  Loss of heterozygosity or loss of gain of chromosomal segments requires assumptions additional biological complexity, with the complexity increasing for larger deviations from diploid.  PURPLE uses an event penalty to explicitly penalise deviations from diploid heterozygous copy number
+3. **Penalise solutions with implausible somatic SNV copy numbers**: SNVs in principle occur on only one chromatid and should not be found on both alleles.   Therefore we penalise solutions where SNV copy numbers exceed the major allele copy number.   
 4. **Weigh segments by count of BAF observations**: Segments are weighted by the count of BAF observations which is treated as a proxy for confidence of BAF and read depth ratio inputs.
 5. **Place more weight on segments with higher observed BAF**: segments with lower observed BAFs have more degenerate fits and are weighted less in the fit
 
@@ -358,26 +344,25 @@ Each of the 3 penalty terms is described in detail in the following sections.
 #### Deviation Penalty
 The deviation penalty aims to penalise [ploidy|purity] combinations which require extensive sub-clonality to explain the observed copy number pattern.
 
-For each [ploidy|purity] combination tested an implied major and minor allele ploidy is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment based on the implied ploidies.   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
-- For major allele ploidy > 1 and minor allele ploidy > 0 a fixed deviation penalty applies
-  - the penalty depends only on the distance to the nearest integer ploidy and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
-  - For small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to reflect the fact the increasing probability that the observed deviation requires a implied non-integer (subclonal) ploidy.
+For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied ploidies.   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
+- For major allele copy number > 1 and minor allele copy number > 0 a deviation penalty applies to penalise solutions which imply subclonality:
+  - the penalty depends only on the distance to the nearest integer copy number and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
+  - small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to the maximum penalty reflecting the increasing probability that the observed deviation requires an implied non-integer (subclonal) copy number.
   - The deviation penalty is increased more slowly at lower purities reflecting the increased expected noise.   This is implemented by modeling the penalty as a normal distribution with the standard deviation a function of the purity. 
-- An additional and increasing penalty multiplier applies for implied major allele ploidy < 1.   This is intended to capture the relative rarity of large homozygous deletions in cancer genomes, so potential solutions with significant amounts of homozygous deletion are penalised significantly. 
-- An additional and increasing penalty also applies for implied minor allele ploidy < 0 to strongly penalise solutions which imply negative copy number and are biologically implausible.
+  - An additional and increasing penalty multiplier applies for implied major allele copy number < 1.   This is intended to capture the relative rarity of large homozygous deletions in cancer genomes, so potential solutions with significant amounts of homozygous deletion are penalised significantly. 
+- An additional and increasing penalty also applies for implied minor allele copy number < 0 to strongly penalise solutions which imply negative copy number and are biologically implausible.
 
-The following chart illustrates the deviation penalty applied for each of minor and major allele ploidy at both 30% and 70% purity.
+The following chart illustrates the deviation penalty applied for each of minor and major allele copy number at both 30% and 70% purity.
 
 ![Deviation Penalty](src/main/resources/readme/FittedPurityDeviationPenalty.png)
 
-The total deviation penalty is calculated from the minor and major allele as:
+The total deviation penalty is calculated by adding the minor and major allele deviation penalty.   It is weighted by the observedBAF (which varies between 0.5 and 1) to reflect that higher BAF regions have fewer possible solutions.  The formula used is: 
 
 `Deviation Penalty = (MinorAlleleDeviationPenalty + MajorAlleleDeviationPenalty) * ObservedBAF` 
 
 #### Event Penalty
 
-An event penalty is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele ploidies. 
-In particular, this model penalises higher ploidy solutions that can be highly degenerate and lead to low deviation penalties, but are unlikely to be the most parsimonious or biologically plausible solution.  
+An event penalty is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele ploidies.  In particular, this model penalises higher ploidy solutions that can be highly degenerate and lead to low deviation penalties, but are unlikely to be the most parsimonious or biologically plausible solution.  
 
 The event penalty multiplier is given by:
 
@@ -387,15 +372,9 @@ The event penalty multiplier is given by:
 
 `SingleEventDistance = abs(majorAllele - 1) + abs(minorAllele - 1);`
 
-Note that a diploid segment with implied minor allele ploidy = implied major allele ploidy = 1 has an event penalty of exactly 1 whilst 
-all other solutions have increasingly higher multipliers as the minor and major allele deviate further from 1. 
-The formula includes an explicit reduced penalty for a doubling of both major and minor allele ploidy since there is a known common 
-mechanism of whole genome doubling which can occur in a single event.
+Note that a diploid segment with implied minor allele copy number = implied major allele copy number = 1 has an event penalty of exactly 1 whilst all other solutions have increasingly higher multipliers as the minor and major allele deviate further from 1. The formula includes an explicit reduced penalty for a doubling of both major and minor allele copy number since there is a known common mechanism of whole genome doubling which can occur in a single event.
 
-The Deviation Penalty and Event Penalty are aggregated independently across all segments that are diploid in the germline and have a tumor 
-depth ratio of <3x the average depth. 
-An average is calculated for each value weighted by the number of BAF observations in each segment. 
-The averaged numbers are multiplied by each other to form an overall ploidy penalty for the sample.
+The Deviation Penalty and Event Penalty are aggregated independently across all segments that are diploid in the germline and have a tumor depth ratio of <3x the average depth. An average is calculated for each value weighted by the number of BAF observations in each segment.  The averaged numbers are multiplied by each other to form an overall ploidy penalty for the sample.
 
 The following chart shows the combined shape of the deviation and event penalty:
 
@@ -405,32 +384,23 @@ The following chart shows the combined shape of the deviation and event penalty:
 
 #### Somatic Penalty
 
-If somatic variants are provided, an additional somatic penalty is added to fits which lead to somatic variants with ploidies higher than 
-the major allele ploidy, since these are biologically implausible. 
-This feature was introduced primarily to deal with a degeneracy where in certain situations a lower purity, lower sample ploidy solutions 
-may provide a plausible minor and major allele ploidy fit to the copy number data, but imply that many SNVs exceed the major allele ploidy 
+If somatic variants are provided, an additional somatic penalty is added to fits which lead to somatic variants with ploidies higher than the major allele copy number, since these are biologically implausible. This feature was introduced primarily to deal with a degeneracy where in certain situations a lower purity, lower ploidy solutions may provide a plausible minor and major allele copy number fit to the copy number data, but imply that many SNVs exceed the major allele copy number 
 which is biologically implausible.
 
-The somatic penalty is determined for each [sample ploidy,purity] combination by sampling 1000 somatic SNV per tumor and comparing the 
-observed ploidy with an upper bound expectation of the variant’s ploidy from the 99.9% percentile of a binomial distribution given the 
-major allele at the SNV location. 
-The penalty applied to a single SNV is the max(0,implied SNV ploidy - 99.9% expected bound given the major allele). 
-The somatic penalty is averaged across the 1000 variants and multiplied by a somaticPenaltyWeight [0.3] constant and added to the ploidy penalty.
+The somatic penalty is determined for each [sample ploidy,purity] combination by sampling 1000 somatic SNV per tumor and comparing the observed major allele copy number with an upper bound expectation of the variant’s copy number from the 99.9% percentile of a binomial distribution given the major allele at the SNV location. The penalty applied to a single SNV is the max(0,implied SNV copy number - 99.9% expected bound given the major allele). The somatic penalty is averaged across the 1000 variants and multiplied by a somaticPenaltyWeight [0.3] constant and added to the ploidy penalty.
 
 #### Candidates
-While the lowest scoring purity becomes the fitted purity, we also examine other solutions within 10% or 0.0005 of the best solution. 
-These become potential candidates if we need to resort to using the somatic purity described below. 
+
+While the lowest scoring purity becomes the fitted purity, we also examine other solutions within 10% or 0.0005 of the best solution. These become potential candidates if we need to resort to using the somatic purity described below. 
 We also record the min and max of the purity, ploidy and diploid proportions of the candidates to give some context around the confidence in the solution.
 
 Note that a segment is diploid only if both the major and minor allele are between 0.8 and 1.2 inclusive. 
 
 #### Somatic Purity
-If any of the candidate solutions are highly diploid (>= 0.97) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. 
-Once in this mode, the sample status will be changed from NORMAL to one of HIGHLY_DIPLOID, NO_TUMOR or SOMATIC according to the logic described below.  
 
-First we calculate a somatic purity from all passing or unfiltered variants. 
-To do this, we use a kernel density estimator to find significant (n >= 50) somatic variant allele frequency peaks. 
-Each peak implies a tumor purity of twice the frequency. 
+If any of the candidate solutions are highly diploid (>= 0.97) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. Once in this mode, the sample status will be changed from NORMAL to one of HIGHLY_DIPLOID, NO_TUMOR or SOMATIC according to the logic described below.  
+
+First we calculate a somatic purity from all passing or unfiltered variants. To do this, we use a kernel density estimator to find significant (n >= 50) somatic variant allele frequency peaks. Each peak implies a tumor purity of twice the frequency. 
 We select the peak that implies the largest purity within the candidate solutions as the somatic purity.
 
 If the somatics are unable to help, either because there are none, or because the somatic purity and the fitted purity are both too low (< 0.17) then we continue to use the fitted purity but flag the solution with a status of HIGHLY_DIPLOID. 
@@ -442,30 +412,22 @@ If we have not met the criteria for HIGHLY_DIPLOID or NO_TUMOR then we set the s
 
 ### 4. Copy Number Smoothing 
 
-Since the initial segmentation algorithm is highly sensitive, and there is a significant amount of noise in the read depth in whole genome sequencing, many adjacent segments will have a similar copy number and BAF profile and are unlikely to represent a real somatic copy number change in the tumor. 
-We therefore apply a smoothing algorithm to merge the raw segments into a final set of smoothed copy number regions. 
+Since the initial segmentation algorithm is highly sensitive, and there is a significant amount of noise in the read depth in whole genome sequencing, many adjacent segments will have a similar copy number and BAF profile and are unlikely to represent a real somatic copy number change in the tumor. We therefore apply a smoothing algorithm to merge the raw segments into a final set of smoothed copy number regions. 
 
 The following criteria apply when deciding to merge segments:
 
 1. Never merge across a segment breakpoint with structural variant support.
 2. Do not merge segments if the minimum BAF count in the segments being compared > 0 and the change in observed BAF > 0.03 and the minor allele tolerance is exceeded. The absolute minor allele tolerance is 0.3 + 0.5 * max(copy number of compared segments) / sqrt (min count of BAF points ).  For tumors with purity < 20% the absolute tolerances are increased inversely proportional to the purity to allow for greater noise in tumor copy number and BAF measurements.
-3. Merge segments where the absolute or relative difference in either the copy number or ref normalised copy number is within tolerances. 
-Absolute copy number tolerance is 0.3 + 2 / sqrt(min depth window count).
-Relative copy number tolerance is 0.12 + 0.8 / sqrt(min depth window count).
-Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.). Again, for tumors with purity < 20% the absolute tolerances are increased.
+3. Merge segments where the absolute or relative difference in either the copy number or ref normalised copy number is within tolerances. Absolute copy number tolerance is 0.3 + 2 / sqrt(min depth window count). Relative copy number tolerance is 0.12 + 0.8 / sqrt(min depth window count). Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.). Again, for tumors with purity < 20% the absolute tolerances are increased.
 4. Start from most confident germline diploid segment (highest tumor depth window count) and extend outwards in both directions until we reach a segment outside of tolerance. Then move on to next most confident unsmoothed germline diploid segment. 
 5. It is possible to merge in (multiple) segments that would otherwise be outside of tolerances if:
     - The total dubious region is sufficiently small (< 30 depth window count or < 50 depth window count if approaching centromere); and
     - The dubious region does not end because of a structural variant; and
     - The dubious region ends at a centromere, telomere or a segment that is within tolerances.
 
-When merging segments, the depth window count (number of COBALT windows) of each segment is used as a proxy for confidence and is used to calculate a weighted average of the copy number. 
-Similarly, the BAF count is used to calculate the weighted average BAF. 
-The min and max start of the combined region is the minimum from each segment.  
+When merging segments, the depth window count (number of COBALT windows) of each segment is used as a proxy for confidence and is used to calculate a weighted average of the copy number. Similarly, the BAF count is used to calculate the weighted average BAF. The min and max start of the combined region is the minimum from each segment.  
 
-Regions that are non-diploid in the germline are typically smoothed over, thus the copy number profile represents the somatic copy number without influence from the germline. 
-However, where smoothing is otherwise not possible PURPLE can sometimes use the reference normalised copy number for this region, ie, the copy number as adjusted for the actual reference read ratio rather than the ideal read ratio. 
-For this to occur, the non-diploid region must:
+Regions that are non-diploid in the germline are typically smoothed over, thus the copy number profile represents the somatic copy number without influence from the germline. However, where smoothing is otherwise not possible PURPLE can sometimes use the reference normalised copy number for this region, ie, the copy number as adjusted for the actual reference read ratio rather than the ideal read ratio. For this to occur, the non-diploid region must:
   - Be directly adjacent to a structural variant but not a centromere;
   - Not be excessively noisy in the germline (reference read ratio < 2.2x expected); 
   - Have some depth window support from COBALT;
@@ -478,34 +440,30 @@ Consecutive non-diploid regions un-interrupted by a structural variant will be m
 Where clusters of SVs exist which are closer together than our read depth ratio window resolution of 1,000 bases, the segments in between will not have any copy number information associated with them. 
 We use the ploidies of the structural variants to resolve this.
 
-The outermost segment of any SV cluster will be associated with a structural variant whose ploidy can be determined from the adjacent copy number region and the VAF of the SV. 
-Note that if we are inferring from a lower copy number region into a higher one and the VAF is > 0.75 then we use the read depth rather than the VAF to infer a ploidy. 
-We use the average copy number and read depth of the sample to do this.
+The outermost segment of any SV cluster will be associated with a structural variant whose junction copy number can be determined from the adjacent copy number region and the VAF of the SV. Note that if we are inferring from a lower copy number region into a higher one and the VAF is > 0.75 then we use the read depth rather than the VAF to infer a junction copy number.  We use the average copy number and read depth of the sample to do this.
 
-Given a SV ploidy, we use orientation of the structural variant to calculate the change in copy number across the SV and hence the copy number of the outermost unknown segment. 
+Given a SV junction copy number, we use orientation of the structural variant to calculate the change in copy number across the SV and hence the copy number of the outermost unknown segment. 
 We repeat this process iteratively and infer the copy number of all regions within a cluster.
 
 When the entire short arm of a chromosome is lacking copy number information (generally on chromosome 13,14,15,21, or 22), the copy number of the long arm is extended to the short arm.
 
 
-### 6. Allele specific ploidy inferring
+### 6. Allele specific copy number inferring
 
 Once copy number region smoothing and inference is complete, it is possible there will be regions without BAF points which will result in a unknown allele specific ploidies, since BAF coverage of the genome is limited and many copy number regions can be very small.
 
-For these regions, we infer a BAF and allele specific ploidies of one or more consecutive regions with unknown BAF by first examining neighbouring regions with known allele specific ploidies and inferring based on the observed copy number changes to the unknown regions. 
-Where possible, we assume that only one allele changes ploidy in a set of consecutive regions of unknown allele specific ploidy. 
-The other allele is held constant.
+For these regions, we infer a BAF and allele specific ploidies of one or more consecutive regions with unknown BAF by first examining neighbouring regions with known allele specific ploidies and inferring based on the observed copy number changes to the unknown regions. Where possible, we assume that only one allele changes copy number in a set of consecutive regions of unknown allele specific copy number. The other allele is held constant.
 
-Which allele ploidy to hold remain constant from the neighbouring region depends on a number of rules including on whether the allele specific ploidy is known on both sides of the unknown region or only one one side.
+Which allele copy number to hold remain constant from the neighbouring region depends on a number of rules including on whether the allele specific copy number is known on both sides of the unknown region or only one one side.
 
 If only one side of the unknown region is available then we determine which of the major or minor allele of that neighbour to remain constant with the following logic:
 - If the unknown region is tiny (<= 30 bases) and is greater in copy number than the neighbour, then hold the minor allele constant.
-- Else, find the nearest copy number region where one allele changed by more than 0.5 ploidy and hold constant the allele that did not change.
+- Else, find the nearest copy number region where one allele changed by more than 0.5 copy number and hold constant the allele that did not change.
 - Failing everything else, keep the minor allele constant. 
 
-If there is neighbouring information on both sides of the unknown region, then the following rules apply to determine which allele ploidy to hold constant:
+If there is neighbouring information on both sides of the unknown region, then the following rules apply to determine which allele copy number to hold constant:
 - If the minimum copy number of the unknown region is significantly less (> 0.5) than the major allele of both sides, then keep the minor allele constant.
-- If both the major and minor allele of the neighbours are significantly different (> 0.5) but the minor allele of one matches the major allele of the other ( < 0.5) then choose the matching allele ploidy as the constant ploidy.
+- If both the major and minor allele of the neighbours are significantly different (> 0.5) but the minor allele of one matches the major allele of the other ( < 0.5) then choose the matching allele copy number as the constant copy number.
 - Else, if the major allele of the neighbours is significantly different keep the minor allele constant.
 - Else, if the minor allele of the neighbours is significantly different keep the major allele constant.
 - Else, if the unknown region is tiny (<= 30 bases), and is greater in copy number than the neighbour with the largest number of BAF observations, then hold constant that neighbours minor allele.  
@@ -516,33 +474,26 @@ This rule is intended to ensure that short templated insertions do not break reg
 - Else, find the nearest region on each side (without crossing the centromere) with a change in minor or major allele. If found, re-apply logic from the first three steps. 
 - Failing everything else, hold constant the minor allele of the neighbour with the largest number of BAF observations.
 
-At this stage we have determined a copy number and minor allele ploidy for every base in the genome
+At this stage we have determined a copy number and minor allele copy number for every base in the genome
 
 
 ### 7. Structural Variant Recovery
+
 PURPLE attempts to recover entries from a set of lower confidence structural variants if a recovery vcf (parameter: `sv_recovery_vcf`) is provided.
 
-There are two situations where PURPLE will attempt to recover structural variants. 
-The first is when a copy number segment is unsupported by an existing structural variant. 
-The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural 
-variant break that has a ploidy not supported by the copy number change. 
-A structural variant is considered unbalanced if the unexplained copy number change (ie. the ploidy - copy number change) is 
-greater than 20% of the copy number at the breakpoint and > 0.5. 
-An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint.
-If only one leg of a structural variant is unbalanced but no suitable candidate was found, a single ended breakpoint will be inferred at that position. 
+There are two situations where PURPLE will attempt to recover structural variants. The first is when a copy number segment is unsupported by an existing structural variant. The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a junction copy number not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the junction copy number - copy number change) is greater than 20% of the copy number at the breakpoint and > 0.5.  An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint. If only one leg of a structural variant is unbalanced but no suitable candidate was found, a single ended breakpoint will be inferred at that position. 
 
 Eligible recovery candidates must:
 
 1. Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant (if not a single breakend, the other breakpoint must also be within 1 kb of the min-max range of a copy number breakpoint)
 2. Not be “minTumorAF” or "minQual" filtered in GRIDSS 
-3. Have a ploidy of at least 50% of the unexplained copy number change and of at least 0.5.
+3. Have a junction copy number of at least 50% of the unexplained copy number change and of at least 0.5.
 
-Following the successful recovery any structural variants we will rerun the segmentation, copy number smoothing and minor allele ploidy smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. 
-Note that the purity estimation does not change.
+Following the successful recovery any structural variants we will rerun the segmentation, copy number smoothing and minor allele copy number smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. Note that the purity estimation does not change.
 
 ### 8. Identify germline copy number alterations that are homozygously deleted in the tumor
-During the smoothing process, regions that are homozygously or heterozygously deleted from the germline are smoothed over for the purposes of producing the somatic output. 
-However, as some of these regions are of specific interest we include them in a separate germline copy number output that contains the homozygous deletes from the germline as well as any deletes that are heterozygous in the germline but homozygous in the tumor. 
+
+During the smoothing process, regions that are homozygously or heterozygously deleted from the germline are smoothed over for the purposes of producing the somatic output. However, as some of these regions are of specific interest we include them in a separate germline copy number output that contains the homozygous deletes from the germline as well as any deletes that are heterozygous in the germline but homozygous in the tumor. 
 
 
 ### 9. Determine a QC Status for the tumor
@@ -558,7 +509,18 @@ PURPLE also provides a qc status that can fail for the following 3 reasons:
 - `FAIL_GENDER` - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
 
 ### 10. Somatic Enrichment
-If a somatic VCF is supplied to PURPLE a purity enriched copy of it will be produced in the output directory. In addition to purity, PURPLE also includes the following enrichments.
+
+If a somatic VCF is supplied to PURPLE each variant is enriched with the following fields:
+
+- PURPLE_CN: Purity adjusted copy number surrounding variant location
+- PURPLE_MAP: Purity adjusted minor allele copy number surrounding variant location
+- PURPLE_AF: Purity adjusted allelic frequency of variant
+- PURPLE_PLOIDY: Purity adjusted ploidy of variant
+- SUBCL: Subclonal likelihood between 0 and 1
+- KT: Forward/reverse kataegis id
+- BIALLELIC: Flag to indicate variant is biallelic
+
+More detailed descriptions of the kataegis, clonality and biallelic status are found below.
 
 #### Kataegis 
 
@@ -568,30 +530,25 @@ if there are three or more mutations of that type, strand and context localised 
 
 #### Clonality and Biallelic status
 
-For each point mutation we determined the clonality and biallelic status by comparing the estimated ploidy of the variant to the local copy number at the exact base of the variant. 
-The ploidy of each variant is calculated by adjusting the observed VAF by the purity and then multiplying by the local copy number to work out the absolute number of chromatids that contain the variant. 
+For each point mutation we determined the clonality and biallelic status by comparing the estimated number of copies of the variant to the local copy number at the exact base of the variant.    The copy number of each variant is calculated by adjusting the observed VAF by the purity and then multiplying by the local copy number to work out the absolute number of chromatids that contain the variant. 
 
-We mark a mutation as biallelic (i.e. no wild type remaining) if Variant Ploidy > Local Copy Number - 0.5. 
+We mark a mutation as biallelic (i.e. no wild type remaining) if Variant copy number > local copy number - 0.5. 
 The 0.5 tolerance is used to allow for the binomial distribution of VAF measurements for each variant. 
-For example, if the local copy number is 2 than any somatic variant with measured ploidy > 1.5 is marked as biallelic.
+For example, if the local copy number is 2 than any somatic variant with estimated variant copy number > 1.5 is marked as biallelic.
 
 For each variant we also determine a probability that it is subclonal. This is achieved via a two-step process. 
 
 First, we fit the somatic ploidies for each sample into a set of clonal and subclonal peaks. 
 
-We apply an iterative algorithm to find peaks in the ploidy distribution:
-  - Determine the peak by finding the highest density of variants within +/- 0.1 of every 0.01 ploidy bucket.
-  - Sample the variants within a 0.05 ploidy range around the peak. 
-  - For each sampled variant, use a binomial distribution to estimate the likelihood that the variant would appear in all other 0.05 ploidy buckets. 
-  - Sum the expected variants from the peak across all ploidy buckets and subtract from the distribution.
+We apply an iterative algorithm to find peaks in the variant copy number distribution:
+  - Determine the peak by finding the highest density of variants within +/- 0.1 of every 0.01 copy number bucket.
+  - Sample the variants within a 0.05 variant copy number range around the peak. 
+  - For each sampled variant, use a binomial distribution to estimate the likelihood that the variant would appear in all other 0.05 copy number buckets. 
+  - Sum the expected variants from the peak across all copy number buckets and subtract from the distribution.
   - Repeat the process with the next peak
 
-This process yields a set of ploidy peaks, each with a ploidy and a total density (i.e. count of variants). 
-To avoid overfitting small amounts of noise in the distribution, we filter out any peaks that account for less than 40% of the variants in the ploidy bucket at the peak itself. 
-After this filtering we scale the fitted peaks by a constant so that the sum of fitted peaks = the total variant count of the sample. 
-We mark a peak as subclonal if the peak ploidy < 0.85.
-
-Secondly, we can calculate the subclonal likelihood for any individual variant as the proportion of subclonal variants at that same ploidy. 
+This process yields a set of variant copy number peaks, each with a copy number and a total density (i.e. count of variants). 
+To avoid overfitting small amounts of noise in the distribution, we filter out any peaks that account for less than 40% of the variants in the copy number bucket at the peak itself.   After this filtering we scale the fitted peaks by a constant so that the sum of fitted peaks = the total variant count of the sample.  We mark a peak as subclonal if the peak variant copy number < 0.85.   We also calculate the subclonal likelihood for each individual variant as the proportion of variants in that same copy number bucket fitted as belonging to a subclonal peak. 
 
 ## Output
 
@@ -609,11 +566,11 @@ Version | 2.25 | Version of PURPLE
 Purity  | 0.98 | Purity of tumor in the sample
 NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number implies higher ploidy
 Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity
-SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies that are inconsistent with the minor and major allele ploidy 
+SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies that are inconsistent with the minor and major allele copy number 
 Score | 0.68 | Score of fit (lower is better)
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
-WholeGenomeDuplication | true | True if more than 10 autosomes have major allele ploidy > 1.5
+WholeGenomeDuplication | true | True if more than 10 autosomes have major allele copy number > 1.5
 [Gender](#1-gender) | MALE | One of `MALE`, `FEMALE` or `MALE_KLINEFELTER`
 [Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 MinPurity | 0.95 | Minimum purity with score within 10% of best
@@ -653,13 +610,13 @@ ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**a
 BAF  | 0.7124 | Tumor BAF after adjusted for purity and ploidy
 SegmentStartSupport  | TELOMERE |  The type of structural variant support for the copy number breakpoint at start of region.  Allowed values:  (`CENTROMERE`, `TELOMERE`,`INV`,`DEL`,`DUP`,`BND` - translocation, `SGL` - single breakend SV support, `NONE` - no SV support for CN breakpoint, `MULT` - multiple SV support at exact breakpoint)
 SegmentEndSupport  | BND | The type of structural variant support for the copy number breakpoint at end of region. Allowed values as per SegmentStartSupport.
-Method | BAF_WEIGHTED | Method used to determine the copy number of the region. Allowed values: (`BAF_WEIGHTED` - average of all depth windows for the region ,`STRUCTURAL_VARIANT` - inferred using ploidy of flanking SVs ,`LONG_ARM` - inferred from the long arm,`GERMLINE_AMPLIFICATION` - inferred using special logic to handle regions of germline amplification)
+Method | BAF_WEIGHTED | Method used to determine the copy number of the region. Allowed values: (`BAF_WEIGHTED` - average of all depth windows for the region ,`STRUCTURAL_VARIANT` - inferred using junction copy number of flanking SVs ,`LONG_ARM` - inferred from the long arm,`GERMLINE_AMPLIFICATION` - inferred using special logic to handle regions of germline amplification)
 DepthWindowCount | 77277 | Count of COBALT windows covered by this segment
 GcContent | 0.4351 | Proportion of segment that is G or C
 MinStart | 1 | Minimum start location of this segment if there is any uncertainty.
 MaxStart | 1 | Maximum start location of this segment if there is any uncertainty.
-MinorAllelePloidy | 0.8165 | Ploidy of minor allele adjusted for purity
-MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
+MinorAllelePloidy | 0.8165 | Copy number of minor allele adjusted for purity
+MajorAllelePloidy | 2.0076 | Copy number of major allele adjusted for purity
 
 #### Gene Copy Number File
 
@@ -685,7 +642,7 @@ MinRegionEnd | 28031835 | End base of the copy number region overlapping the gen
 MinRegionStartSupport | TELOMERE | Start support of the copy number region overlapping the gene with the minimum copy number
 MinRegionEndSupport | INV | End support of the copy number region overlapping the gene with the minimum copy number
 MinRegionMethod | BAF_WEIGHTED | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
-MinMinorAllelePloidy | 0 | Minimum allele ploidy found over the gene exons - useful for identifying LOH events  
+MinMinorAllelePloidy | 0 | Minimum allele copy number found over the gene exons - useful for identifying LOH events  
 
 ### VCF
 
@@ -698,7 +655,7 @@ enriched with the following fields:
 
 Field | Count | Description 
 --- | --- | ---
-PURPLE_PLOIDY | 1 | Purity adjusted ploidy of variant
+PURPLE_PLOIDY | 1 | Purity adjusted junction copy number of variant
 PURPLE_AF | 1 or 2 |Purity adjusted allele frequency at each breakend
 PURPLE_CN | 1 or 2 | Purity adjusted copy number at each breakend
 PURPLE_CN_CHANGE | 1 or 2 | Purity adjusted change in copy number at each breakend
@@ -713,10 +670,10 @@ The output VCF `TUMOR.purple.somatic.vcf.gz` will contain all (filtered and unfi
 
 Field | Count | Description 
 --- | --- | ---
-PURPLE_PLOIDY | 1 | Purity adjusted ploidy of variant
+PURPLE_PLOIDY | 1 | Purity adjusted number of copies of variant
 PURPLE_AF | 1 | Purity adjusted allelic frequency of variant
 PURPLE_CN | 1 | Purity adjusted copy number surrounding variant location
-PURPLE_MAP | 1 | Purity adjusted minor allele ploidy surrounding variant location
+PURPLE_MAP | 1 | Purity adjusted minor allele copy number surrounding variant location
 PURPLE_GERMLINE | 1 | Germline classification surrounding variant location, one of `HOM_DELETION`, `HET_DELETION`, `AMPLIFICATION`, `NOISE`, `DIPLOID`, `UNKNOWN`
 BIALLELIC | 1 | Flag to indicate variant is biallelic
 REP_S | 1 | Repeat sequence
@@ -946,28 +903,28 @@ Crosshairs identify the best purity / ploidy solution.
 </p>
 
 The contribution of each fitted segment to the final score of the best fit is shown in the following figure. 
-Each segment is divided into its major and minor allele ploidy. The area of each circle shows the weight (AMBER baf count) of each segment.
+Each segment is divided into its major and minor allele copy number. The area of each circle shows the weight (AMBER baf count) of each segment.
 
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.fitted.segments.png" width="500" alt="Purity Range">
 </p>
 
-The following figures shows the AMBER BAF count weighted distribution of copy number and minor allele ploidy throughout the fitted segments.
-Copy numbers are broken down by colour into their respective minor allele ploidy (MAP) while the minor allele ploidy figure is broken down by copy number. 
+The following figures shows the AMBER BAF count weighted distribution of copy number and minor allele copy number throughout the fitted segments.
+Copy numbers are broken down by colour into their respective minor allele copy number (MAP) while the minor allele copy number figure is broken down by copy number. 
 
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.copynumber.png" width="500" alt="Copy Number PDF">
 </p>
 
 <p align="center">
-  <img src="src/main/resources/readme/COLO829T.map.png" width="500" alt="Minor Allele Ploidy PDF">
+  <img src="src/main/resources/readme/COLO829T.map.png" width="500" alt="Minor Allele Copy Number PDF">
 </p>
 
-If a somatic variant VCF has been supplied, a similar figure will be produced showing the somatic variant ploidy broken down by copy number as 
+If a somatic variant VCF has been supplied, a similar figure will be produced showing the somatic variant copy number broken down by copy number as 
 well as rainfall plot with kataegis clusters highlighted grey:
 
 <p align="center">
-  <img src="src/main/resources/readme/COLO829T.variant.png" width="500" alt="Somatic Variant Ploidy PDF">
+  <img src="src/main/resources/readme/COLO829T.variant.png" width="500" alt="Somatic Variant Copy Number PDF">
 </p>
 
 <p align="center">
@@ -976,11 +933,11 @@ well as rainfall plot with kataegis clusters highlighted grey:
 
 The following diagram illustrates the clonality model of a typical sample.
  
-The top figure shows the histogram of somatic ploidy for all SNV and INDEL in blue. 
-Superimposed are peaks in different colours fitted from the sample as described above while the black line shows the overall fitted ploidy distribution. 
+The top figure shows the histogram of somatic variant copy number for all SNV and INDEL in blue. 
+Superimposed are peaks in different colours fitted from the sample as described above while the black line shows the overall fitted copy number distribution. 
 Red filled peaks are below the 0.85 subclonal threshold. 
 
-We can determine the likelihood of a variant being subclonal at any given ploidy as shown in the bottom half of the figure.   
+We can determine the likelihood of a variant being subclonal at any given variant copy number as shown in the bottom half of the figure.   
 
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
@@ -1059,7 +1016,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Added variant rainfall plot
 - [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.30)
   - Removed FittedSegment file and db table
-  - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have average major allele ploidy > 1.5)
+  - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have average major allele copy number > 1.5)
   - Improved logging of missing arguments
   - Added support for new AMBER and COBALT file names and formats
 - [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.29)
@@ -1114,11 +1071,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
     If suitable, they will be recovered and included in the segmentation and smoothing algorithms. 
     All passing and recovered structural variants are now written as a VCF to the purple output directory.
 - 2.15
-  - New ploidy penalty model adopted using minor and major allele ploidy deviation instead of baf and copy number deviation.
-  - A somatic deviation penalty has been added to penalise fits which lead to somatic variants with higher ploidies than the major allele ploidy. 
-    The 99.9% upper cutoff for binomial distribution from the major allele ploidy is used as a cutoff to mark variants as inconsistent. 
+  - New ploidy penalty model adopted using minor and major allele copy number deviation instead of baf and copy number deviation.
+  - A somatic deviation penalty has been added to penalise fits which lead to somatic variants with higher ploidies than the major allele copy number. 
+    The 99.9% upper cutoff for binomial distribution from the major allele copy number is used as a cutoff to mark variants as inconsistent. 
     1000 somatic variants are sampled per tumor, with the somatic penalty equal to the sum of the deviations over the 99.9% cutoff divided by the number of somatic variants sampled.
-  - Cutoff to be classified as highly diploid tightened (minor and major allele ploidy must both be between 0.8 and 1.2).
+  - Cutoff to be classified as highly diploid tightened (minor and major allele copy number must both be between 0.8 and 1.2).
   - If there is <300 variants (all types) with raw vaf > 10% then mark as NO_TUMOR (formerly was if there were >1000 SNP in total). 
     Purity is set to what it would have been if NO_TUMOR rule had not been applied (ie the somatic peak or highly diploid)
 - 2.14

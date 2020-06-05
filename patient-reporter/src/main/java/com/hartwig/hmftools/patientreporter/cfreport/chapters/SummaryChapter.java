@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
@@ -153,9 +154,19 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
 
-        String hrdString = hasReliablePurity ? patientReport.chordHrdStatus().display() : DataUtil.NA_STRING;
+        String hrdString;
+        Style hrdStyle;
+
+        if (hasReliablePurity && ChordStatus.reliableHRD(patientReport.microsatelliteStatus())) {
+            hrdString = patientReport.chordHrdStatus().display();
+            hrdStyle = ReportResources.dataHighlightStyle();
+        } else {
+            hrdString = DataUtil.NA_STRING;
+            hrdStyle = ReportResources.dataHighlightNaStyle();
+        }
+
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
         reportDocument.add(div);
     }

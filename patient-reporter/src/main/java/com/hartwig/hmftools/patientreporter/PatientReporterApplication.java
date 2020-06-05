@@ -30,7 +30,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //            public static final String VERSION = "7.11";
+    //            public static final String VERSION = "7.12";
 
     public static void main(final String... args) throws ParseException, IOException {
         Options options = PatientReporterConfig.createOptions();
