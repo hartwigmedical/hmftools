@@ -5,8 +5,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cli.Configs;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -28,15 +33,17 @@ public class PonApplication implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(PonApplication.class);
 
+    private static final String THREADS = "threads";
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
-    private static final String GLOB = "*.sage.germline.vcf.gz";
+    private static final String GLOB = "*.sage.somatic.vcf.gz";
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) throws IOException, ParseException, ExecutionException, InterruptedException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String inputFilePath = cmd.getOptionValue(IN_VCF);
         final String outputFilePath = cmd.getOptionValue(OUT_VCF);
+        final int threads = Configs.defaultIntValue(cmd, THREADS, 1);
 
         if (outputFilePath == null || inputFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -44,7 +51,7 @@ public class PonApplication implements AutoCloseable {
             System.exit(1);
         }
 
-        try (PonApplication app = new PonApplication(inputFilePath, outputFilePath)) {
+        try (PonApplication app = new PonApplication(threads, inputFilePath, outputFilePath)) {
             app.run();
         }
     }
@@ -52,11 +59,13 @@ public class PonApplication implements AutoCloseable {
     private final PonVCF vcf;
     private final String input;
     private final List<File> files;
+    private final ExecutorService executorService;
 
-    private PonApplication(@NotNull final String input, @NotNull final String output) throws IOException {
+    private PonApplication(int threads, @NotNull final String input, @NotNull final String output) throws IOException {
         LOGGER.info("Input: {}", input);
         LOGGER.info("Output: {}", output);
 
+        executorService = Executors.newFixedThreadPool(threads);
         this.input = input;
 
         files = Lists.newArrayList();
@@ -67,12 +76,11 @@ public class PonApplication implements AutoCloseable {
         this.vcf = new PonVCF(output, files.size());
     }
 
-    private void run() throws IOException {
+    private void run() throws IOException, ExecutionException, InterruptedException {
 
         if (files.isEmpty()) {
             return;
         }
-
 
         final VCFFileReader dictionaryReader = new VCFFileReader(files.get(0), true);
         SAMSequenceDictionary dictionary = dictionaryReader.getFileHeader().getSequenceDictionary();
@@ -80,21 +88,30 @@ public class PonApplication implements AutoCloseable {
 
         for (SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             LOGGER.info("Processing sequence {}", samSequenceRecord.getSequenceName());
-
             final PonBuilder ponBuilder = new PonBuilder();
 
+            List<Future<?>> contigFutures = Lists.newArrayList();
+
             for (Path file : Files.newDirectoryStream(new File(input).toPath(), GLOB)) {
-                try (VCFFileReader fileReader = new VCFFileReader(file.toFile(), true)) {
-                    CloseableIterator<VariantContext> iter = fileReader.query(samSequenceRecord.getSequenceName(), 1, samSequenceRecord.getSequenceLength());
-                    while (iter.hasNext()) {
-                        ponBuilder.add(iter.next());
-                    }
-                    iter.close();
-                }
+                contigFutures.add(executorService.submit(() -> addVariantsFromFileToBuilder(ponBuilder, samSequenceRecord, file)));
+            }
+
+            for (Future<?> contigFuture : contigFutures) {
+                contigFuture.get();
             }
 
             vcf.write(ponBuilder.build());
+        }
+    }
 
+    private void addVariantsFromFileToBuilder(final PonBuilder ponBuilder, final SAMSequenceRecord samSequenceRecord, final Path file) {
+        try (VCFFileReader fileReader = new VCFFileReader(file.toFile(), true)) {
+            CloseableIterator<VariantContext> iter =
+                    fileReader.query(samSequenceRecord.getSequenceName(), 1, samSequenceRecord.getSequenceLength());
+            while (iter.hasNext()) {
+                ponBuilder.add(iter.next());
+            }
+            iter.close();
         }
     }
 
@@ -109,11 +126,13 @@ public class PonApplication implements AutoCloseable {
         final Options options = new Options();
         options.addOption(IN_VCF, true, "Input file.");
         options.addOption(OUT_VCF, true, "Output file.");
+        options.addOption(THREADS, true, "Number of threads [1]");
         return options;
     }
 
     @Override
     public void close() throws IOException {
+        executorService.shutdown();
         vcf.close();
         LOGGER.info("PON complete");
     }
