@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.serve;
+package com.hartwig.hmftools.serve.transvar;
 
 import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.transvar.Transvar;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
