@@ -57,6 +57,5 @@ public class TransvarTest {
     @NotNull
     private static Transvar returnsNoTransvarRecord() {
         return TransvarTestFactory.testTransvar((gene, proteinAnnotation) -> Lists.newArrayList());
-
     }
 }
