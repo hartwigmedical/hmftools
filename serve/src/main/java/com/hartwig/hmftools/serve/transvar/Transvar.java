@@ -22,7 +22,7 @@ public class Transvar {
     private static final Logger LOGGER = LogManager.getLogger(Transvar.class);
 
     @NotNull
-    private final TransvarProcess process;
+    private final TransvarProcessImpl process;
     @NotNull
     private final TransvarInterpreter interpreter;
     @NotNull
@@ -31,12 +31,12 @@ public class Transvar {
     @NotNull
     public static Transvar withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
             throws FileNotFoundException {
-        return new Transvar(new TransvarProcess(refGenomeVersion, refGenomeFastaFile),
+        return new Transvar(new TransvarProcessImpl(refGenomeVersion, refGenomeFastaFile),
                 TransvarInterpreter.fromRefGenomeFastaFile(refGenomeFastaFile),
                 HmfGenePanelSupplier.allGenesMap37());
     }
 
-    private Transvar(@NotNull TransvarProcess process, @NotNull TransvarInterpreter interpreter,
+    private Transvar(@NotNull TransvarProcessImpl process, @NotNull TransvarInterpreter interpreter,
             @NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.process = process;
         this.interpreter = interpreter;

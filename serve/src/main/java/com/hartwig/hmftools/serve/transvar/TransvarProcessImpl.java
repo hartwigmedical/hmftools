@@ -16,9 +16,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class TransvarProcess {
+class TransvarProcessImpl {
 
-    private static final Logger LOGGER = LogManager.getLogger(TransvarProcess.class);
+    private static final Logger LOGGER = LogManager.getLogger(TransvarProcessImpl.class);
 
     private static final int TRANSVAR_TIMEOUT_SEC = 90;
 
@@ -27,7 +27,7 @@ class TransvarProcess {
     @NotNull
     private final String refGenomeFastaFile;
 
-    TransvarProcess(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
+    TransvarProcessImpl(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
         this.refGenomeVersion = refGenomeVersion;
         this.refGenomeFastaFile = refGenomeFastaFile;
     }
