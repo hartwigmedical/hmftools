@@ -43,7 +43,7 @@ public class PonApplication implements AutoCloseable {
         final CommandLine cmd = createCommandLine(args, options);
         final String inputFilePath = cmd.getOptionValue(IN_VCF);
         final String outputFilePath = cmd.getOptionValue(OUT_VCF);
-        final int threads = Configs.defaultIntValue(cmd, THREADS, 1);
+        final int threads = Configs.defaultIntValue(cmd, THREADS, 5);
 
         if (outputFilePath == null || inputFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -89,11 +89,13 @@ public class PonApplication implements AutoCloseable {
         for (SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             LOGGER.info("Processing sequence {}", samSequenceRecord.getSequenceName());
             final PonBuilder ponBuilder = new PonBuilder();
+            final RunnableTaskCompletion runnableTaskCompletion = new RunnableTaskCompletion();
 
             List<Future<?>> contigFutures = Lists.newArrayList();
 
             for (Path file : Files.newDirectoryStream(new File(input).toPath(), GLOB)) {
-                contigFutures.add(executorService.submit(() -> addVariantsFromFileToBuilder(ponBuilder, samSequenceRecord, file)));
+                Runnable runnable = () -> addVariantsFromFileToBuilder(ponBuilder, samSequenceRecord, file);
+                contigFutures.add(executorService.submit(runnableTaskCompletion.task(runnable)));
             }
 
             for (Future<?> contigFuture : contigFutures) {
