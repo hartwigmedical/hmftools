@@ -44,7 +44,7 @@ public class Transvar {
     }
 
     @NotNull
-    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String transcript,
+    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) throws IOException, InterruptedException {
         List<TransvarRecord> records = process.runTransvarPanno(gene, proteinAnnotation);
         if (records.isEmpty()) {
@@ -60,11 +60,11 @@ public class Transvar {
             return Lists.newArrayList();
         }
 
-        TransvarRecord best = pickBestRecord(records, transcript, canonicalTranscript.transcriptID());
-        if (transcript != null && !best.transcript().equals(transcript)) {
-            LOGGER.warn("No record found on preferred transcript '{}'. "
+        TransvarRecord best = pickBestRecord(records, specificTranscript, canonicalTranscript.transcriptID());
+        if (specificTranscript != null && !best.transcript().equals(specificTranscript)) {
+            LOGGER.warn("No record found on specific transcript '{}'. "
                             + "Instead a record was resolved for '{}' for {}:p.{}. Skipping interpretation",
-                    transcript,
+                    specificTranscript,
                     best.transcript(),
                     gene,
                     proteinAnnotation);
@@ -83,16 +83,16 @@ public class Transvar {
     }
 
     @NotNull
-    private TransvarRecord pickBestRecord(@NotNull List<TransvarRecord> records, @Nullable String preferredTranscript,
+    private static TransvarRecord pickBestRecord(@NotNull List<TransvarRecord> records, @Nullable String specificTranscript,
             @NotNull String canonicalTranscript) {
         assert !records.isEmpty();
 
-        TransvarRecord preferredRecord = null;
+        TransvarRecord specificRecord = null;
         TransvarRecord canonicalRecord = null;
         TransvarRecord bestRecord = null;
         for (TransvarRecord record : records) {
-            if (preferredTranscript != null && record.transcript().equals(preferredTranscript)) {
-                preferredRecord = record;
+            if (specificTranscript != null && record.transcript().equals(specificTranscript)) {
+                specificRecord = record;
             } else if (record.transcript().equals(canonicalTranscript)) {
                 canonicalRecord = record;
             } else {
@@ -100,8 +100,8 @@ public class Transvar {
             }
         }
 
-        if (preferredRecord != null) {
-            return preferredRecord;
+        if (specificRecord != null) {
+            return specificRecord;
         }
 
         if (canonicalRecord != null) {
