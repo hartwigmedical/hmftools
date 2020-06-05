@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIO
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
@@ -18,6 +20,9 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_C
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.common.fusion.Transcript.TRANS_REGION_TYPE_UPSTREAM;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
@@ -28,11 +33,14 @@ import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineRepo
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 
@@ -112,10 +120,21 @@ public class FusionFinder
         {
             // left is upstream, right is downstream
             boolean startUpstream = startGene.isUpstream();
+            boolean startIsIgRegion = mKnownFusionCache.withinIgRegion(startGene.chromosome(), startGene.position());
 
             for (final GeneAnnotation endGene : breakendGenes2)
             {
                 boolean endUpstream = endGene.isUpstream();
+                boolean endIsIgRegion = mKnownFusionCache.withinIgRegion(endGene.chromosome(), endGene.position());
+
+                if(startIsIgRegion || endIsIgRegion)
+                {
+                    if(startIsIgRegion && endIsIgRegion)
+                        continue;
+
+                    checkIgFusion(startGene, endGene, potentialFusions);
+                    continue;
+                }
 
                 if (startUpstream == endUpstream)
                 {
@@ -128,11 +147,11 @@ public class FusionFinder
                 final GeneAnnotation upGene = startUpstream ? startGene : endGene;
                 final GeneAnnotation downGene = !startUpstream ? startGene : endGene;
 
-                boolean knownPair = mKnownFusionCache != null && mKnownFusionCache.hasKnownFusion(upGene.GeneName, downGene.GeneName);
+                boolean knownPair = mKnownFusionCache.hasKnownFusion(upGene.GeneName, downGene.GeneName);
 
-                for (final Transcript upstreamTrans : upGene.transcripts())
+                for(final Transcript upstreamTrans : upGene.transcripts())
                 {
-                    for (final Transcript downstreamTrans : downGene.transcripts())
+                    for(final Transcript downstreamTrans : downGene.transcripts())
                     {
                         GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, params, !knownPair);
 
@@ -150,6 +169,76 @@ public class FusionFinder
             setReportableGeneFusions(potentialFusions);
 
         return potentialFusions;
+    }
+
+    private void checkIgFusion(final GeneAnnotation startGene, final GeneAnnotation endGene, final List<GeneFusion> potentialFusions)
+    {
+        /* Criteria:
+            - These are allowed to fuse with 5’UTR splice donors from 10kb upstream. Phasing is assumed to be -1.
+            - In the case of IGH-BCL2 specifically, allow fusions in the 3’UTR region and up to 40k bases downstream of BCL2 ((common in Folicular Lymphomas[PP1] )
+        */
+
+        boolean startIsIgGene = mKnownFusionCache.matchesIgGene(startGene.chromosome(), startGene.position(), startGene.orientation());
+        boolean endIsIgGene = !startIsIgGene && mKnownFusionCache.matchesIgGene(endGene.chromosome(), endGene.position(), endGene.orientation());
+
+        if(!startIsIgGene && !endIsIgGene)
+            return;
+
+        final GeneAnnotation igGene = startIsIgGene ? startGene : endGene;
+        final GeneAnnotation downGene = startIsIgGene ? endGene : startGene;
+
+        KnownFusionType knownType = NONE;
+
+        final List<Transcript> candidateTranscripts = downGene.transcripts().stream()
+                .filter(x -> x.regionType().equals(TRANS_REGION_TYPE_UPSTREAM)).collect(Collectors.toList());
+
+        KnownFusionData knownFusionData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
+                .filter(x -> x.ThreeGene.equals(downGene.GeneName))
+                .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
+                .findFirst().orElse(null);
+
+        if(knownFusionData != null)
+        {
+            // a known IG-partner gene
+            if(knownFusionData.igDownstreamDistance() > 0)
+            {
+                candidateTranscripts.addAll(downGene.transcripts().stream().filter(x -> x.postCoding()).collect(Collectors.toList()));
+            }
+
+            knownType = IG_KNOWN_PAIR;
+        }
+        else
+        {
+            knownFusionData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
+                    .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
+                    .findFirst().orElse(null);
+
+            // check within the promiscuous region bounds
+            if(knownFusionData == null)
+                return;
+
+            knownType = IG_PROMISCUOUS;
+        }
+
+        final Transcript upTrans = generateIgTranscript(igGene, knownFusionData);
+
+        if(!candidateTranscripts.isEmpty())
+        {
+            for(final Transcript downTrans : candidateTranscripts)
+            {
+                GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
+                fusion.setKnownType(knownType);
+                potentialFusions.add(fusion);
+            }
+        }
+    }
+
+    private Transcript generateIgTranscript(final GeneAnnotation gene, final KnownFusionData knownFusionData)
+    {
+        return new Transcript(
+                gene, 0, knownFusionData.FiveGene, 1,-1, 1, -1,
+        0, 0,   1, true, knownFusionData.igRegion()[SE_START], knownFusionData.igRegion()[SE_END],
+        null, null);
     }
 
     private static void logInvalidReasonInfo(final Transcript trans1, final Transcript trans2, final String reasonType, final String reason)

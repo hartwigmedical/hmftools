@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptProteinData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.fusion.Transcript.TRANS_CODING_TYPE_CODING;
@@ -41,6 +43,8 @@ public class EnsemblDataCache
     private boolean mRequireSplicePositions;
     private boolean mCanonicalTranscriptsOnly;
 
+    private final Map<EnsemblGeneData,Integer> mDownstreamGeneAnnotations;
+
     private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
@@ -58,6 +62,7 @@ public class EnsemblDataCache
         mRequireProteinDomains = false;
         mRequireSplicePositions = false;
         mCanonicalTranscriptsOnly = false;
+        mDownstreamGeneAnnotations = Maps.newHashMap();
     }
 
     public void setRestrictedGeneIdList(final List<String> geneIds)
@@ -65,6 +70,8 @@ public class EnsemblDataCache
         mRestrictedGeneIdList.clear();
         mRestrictedGeneIdList.addAll(geneIds);
     }
+
+    public final Map<EnsemblGeneData,Integer> getDownstreamGeneAnnotations() { return mDownstreamGeneAnnotations; }
 
     public void setRequiredData(boolean exons, boolean proteinDomains, boolean splicePositions, boolean canonicalOnly)
     {
@@ -145,12 +152,7 @@ public class EnsemblDataCache
     public void populateGeneIdList(final List<String> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
     {
         // find the unique set of geneIds
-        final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
-
-        if (geneRegions == null)
-            return;
-
-        List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions, upstreamDistance);
+        final List<EnsemblGeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
 
         for (final EnsemblGeneData geneData : matchedGenes)
         {
@@ -159,27 +161,12 @@ public class EnsemblDataCache
         }
     }
 
-    public final List<EnsemblGeneData> findGenes(final String chromosome, long position, int upstreamDistance)
-    {
-        final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
-
-        if (geneRegions == null)
-            return Lists.newArrayList();
-
-        return findGeneRegions(position, geneRegions, upstreamDistance);
-    }
-
     public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position,
             byte orientation, int upstreamDistance)
     {
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
-        final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
-
-        if(geneRegions == null)
-            return geneAnnotations;
-
-        final List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions, upstreamDistance);
+        final List<EnsemblGeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
 
         // now look up relevant transcript and exon information
         for(final EnsemblGeneData geneData : matchedGenes)
@@ -210,6 +197,24 @@ public class EnsemblDataCache
                     {
                         setPrecedingGeneDistance(transcript, position);
                     }
+                }
+            }
+
+            if(currentGene.transcripts().isEmpty() && mDownstreamGeneAnnotations.containsKey(geneData))
+            {
+                final TranscriptData canonicalTrans = transcriptDataList.stream().filter(x -> x.IsCanonical).findAny().orElse(null);
+
+                if(canonicalTrans != null)
+                {
+                    final Transcript postGeneTrans = new Transcript(
+                            currentGene, canonicalTrans.TransId, canonicalTrans.TransName, canonicalTrans.exons().size(),
+                            -1, canonicalTrans.exons().size(), -1, 1, 1,
+                            canonicalTrans.exons().size(), true, canonicalTrans.TransStart, canonicalTrans.TransEnd,
+                            canonicalTrans.CodingStart, canonicalTrans.CodingEnd);
+
+                    postGeneTrans.setBioType(canonicalTrans.BioType);
+
+                    currentGene.addTranscript(postGeneTrans);
                 }
             }
 
@@ -321,9 +326,14 @@ public class EnsemblDataCache
         return genesList;
     }
 
-    public static final List<EnsemblGeneData> findGeneRegions(long position, final List<EnsemblGeneData> geneDataList, int upstreamDistance)
+    private final List<EnsemblGeneData> findGeneRegions(final String chromosome, long position, int upstreamDistance)
     {
-        List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
+        final List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
+
+        final List<EnsemblGeneData> geneDataList = mChrGeneDataMap.get(chromosome);
+
+        if(geneDataList == null)
+            return matchedGenes;
 
         for(final EnsemblGeneData geneData : geneDataList)
         {
@@ -331,6 +341,20 @@ public class EnsemblDataCache
             long geneEndRange = geneData.Strand == 1 ? geneData.GeneEnd : geneData.GeneEnd + upstreamDistance;
 
             if(position >= geneStartRange && position <= geneEndRange)
+            {
+                matchedGenes.add(geneData);
+            }
+        }
+
+        for(Map.Entry<EnsemblGeneData,Integer> entry : mDownstreamGeneAnnotations.entrySet())
+        {
+            final EnsemblGeneData geneData = entry.getKey();
+
+            if(matchedGenes.contains(geneData) || !geneData.Chromosome.equals(chromosome))
+                continue;
+
+            if((geneData.Strand == POS_STRAND && position >= geneData.GeneEnd && position <= geneData.GeneEnd + entry.getValue())
+            || (geneData.Strand == NEG_STRAND && position <= geneData.GeneStart && position >= geneData.GeneStart - entry.getValue()))
             {
                 matchedGenes.add(geneData);
             }
@@ -348,8 +372,8 @@ public class EnsemblDataCache
         return spliceAcceptorPos != null ? spliceAcceptorPos : -1;
     }
 
-    public static Transcript extractTranscriptExonData(final TranscriptData transData, long position,
-            final GeneAnnotation geneAnnotation)
+    public static Transcript extractTranscriptExonData(
+            final TranscriptData transData, long position, final GeneAnnotation geneAnnotation)
     {
         final List<ExonData> exonList = transData.exons();
 

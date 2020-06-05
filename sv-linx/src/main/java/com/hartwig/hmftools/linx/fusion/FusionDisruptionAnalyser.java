@@ -36,6 +36,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
@@ -226,6 +228,18 @@ public class FusionDisruptionAnalyser
 
         if(cmdLineArgs.hasOption(CHECK_FUSIONS) && !mFusionFinder.hasValidConfigData())
             mValidState = false;
+
+        for(final KnownFusionData igDownstreamGene : mFusionFinder.getKnownFusionCache().getDataByType(IG_KNOWN_PAIR))
+        {
+            if(igDownstreamGene.igDownstreamDistance() > 0)
+            {
+                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(igDownstreamGene.ThreeGene);
+                if(geneData != null)
+                {
+                    mGeneDataCache.getDownstreamGeneAnnotations().put(geneData, igDownstreamGene.igDownstreamDistance());
+                }
+            }
+        }
     }
 
     public boolean hasRnaSampleData() { return mRnaFusionMapper != null; }

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
@@ -13,9 +15,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -38,8 +40,6 @@ public class KnownFusionCache
     public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     public static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
 
-    public static final int FIVE_GENE = 0;
-    public static final int THREE_GENE = 1;
     private static final String FILE_DELIMITER = ",";
 
     private static final Logger LOGGER = LogManager.getLogger(KnownFusionCache.class);
@@ -50,10 +50,7 @@ public class KnownFusionCache
         mDataByType = Maps.newHashMap();
 
         // initialise to avoid having to check for null
-        for(KnownFusionType type : KnownFusionType.values())
-        {
-            mDataByType.put(type, Lists.newArrayList());
-        }
+        Arrays.stream(KnownFusionType.values()).filter(x -> x != NONE).forEach(x -> mDataByType.put(x, Lists.newArrayList()));
     }
 
     public final List<KnownFusionData> getData() { return mData; }
@@ -86,6 +83,34 @@ public class KnownFusionCache
             {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    public boolean withinIgRegion(final String chromosome, int position)
+    {
+        if(mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.withinIgRegion(chromosome, position)))
+        {
+            return true;
+        }
+        else if(mDataByType.get(IG_PROMISCUOUS).stream().anyMatch(x -> x.withinIgRegion(chromosome, position)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean matchesIgGene(final String chromosome, int position, byte orientation)
+    {
+        if(mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.matchesIgGene(chromosome, position, orientation)))
+        {
+            return true;
+        }
+        else if(mDataByType.get(IG_PROMISCUOUS).stream().anyMatch(x -> x.matchesIgGene(chromosome, position, orientation)))
+        {
+            return true;
         }
 
         return false;

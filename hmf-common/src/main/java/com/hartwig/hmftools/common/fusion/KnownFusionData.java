@@ -5,10 +5,14 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.Map;
+
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 public class KnownFusionData
 {
@@ -27,7 +31,10 @@ public class KnownFusionData
     private int[] mMaxFusedExons;
 
     // IG region
-    private int[] mIgRegionBounds;
+    private int[] mIgRegion;
+    private String mIgChromosome;
+    private byte mIgStrand;
+    private int mIgDownstreamDistance;
 
     public static final int FIVE_GENE = 0;
     public static final int THREE_GENE = 1;
@@ -55,7 +62,11 @@ public class KnownFusionData
         mSpecificTransName = "";
         mMinFusedExons = new int[FS_PAIR];
         mMaxFusedExons = new int[FS_PAIR];
-        mIgRegionBounds = new int[FS_PAIR];
+        mIgRegion = new int[SE_PAIR];
+        mIgChromosome = "";
+        mIgStrand = 0;
+        mIgDownstreamDistance = 0;
+
         mValidData = true;
 
         setTypeInfo();
@@ -93,25 +104,39 @@ public class KnownFusionData
             mMinFusedExons[FS_DOWNSTREAM] = Integer.parseInt(items[3]);
             mMaxFusedExons[FS_DOWNSTREAM] = Integer.parseInt(items[4]);
         }
-        else if(Type == IG_KNOWN_PAIR || Type == IG_KNOWN_PAIR)
+        else if(Type == IG_KNOWN_PAIR || Type == IG_PROMISCUOUS)
         {
             final String[] items = mOtherData.split(OTHER_DATA_DELIMITER);
-            if(items.length != 2)
+            if(items.length != 5)
             {
                 mValidData = false;
                 return;
             }
 
-            mIgRegionBounds[SE_START] = Integer.parseInt(items[0]);
-            mIgRegionBounds[SE_END] = Integer.parseInt(items[1]);
+            mIgStrand = Byte.parseByte(items[0]);
+            mIgChromosome = items[1];
+            mIgRegion[SE_START] = Integer.parseInt(items[2]);
+            mIgRegion[SE_END] = Integer.parseInt(items[3]);
+            mIgDownstreamDistance = Integer.parseInt(items[4]);
         }
     }
 
     public String specificTransName() { return mSpecificTransName; }
     public int[] minFusedExons() { return mMinFusedExons; }
     public int[] maxFusedExons() { return mMaxFusedExons; }
-    public int[] igRegionBounds() { return mIgRegionBounds; }
+    public int[] igRegion() { return mIgRegion; }
 
+    public boolean withinIgRegion(final String chromosome, int position)
+    {
+        return mIgChromosome.equals(chromosome) && position >= mIgRegion[SE_START] && position <= mIgRegion[SE_END];
+    }
+
+    public boolean matchesIgGene(final String chromosome, int position, byte orientation)
+    {
+        return mIgStrand == orientation && withinIgRegion(chromosome, position);
+    }
+
+    public int igDownstreamDistance() { return mIgDownstreamDistance; }
 
     public String toString()
     {
