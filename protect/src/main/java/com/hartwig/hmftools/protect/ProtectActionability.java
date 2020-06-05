@@ -138,7 +138,7 @@ public class ProtectActionability {
         }
 
         LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
-        Lims lims = LimsFactory.fromLimsDirectoryAndHospitalDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
+        Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
 
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
         String patientCancerSubtype = extractCancerSubtype(tumorLocationCsv, tumorSampleId);

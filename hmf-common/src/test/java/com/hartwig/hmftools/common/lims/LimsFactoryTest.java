@@ -28,12 +28,12 @@ public class LimsFactoryTest {
 
     @Test
     public void canBuildLimsFromTestData() throws IOException {
-        assertNotNull(LimsFactory.fromLimsDirectoryAndHospitalDirectory(LIMS_DIRECTORY));
+        assertNotNull(LimsFactory.fromLimsDirectory(LIMS_DIRECTORY));
     }
 
     @Test(expected = IOException.class)
     public void exceptionWhenJsonFileDoesNotExist() throws IOException {
-        LimsFactory.fromLimsDirectoryAndHospitalDirectory("Does not exist");
+        LimsFactory.fromLimsDirectory("Does not exist");
     }
 
     @Test
