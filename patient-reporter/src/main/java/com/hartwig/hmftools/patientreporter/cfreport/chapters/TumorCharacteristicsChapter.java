@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
@@ -55,7 +54,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
     private void renderHrdCharacteristic(@NotNull Document reportDocument) {
         boolean hasReliablePurity = patientReport.hasReliablePurity();
-        boolean isMicrosatelliteStable = ChordStatus.reliableHRD(patientReport.microsatelliteStatus());
+        boolean isHrdReliable = ChordStatus.reliableHRD(patientReport.microsatelliteStatus());
 
         double hrdValue = patientReport.chordHrdValue();
         ChordStatus hrdStatus = patientReport.chordHrdStatus();
@@ -65,14 +64,14 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         String noHrdWhenMicrosatelliteUnstable = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
                 + "and is therefore not reported for this sample.";
         boolean displayFootNote = false;
-        if (!isMicrosatelliteStable) {
+        if (!isHrdReliable) {
             displayFootNote = true;
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
         }
 
         // We subtract 0.0001 from the minimum to allow visualization of a HR-score of exactly 0.
         BarChart hrChart = new BarChart(hrdValue, HrDeficiency.RANGE_MIN - 0.0001, HrDeficiency.RANGE_MAX, "Low", "High", false);
-        hrChart.enabled(hasReliablePurity && isMicrosatelliteStable);
+        hrChart.enabled(hasReliablePurity && isHrdReliable);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, SINGLE_DECIMAL_FORMAT);
 
         hrChart.setIndicator(ChordStatus.HRD_THRESHOLD, "HRD status (" + DOUBLE_DECIMAL_FORMAT.format(ChordStatus.HRD_THRESHOLD) + ")");
