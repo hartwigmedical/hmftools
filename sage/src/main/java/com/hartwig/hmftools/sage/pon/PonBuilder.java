@@ -3,10 +3,10 @@ package com.hartwig.hmftools.sage.pon;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -23,7 +23,7 @@ public class PonBuilder {
     private static final int MIN_OUTPUT_COUNT = 2;
     private static final int MIN_INPUT_ALLELIC_DEPTH = 3;
 
-    private final Map<VariantHotspot, Counter> map = Maps.newHashMap();
+    private final Map<VariantHotspot, Counter> map = new java.util.concurrent.ConcurrentHashMap<>();
 
     public void add(@NotNull final VariantContext context) {
         final VariantHotspot hotspot = hotspot(context);
@@ -42,7 +42,7 @@ public class PonBuilder {
     public List<VariantContext> build() {
         return map.values()
                 .stream()
-                .filter(x -> x.counter >= MIN_OUTPUT_COUNT)
+                .filter(x -> x.counter() >= MIN_OUTPUT_COUNT)
                 .sorted(Comparator.comparing(o -> o.hotspot))
                 .map(PonBuilder::context)
                 .collect(Collectors.toList());
@@ -76,18 +76,22 @@ public class PonBuilder {
 
     static class Counter {
         private final VariantHotspot hotspot;
-        private int counter;
-        private int total;
-        private int max = 0;
+        private final AtomicInteger counter = new AtomicInteger();
+        private final AtomicInteger total = new AtomicInteger();
+        private final AtomicInteger max = new AtomicInteger();
 
         Counter(final VariantHotspot hotspot) {
             this.hotspot = hotspot;
         }
 
+        public int counter() {
+            return counter.intValue();
+        }
+
         void increment(int depth) {
-            counter++;
-            total += depth;
-            max = Integer.max(max, depth);
+            counter.incrementAndGet();
+            total.addAndGet(depth);
+            max.set(Integer.max(max.get(), depth));
         }
     }
 
