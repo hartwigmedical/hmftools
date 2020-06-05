@@ -16,7 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class TransvarProcessImpl {
+class TransvarProcessImpl implements TransvarProcess {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarProcessImpl.class);
 
@@ -32,8 +32,9 @@ class TransvarProcessImpl {
         this.refGenomeFastaFile = refGenomeFastaFile;
     }
 
+    @Override
     @NotNull
-    List<TransvarRecord> runTransvarPanno(@NotNull String gene, @NotNull String proteinAnnotation)
+    public List<TransvarRecord> runTransvarPanno(@NotNull String gene, @NotNull String proteinAnnotation)
             throws InterruptedException, IOException {
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",

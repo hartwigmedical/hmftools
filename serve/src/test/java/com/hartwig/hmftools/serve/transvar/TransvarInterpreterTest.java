@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.serve.transvar;
 
+import static com.hartwig.hmftools.serve.transvar.TransvarTestFactory.testInterpreter;
+
 import static org.junit.Assert.assertEquals;
 
-import java.io.FileNotFoundException;
 import java.util.List;
 
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -21,8 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class TransvarInterpreterTest {
-
-    private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
 
     @Test
     public void canConvertSnvToHotspots() {
@@ -167,14 +165,5 @@ public class TransvarInterpreterTest {
     @NotNull
     private static ImmutableVariantHotspotImpl.Builder baseHotspot() {
         return ImmutableVariantHotspotImpl.builder().chromosome("1");
-    }
-
-    @NotNull
-    private static TransvarInterpreter testInterpreter() {
-        try {
-            return TransvarInterpreter.fromRefGenomeFastaFile(REF_GENOME_FASTA_FILE);
-        } catch (FileNotFoundException exception) {
-            throw new IllegalStateException("Cannot create test interpreter! Message=" + exception.getMessage());
-        }
     }
 }

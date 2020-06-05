@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -22,7 +23,7 @@ public class Transvar {
     private static final Logger LOGGER = LogManager.getLogger(Transvar.class);
 
     @NotNull
-    private final TransvarProcessImpl process;
+    private final TransvarProcess process;
     @NotNull
     private final TransvarInterpreter interpreter;
     @NotNull
@@ -36,7 +37,8 @@ public class Transvar {
                 HmfGenePanelSupplier.allGenesMap37());
     }
 
-    private Transvar(@NotNull TransvarProcessImpl process, @NotNull TransvarInterpreter interpreter,
+    @VisibleForTesting
+    Transvar(@NotNull TransvarProcess process, @NotNull TransvarInterpreter interpreter,
             @NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.process = process;
         this.interpreter = interpreter;
