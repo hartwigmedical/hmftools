@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.transvar;
 import java.util.Arrays;
 import java.util.List;
 
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
@@ -76,12 +77,15 @@ final class TransvarConverter {
         String gdna = chromosomeAndGDNA[1].substring(2);
 
         if (gdna.contains(RANGE_INDICATOR)) {
-            recordBuilder.gdnaPosition(Long.parseLong(gdna.split(RANGE_INDICATOR)[0]));
+            String[] gdnaParts = gdna.split(RANGE_INDICATOR);
+            long position = Long.parseLong(gdnaParts[0]);
+            recordBuilder.gdnaPosition(position);
+
             TransvarAnnotation annotation;
             if (gdna.contains(INSERTION) || gdna.contains(DELETION)) {
-                annotation = annotationForInsertionDeletion(gdna, messageField);
+                annotation = annotationForInsertionDeletion(position, gdnaParts[1], messageField);
             } else {
-                annotation = annotationForDuplication(gdna);
+                annotation = annotationForDuplication(position, gdnaParts[1]);
             }
 
             return recordBuilder.annotation(annotation).build();
@@ -91,15 +95,14 @@ final class TransvarConverter {
     }
 
     @NotNull
-    private static TransvarAnnotation annotationForInsertionDeletion(@NotNull String gdna, @NotNull String messageField) {
-        assert gdna.contains(RANGE_INDICATOR);
-
-        String delInsPart = gdna.split(RANGE_INDICATOR)[1];
+    private static TransvarAnnotation annotationForInsertionDeletion(long position, @NotNull String delInsPart,
+            @NotNull String messageField) {
         int delStart = delInsPart.indexOf(DELETION);
         int insStart = delInsPart.indexOf(INSERTION);
 
         if (delStart < 0 && insStart < 0) {
-            throw new IllegalStateException("Cannot process range gDNA as no '" + DELETION + "' or  '" + INSERTION + "' found: " + gdna);
+            throw new IllegalStateException(
+                    "Cannot process range gDNA as no '" + DELETION + "' or  '" + INSERTION + "' found: " + delInsPart);
         }
 
         if (insStart >= 0) {
@@ -107,9 +110,12 @@ final class TransvarConverter {
 
             if (delStart >= 0) {
                 if (delStart + DELETION.length() == insStart) {
-                    // This should look like 123delinsGGT
-                    // TODO support complex deletions+insertions
-                    return new TransvarAnnotation() {};
+                    // This should look like '123delinsGGT' and is a complex insertion + deletion rather than a simple MNV
+                    int deletedBaseCount = 1 + (int) (Long.parseLong(delInsPart.substring(0, delStart)) - position);
+                    return ImmutableTransvarComplexInsertDelete.builder()
+                            .deletedBaseCount(deletedBaseCount)
+                            .candidateAlternativeSequences(extractCandidateAlternativeSequencesFromMessageField(messageField))
+                            .build();
                 } else {
                     // This should look like '123delCinsG'
                     String deletedBases = delInsPart.substring(delStart + DELETION.length(), insStart);
@@ -123,6 +129,7 @@ final class TransvarConverter {
                             .build();
                 }
             } else {
+                // This should look like '123insC'
                 return ImmutableTransvarInsertion.builder().insertedBases(insertedBases).build();
             }
         } else {
@@ -133,21 +140,16 @@ final class TransvarConverter {
     }
 
     @NotNull
-    private static TransvarAnnotation annotationForDuplication(@NotNull String gdna) {
-        assert gdna.contains(RANGE_INDICATOR);
-
-        String[] gdnaParts = gdna.split(RANGE_INDICATOR);
-        long position = Long.parseLong(gdnaParts[0]);
-
-        String dupPart = gdnaParts[1];
+    private static TransvarAnnotation annotationForDuplication(long position, @NotNull String dupPart) {
         int duplicatedBaseCount;
         if (dupPart.contains(DUPLICATION)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(DUPLICATION))) - position);
         } else if (isLong(dupPart)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart) - position);
         } else {
-            throw new IllegalStateException("Cannot process duplication for gDNA: " + gdna);
+            throw new IllegalStateException("Cannot process duplication for gDNA: " + dupPart);
         }
+
         return ImmutableTransvarDuplication.builder().duplicatedBaseCount(duplicatedBaseCount).build();
     }
 
@@ -195,33 +197,34 @@ final class TransvarConverter {
 
     @NotNull
     private static String extractReferenceCodonFromMessageField(@NotNull String messageField) {
-        // Field is semicolon-separated.
-        //  Relevant fields look like "reference_codon=${ref};candidate_codons=${alt1},${alt2},...,${altN};"
-        String[] infoFields = messageField.split(";");
-
-        for (String infoField : infoFields) {
-            if (infoField.contains("reference_codon")) {
-                return infoField.split("=")[1];
-            }
-        }
-
-        throw new IllegalStateException("No reference_codon found in message field: " + messageField);
+        return extractValueFromMessageField(messageField, "reference_codon");
     }
 
     @NotNull
     private static List<String> extractCandidateCodonsFromMessageField(@NotNull String messageField) {
-        // Field is semicolon-separated.
-        //  Relevant fields look like "reference_codon=${ref};candidate_codons=${alt1},${alt2},...,${altN};"
+        String fieldValue = extractValueFromMessageField(messageField, "candidate_codons");
+
+        return Arrays.asList(fieldValue.split(","));
+    }
+
+    @NotNull
+    private static List<String> extractCandidateAlternativeSequencesFromMessageField(@NotNull String messageField) {
+        String fieldValue = extractValueFromMessageField(messageField, "candidate_alternative_sequence");
+
+        return Arrays.asList(fieldValue.split("/"));
+    }
+
+    @NotNull
+    private static String extractValueFromMessageField(@NotNull String messageField, @NotNull String fieldName) {
         String[] infoFields = messageField.split(";");
 
         for (String infoField : infoFields) {
-            if (infoField.contains("candidate_codons")) {
-                String candidates = infoField.split("=")[1];
-                return Arrays.asList(candidates.split(","));
+            if (infoField.contains(fieldName)) {
+                return infoField.split("=")[1];
             }
         }
 
-        throw new IllegalStateException("No candidate_codons found in message field: " + messageField);
+        throw new IllegalStateException("No '" + fieldName + "' found in message field: " + messageField);
     }
 
     private static boolean isLong(@NotNull String value) {
