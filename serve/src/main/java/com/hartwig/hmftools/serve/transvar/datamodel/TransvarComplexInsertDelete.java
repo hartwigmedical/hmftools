@@ -14,5 +14,8 @@ public abstract class TransvarComplexInsertDelete implements TransvarAnnotation 
     public abstract int deletedBaseCount();
 
     @NotNull
+    public abstract String insertedSequence();
+
+    @NotNull
     public abstract List<String> candidateAlternativeSequences();
 }

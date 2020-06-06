@@ -144,6 +144,7 @@ public class TransvarInterpreterTest {
         TransvarRecord complexRecord = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
                         .deletedBaseCount(4)
+                        .insertedSequence("GGG")
                         .addCandidateAlternativeSequences("GGG")
                         .addCandidateAlternativeSequences("CCC")
                         .build())

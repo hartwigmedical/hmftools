@@ -14,6 +14,7 @@ import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -114,6 +115,7 @@ final class TransvarConverter {
                     int deletedBaseCount = 1 + (int) (Long.parseLong(delInsPart.substring(0, delStart)) - position);
                     return ImmutableTransvarComplexInsertDelete.builder()
                             .deletedBaseCount(deletedBaseCount)
+                            .insertedSequence(insertedBases)
                             .candidateAlternativeSequences(extractCandidateAlternativeSequencesFromMessageField(messageField))
                             .build();
                 } else {
@@ -218,13 +220,25 @@ final class TransvarConverter {
 
     @NotNull
     private static List<String> extractCandidateAlternativeSequencesFromMessageField(@NotNull String messageField) {
-        String fieldValue = extractValueFromMessageField(messageField, "candidate_alternative_sequence");
+        String fieldValue = extractOptionalValueFromMessageField(messageField, "candidate_alternative_sequence");
 
-        return Arrays.asList(fieldValue.split("/"));
+
+        return fieldValue != null ? Arrays.asList(fieldValue.split("/")) : Lists.newArrayList();
     }
 
     @NotNull
     private static String extractValueFromMessageField(@NotNull String messageField, @NotNull String fieldName) {
+        String value = extractOptionalValueFromMessageField(messageField, fieldName);
+
+        if (value == null) {
+            throw new IllegalStateException("No '" + fieldName + "' found in message field: " + messageField);
+        }
+
+        return value;
+    }
+
+    @Nullable
+    private static String extractOptionalValueFromMessageField(@NotNull String messageField, @NotNull String fieldName) {
         String[] infoFields = messageField.split(";");
 
         for (String infoField : infoFields) {
@@ -233,7 +247,7 @@ final class TransvarConverter {
             }
         }
 
-        throw new IllegalStateException("No '" + fieldName + "' found in message field: " + messageField);
+        return null;
     }
 
     private static boolean isLong(@NotNull String value) {

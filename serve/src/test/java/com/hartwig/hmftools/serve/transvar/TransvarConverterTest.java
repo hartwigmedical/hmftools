@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
@@ -115,10 +116,26 @@ public class TransvarConverterTest {
 
         TransvarComplexInsertDelete insertionDeletion = (TransvarComplexInsertDelete) record.annotation();
         assertEquals(12, insertionDeletion.deletedBaseCount());
+        assertEquals("CCT", insertionDeletion.insertedSequence());
         assertEquals("CCT", insertionDeletion.candidateAlternativeSequences().get(0));
         assertEquals("CCG", insertionDeletion.candidateAlternativeSequences().get(1));
         assertEquals("CCA", insertionDeletion.candidateAlternativeSequences().get(2));
         assertEquals("CCC", insertionDeletion.candidateAlternativeSequences().get(3));
+
+        String delInsLineWithoutCandidateAlternateSequence = "EGFR:p.I744_K745delinsKIPVAI\tENST00000275493 (protein_coding)\tEGFR\t+\t"
+                + "chr7:g.55242460_55242465delinsAAGATCCCTGTAGCAATC/c.2230_2235delinsAAGATCCCTGTAGCAATC/p.I744_K745delinsKIPVAI\t"
+                + "inside_[cds_in_exon_19]\tCSQN=MultiAAMissense;1152_CandidatesOmitted;aliases=ENSP00000275493;source=Ensembl";
+
+        TransvarRecord record2 = TransvarConverter.toTransvarRecord(delInsLineWithoutCandidateAlternateSequence);
+
+        assertEquals("ENST00000275493", record2.transcript());
+        assertEquals("7", record2.chromosome());
+        assertEquals(55242460, record2.gdnaPosition());
+
+        TransvarComplexInsertDelete insertionDeletion2 = (TransvarComplexInsertDelete) record2.annotation();
+        assertEquals(6, insertionDeletion2.deletedBaseCount());
+        assertEquals("AAGATCCCTGTAGCAATC", insertionDeletion2.insertedSequence());
+        assertTrue(insertionDeletion2.candidateAlternativeSequences().isEmpty());
     }
 
     @Test

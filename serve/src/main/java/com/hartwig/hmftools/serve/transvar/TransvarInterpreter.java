@@ -151,8 +151,11 @@ class TransvarInterpreter {
                 .ref(preMutatedSequence + deletedBases);
 
         List<VariantHotspot> hotspots = Lists.newArrayList();
+        hotspots.add(hotspotBuilder.alt(preMutatedSequence + insDel.insertedSequence()).build());
         for (String candidateAlternativeSequence : insDel.candidateAlternativeSequences()) {
-            hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
+            if (!candidateAlternativeSequence.equals(insDel.insertedSequence())) {
+                hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
+            }
         }
         return hotspots;
     }
