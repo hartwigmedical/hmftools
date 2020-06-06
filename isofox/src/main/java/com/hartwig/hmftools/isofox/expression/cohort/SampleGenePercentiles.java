@@ -37,6 +37,7 @@ public class SampleGenePercentiles
     private BufferedWriter mWriter;
 
     private static final String PAN_CANCER = "ALL";
+    private static final String UNKNOWN_CANCER = "Unknown";
     private static final int FLD_CANCER_TYPE = 0;
     private static final int FLD_FILENAME = 1;
 
@@ -106,6 +107,12 @@ public class SampleGenePercentiles
 
             final String cancerType = mConfig.SampleData.SampleCancerType.get(sampleId);
 
+            final Map<String,double[]> panCancerPercentilesMap = getCancerTypePercentilesMap(PAN_CANCER);
+            final Map<String,double[]> cancerPercentilesMap = getCancerTypePercentilesMap(cancerType);
+
+            if(panCancerPercentilesMap == null || cancerPercentilesMap == null)
+                return;
+
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
             int tpmIndex = fieldsMap.get(FLD_TPM);
@@ -122,13 +129,16 @@ public class SampleGenePercentiles
                 final String geneName = items[geneNameIndex];
                 double tpm = Double.parseDouble(items[tpmIndex]);
 
+                if(tpm < mConfig.TpmLogThreshold)
+                    continue;
+
                 try
                 {
-                    double panCancerPerc = getTpmPercentile(mCancerTypesGeneDistribution.get(PAN_CANCER), geneId, tpm);
-                    double cancerPerc = getTpmPercentile(mCancerTypesGeneDistribution.get(cancerType), geneId, tpm);
+                    double panCancerPerc = getTpmPercentile(panCancerPercentilesMap, geneId, tpm);
+                    double cancerPerc = getTpmPercentile(cancerPercentilesMap, geneId, tpm);
 
-                    double panCancerMedian = getTpmMedian(mCancerTypesGeneDistribution.get(PAN_CANCER), geneId);
-                    double cancerMedian = getTpmMedian(mCancerTypesGeneDistribution.get(cancerType), geneId);
+                    double panCancerMedian = getTpmMedian(panCancerPercentilesMap, geneId);
+                    double cancerMedian = getTpmMedian(cancerPercentilesMap, geneId);
 
                     writeSamplePercentileData(
                             sampleId, cancerType, geneId, geneName, tpm, panCancerPerc, cancerPerc, panCancerMedian, cancerMedian);
@@ -145,6 +155,19 @@ public class SampleGenePercentiles
             ISF_LOGGER.error("failed to load gene data file({}): {}", filename.toString(), e.toString());
             return;
         }
+    }
+
+    private Map<String,double[]> getCancerTypePercentilesMap(final String cancerType)
+    {
+        final Map<String,double[]> transPercentilesMap = mCancerTypesGeneDistribution.get(cancerType);
+
+        if(transPercentilesMap != null)
+            return transPercentilesMap;
+
+        if(!mCancerTypesGeneDistribution.containsKey(UNKNOWN_CANCER))
+            return null;
+
+        return mCancerTypesGeneDistribution.get(UNKNOWN_CANCER);
     }
 
     private void initialiseWriter()

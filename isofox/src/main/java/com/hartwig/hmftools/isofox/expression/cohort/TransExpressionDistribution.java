@@ -285,26 +285,6 @@ public class TransExpressionDistribution
         }
     }
 
-    public double getCohortTpmPercentile(final String transName, double tpm, boolean isCohort)
-    {
-        return getTpmPercentile(mCohortTranscriptDistribution, transName, tpm);
-    }
-
-    public double getCancerTypeTpmPercentile(final String transName, double tpm, boolean isCohort)
-    {
-        return getTpmPercentile(mCancerTypeTranscriptDistribution, transName, tpm);
-    }
-
-    public double getCohortTpmMedian(final Map<String,double[]> transPercentilesMap, final String transName)
-    {
-        return getTpmMedian(mCohortTranscriptDistribution, transName);
-    }
-
-    public double getCancerTypeTpmMedian(final Map<String,double[]> transPercentilesMap, final String transName)
-    {
-        return getTpmMedian(mCancerTypeTranscriptDistribution, transName);
-    }
-
     public static double getTpmMedian(final Map<String,double[]> transPercentilesMap, final String transName)
     {
         final double[] transPercentiles = transPercentilesMap.get(transName);
