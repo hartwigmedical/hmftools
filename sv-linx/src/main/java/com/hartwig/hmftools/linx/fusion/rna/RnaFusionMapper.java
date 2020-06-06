@@ -110,7 +110,13 @@ public class RnaFusionMapper
             if(!rnaFusion.isValid())
                 continue;
 
-            annotateRnaFusions(rnaFusion, chrBreakendMap);
+            findMatchingBreakendTranscripts(rnaFusion, chrBreakendMap);
+
+            setDnaFusionMatch(rnaFusion);
+
+            setReferenceFusionData(mFusionFinder.getKnownFusionCache(), rnaFusion);
+
+            rnaFusion.setFusionClusterChainInfo();
 
             mWriter.writeRnaMatchData(rnaFusion);
         }
@@ -119,7 +125,7 @@ public class RnaFusionMapper
         mSampleRnaData.remove(mSampleId);
     }
 
-    private void annotateRnaFusions(final RnaFusionData rnaFusion, Map<String, List<SvBreakend>> chrBreakendMap)
+    private void findMatchingBreakendTranscripts(final RnaFusionData rnaFusion, Map<String, List<SvBreakend>> chrBreakendMap)
     {
         /* Matching and annotation logic:
             - find all breakends in the RNA up and down gene
@@ -377,9 +383,6 @@ public class RnaFusionMapper
                 }
             }
         }
-
-        setDnaFusionMatch(rnaFusion);
-        rnaFusion.setFusionClusterChainInfo();
     }
 
     private void setDnaFusionMatch(final RnaFusionData rnaFusion)
@@ -588,8 +591,6 @@ public class RnaFusionMapper
         }
 
         checkRnaPhasedTranscripts(rnaFusion);
-
-        setReferenceFusionData(mFusionFinder.getKnownFusionCache(), rnaFusion);
     }
 
     public boolean loadSampleRnaData(final String source, final String filename)
