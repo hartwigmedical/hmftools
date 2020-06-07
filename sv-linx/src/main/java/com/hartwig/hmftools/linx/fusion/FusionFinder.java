@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_C
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -43,6 +44,8 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
+import com.hartwig.hmftools.common.fusion.TranscriptCodingType;
+import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -235,14 +238,16 @@ public class FusionFinder
 
     private Transcript generateIgTranscript(final GeneAnnotation gene, final KnownFusionData knownFusionData)
     {
-        /*
-        CanonocialTranscript = 0, Disruptive = 1, RegionType = IG, CodingContext = Enhancer, biotype = <blank>, exonicBasePhase = -1,
-        nextSpliceExonRank = -1, nextSpliceExonPhase = -1
-         */
-        return new Transcript(
-                gene, 0, knownFusionData.FiveGene, 1,-1, 1, -1,
-        0, 0,   1, true, knownFusionData.igRegion()[SE_START], knownFusionData.igRegion()[SE_END],
-        null, null);
+        Transcript transcript = new Transcript(
+                gene, 0, String.format("@%s", knownFusionData.FiveGene),
+                -1,-1, 1, -1,
+        0, 0,   0, false,
+                knownFusionData.igRegion()[SE_START], knownFusionData.igRegion()[SE_END], null, null);
+
+        transcript.setCodingType(ENHANCER);
+        transcript.setRegionType(TranscriptRegionType.IG);
+        transcript.setIsDisruptive(true);
+        return transcript;
     }
 
     private static void logInvalidReasonInfo(final Transcript trans1, final Transcript trans2, final String reasonType, final String reason)

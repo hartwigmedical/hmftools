@@ -218,6 +218,8 @@ public class Transcript {
         }
     }
 
+    public void setRegionType(final TranscriptRegionType type) { mRegionType = type; }
+
     public int nextSpliceExonRank()
     {
         if(isExonic())
@@ -251,10 +253,7 @@ public class Transcript {
         }
     }
 
-    public void setCodingType(final TranscriptCodingType type)
-    {
-        mCodingType = type;
-    }
+    public void setCodingType(final TranscriptCodingType type) { mCodingType = type; }
 
     public boolean isCanonical() { return mCanonical; }
 

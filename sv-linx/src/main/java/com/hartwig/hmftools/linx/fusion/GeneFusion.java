@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.UPSTREAM_STR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOTH;
@@ -17,7 +19,6 @@ import com.hartwig.hmftools.common.fusion.Transcript;
 public class GeneFusion
 {
     private final Transcript[] mTranscripts;
-    private final String mName;
 
     private boolean mIsReportable;
     private boolean mPhaseMatched;
@@ -34,7 +35,7 @@ public class GeneFusion
     public GeneFusion(final Transcript upstreamTrans, final Transcript downstreamTrans, boolean phaseMatched)
     {
         mTranscripts = new Transcript[] { upstreamTrans, downstreamTrans };
-        mName = mTranscripts[FS_UPSTREAM].geneName() + "_" + mTranscripts[FS_DOWNSTREAM].geneName();
+
         mIsReportable = false;
         mKnownFusionType = KnownFusionType.NONE;
         mIsPromiscuous = new boolean[] { false, false };
@@ -45,7 +46,13 @@ public class GeneFusion
         mPriority = 0;
     }
 
-    public String name() { return mName; }
+    public String name()
+    {
+        if(mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS) // form like @IGH-MYC
+            return mTranscripts[FS_UPSTREAM].StableId + "_" + mTranscripts[FS_DOWNSTREAM].geneName();
+        else
+            return mTranscripts[FS_UPSTREAM].geneName() + "_" + mTranscripts[FS_DOWNSTREAM].geneName();
+    }
 
     public int svId(boolean isUpstream) { return mTranscripts[fsIndex(isUpstream)].gene().id(); }
 
