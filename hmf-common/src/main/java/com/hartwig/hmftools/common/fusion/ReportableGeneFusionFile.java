@@ -91,10 +91,12 @@ public final class ReportableGeneFusionFile {
     @NotNull
     public static String context(@NotNull Transcript transcript, int fusedExon) {
         switch (transcript.regionType()) {
-            case Transcript.TRANS_REGION_TYPE_UPSTREAM:
+            case UPSTREAM:
                 return "Promoter Region";
-            case Transcript.TRANS_REGION_TYPE_EXONIC:
-            case Transcript.TRANS_REGION_TYPE_INTRONIC:
+            case IG:
+                return "IG";
+            case EXONIC:
+            case INTRONIC:
                 return String.format("Exon %d", fusedExon);
         }
 

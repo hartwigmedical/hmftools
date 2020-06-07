@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.getProte
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.setAlternativeTranscriptPhasings;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
-import static com.hartwig.hmftools.common.fusion.Transcript.TRANS_CODING_TYPE_3P_UTR;
-import static com.hartwig.hmftools.common.fusion.Transcript.TRANS_CODING_TYPE_CODING;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -302,7 +302,7 @@ public class GeneCollectionTest
         assertEquals(5, trans.ExonMax);
         assertEquals(1, trans.ExonUpstream);
         assertEquals(2, trans.ExonDownstream);
-        assertEquals(TRANS_CODING_TYPE_3P_UTR, trans.codingType());
+        assertEquals(UTR_3P, trans.codingType());
         assertEquals(-2, trans.ExonUpstreamPhase);
         assertEquals(-2, trans.ExonDownstreamPhase);
         assertEquals(8, trans.codingBases()); // stop codon is taken out
@@ -320,7 +320,7 @@ public class GeneCollectionTest
 
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
-        assertEquals(TRANS_CODING_TYPE_CODING, trans.codingType());
+        assertEquals(CODING, trans.codingType());
         assertEquals(1, trans.ExonUpstreamPhase);
         assertEquals(1, trans.ExonDownstreamPhase);
         assertEquals(28, trans.codingBases());
@@ -348,7 +348,7 @@ public class GeneCollectionTest
         assertEquals(5, trans.ExonMax);
         assertEquals(1, trans.ExonUpstream);
         assertEquals(2, trans.ExonDownstream);
-        assertEquals(TRANS_CODING_TYPE_3P_UTR, trans.codingType());
+        assertEquals(UTR_3P, trans.codingType());
         assertEquals(-2, trans.ExonUpstreamPhase);
         assertEquals(-2, trans.ExonDownstreamPhase);
         assertEquals(8, trans.codingBases());
@@ -366,7 +366,7 @@ public class GeneCollectionTest
 
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
-        assertEquals(TRANS_CODING_TYPE_CODING, trans.codingType());
+        assertEquals(CODING, trans.codingType());
         assertEquals(1, trans.ExonUpstreamPhase);
         assertEquals(1, trans.ExonDownstreamPhase);
         assertEquals(28, trans.codingBases());

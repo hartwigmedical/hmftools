@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_C
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
-import static com.hartwig.hmftools.common.fusion.Transcript.TRANS_REGION_TYPE_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -190,7 +190,7 @@ public class FusionFinder
         KnownFusionType knownType = NONE;
 
         final List<Transcript> candidateTranscripts = downGene.transcripts().stream()
-                .filter(x -> x.regionType().equals(TRANS_REGION_TYPE_UPSTREAM)).collect(Collectors.toList());
+                .filter(x -> x.regionType().equals(UPSTREAM)).collect(Collectors.toList());
 
         KnownFusionData knownFusionData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
                 .filter(x -> x.ThreeGene.equals(downGene.GeneName))
@@ -235,6 +235,10 @@ public class FusionFinder
 
     private Transcript generateIgTranscript(final GeneAnnotation gene, final KnownFusionData knownFusionData)
     {
+        /*
+        CanonocialTranscript = 0, Disruptive = 1, RegionType = IG, CodingContext = Enhancer, biotype = <blank>, exonicBasePhase = -1,
+        nextSpliceExonRank = -1, nextSpliceExonPhase = -1
+         */
         return new Transcript(
                 gene, 0, knownFusionData.FiveGene, 1,-1, 1, -1,
         0, 0,   1, true, knownFusionData.igRegion()[SE_START], knownFusionData.igRegion()[SE_END],

@@ -1,6 +1,14 @@
 package com.hartwig.hmftools.common.fusion;
 
 import static com.hartwig.hmftools.common.fusion.GeneAnnotation.isDownstream;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.NON_CODING;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UNKNOWN;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
 
 import java.util.Map;
 
@@ -42,8 +50,8 @@ public class Transcript {
     private final boolean mCanonical;
     private String mBioType;
 
-    private String mCodingType;
-    private final String mRegionType;
+    private TranscriptCodingType mCodingType;
+    private TranscriptRegionType mRegionType;
 
     private Integer mPrevSpliceAcceptorDistance;
     private Integer mNextSpliceAcceptorDistance;
@@ -56,15 +64,6 @@ public class Transcript {
 
     private String mProteinFeaturesKept;
     private String mProteinFeaturesLost;
-
-    public static final String TRANS_REGION_TYPE_UPSTREAM = "Upstream"; // promotor and earlier
-    public static final String TRANS_REGION_TYPE_EXONIC = "Exonic";
-    public static final String TRANS_REGION_TYPE_INTRONIC = "Intronic";
-
-    public static final String TRANS_CODING_TYPE_CODING = "Coding";
-    public static final String TRANS_CODING_TYPE_5P_UTR = "5P_UTR";
-    public static final String TRANS_CODING_TYPE_3P_UTR = "3P_UTR";
-    public static final String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
     public static final int POST_CODING_PHASE = -2;
 
@@ -119,10 +118,10 @@ public class Transcript {
             mCodingBases = codingBases;
         }
 
-        mCodingType = calcCodingType();
-        mRegionType = calcRegionType();
+        setCodingType();
+        setRegionType();
 
-        if(mCodingType == TRANS_CODING_TYPE_3P_UTR)
+        if(mCodingType == UTR_3P)
         {
             ExonUpstreamPhase = POST_CODING_PHASE;
             ExonDownstreamPhase = POST_CODING_PHASE;
@@ -133,7 +132,7 @@ public class Transcript {
             ExonUpstreamPhase = exonUpstreamPhase;
         }
 
-        if(isDownstream(mGene) && mRegionType == TRANS_REGION_TYPE_UPSTREAM)
+        if(isDownstream(mGene) && mRegionType == UPSTREAM)
             mIsDisruptive = false;
         else
             mIsDisruptive = true;
@@ -178,39 +177,45 @@ public class Transcript {
             return svPosition() - TranscriptEnd;
     }
 
-    public final String codingType() { return mCodingType; }
-    public final String regionType() { return mRegionType; }
+    public final TranscriptCodingType codingType() { return mCodingType; }
+    public final TranscriptRegionType regionType() { return mRegionType; }
 
     // for convenience
-    public boolean isCoding() { return mCodingType.equals(TRANS_CODING_TYPE_CODING); }
+    public boolean isCoding() { return mCodingType == CODING; }
 
     public boolean preCoding()
     {
-        return mCodingType.equals(TRANS_CODING_TYPE_5P_UTR);
+        return mCodingType == UTR_5P;
     }
 
     public boolean postCoding()
     {
-        return mCodingType.equals(TRANS_CODING_TYPE_3P_UTR);
+        return mCodingType == UTR_3P;
     }
 
     public boolean nonCoding()
     {
-        return mCodingType.equals(TRANS_CODING_TYPE_NON_CODING);
+        return mCodingType == NON_CODING;
     }
 
-    private String calcRegionType()
+    private void setRegionType()
     {
         if(isIntronic())
-            return TRANS_REGION_TYPE_INTRONIC;
-
-        if(isExonic())
-            return TRANS_REGION_TYPE_EXONIC;
-
-        if(isPromoter())
-            return TRANS_REGION_TYPE_UPSTREAM;
-
-        return "Unknown";
+        {
+            mRegionType = INTRONIC;
+        }
+        else if(isExonic())
+        {
+            mRegionType = EXONIC;
+        }
+        else if(isPromoter())
+        {
+            mRegionType = UPSTREAM;
+        }
+        else
+        {
+            mRegionType = UNKNOWN;
+        }
     }
 
     public int nextSpliceExonRank()
@@ -226,27 +231,27 @@ public class Transcript {
         return isUpstream() ? ExonUpstreamPhase : ExonDownstreamPhase;
     }
 
-    private String calcCodingType()
+    private void setCodingType()
     {
         if(CodingStart == null || CodingEnd == null || mTotalCodingBases == 0)
         {
-            return TRANS_CODING_TYPE_NON_CODING;
+            mCodingType = NON_CODING;
         }
         else if(mCodingBases == 0)
         {
-            return TRANS_CODING_TYPE_5P_UTR;
+            mCodingType = UTR_5P;
         }
         else if(mCodingBases == mTotalCodingBases)
         {
-            return TRANS_CODING_TYPE_3P_UTR;
+            mCodingType = UTR_3P;
         }
         else
         {
-            return TRANS_CODING_TYPE_CODING;
+            mCodingType = CODING;
         }
     }
 
-    public void setCodingType(final String type)
+    public void setCodingType(final TranscriptCodingType type)
     {
         mCodingType = type;
     }

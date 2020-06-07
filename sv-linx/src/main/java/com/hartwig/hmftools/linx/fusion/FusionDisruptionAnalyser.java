@@ -981,9 +981,9 @@ public class FusionDisruptionAnalyser
                 visFusions.add(new VisFusionFile(
                         mSampleId, clusterId, fusion.reportable(),
                         transUp.geneName(), transUp.StableId, transUp.gene().chromosome(), transUp.gene().position(),
-                        transUp.gene().Strand, transUp.regionType(), fusion.getFusedExon(true),
+                        transUp.gene().Strand, transUp.regionType().toString(), fusion.getFusedExon(true),
                         transDown.geneName(), transDown.StableId, transDown.gene().chromosome(), transDown.gene().position(),
-                        transDown.gene().Strand, transDown.regionType(), fusion.getFusedExon(false)));
+                        transDown.gene().Strand, transDown.regionType().toString(), fusion.getFusedExon(false)));
             }
         }
 
