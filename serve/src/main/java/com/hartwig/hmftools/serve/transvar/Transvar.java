@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -31,12 +32,13 @@ public class Transvar {
     @NotNull
     public static Transvar withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
             throws FileNotFoundException {
-        return new Transvar(new TransvarProcess(refGenomeVersion, refGenomeFastaFile),
+        return new Transvar(new TransvarProcessImpl(refGenomeVersion, refGenomeFastaFile),
                 TransvarInterpreter.fromRefGenomeFastaFile(refGenomeFastaFile),
                 HmfGenePanelSupplier.allGenesMap37());
     }
 
-    private Transvar(@NotNull TransvarProcess process, @NotNull TransvarInterpreter interpreter,
+    @VisibleForTesting
+    Transvar(@NotNull TransvarProcess process, @NotNull TransvarInterpreter interpreter,
             @NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.process = process;
         this.interpreter = interpreter;
@@ -44,7 +46,7 @@ public class Transvar {
     }
 
     @NotNull
-    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String transcriptID,
+    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) throws IOException, InterruptedException {
         List<TransvarRecord> records = process.runTransvarPanno(gene, proteinAnnotation);
         if (records.isEmpty()) {
@@ -60,9 +62,16 @@ public class Transvar {
             return Lists.newArrayList();
         }
 
-        TransvarRecord best = pickBestRecord(records, transcriptID, canonicalTranscript.transcriptID());
-
-        // TODO (if best is not on preferred transcript -> error
+        TransvarRecord best = pickBestRecord(records, specificTranscript, canonicalTranscript.transcriptID());
+        if (specificTranscript != null && !best.transcript().equals(specificTranscript)) {
+            LOGGER.warn("No record found on specific transcript '{}'. "
+                            + "Instead a record was resolved for '{}' for {}:p.{}. Skipping interpretation",
+                    specificTranscript,
+                    best.transcript(),
+                    gene,
+                    proteinAnnotation);
+            return Lists.newArrayList();
+        }
 
         LOGGER.debug("Interpreting transvar record: '{}'", best);
         // This is assuming every transcript on a gene lies on the same strand.
@@ -76,25 +85,25 @@ public class Transvar {
     }
 
     @NotNull
-    private TransvarRecord pickBestRecord(@NotNull List<TransvarRecord> records, @Nullable String preferredTranscriptId,
-            @NotNull String canonicalTranscriptId) {
+    private static TransvarRecord pickBestRecord(@NotNull List<TransvarRecord> records, @Nullable String specificTranscript,
+            @NotNull String canonicalTranscript) {
         assert !records.isEmpty();
 
-        TransvarRecord preferredRecord = null;
+        TransvarRecord specificRecord = null;
         TransvarRecord canonicalRecord = null;
         TransvarRecord bestRecord = null;
         for (TransvarRecord record : records) {
-            if (preferredTranscriptId != null && record.transcript().equals(preferredTranscriptId)) {
-                preferredRecord = record;
-            } else if (record.transcript().equals(canonicalTranscriptId)) {
+            if (specificTranscript != null && record.transcript().equals(specificTranscript)) {
+                specificRecord = record;
+            } else if (record.transcript().equals(canonicalTranscript)) {
                 canonicalRecord = record;
             } else {
                 bestRecord = record;
             }
         }
 
-        if (preferredRecord != null) {
-            return preferredRecord;
+        if (specificRecord != null) {
+            return specificRecord;
         }
 
         if (canonicalRecord != null) {

@@ -1,12 +1,18 @@
 # <ISOFOX>
 
 ## Overview
-ISOFOX is a tool for counting fragment support for gene and transcript features using genome aligned RNASeq data in tumor samples.   In particular, ISOFOX estimates transcript abundance (including unspliced transcripts) and detects evidence for novel splice junctions and retained introns.    The input for ISOFOX is mapped paired end reads (we use STAR for our aligner).
+ISOFOX is a tool for counting fragment support for identifying and counting gene and transcript features using genome aligned RNASeq data in tumor samples.   In particular, ISOFOX:
+* estimates transcript abundance (including unspliced transcripts) 
+* detects novel splice junctions (including circularised RNA) and retained introns within genes    
+* detects intergenic fusion events
 
-ISOFOX uses a similar methodology to several previous transcript abundance estimation tools, but may offer several advantages by using a genome based mapping:
+For transcript abundance, ISOFOX uses a similar methodology to several previous transcript abundance estimation tools, but may offer several advantages by using a genome based mapping:
 * Explicit estimates of the abundance of unspliced transcripts in each gene
 * Avoids overfitting of 'retained intron' transcripts which may simply be intronic reads 
 * Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly.  Does not overfit variability of coverage within exons
+
+The input for ISOFOX is mapped paired end reads (we use STAR for our aligner).
+
 
 ### A note on duplicates, highly expressed genes, raw and adjusted TPM
 

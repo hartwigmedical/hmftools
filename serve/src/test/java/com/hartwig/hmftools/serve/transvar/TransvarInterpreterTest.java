@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.serve.transvar;
 
+import static com.hartwig.hmftools.serve.transvar.TransvarTestFactory.testInterpreter;
+
 import static org.junit.Assert.assertEquals;
 
-import java.io.FileNotFoundException;
 import java.util.List;
 
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
@@ -17,12 +18,9 @@ import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TransvarInterpreterTest {
-
-    private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
 
     @Test
     public void canConvertSnvToHotspots() {
@@ -89,14 +87,33 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertDeletionToHotspots() {
-        TransvarRecord record =
-                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarDeletion.builder().deletedBases("GAT").build()).build();
+        TransvarRecord record = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarDeletion.builder().deletedBases("GAT").unalignedGDNAPosition(5).build())
+                .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(1, hotspots.size());
 
         assertHotspot(baseHotspot().position(4).ref("CGAT").alt("C").build(), hotspots.get(0));
+    }
+
+    @Test
+    public void canConvertDeletionWithMultipleAlignmentsToHotspots() {
+        // In this situation the mutation is "GATCGATC -> GATC",
+        //  Normally the unaligned DNA would be 1 here but that would imply we need to read the 0th ref base.
+        TransvarRecord record = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarDeletion.builder().deletedBases("GATC").unalignedGDNAPosition(2).build())
+                .build();
+
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
+
+        assertEquals(4, hotspots.size());
+
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("G").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATCGA").alt("A").build(), hotspots.get(1));
+        assertHotspot(baseHotspot().position(3).ref("TCGAT").alt("T").build(), hotspots.get(2));
+        assertHotspot(baseHotspot().position(4).ref("CGATC").alt("C").build(), hotspots.get(3));
     }
 
     @Test
@@ -123,10 +140,37 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    @Ignore
-    public void canConvertCombinedDeletionsInsertionsToHotspot() {
-        // TODO
-        // See for example EGFR:p.L747_A750delinsP
+    public void canConvertComplexDeletionInsertionToHotspot() {
+        TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
+                .annotation(ImmutableTransvarComplexInsertDelete.builder()
+                        .deletedBaseCount(4)
+                        .insertedSequence("GGG")
+                        .addCandidateAlternativeSequences("GGG")
+                        .addCandidateAlternativeSequences("CCC")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots1 = testInterpreter().convertRecordToHotspots(oneAminoAcidInsert, Strand.FORWARD);
+
+        assertEquals(2, hotspots1.size());
+
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGG").build(), hotspots1.get(0));
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GCCC").build(), hotspots1.get(1));
+
+        TransvarRecord twoAminoAcidInsert = baseRecord().gdnaPosition(2)
+                .annotation(ImmutableTransvarComplexInsertDelete.builder()
+                        .deletedBaseCount(4)
+                        .insertedSequence("GGGTTT")
+                        .addCandidateAlternativeSequences("GGGTTT")
+                        .addCandidateAlternativeSequences("CCCAAA")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots2 = testInterpreter().convertRecordToHotspots(twoAminoAcidInsert, Strand.FORWARD);
+
+        assertEquals(1, hotspots2.size());
+
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGGTTT").build(), hotspots2.get(0));
     }
 
     @Test
@@ -156,14 +200,5 @@ public class TransvarInterpreterTest {
     @NotNull
     private static ImmutableVariantHotspotImpl.Builder baseHotspot() {
         return ImmutableVariantHotspotImpl.builder().chromosome("1");
-    }
-
-    @NotNull
-    private static TransvarInterpreter testInterpreter() {
-        try {
-            return TransvarInterpreter.fromRefGenomeFastaFile(REF_GENOME_FASTA_FILE);
-        } catch (FileNotFoundException exception) {
-            throw new IllegalStateException("Cannot create test interpreter! Message=" + exception.getMessage());
-        }
     }
 }

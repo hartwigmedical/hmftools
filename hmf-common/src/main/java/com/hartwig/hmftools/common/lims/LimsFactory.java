@@ -46,7 +46,7 @@ public final class LimsFactory {
     }
 
     @NotNull
-    public static Lims fromLimsDirectoryAndHospitalDirectory(@NotNull String limsDirectory)
+    public static Lims fromLimsDirectory(@NotNull String limsDirectory)
             throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
