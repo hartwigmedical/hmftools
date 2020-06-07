@@ -141,7 +141,7 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertComplexDeletionInsertionToHotspot() {
-        TransvarRecord complexRecord = baseRecord().gdnaPosition(2)
+        TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
                         .deletedBaseCount(4)
                         .insertedSequence("GGG")
@@ -150,12 +150,27 @@ public class TransvarInterpreterTest {
                         .build())
                 .build();
 
-        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(complexRecord, Strand.FORWARD);
+        List<VariantHotspot> hotspots1 = testInterpreter().convertRecordToHotspots(oneAminoAcidInsert, Strand.FORWARD);
 
-        assertEquals(2, hotspots.size());
+        assertEquals(2, hotspots1.size());
 
-        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGG").build(), hotspots.get(0));
-        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GCCC").build(), hotspots.get(1));
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGG").build(), hotspots1.get(0));
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GCCC").build(), hotspots1.get(1));
+
+        TransvarRecord twoAminoAcidInsert = baseRecord().gdnaPosition(2)
+                .annotation(ImmutableTransvarComplexInsertDelete.builder()
+                        .deletedBaseCount(4)
+                        .insertedSequence("GGGTTT")
+                        .addCandidateAlternativeSequences("GGGTTT")
+                        .addCandidateAlternativeSequences("CCCAAA")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots2 = testInterpreter().convertRecordToHotspots(twoAminoAcidInsert, Strand.FORWARD);
+
+        assertEquals(1, hotspots2.size());
+
+        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGGTTT").build(), hotspots2.get(0));
     }
 
     @Test

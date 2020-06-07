@@ -152,9 +152,12 @@ class TransvarInterpreter {
 
         List<VariantHotspot> hotspots = Lists.newArrayList();
         hotspots.add(hotspotBuilder.alt(preMutatedSequence + insDel.insertedSequence()).build());
-        for (String candidateAlternativeSequence : insDel.candidateAlternativeSequences()) {
-            if (!candidateAlternativeSequence.equals(insDel.insertedSequence())) {
-                hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
+        // For now we only add alternative sequences for insertions of one AA
+        if (insDel.insertedSequence().length() == 3) {
+            for (String candidateAlternativeSequence : insDel.candidateAlternativeSequences()) {
+                if (!candidateAlternativeSequence.equals(insDel.insertedSequence())) {
+                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
+                }
             }
         }
         return hotspots;
