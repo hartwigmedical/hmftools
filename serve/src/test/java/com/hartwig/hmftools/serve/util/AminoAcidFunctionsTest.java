@@ -11,13 +11,13 @@ import com.hartwig.hmftools.common.genome.region.Strand;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class AminoAcidLookupTest {
+public class AminoAcidFunctionsTest {
 
     private static final Set<String> STOP_CODONS = Sets.newHashSet("TGA", "TAA", "TAG");
 
     @Test
     public void allAminoAcidsAreFoundAndAreUnique() {
-        Map<String, Set<String>> aminoAcidToTrinucleotideMap = AminoAcidLookup.aminoAcidToTrinucleotidesMap();
+        Map<String, Set<String>> aminoAcidToTrinucleotideMap = AminoAcidFunctions.aminoAcidToTrinucleotidesMap();
         Set<String> bases = Sets.newHashSet("A", "T", "G", "C");
 
         for (String base1 : bases) {
@@ -45,19 +45,24 @@ public class AminoAcidLookupTest {
     @Test
     public void canLookupTrinucleotides() {
         // Serine (S)
-        assertEquals(6, AminoAcidLookup.allTrinucleotidesForSameAminoAcid("TCT", Strand.FORWARD).size());
-        assertEquals(6, AminoAcidLookup.allTrinucleotidesForSameAminoAcid("TCT", Strand.REVERSE).size());
+        assertEquals(6, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TCT", Strand.FORWARD).size());
+        assertEquals(6, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TCT", Strand.REVERSE).size());
 
         // Valine (V)
-        assertEquals(4, AminoAcidLookup.allTrinucleotidesForSameAminoAcid("GTC", Strand.FORWARD).size());
-        assertEquals(4, AminoAcidLookup.allTrinucleotidesForSameAminoAcid("CTG", Strand.REVERSE).size());
+        assertEquals(4, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("GTC", Strand.FORWARD).size());
+        assertEquals(4, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("CTG", Strand.REVERSE).size());
 
         // Tyrosine (Y)
-        assertEquals(2, AminoAcidLookup.allTrinucleotidesForSameAminoAcid("TAC", Strand.FORWARD).size());
-        assertEquals(2, AminoAcidLookup.allTrinucleotidesForSameAminoAcid("CAT", Strand.REVERSE).size());
+        assertEquals(2, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TAC", Strand.FORWARD).size());
+        assertEquals(2, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("CAT", Strand.REVERSE).size());
 
         // Does not exist -> no trinucleotides found!
-        assertEquals(0, AminoAcidLookup.allTrinucleotidesForSameAminoAcid("???", Strand.FORWARD).size());
-        assertEquals(0, AminoAcidLookup.allTrinucleotidesForSameAminoAcid("???", Strand.REVERSE).size());
+        assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("???", Strand.FORWARD).size());
+        assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("???", Strand.REVERSE).size());
+    }
+
+    @Test
+    public void canForceSingleLetterProteinAnnotation() {
+        assertEquals("p.N334K", AminoAcidFunctions.forceSingleLetterProteinAnnotation("p.Asn334Lys"));
     }
 }
