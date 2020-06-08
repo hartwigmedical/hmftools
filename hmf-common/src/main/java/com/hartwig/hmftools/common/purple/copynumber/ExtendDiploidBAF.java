@@ -189,11 +189,6 @@ class ExtendDiploidBAF {
     private void inferBetween(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         assert (inferRegion.isValid());
 
-        CombinedRegion region = regions.get(inferRegion.leftTargetIndex);
-        if (region.start() == 13030137) {
-                        System.out.println("sdf");
-        }
-
         // Exactly one source available (XOR)
         final double targetPloidy = inferRegion.isLeftValid() ^ inferRegion.isRightValid()
                 ? singleSourceTargetPloidy(inferRegion, regions)
