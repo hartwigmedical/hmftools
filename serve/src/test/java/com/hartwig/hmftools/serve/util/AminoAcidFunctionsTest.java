@@ -24,22 +24,20 @@ public class AminoAcidFunctionsTest {
             for (String base2 : bases) {
                 for (String base3 : bases) {
                     String trinucleotide = base1 + base2 + base3;
-                    int expectedCount = STOP_CODONS.contains(trinucleotide) ? 0 : 1;
-                    System.out.println(trinucleotide);
-                    assertEquals(expectedCount, aminoAcidCount(aminoAcidToTrinucleotideMap, trinucleotide));
+                    boolean expectsToExist = !STOP_CODONS.contains(trinucleotide);
+                    assertEquals(expectsToExist, aminoAcidExists(aminoAcidToTrinucleotideMap, trinucleotide));
                 }
             }
         }
     }
 
-    private static int aminoAcidCount(@NotNull Map<String, Set<String>> aminoAcidToTrinucleotideMap, @NotNull String trinucleotide) {
-        int count = 0;
+    private static boolean aminoAcidExists(@NotNull Map<String, Set<String>> aminoAcidToTrinucleotideMap, @NotNull String trinucleotide) {
         for (Map.Entry<String, Set<String>> entry : aminoAcidToTrinucleotideMap.entrySet()) {
             if (entry.getValue().contains(trinucleotide)) {
-                count++;
+                return true;
             }
         }
-        return count;
+        return false;
     }
 
     @Test
