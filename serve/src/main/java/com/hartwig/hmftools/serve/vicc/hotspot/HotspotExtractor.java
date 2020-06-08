@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.serve.vicc.hotspot;
 
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_DELETION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_DUPLICATION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_FRAMESHIFT_SUFFIX;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_INSERTION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_RANGE_INDICATOR;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
@@ -24,14 +31,7 @@ public class HotspotExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(HotspotExtractor.class);
 
-    private static final String FEATURE_RANGE_INDICATOR = "_";
-    private static final String DELETION_KEYWORD = "del";
-    private static final String INSERTION_KEYWORD = "ins";
-    private static final String DUPLICATION_KEYWORD = "dup";
     private static final int MAX_AA_DELETION_LENGTH = 17; // We don't call deletions longer than 17 AA using standard indels.
-
-    private static final String FRAMESHIFT_FEATURE_SUFFIX = "fs";
-    private static final String FRAMESHIFT_FEATURE_SUFFIX_WITH_STOP_GAINED = "fs*";
 
     @NotNull
     private final Transvar transvar;
@@ -82,7 +82,7 @@ public class HotspotExtractor {
     static boolean isResolvableProteinAnnotation(@NotNull String feature) {
         if (isFrameshift(feature)) {
             return false;
-        } else if (feature.contains(FEATURE_RANGE_INDICATOR)) {
+        } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
             return isValidRangeMutation(feature);
         } else {
             return isValidSingleCodonMutation(feature);
@@ -90,19 +90,19 @@ public class HotspotExtractor {
     }
 
     private static boolean isFrameshift(@NotNull String feature) {
-        return feature.endsWith(FRAMESHIFT_FEATURE_SUFFIX) || feature.endsWith(FRAMESHIFT_FEATURE_SUFFIX_WITH_STOP_GAINED);
+        return feature.endsWith(HGVS_FRAMESHIFT_SUFFIX) || feature.endsWith(HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED);
     }
 
     private static boolean isValidRangeMutation(@NotNull String feature) {
-        assert feature.contains(FEATURE_RANGE_INDICATOR);
+        assert feature.contains(HGVS_RANGE_INDICATOR);
 
         // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
-        String featureToTest = feature.split(FEATURE_RANGE_INDICATOR)[1];
-        if (featureToTest.contains(INSERTION_KEYWORD) || featureToTest.contains(DUPLICATION_KEYWORD)) {
+        String featureToTest = feature.split(HGVS_RANGE_INDICATOR)[1];
+        if (featureToTest.contains(HGVS_INSERTION) || featureToTest.contains(HGVS_DUPLICATION)) {
             return true;
-        } else if (featureToTest.contains(DELETION_KEYWORD)) {
-            long start = Long.parseLong(feature.split(FEATURE_RANGE_INDICATOR)[0].substring(1));
-            long end = Long.parseLong(featureToTest.substring(1, featureToTest.indexOf(DELETION_KEYWORD)));
+        } else if (featureToTest.contains(HGVS_DELETION)) {
+            long start = Long.parseLong(feature.split(HGVS_RANGE_INDICATOR)[0].substring(1));
+            long end = Long.parseLong(featureToTest.substring(1, featureToTest.indexOf(HGVS_DELETION)));
             return (1 + end - start) <= MAX_AA_DELETION_LENGTH;
         } else {
             return false;
@@ -110,7 +110,7 @@ public class HotspotExtractor {
     }
 
     private static boolean isValidSingleCodonMutation(@NotNull String feature) {
-        if (feature.contains(INSERTION_KEYWORD)) {
+        if (feature.contains(HGVS_INSERTION)) {
             // Insertions are only allowed in a range, since we need to know where to insert the sequence exactly.
             return false;
         }
