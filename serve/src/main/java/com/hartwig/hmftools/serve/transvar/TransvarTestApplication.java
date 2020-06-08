@@ -27,7 +27,7 @@ public class TransvarTestApplication {
 
 
         // Leads to a warning which we can ignore.
-        extractAndPrintHotspots(transvar, "BRAF", null, "T599dup");
+        extractAndPrintHotspots(transvar, "BRAF", null, "T599insTT");
 
         // Repeat issue - These 2 variants are identical (the trinucleotide is repeated)
 //        extractAndPrintHotspots(transvar, "KIT", null, "V560del");

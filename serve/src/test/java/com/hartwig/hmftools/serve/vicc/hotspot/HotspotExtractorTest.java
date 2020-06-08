@@ -14,6 +14,7 @@ public class HotspotExtractorTest {
         assertTrue(HotspotExtractor.isProteinAnnotation("L2230V"));
         assertTrue(HotspotExtractor.isProteinAnnotation("V5del"));
         assertTrue(HotspotExtractor.isProteinAnnotation("L755_T759del"));
+        assertTrue(HotspotExtractor.isProteinAnnotation("G10dup"));
 
         assertFalse(HotspotExtractor.isProteinAnnotation(Strings.EMPTY));
         assertFalse(HotspotExtractor.isProteinAnnotation("truncating"));
@@ -25,5 +26,6 @@ public class HotspotExtractorTest {
         assertFalse(HotspotExtractor.isProteinAnnotation("L20Pdel5"));
 
         assertFalse(HotspotExtractor.isProteinAnnotation("963_D1010splice"));
+        assertFalse(HotspotExtractor.isProteinAnnotation("T599insTT"));
     }
 }

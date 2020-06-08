@@ -79,10 +79,9 @@ public class HotspotExtractor {
 
     @VisibleForTesting
     static boolean isProteinAnnotation(@NotNull String featureName) {
-        String featureToTest;
         if (featureName.contains(FEATURE_RANGE_INDICATOR)) {
             // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
-            featureToTest = featureName.split(FEATURE_RANGE_INDICATOR)[1];
+            String featureToTest = featureName.split(FEATURE_RANGE_INDICATOR)[1];
             boolean validFeatureFound = false;
             for (String validFeature : VALID_FEATURE_RANGES) {
                 if (featureToTest.contains(validFeature)) {
@@ -90,38 +89,39 @@ public class HotspotExtractor {
                     break;
                 }
             }
-            if (!validFeatureFound) {
-                return false;
-            }
+            return validFeatureFound;
         } else if (featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX)) {
             // Frameshifts are ignored for hotspot determination
             return false;
         } else {
-            featureToTest = featureName;
-        }
-
-        // Features are expected to look something like V600E (1 char - N digits - M chars)
-        if (featureToTest.length() < 3) {
-            return false;
-        }
-
-        if (!Character.isLetter(featureToTest.charAt(0))) {
-            return false;
-        }
-
-        if (!Character.isDigit(featureToTest.charAt(1))) {
-            return false;
-        }
-
-        boolean haveObservedNonDigit = !Character.isDigit(featureToTest.charAt(2));
-        for (int i = 3; i < featureToTest.length(); i++) {
-            char charToEvaluate = featureToTest.charAt(i);
-            if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
+            if (featureName.contains("ins")) {
+                // "ins" is only allowed in a range, since we need to know where to insert the sequence exactly.
                 return false;
             }
-            haveObservedNonDigit = haveObservedNonDigit || !Character.isDigit(charToEvaluate);
-        }
 
-        return haveObservedNonDigit;
+            // Features are expected to look something like V600E (1 char - N digits - M chars)
+            if (featureName.length() < 3) {
+                return false;
+            }
+
+            if (!Character.isLetter(featureName.charAt(0))) {
+                return false;
+            }
+
+            if (!Character.isDigit(featureName.charAt(1))) {
+                return false;
+            }
+
+            boolean haveObservedNonDigit = !Character.isDigit(featureName.charAt(2));
+            for (int i = 3; i < featureName.length(); i++) {
+                char charToEvaluate = featureName.charAt(i);
+                if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
+                    return false;
+                }
+                haveObservedNonDigit = haveObservedNonDigit || !Character.isDigit(charToEvaluate);
+            }
+
+            return haveObservedNonDigit;
+        }
     }
 }
