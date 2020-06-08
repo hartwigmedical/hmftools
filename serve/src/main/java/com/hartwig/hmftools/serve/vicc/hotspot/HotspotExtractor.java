@@ -62,7 +62,7 @@ public class HotspotExtractor {
                         hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                                 viccEntry.transcriptId(),
                                 feature.name());
-                        LOGGER.info("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
+                        LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
                         if (hotspots.isEmpty()) {
                             unresolvableFeatures.add(featureKey);
                         }
