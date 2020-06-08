@@ -15,7 +15,6 @@ import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.Transvar;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,22 +50,19 @@ public class HotspotExtractor {
     @NotNull
     public Map<Feature, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
         Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
-        if (viccEntry.source() == ViccSource.ONCOKB) {
-            for (Feature feature : viccEntry.features()) {
-                String featureKey = feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
-                if (isProteinAnnotation(feature.name())) {
-                    List<VariantHotspot> hotspots = Lists.newArrayList();
-                    if (transvarEnabled) {
-                        hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
-                                viccEntry.transcriptId(),
-                                feature.name());
-                        LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
-                        if (hotspots.isEmpty()) {
-                            unresolvableFeatures.add(featureKey);
-                        }
+        for (Feature feature : viccEntry.features()) {
+            String featureKey = feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
+            if (isResolvableProteinAnnotation(feature.name())) {
+                List<VariantHotspot> hotspots = Lists.newArrayList();
+                if (transvarEnabled) {
+                    hotspots =
+                            transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), viccEntry.transcriptId(), feature.name());
+                    LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
+                    if (hotspots.isEmpty()) {
+                        unresolvableFeatures.add(featureKey);
                     }
-                    allHotspotsPerFeature.put(feature, hotspots);
                 }
+                allHotspotsPerFeature.put(feature, hotspots);
             }
         }
 
@@ -79,50 +75,62 @@ public class HotspotExtractor {
     }
 
     @VisibleForTesting
-    static boolean isProteinAnnotation(@NotNull String featureName) {
-        if (featureName.contains(FEATURE_RANGE_INDICATOR)) {
-            // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
-            String featureToTest = featureName.split(FEATURE_RANGE_INDICATOR)[1];
-            boolean validFeatureFound = false;
-            for (String validFeature : VALID_FEATURE_RANGES) {
-                if (featureToTest.contains(validFeature)) {
-                    validFeatureFound = true;
-                    break;
-                }
-            }
-            return validFeatureFound;
-        } else if (featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX) || featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX_WITH_STOP_GAINED)) {
-            // Frameshifts are ignored for hotspot determination
+    static boolean isResolvableProteinAnnotation(@NotNull String feature) {
+        if (isFrameshift(feature)) {
             return false;
+        } else if (feature.contains(FEATURE_RANGE_INDICATOR)) {
+            return isValidRangeMutation(feature);
         } else {
-            if (featureName.contains("ins")) {
-                // "ins" is only allowed in a range, since we need to know where to insert the sequence exactly.
-                return false;
-            }
-
-            // Features are expected to look something like V600E (1 char - N digits - M chars)
-            if (featureName.length() < 3) {
-                return false;
-            }
-
-            if (!Character.isLetter(featureName.charAt(0))) {
-                return false;
-            }
-
-            if (!Character.isDigit(featureName.charAt(1))) {
-                return false;
-            }
-
-            boolean haveObservedNonDigit = !Character.isDigit(featureName.charAt(2));
-            for (int i = 3; i < featureName.length(); i++) {
-                char charToEvaluate = featureName.charAt(i);
-                if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
-                    return false;
-                }
-                haveObservedNonDigit = haveObservedNonDigit || !Character.isDigit(charToEvaluate);
-            }
-
-            return haveObservedNonDigit;
+            return isValidSingleCodonMutation(feature);
         }
+    }
+
+    private static boolean isFrameshift(@NotNull String feature) {
+        return feature.endsWith(FRAMESHIFT_FEATURE_SUFFIX) || feature.endsWith(FRAMESHIFT_FEATURE_SUFFIX_WITH_STOP_GAINED);
+    }
+
+    private static boolean isValidRangeMutation(@NotNull String feature) {
+        assert feature.contains(FEATURE_RANGE_INDICATOR);
+
+        // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
+        String featureToTest = feature.split(FEATURE_RANGE_INDICATOR)[1];
+        for (String validFeature : VALID_FEATURE_RANGES) {
+            if (featureToTest.contains(validFeature)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isValidSingleCodonMutation(@NotNull String feature) {
+        if (feature.contains("ins")) {
+            // "ins" is only allowed in a range, since we need to know where to insert the sequence exactly.
+            return false;
+        }
+
+        // Features are expected to look something like V600E (1 char - N digits - M chars)
+        if (feature.length() < 3) {
+            return false;
+        }
+
+        if (!Character.isLetter(feature.charAt(0))) {
+            return false;
+        }
+
+        if (!Character.isDigit(feature.charAt(1))) {
+            return false;
+        }
+
+        boolean haveObservedNonDigit = !Character.isDigit(feature.charAt(2));
+        for (int i = 3; i < feature.length(); i++) {
+            char charToEvaluate = feature.charAt(i);
+            if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
+                return false;
+            }
+            haveObservedNonDigit = haveObservedNonDigit || !Character.isDigit(charToEvaluate);
+        }
+
+        return haveObservedNonDigit;
     }
 }

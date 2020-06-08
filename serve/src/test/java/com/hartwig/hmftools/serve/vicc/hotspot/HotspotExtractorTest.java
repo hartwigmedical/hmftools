@@ -11,21 +11,21 @@ public class HotspotExtractorTest {
 
     @Test
     public void canAssessWhetherFeatureIsProteinAnnotation() {
-        assertTrue(HotspotExtractor.isProteinAnnotation("L2230V"));
-        assertTrue(HotspotExtractor.isProteinAnnotation("V5del"));
-        assertTrue(HotspotExtractor.isProteinAnnotation("L755_T759del"));
-        assertTrue(HotspotExtractor.isProteinAnnotation("G10dup"));
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("L2230V"));
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("V5del"));
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("L755_T759del"));
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("G10dup"));
 
-        assertFalse(HotspotExtractor.isProteinAnnotation(Strings.EMPTY));
-        assertFalse(HotspotExtractor.isProteinAnnotation("truncating"));
-        assertFalse(HotspotExtractor.isProteinAnnotation("20LtoV"));
-        assertFalse(HotspotExtractor.isProteinAnnotation("L20"));
-        assertFalse(HotspotExtractor.isProteinAnnotation("LP"));
-        assertFalse(HotspotExtractor.isProteinAnnotation("L"));
-        assertFalse(HotspotExtractor.isProteinAnnotation("L2"));
-        assertFalse(HotspotExtractor.isProteinAnnotation("L20Pdel5"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation(Strings.EMPTY));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("truncating"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("20LtoV"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L20"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("LP"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L2"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L20Pdel5"));
 
-        assertFalse(HotspotExtractor.isProteinAnnotation("963_D1010splice"));
-        assertFalse(HotspotExtractor.isProteinAnnotation("T599insTT"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("963_D1010splice"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("T599insTT"));
     }
 }
