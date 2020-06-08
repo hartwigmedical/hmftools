@@ -20,7 +20,7 @@ import htsjdk.variant.vcf.VCFCodec;
 public class ViccAnnotatedVCFChecker {
 
     public static void main(String[] args) throws IOException {
-        String annotatedHotspotVcf = System.getProperty("user.home") + "/tmp/annotatedHotspotsVicc.vcf";
+        String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspotsVicc.vcf";
 
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedHotspotVcf, new VCFCodec(), false);
 
