@@ -199,6 +199,14 @@ public class TransvarConverterTest {
     }
 
     @Test
+    public void weirdVariantsShouldNotLeadToDuplications() {
+        String line = "CARD11:p.L225LI\tENST00000396946 (protein_coding)\tCARD11\t-\tchr7:g.2983855_2983857/c.673_675/p.L225\t" +
+                "inside_[cds_in_exon_5]\tCSQN=Unclassified;aliases=ENSP00000380150;source=Ensembl";
+
+        assertNull(TransvarConverter.toTransvarRecord(line));
+    }
+
+    @Test
     public void unresolvedProteinAnnotationLeadsToNull() {
         String line = "RAD50:p.L1273F\t.\t.\t.\t././.\t.\tno_valid_transcript_found";
 

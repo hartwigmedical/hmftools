@@ -15,6 +15,7 @@ import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
@@ -49,6 +50,11 @@ final class TransvarConverter {
 
         // (Very) long insertions report a deleted count rather than a list of bases. We ignore these.
         if (record.annotation() instanceof TransvarInsertion && isInteger(((TransvarInsertion) record.annotation()).insertedBases())) {
+            return null;
+        }
+
+        // Duplications are somewhat educated guesses, so need to be sure they refer to a dup at least once.
+        if (record.annotation() instanceof TransvarDuplication && !transvarLine.contains(HGVS_DUPLICATION)) {
             return null;
         }
 
