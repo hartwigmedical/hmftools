@@ -78,7 +78,11 @@ public class Transvar {
         List<VariantHotspot> hotspots = interpreter.convertRecordToHotspots(best, canonicalTranscript.strand());
 
         if (hotspots.isEmpty()) {
-            LOGGER.warn("Could not derive any hotspots from record {} for '{}:p.{}'", best, gene, proteinAnnotation);
+            LOGGER.warn("Could not derive any hotspots from record {} for '{}:p.{} - {}'",
+                    best,
+                    gene,
+                    proteinAnnotation,
+                    specificTranscript);
         }
 
         return hotspots;
