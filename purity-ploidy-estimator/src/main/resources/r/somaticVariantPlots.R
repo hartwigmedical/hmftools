@@ -78,7 +78,7 @@ clonality_plot <- function(somaticVariants, clonalityModel) {
     geom_line(data=combinedModel , aes(x = bucket, y = bucketWeight), position = "identity", alpha = 0.8) +
     geom_line(data=nonResidualModel, aes(x = bucket, y = bucketWeight, color = peak), position = "identity") +
     geom_area(data=nonResidualSubclonalPercentage %>% filter(isSubclonal), aes(x = bucket, y = bucketWeight), position = "identity",  alpha = 0.3, fill = singleRed, color = singleRed) +
-    ggtitle("") + xlab("Ploidy") + ylab("") +
+    ggtitle("") + xlab("Variant Copy Number") + ylab("") +
     scale_y_continuous(expand=c(0.02, 0.02)) +
     theme(panel.border = element_blank(), panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position="none") +
     scale_x_continuous( expand=c(0.01, 0.01), limits = c(0, 3.5)) 
@@ -160,7 +160,7 @@ somatic_ploidy_pdf <- function(somatics) {
     scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxPloidy + 1.1)) +
     scale_fill_manual(values = cnColours) +
     theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title = element_blank()) +
-    xlab("Ploidy") + ylab("Count") + ggtitle("Somatic Variant Ploidy PDF")
+    xlab("Variant Copy Number") + ylab("Count") + ggtitle("Somatic Variant Copy Number PDF")
 }
 
 vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
