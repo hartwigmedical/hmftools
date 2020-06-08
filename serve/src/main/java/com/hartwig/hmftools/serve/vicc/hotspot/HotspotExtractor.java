@@ -25,7 +25,11 @@ public class HotspotExtractor {
     private static final Logger LOGGER = LogManager.getLogger(HotspotExtractor.class);
 
     private static final String FEATURE_RANGE_INDICATOR = "_";
-    private static final Set<String> VALID_FEATURE_RANGES = Sets.newHashSet("ins", "dup", "del");
+    private static final String DELETION_KEYWORD = "del";
+    private static final String INSERTION_KEYWORD = "ins";
+    private static final String DUPLICATION_KEYWORD = "dup";
+    private static final int MAX_AA_DELETION_LENGTH = 17; // We don't call deletions longer than 17 AA using standard indels.
+
     private static final String FRAMESHIFT_FEATURE_SUFFIX = "fs";
     private static final String FRAMESHIFT_FEATURE_SUFFIX_WITH_STOP_GAINED = "fs*";
 
@@ -94,18 +98,20 @@ public class HotspotExtractor {
 
         // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
         String featureToTest = feature.split(FEATURE_RANGE_INDICATOR)[1];
-        for (String validFeature : VALID_FEATURE_RANGES) {
-            if (featureToTest.contains(validFeature)) {
-                return true;
-            }
+        if (featureToTest.contains(INSERTION_KEYWORD) || featureToTest.contains(DUPLICATION_KEYWORD)) {
+            return true;
+        } else if (featureToTest.contains(DELETION_KEYWORD)) {
+            long start = Long.parseLong(feature.split(FEATURE_RANGE_INDICATOR)[0].substring(1));
+            long end = Long.parseLong(featureToTest.substring(1, featureToTest.indexOf(DELETION_KEYWORD)));
+            return (1 + end - start) <= MAX_AA_DELETION_LENGTH;
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     private static boolean isValidSingleCodonMutation(@NotNull String feature) {
-        if (feature.contains("ins")) {
-            // "ins" is only allowed in a range, since we need to know where to insert the sequence exactly.
+        if (feature.contains(INSERTION_KEYWORD)) {
+            // Insertions are only allowed in a range, since we need to know where to insert the sequence exactly.
             return false;
         }
 

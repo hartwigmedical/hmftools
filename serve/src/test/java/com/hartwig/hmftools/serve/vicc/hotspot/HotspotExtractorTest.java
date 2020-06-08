@@ -27,5 +27,6 @@ public class HotspotExtractorTest {
 
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("963_D1010splice"));
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("T599insTT"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L4_T40del"));
     }
 }

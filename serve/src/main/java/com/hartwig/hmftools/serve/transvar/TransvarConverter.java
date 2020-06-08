@@ -10,7 +10,6 @@ import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
-import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
@@ -48,10 +47,8 @@ final class TransvarConverter {
 
         TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], message);
 
-        // (Very) long insertions and deletions report a deleted count rather than a list of bases. We ignore these.
-        if (record.annotation() instanceof TransvarDeletion && isLong(((TransvarDeletion) record.annotation()).deletedBases())) {
-            return null;
-        } else if (record.annotation() instanceof TransvarInsertion && isLong(((TransvarInsertion) record.annotation()).insertedBases())) {
+        // (Very) long insertions report a deleted count rather than a list of bases. We ignore these.
+        if (record.annotation() instanceof TransvarInsertion && isInteger(((TransvarInsertion) record.annotation()).insertedBases())) {
             return null;
         }
 
@@ -137,8 +134,9 @@ final class TransvarConverter {
         } else {
             // This should look like '123delC'
             String deletedBases = delInsPart.substring(delStart + DELETION.length());
+            int deletedBaseCount = isInteger(deletedBases) ? Integer.parseInt(deletedBases) : deletedBases.length();
             return ImmutableTransvarDeletion.builder()
-                    .deletedBases(deletedBases)
+                    .deletedBaseCount(deletedBaseCount)
                     .unalignedGDNAPosition(extractUnalignedGDNAPositionFromMessageField(messageField))
                     .build();
         }
@@ -149,7 +147,7 @@ final class TransvarConverter {
         int duplicatedBaseCount;
         if (dupPart.contains(DUPLICATION)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(DUPLICATION))) - position);
-        } else if (isLong(dupPart)) {
+        } else if (isInteger(dupPart)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart) - position);
         } else {
             throw new IllegalStateException("Cannot process duplication for gDNA: " + dupPart);
@@ -250,9 +248,9 @@ final class TransvarConverter {
         return null;
     }
 
-    private static boolean isLong(@NotNull String value) {
+    private static boolean isInteger(@NotNull String value) {
         try {
-            Long.parseLong(value);
+            Integer.parseInt(value);
             return true;
         } catch (NumberFormatException exp) {
             return false;

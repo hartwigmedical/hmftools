@@ -9,8 +9,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class TransvarDeletion implements TransvarAnnotation {
 
-    @NotNull
-    public abstract String deletedBases();
+    public abstract int deletedBaseCount();
 
     public abstract long unalignedGDNAPosition();
 }

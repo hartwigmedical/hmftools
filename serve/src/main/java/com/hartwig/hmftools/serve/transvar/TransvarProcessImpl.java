@@ -23,7 +23,7 @@ class TransvarProcessImpl implements TransvarProcess {
     private static final Logger LOGGER = LogManager.getLogger(TransvarProcessImpl.class);
 
     // DUPs result in warnings in transvar but do lead to interpretable output so warn can be ignored.
-    private static final Set<String> WARNINGS_TO_IGNORE = Sets.newHashSet("warning: unknown alternative: DUP, ignore alternative");
+    private static final Set<String> ERRORS_TO_IGNORE = Sets.newHashSet("warning: unknown alternative: DUP, ignore alternative");
 
     private static final int TRANSVAR_TIMEOUT_SEC = 90;
 
@@ -97,7 +97,7 @@ class TransvarProcessImpl implements TransvarProcess {
         for (String error : errors) {
             if (!error.trim().isEmpty()) {
                 boolean foundIgnoreString = false;
-                for (String ignoreString : WARNINGS_TO_IGNORE) {
+                for (String ignoreString : ERRORS_TO_IGNORE) {
                     if (error.contains(ignoreString)) {
                         LOGGER.debug("Suppressing error from transvar: '{}'", error);
                         foundIgnoreString = true;

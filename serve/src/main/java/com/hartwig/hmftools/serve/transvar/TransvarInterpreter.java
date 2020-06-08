@@ -124,7 +124,7 @@ class TransvarInterpreter {
                         refGenome.getSubsequenceAt(record.chromosome(), adjustedPosition, adjustedPosition).getBaseString();
                 String deletedSequence = refGenome.getSubsequenceAt(record.chromosome(),
                         adjustedPosition + 1,
-                        adjustedPosition + deletion.deletedBases().length()).getBaseString();
+                        adjustedPosition + deletion.deletedBaseCount()).getBaseString();
 
                 hotspots.add(hotspotBuilder.position(adjustedPosition)
                         .ref(preMutatedSequence + deletedSequence)
@@ -132,7 +132,7 @@ class TransvarInterpreter {
                         .build());
             }
         } else {
-            LOGGER.warn("Unaligned GDNA higher than position. Unsure why: {}", record);
+            LOGGER.warn("Unaligned GDNA > position. Unsure why! Record={}", record);
         }
         return hotspots;
     }

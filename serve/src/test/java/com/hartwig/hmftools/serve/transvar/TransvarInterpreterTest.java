@@ -88,7 +88,7 @@ public class TransvarInterpreterTest {
     @Test
     public void canConvertDeletionToHotspots() {
         TransvarRecord record = baseRecord().gdnaPosition(5)
-                .annotation(ImmutableTransvarDeletion.builder().deletedBases("GAT").unalignedGDNAPosition(5).build())
+                .annotation(ImmutableTransvarDeletion.builder().deletedBaseCount(3).unalignedGDNAPosition(5).build())
                 .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
@@ -103,7 +103,7 @@ public class TransvarInterpreterTest {
         // In this situation the mutation is "GATCGATC -> GATC",
         //  Normally the unaligned DNA would be 1 here but that would imply we need to read the 0th ref base.
         TransvarRecord record = baseRecord().gdnaPosition(5)
-                .annotation(ImmutableTransvarDeletion.builder().deletedBases("GATC").unalignedGDNAPosition(2).build())
+                .annotation(ImmutableTransvarDeletion.builder().deletedBaseCount(4).unalignedGDNAPosition(2).build())
                 .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
