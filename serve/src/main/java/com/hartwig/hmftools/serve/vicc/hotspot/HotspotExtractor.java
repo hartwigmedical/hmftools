@@ -25,9 +25,6 @@ public class HotspotExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(HotspotExtractor.class);
 
-    private static final Set<String> ONCOKB_VALID_BIOMARKER_TYPES =
-            Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
-
     private static final String FEATURE_RANGE_INDICATOR = "_";
     private static final Set<String> VALID_FEATURE_RANGES = Sets.newHashSet("ins", "dup", "del");
     private static final String FRAMESHIFT_FEATURE_SUFFIX = "fs";
@@ -56,7 +53,7 @@ public class HotspotExtractor {
         if (viccEntry.source() == ViccSource.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
                 String featureKey = feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
-                if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType()) || isProteinAnnotation(feature.name())) {
+                if (isProteinAnnotation(feature.name())) {
                     List<VariantHotspot> hotspots = Lists.newArrayList();
                     if (transvarEnabled) {
                         hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
