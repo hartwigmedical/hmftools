@@ -28,6 +28,7 @@ public class HotspotExtractor {
     private static final String FEATURE_RANGE_INDICATOR = "_";
     private static final Set<String> VALID_FEATURE_RANGES = Sets.newHashSet("ins", "dup", "del");
     private static final String FRAMESHIFT_FEATURE_SUFFIX = "fs";
+    private static final String FRAMESHIFT_FEATURE_SUFFIX_WITH_STOP_GAINED = "fs*";
 
     @NotNull
     private final Transvar transvar;
@@ -90,7 +91,7 @@ public class HotspotExtractor {
                 }
             }
             return validFeatureFound;
-        } else if (featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX)) {
+        } else if (featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX) || featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX_WITH_STOP_GAINED)) {
             // Frameshifts are ignored for hotspot determination
             return false;
         } else {
