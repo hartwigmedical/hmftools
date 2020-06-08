@@ -10,9 +10,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Strand;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class AminoAcidFunctions {
+
+    private static final Logger LOGGER = LogManager.getLogger(AminoAcidFunctions.class);
 
     private static final Map<String, Set<String>> AMINO_ACID_TO_TRINUCLEOTIDES_MAP = Maps.newHashMap();
     private static final Map<String, String> TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER = Maps.newHashMap();
@@ -69,7 +73,11 @@ public final class AminoAcidFunctions {
 
     @NotNull
     public static List<String> allTrinucleotidesForSameAminoAcid(@NotNull String trinucleotideToFind, @NotNull Strand strand) {
-        assert trinucleotideToFind.length() == 3;
+        if (trinucleotideToFind.length() != 3) {
+            LOGGER.warn("Cannot look up amino acids for non-trinucleotides: {}", trinucleotideToFind);
+            return Lists.newArrayList();
+        }
+
         String strandCorrectedTrinucleotide = strand == Strand.FORWARD ? trinucleotideToFind : reverse(trinucleotideToFind);
 
         List<String> allTrinucleotides = Lists.newArrayList();

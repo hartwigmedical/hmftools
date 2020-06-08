@@ -57,6 +57,10 @@ public class AminoAcidFunctionsTest {
         // Does not exist -> no trinucleotides found!
         assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("???", Strand.FORWARD).size());
         assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("???", Strand.REVERSE).size());
+
+        // No trinucleotide -> return none.
+        assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TCTC", Strand.FORWARD).size());
+        assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TCTC", Strand.REVERSE).size());
     }
 
     @Test
