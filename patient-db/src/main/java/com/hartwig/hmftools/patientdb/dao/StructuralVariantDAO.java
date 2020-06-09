@@ -51,7 +51,7 @@ class StructuralVariantDAO {
             boolean isSingleBreakend = (type == SGL) || (type == INF);
 
             // ploidy correction for NONE segment SVs
-            Double ploidy = record.getValue(STRUCTURALVARIANT.PLOIDY);
+            Double ploidy = record.getValue(STRUCTURALVARIANT.JUNCTIONCOPYNUMBER);
             if (type == INF && ploidy == null) {
                 ploidy = getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
@@ -164,7 +164,7 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.ADJUSTEDAFEND,
                     STRUCTURALVARIANT.ADJUSTEDCOPYNUMBEREND,
                     STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGEEND,
-                    STRUCTURALVARIANT.PLOIDY,
+                    STRUCTURALVARIANT.JUNCTIONCOPYNUMBER,
                     STRUCTURALVARIANT.FILTER,
                     STRUCTURALVARIANT.IMPRECISE,
                     STRUCTURALVARIANT.QUALSCORE,
