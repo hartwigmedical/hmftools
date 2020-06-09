@@ -34,18 +34,21 @@ public class RecoveredVariantFactoryTest {
     @Test
     public void testFilterFilter() {
         final String eligible =
-                "16	33040204	gridss81_16816h	G	]16:33040203]GGCGGCGGGGCAA	343.95	BPI.Filter.SRSupportZero;qual	SVTYPE=BND	GT\t./.";
+                "16	33040204	gridss81_16816h	G	]16:33040203]GGCGGCGGGGCAA	343.95	BPI.Filter.SRSupportZero;someFilter	SVTYPE=BND	GT\t./.";
         final String passing =
                 "16	33040204	gridss81_16816h	G	]16:33040203]GGCGGCGGGGCAA	343.95	.	SVTYPE=BND	GT\t./.";
         final String ponFiltered =
                 "16	33040203	gridss81_16816o	G	GGTAAGAATCCGC[16:33040204[	343.95	PON	SVTYPE=BND	GT\t./.";
-        final String afFiltered =
-                "16	33040204	gridss81_16816h	G	]16:33040203]GGCGGCGGGGCAA	343.95	af	SVTYPE=BND	GT\t./.";
 
         assertTrue(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(eligible)));
         assertFalse(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(passing)));
+
         assertTrue(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(ponFiltered)));
-        assertFalse(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(afFiltered)));
+        for (String filter : RecoveredVariantFactory.DO_NOT_RESCUE) {
+            final String ineligible = ponFiltered.replace("PON", filter);
+            assertFalse(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(ineligible)));
+        }
+
     }
 
     @NotNull
