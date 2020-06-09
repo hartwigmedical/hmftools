@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss
 
+import com.hartwig.hmftools.common.gripss.GripssFilters.*
 import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
@@ -7,9 +8,7 @@ import htsjdk.variant.vcf.*
 
 
 const val PON = "PON"
-const val MIN_QUAL = "minQual";
 const val IMPRECISE = "imprecise";
-const val MIN_TUMOR_AF = "minTumorAF";
 const val SHORT_SR_NORMAL = "shortSRNormalSupport"
 const val SHORT_SR_SUPPORT = "shortSRTumorSupport"
 const val SHORT_STRAND_BIAS = "shortStrandBias"
@@ -26,7 +25,6 @@ const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
 
 const val MATE = "mate"
 const val PASS = "PASS"
-const val DEDUP = "dedup"
 const val MIN_LENGTH = "minLength"
 
 const val TAF = "TAF";

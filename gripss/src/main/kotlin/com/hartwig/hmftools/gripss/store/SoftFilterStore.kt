@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.gripss.store
 
-import com.hartwig.hmftools.gripss.*
+import com.hartwig.hmftools.common.gripss.GripssFilters.DEDUP
+import com.hartwig.hmftools.gripss.GripssFilterConfig
+import com.hartwig.hmftools.gripss.MATE
+import com.hartwig.hmftools.gripss.PON
+import com.hartwig.hmftools.gripss.StructuralVariantContext
 import java.util.*
 
 class SoftFilterStore(private val filters: Map<String, Set<String>>) {
