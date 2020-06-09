@@ -137,10 +137,10 @@ public class DataLoaderConfig
         if(SubclonalLikelihoodMax != null && variant.subclonalLikelihood() > SubclonalLikelihoodMax)
             return false;
 
-        if(PloidyMin != null && variant.ploidy() < PloidyMin)
+        if(PloidyMin != null && variant.variantCopyNumber() < PloidyMin)
             return false;
 
-        if(PloidyMax != null && variant.ploidy() > PloidyMax)
+        if(PloidyMax != null && variant.variantCopyNumber() > PloidyMax)
             return false;
 
         return true;

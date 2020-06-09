@@ -135,7 +135,7 @@ public class TsgDriversTest {
                 .hotspot(hotspot ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
                 .adjustedCopyNumber(2)
                 .adjustedVAF(vaf)
-                .ploidy(2 * vaf)
+                .variantCopyNumber(2 * vaf)
                 .biallelic(biallelic)
                 .build();
     }

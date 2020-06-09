@@ -77,11 +77,11 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant variantMap = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_MAP=1.9"))));
         final SomaticVariant variantMacn = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_MACN=1.9"))));
 
-        assertEquals(1.9, variantMap.minorAllelePloidy(), 0.01);
+        assertEquals(1.9, variantMap.minorAlleleCopyNumber(), 0.01);
         assertEquals(variantMap, variantMacn);
 
         final SomaticVariant both = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_MAP=1.8;PURPLE_MACN=1.7"))));
-        assertEquals(1.7, both.minorAllelePloidy(), 0.01);
+        assertEquals(1.7, both.minorAlleleCopyNumber(), 0.01);
     }
 
     @Test
@@ -90,11 +90,11 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant variantMap = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_PLOIDY=1.9"))));
         final SomaticVariant variantMacn = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_VCN=1.9"))));
 
-        assertEquals(1.9, variantMap.ploidy(), 0.01);
+        assertEquals(1.9, variantMap.variantCopyNumber(), 0.01);
         assertEquals(variantMap, variantMacn);
 
         final SomaticVariant both = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_PLOIDY=1.8;PURPLE_VCN=1.7"))));
-        assertEquals(1.7, both.ploidy(), 0.01);
+        assertEquals(1.7, both.variantCopyNumber(), 0.01);
     }
 
     @Test

@@ -398,12 +398,12 @@ public class PurityPloidyEstimateApplication   {
             @NotNull final List<PurityAdjustedSomaticVariant> enrichedSomatics) {
         final List<ModifiableWeightedPloidy> weightedPloidies = Lists.newArrayList();
         for (PurityAdjustedSomaticVariant enrichedSomatic : enrichedSomatics) {
-            if (Doubles.lessThan(enrichedSomatic.ploidy(), config.clonalityMaxPloidy()) && !enrichedSomatic.isFiltered()
+            if (Doubles.lessThan(enrichedSomatic.variantCopyNumber(), config.clonalityMaxPloidy()) && !enrichedSomatic.isFiltered()
                     && HumanChromosome.contains(enrichedSomatic.chromosome()) && HumanChromosome.fromString(enrichedSomatic.chromosome())
                     .isAutosome()) {
                 weightedPloidies.add(ModifiableWeightedPloidy.create()
                         .from(enrichedSomatic)
-                        .setPloidy(enrichedSomatic.ploidy())
+                        .setPloidy(enrichedSomatic.variantCopyNumber())
                         .setWeight(1));
             }
         }

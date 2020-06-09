@@ -435,7 +435,7 @@ class VariantEnricher
                     .hgvsProtein(bachRecord.HgvsProtein)
                     .hgvsCoding(bachRecord.HgvsCoding)
                     .biallelic(bachRecord.isBiallelic())
-                    .minorAllelePloidy(enrichedVariant != null ? enrichedVariant.minorAllelePloidy() : somaticVariant.minorAllelePloidy())
+                    .minorAllelePloidy(enrichedVariant != null ? enrichedVariant.minorAlleleCopyNumber() : somaticVariant.minorAlleleCopyNumber())
                     .program(bachRecord.Program)
                     .variantId(bachRecord.VariantId)
                     .annotations(bachRecord.Annotations)

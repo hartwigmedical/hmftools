@@ -15,13 +15,13 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public interface PurityAdjustedSomaticVariantBuilder {
 
-    PurityAdjustedSomaticVariantBuilder ploidy(double ploidy);
+    PurityAdjustedSomaticVariantBuilder variantCopyNumber(double ploidy);
 
     PurityAdjustedSomaticVariantBuilder adjustedCopyNumber(double copyNumber);
 
     PurityAdjustedSomaticVariantBuilder adjustedVAF(double vaf);
 
-    PurityAdjustedSomaticVariantBuilder minorAllelePloidy(double map);
+    PurityAdjustedSomaticVariantBuilder minorAlleleCopyNumber(double map);
 
     PurityAdjustedSomaticVariantBuilder germlineStatus(@NotNull final GermlineStatus germlineStatus);
 
@@ -31,7 +31,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
     static PurityAdjustedSomaticVariantBuilder fromVariantContex(@NotNull final VariantContext builder) {
         return new PurityAdjustedSomaticVariantBuilder() {
             @Override
-            public PurityAdjustedSomaticVariantBuilder ploidy(final double ploidy) {
+            public PurityAdjustedSomaticVariantBuilder variantCopyNumber(final double ploidy) {
                 builder.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, ploidy);
                 return this;
             }
@@ -49,7 +49,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
             }
 
             @Override
-            public PurityAdjustedSomaticVariantBuilder minorAllelePloidy(final double map) {
+            public PurityAdjustedSomaticVariantBuilder minorAlleleCopyNumber(final double map) {
                 builder.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, map);
                 return this;
             }

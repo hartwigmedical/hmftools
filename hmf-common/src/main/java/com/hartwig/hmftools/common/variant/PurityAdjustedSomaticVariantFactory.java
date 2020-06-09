@@ -62,7 +62,7 @@ public class PurityAdjustedSomaticVariantFactory {
                     .from(variant)
                     .adjustedCopyNumber(0)
                     .adjustedVAF(0)
-                    .minorAllelePloidy(0)
+                    .minorAlleleCopyNumber(0)
                     .germlineStatus(GermlineStatus.UNKNOWN);
 
             enrich(variant, variant, builder);
@@ -99,8 +99,8 @@ public class PurityAdjustedSomaticVariantFactory {
 
         builder.adjustedCopyNumber(copyNumber)
                 .adjustedVAF(vaf)
-                .ploidy(ploidy)
+                .variantCopyNumber(ploidy)
                 .biallelic(biallelic)
-                .minorAllelePloidy(purpleCopyNumber.minorAllelePloidy());
+                .minorAlleleCopyNumber(purpleCopyNumber.minorAllelePloidy());
     }
 }

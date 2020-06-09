@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.annotators;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -26,8 +25,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
-import com.hartwig.hmftools.linx.types.ResolvedType;
-import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -249,7 +246,7 @@ public class IndelAnnotator
                 continue;
 
             sampleIndelList.add(new IndelData(variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(),
-                    variant.microhomology(), variant.repeatCount(), variant.ploidy()));
+                    variant.microhomology(), variant.repeatCount(), variant.variantCopyNumber()));
         }
 
         LOGGER.debug("sample({}) retrieved {} indels", sampleId, sampleIndelList.size());

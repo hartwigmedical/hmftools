@@ -71,9 +71,9 @@ public interface SomaticVariant extends Variant {
 
     double adjustedVAF();
 
-    double minorAllelePloidy();
+    double minorAlleleCopyNumber();
 
-    double ploidy();
+    double variantCopyNumber();
 
     boolean biallelic();
 
