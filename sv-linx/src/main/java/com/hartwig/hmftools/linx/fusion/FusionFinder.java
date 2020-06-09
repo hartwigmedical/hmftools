@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -193,7 +194,7 @@ public class FusionFinder
         KnownFusionType knownType = NONE;
 
         final List<Transcript> candidateTranscripts = downGene.transcripts().stream()
-                .filter(x -> x.regionType().equals(UPSTREAM)).collect(Collectors.toList());
+                .filter(x -> x.codingType().equals(UTR_5P)).collect(Collectors.toList());
 
         KnownFusionData knownFusionData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
                 .filter(x -> x.ThreeGene.equals(downGene.GeneName))
