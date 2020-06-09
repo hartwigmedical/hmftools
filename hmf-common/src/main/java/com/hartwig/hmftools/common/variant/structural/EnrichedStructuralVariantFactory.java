@@ -25,12 +25,9 @@ public final class EnrichedStructuralVariantFactory {
             final VariantContext startContext = variant.startContext();
             if (startContext != null) {
 
-                final Double purplePloidy =
-                        startContext.hasAttribute(StructuralVariantHeader.PURPLE_PLOIDY_INFO) ? startContext.getAttributeAsDouble(StructuralVariantHeader.PURPLE_PLOIDY_INFO, 0) : null;
-
                 final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder()
                         .from(variant)
-                        .ploidy(purplePloidy)
+                        .ploidy(junctionCopyNumber(startContext))
                         .start(createBuilder(startContext, variant.start()));
 
                 @Nullable
@@ -46,6 +43,18 @@ public final class EnrichedStructuralVariantFactory {
         }
 
         return result;
+    }
+
+    private static Double junctionCopyNumber(@NotNull final VariantContext startContext) {
+        if (startContext.hasAttribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO)) {
+            return startContext.getAttributeAsDouble(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, 0);
+        }
+
+        if (startContext.hasAttribute(StructuralVariantHeader.PURPLE_PLOIDY_INFO)) {
+            return startContext.getAttributeAsDouble(StructuralVariantHeader.PURPLE_PLOIDY_INFO, 0);
+        }
+
+        return null;
     }
 
     @NotNull

@@ -208,7 +208,7 @@ class PurpleStructuralVariantSupplier {
 
         Double ploidy = variant.ploidy();
         if (ploidy != null) {
-            builder.attribute(StructuralVariantHeader.PURPLE_PLOIDY_INFO, ploidy);
+            builder.attribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, ploidy);
         }
 
         return builder.make();

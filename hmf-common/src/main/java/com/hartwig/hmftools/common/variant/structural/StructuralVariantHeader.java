@@ -21,6 +21,7 @@ public class StructuralVariantHeader {
 
     public static final String PURPLE_AF_INFO = "PURPLE_AF";
     public static final String PURPLE_CN_INFO = "PURPLE_CN";
+    public static final String PURPLE_JUNCTION_COPY_NUMBER_INFO = "PURPLE_JCN";
     public static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
     public static final String PURPLE_CN_CHANGE_INFO = "PURPLE_CN_CHANGE";
 
@@ -30,7 +31,7 @@ public class StructuralVariantHeader {
             "Method used to recover, one of [UNBALANCED_SV_START, UNBALANCED_SV_END, UNSUPPORTED_BREAKEND_START, UNSUPPORTED_BREAKEND_END]";
     private static final String INFERRED_DESC = "Breakend inferred from copy number transition";
     private static final String IMPRECISE_DESC = "Imprecise structural variation";
-    private static final String PURPLE_PLOIDY_DESC = "Purity adjusted copy number of variant junction";
+    private static final String PURPLE_JUNCTION_COPY_NUMBER_DESC = "Purity adjusted copy number of variant junction";
     private static final String PURPLE_AF_DESC = "Purity adjusted allele frequency at each breakend";
     private static final String PURPLE_CN_DESC = "Purity adjusted copy number at each breakend";
     private static final String PURPLE_CN_CHANGE_DESC = "Purity adjusted change in copy number at each breakend";
@@ -59,7 +60,8 @@ public class StructuralVariantHeader {
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_CN_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERY_METHOD, 1, VCFHeaderLineType.String, RECOVERY_METHOD_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERY_FILTER, UNBOUNDED, VCFHeaderLineType.String, RECOVERY_FILTER_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_PLOIDY_INFO, 1, VCFHeaderLineType.Float, PURPLE_PLOIDY_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_JUNCTION_COPY_NUMBER_INFO, 1, VCFHeaderLineType.Float,
+                PURPLE_JUNCTION_COPY_NUMBER_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_CHANGE_INFO,
                 UNBOUNDED,
                 VCFHeaderLineType.Float,
