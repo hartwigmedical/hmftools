@@ -513,9 +513,9 @@ PURPLE also provides a qc status that can fail for the following 3 reasons:
 If a somatic VCF is supplied to PURPLE each variant is enriched with the following fields:
 
 - PURPLE_CN: Purity adjusted copy number surrounding variant location
-- PURPLE_MAP: Purity adjusted minor allele copy number surrounding variant location
+- PURPLE_MACN: Purity adjusted minor allele copy number surrounding variant location
 - PURPLE_AF: Purity adjusted allelic frequency of variant
-- PURPLE_PLOIDY: Purity adjusted ploidy of variant
+- PURPLE_VCN: Purity adjusted copy number of variant
 - SUBCL: Subclonal likelihood between 0 and 1
 - KT: Forward/reverse kataegis id
 - BIALLELIC: Flag to indicate variant is biallelic
@@ -655,7 +655,7 @@ enriched with the following fields:
 
 Field | Count | Description 
 --- | --- | ---
-PURPLE_PLOIDY | 1 | Purity adjusted junction copy number of variant
+PURPLE_JCN | 1 | Purity adjusted junction copy number of variant
 PURPLE_AF | 1 or 2 |Purity adjusted allele frequency at each breakend
 PURPLE_CN | 1 or 2 | Purity adjusted copy number at each breakend
 PURPLE_CN_CHANGE | 1 or 2 | Purity adjusted change in copy number at each breakend
@@ -670,10 +670,10 @@ The output VCF `TUMOR.purple.somatic.vcf.gz` will contain all (filtered and unfi
 
 Field | Count | Description 
 --- | --- | ---
-PURPLE_PLOIDY | 1 | Purity adjusted number of copies of variant
+PURPLE_VCN | 1 | Purity adjusted number of copies of variant
 PURPLE_AF | 1 | Purity adjusted allelic frequency of variant
 PURPLE_CN | 1 | Purity adjusted copy number surrounding variant location
-PURPLE_MAP | 1 | Purity adjusted minor allele copy number surrounding variant location
+PURPLE_MACN | 1 | Purity adjusted minor allele copy number surrounding variant location
 PURPLE_GERMLINE | 1 | Germline classification surrounding variant location, one of `HOM_DELETION`, `HET_DELETION`, `AMPLIFICATION`, `NOISE`, `DIPLOID`, `UNKNOWN`
 BIALLELIC | 1 | Flag to indicate variant is biallelic
 REP_S | 1 | Repeat sequence
