@@ -43,6 +43,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         const val PON_ADDITIONAL_DISTANCE = 1
         const val MIN_HOTSPOT_DISTANCE = 1000
         const val MIN_RESCUE_QUAL = 100
+        const val MIN_DSB_RESCUE_LENGTH = 1000
 
         val logger = LogManager.getLogger(this::class.java)
         val version = VersionInfo("gripss.version")
@@ -90,13 +91,16 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
         logger.info("Finding double stranded break links")
         val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates())
-        val combinedLinks = LinkStore(assemblyLinks, transitiveLinks, dsbLinks)
 
         logger.info("Rescuing linked variants")
-        val linkRescues = LinkRescue(MIN_RESCUE_QUAL, combinedLinks, softFiltersAfterSingleDedup, variantStore).rescues
-        val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), linkRescues)
+        val dsbRescues = LinkRescue(MIN_RESCUE_QUAL, dsbLinks, softFiltersAfterSingleDedup, variantStore, false).rescues
+        val assemblyRescues = LinkRescue(MIN_RESCUE_QUAL, assemblyLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
+        val transitiveRescues = LinkRescue(MIN_RESCUE_QUAL, transitiveLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
+        val allRescues = dsbRescues + assemblyRescues + transitiveRescues
 
         logger.info("Writing file: ${config.outputVcf}")
+        val combinedLinks = LinkStore(assemblyLinks, transitiveLinks, dsbLinks)
+        val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), allRescues)
         fileWriter.writeHeader(version.version(), fileReader.fileHeader)
         for (variant in variantStore.selectAll()) {
 
