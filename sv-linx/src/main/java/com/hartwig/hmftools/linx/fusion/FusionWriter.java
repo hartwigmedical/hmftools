@@ -112,10 +112,10 @@ public class FusionWriter
             if(fusion.reportable())
             {
                 reportedFusions.add(ImmutableReportableGeneFusion.builder()
-                        .geneStart(fusion.upstreamTrans().geneName())
+                        .geneStart(fusion.geneName(FS_UPSTREAM))
                         .geneTranscriptStart(fusion.upstreamTrans().StableId)
                         .geneContextStart(context(fusion.upstreamTrans(), fusion.getFusedExon(true)))
-                        .geneEnd(fusion.downstreamTrans().geneName())
+                        .geneEnd(fusion.geneName(FS_DOWNSTREAM))
                         .geneTranscriptEnd(fusion.downstreamTrans().StableId)
                         .geneContextEnd(context(fusion.downstreamTrans(), fusion.getFusedExon(false)))
                         .ploidy(fusionPloidy(fusion.upstreamTrans().gene().ploidy(), fusion.downstreamTrans().gene().ploidy()))
@@ -233,7 +233,7 @@ public class FusionWriter
                         gene.type(), gene.ploidy()));
 
                 writer.write(String.format(",%s,%s,%s,%d,%s,%s",
-                        gene.StableId, gene.GeneName, trans.StableId,
+                        gene.StableId, fusion.geneName(fs), trans.StableId,
                         gene.Strand, trans.regionType(), trans.codingType()));
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%s",

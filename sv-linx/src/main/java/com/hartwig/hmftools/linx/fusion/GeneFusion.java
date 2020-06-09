@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.UPSTREAM_STR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
@@ -59,6 +60,14 @@ public class GeneFusion
     public Transcript[] transcripts() { return mTranscripts; }
     public Transcript upstreamTrans() { return mTranscripts[FS_UPSTREAM]; }
     public Transcript downstreamTrans() { return mTranscripts[FS_DOWNSTREAM]; }
+
+    public String geneName(int fs)
+    {
+        if(fs == FS_UPSTREAM && (mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS))
+            return mTranscripts[FS_UPSTREAM].StableId;
+        else
+            return mTranscripts[fs].geneName();
+    }
 
     public boolean reportable(){ return mIsReportable; }
     public void setReportable(boolean toggle) { mIsReportable = toggle; }
