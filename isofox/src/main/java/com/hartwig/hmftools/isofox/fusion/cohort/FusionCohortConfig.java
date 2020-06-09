@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_TH
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -38,7 +37,7 @@ public class FusionCohortConfig
     public final boolean WriteCombinedFusions;
     public final boolean RewriteAnnotatedFusions; // rewrite all fusions with cohort and other gene data
 
-    public final List<String> ComparisonSources;
+    public final String ComparisonSource;
     public final boolean CompareUnfiltered;
 
     public FusionCohortConfig(final CommandLine cmd)
@@ -52,9 +51,7 @@ public class FusionCohortConfig
         WriteCombinedFusions = cmd.hasOption(WRITE_COMBINED_FUSIONS);
 
         CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
-
-        ComparisonSources = cmd.hasOption(FUSION_COMPARISONS) ?
-                Arrays.stream(cmd.getOptionValue(FUSION_COMPARISONS).split(ITEM_DELIM)).collect(Collectors.toList()) : Lists.newArrayList();
+        ComparisonSource = cmd.getOptionValue(FUSION_COMPARISONS);
     }
 
     public static void addCmdLineOptions(final Options options)

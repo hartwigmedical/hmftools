@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
-import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilename;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.writeCombinedFusions;
@@ -17,7 +15,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -92,7 +89,7 @@ public class FusionCohortTask implements Callable
                 mFusionCollection.addToCohortCache(sampleFusions, sampleId);
             }
 
-            if(!mConfig.Fusions.ComparisonSources.isEmpty())
+            if(mConfig.Fusions.ComparisonSource != null)
             {
                 mExternalFusionCompare.compareFusions(sampleId, sampleFusions);
             }

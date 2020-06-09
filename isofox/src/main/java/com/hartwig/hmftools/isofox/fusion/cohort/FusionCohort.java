@@ -53,7 +53,7 @@ public class FusionCohort
         mConfig = config;
         mFilters = new FusionFilters(mConfig.Fusions, cmd);
         mFilteredFusionHeader = null;
-        mExternalCompareWriter = !mConfig.Fusions.ComparisonSources.isEmpty() ? ExternalFusionCompare.initialiseWriter(mConfig) : null;
+        mExternalCompareWriter = mConfig.Fusions.ComparisonSource != null ? ExternalFusionCompare.initialiseWriter(mConfig) : null;
         mFusionCollection = new FusionCollection(mConfig);
         mWriter = null;
 
@@ -63,7 +63,7 @@ public class FusionCohort
 
     public void processFusionFiles()
     {
-        if(!mConfig.Fusions.GenerateCohort && mConfig.Fusions.ComparisonSources.isEmpty() && !mConfig.Fusions.WriteFilteredFusions)
+        if(!mConfig.Fusions.GenerateCohort && mConfig.Fusions.ComparisonSource == null && !mConfig.Fusions.WriteFilteredFusions)
         {
             ISF_LOGGER.warn("no fusion functions configured");
             return;
@@ -71,7 +71,7 @@ public class FusionCohort
 
         final List<Path> filenames = Lists.newArrayList();
 
-        final CohortAnalysisType fileType = !mConfig.Fusions.ComparisonSources.isEmpty() ? PASSING_FUSION : FUSION;
+        final CohortAnalysisType fileType = mConfig.Fusions.ComparisonSource != null ? PASSING_FUSION : FUSION;
 
         if(!formSampleFilenames(mConfig, fileType, filenames))
             return;

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -40,6 +39,12 @@ public class ExternalFusionCompare
     private final BufferedWriter mWriter;
     private final List<String> mSampleResults;
     private final Map<String,Integer> mFieldsMap;
+
+    private static final String MT_MATCH = "MATCH";
+    private static final String MT_FILT_IN_ISOFOX = "FILTERED_IN_ISOFOX";
+    private static final String MT_FILT_IN_EXT = "FILTERED_IN_";
+    private static final String MT_ISOFOX_ONLY = "ISOFOX_ONLY";
+    private static final String MT_EXT_ONLY = "_ONLY";
 
     public ExternalFusionCompare(final CohortConfig config, final BufferedWriter writer)
     {
@@ -96,7 +101,7 @@ public class ExternalFusionCompare
                 ++matchedFusionCount;
                 matchedExtFusions.add(extFusion);
 
-                cacheMatchResults(sampleId, "MATCH", fusion.Id, fusion.Chromosomes, fusion.JunctionPositions, fusion.JunctionOrientations,
+                cacheMatchResults(sampleId, getMatchType(MT_MATCH), fusion.Id, fusion.Chromosomes, fusion.JunctionPositions, fusion.JunctionOrientations,
                         fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames, fusion.SplitFrags + fusion.RealignedFrags,
                         fusion.DiscordantFrags, extFusion.SplitFragments, extFusion.DiscordantFragments, fusion.CohortCount, "");
             }
@@ -224,7 +229,7 @@ public class ExternalFusionCompare
                                     min(unfilteredFusion.AnchorDistance[SE_START], unfilteredFusion.AnchorDistance[SE_START]),
                                     unfilteredFusion.alleleFrequency());
 
-                            cacheMatchResults(sampleId, "MATCH_ISF_UNFILTERED", unfilteredFusion.Id,
+                            cacheMatchResults(sampleId, getMatchType(MT_FILT_IN_ISOFOX), unfilteredFusion.Id,
                                     extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
                                     unfilteredFusion.JunctionTypes, extFusion.SvType, unfilteredFusion.GeneIds, extFusion.GeneNames,
                                     unfilteredFusion.supportingFragments(), unfilteredFusion.DiscordantFrags,
@@ -252,18 +257,29 @@ public class ExternalFusionCompare
 
         for(ExternalFusionData extFusion : unmatchedExternalFusions)
         {
-            cacheMatchResults(sampleId, "EXT_ONLY", -1, extFusion.Chromosomes, extFusion.JunctionPositions,
+            cacheMatchResults(sampleId, getMatchType(MT_EXT_ONLY), -1, extFusion.Chromosomes, extFusion.JunctionPositions,
                     extFusion.JunctionOrientations, extFusion.JunctionTypes, extFusion.SvType, noGeneIds, extFusion.GeneNames,
                     0, 0, extFusion.SplitFragments, extFusion.DiscordantFragments, 0, "");
         }
 
     }
 
+    private String getMatchType(final String matchStr)
+    {
+        if(matchStr.equals(MT_MATCH) || matchStr.equals(MT_ISOFOX_ONLY) || matchStr.equals(MT_FILT_IN_ISOFOX))
+            return matchStr;
+
+        if(matchStr.equals(MT_EXT_ONLY))
+            return mConfig.Fusions.ComparisonSource + matchStr;
+        else
+            return matchStr + mConfig.Fusions.ComparisonSource;
+    }
+
     private final Map<String, List<ExternalFusionData>> loadExternalFusionData(final String sampleId)
     {
         final Map<String, List<ExternalFusionData>> mappedFusions = Maps.newHashMap();
 
-        if(mConfig.Fusions.ComparisonSources.contains(FUSION_SOURCE_ARRIBA))
+        if(mConfig.Fusions.ComparisonSource.equals(FUSION_SOURCE_ARRIBA))
         {
             final String arribaFile = mConfig.RootDataDir + sampleId + ".fusions.tsv";
 
@@ -299,7 +315,7 @@ public class ExternalFusionCompare
 
     private void checkExternalUnfilteredFusionData(final String sampleId, final List<FusionData> fusions)
     {
-        if(mConfig.Fusions.CompareUnfiltered && mConfig.Fusions.ComparisonSources.contains(FUSION_SOURCE_ARRIBA))
+        if(mConfig.Fusions.CompareUnfiltered && mConfig.Fusions.ComparisonSource.equals(FUSION_SOURCE_ARRIBA))
         {
             final String arribaDiscardedFile = mConfig.RootDataDir + sampleId + ".fusions.discarded.tsv";
 
@@ -335,7 +351,7 @@ public class ExternalFusionCompare
                             final String otherData = String.format("Conf=%s;Filters=%s",
                                     items[16], items[19].replaceAll(",",";"));
 
-                            cacheMatchResults(sampleId, "MATCH_EXT_UNFILTERED", fusion.Id, fusion.Chromosomes,
+                            cacheMatchResults(sampleId, getMatchType(MT_FILT_IN_EXT), fusion.Id, fusion.Chromosomes,
                                     fusion.JunctionPositions, fusion.JunctionOrientations, fusion.JunctionTypes, fusion.SvType,
                                     fusion.GeneIds, fusion.GeneNames, fusion.supportingFragments(), fusion.DiscordantFrags,
                                     splitFragments, discordantFragments, fusion.CohortCount, otherData);
@@ -360,7 +376,7 @@ public class ExternalFusionCompare
 
         for(FusionData fusion : fusions)
         {
-            cacheMatchResults(sampleId, "ISOFOX_ONLY", fusion.Id, fusion.Chromosomes, fusion.JunctionPositions,
+            cacheMatchResults(sampleId, getMatchType(MT_ISOFOX_ONLY), fusion.Id, fusion.Chromosomes, fusion.JunctionPositions,
                     fusion.JunctionOrientations, fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames,
                     fusion.SplitFrags + fusion.RealignedFrags, fusion.DiscordantFrags, 0, 0,
                     fusion.CohortCount, fusionId(fusion.Id));
