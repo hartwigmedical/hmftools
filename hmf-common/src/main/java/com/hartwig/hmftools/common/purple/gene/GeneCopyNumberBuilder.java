@@ -73,7 +73,7 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
             double currentCopyNumber = copyNumber.averageTumorCopyNumber();
 
             maxCopyNumber = Math.max(maxCopyNumber, currentCopyNumber);
-            minMinorAllelePloidy = Math.min(minMinorAllelePloidy, copyNumber.minorAllelePloidy());
+            minMinorAllelePloidy = Math.min(minMinorAllelePloidy, copyNumber.minorAlleleCopyNumber());
 
             if (!Doubles.equal(currentCopyNumber, previousCopyNumber)) {
                 switch (copyNumber.method()) {
@@ -131,7 +131,7 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
                 .germlineHomRegions(homCount)
                 .germlineHet2HomRegions(het2HomCount)
                 .minRegions(minRegions)
-                .minMinorAllelePloidy(minMinorAllelePloidy)
+                .minMinorAlleleCopyNumber(minMinorAllelePloidy)
                 .build();
     }
 }

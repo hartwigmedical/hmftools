@@ -46,7 +46,7 @@ public class CopyNumberEvidenceAnalyzerTest {
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEndSupport(SegmentSupport.NONE)
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minMinorAllelePloidy(0)
+                .minMinorAlleleCopyNumber(0)
                 .transcriptID("trans")
                 .transcriptVersion(1)
                 .chromosomeBand("12.1")

@@ -34,7 +34,7 @@ public interface GeneCopyNumber extends TranscriptRegion {
 
     CopyNumberMethod minRegionMethod();
 
-    double minMinorAllelePloidy();
+    double minMinorAlleleCopyNumber();
 
     default int totalRegions() {
         return somaticRegions() + germlineHet2HomRegions() + germlineHomRegions();

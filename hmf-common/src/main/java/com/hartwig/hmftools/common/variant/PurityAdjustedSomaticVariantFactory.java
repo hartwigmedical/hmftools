@@ -101,6 +101,6 @@ public class PurityAdjustedSomaticVariantFactory {
                 .adjustedVAF(vaf)
                 .variantCopyNumber(ploidy)
                 .biallelic(biallelic)
-                .minorAlleleCopyNumber(purpleCopyNumber.minorAllelePloidy());
+                .minorAlleleCopyNumber(purpleCopyNumber.minorAlleleCopyNumber());
     }
 }

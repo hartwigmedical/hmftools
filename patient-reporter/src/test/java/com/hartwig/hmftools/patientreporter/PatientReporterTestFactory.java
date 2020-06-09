@@ -62,7 +62,7 @@ public final class PatientReporterTestFactory {
                 .maxCopyNumber(0)
                 .transcriptID(Strings.EMPTY)
                 .transcriptVersion(0)
-                .minMinorAllelePloidy(0);
+                .minMinorAlleleCopyNumber(0);
     }
 
     @NotNull

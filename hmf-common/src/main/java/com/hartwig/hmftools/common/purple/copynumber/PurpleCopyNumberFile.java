@@ -94,8 +94,8 @@ public final class PurpleCopyNumberFile {
                 .add("gcContent")
                 .add("minStart")
                 .add("maxStart")
-                .add("minorAllelePloidy")
-                .add("majorAllelePloidy")
+                .add("minorAlleleCopyNumber")
+                .add("majorAlleleCopyNumber")
                 .toString();
     }
 
@@ -115,8 +115,8 @@ public final class PurpleCopyNumberFile {
                 .add(FORMAT.format(copyNumber.gcContent()))
                 .add(String.valueOf(copyNumber.minStart()))
                 .add(String.valueOf(copyNumber.maxStart()))
-                .add(FORMAT.format(copyNumber.minorAllelePloidy()))
-                .add(FORMAT.format(copyNumber.majorAllelePloidy()))
+                .add(FORMAT.format(copyNumber.minorAlleleCopyNumber()))
+                .add(FORMAT.format(copyNumber.majorAlleleCopyNumber()))
                 .toString();
     }
 

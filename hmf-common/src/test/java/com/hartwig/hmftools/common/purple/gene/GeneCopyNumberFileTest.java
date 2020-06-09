@@ -21,7 +21,7 @@ public class GeneCopyNumberFileTest {
 
         GeneCopyNumber copyNumber = GeneCopyNumberFile.fromString(oldVersion);
         assertEquals(11869, copyNumber.start());
-        assertEquals(0.5491, copyNumber.minMinorAllelePloidy(), 0.00001);
+        assertEquals(0.5491, copyNumber.minMinorAlleleCopyNumber(), 0.00001);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class GeneCopyNumberFileTest {
                 .minRegionMethod(randomMethod(random))
                 .minRegionStartSupport(randomSupport(random))
                 .minRegionEndSupport(randomSupport(random))
-                .minMinorAllelePloidy(nextDouble(random));
+                .minMinorAlleleCopyNumber(nextDouble(random));
     }
 
     @NotNull
