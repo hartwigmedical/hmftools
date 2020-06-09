@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
 import static com.hartwig.hmftools.common.variant.enrich.HighConfidenceEnrichment.HIGH_CONFIDENCE_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_VARIANT_PLOIDY_INFO;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
@@ -264,7 +264,6 @@ public class SomaticVariantFactory {
     private static double variantCopyNumber(@NotNull final VariantContext context) {
         return context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, context.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
     }
-
 
     private static void attachIDAndCosmicAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
             @NotNull VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {

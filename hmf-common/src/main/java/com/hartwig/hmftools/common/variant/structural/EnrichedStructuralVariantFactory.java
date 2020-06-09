@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.variant.structural;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantHeader.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantHeader.PURPLE_CN_CHANGE_INFO;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantHeader.PURPLE_CN_INFO;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -13,11 +17,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public final class EnrichedStructuralVariantFactory {
 
-    private static final String PURPLE_AF = "PURPLE_AF";
-    private static final String PURPLE_CN = "PURPLE_CN";
-    private static final String PURPLE_CN_CHANGE = "PURPLE_CN_CHANGE";
-    private static final String PURPLE_PLOIDY = "PURPLE_PLOIDY";
-
     @NotNull
     public List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants) {
         final List<EnrichedStructuralVariant> result = Lists.newArrayList();
@@ -27,7 +26,7 @@ public final class EnrichedStructuralVariantFactory {
             if (startContext != null) {
 
                 final Double purplePloidy =
-                        startContext.hasAttribute(PURPLE_PLOIDY) ? startContext.getAttributeAsDouble(PURPLE_PLOIDY, 0) : null;
+                        startContext.hasAttribute(StructuralVariantHeader.PURPLE_PLOIDY_INFO) ? startContext.getAttributeAsDouble(StructuralVariantHeader.PURPLE_PLOIDY_INFO, 0) : null;
 
                 final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder()
                         .from(variant)
@@ -53,13 +52,13 @@ public final class EnrichedStructuralVariantFactory {
     private ImmutableEnrichedStructuralVariantLeg createBuilder(@NotNull final VariantContext context,
             @NotNull final StructuralVariantLeg leg) {
         final List<Double> purpleAF =
-                context.hasAttribute(PURPLE_AF) ? context.getAttributeAsDoubleList(PURPLE_AF, 0.0) : Collections.emptyList();
+                context.hasAttribute(PURPLE_AF_INFO) ? context.getAttributeAsDoubleList(PURPLE_AF_INFO, 0.0) : Collections.emptyList();
 
         final List<Double> purpleCN =
-                context.hasAttribute(PURPLE_CN) ? context.getAttributeAsDoubleList(PURPLE_CN, 0.0) : Collections.emptyList();
+                context.hasAttribute(PURPLE_CN_INFO) ? context.getAttributeAsDoubleList(PURPLE_CN_INFO, 0.0) : Collections.emptyList();
 
         final List<Double> purpleCNChange =
-                context.hasAttribute(PURPLE_CN_CHANGE) ? context.getAttributeAsDoubleList(PURPLE_CN_CHANGE, 0.0) : Collections.emptyList();
+                context.hasAttribute(PURPLE_CN_CHANGE_INFO) ? context.getAttributeAsDoubleList(PURPLE_CN_CHANGE_INFO, 0.0) : Collections.emptyList();
 
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder()
                 .from(leg)

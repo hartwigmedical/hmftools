@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.variant.SomaticVariantHeader;
 import com.hartwig.hmftools.common.variant.clonality.PeakModel;
 import com.hartwig.hmftools.common.variant.clonality.SubclonalLikelihood;
 
@@ -33,7 +34,7 @@ public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-        final double variantCopyNumber = context.getAttributeAsDouble(PurityEnrichment.PURPLE_VARIANT_CN_INFO, maxPloidy);
+        final double variantCopyNumber = context.getAttributeAsDouble(SomaticVariantHeader.PURPLE_VARIANT_CN_INFO, maxPloidy);
         double subclonalLikelihood = Math.round(likelihoodFactory.subclonalLikelihood(variantCopyNumber) * 1000d) / 1000d;
 
         if (!Doubles.isZero(subclonalLikelihood)) {
