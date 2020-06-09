@@ -81,6 +81,8 @@ public class SampleGenePercentiles
 
         initialiseWriter();
 
+        ISF_LOGGER.info("processing {} samples gene files", mConfig.SampleData.SampleIds.size());
+
         // load each sample's alt SJs and consolidate into a single list
         for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
         {
@@ -91,7 +93,7 @@ public class SampleGenePercentiles
             ISF_LOGGER.debug("{}: sample({}) processed gene file", i, sampleId);
         }
 
-        ISF_LOGGER.info("loaded {} samples gene files", mConfig.SampleData.SampleIds.size());
+        ISF_LOGGER.info("processed {} samples gene files", mConfig.SampleData.SampleIds.size());
 
         closeBufferedWriter(mWriter);
     }
@@ -126,28 +128,21 @@ public class SampleGenePercentiles
                 if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(geneId))
                     continue;
 
-                final String geneName = items[geneNameIndex];
                 double tpm = Double.parseDouble(items[tpmIndex]);
 
                 if(tpm < mConfig.TpmLogThreshold)
                     continue;
 
-                try
-                {
-                    double panCancerPerc = getTpmPercentile(panCancerPercentilesMap, geneId, tpm);
-                    double cancerPerc = getTpmPercentile(cancerPercentilesMap, geneId, tpm);
+                final String geneName = items[geneNameIndex];
 
-                    double panCancerMedian = getTpmMedian(panCancerPercentilesMap, geneId);
-                    double cancerMedian = getTpmMedian(cancerPercentilesMap, geneId);
+                double panCancerPerc = getTpmPercentile(panCancerPercentilesMap, geneId, tpm);
+                double cancerPerc = getTpmPercentile(cancerPercentilesMap, geneId, tpm);
 
-                    writeSamplePercentileData(
-                            sampleId, cancerType, geneId, geneName, tpm, panCancerPerc, cancerPerc, panCancerMedian, cancerMedian);
-                }
-                catch (NullPointerException e)
-                {
-                    ISF_LOGGER.error("sampleId({}) geneId({}) cancerType({}) missing data", sampleId, geneId, cancerType, e.toString());
-                    return;
-                }
+                double panCancerMedian = getTpmMedian(panCancerPercentilesMap, geneId);
+                double cancerMedian = getTpmMedian(cancerPercentilesMap, geneId);
+
+                writeSamplePercentileData(
+                        sampleId, cancerType, geneId, geneName, tpm, panCancerPerc, cancerPerc, panCancerMedian, cancerMedian);
             }
         }
         catch(IOException e)
