@@ -206,9 +206,9 @@ class PurpleStructuralVariantSupplier {
             builder.attribute(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO, purpleCNChange);
         }
 
-        Double ploidy = variant.ploidy();
-        if (ploidy != null) {
-            builder.attribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, ploidy);
+        Double junctionCopyNumber = variant.junctionCopyNumber();
+        if (junctionCopyNumber != null) {
+            builder.attribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, junctionCopyNumber);
         }
 
         return builder.make();

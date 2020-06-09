@@ -273,7 +273,7 @@ public class SvDataLoader
                 .endOrientation(var.end() == null ? (byte) 0 : var.orientation(false))
                 .startHomologySequence(var.start().homology())
                 .endHomologySequence(var.end() == null ? "" : var.end().homology())
-                .ploidy(getValueNotNull(var.ploidy()))
+                .ploidy(getValueNotNull(var.junctionCopyNumber()))
                 .startAF(getValueNotNull(var.start().alleleFrequency()))
                 .endAF(var.end() == null ? 0 : getValueNotNull(var.end().alleleFrequency()))
                 .adjustedStartAF(getValueNotNull(var.start().adjustedAlleleFrequency()))

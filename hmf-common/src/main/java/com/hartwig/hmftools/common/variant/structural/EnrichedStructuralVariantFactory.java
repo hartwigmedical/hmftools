@@ -27,7 +27,7 @@ public final class EnrichedStructuralVariantFactory {
 
                 final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder()
                         .from(variant)
-                        .ploidy(junctionCopyNumber(startContext))
+                        .junctionCopyNumber(junctionCopyNumber(startContext))
                         .start(createBuilder(startContext, variant.start()));
 
                 @Nullable

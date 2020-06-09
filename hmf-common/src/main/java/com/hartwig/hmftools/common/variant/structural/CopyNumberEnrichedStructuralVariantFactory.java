@@ -54,7 +54,7 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
             List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
                 // The implied ploidy should be equal between start and end, so doesn't matter what we pick.
-                builder.ploidy((ploidies.get(0).averageImpliedPloidy()));
+                builder.junctionCopyNumber((ploidies.get(0).averageImpliedPloidy()));
 
                 StructuralVariantLegPloidy startPloidy = ploidies.get(0);
                 StructuralVariantLegPloidy endPloidy = ploidies.size() <= 1 ? null : ploidies.get(1);
@@ -77,7 +77,7 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
 
                 // Lacking anything else, inferred variants can use copy number change as ploidy
                 if (variant.type() == StructuralVariantType.INF) {
-                    builder.ploidy((changeFactory.copyNumberChange(startCopyNumber)));
+                    builder.junctionCopyNumber((changeFactory.copyNumberChange(startCopyNumber)));
                 }
 
                 if (endLeg != null) {

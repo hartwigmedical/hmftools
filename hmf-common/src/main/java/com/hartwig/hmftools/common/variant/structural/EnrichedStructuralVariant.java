@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class EnrichedStructuralVariant implements StructuralVariant {
 
     @Nullable
-    public abstract Double ploidy();
+    public abstract Double junctionCopyNumber();
 
     @NotNull
     @Override
