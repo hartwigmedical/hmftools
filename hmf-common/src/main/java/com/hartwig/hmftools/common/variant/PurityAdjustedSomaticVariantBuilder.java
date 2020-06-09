@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE
 import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_VARIANT_CN_INFO;
 
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 
@@ -32,7 +32,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
         return new PurityAdjustedSomaticVariantBuilder() {
             @Override
             public PurityAdjustedSomaticVariantBuilder ploidy(final double ploidy) {
-                builder.getCommonInfo().putAttribute(PURPLE_PLOIDY_INFO, ploidy);
+                builder.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, ploidy);
                 return this;
             }
 
@@ -50,7 +50,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
 
             @Override
             public PurityAdjustedSomaticVariantBuilder minorAllelePloidy(final double map) {
-                builder.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_PLOIDY_INFO, map);
+                builder.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, map);
                 return this;
             }
 

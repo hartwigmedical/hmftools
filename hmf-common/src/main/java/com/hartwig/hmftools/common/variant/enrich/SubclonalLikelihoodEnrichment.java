@@ -33,8 +33,8 @@ public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-        final double ploidy = context.getAttributeAsDouble(PurityEnrichment.PURPLE_PLOIDY_INFO, maxPloidy);
-        double subclonalLikelihood = Math.round(likelihoodFactory.subclonalLikelihood(ploidy) * 1000d) / 1000d;
+        final double variantCopyNumber = context.getAttributeAsDouble(PurityEnrichment.PURPLE_VARIANT_CN_INFO, maxPloidy);
+        double subclonalLikelihood = Math.round(likelihoodFactory.subclonalLikelihood(variantCopyNumber) * 1000d) / 1000d;
 
         if (!Doubles.isZero(subclonalLikelihood)) {
             context.getCommonInfo().putAttribute(SUBCLONAL_LIKELIHOOD_FLAG, subclonalLikelihood);

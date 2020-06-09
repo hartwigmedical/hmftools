@@ -6,8 +6,10 @@ import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE
 import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_VARIANT_PLOIDY_INFO;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
@@ -229,11 +231,11 @@ public class SomaticVariantFactory {
                 .alleleReadCount(allelicDepth.alleleReadCount())
                 .totalReadCount(allelicDepth.totalReadCount())
                 .hotspot(HotspotEnrichment.fromVariant(context))
-                .minorAllelePloidy(context.getAttributeAsDouble(PURPLE_MINOR_ALLELE_PLOIDY_INFO, 0))
+                .minorAllelePloidy(minorAlleleCopyNumber(context))
                 .adjustedCopyNumber(context.getAttributeAsDouble(PURPLE_CN_INFO, 0))
                 .adjustedVAF(context.getAttributeAsDouble(PURPLE_AF_INFO, 0))
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
-                .ploidy(context.getAttributeAsDouble(PURPLE_PLOIDY_INFO, 0))
+                .ploidy(variantCopyNumber(context))
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
                 .tier(VariantTier.fromString(context.getAttributeAsString("TIER", VariantTier.UNKNOWN.toString())))
@@ -255,6 +257,15 @@ public class SomaticVariantFactory {
         return builder;
     }
 
+    private static double minorAlleleCopyNumber(@NotNull final VariantContext context) {
+        return context.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, context.getAttributeAsDouble(PURPLE_MINOR_ALLELE_PLOIDY_INFO, 0));
+    }
+
+    private static double variantCopyNumber(@NotNull final VariantContext context) {
+        return context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, context.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
+    }
+
+
     private static void attachIDAndCosmicAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
             @NotNull VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
         final String ID = context.getID();
@@ -272,7 +283,8 @@ public class SomaticVariantFactory {
         builder.cosmicIDs(cosmicIDs);
 
         final List<CosmicAnnotation> cosmicAnnotations = CosmicAnnotationFactory.fromContext(context);
-        final Optional<CosmicAnnotation> canonicalCosmicAnnotation = canonicalAnnotationFactory.canonicalCosmicAnnotation(cosmicAnnotations);
+        final Optional<CosmicAnnotation> canonicalCosmicAnnotation =
+                canonicalAnnotationFactory.canonicalCosmicAnnotation(cosmicAnnotations);
 
         if (canonicalCosmicAnnotation.isPresent()) {
             builder.canonicalCosmicID(canonicalCosmicAnnotation.get().id());
