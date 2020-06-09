@@ -1,18 +1,22 @@
 package com.hartwig.hmftools.common.fusion;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.GeneAnnotation.isDownstream;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UNKNOWN;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -166,12 +170,20 @@ public class Transcript {
         return ExonUpstream > 0 && (ExonDownstream - ExonUpstream) == 1;
     }
 
+    public boolean isPostTranscript()
+    {
+        if(mGene.Strand == POS_STRAND)
+            return svPosition() > TranscriptEnd;
+        else
+            return svPosition() < TranscriptStart;
+    }
+
     public int getDistanceUpstream()
     {
         if(!isPromoter())
             return 0;
 
-        if(mGene.Strand == 1)
+        if(mGene.Strand == POS_STRAND)
             return TranscriptStart - svPosition();
         else
             return svPosition() - TranscriptEnd;
@@ -182,16 +194,8 @@ public class Transcript {
 
     // for convenience
     public boolean isCoding() { return mCodingType == CODING; }
-
-    public boolean preCoding()
-    {
-        return mCodingType == UTR_5P;
-    }
-
-    public boolean postCoding()
-    {
-        return mCodingType == UTR_3P;
-    }
+    public boolean preCoding() { return mCodingType == UTR_5P; }
+    public boolean postCoding() { return mCodingType == UTR_3P; }
 
     public boolean nonCoding()
     {
@@ -200,17 +204,21 @@ public class Transcript {
 
     private void setRegionType()
     {
-        if(isIntronic())
+        if(isPromoter())
+        {
+            mRegionType = UPSTREAM;
+        }
+        else if(isPostTranscript())
+        {
+            mRegionType = DOWNSTREAM;
+        }
+        else if(isIntronic())
         {
             mRegionType = INTRONIC;
         }
         else if(isExonic())
         {
             mRegionType = EXONIC;
-        }
-        else if(isPromoter())
-        {
-            mRegionType = UPSTREAM;
         }
         else
         {
@@ -239,13 +247,13 @@ public class Transcript {
         {
             mCodingType = NON_CODING;
         }
+        else if(mCodingBases == mTotalCodingBases || isPostTranscript())
+        {
+            mCodingType = UTR_3P;
+        }
         else if(mCodingBases == 0)
         {
             mCodingType = UTR_5P;
-        }
-        else if(mCodingBases == mTotalCodingBases)
-        {
-            mCodingType = UTR_3P;
         }
         else
         {
@@ -363,4 +371,77 @@ public class Transcript {
     public final String getProteinFeaturesKept() { return mProteinFeaturesKept; }
     public final String getProteinFeaturesLost() { return mProteinFeaturesLost; }
 
+    public static final int CODING_BASES = 0;
+    public static final int TOTAL_CODING_BASES = 1;
+
+    public static int[] calcCodingBases(int codingStart, int codingEnd, final List<ExonData> exonList, int position)
+    {
+        boolean inCodingRegion = false;
+        boolean codingRegionEnded = false;
+
+        int[] codingData = {0, 0};
+
+        for (ExonData exonData : exonList)
+        {
+            int exonStart = exonData.ExonStart;
+            int exonEnd = exonData.ExonEnd;
+
+            if (!inCodingRegion)
+            {
+                if (exonEnd >= codingStart)
+                {
+                    // coding region begins in this exon
+                    inCodingRegion = true;
+
+                    codingData[TOTAL_CODING_BASES] += exonEnd - codingStart + 1;
+
+                    // check whether the position falls in this exon and if so before or after the coding start
+                    if (position >= codingStart)
+                    {
+                        if (position < exonEnd)
+                            codingData[CODING_BASES] += position - codingStart + 1;
+                        else
+                            codingData[CODING_BASES] += exonEnd - codingStart + 1;
+                    }
+                }
+            }
+            else if (!codingRegionEnded)
+            {
+                if (exonStart > codingEnd)
+                {
+                    codingRegionEnded = true;
+                }
+                else if (exonEnd > codingEnd)
+                {
+                    // coding region ends in this exon
+                    codingRegionEnded = true;
+
+                    codingData[TOTAL_CODING_BASES] += codingEnd - exonStart + 1;
+
+                    if (position >= exonStart)
+                    {
+                        if (position < codingEnd)
+                            codingData[CODING_BASES] += position - exonStart + 1;
+                        else
+                            codingData[CODING_BASES] += codingEnd - exonStart + 1;
+                    }
+                }
+                else
+                {
+                    // take all of the exon's bases
+                    codingData[TOTAL_CODING_BASES] += exonEnd - exonStart + 1;
+
+                    if (position >= exonStart)
+                    {
+                        if (position < exonEnd)
+                            codingData[CODING_BASES] += position - exonStart + 1;
+                        else
+                            codingData[CODING_BASES] += exonEnd - exonStart + 1;
+                    }
+                }
+            }
+        }
+
+        return codingData;
+    }
 }

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTra
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.Transcript.CODING_BASES;
+import static com.hartwig.hmftools.common.fusion.Transcript.TOTAL_CODING_BASES;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -146,7 +148,7 @@ public class EnsemblDataCache
         return mTranscriptDataMap.get(geneId);
     }
 
-    public void populateGeneIdList(final List<String> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
+    public void populateGeneIdList(final List<String> uniqueGeneIds, final String chromosome, int position, int upstreamDistance)
     {
         // find the unique set of geneIds
         final List<EnsemblGeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
@@ -158,7 +160,7 @@ public class EnsemblDataCache
         }
     }
 
-    public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position,
+    public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, int position,
             byte orientation, int upstreamDistance)
     {
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
@@ -177,6 +179,7 @@ public class EnsemblDataCache
                     geneData.Strand, geneData.KaryotypeBand);
 
             currentGene.setGeneData(geneData);
+            currentGene.setPositionalData(chromosome, position, orientation);
 
             // collect up all the relevant exons for each unique transcript to analyse as a collection
             for(TranscriptData transData : transcriptDataList)
@@ -199,17 +202,24 @@ public class EnsemblDataCache
 
             if(currentGene.transcripts().isEmpty() && mDownstreamGeneAnnotations.containsKey(geneData))
             {
-                final TranscriptData canonicalTrans = transcriptDataList.stream().filter(x -> x.IsCanonical).findAny().orElse(null);
+                final TranscriptData trans = transcriptDataList.stream().filter(x -> x.IsCanonical).findAny().orElse(null);
 
-                if(canonicalTrans != null)
+                if(trans != null)
                 {
-                    final Transcript postGeneTrans = new Transcript(
-                            currentGene, canonicalTrans.TransId, canonicalTrans.TransName, canonicalTrans.exons().size(),
-                            -1, canonicalTrans.exons().size(), -1, 1, 1,
-                            canonicalTrans.exons().size(), true, canonicalTrans.TransStart, canonicalTrans.TransEnd,
-                            canonicalTrans.CodingStart, canonicalTrans.CodingEnd);
+                    int totalCodingBases = 0;
+                    int codingBases = 0;
+                    if(trans.CodingStart != null && trans.CodingEnd != null)
+                    {
+                        int[] codingData = Transcript.calcCodingBases(trans.CodingStart, trans.CodingEnd, trans.exons(), position);
+                        totalCodingBases = codingData[TOTAL_CODING_BASES];
+                    }
 
-                    postGeneTrans.setBioType(canonicalTrans.BioType);
+                    final Transcript postGeneTrans = new Transcript(
+                            currentGene, trans.TransId, trans.TransName, trans.exons().size(), -1, trans.exons().size(),
+                            -1, codingBases, totalCodingBases, trans.exons().size(), true,
+                            trans.TransStart, trans.TransEnd, trans.CodingStart, trans.CodingEnd);
+
+                    postGeneTrans.setBioType(trans.BioType);
 
                     currentGene.addTranscript(postGeneTrans);
                 }
@@ -221,7 +231,7 @@ public class EnsemblDataCache
         return geneAnnotations;
     }
 
-    public List<GeneAnnotation> findGeneAnnotationsByOverlap(int svId, final String chromosome, long posStart, long posEnd)
+    public List<GeneAnnotation> findGeneAnnotationsByOverlap(int svId, final String chromosome, int posStart, int posEnd)
     {
         // create gene and transcript data for any gene fully overlapped by the SV
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
@@ -261,16 +271,16 @@ public class EnsemblDataCache
         return geneAnnotations;
     }
 
-    private void setPrecedingGeneDistance(Transcript transcript, long position)
+    private void setPrecedingGeneDistance(Transcript transcript, int position)
     {
         // annotate with preceding gene info if the up distance isn't set
-        long precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(transcript.TransId);
+        int precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(transcript.TransId);
 
         if(precedingGeneSAPos >= 0)
         {
             // if the breakend is after (higher for +ve strand) the nearest preceding splice acceptor, then the distance will be positive
             // and mean that the transcript isn't interupted when used in a downstream fusion
-            long preDistance = transcript.gene().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
+            int preDistance = transcript.gene().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
             transcript.setSpliceAcceptorDistance(true, (int)preDistance);
         }
     }
@@ -293,7 +303,7 @@ public class EnsemblDataCache
         return null;
     }
 
-    public final List<EnsemblGeneData> findGenesByRegion(final String chromosome, long posStart, long posEnd)
+    public final List<EnsemblGeneData> findGenesByRegion(final String chromosome, int posStart, int posEnd)
     {
         // find genes if any of their transcripts are within this position
         List<EnsemblGeneData> genesList = Lists.newArrayList();
@@ -323,7 +333,7 @@ public class EnsemblDataCache
         return genesList;
     }
 
-    private final List<EnsemblGeneData> findGeneRegions(final String chromosome, long position, int upstreamDistance)
+    private final List<EnsemblGeneData> findGeneRegions(final String chromosome, int position, int upstreamDistance)
     {
         final List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
 
@@ -334,8 +344,8 @@ public class EnsemblDataCache
 
         for(final EnsemblGeneData geneData : geneDataList)
         {
-            long geneStartRange = geneData.Strand == 1 ? geneData.GeneStart - upstreamDistance : geneData.GeneStart;
-            long geneEndRange = geneData.Strand == 1 ? geneData.GeneEnd : geneData.GeneEnd + upstreamDistance;
+            int geneStartRange = geneData.Strand == 1 ? geneData.GeneStart - upstreamDistance : geneData.GeneStart;
+            int geneEndRange = geneData.Strand == 1 ? geneData.GeneEnd : geneData.GeneEnd + upstreamDistance;
 
             if(position >= geneStartRange && position <= geneEndRange)
             {
@@ -370,7 +380,7 @@ public class EnsemblDataCache
     }
 
     public static Transcript extractTranscriptExonData(
-            final TranscriptData transData, long position, final GeneAnnotation geneAnnotation)
+            final TranscriptData transData, int position, final GeneAnnotation geneAnnotation)
     {
         final List<ExonData> exonList = transData.exons();
 
@@ -385,8 +395,8 @@ public class EnsemblDataCache
         int upExonPhase = -1;
         int downExonRank = -1;
         int downExonPhase = -1;
-        long nextUpDistance = -1;
-        long nextDownDistance = -1;
+        int nextUpDistance = -1;
+        int nextDownDistance = -1;
         boolean isCodingTypeOverride = false;
 
         // first check for a position outside the exon boundaries
@@ -530,87 +540,19 @@ public class EnsemblDataCache
         // for the given position, determine how many coding bases occur prior to the position
         // in the direction of the transcript
 
-        boolean isCoding = transData.CodingStart != null && transData.CodingEnd != null;
-        long codingStart = transData.CodingStart != null ? transData.CodingStart : 0;
-        long codingEnd = transData.CodingEnd != null ? transData.CodingEnd : 0;
-        boolean inCodingRegion = false;
-        boolean codingRegionEnded = false;
+        int codingBases = 0;
+        int totalCodingBases = 0;
 
-        long codingBases = 0;
-        long totalCodingBases = 0;
-
-        if(isCoding)
+        if(transData.CodingStart != null && transData.CodingEnd != null)
         {
-            for (ExonData exonData : exonList)
-            {
-                long exonStart = exonData.ExonStart;
-                long exonEnd = exonData.ExonEnd;
-
-                if (!inCodingRegion)
-                {
-                    if (exonEnd >= codingStart)
-                    {
-                        // coding region begins in this exon
-                        inCodingRegion = true;
-
-                        totalCodingBases += exonEnd - codingStart + 1;
-
-                        // check whether the position falls in this exon and if so before or after the coding start
-                        if (position >= codingStart)
-                        {
-                            if (position < exonEnd)
-                                codingBases += position - codingStart + 1;
-                            else
-                                codingBases += exonEnd - codingStart + 1;
-                        }
-                    }
-                }
-                else if (!codingRegionEnded)
-                {
-                    if (exonStart > codingEnd)
-                    {
-                        codingRegionEnded = true;
-                    }
-                    else if (exonEnd > codingEnd)
-                    {
-                        // coding region ends in this exon
-                        codingRegionEnded = true;
-
-                        totalCodingBases += codingEnd - exonStart + 1;
-
-                        if (position >= exonStart)
-                        {
-                            if (position < codingEnd)
-                                codingBases += position - exonStart + 1;
-                            else
-                                codingBases += codingEnd - exonStart + 1;
-                        }
-                    }
-                    else
-                    {
-                        // take all of the exon's bases
-                        totalCodingBases += exonEnd - exonStart + 1;
-
-                        if (position >= exonStart)
-                        {
-                            if (position < exonEnd)
-                                codingBases += position - exonStart + 1;
-                            else
-                                codingBases += exonEnd - exonStart + 1;
-                        }
-                    }
-                }
-            }
-
-            if (!isForwardStrand)
-            {
-                codingBases = totalCodingBases - codingBases;
-            }
+            int[] codingData = Transcript.calcCodingBases(transData.CodingStart, transData.CodingEnd, exonList, position);
+            totalCodingBases = codingData[TOTAL_CODING_BASES];
+            codingBases = isForwardStrand ? codingData[CODING_BASES] : totalCodingBases - codingData[CODING_BASES];
         }
 
         Transcript transcript = new Transcript(geneAnnotation, transData.TransId, transData.TransName,
                 upExonRank, upExonPhase, downExonRank, downExonPhase,
-                (int)codingBases, (int)totalCodingBases,
+                codingBases, totalCodingBases,
                 exonMax, transData.IsCanonical, transData.TransStart, transData.TransEnd,
                 transData.CodingStart != null ? transData.CodingStart : null,
                 transData.CodingEnd != null ? transData.CodingEnd : null);
@@ -632,7 +574,7 @@ public class EnsemblDataCache
     public static int EXON_PHASE_MIN = 2;
     public static int EXON_PHASE_MAX = 3;
 
-    public int[] getExonRankings(final String geneId, long position)
+    public int[] getExonRankings(final String geneId, int position)
     {
         // finds the exon before and after this position, setting to -1 if before the first or beyond the last exon
         int[] exonData = new int[EXON_PHASE_MAX + 1];
@@ -645,7 +587,7 @@ public class EnsemblDataCache
         return getExonRankings(transData.Strand, transData.exons(), position);
     }
 
-    public static int[] getExonRankings(int strand, final List<ExonData> exonDataList, long position)
+    public static int[] getExonRankings(int strand, final List<ExonData> exonDataList, int position)
     {
         int[] exonData = new int[EXON_PHASE_MAX + 1];
 
@@ -731,7 +673,7 @@ public class EnsemblDataCache
     }
 
     public static void setAlternativeTranscriptPhasings(Transcript transcript, final List<ExonData> exonDataList,
-            long position, byte orientation)
+            int position, byte orientation)
     {
         // collect exon phasings before the position on the upstream and after it on the downstream
         boolean isUpstream = (transcript.gene().Strand * orientation) > 0;

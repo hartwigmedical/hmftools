@@ -6,5 +6,6 @@ public enum TranscriptRegionType
     UPSTREAM,
     EXONIC,
     INTRONIC,
-    IG;
+    IG,
+    DOWNSTREAM;
 }

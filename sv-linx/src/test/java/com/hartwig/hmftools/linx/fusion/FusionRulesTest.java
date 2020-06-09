@@ -26,14 +26,14 @@ public class FusionRulesTest
         String chromosome = "1";
 
         // SV breakend positions won't impact fusion determination since transcripts are created manually
-        GeneAnnotation gene1 = createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, 0, 1);
+        GeneAnnotation gene1 = createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, 150, 1);
 
         // one on the negative strand
         String geneName2 = "GENE2";
         String geneId2 = "ENSG0003";
         String chromosome2 = "1";
 
-        GeneAnnotation gene2 = createGeneAnnotation(0, false, geneName2, geneId2, -1, chromosome2, 0, 1);
+        GeneAnnotation gene2 = createGeneAnnotation(0, false, geneName2, geneId2, -1, chromosome2, 150, 1);
 
         String transName1 = "ENST0001";
         int transId1 = 1;
@@ -224,18 +224,17 @@ public class FusionRulesTest
         String chromosome = "1";
 
         // SV breakend positions won't impact fusion determination since transcripts are created manually
-        GeneAnnotation gene1 = createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, 0, 1);
+        GeneAnnotation gene1 = createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, 150, 1);
 
         // one on the negative strand
         String geneName2 = "GENE2";
         String geneId2 = "ENSG0003";
         String chromosome2 = "1";
 
-        GeneAnnotation gene2 = createGeneAnnotation(0, false, geneName2, geneId2, -1, chromosome2, 0, 1);
+        GeneAnnotation gene2 = createGeneAnnotation(0, false, geneName2, geneId2, -1, chromosome2, 150, 1);
 
         String transName1 = "ENST0001";
         int transId1 = 1;
-
 
         // non-coding combos
         Integer codingStart = new Integer(100);
