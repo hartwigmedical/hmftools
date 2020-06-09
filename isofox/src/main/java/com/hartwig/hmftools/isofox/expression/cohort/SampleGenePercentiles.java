@@ -46,21 +46,24 @@ public class SampleGenePercentiles
         mConfig = config;
         mCancerTypesGeneDistribution = Maps.newHashMap();
 
-        final Map<String,String> cancerGeneFilenames = loadCancerGeneDistributionFilenames(mConfig.CancerGeneFiles);
-
-        for(Map.Entry<String,String> entry : cancerGeneFilenames.entrySet())
+        if(mConfig.CancerGeneFiles != null)
         {
-            final String cancerType = entry.getKey();
-            final String filename = entry.getValue();
+            final Map<String, String> cancerGeneFilenames = loadCancerGeneDistributionFilenames(mConfig.CancerGeneFiles);
 
-            ISF_LOGGER.debug("cancerType({}) loading gene records", cancerType);
+            for(Map.Entry<String, String> entry : cancerGeneFilenames.entrySet())
+            {
+                final String cancerType = entry.getKey();
+                final String filename = entry.getValue();
 
-            final Map<String,double[]> geneDistributionMap = Maps.newHashMap();
-            loadCohortDistribution(filename, geneDistributionMap, "gene", DISTRIBUTION_SIZE + 2, mConfig.RestrictedGeneIds);
+                ISF_LOGGER.debug("cancerType({}) loading gene records", cancerType);
 
-            ISF_LOGGER.info("cancerType({}) loaded {} gene records", cancerType, geneDistributionMap.size());
+                final Map<String, double[]> geneDistributionMap = Maps.newHashMap();
+                loadCohortDistribution(filename, geneDistributionMap, "gene", DISTRIBUTION_SIZE + 2, mConfig.RestrictedGeneIds);
 
-            mCancerTypesGeneDistribution.put(cancerType, geneDistributionMap);
+                ISF_LOGGER.info("cancerType({}) loaded {} gene records", cancerType, geneDistributionMap.size());
+
+                mCancerTypesGeneDistribution.put(cancerType, geneDistributionMap);
+            }
         }
 
         mWriter = null;
@@ -68,12 +71,6 @@ public class SampleGenePercentiles
 
     public void processSampleFiles()
     {
-        if(mCancerTypesGeneDistribution.isEmpty())
-        {
-            ISF_LOGGER.warn("sample gene percentile routine won't run without valid distribution data");
-            return;
-        }
-
         final List<Path> filenames = Lists.newArrayList();
 
         if(!formSampleFilenames(mConfig, CohortAnalysisType.GENE_DISTRIBUTION, filenames))
@@ -112,8 +109,7 @@ public class SampleGenePercentiles
             final Map<String,double[]> panCancerPercentilesMap = getCancerTypePercentilesMap(PAN_CANCER);
             final Map<String,double[]> cancerPercentilesMap = getCancerTypePercentilesMap(cancerType);
 
-            if(panCancerPercentilesMap == null || cancerPercentilesMap == null)
-                return;
+            final List<String> sampleGeneIds = mConfig.SampleData.SampleGeneIds.get(sampleId);
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
@@ -128,6 +124,9 @@ public class SampleGenePercentiles
                 if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(geneId))
                     continue;
 
+                if(sampleGeneIds != null && !sampleGeneIds.contains(geneId))
+                    continue;
+
                 double tpm = Double.parseDouble(items[tpmIndex]);
 
                 if(tpm < mConfig.TpmLogThreshold)
@@ -135,11 +134,22 @@ public class SampleGenePercentiles
 
                 final String geneName = items[geneNameIndex];
 
-                double panCancerPerc = getTpmPercentile(panCancerPercentilesMap, geneId, tpm);
-                double cancerPerc = getTpmPercentile(cancerPercentilesMap, geneId, tpm);
+                double panCancerPerc = 0;
+                double cancerPerc = 0;
+                double panCancerMedian = 0;
+                double cancerMedian = 0;
 
-                double panCancerMedian = getTpmMedian(panCancerPercentilesMap, geneId);
-                double cancerMedian = getTpmMedian(cancerPercentilesMap, geneId);
+                if(panCancerPercentilesMap != null)
+                {
+                    panCancerPerc = getTpmPercentile(panCancerPercentilesMap, geneId, tpm);
+                    panCancerMedian = getTpmMedian(panCancerPercentilesMap, geneId);
+                }
+
+                if(cancerPercentilesMap != null)
+                {
+                    cancerPerc = getTpmPercentile(cancerPercentilesMap, geneId, tpm);
+                    cancerMedian = getTpmMedian(cancerPercentilesMap, geneId);
+                }
 
                 writeSamplePercentileData(
                         sampleId, cancerType, geneId, geneName, tpm, panCancerPerc, cancerPerc, panCancerMedian, cancerMedian);

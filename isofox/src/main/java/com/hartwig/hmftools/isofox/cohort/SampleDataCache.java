@@ -20,6 +20,8 @@ public class SampleDataCache
     public final Map<String, String> SampleCohort; // sample to cohort name
     public final List<String> SampleIds;
     public final List<String> CohortNames;
+    public final Map<String, List<String>> SampleGeneIds; // list of genes per sample
+
     private boolean mIsValid;
 
     public final static String COHORT_A = "CohortA"; // 'cohort A' being evaluated, may be arbitrary
@@ -31,6 +33,7 @@ public class SampleDataCache
         CancerTypeSamples = Maps.newHashMap();
         SampleCancerType = Maps.newHashMap();
         SampleCohort = Maps.newHashMap();
+        SampleGeneIds = Maps.newHashMap();
         CohortNames = Lists.newArrayList();
 
         mIsValid = loadData(inputFile);
@@ -38,9 +41,13 @@ public class SampleDataCache
 
     public boolean isValid() { return mIsValid; }
 
+    // required fields
     private static final int COL_SAMPLE_ID = 0;
     private static final int COL_CANCER_TYPE = 1;
+
+    // optional fields
     private static final String COL_COHORT_NAME = "CohortName";
+    private static final String COL_GENE_ID = "GeneId";
 
     public int sampleCountInCohort(final List<String> sampleIds, final String cohortName)
     {
@@ -80,6 +87,7 @@ public class SampleDataCache
             items.remove(0);
 
             Integer cohortNameIndex = fieldIndexMap.get(COL_COHORT_NAME);
+            Integer geneIdIndex = fieldIndexMap.get(COL_GENE_ID);
 
             for(String item : items)
             {
@@ -90,27 +98,37 @@ public class SampleDataCache
                 final String sampleId = data[COL_SAMPLE_ID];
                 final String cancerType = data[COL_CANCER_TYPE];
 
-                SampleIds.add(sampleId);
-                SampleCancerType.put(sampleId, cancerType);
+                if(!SampleIds.contains(sampleId))
+                {
+                    SampleIds.add(sampleId);
+                    SampleCancerType.put(sampleId, cancerType);
+
+                    List<String> sampleIds = CancerTypeSamples.get(cancerType);
+                    if(sampleIds == null)
+                        CancerTypeSamples.put(cancerType, Lists.newArrayList(sampleId));
+                    else
+                        sampleIds.add(sampleId);
+                }
 
                 if(cohortNameIndex != null)
                 {
                     final String cohortName = data[cohortNameIndex];
-
                     SampleCohort.put(sampleId, cohortName);
 
                     if(!CohortNames.contains(cohortName))
                         CohortNames.add(cohortName);
                 }
 
-                List<String> sampleIds = CancerTypeSamples.get(cancerType);
-                if(sampleIds == null)
+                if(geneIdIndex != null)
                 {
-                    sampleIds = Lists.newArrayList();
-                    CancerTypeSamples.put(cancerType, sampleIds);
-                }
+                    final String geneId = data[geneIdIndex];
+                    List<String> geneIdList = SampleGeneIds.get(sampleId);
 
-                sampleIds.add(sampleId);
+                    if(geneIdList == null)
+                        SampleGeneIds.put(sampleId, Lists.newArrayList(geneId));
+                    else
+                        geneIdList.add(geneId);
+                }
             }
 
             ISF_LOGGER.info("load {} samples, {} cancer types from file({})", SampleIds.size(), CancerTypeSamples.size(), inputFile);
