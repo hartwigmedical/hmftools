@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.serve.vicc.hotspot;
 
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_DELETION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_DUPLICATION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_FRAMESHIFT_SUFFIX;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_INSERTION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_RANGE_INDICATOR;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
@@ -15,7 +22,6 @@ import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.Transvar;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,12 +31,7 @@ public class HotspotExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(HotspotExtractor.class);
 
-    private static final Set<String> ONCOKB_VALID_BIOMARKER_TYPES =
-            Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
-
-    private static final String FEATURE_RANGE_INDICATOR = "_";
-    private static final Set<String> VALID_FEATURE_RANGES = Sets.newHashSet("ins", "dup", "del");
-    private static final String FRAMESHIFT_FEATURE_SUFFIX = "fs";
+    private static final int MAX_AA_DELETION_LENGTH = 17; // We don't call deletions longer than 17 AA using standard indels.
 
     @NotNull
     private final Transvar transvar;
@@ -53,22 +54,19 @@ public class HotspotExtractor {
     @NotNull
     public Map<Feature, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
         Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
-        if (viccEntry.source() == ViccSource.ONCOKB) {
-            for (Feature feature : viccEntry.features()) {
-                String featureKey = feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
-                if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType()) || isProteinAnnotation(feature.name())) {
-                    List<VariantHotspot> hotspots = Lists.newArrayList();
-                    if (transvarEnabled) {
-                        hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
-                                viccEntry.transcriptId(),
-                                feature.name());
-                        LOGGER.info("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
-                        if (hotspots.isEmpty()) {
-                            unresolvableFeatures.add(featureKey);
-                        }
+        for (Feature feature : viccEntry.features()) {
+            String featureKey = feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
+            if (isResolvableProteinAnnotation(feature.name())) {
+                List<VariantHotspot> hotspots = Lists.newArrayList();
+                if (transvarEnabled) {
+                    hotspots =
+                            transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), viccEntry.transcriptId(), feature.name());
+                    LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
+                    if (hotspots.isEmpty()) {
+                        unresolvableFeatures.add(featureKey);
                     }
-                    allHotspotsPerFeature.put(feature, hotspots);
                 }
+                allHotspotsPerFeature.put(feature, hotspots);
             }
         }
 
@@ -81,44 +79,58 @@ public class HotspotExtractor {
     }
 
     @VisibleForTesting
-    static boolean isProteinAnnotation(@NotNull String featureName) {
-        String featureToTest;
-        if (featureName.contains(FEATURE_RANGE_INDICATOR)) {
-            // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
-            featureToTest = featureName.split(FEATURE_RANGE_INDICATOR)[1];
-            boolean validFeatureFound = false;
-            for (String validFeature : VALID_FEATURE_RANGES) {
-                if (featureToTest.contains(validFeature)) {
-                    validFeatureFound = true;
-                    break;
-                }
-            }
-            if (!validFeatureFound) {
-                return false;
-            }
-        } else if (featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX)) {
-            // Frameshifts are ignored for hotspot determination
+    static boolean isResolvableProteinAnnotation(@NotNull String feature) {
+        if (isFrameshift(feature)) {
             return false;
+        } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
+            return isValidRangeMutation(feature);
         } else {
-            featureToTest = featureName;
+            return isValidSingleCodonMutation(feature);
+        }
+    }
+
+    private static boolean isFrameshift(@NotNull String feature) {
+        return feature.endsWith(HGVS_FRAMESHIFT_SUFFIX) || feature.endsWith(HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED);
+    }
+
+    private static boolean isValidRangeMutation(@NotNull String feature) {
+        assert feature.contains(HGVS_RANGE_INDICATOR);
+
+        // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
+        String featureToTest = feature.split(HGVS_RANGE_INDICATOR)[1];
+        if (featureToTest.contains(HGVS_INSERTION) || featureToTest.contains(HGVS_DUPLICATION)) {
+            return true;
+        } else if (featureToTest.contains(HGVS_DELETION)) {
+            long start = Long.parseLong(feature.split(HGVS_RANGE_INDICATOR)[0].substring(1));
+            long end = Long.parseLong(featureToTest.substring(1, featureToTest.indexOf(HGVS_DELETION)));
+            return (1 + end - start) <= MAX_AA_DELETION_LENGTH;
+        } else {
+            return false;
+        }
+    }
+
+    private static boolean isValidSingleCodonMutation(@NotNull String feature) {
+        if (feature.contains(HGVS_INSERTION)) {
+            // Insertions are only allowed in a range, since we need to know where to insert the sequence exactly.
+            return false;
         }
 
         // Features are expected to look something like V600E (1 char - N digits - M chars)
-        if (featureToTest.length() < 3) {
+        if (feature.length() < 3) {
             return false;
         }
 
-        if (!Character.isLetter(featureToTest.charAt(0))) {
+        if (!Character.isLetter(feature.charAt(0))) {
             return false;
         }
 
-        if (!Character.isDigit(featureToTest.charAt(1))) {
+        if (!Character.isDigit(feature.charAt(1))) {
             return false;
         }
 
-        boolean haveObservedNonDigit = !Character.isDigit(featureToTest.charAt(2));
-        for (int i = 3; i < featureToTest.length(); i++) {
-            char charToEvaluate = featureToTest.charAt(i);
+        boolean haveObservedNonDigit = !Character.isDigit(feature.charAt(2));
+        for (int i = 3; i < feature.length(); i++) {
+            char charToEvaluate = feature.charAt(i);
             if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
                 return false;
             }

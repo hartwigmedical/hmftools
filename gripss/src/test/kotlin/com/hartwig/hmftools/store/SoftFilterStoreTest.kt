@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.store
 
-import com.hartwig.hmftools.gripss.DEDUP
+import com.hartwig.hmftools.common.gripss.GripssFilters.DEDUP
+import com.hartwig.hmftools.common.gripss.GripssFilters.MIN_QUAL
 import com.hartwig.hmftools.gripss.MIN_LENGTH
-import com.hartwig.hmftools.gripss.MIN_QUAL
 import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import junit.framework.Assert.assertFalse
 import junit.framework.Assert.assertTrue

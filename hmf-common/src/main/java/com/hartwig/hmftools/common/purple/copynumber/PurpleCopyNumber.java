@@ -30,12 +30,12 @@ public abstract class PurpleCopyNumber implements GenomeRegion {
 
     public abstract double gcContent();
 
-    public double minorAllelePloidy() {
+    public double minorAlleleCopyNumber() {
         return Doubles.lessThan(averageActualBAF(), 0.50) ? 0 : Math.max(0, (1 - averageActualBAF()) * averageTumorCopyNumber());
     }
 
-    public double majorAllelePloidy() {
-        return averageTumorCopyNumber() - minorAllelePloidy();
+    public double majorAlleleCopyNumber() {
+        return averageTumorCopyNumber() - minorAlleleCopyNumber();
     }
 
     public long length() {

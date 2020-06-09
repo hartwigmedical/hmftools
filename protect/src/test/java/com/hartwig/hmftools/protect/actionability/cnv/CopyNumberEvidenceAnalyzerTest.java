@@ -3,11 +3,11 @@ package com.hartwig.hmftools.protect.actionability.cnv;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzerTestFactory;
 
 import org.junit.Test;
@@ -46,7 +46,7 @@ public class CopyNumberEvidenceAnalyzerTest {
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEndSupport(SegmentSupport.NONE)
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minMinorAllelePloidy(0)
+                .minMinorAlleleCopyNumber(0)
                 .transcriptID("trans")
                 .transcriptVersion(1)
                 .chromosomeBand("12.1")

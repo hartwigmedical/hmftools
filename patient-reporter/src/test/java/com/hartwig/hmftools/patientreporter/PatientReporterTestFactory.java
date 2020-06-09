@@ -62,7 +62,7 @@ public final class PatientReporterTestFactory {
                 .maxCopyNumber(0)
                 .transcriptID(Strings.EMPTY)
                 .transcriptVersion(0)
-                .minMinorAllelePloidy(0);
+                .minMinorAlleleCopyNumber(0);
     }
 
     @NotNull
@@ -96,9 +96,9 @@ public final class PatientReporterTestFactory {
                 .recovered(false)
                 .adjustedCopyNumber(0)
                 .adjustedVAF(0)
-                .minorAllelePloidy(0)
+                .minorAlleleCopyNumber(0)
                 .germlineStatus(GermlineStatus.UNKNOWN)
-                .ploidy(0)
+                .variantCopyNumber(0)
                 .biallelic(true)
                 .subclonalLikelihood(0)
                 .tier(VariantTier.UNKNOWN)

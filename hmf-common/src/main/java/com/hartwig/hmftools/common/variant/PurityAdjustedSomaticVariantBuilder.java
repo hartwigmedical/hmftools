@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
 
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 
@@ -15,13 +15,13 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public interface PurityAdjustedSomaticVariantBuilder {
 
-    PurityAdjustedSomaticVariantBuilder ploidy(double ploidy);
+    PurityAdjustedSomaticVariantBuilder variantCopyNumber(double ploidy);
 
     PurityAdjustedSomaticVariantBuilder adjustedCopyNumber(double copyNumber);
 
     PurityAdjustedSomaticVariantBuilder adjustedVAF(double vaf);
 
-    PurityAdjustedSomaticVariantBuilder minorAllelePloidy(double map);
+    PurityAdjustedSomaticVariantBuilder minorAlleleCopyNumber(double map);
 
     PurityAdjustedSomaticVariantBuilder germlineStatus(@NotNull final GermlineStatus germlineStatus);
 
@@ -31,8 +31,8 @@ public interface PurityAdjustedSomaticVariantBuilder {
     static PurityAdjustedSomaticVariantBuilder fromVariantContex(@NotNull final VariantContext builder) {
         return new PurityAdjustedSomaticVariantBuilder() {
             @Override
-            public PurityAdjustedSomaticVariantBuilder ploidy(final double ploidy) {
-                builder.getCommonInfo().putAttribute(PURPLE_PLOIDY_INFO, ploidy);
+            public PurityAdjustedSomaticVariantBuilder variantCopyNumber(final double ploidy) {
+                builder.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, ploidy);
                 return this;
             }
 
@@ -49,8 +49,8 @@ public interface PurityAdjustedSomaticVariantBuilder {
             }
 
             @Override
-            public PurityAdjustedSomaticVariantBuilder minorAllelePloidy(final double map) {
-                builder.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_PLOIDY_INFO, map);
+            public PurityAdjustedSomaticVariantBuilder minorAlleleCopyNumber(final double map) {
+                builder.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, map);
                 return this;
             }
 

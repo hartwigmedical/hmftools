@@ -345,7 +345,7 @@ public class CircosDataWriter
             final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
                     .add(String.valueOf(alteration.start()))
                     .add(String.valueOf(alteration.end()))
-                    .add(String.valueOf(alteration.minorAllelePloidy() - 1))
+                    .add(String.valueOf(alteration.minorAlleleCopyNumber() - 1))
                     .toString();
             result.add(cna);
         }

@@ -62,7 +62,7 @@ class GeneCopyNumberDAO {
                     .minRegionStartSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONSTARTSUPPORT)))
                     .minRegionEndSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONENDSUPPORT)))
                     .minRegionMethod(CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)))
-                    .minMinorAllelePloidy(record.getValue(GENECOPYNUMBER.MINMINORALLELEPLOIDY))
+                    .minMinorAlleleCopyNumber(record.getValue(GENECOPYNUMBER.MINMINORALLELECOPYNUMBER))
                     .build());
         }
         return geneCopyNumbers;
@@ -93,7 +93,7 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.MINREGIONSTARTSUPPORT,
                     GENECOPYNUMBER.MINREGIONENDSUPPORT,
                     GENECOPYNUMBER.MINREGIONMETHOD,
-                    GENECOPYNUMBER.MINMINORALLELEPLOIDY,
+                    GENECOPYNUMBER.MINMINORALLELECOPYNUMBER,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -121,7 +121,7 @@ class GeneCopyNumberDAO {
                 gene.minRegionStartSupport(),
                 gene.minRegionEndSupport(),
                 gene.minRegionMethod(),
-                DatabaseUtil.decimal(gene.minMinorAllelePloidy()),
+                DatabaseUtil.decimal(gene.minMinorAlleleCopyNumber()),
                 timestamp);
     }
 

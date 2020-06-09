@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.serve.transvar;
 
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_DELETION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_DUPLICATION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_INSERTION;
+import static com.hartwig.hmftools.serve.util.HgvsConstants.HGVS_RANGE_INDICATOR;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -10,7 +15,7 @@ import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
-import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
@@ -29,11 +34,6 @@ final class TransvarConverter {
     private static final String MSG_NO_VALID_TRANSCRIPT_FOUND = "no_valid_transcript_found";
     private static final String MSG_ERROR_INDICATION_PREFIX = "Error_";
 
-    private static final String RANGE_INDICATOR = "_";
-    private static final String DELETION = "del";
-    private static final String INSERTION = "ins";
-    private static final String DUPLICATION = "dup";
-
     private TransvarConverter() {
     }
 
@@ -48,10 +48,13 @@ final class TransvarConverter {
 
         TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], message);
 
-        // (Very) long insertions and deletions report a deleted count rather than a list of bases. We ignore these.
-        if (record.annotation() instanceof TransvarDeletion && isLong(((TransvarDeletion) record.annotation()).deletedBases())) {
+        // (Very) long insertions report a deleted count rather than a list of bases. We ignore these.
+        if (record.annotation() instanceof TransvarInsertion && isInteger(((TransvarInsertion) record.annotation()).insertedBases())) {
             return null;
-        } else if (record.annotation() instanceof TransvarInsertion && isLong(((TransvarInsertion) record.annotation()).insertedBases())) {
+        }
+
+        // Duplications are somewhat educated guesses, so need to be sure they refer to a dup at least once.
+        if (record.annotation() instanceof TransvarDuplication && !transvarLine.contains(HGVS_DUPLICATION)) {
             return null;
         }
 
@@ -77,13 +80,13 @@ final class TransvarConverter {
         // Remove "g." from the gdna annotation
         String gdna = chromosomeAndGDNA[1].substring(2);
 
-        if (gdna.contains(RANGE_INDICATOR)) {
-            String[] gdnaParts = gdna.split(RANGE_INDICATOR);
+        if (gdna.contains(HGVS_RANGE_INDICATOR)) {
+            String[] gdnaParts = gdna.split(HGVS_RANGE_INDICATOR);
             long position = Long.parseLong(gdnaParts[0]);
             recordBuilder.gdnaPosition(position);
 
             TransvarAnnotation annotation;
-            if (gdna.contains(INSERTION) || gdna.contains(DELETION)) {
+            if (gdna.contains(HGVS_INSERTION) || gdna.contains(HGVS_DELETION)) {
                 annotation = annotationForInsertionDeletion(position, gdnaParts[1], messageField);
             } else {
                 annotation = annotationForDuplication(position, gdnaParts[1]);
@@ -98,19 +101,19 @@ final class TransvarConverter {
     @NotNull
     private static TransvarAnnotation annotationForInsertionDeletion(long position, @NotNull String delInsPart,
             @NotNull String messageField) {
-        int delStart = delInsPart.indexOf(DELETION);
-        int insStart = delInsPart.indexOf(INSERTION);
+        int delStart = delInsPart.indexOf(HGVS_DELETION);
+        int insStart = delInsPart.indexOf(HGVS_INSERTION);
 
         if (delStart < 0 && insStart < 0) {
             throw new IllegalStateException(
-                    "Cannot process range gDNA as no '" + DELETION + "' or  '" + INSERTION + "' found: " + delInsPart);
+                    "Cannot process range gDNA as no '" + HGVS_DELETION + "' or  '" + HGVS_INSERTION + "' found: " + delInsPart);
         }
 
         if (insStart >= 0) {
-            String insertedBases = delInsPart.substring(insStart + INSERTION.length());
+            String insertedBases = delInsPart.substring(insStart + HGVS_INSERTION.length());
 
             if (delStart >= 0) {
-                if (delStart + DELETION.length() == insStart) {
+                if (delStart + HGVS_DELETION.length() == insStart) {
                     // This should look like '123delinsGGT' and is a complex insertion + deletion rather than a simple MNV
                     int deletedBaseCount = 1 + (int) (Long.parseLong(delInsPart.substring(0, delStart)) - position);
                     return ImmutableTransvarComplexInsertDelete.builder()
@@ -120,7 +123,7 @@ final class TransvarConverter {
                             .build();
                 } else {
                     // This should look like '123delCinsG'
-                    String deletedBases = delInsPart.substring(delStart + DELETION.length(), insStart);
+                    String deletedBases = delInsPart.substring(delStart + HGVS_DELETION.length(), insStart);
                     assert deletedBases.length() == insertedBases.length();
 
                     return ImmutableTransvarSnvMnv.builder()
@@ -136,9 +139,10 @@ final class TransvarConverter {
             }
         } else {
             // This should look like '123delC'
-            String deletedBases = delInsPart.substring(delStart + DELETION.length());
+            String deletedBases = delInsPart.substring(delStart + HGVS_DELETION.length());
+            int deletedBaseCount = isInteger(deletedBases) ? Integer.parseInt(deletedBases) : deletedBases.length();
             return ImmutableTransvarDeletion.builder()
-                    .deletedBases(deletedBases)
+                    .deletedBaseCount(deletedBaseCount)
                     .unalignedGDNAPosition(extractUnalignedGDNAPositionFromMessageField(messageField))
                     .build();
         }
@@ -147,9 +151,9 @@ final class TransvarConverter {
     @NotNull
     private static TransvarAnnotation annotationForDuplication(long position, @NotNull String dupPart) {
         int duplicatedBaseCount;
-        if (dupPart.contains(DUPLICATION)) {
-            duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(DUPLICATION))) - position);
-        } else if (isLong(dupPart)) {
+        if (dupPart.contains(HGVS_DUPLICATION)) {
+            duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(HGVS_DUPLICATION))) - position);
+        } else if (isInteger(dupPart)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart) - position);
         } else {
             throw new IllegalStateException("Cannot process duplication for gDNA: " + dupPart);
@@ -203,7 +207,7 @@ final class TransvarConverter {
     private static long extractUnalignedGDNAPositionFromMessageField(@NotNull String messageField) {
         // Looks like g.139399409_139399411delCAC
         String unalignedGDNA = extractValueFromMessageField(messageField, "unaligned_gDNA");
-        return Long.parseLong(unalignedGDNA.substring(2).split(RANGE_INDICATOR)[0]);
+        return Long.parseLong(unalignedGDNA.substring(2).split(HGVS_RANGE_INDICATOR)[0]);
     }
 
     @NotNull
@@ -221,7 +225,6 @@ final class TransvarConverter {
     @NotNull
     private static List<String> extractCandidateAlternativeSequencesFromMessageField(@NotNull String messageField) {
         String fieldValue = extractOptionalValueFromMessageField(messageField, "candidate_alternative_sequence");
-
 
         return fieldValue != null ? Arrays.asList(fieldValue.split("/")) : Lists.newArrayList();
     }
@@ -250,9 +253,9 @@ final class TransvarConverter {
         return null;
     }
 
-    private static boolean isLong(@NotNull String value) {
+    private static boolean isInteger(@NotNull String value) {
         try {
-            Long.parseLong(value);
+            Integer.parseInt(value);
             return true;
         } catch (NumberFormatException exp) {
             return false;

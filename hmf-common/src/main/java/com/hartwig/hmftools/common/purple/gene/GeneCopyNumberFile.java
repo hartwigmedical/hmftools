@@ -77,7 +77,7 @@ public final class GeneCopyNumberFile {
                 .add("minRegionStartSupport")
                 .add("minRegionEndSupport")
                 .add("minRegionMethod")
-                .add("minMinorAllelePloidy")
+                .add("minMinorAlleleCopyNumber")
                 .toString();
     }
 
@@ -103,7 +103,7 @@ public final class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.minRegionStartSupport()))
                 .add(String.valueOf(geneCopyNumber.minRegionEndSupport()))
                 .add(String.valueOf(geneCopyNumber.minRegionMethod()))
-                .add(FORMAT.format(geneCopyNumber.minMinorAllelePloidy()))
+                .add(FORMAT.format(geneCopyNumber.minMinorAlleleCopyNumber()))
                 .toString();
     }
 
@@ -141,7 +141,7 @@ public final class GeneCopyNumberFile {
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEndSupport(SegmentSupport.NONE)
-                .minMinorAllelePloidy(0);
+                .minMinorAlleleCopyNumber(0);
 
         if (values.length >= 19) {
             builder.minRegions(Integer.parseInt(values[13]))
@@ -152,7 +152,7 @@ public final class GeneCopyNumberFile {
                     .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
         }
 
-        builder.minMinorAllelePloidy(Double.parseDouble(values[values.length - 1]));
+        builder.minMinorAlleleCopyNumber(Double.parseDouble(values[values.length - 1]));
 
         return builder.build();
     }

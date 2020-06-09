@@ -113,7 +113,7 @@ minor_allele_ploidy_pdf <- function(copyNumberRegions) {
         scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxAllelePloidy + 0.1)) +
         scale_fill_manual(values = cnColours) +
         theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title = element_blank()) +
-        xlab("Minor Allele Ploidy") + ylab("Baf Count") + ggtitle("Minor Allele Ploidy PDF")
+        xlab("Minor Allele Copy Number") + ylab("Baf Count") + ggtitle("Minor Allele Copy Number PDF")
 }
 
 copynumber_pdf <- function(copyNumberRegions) {

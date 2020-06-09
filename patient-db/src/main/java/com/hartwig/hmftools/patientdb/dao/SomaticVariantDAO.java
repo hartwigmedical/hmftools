@@ -92,7 +92,7 @@ class SomaticVariantDAO {
                     .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
                     .adjustedCopyNumber(record.getValue(SOMATICVARIANT.COPYNUMBER))
                     .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
-                    .ploidy(record.getValue(SOMATICVARIANT.PLOIDY))
+                    .variantCopyNumber(record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER))
                     .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
                     .highConfidenceRegion(byteToBoolean(record.getValue(SOMATICVARIANT.HIGHCONFIDENCE)))
                     .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
@@ -103,7 +103,7 @@ class SomaticVariantDAO {
                     .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
                     .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
-                    .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
+                    .minorAlleleCopyNumber(record.getValue(SOMATICVARIANT.MINORALLELECOPYNUMBER))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
                     .tier(VariantTier.fromString(record.get(SOMATICVARIANT.TIER)))
@@ -150,7 +150,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.TOTALREADCOUNT,
                     SOMATICVARIANT.COPYNUMBER,
                     SOMATICVARIANT.ADJUSTEDVAF,
-                    SOMATICVARIANT.PLOIDY,
+                    SOMATICVARIANT.VARIANTCOPYNUMBER,
                     SOMATICVARIANT.HIGHCONFIDENCE,
                     SOMATICVARIANT.TRINUCLEOTIDECONTEXT,
                     SOMATICVARIANT.MICROHOMOLOGY,
@@ -161,7 +161,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.HOTSPOT,
                     SOMATICVARIANT.MAPPABILITY,
                     SOMATICVARIANT.GERMLINESTATUS,
-                    SOMATICVARIANT.MINORALLELEPLOIDY,
+                    SOMATICVARIANT.MINORALLELECOPYNUMBER,
                     SOMATICVARIANT.RECOVERED,
                     SOMATICVARIANT.KATAEGIS,
                     SOMATICVARIANT.TIER,
@@ -200,7 +200,7 @@ class SomaticVariantDAO {
                 variant.totalReadCount(),
                 DatabaseUtil.decimal(variant.adjustedCopyNumber()),
                 DatabaseUtil.decimal(variant.adjustedVAF()),
-                DatabaseUtil.decimal(variant.ploidy()),
+                DatabaseUtil.decimal(variant.variantCopyNumber()),
                 variant.highConfidenceRegion(),
                 variant.trinucleotideContext(),
                 variant.microhomology(),
@@ -211,7 +211,7 @@ class SomaticVariantDAO {
                 variant.hotspot(),
                 DatabaseUtil.decimal(variant.mappability()),
                 variant.germlineStatus(),
-                DatabaseUtil.decimal(variant.minorAllelePloidy()),
+                DatabaseUtil.decimal(variant.minorAlleleCopyNumber()),
                 variant.recovered(),
                 variant.kataegis(),
                 variant.tier().toString(),

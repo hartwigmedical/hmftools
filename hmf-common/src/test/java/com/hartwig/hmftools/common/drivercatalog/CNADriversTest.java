@@ -55,6 +55,6 @@ public class CNADriversTest {
                 .maxCopyNumber(0.1)
                 .transcriptID("trans")
                 .transcriptVersion(0)
-                .minMinorAllelePloidy(0);
+                .minMinorAlleleCopyNumber(0);
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple.purity;
 
 import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.MIN_AVERAGE_PLOIDY;
 import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.MIN_DUPLICATED_AUTOSOMES;
-import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.averageMajorAllelePloidy;
+import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.averageMajorAlleleCopyNumber;
 import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.wholeGenomeDuplication;
 
 import static org.junit.Assert.assertEquals;
@@ -34,12 +34,12 @@ public class WholeGenomeDuplicationTest {
     }
 
     @Test
-    public void testAverageMajorAllelePloidyIsBafCountWeighted() {
+    public void testAverageMajorAlleleCopyNumberIsBafCountWeighted() {
         PurpleCopyNumber one = create("1", 1, 1000);
         PurpleCopyNumber two = create("1", 2, 3000);
         PurpleCopyNumber three = create("1", 3, 0);
 
-        assertEquals(1.75, averageMajorAllelePloidy(Lists.newArrayList(one, two, three)), EPSILON);
+        assertEquals(1.75, averageMajorAlleleCopyNumber(Lists.newArrayList(one, two, three)), EPSILON);
     }
 
     @Test

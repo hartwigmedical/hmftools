@@ -21,7 +21,7 @@ public abstract class CopyNumberAlteration implements GenomeRegion
 
     public abstract double baf();
 
-    public double minorAllelePloidy()
+    public double minorAlleleCopyNumber()
     {
         return Math.max(0, (1 - baf()) * copyNumber());
     }

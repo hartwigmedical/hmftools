@@ -31,7 +31,7 @@ public interface AllelicDepth {
 
     static int totalReadCount(@NotNull final Genotype genotype) {
         // Note: this is a workaround of strelka's DP being only Tier 1
-        return genotype.hasAD() ? Math.max(genotype.getDP(), sumReadCount(genotype.getAD())) : sumReadCount(genotype.getAD());
+        return genotype.hasDP() ? Math.max(genotype.getDP(), sumReadCount(genotype.getAD())) : sumReadCount(genotype.getAD());
     }
 
     static int sumReadCount(int[] adFields) {

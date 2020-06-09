@@ -15,7 +15,7 @@ import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDuplication;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarSnvMnv;
-import com.hartwig.hmftools.serve.util.AminoAcidLookup;
+import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -103,7 +103,7 @@ class TransvarInterpreter {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
         if (insertion.insertedBases().length() == 3) {
-            for (String trinucleotide : AminoAcidLookup.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
+            for (String trinucleotide : AminoAcidFunctions.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
                 hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
             }
         } else {
@@ -124,7 +124,7 @@ class TransvarInterpreter {
                         refGenome.getSubsequenceAt(record.chromosome(), adjustedPosition, adjustedPosition).getBaseString();
                 String deletedSequence = refGenome.getSubsequenceAt(record.chromosome(),
                         adjustedPosition + 1,
-                        adjustedPosition + deletion.deletedBases().length()).getBaseString();
+                        adjustedPosition + deletion.deletedBaseCount()).getBaseString();
 
                 hotspots.add(hotspotBuilder.position(adjustedPosition)
                         .ref(preMutatedSequence + deletedSequence)
@@ -132,7 +132,7 @@ class TransvarInterpreter {
                         .build());
             }
         } else {
-            LOGGER.warn("Unaligned GDNA higher than position. Unsure why: {}", record);
+            LOGGER.warn("Unaligned GDNA > position. Unsure why! Record={}", record);
         }
         return hotspots;
     }

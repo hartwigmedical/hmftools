@@ -169,7 +169,7 @@ data class GripssFilterConfig(
                     0.005,
                     0.95,
                     1000,
-                    350,
+                    400,
                     6,
                     50,
                     5,

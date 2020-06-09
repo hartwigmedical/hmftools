@@ -24,7 +24,7 @@ public final class WholeGenomeDuplication {
 
         int duplicatedAutosomes = 0;
         for (Chromosome chromosome : copyNumberMap.keySet()) {
-            if (chromosome.isAutosome() && Doubles.greaterOrEqual(averageMajorAllelePloidy(copyNumberMap.get(chromosome)),
+            if (chromosome.isAutosome() && Doubles.greaterOrEqual(averageMajorAlleleCopyNumber(copyNumberMap.get(chromosome)),
                     MIN_AVERAGE_PLOIDY)) {
                 duplicatedAutosomes++;
             }
@@ -34,12 +34,12 @@ public final class WholeGenomeDuplication {
         return duplicatedAutosomes;
     }
 
-    static double averageMajorAllelePloidy(@NotNull final List<PurpleCopyNumber> copyNumbers) {
+    static double averageMajorAlleleCopyNumber(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         double weightedMajorAllelePloidy = 0;
         long totalBafCount = 0;
 
         for (PurpleCopyNumber copyNumber : copyNumbers) {
-            weightedMajorAllelePloidy += copyNumber.majorAllelePloidy() * copyNumber.bafCount();
+            weightedMajorAllelePloidy += copyNumber.majorAlleleCopyNumber() * copyNumber.bafCount();
             totalBafCount += copyNumber.bafCount();
         }
 

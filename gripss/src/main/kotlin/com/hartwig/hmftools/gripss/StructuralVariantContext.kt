@@ -2,6 +2,8 @@ package com.hartwig.hmftools.gripss
 
 import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
+import com.hartwig.hmftools.common.gripss.GripssFilters.MIN_QUAL
+import com.hartwig.hmftools.common.gripss.GripssFilters.MIN_TUMOR_AF
 import com.hartwig.hmftools.extensions.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.util.Interval

@@ -205,7 +205,7 @@ public class SvTestUtils
                 .minRegionStartSupport(SegmentSupport.BND)
                 .minRegionEndSupport(SegmentSupport.BND)
                 .minRegionMethod(BAF_WEIGHTED)
-                .minMinorAllelePloidy(0)
+                .minMinorAlleleCopyNumber(0)
                 .transcriptID("")
                 .transcriptVersion(1)
                 .build();

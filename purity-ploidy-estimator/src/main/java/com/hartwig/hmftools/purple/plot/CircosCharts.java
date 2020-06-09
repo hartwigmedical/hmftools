@@ -113,7 +113,7 @@ class CircosCharts {
     }
 
     private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
-        CircosFileWriter.writeRegions(baseCircosTumorSample + ".map.circos", copyNumbers, x -> x.minorAllelePloidy() - 1);
+        CircosFileWriter.writeRegions(baseCircosTumorSample + ".map.circos", copyNumbers, x -> x.minorAlleleCopyNumber() - 1);
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".cnv.circos", copyNumbers, x -> x.averageTumorCopyNumber() - 2);
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".baf.circos", copyNumbers, PurpleCopyNumber::averageActualBAF);
     }

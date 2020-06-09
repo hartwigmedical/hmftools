@@ -228,6 +228,6 @@ public class ViccExtractorTestApplication {
 
     @NotNull
     private static String toAttribute(@NotNull ViccEntry viccEntry, @NotNull Feature feature) {
-        return feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
+        return feature.geneSymbol() + "|" + viccEntry.transcriptId() + "|p." + feature.name();
     }
 }
