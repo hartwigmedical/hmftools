@@ -29,22 +29,39 @@ public class CopyNumberExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberExtractor.class);
 
-    private static final Set<String> ONCOKB_AMPLIFICATIONS =
-            Sets.newHashSet("Amplification", "AMPLIFICATION", "amplification");
+    private static final Set<String> ONCOKB_AMPLIFICATIONS = Sets.newHashSet("Amplification");
 
-    private static final Set<String> ONCOKB_DELETIONS =
-            Sets.newHashSet("Deletion", "DELETION", "deletion");
+    private static final Set<String> ONCOKB_DELETIONS = Sets.newHashSet("Deletion");
+
+    private static final Set<String> CGI_AMPLIFICATIONS = Sets.newHashSet("");
+
+    private static final Set<String> CGI_DELETIONS = Sets.newHashSet("");
+
+    private static final Set<String> CIVIC_AMPLIFICATIONS = Sets.newHashSet("");
+
+    private static final Set<String> CIVIC_DELETIONS = Sets.newHashSet("");
 
     @NotNull
     public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
         if (viccEntry.source() == ViccSource.ONCOKB) {
-            for (Feature feature : viccEntry.features()) {
-                if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
-                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
-                } else if (ONCOKB_DELETIONS.contains(feature.name())) {
-                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
-                }
+            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
+        } else if (viccEntry.source() == ViccSource.CIVIC) {
+            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
+        } else if (viccEntry.source() == ViccSource.CGI) {
+            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
+        } return ampsDelsPerFeature;
+    }
+
+    @NotNull
+    private static Map<Feature, KnownAmplificationDeletion> extractAmpsDelsInformation(@NotNull ViccEntry viccEntry,
+            @NotNull Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature) {
+        for (Feature feature : viccEntry.features()) {
+            LOGGER.info(feature.name());
+            if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
+                ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+            } else if (ONCOKB_DELETIONS.contains(feature.name())) {
+                ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
             }
         }
         return ampsDelsPerFeature;
@@ -52,11 +69,7 @@ public class CopyNumberExtractor {
 
     @NotNull
     private static KnownAmplificationDeletion oncoKbEventForGene(@NotNull String gene, @NotNull String eventType) {
-        return ImmutableKnownAmplificationDeletion.builder().gene(gene)
-                .source("OncoKB")
-                .eventType(eventType)
-                .sourceLink("link")
-                .build();
+        return ImmutableKnownAmplificationDeletion.builder().gene(gene).source("OncoKB").eventType(eventType).sourceLink("link").build();
     }
 
     @NotNull
@@ -131,7 +144,7 @@ public class CopyNumberExtractor {
                 direction = viccEntry.association().responseType();
                 link = "http://oncokb.org/#/gene/" + gene + "/alteration/" + "[variantName]";
 
-            break;
+                break;
             case CGI: // all events are actionable
                 Cgi kbCgi = (Cgi) kbSpecificObject;
                 drug = kbCgi.drug();

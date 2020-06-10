@@ -26,8 +26,8 @@ public class TransvarTestApplication {
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
         // Leads to a warning which we can ignore.
-        extractAndPrintHotspots(transvar, "CARD11", null, "L225LI");
-        extractAndPrintHotspots(transvar, "CARD11", null, "L225dup");
+        extractAndPrintHotspots(transvar, "EPAS1", null, "I533_P534del");
+        extractAndPrintHotspots(transvar, "EPAS1", null, "533_534del");
 
         // Repeat issue - These 2 variants are identical (the trinucleotide is repeated)
 //        extractAndPrintHotspots(transvar, "KIT", null, "V560del");

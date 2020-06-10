@@ -13,12 +13,14 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.curation.FeatureCurator;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
@@ -44,7 +46,6 @@ public class ViccExtractorTestApplication {
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
     private static final boolean TRANSVAR_ENABLED = true;
-    private static final boolean WRITE_HOTSPOTS_TO_VCF = true;
     private static final Integer MAX_ENTRIES = null;
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -71,29 +72,48 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
+        LOGGER.debug("Configured '{}' for whether transvar is enabled", TRANSVAR_ENABLED);
 
         ViccSource source = ViccSource.ONCOKB;
         LOGGER.info("Reading VICC json from '{}' with source '{}'", viccJsonPath, source);
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).maxEntriesToInclude(MAX_ENTRIES).build();
-        List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJsonPath, querySelection);
-        LOGGER.info(" Read {} entries", viccEntries.size());
+        List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection));
+        LOGGER.info(" Read and curated {} entries", viccEntries.size());
 
-        ViccExtractor viccExtractor =
-                new ViccExtractor(HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile, TRANSVAR_ENABLED),
-                        new CopyNumberExtractor(),
-                        new FusionExtractor(),
-                        new GeneLevelEventExtractor(),
-                        new GeneRangeExtractor(),
-                        new SignaturesExtractor());
+        HotspotExtractor hotspotExtractor = TRANSVAR_ENABLED
+                ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
+                : new HotspotExtractor((gene, specificTranscript, proteinAnnotation) -> Lists.newArrayList());
+
+        ViccExtractor viccExtractor = new ViccExtractor(hotspotExtractor,
+                new CopyNumberExtractor(),
+                new FusionExtractor(),
+                new GeneLevelEventExtractor(),
+                new GeneRangeExtractor(),
+                new SignaturesExtractor());
 
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
         analyzeExtractionResults(resultsPerEntry);
 
-        if (WRITE_HOTSPOTS_TO_VCF) {
+        if (TRANSVAR_ENABLED) {
             writeHotspots(hotspotVcf, resultsPerEntry);
         }
+    }
+
+    @NotNull
+    private static List<ViccEntry> curate(@NotNull List<ViccEntry> viccEntries) {
+        List<ViccEntry> curatedViccEntries = Lists.newArrayList();
+
+        for (ViccEntry entry : viccEntries) {
+            ImmutableViccEntry.Builder builder = ImmutableViccEntry.builder().from(entry);
+            List<Feature> curatedFeatures = Lists.newArrayList();
+            for (Feature feature : entry.features()) {
+                curatedFeatures.add(FeatureCurator.curate(entry.source(), feature));
+            }
+            curatedViccEntries.add(builder.features(curatedFeatures).build());
+        }
+        return curatedViccEntries;
     }
 
     private static void analyzeExtractionResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {

@@ -52,7 +52,7 @@ maxInexactHomLengthShortDel | 6 | DEL(<1kb) | Short DEL with high homology are a
 shortStrandBias | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
 shortSRTumorSupport | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read
 shortSRNormalSupport | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read in the normal
-small.replacement.fp | | DEL(<1kb) | *TO DO!!!*
+shortDelInsArtefact | | DEL(<1kb) | Filter any short DEL where the insert sequence length + 1 = deletion length, unless the insert sequence is identical to the reverse complement (ie a short reciprocal inversion).  This is a known GRIDSS artefact.
 
 ## 4. Linkage, deduplication and rescue
 
