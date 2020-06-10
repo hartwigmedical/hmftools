@@ -104,7 +104,7 @@ public class RnaDataLoader
         int junctionFrags = 0;
         int discordantFrags = 0;
 
-        if(matchType.equals("MATCH") || matchType.equals("MATCH_EXT_UNFILTERED") || matchType.equals("ISOFOX_ONLY"))
+        if(matchType.equals("MATCH") || matchType.equals("FILTERED_IN_ARRIBA") || matchType.equals("ISOFOX_ONLY"))
         {
             junctionFrags = Integer.parseInt(items[fieldIndexMap.get("JuncFrags")]);
             discordantFrags = Integer.parseInt(items[fieldIndexMap.get("DiscFrags")]);
