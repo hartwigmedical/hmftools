@@ -54,6 +54,18 @@ class StructuralVariantContextTest {
     }
 
     @Test
+    fun testShortDelInsArtifact() {
+        val delWithInsertSameSizeAsLength = shortDel(100, 110, "123456789").toSv()
+        assertTrue(delWithInsertSameSizeAsLength.shortDelInsertArtifact())
+
+        val delWithInsertLongerSizeAsLength = shortDel(100, 110, "1234567890").toSv()
+        assertFalse(delWithInsertLongerSizeAsLength.shortDelInsertArtifact())
+
+        val delWithInsertShorterSizeThanLength = shortDel(100, 110, "12345678").toSv()
+        assertFalse(delWithInsertShorterSizeThanLength.shortDelInsertArtifact())
+    }
+
+    @Test
     fun testPolyGFilters() {
         val polyGRegion = Interval("1", 1000, 1010)
 
@@ -171,7 +183,7 @@ class StructuralVariantContextTest {
 
     private fun shortInv(position: Int = 100, otherPosition: Int = 110): VariantContext = createVariant(position, "A", "ATT]1:$otherPosition]")
 
-    private fun shortDel(position: Int = 80, otherPosition: Int = 100): VariantContext = createVariant(position, "A", "ATACTGCTACA[1:${otherPosition}[")
+    private fun shortDel(position: Int = 80, otherPosition: Int = 100, insertSequence:String = "TACTGCTACA"): VariantContext = createVariant(position, "A", "A${insertSequence}[1:${otherPosition}[")
 
     private fun shortDup(position: Int = 110, otherPosition: Int = 100): VariantContext = createVariant(position, "A", "ATACTGCTACA[1:${otherPosition}[")
 

@@ -149,6 +149,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         }
     }
 
+
     fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
@@ -181,7 +182,9 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(MIN_TUMOR_AF)
         }
 
-
+        if (shortDelInsertArtifact()) {
+            result.add(SHORT_DEL_INS_ARTIFACT)
+        }
 
         if (qualFilter(config.minQualBreakEnd, config.minQualBreakPoint)) {
             result.add(MIN_QUAL)
@@ -295,6 +298,14 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
 
     fun allelicFrequencyFilter(minTumorAf: Double): Boolean {
         return tumorAF < minTumorAf
+    }
+
+    fun shortDelInsertArtifact(): Boolean {
+        if (isShortDel) {
+            val deletion = variantType as Deletion
+            return deletion.length - 1 == deletion.insertSequence.length
+        }
+        return false;
     }
 
     fun normalCoverageFilter(minNormalCoverage: Int): Boolean {
