@@ -149,7 +149,6 @@ public class ReadRecord
     public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
     public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.SECONDARY_ALIGNMENT.intValue()) != 0; }
 
-    public int getSecondaryReadCount() { return mSecondaryReadCount; }
     public void setSecondaryReadCount(int count) { mSecondaryReadCount = count; }
 
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }

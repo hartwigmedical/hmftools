@@ -635,7 +635,7 @@ public class FusionReadData
     {
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
-                + ",SVType,NonSupp,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,MultiMapFrags,CoverageUp,CoverageDown"
+                + ",SVType,NonSupp,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,CoverageUp,CoverageDown"
                 + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown"
                 + ",OtherGenesUp,OtherGenesDown,RelatedSplicedIds,RelatedProxIds,InitReadId,HomologyOffset";
     }
@@ -680,7 +680,6 @@ public class FusionReadData
         int splitFragments = 0;
         int realignedFragments = 0;
         int discordantFragments = 0;
-        int readsWithSecondaries = 0;
 
         for(Map.Entry<FusionFragmentType,List<FusionFragment>> entry : mFragments.entrySet())
         {
@@ -690,9 +689,6 @@ public class FusionReadData
                 discordantFragments = entry.getValue().size();
             else if(entry.getKey() == REALIGNED)
                 realignedFragments = entry.getValue().size();
-
-            readsWithSecondaries += (int)entry.getValue().stream()
-                    .filter(x -> x.reads().stream().anyMatch(y -> y.getSecondaryReadCount() > 0)).count();
         }
 
         int totalFragments = splitFragments + realignedFragments + discordantFragments;
@@ -701,7 +697,6 @@ public class FusionReadData
         csvData.add(String.valueOf(splitFragments));
         csvData.add(String.valueOf(realignedFragments));
         csvData.add(String.valueOf(discordantFragments));
-        csvData.add(String.valueOf(readsWithSecondaries));
 
         // since depth of 1 may have been discarded from the BaseDepth, correct for this
         csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UPSTREAM]], splitFragments)));

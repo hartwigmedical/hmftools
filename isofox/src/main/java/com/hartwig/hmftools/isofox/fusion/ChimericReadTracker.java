@@ -37,7 +37,6 @@ public class ChimericReadTracker
     private final Set<Integer> mJunctionPositions; // from amongst the chimeric fragments with evidence of a fusion junction
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
     private final Map<String,List<ReadRecord>> mCandidateRealignedReadMap;
-    private final Map<String,Integer> mSecondaryReadMap;
     private final Set<String> mDuplicateReadIds; // currently only used to store chimeric duplicates
 
     // to avoid double-processing reads falling after a gene collection
@@ -54,7 +53,6 @@ public class ChimericReadTracker
         mDuplicateReadIds = Sets.newHashSet();
         mLocalChimericReads = Lists.newArrayList();
         mCandidateRealignedReadMap = Maps.newHashMap();
-        mSecondaryReadMap = Maps.newHashMap();
         mPostGeneReadMap = Maps.newHashMap();
         mPreviousPostGeneReadMap = Maps.newHashMap();
         mGeneCollection = null;
@@ -80,7 +78,6 @@ public class ChimericReadTracker
         mChimericReadMap.clear();
         mCandidateRealignedReadMap.clear();
         mChimericStats.clear();
-        mSecondaryReadMap.clear();
         mLocalChimericReads.clear();
         mJunctionPositions.clear();
         mDuplicateReadIds.clear();
@@ -92,16 +89,6 @@ public class ChimericReadTracker
             return;
 
         mCandidateRealignedReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
-    }
-
-    public void registerSecondaryRead(final String readId)
-    {
-        // used for filtering fusions
-        Integer count = mSecondaryReadMap.get(readId);
-        if(count == null)
-            mSecondaryReadMap.put(readId, 1);
-        else
-            mSecondaryReadMap.put(readId, count + 1);
     }
 
     public void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
@@ -252,13 +239,7 @@ public class ChimericReadTracker
         for(Map.Entry<String,List<ReadRecord>> entry : mChimericReadMap.entrySet())
         {
             final List<ReadRecord> reads = entry.getValue();
-
-            Integer secondaryCount = mSecondaryReadMap.get(entry.getKey());
-
             reads.forEach(x -> x.captureGeneInfo(true));
-
-            if(secondaryCount != null)
-                reads.forEach(x -> x.setSecondaryReadCount(secondaryCount));
         }
     }
 

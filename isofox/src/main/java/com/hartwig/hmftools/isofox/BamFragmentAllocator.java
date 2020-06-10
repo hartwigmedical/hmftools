@@ -227,12 +227,7 @@ public class BamFragmentAllocator
             return;
 
         if(record.isSecondaryAlignment())
-        {
-            if(mRunFusions && record.getFirstOfPairFlag())
-                mChimericReads.registerSecondaryRead(record.getReadName());
-
             return;
-        }
 
         if(mDuplicateTracker.checkDuplicates(record))
         {
