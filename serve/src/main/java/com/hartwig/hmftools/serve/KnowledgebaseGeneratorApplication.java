@@ -77,7 +77,7 @@ public class KnowledgebaseGeneratorApplication {
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
 
         HotspotExtractor hotspotExtractor =
-                HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE), false);
+                HotspotExtractor.transvarWithRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
 

@@ -72,6 +72,7 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
+        LOGGER.debug("Configured '{}' for whether transvar is enabled", TRANSVAR_ENABLED);
 
         ViccSource source = ViccSource.ONCOKB;
         LOGGER.info("Reading VICC json from '{}' with source '{}'", viccJsonPath, source);
@@ -80,13 +81,16 @@ public class ViccExtractorTestApplication {
         List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection));
         LOGGER.info(" Read and curated {} entries", viccEntries.size());
 
-        ViccExtractor viccExtractor =
-                new ViccExtractor(HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile, TRANSVAR_ENABLED),
-                        new CopyNumberExtractor(),
-                        new FusionExtractor(),
-                        new GeneLevelEventExtractor(),
-                        new GeneRangeExtractor(),
-                        new SignaturesExtractor());
+        HotspotExtractor hotspotExtractor = TRANSVAR_ENABLED
+                ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
+                : new HotspotExtractor((gene, specificTranscript, proteinAnnotation) -> Lists.newArrayList());
+
+        ViccExtractor viccExtractor = new ViccExtractor(hotspotExtractor,
+                new CopyNumberExtractor(),
+                new FusionExtractor(),
+                new GeneLevelEventExtractor(),
+                new GeneRangeExtractor(),
+                new SignaturesExtractor());
 
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
@@ -97,7 +101,7 @@ public class ViccExtractorTestApplication {
         }
     }
 
-    @NotNull 
+    @NotNull
     private static List<ViccEntry> curate(@NotNull List<ViccEntry> viccEntries) {
         List<ViccEntry> curatedViccEntries = Lists.newArrayList();
 

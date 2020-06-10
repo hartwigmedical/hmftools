@@ -12,13 +12,14 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
+import com.hartwig.hmftools.serve.vicc.hotspot.ProteinResolver;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class Transvar {
+public class Transvar implements ProteinResolver {
 
     private static final Logger LOGGER = LogManager.getLogger(Transvar.class);
 
@@ -45,10 +46,18 @@ public class Transvar {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
+    @Override
     @NotNull
     public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
-            @NotNull String proteinAnnotation) throws IOException, InterruptedException {
-        List<TransvarRecord> records = process.runTransvarPanno(gene, proteinAnnotation);
+            @NotNull String proteinAnnotation) {
+        List<TransvarRecord> records;
+        try {
+            records = process.runTransvarPanno(gene, proteinAnnotation);
+        } catch (InterruptedException | IOException e) {
+            LOGGER.error("Exception thrown by transvar");
+            throw new RuntimeException(e);
+        }
+
         if (records.isEmpty()) {
             LOGGER.warn("Transvar could not resolve any genomic coordinates for '{}:p.{}'", gene, proteinAnnotation);
             return Lists.newArrayList();
