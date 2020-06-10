@@ -56,7 +56,7 @@ public class HotspotExtractor {
                 List<VariantHotspot> hotspots = proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                         viccEntry.transcriptId(),
                         feature.name());
-                LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
+              //  LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
                 if (hotspots.isEmpty()) {
                     unresolvableFeatures.add(featureKey);
                 }

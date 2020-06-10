@@ -74,7 +74,7 @@ public final class ViccExtractor {
 
         LOGGER.info("Could not resolve hotspots for {} features", hotspotExtractor.unresolvableFeatures().size());
         for (String feature : hotspotExtractor.unresolvableFeatures()) {
-            LOGGER.debug(" {}", feature);
+           // LOGGER.debug(" {}", feature);
         }
 
         return extractionResultsPerEntry;

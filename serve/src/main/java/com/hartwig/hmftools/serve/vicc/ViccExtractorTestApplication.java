@@ -45,7 +45,7 @@ public class ViccExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
-    private static final boolean TRANSVAR_ENABLED = true;
+    private static final boolean TRANSVAR_ENABLED = false;
     private static final Integer MAX_ENTRIES = null;
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -181,7 +181,7 @@ public class ViccExtractorTestApplication {
 
         LOGGER.info("No genomic events found for {} features", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
-            LOGGER.debug(" {} in {}: {}", feature.name(), feature.geneSymbol(), feature);
+           // LOGGER.debug(" {} in {}: {}", feature.name(), feature.geneSymbol(), feature);
         }
     }
 
