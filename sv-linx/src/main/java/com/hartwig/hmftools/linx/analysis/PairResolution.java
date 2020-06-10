@@ -490,12 +490,22 @@ public class PairResolution
             boolean uniformPloidy, @NotNull final SvLinkedPair longestTiPair)
     {
         /* establish configuration:
-            - Facing, no overlap
-            - Facing, inner breakends overlap
-            - Facing, outer breakends overlap
-            - INV encloses INV
-            - INV face away
-         */
+        1. FB_INV_PAIR - facing foldbacks - +ve INV positions 3,4, -ve INV positions 1,2
+
+        2. Two DELS - 2x DBs, +ve INV positions 1,3, -ve INV positions 2,4
+        - RECIP_INV if both DBs are present otherwise leave as-is
+
+        3. One INV encloses the other - has 1x DB, 1x TI which must be long (>1K) since otherwise would be shard and just a synthetic DEL,
+         +ve INV positions 1,3, -ve INV positions 2,4
+        - if the TI is LOH bounded and the INVs uniform ploidy (now JCN), this is a DEL_TI
+        - if the inner INV length < 100K, this is a RESOLVED_FOLDBACK
+        - otherwise is a RECIP_INV_DEL_DUP, and the chain is rearranged so the long TI is formed
+
+        4. Overlapping INVs with 2 facing breakends - 2x TIs, +ve INV positions 2,4, -ve INV positions 1,3
+        - DOUBLE_MINUTE if satisfies DM rules
+        - if the TI is LOH bounded and the INVs uniform ploidy), this is a DUP_TI
+        - otherwise is a RECIP_INV_DUP2, and the chain is rearranged so the long TI is formed
+        */
 
         // assign relative positions for easier comparison
         SvBreakend lowerBe1 = startBe1.position() < endBe1.position() ? startBe1 : endBe1;
@@ -503,6 +513,7 @@ public class PairResolution
         SvBreakend lowerBe2 = startBe2.position() < endBe2.position() ? startBe2 : endBe2;
         SvBreakend upperBe2 = lowerBe2 == startBe2 ? endBe2 : startBe2;
 
+        // 1. Facing Inversions
         if(upperBe1.position() < lowerBe2.position() || upperBe2.position() < lowerBe1.position())
         {
             // no overlap and facing away is unclassified
@@ -523,12 +534,19 @@ public class PairResolution
         boolean lowerMatchingDB = lowerDb1 != null && lowerDb1 == lowerBe2.getDBLink();
         boolean upperMatchingDB = upperDb1 != null && upperDb1 == upperBe2.getDBLink();
 
-        // basic reciprocal inversion
+        // 2. Reciprocal INV case
         if(lowerMatchingDB && upperMatchingDB)
         {
+            // basic reciprocal inversion
             boolean isResolved = (lowerDb1.length() <= longDelThreshold && upperDb1.length() <= longDelThreshold);
             cluster.setResolved(isResolved, RECIP_INV);
             cluster.addAnnotation(String.format("PairLen=%d;%d;%d", lowerDb1.length(), upperDb1.length(), NO_LENGTH));
+            return;
+        }
+        else if((lowerBe1.orientation() == 1 && lowerBe1.position() < lowerBe2.position() && upperBe1.position() < upperBe2.position())
+        || (lowerBe2.orientation() == 1 && lowerBe2.position() < lowerBe1.position() && upperBe2.position() < upperBe1.position()))
+        {
+            // still possibly a reciprocal INV but interrupted by other breakends
             return;
         }
 
@@ -536,14 +554,13 @@ public class PairResolution
         setPairLengthData(cluster);
 
         boolean lohBoundedTi = isLohBoundedTi(longestTiPair);
-        boolean hasLongTi = longestTiPair.length() > SHORT_TI_LENGTH;
 
         ResolvedType resolvedType = NONE;
 
+        // 3. One INV encloses the other - the DEL scenario
         if((lowerBe1.position() < lowerBe2.position() && upperBe1.position() > upperBe2.position())
         || (lowerBe2.position() < lowerBe1.position() && upperBe2.position() > upperBe1.position()))
         {
-            // one INV encloses the other - the DEL scenario
             if(lohBoundedTi && uniformPloidy)
             {
                 resolvedType = DEL_TI;

@@ -209,7 +209,7 @@ public class InversionPairTest
         assertEquals(var1.position(false) - var2.position(false), getSyntheticTiLength(cluster));
         assertEquals(var2.position(false) - var2.position(true), getSyntheticGapLength(cluster));
 
-        //no LOH, then is resolved as a RECIP_INV_DUPS
+        //no LOH, then is resolved as a RECIP_INV_DEL_DUP
         tester.CnDataLoader.getLohData().clear();
 
         tester.addAndCluster(var1, var2);
@@ -242,7 +242,6 @@ public class InversionPairTest
         assertEquals(1, cluster.getChains().size());
         long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(SvLinkedPair::length).max().getAsLong();;
         assertEquals(longTiLength, var4.position(true) - var1.position(true));
-
     }
 
 }
