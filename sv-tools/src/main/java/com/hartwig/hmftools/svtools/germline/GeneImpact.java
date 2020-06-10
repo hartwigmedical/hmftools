@@ -131,7 +131,7 @@ public class GeneImpact
         if(sv.type() == DEL)
         {
             overlapGenes.addAll(mGeneDataCache.findGeneAnnotationsByOverlap(
-                    svIndex, sv.chromosome(true), sv.position(true), sv.position(false)));
+                    svIndex, sv.chromosome(true), sv.position(true).intValue(), sv.position(false).intValue()));
 
             if(!overlapGenes.isEmpty())
             {
@@ -150,7 +150,7 @@ public class GeneImpact
             List<GeneAnnotation> svGenes = breakendPairGenes.get(se);
 
             svGenes.addAll(mGeneDataCache.findGeneAnnotationsBySv(
-                    svIndex, isStart, sv.chromosome(isStart), sv.position(isStart), sv.orientation(isStart), 0)
+                    svIndex, isStart, sv.chromosome(isStart), sv.position(isStart).intValue(), sv.orientation(isStart), 0)
                     .stream().filter(x -> x.canonical() != null).collect(Collectors.toList()));
 
             if(!svGenes.isEmpty())
