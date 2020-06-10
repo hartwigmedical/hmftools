@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss.link
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.VariantStore
+import org.apache.logging.log4j.LogManager
 import java.util.*
 
 class TransitiveLink(private val assemblyLinkStore: LinkStore, private val variantStore: VariantStore) {
@@ -15,6 +16,8 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         private const val MAX_TRANSITIVE_JUMPS = 2
         private const val MAX_TRANSITIVE_SEEK_DISTANCE = 2000
         private const val MAX_TRANSITIVE_ADDITIONAL_DISTANCE = 1000
+
+        private val logger = LogManager.getLogger(this::class.java)
     }
 
     fun transitiveLink(variant: StructuralVariantContext, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
@@ -24,7 +27,8 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
             val alternativeStart = variantStore.selectAlternatives(variant)
             // Note: we really shouldn't expect to see that many variants within the CIPOS. If we do it is likely that it is a large
             // poly-G region or something equally messy.
-            if (alternativeStart.size <= MAX_ALTERNATIVES) {
+            if (alternativeStart.size in 1..MAX_ALTERNATIVES) {
+                logger.debug("Examining ${alternativeStart.size} alternative(s) to variant $target")
                 for (alternative in alternativeStart) {
                     val assemblyLinks = findLinks("trs_${variant.vcfId}_", alternative, target, maxTransitiveJumps, mutableListOf())
                     if (assemblyLinks.isNotEmpty()) {
@@ -53,12 +57,11 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         }
 
         // Always try assembled links first!
-        val assemblyLinkedVariants = assemblyLinkStore.linkedVariants(current.mateId)
+        val assemblyLinkedVariants = assemblyLinkStore.linkedVariants(current.mateId).filter { x -> !path.contains(x)  }
         for (link in assemblyLinkedVariants) {
             val linkedVariant = variantStore.select(link.otherVcfId)
             if (!linkedVariant.isSingle && !linkedVariant.imprecise) {
-                val nextJump = Link(link.link, Pair(mate, linkedVariant))
-                val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps, newPath + nextJump)
+                val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps, newPath + link)
                 if (newAssemblyLinks.isNotEmpty()) {
                     return newAssemblyLinks
                 }

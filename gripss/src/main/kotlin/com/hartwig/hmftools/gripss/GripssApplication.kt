@@ -43,7 +43,6 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         const val PON_ADDITIONAL_DISTANCE = 1
         const val MIN_HOTSPOT_DISTANCE = 1000
         const val MIN_RESCUE_QUAL = 100
-        const val MIN_DSB_RESCUE_LENGTH = 1000
 
         val logger = LogManager.getLogger(this::class.java)
         val version = VersionInfo("gripss.version")
