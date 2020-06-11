@@ -109,7 +109,7 @@ public class ViccExtractorTestApplication {
             ImmutableViccEntry.Builder builder = ImmutableViccEntry.builder().from(entry);
             List<Feature> curatedFeatures = Lists.newArrayList();
             for (Feature feature : entry.features()) {
-                curatedFeatures.add(FeatureCurator.curate(entry.source(), feature));
+                curatedFeatures.add(FeatureCurator.curate(entry, feature));
             }
             curatedViccEntries.add(builder.features(curatedFeatures).build());
         }
