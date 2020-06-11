@@ -132,7 +132,7 @@ public class FilteringTest
         tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
 
-        tester.AllVariants.forEach(x -> x.setPloidyRecalcData(0.1, 0.2));
+        tester.AllVariants.forEach(x -> x.setJcnRecalcData(0.1, 0.2));
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();

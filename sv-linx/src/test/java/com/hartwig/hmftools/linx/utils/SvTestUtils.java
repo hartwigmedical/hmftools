@@ -85,11 +85,11 @@ public class SvTestUtils
     }
 
     public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
-            int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type, double ploidy)
+            int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type, double jcn)
     {
         // let the copy number test data routine take care of setting CN and CN change data
         return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type,
-                0, 0, ploidy, ploidy, ploidy, "");
+                0, 0, jcn, jcn, jcn, "");
     }
 
     public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
@@ -117,7 +117,7 @@ public class SvTestUtils
                         .endHomologySequence("")
                         .startAF(1.0)
                         .endAF(1.0)
-                        .ploidy(ploidy)
+                        .junctionCopyNumber(ploidy)
                         .adjustedStartAF(1.0)
                         .adjustedEndAF(1.0)
                         .adjustedStartCopyNumber(cnStart)
@@ -181,7 +181,7 @@ public class SvTestUtils
         var.setChromosomalArms(startArm, endArm);
 
         // by default
-        var.setPloidyRecalcData(var.getSvData().ploidy(), var.getSvData().ploidy());
+        var.setJcnRecalcData(var.getSvData().junctionCopyNumber(), var.getSvData().junctionCopyNumber());
     }
 
 

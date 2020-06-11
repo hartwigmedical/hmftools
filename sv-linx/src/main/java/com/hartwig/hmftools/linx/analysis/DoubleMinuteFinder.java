@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
@@ -62,8 +63,8 @@ public class DoubleMinuteFinder
     private String mOutputDir;
     private BufferedWriter mFileWriter;
 
-    private static final double PLOIDY_THRESHOLD = 8;
-    private static final double ADJACENT_PLOIDY_RATIO = 2.3;
+    private static final double JCN_THRESHOLD = 8;
+    private static final double ADJACENT_JCN_RATIO = 2.3;
     private static final int INF_PAIR_MIN_DISTANCE = 50000;
 
     private static final Logger LOGGER = LogManager.getLogger(DoubleMinuteFinder.class);
@@ -122,7 +123,7 @@ public class DoubleMinuteFinder
 
         final List<SvVarData> candidateDMSVs = Lists.newArrayList();
 
-        double clusterMaxPloidy = 0; // the max of the ploidy min values
+        double clusterMaxJcn = 0; // the max of the JCN min values
         boolean possibleDM = false;
 
         if(cluster.getSvCount() == 1)
@@ -130,53 +131,53 @@ public class DoubleMinuteFinder
             final SvVarData var = cluster.getSV(0);
 
             // early exit - only consider cluster-1 if a DUP
-            if(var.type() == DUP && var.ploidyMax() >= PLOIDY_THRESHOLD && getAdjacentMajorAPRatio(var) >= ADJACENT_PLOIDY_RATIO)
+            if(var.type() == DUP && var.jcnMax() >= JCN_THRESHOLD && getAdjacentMajorAPRatio(var) >= ADJACENT_JCN_RATIO)
             {
                 candidateDMSVs.add(var);
-                clusterMaxPloidy = var.ploidyMin();
+                clusterMaxJcn = var.jcnMin();
                 possibleDM = true;
             }
         }
         else
         {
-            double maxInfPloidy = 0;
-            final List<SvVarData> highPloidySVs = Lists.newArrayList();
+            double maxInfJcn = 0;
+            final List<SvVarData> highJcnSVs = Lists.newArrayList();
 
             for (SvVarData var : cluster.getSVs())
             {
                 if (var.isSglBreakend())
-                    clusterMaxPloidy = max(clusterMaxPloidy, var.ploidyMin() * 0.5); // in case the SGL is a disguised foldback
+                    clusterMaxJcn = max(clusterMaxJcn, var.jcnMin() * 0.5); // in case the SGL is a disguised foldback
                 else
-                    clusterMaxPloidy = max(clusterMaxPloidy, var.ploidyMin());
+                    clusterMaxJcn = max(clusterMaxJcn, var.jcnMin());
 
                 if (var.isInferredSgl())
-                    maxInfPloidy = max(maxInfPloidy, var.ploidy());
+                    maxInfJcn = max(maxInfJcn, var.jcn());
 
-                if (var.ploidyMax() >= PLOIDY_THRESHOLD)
-                    highPloidySVs.add(var);
+                if (var.jcnMax() >= JCN_THRESHOLD)
+                    highJcnSVs.add(var);
             }
 
             // now attempt to find its boundaries, ie the SVs which
-            // formed the DM by looking at ploidy and its ratio to adjacent major AP
-            boolean hasHighMinPloidy = false;
+            // formed the DM by looking at JCN and its ratio to adjacent major AP
+            boolean hasHighMinJcn = false;
 
-            for (final SvVarData var : highPloidySVs)
+            for (final SvVarData var : highJcnSVs)
             {
-                if (var.ploidyMax() < clusterMaxPloidy && var.isFoldback())
+                if (var.jcnMax() < clusterMaxJcn && var.isFoldback())
                     continue;
 
-                // at least one high-ploidy breakend must have a high ploidy relative to the
-                // adjacent CN segment's major allele ploidy and a min ploidy above the threshold, not including DELs
-                if(var.type() != DEL && var.ploidyMin() >= PLOIDY_THRESHOLD)
-                    hasHighMinPloidy = true;
+                // at least one high-JCN breakend must have a high JCN relative to the
+                // adjacent CN segment's major allele JCN and a min JCN above the threshold, not including DELs
+                if(var.type() != DEL && var.jcnMin() >= JCN_THRESHOLD)
+                    hasHighMinJcn = true;
 
                 double svAdjMAPRatio = getAdjacentMajorAPRatio(var);
 
-                if(svAdjMAPRatio >= ADJACENT_PLOIDY_RATIO)
+                if(svAdjMAPRatio >= ADJACENT_JCN_RATIO)
                     candidateDMSVs.add(var);
             }
 
-            if(hasHighMinPloidy && !candidateDMSVs.isEmpty())
+            if(hasHighMinJcn && !candidateDMSVs.isEmpty())
                 possibleDM = true;
         }
 
@@ -184,10 +185,10 @@ public class DoubleMinuteFinder
             return;
 
         // determine whether foldbacks and/or SGLs could explain the amplification, indicating a BFB process
-        double sumFbPloidy = 0;
-        double maxFbPloidy = 0;
+        double sumFbJcn = 0;
+        double maxFbJcn = 0;
         int foldbackCount = 0;
-        double maxSglPloidy = 0;
+        double maxSglJcn = 0;
 
         for (final SvVarData var : cluster.getSVs())
         {
@@ -196,31 +197,31 @@ public class DoubleMinuteFinder
 
             if(var.isFoldback())
             {
-                sumFbPloidy += var.isChainedFoldback() ? var.ploidy() * 0.5 : var.ploidy();
+                sumFbJcn += var.isChainedFoldback() ? var.jcn() * 0.5 : var.jcn();
                 foldbackCount += var.isChainedFoldback() ? 0.5 : 1;
-                maxFbPloidy = max(maxFbPloidy, var.ploidy());
+                maxFbJcn = max(maxFbJcn, var.jcn());
             }
             else if(var.isSglBreakend())
             {
-                // limit the SGLs to the top 2 by ploidy
-                maxSglPloidy = max(var.ploidy(), maxSglPloidy);
+                // limit the SGLs to the top 2 by JCN
+                maxSglJcn = max(var.jcn(), maxSglJcn);
             }
         }
 
-        // determine the maximum potential ploidy plausibly explained by BFB - taking the min of:
-        // - 2x sum of FB ploidies + max INF /SGL ploidy
-        // - 6x max FB ploidy
+        // determine the maximum potential JCN plausibly explained by BFB - taking the min of:
+        // - 2x sum of FB ploidies + max INF /SGL JCN
+        // - 6x max FB JCN
         // - HighestTelo/CentromereCN x 2^(FBCount + if(SGLPloidy > 10% * highest minPloidy,1,0))
         double maxArmEndCopyNumber = getMaxArmEndCopyNumber(cluster);
-        int fbSglCount = foldbackCount + (maxSglPloidy > 0.1 * clusterMaxPloidy ? 1 : 0);
+        int fbSglCount = foldbackCount + (maxSglJcn > 0.1 * clusterMaxJcn ? 1 : 0);
         double armBfbCopyNumber = maxArmEndCopyNumber * pow(2, fbSglCount);
 
-        double maxBFBPloidy = min(2 * sumFbPloidy + maxSglPloidy, min(6 * maxFbPloidy, armBfbCopyNumber));
+        double maxBFBJcn = min(2 * sumFbJcn + maxSglJcn, min(6 * maxFbJcn, armBfbCopyNumber));
 
-        if(maxBFBPloidy > clusterMaxPloidy)
+        if(maxBFBJcn > clusterMaxJcn)
         {
-            LOGGER.debug(String.format("cluster(%s) BFB maxPloidy(%.1f) plausible ploidy(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
-                    cluster.id(), clusterMaxPloidy, maxBFBPloidy, sumFbPloidy, maxSglPloidy, armBfbCopyNumber));
+            LOGGER.debug(String.format("cluster(%s) BFB maxJCN(%.1f) plausible jcn(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
+                    cluster.id(), clusterMaxJcn, maxBFBJcn, sumFbJcn, maxSglJcn, armBfbCopyNumber));
 
             cluster.addAnnotation(CLUSTER_ANNOT_BFB);
             return;
@@ -229,8 +230,8 @@ public class DoubleMinuteFinder
         if(!possibleDM)
             return;
 
-        LOGGER.debug(String.format("cluster(%s) possible DM: maxPloidy(%.1f) dmSvCount(%d) maxBFBPloidy(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
-                cluster.id(), clusterMaxPloidy, candidateDMSVs.size(), maxBFBPloidy, sumFbPloidy, maxSglPloidy, armBfbCopyNumber));
+        LOGGER.debug(String.format("cluster(%s) possible DM: maxJCN(%.1f) dmSvCount(%d) maxBFBJcn(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
+                cluster.id(), clusterMaxJcn, candidateDMSVs.size(), maxBFBJcn, sumFbJcn, maxSglJcn, armBfbCopyNumber));
 
         // other the criteria to be a DM are:
         // - NOT (INF=2) < 50k bases
@@ -250,7 +251,7 @@ public class DoubleMinuteFinder
 
         final SvChain dmChain = createDMChain(cluster, candidateDMSVs);
 
-        // a single DUP or a chain involving all high-ploidy SVs which can be made into a loop
+        // a single DUP or a chain involving all high-JCN SVs which can be made into a loop
         boolean fullyChained = false;
 
         if(dmChain != null)
@@ -273,19 +274,19 @@ public class DoubleMinuteFinder
                 }
             }
         }
-        // check that no arm has a high telomere or centromere relative to the DM's ploidy - make an exception for fully chained DMs
-        if(!amplifiedVsSamplePloidy(cluster, clusterMaxPloidy) && !fullyChained)
+        // check that no arm has a high telomere or centromere relative to the DM's JCN - make an exception for fully chained DMs
+        if(!amplifiedVsSamplePloidy(cluster, clusterMaxJcn) && !fullyChained)
         {
-            if(clusterMaxPloidy < maxArmEndCopyNumber * ADJACENT_PLOIDY_RATIO)
+            if(clusterMaxJcn < maxArmEndCopyNumber * ADJACENT_JCN_RATIO)
             {
                 LOGGER.debug("cluster({}}) possible DM: not amplified vs max armEndCopyNumber({}}) centro({}})",
-                        cluster.id(), formatPloidy(maxArmEndCopyNumber));
+                        cluster.id(), formatJcn(maxArmEndCopyNumber));
                 return;
             }
         }
 
         DoubleMinuteData dmData = new DoubleMinuteData(cluster, candidateDMSVs);
-        dmData.MaxBFBPloidy = maxBFBPloidy;
+        dmData.MaxBFBJcn = maxBFBJcn;
 
         if(dmChain != null)
         {
@@ -310,17 +311,17 @@ public class DoubleMinuteFinder
         {
             // single DUPs won't go through the chaining routine so cache this chain here
             final SvVarData var = candidateDMSVs.get(0);
-            dmChain.setPloidyData(var.ploidy(), var.ploidyUncertainty());
+            dmChain.setJcnData(var.jcn(), var.jcnUncertainty());
             cluster.addChain(dmChain, false);
         }
 
         LOGGER.debug(String.format("cluster(%s) identified DM: maxPloidy(%.1f) dmSvCount(%d) fullyChained(%s)",
-                cluster.id(), clusterMaxPloidy, candidateDMSVs.size(), fullyChained));
+                cluster.id(), clusterMaxJcn, candidateDMSVs.size(), fullyChained));
     }
 
     private static double getAdjacentMajorAPRatio(final SvVarData var)
     {
-        // get the largest ratio of ploidy to the adjacent major AP
+        // get the largest ratio of JCN to the adjacent major AP
         double maxRatio = 0;
 
         for (int se = SE_START; se <= SE_END; ++se)
@@ -336,9 +337,9 @@ public class DoubleMinuteFinder
             if(cnData == null)
                 continue;
 
-            double adjacentMap = cnData.majorAllelePloidy();
+            double adjacentMap = cnData.majorAlleleJcn();
 
-            maxRatio = adjacentMap > 0 ? max(var.ploidy() / adjacentMap, maxRatio) : cnData.CopyNumber;
+            maxRatio = adjacentMap > 0 ? max(var.jcn() / adjacentMap, maxRatio) : cnData.CopyNumber;
         }
 
         return maxRatio;
@@ -393,7 +394,7 @@ public class DoubleMinuteFinder
 
             SvLinkedPair pair = new SvLinkedPair(var, var, LINK_TYPE_TI, true, false);
             chain.addLink(pair, true);
-            chain.setPloidyData(var.ploidy(), var.ploidyUncertainty());
+            chain.setJcnData(var.jcn(), var.jcnUncertainty());
             return chain;
         }
 
@@ -424,7 +425,7 @@ public class DoubleMinuteFinder
 
         final SvChain chain = dmData.Chains.isEmpty() ? null : dmData.Chains.get(0);
 
-        // a single DUP or a chain involving all high-ploidy SVs which can be made into a loop
+        // a single DUP or a chain involving all high-JCN SVs which can be made into a loop
         boolean chainsCentromere = false;
 
         if(chain != null)
@@ -457,8 +458,8 @@ public class DoubleMinuteFinder
         {
             ++typeCounts[typeAsInt(var.type())];
 
-            minDMPloidy = max(var.ploidyMin(), minDMPloidy);
-            maxDMPloidy = max(var.ploidy(), maxDMPloidy);
+            minDMPloidy = max(var.jcnMin(), minDMPloidy);
+            maxDMPloidy = max(var.jcn(), maxDMPloidy);
 
             maxDMCopyNumber = max(maxDMCopyNumber, max(var.copyNumber(true), var.copyNumber(false)));
 
@@ -496,26 +497,26 @@ public class DoubleMinuteFinder
         {
             if(var.isFoldback())
             {
-                sumFbPloidy += var.isChainedFoldback() ? var.ploidy() * 0.5 : var.ploidy();
-                maxFbPloidy = max(var.ploidy(), maxFbPloidy);
+                sumFbPloidy += var.isChainedFoldback() ? var.jcn() * 0.5 : var.jcn();
+                maxFbPloidy = max(var.jcn(), maxFbPloidy);
             }
 
             if(var.isSglBreakend())
             {
-                sumSglPloidy += var.ploidy();
-                maxSglPloidy = max(var.ploidy(), maxSglPloidy);
+                sumSglPloidy += var.jcn();
+                maxSglPloidy = max(var.jcn(), maxSglPloidy);
             }
 
             if(!dmData.SVs.contains(var))
             {
-                if(var.ploidyMax() >= minDMPloidy)
+                if(var.jcnMax() >= minDMPloidy)
                     ++nonDmSvsFullPloidy;
 
-                if(var.ploidyMax() >= minDMPloidy * 0.5)
+                if(var.jcnMax() >= minDMPloidy * 0.5)
                     ++nonDmSvsHalfPloidy;
 
-                if((var.ploidy() >= dmData.MaxBFBPloidy || var.ploidy() > PLOIDY_THRESHOLD)
-                && getAdjacentMajorAPRatio(var) >= ADJACENT_PLOIDY_RATIO)
+                if((var.jcn() >= dmData.MaxBFBJcn || var.jcn() > JCN_THRESHOLD)
+                && getAdjacentMajorAPRatio(var) >= ADJACENT_JCN_RATIO)
                 {
                     dmData.CandidateSVs.add(var);
                 }
@@ -629,7 +630,7 @@ public class DoubleMinuteFinder
             }
 
             mFileWriter.write(String.format(",%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f",
-                    dmData.MaxBFBPloidy, cluster.getFoldbacks().size(), sumFbPloidy, maxFbPloidy,
+                    dmData.MaxBFBJcn, cluster.getFoldbacks().size(), sumFbPloidy, maxFbPloidy,
                     cluster.getSglBreakendCount(), sumSglPloidy, maxSglPloidy));
 
             mFileWriter.write(String.format(",%d,%d,%.1f,%s,%.1f",
@@ -684,8 +685,8 @@ public class DoubleMinuteFinder
                     if (!nonDmSVs.contains(var))
                         nonDmSVs.add(var);
 
-                    if (!diffPloidies.stream().anyMatch(x -> copyNumbersEqual(x, var.ploidy())))
-                        diffPloidies.add(var.ploidy());
+                    if (!diffPloidies.stream().anyMatch(x -> copyNumbersEqual(x, var.jcn())))
+                        diffPloidies.add(var.jcn());
                 }
 
                 // ignore simple consecutive DELs
@@ -800,7 +801,7 @@ public class DoubleMinuteFinder
                     inSegment = true;
                     prevPosition = breakend.position();
                     prevCN = breakend.copyNumber();
-                    netPloidy = breakend.ploidy();
+                    netPloidy = breakend.jcn();
                 }
                 else
                 {
@@ -814,14 +815,14 @@ public class DoubleMinuteFinder
                         // move position on
                         prevPosition = breakend.position();
                         prevCN = breakend.copyNumber();
-                        netPloidy += breakend.ploidy();
+                        netPloidy += breakend.jcn();
                     }
                     else
                     {
                         double avgCopyCN = (prevCN + breakend.copyNumber()) * 0.5;
                         addCnSegmentData(cnSegmentLengths, segmentLength, samplePloidy, avgCopyCN, minDmCopyNumber);
 
-                        netPloidy -= breakend.ploidy();
+                        netPloidy -= breakend.jcn();
                         prevPosition = breakend.position();
 
                         if(copyNumbersEqual(netPloidy, 0))
@@ -844,7 +845,7 @@ public class DoubleMinuteFinder
     private static void addCnSegmentData(
             final long[] cnSegmentLengths, long length, double samplePloidy, double copyNumber, double minDmCopyNumber)
     {
-        // bucket into maximum 5 multiples of sample ploidy
+        // bucket into maximum 5 multiples of sample JCN
         double cnRatio = max(copyNumber/samplePloidy, 1);
 
         if(copyNumber >= minDmCopyNumber || copyNumbersEqual(copyNumber, minDmCopyNumber))

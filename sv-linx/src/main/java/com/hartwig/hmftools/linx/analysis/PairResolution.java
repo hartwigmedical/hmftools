@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLe
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.ResolvedType;
@@ -84,7 +85,7 @@ public class PairResolution
         SvBreakend endBe2 = null;
 
         SvLinkedPair longTiLink = null;
-        boolean uniformPloidy = false;
+        boolean uniformJcn = false;
 
         // establish the characteristics of this cluster:
         // - how many chains - 0, 1 or 2
@@ -228,7 +229,7 @@ public class PairResolution
             endBe1 = var1.getBreakend(false);
             startBe2 = var2.getBreakend(true);
             endBe2 = var2.getBreakend(false);
-            uniformPloidy = ploidyMatch(var1, var2);
+            uniformJcn = ChainJcnLimits.jcnMatch(var1, var2);
         }
         else if(cluster.isFullyChained(false) && clusterChains.size() == 2)
         {
@@ -239,7 +240,7 @@ public class PairResolution
             endBe1 = chain1.getOpenBreakend(false);
             startBe2 = chain2.getOpenBreakend(true);
             endBe2 = chain2.getOpenBreakend(false);
-            uniformPloidy = ploidyMatch(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty());
+            uniformJcn = jcnMatch(chain1.jcn(), chain1.jcnUncertainty(), chain2.jcn(), chain2.jcnUncertainty());
         }
         else if(clusterChains.size() == 1 && unchainedSvCount == 1)
         {
@@ -253,7 +254,7 @@ public class PairResolution
             startBe2 = var.getBreakend(true);
             endBe2 = var.getBreakend(false);
 
-            uniformPloidy = ploidyMatch(var.ploidy(), var.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty());
+            uniformJcn = jcnMatch(var.jcn(), var.jcnUncertainty(), chain.jcn(), chain.jcnUncertainty());
         }
         else
         {
@@ -272,7 +273,7 @@ public class PairResolution
             {
                 classifyInversionPairClusters(
                         cluster, longDelThreshold, longDupThreshold,
-                        startBe1, endBe1, startBe2, endBe2, uniformPloidy, longTiLink);
+                        startBe1, endBe1, startBe2, endBe2, uniformJcn, longTiLink);
             }
         }
         else
@@ -280,7 +281,7 @@ public class PairResolution
             // check for translocation type events
             classifyTranslocationPairClusters(
                     cluster, longDelThreshold, longDupThreshold, startBe1, endBe1, startBe2, endBe2,
-                    uniformPloidy, longTiLink, existingChainModified ? clusterChains: null);
+                    uniformJcn, longTiLink, existingChainModified ? clusterChains: null);
         }
     }
 
@@ -347,7 +348,7 @@ public class PairResolution
     private static void classifyTranslocationPairClusters(
             SvCluster cluster, long longDelThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
-            boolean uniformPloidy, final SvLinkedPair longestTiPair,
+            boolean uniformJcn, final SvLinkedPair longestTiPair,
             List<SvChain> rearrangedChains)
     {
         // first check consistency
@@ -431,11 +432,11 @@ public class PairResolution
 
             if (!arm1MatchingDB && !arm2MatchingDB)
             {
-                resolvedType = lohBoundedTi && uniformPloidy ? DUP_TI : RECIP_TRANS_DUPS;
+                resolvedType = lohBoundedTi && uniformJcn ? DUP_TI : RECIP_TRANS_DUPS;
             }
             else
             {
-                resolvedType = lohBoundedTi && uniformPloidy ? DEL_TI : RECIP_TRANS_DEL_DUP;
+                resolvedType = lohBoundedTi && uniformJcn ? DEL_TI : RECIP_TRANS_DEL_DUP;
             }
 
             // test the overlap and DB lengths to determine whether this cluster is resolved (ie protected from clustering)
@@ -476,7 +477,7 @@ public class PairResolution
 
             for(SvChain newChain : rearrangedChains)
             {
-                newChain.setPloidyData(existingChain.ploidy(), existingChain.ploidyUncertainty());
+                newChain.setJcnData(existingChain.jcn(), existingChain.jcnUncertainty());
                 cluster.addChain(newChain, true);
             }
         }
@@ -487,7 +488,7 @@ public class PairResolution
     private static void classifyInversionPairClusters(
             SvCluster cluster, long longDelThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
-            boolean uniformPloidy, @NotNull final SvLinkedPair longestTiPair)
+            boolean uniformJcn, @NotNull final SvLinkedPair longestTiPair)
     {
         /* establish configuration:
         1. FB_INV_PAIR - facing foldbacks - +ve INV positions 3,4, -ve INV positions 1,2
@@ -561,7 +562,7 @@ public class PairResolution
         if((lowerBe1.position() < lowerBe2.position() && upperBe1.position() > upperBe2.position())
         || (lowerBe2.position() < lowerBe1.position() && upperBe2.position() > upperBe1.position()))
         {
-            if(lohBoundedTi && uniformPloidy)
+            if(lohBoundedTi && uniformJcn)
             {
                 resolvedType = DEL_TI;
             }
@@ -604,7 +605,7 @@ public class PairResolution
         else
         {
             // otherwise the inner breakends overlap
-            if(lohBoundedTi && uniformPloidy)
+            if(lohBoundedTi && uniformJcn)
             {
                 resolvedType = DUP_TI;
             }
@@ -658,69 +659,6 @@ public class PairResolution
         LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
                 cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
 
-        cluster.setResolved(isResolved, resolvedType);
-    }
-
-    public static void classifyDelDupPairClusters(
-            SvCluster cluster, long longDelThreshold, long longDupThreshold, @NotNull final SvLinkedPair longestTiPair,
-            SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
-            boolean uniformPloidy)
-    {
-        if(!uniformPloidy)
-            return;
-
-        SvBreakend lowerBe1 = startBe1.position() < endBe1.position() ? startBe1 : endBe1;
-        SvBreakend upperBe1 = lowerBe1 == startBe1 ? endBe1 : startBe1;
-        SvBreakend lowerBe2 = startBe2.position() < endBe2.position() ? startBe2 : endBe2;
-        SvBreakend upperBe2 = lowerBe2 == startBe2 ? endBe2 : startBe2;
-
-        if(upperBe1.position() < lowerBe2.position() || upperBe2.position() < lowerBe1.position())
-        {
-            // ignore a DUP and DEL which don't overlap
-            return;
-        }
-
-        ResolvedType resolvedType = NONE;
-
-        if(lowerBe1.position() < lowerBe2.position() && upperBe1.position() > upperBe2.position())
-        {
-            // check the DEL isn't enclosing the DUP
-            if(lowerBe1.orientation() == 1)
-                return;
-
-            resolvedType = DUP_TI;
-        }
-        else if(lowerBe2.position() < lowerBe1.position() && upperBe2.position() > upperBe1.position())
-        {
-            if(lowerBe2.orientation() == 1)
-                return;
-
-            resolvedType = DUP_TI;
-        }
-        else
-        {
-            // overlapping
-            resolvedType = DEL_TI;
-        }
-
-        final SvBreakend chainStart = cluster.getChains().get(0).getOpenBreakend(true);
-        final SvBreakend chainEnd = cluster.getChains().get(0).getOpenBreakend(false);
-        long nonTiDistance = abs(chainStart.position() - chainEnd.position());
-        boolean isResolved = false;
-
-        if(resolvedType == DUP_TI)
-        {
-            isResolved = longestTiPair.length() <= longDupThreshold && nonTiDistance <= longDupThreshold;
-        }
-        else
-        {
-            isResolved = longestTiPair.length() <= longDupThreshold && nonTiDistance <= longDelThreshold;
-        }
-
-        LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
-                cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
-
-        setPairLengthData(cluster);
         cluster.setResolved(isResolved, resolvedType);
     }
 

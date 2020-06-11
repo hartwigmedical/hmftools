@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF_PERC;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isShortArmChromosome;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.TOTAL_CN_LOSS;
@@ -488,7 +489,7 @@ public class DriverGeneAnnotator
 
         LNX_LOGGER.debug("gene({}) chromosome({}) position({} -> {}) minCN({})",
                 dgData.GeneData.GeneName, dgData.GeneData.Chromosome, dgData.TransData.TransStart, dgData.TransData.TransEnd,
-                formatPloidy(dgData.GeneCN.minCopyNumber()));
+                formatJcn(dgData.GeneCN.minCopyNumber()));
 
         checkChromosomeAmplification(dgData);
         checkClusterAmplification(dgData, breakendList);
@@ -522,8 +523,8 @@ public class DriverGeneAnnotator
             if (chromosomeCopyNumber / mSamplePloidy > 2)
             {
                 LNX_LOGGER.debug("gene({}) AMP gain from chromosome chChange({} telo={} centro={}) vs samplePloidy({})",
-                        dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber),
-                        formatPloidy(telomereCopyNumber), formatPloidy(centromereCopyNumber), formatPloidy(mSamplePloidy));
+                        dgData.GeneData.GeneName, formatJcn(chromosomeCopyNumber),
+                        formatJcn(telomereCopyNumber), formatJcn(centromereCopyNumber), formatPloidy(mSamplePloidy));
 
                 DriverGeneEvent event = new DriverGeneEvent(GAIN_CHR);
                 event.setCopyNumberGain(chromosomeCopyNumber - mSamplePloidy);
@@ -541,8 +542,8 @@ public class DriverGeneAnnotator
         if (centromereCNChange > 0 && !copyNumbersEqual(centromereCNChange, 0))
         {
             LNX_LOGGER.debug("gene({}) AMP gain from arm({}) cnChange across centromere({} -> {} = {})",
-                    dgData.GeneData.GeneName, dgData.Arm, formatPloidy(tcData.CentromerePArm), formatPloidy(tcData.CentromereQArm),
-                    formatPloidy(centromereCNChange));
+                    dgData.GeneData.GeneName, dgData.Arm, formatJcn(tcData.CentromerePArm), formatJcn(tcData.CentromereQArm),
+                    formatJcn(centromereCNChange));
 
             DriverGeneEvent event = new DriverGeneEvent(GAIN_ARM);
             event.setCopyNumberGain(centromereCNChange);
@@ -668,8 +669,8 @@ public class DriverGeneAnnotator
                     netClusterCNChange += segmentCNChange;
 
                     LNX_LOGGER.trace("gene({}) cluster({}) adding segment CN({} -> {} chg={}) net({}) breakends({} -> {})",
-                            dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber), formatPloidy(endCopyNumber),
-                            formatPloidy(segmentCNChange), formatPloidy(netClusterCNChange), segStartBreakend, breakend);
+                            dgData.GeneData.GeneName, targetCluster.id(), formatJcn(segmentStartCopyNumber), formatJcn(endCopyNumber),
+                            formatJcn(segmentCNChange), formatJcn(netClusterCNChange), segStartBreakend, breakend);
 
                     inSegment = false;
                 }
@@ -682,8 +683,8 @@ public class DriverGeneAnnotator
                     if(opposingSegment.remainingCNChange() > netClusterCNChange)
                     {
                         LNX_LOGGER.trace("gene({}) cluster({}) netCN({}) cancelled by breakend({}) cnChange(orig={} remain={})",
-                                dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(netClusterCNChange),
-                                breakend, formatPloidy(breakend.copyNumberChange()), formatPloidy(opposingSegment.remainingCNChange()));
+                                dgData.GeneData.GeneName, targetCluster.id(), formatJcn(netClusterCNChange),
+                                breakend, formatJcn(breakend.copyNumberChange()), formatJcn(opposingSegment.remainingCNChange()));
 
                         opposingSegment.reduceCNChange(netClusterCNChange);
                         netClusterCNChange = 0;
@@ -691,8 +692,8 @@ public class DriverGeneAnnotator
                     else
                     {
                         LNX_LOGGER.trace("gene({}) cluster({}) netCN({}) reducing by breakend({}) cnChange({})",
-                                dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(netClusterCNChange),
-                                breakend, formatPloidy(breakend.copyNumberChange()));
+                                dgData.GeneData.GeneName, targetCluster.id(), formatJcn(netClusterCNChange),
+                                breakend, formatJcn(breakend.copyNumberChange()));
 
                         netClusterCNChange -= opposingSegment.remainingCNChange();
                         opposingSegment.zeroCNChange(); // keep so it won't be registered again but zero out
@@ -721,15 +722,15 @@ public class DriverGeneAnnotator
             clusterCNChange += geneMinCopyNumber - segmentStartCopyNumber;
 
             LNX_LOGGER.trace("gene({}) cluster({}) open segment startCN({}) net({}) start breakend({})",
-                    dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber), formatPloidy(clusterCNChange),
+                    dgData.GeneData.GeneName, targetCluster.id(), formatJcn(segmentStartCopyNumber), formatJcn(clusterCNChange),
                     segStartBreakend);
         }
 
         if(clusterCNChange > 0 && !copyNumbersEqual(clusterCNChange, 0) && !copyNumbersEqual(startCopyNumber + clusterCNChange, startCopyNumber))
         {
             LNX_LOGGER.debug("gene({}) cluster({}) copy number gain({}) vs startCN({}) segments({}: CN={}) traversal({})",
-                    dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(clusterCNChange), formatPloidy(startCopyNumber),
-                    segmentCount, formatPloidy(netClusterCNChange), traverseUp ? "up" : "down");
+                    dgData.GeneData.GeneName, targetCluster.id(), formatJcn(clusterCNChange), formatJcn(startCopyNumber),
+                    segmentCount, formatJcn(netClusterCNChange), traverseUp ? "up" : "down");
 
             return new DriverAmpData(targetCluster, traverseUp, breakendCount, segmentCount, startCopyNumber, clusterCNChange);
         }
@@ -886,7 +887,7 @@ public class DriverGeneAnnotator
                         // calculate the copy number over the deletion bridge section
                         double cnLowSide = breakend.copyNumberLowSide();
 
-                        double otherSvPloidy = dbLink.getOtherBreakend(breakend).ploidy();
+                        double otherSvPloidy = dbLink.getOtherBreakend(breakend).jcn();
 
                         // account for an overlapping DB by subtracting the ploidy of the overlap
                         if(dbLink.length() < 0)
@@ -898,7 +899,7 @@ public class DriverGeneAnnotator
 
                             LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozyous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
                                     trans.geneName(), breakend.getCluster().id(), breakend,
-                                    formatPloidy(cnLowSide), dbLink.length(), formatPloidy(otherSvPloidy));
+                                    formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvPloidy));
 
                             DriverGeneData dgData = createDriverData(gene);
                             DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
@@ -918,7 +919,7 @@ public class DriverGeneAnnotator
 
                         double cnLowSideStart = breakend.copyNumberLowSide();
                         double cnLowSideEnd = otherBreakend.copyNumberLowSide();
-                        double ploidy = breakend.ploidy();
+                        double ploidy = breakend.jcn();
                         double ploidyThreshold = max(ploidy * (1 + MAX_COPY_NUM_DIFF_PERC), ploidy + MAX_COPY_NUM_DIFF);
 
                         if(cnLowSideStart < ploidyThreshold && cnLowSideEnd < ploidyThreshold)
@@ -927,7 +928,7 @@ public class DriverGeneAnnotator
 
                             LNX_LOGGER.debug("gene({}) cluster({}) DUP({}) cause homozygous disruption cnLowSide({} & {}) ploidy({})",
                                     trans.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
-                                    formatPloidy(cnLowSideStart), formatPloidy(cnLowSideEnd), formatPloidy(ploidy));
+                                    formatJcn(cnLowSideStart), formatJcn(cnLowSideEnd), formatJcn(ploidy));
 
                             DriverGeneData dgData = createDriverData(gene);
                             DriverGeneEvent event = new DriverGeneEvent(HOM_DUP_DISRUPTION);

@@ -19,13 +19,13 @@ public class SvChainState
 {
     public final SvVarData SV;
 
-    public final double MinPloidy;
-    public final double Ploidy;
-    public final double MaxPloidy;
+    public final double MinJcn;
+    public final double Jcn;
+    public final double MaxJcn;
 
     private final double mExhaustedLevel;
 
-    private final boolean mSinglePloidy;
+    private final boolean mSingleJcn;
 
     private double[] mBreakendCount;
 
@@ -33,29 +33,29 @@ public class SvChainState
     private final List<SvBreakend> mConnectionsStart;
     private final List<SvBreakend> mConnectionsEnd;
 
-    public static final double EXHAUSTED_PLOIDY_PERC = 0.1;
-    public static final double EXHAUSTED_PLOIDY_ABS = 0.2;
+    public static final double EXHAUSTED_JCN_PERC = 0.1;
+    public static final double EXHAUSTED_JCN_ABS = 0.2;
 
-    public SvChainState(final SvVarData var, Double singlePloidy)
+    public SvChainState(final SvVarData var, Double singleJcn)
     {
         SV = var;
 
-        if(singlePloidy != null)
+        if(singleJcn != null)
         {
-            mSinglePloidy = true;
-            Ploidy = singlePloidy;
-            MaxPloidy = singlePloidy;
-            MinPloidy = singlePloidy;
+            mSingleJcn = true;
+            Jcn = singleJcn;
+            MaxJcn = singleJcn;
+            MinJcn = singleJcn;
         }
         else
         {
-            mSinglePloidy = false;
-            Ploidy = var.ploidy();
-            MinPloidy = var.ploidyMin();
-            MaxPloidy = max(var.ploidyMax(), Ploidy);
+            mSingleJcn = false;
+            Jcn = var.jcn();
+            MinJcn = var.jcnMin();
+            MaxJcn = max(var.jcnMax(), Jcn);
         }
 
-        mExhaustedLevel = min(EXHAUSTED_PLOIDY_PERC * Ploidy, EXHAUSTED_PLOIDY_ABS);
+        mExhaustedLevel = min(EXHAUSTED_JCN_PERC * Jcn, EXHAUSTED_JCN_ABS);
 
         mBreakendCount = new double[SE_PAIR];
 
@@ -63,8 +63,8 @@ public class SvChainState
         mConnectionsEnd = Lists.newArrayList();
     }
 
-    public void add(boolean isStart, double linkPloidy) { mBreakendCount[seIndex(isStart)] += linkPloidy; }
-    public void set(boolean isStart, double linkPloidy) { mBreakendCount[seIndex(isStart)] = linkPloidy; }
+    public void add(boolean isStart, double linkJcn) { mBreakendCount[seIndex(isStart)] += linkJcn; }
+    public void set(boolean isStart, double linkJcn) { mBreakendCount[seIndex(isStart)] = linkJcn; }
 
     public double curentCount() { return min(mBreakendCount[SE_START], mBreakendCount[SE_END]); }
     public double breakendCount(boolean isStart) { return mBreakendCount[seIndex(isStart)]; }
@@ -78,11 +78,11 @@ public class SvChainState
     }
     public boolean breakendExhaustedVsMax(boolean isStart) { return maxUnlinked(isStart) <= mExhaustedLevel; }
 
-    public double unlinked() { return max(Ploidy - curentCount(), 0); }
+    public double unlinked() { return max(Jcn - curentCount(), 0); }
     public double unlinked(boolean isStart) { return unlinked(seIndex(isStart)); }
-    public double unlinked(int se) { return max(Ploidy - mBreakendCount[se],0); }
+    public double unlinked(int se) { return max(Jcn - mBreakendCount[se],0); }
 
-    public double maxUnlinked(boolean isStart) { return max(MaxPloidy - mBreakendCount[seIndex(isStart)],0); }
+    public double maxUnlinked(boolean isStart) { return max(MaxJcn - mBreakendCount[seIndex(isStart)],0); }
 
     public final List<SvBreakend> getConnections(boolean isStart) { return isStart ? mConnectionsStart : mConnectionsEnd; }
     public int uniqueConnections(boolean isStart) { return isStart ? mConnectionsStart.size() : mConnectionsEnd.size(); }
@@ -98,37 +98,37 @@ public class SvChainState
 
     public boolean overlaps(final SvChainState other)
     {
-        return !(MinPloidy > other.MaxPloidy || MaxPloidy < other.MinPloidy);
+        return !(MinJcn > other.MaxJcn || MaxJcn < other.MinJcn);
     }
 
     public boolean equals(final SvChainState other)
     {
-        return copyNumbersEqual(Ploidy, other.Ploidy);
+        return copyNumbersEqual(Jcn, other.Jcn);
     }
 
     public String toString()
     {
-        if(mSinglePloidy)
+        if(mSingleJcn)
         {
             return String.format("id(%d) ploidy(%.1f) counts(s=%.1f e=%.1f)",
-                    SV.id(), Ploidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+                    SV.id(), Jcn, mBreakendCount[SE_START], mBreakendCount[SE_END]);
         }
         else
         {
-            if (Ploidy > 10)
+            if (Jcn > 10)
             {
                 return String.format("id(%d) ploidy(%.0f-%.0f-%.0f) counts(s=%.0f e=%.0f)",
-                        SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+                        SV.id(), MinJcn, Jcn, MaxJcn, mBreakendCount[SE_START], mBreakendCount[SE_END]);
             }
-            else if (Ploidy < 0.5)
+            else if (Jcn < 0.5)
             {
                 return String.format("id(%d) ploidy(%.2f-%.2f-%.2f) counts(s=%.2f e=%.2f)",
-                        SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+                        SV.id(), MinJcn, Jcn, MaxJcn, mBreakendCount[SE_START], mBreakendCount[SE_END]);
             }
             else
             {
                 return String.format("id(%d) ploidy(%.1f-%.1f-%.1f) counts(s=%.1f e=%.1f)",
-                        SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+                        SV.id(), MinJcn, Jcn, MaxJcn, mBreakendCount[SE_START], mBreakendCount[SE_END]);
             }
         }
     }

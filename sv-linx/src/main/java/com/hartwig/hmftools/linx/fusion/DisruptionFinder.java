@@ -6,7 +6,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -528,7 +528,7 @@ public class DisruptionFinder
                     {
                         LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
                                 var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId,
-                                formatPloidy(transcript.undisruptedCopyNumber()));
+                                formatJcn(transcript.undisruptedCopyNumber()));
 
                         transcript.setReportableDisruption(true);
                         mDisruptions.add(transcript);
@@ -545,8 +545,7 @@ public class DisruptionFinder
         final SvLinkedPair dbLink = breakend.getDBLink();
         if(dbLink != null && dbLink.length() < 0)
         {
-            double otherSvPloidy = dbLink.getOtherBreakend(breakend).ploidy();
-            cnLowSide -= otherSvPloidy;
+            cnLowSide -= dbLink.getOtherBreakend(breakend).jcn();
         }
 
         return cnLowSide;
@@ -569,7 +568,7 @@ public class DisruptionFinder
                     .chrBand(gene.karyotypeBand())
                     .gene(transcript.geneName())
                     .type(gene.type().toString())
-                    .ploidy(gene.ploidy())
+                    .junctionCopyNumber(gene.jcn())
                     .exonUp(transcript.ExonUpstream)
                     .exonDown(transcript.ExonDownstream)
                     .undisruptedCopyNumber(max(transcript.undisruptedCopyNumber(),0))

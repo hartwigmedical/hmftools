@@ -13,8 +13,8 @@ public abstract class LinxSvData
     public abstract boolean isFoldback();
     public abstract String lineTypeStart();
     public abstract String lineTypeEnd();
-    public abstract double ploidyMin();
-    public abstract double ploidyMax();
+    public abstract double junctionCopyNumberMin();
+    public abstract double junctionCopyNumberMax();
     public abstract String geneStart();
     public abstract String geneEnd();
     public abstract double replicationTimingStart();

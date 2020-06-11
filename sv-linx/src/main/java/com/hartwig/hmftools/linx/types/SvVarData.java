@@ -65,11 +65,11 @@ public class SvVarData
     // copy number related data
     private double[] mCopyNumber; // cached from SV data but modifiable
     private double[] mCopyNumberChange;
-    private double mPloidy;
+    private double mJcn;
 
-    private boolean mHasCalcPloidy;
-    private double mPloidyMin;
-    private double mPloidyMax;
+    private boolean mHasCalcJcn;
+    private double mJcnMin;
+    private double mJcnMax;
     private SvCNData mCnDataPrevStart; // segment leading to the start position
     private SvCNData mCnDataPostStart; // segment starting with the position position
     private SvCNData mCnDataPrevEnd;
@@ -130,11 +130,11 @@ public class SvVarData
 
         mCopyNumber = new double[] { mSVData.adjustedStartCopyNumber(),  mSVData.adjustedEndCopyNumber() };
         mCopyNumberChange = new double[] {mSVData.adjustedStartCopyNumberChange(), mSVData.adjustedEndCopyNumberChange() };
-        mPloidy = mSVData.ploidy();
+        mJcn = mSVData.junctionCopyNumber();
 
-        mHasCalcPloidy = false;
-        mPloidyMin = 0;
-        mPloidyMax = 0;
+        mHasCalcJcn = false;
+        mJcnMin = 0;
+        mJcnMax = 0;
         mCnDataPrevStart = null;
         mCnDataPostStart = null;
         mCnDataPrevEnd = null;
@@ -225,13 +225,13 @@ public class SvVarData
 
     public final String getClusterReason() { return mClusterReason; }
 
-    public double ploidy() { return mPloidy; }
+    public double jcn() { return mJcn; }
 
     public double copyNumberChange(boolean isStart)
     {
-        // TEMP: precise DBs cause incorrect copy number change, so in this case use ploidy
+        // TEMP: precise DBs cause incorrect copy number change, so in this case use JCN
         if(mDbLink[seIndex(isStart)] != null && mDbLink[seIndex(isStart)].length() == 0)
-            return mPloidy;
+            return mJcn;
         else
             return mCopyNumberChange[seIndex(isStart)];
     }
@@ -242,10 +242,10 @@ public class SvVarData
         mCopyNumberChange[seIndex(isStart)] = copyNumberChange;
     }
 
-    public double getRoundedPloidy(boolean enforceClonal)
+    public double getRoundedJcn(boolean enforceClonal)
     {
-        double roundedPloidy = round(ploidy());
-        return enforceClonal ? max(roundedPloidy, 1) : roundedPloidy;
+        double roundedJcn = round(jcn());
+        return enforceClonal ? max(roundedJcn, 1) : roundedJcn;
     }
 
     public int getMaxAssembledBreakend()
@@ -253,9 +253,9 @@ public class SvVarData
         return max(getAssembledLinkedPairs(true).size(), getAssembledLinkedPairs(false).size());
     }
 
-    public int getImpliedPloidy()
+    public int getImpliedJcn()
     {
-        return max(getMaxAssembledBreakend(), (int)getRoundedPloidy(true));
+        return max(getMaxAssembledBreakend(), (int) getRoundedJcn(true));
     }
 
     public int getNearestSvDistance() { return mNearestSvDistance; }
@@ -530,27 +530,27 @@ public class SvVarData
         mReplicationOrigin[seIndex(isStart)] = value;
     }
 
-    public void setPloidyRecalcData(double minPloidy, double maxPloidy)
+    public void setJcnRecalcData(double minJcn, double maxJcn)
     {
-        if(maxPloidy == 0)
+        if(maxJcn == 0)
         {
             // suggests an error in the calculation
-            mPloidyMax = mPloidy;
+            mJcnMax = mJcn;
         }
         else
         {
-            mPloidyMin = minPloidy;
-            mPloidyMax = maxPloidy;
-            mPloidy = (mPloidyMin + mPloidyMax) * 0.5;
+            mJcnMin = minJcn;
+            mJcnMax = maxJcn;
+            mJcn = (mJcnMin + mJcnMax) * 0.5;
         }
 
-        mHasCalcPloidy = true;
+        mHasCalcJcn = true;
     }
 
-    public boolean hasCalculatedPloidy() { return mHasCalcPloidy; }
-    public double ploidyMax() { return mHasCalcPloidy ? mPloidyMax : mPloidy; }
-    public double ploidyMin() { return mHasCalcPloidy ? mPloidyMin : mPloidy; }
-    public double ploidyUncertainty() { return mHasCalcPloidy ? (mPloidy - mPloidyMin) * 0.5 : 0; }
+    public boolean hasCalculatedJcn() { return mHasCalcJcn; }
+    public double jcnMax() { return mHasCalcJcn ? mJcnMax : mJcn; }
+    public double jcnMin() { return mHasCalcJcn ? mJcnMin : mJcn; }
+    public double jcnUncertainty() { return mHasCalcJcn ? (mJcn - mJcnMin) * 0.5 : 0; }
 
     public double calcVaf(boolean isStart)
     {

@@ -80,8 +80,8 @@ public class SvBreakend {
     {
         return mSV.copyNumber(mUsesStart);
     }
-    public double ploidy() { return mSV.ploidy(); }
-    public double ploidyUncertainty() { return mSV.ploidyUncertainty(); }
+    public double jcn() { return mSV.jcn(); }
+    public double jcnUncertainty() { return mSV.jcnUncertainty(); }
 
     public String homology()
     {
@@ -98,24 +98,24 @@ public class SvBreakend {
         return cnData.CopyNumber;
     }
 
-    public double majorAllelePloidy(boolean usePrevious)
+    public double majorAlleleJcn(boolean usePrevious)
     {
         SvCNData cnData = mSV.getCopyNumberData(mUsesStart, usePrevious);
 
         if(cnData == null)
             return 0;
 
-        return cnData.majorAllelePloidy();
+        return cnData.majorAlleleJcn();
     }
 
-    public double minorAllelePloidy(boolean usePrevious)
+    public double minorAlleleJcn(boolean usePrevious)
     {
         SvCNData cnData = mSV.getCopyNumberData(mUsesStart, usePrevious);
 
         if(cnData == null)
             return 0;
 
-        return cnData.minorAllelePloidy();
+        return cnData.minorAlleleJcn();
     }
 
     public boolean isAssembledLink()

@@ -32,7 +32,7 @@ public class GeneAnnotation {
     private String mChromosome;
     private byte mOrientation;
     private int mPosition;
-    private double mPloidy;
+    private double mJunctionCopyNumber;
     private String mInsertSequence;
 
     public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
@@ -51,7 +51,7 @@ public class GeneAnnotation {
         mChromosome = "";
         mOrientation = 0;
         mPosition = -1;
-        mPloidy = 0;
+        mJunctionCopyNumber = 0;
         mInsertSequence = "";
 
         mKaryotypeBand = karyotypeBand;
@@ -71,7 +71,7 @@ public class GeneAnnotation {
     public void setSvData(final StructuralVariantData var)
     {
         mOrientation = mIsStart ? var.startOrientation() : var.endOrientation();
-        mPloidy = var.ploidy();
+        mJunctionCopyNumber = var.junctionCopyNumber();
         mPosition = mIsStart ? var.startPosition() : var.endPosition();
         mChromosome = mIsStart ? var.startChromosome() : var.endChromosome();
         mSvType = var.type();
@@ -84,7 +84,7 @@ public class GeneAnnotation {
     public int position() { return mPosition; }
     public StructuralVariantType type() { return mSvType; }
     public String chromosome() { return mChromosome; }
-    public double ploidy() { return mPloidy; }
+    public double jcn() { return mJunctionCopyNumber; }
     public String insertSequence() { return mInsertSequence; }
     public boolean isUpstream() { return mUpstream; }
 

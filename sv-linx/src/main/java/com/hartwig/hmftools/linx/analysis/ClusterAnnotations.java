@@ -5,7 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -228,7 +228,7 @@ public class ClusterAnnotations
             SvBreakend breakend = pair.getBreakend(se);
 
             if(breakend.getDBLink() != null && breakend.getDBLink().length() < 1)
-                breakendCN[se] = max(breakend.copyNumber() - breakend.getDBLink().getOtherBreakend(breakend).ploidy(), 0);
+                breakendCN[se] = max(breakend.copyNumber() - breakend.getDBLink().getOtherBreakend(breakend).jcn(), 0);
             else
                 breakendCN[se] = breakend.copyNumber();
         }
@@ -717,7 +717,7 @@ public class ClusterAnnotations
                 cluster.addAnnotation(CLUSTER_ANNOT_REP_REPAIR);
 
                 LOGGER.debug("cluster({} desc={} type={}) chain({} cn={}) rep-repair: links({} internal={} withGain={} overlaps={}) length(chain={} gain={} perc={})",
-                        cluster.id(), cluster.getDesc(), cluster.getResolvedType(), chain.id(), formatPloidy(chainEndsCN),
+                        cluster.id(), cluster.getDesc(), cluster.getResolvedType(), chain.id(), formatJcn(chainEndsCN),
                         chain.getLinkCount(), chainMetrics.InternalTIs, chainMetrics.InternalTICnGain, chainMetrics.OverlappingTIs,
                         chainRange, internalGainLength, String.format("%.2f", gainPercent));
             }
@@ -767,7 +767,7 @@ public class ClusterAnnotations
                 inSegment = true;
                 prevPosition = breakend.position();
                 prevCN = breakend.copyNumber();
-                netPloidy = breakend.ploidy();
+                netPloidy = breakend.jcn();
             }
             else
             {
@@ -784,7 +784,7 @@ public class ClusterAnnotations
                     // move position on
                     prevPosition = breakend.position();
                     prevCN = breakend.copyNumber();
-                    netPloidy += breakend.ploidy();
+                    netPloidy += breakend.jcn();
                 }
                 else
                 {
@@ -793,7 +793,7 @@ public class ClusterAnnotations
                         internalGainLength += segmentLength;
                     }
 
-                    netPloidy -= breakend.ploidy();
+                    netPloidy -= breakend.jcn();
                     prevPosition = breakend.position();
 
                     if(copyNumbersEqual(netPloidy, 0))

@@ -55,7 +55,7 @@ public final class ReportableGeneFusionFile {
                 .add("geneEnd")
                 .add("geneContextEnd")
                 .add("geneTranscriptEnd")
-                .add("ploidy")
+                .add("junctionCopyNumber")
                 .toString();
     }
 
@@ -67,7 +67,7 @@ public final class ReportableGeneFusionFile {
                 .add(fusion.geneEnd())
                 .add(fusion.geneContextEnd())
                 .add(fusion.geneTranscriptEnd())
-                .add(DECIMAL_FORMAT.format(fusion.ploidy()))
+                .add(DECIMAL_FORMAT.format(fusion.junctionCopyNumber()))
                 .toString();
     }
 
@@ -84,7 +84,7 @@ public final class ReportableGeneFusionFile {
                 .geneEnd(values[index++])
                 .geneContextEnd(values[index++])
                 .geneTranscriptEnd(values[index++])
-                .ploidy(Double.valueOf(values[index++]))
+                .junctionCopyNumber(Double.valueOf(values[index++]))
                 .build();
     }
 
@@ -103,7 +103,8 @@ public final class ReportableGeneFusionFile {
         return String.format("ERROR: %s", transcript.regionType());
     }
 
-    public static double fusionPloidy(double downstreamPloidy, double upstreamPloidy) {
-        return (upstreamPloidy + downstreamPloidy) * 0.5;
+    public static double fusionJcn(double downstreamJcn, double upstreamJcn)
+    {
+        return (upstreamJcn + downstreamJcn) * 0.5;
     }
 }

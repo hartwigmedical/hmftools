@@ -66,8 +66,8 @@ public class LinxLinkFile
                 .add("assembled")
                 .add("traversedSVCount")
                 .add("length")
-                .add("ploidy")
-                .add("ploidyUncertainty")
+                .add("junctionCopyNumber")
+                .add("junctionCopyNumberUncertainty")
                 .add("pseudogeneInfo")
                 .toString();
     }
@@ -89,8 +89,8 @@ public class LinxLinkFile
                 .add(String.valueOf(svData.assembled()))
                 .add(String.valueOf(svData.traversedSVCount()))
                 .add(String.valueOf(svData.length()))
-                .add(String.valueOf(svData.ploidy()))
-                .add(String.valueOf(svData.ploidyUncertainty()))
+                .add(String.valueOf(svData.junctionCopyNumber()))
+                .add(String.valueOf(svData.junctionCopyNumberUncertainty()))
                 .add(String.valueOf(svData.pseudogeneInfo()))
                 .toString();
     }
@@ -116,8 +116,8 @@ public class LinxLinkFile
                 .assembled(Boolean.parseBoolean(values[index++]))
                 .traversedSVCount(Integer.parseInt(values[index++]))
                 .length(Long.parseLong(values[index++]))
-                .ploidy(Double.parseDouble(values[index++]))
-                .ploidyUncertainty(Double.parseDouble(values[index++]))
+                .junctionCopyNumber(Double.parseDouble(values[index++]))
+                .junctionCopyNumberUncertainty(Double.parseDouble(values[index++]))
                 .pseudogeneInfo(index < values.length ? values[index++] : "")
                 .build();
     }

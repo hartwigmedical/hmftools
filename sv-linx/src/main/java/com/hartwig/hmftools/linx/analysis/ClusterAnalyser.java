@@ -19,8 +19,8 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemp
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.DELETED_TOTAL;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.RANGE_TOTAL;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.DELETED_TOTAL;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.RANGE_TOTAL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
@@ -267,10 +267,10 @@ public class ClusterAnalyser {
             }
 
             // more complicated clusters for now
-            boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedPloidy();
+            boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedJcn();
 
             mLinkFinder.findAssembledLinks(cluster);
-            cluster.setPloidyReplication(mConfig.ChainingSvLimit);
+            cluster.setJcnReplication(mConfig.ChainingSvLimit);
 
             if(isSimple)
                 mDmFinder.analyseCluster(cluster);
@@ -312,7 +312,7 @@ public class ClusterAnalyser {
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
             mDmFinder.analyseCluster(cluster, true);
 
-            cluster.setPloidyReplication(mConfig.ChainingSvLimit);
+            cluster.setJcnReplication(mConfig.ChainingSvLimit);
 
             // no need to re-find assembled TIs
 
@@ -451,7 +451,7 @@ public class ClusterAnalyser {
 
         if(rangeData != null)
         {
-            cluster.getMetrics().ValidAllelePloidySegmentPerc = mChainFinder.getValidAllelePloidySegmentPerc();
+            cluster.getMetrics().ValidAlleleJcnSegmentPerc = mChainFinder.getValidAllelePloidySegmentPerc();
             cluster.getMetrics().TraversedRange = rangeData[RANGE_TOTAL];
             cluster.getMetrics().TotalDeleted = rangeData[DELETED_TOTAL];
         }

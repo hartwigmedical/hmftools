@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.chaining;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -185,11 +185,11 @@ public class ChainDiagnostics
             {
                 LOGGER.debug("cluster({} count={}) breakend({}) rep({}) conns({}) foldbacks({}) compDups({}) asmb({})",
                         mClusterId, mSvConnectionsMap.keySet().size(), svConn.SV.getBreakend(useStart).toString(),
-                        svConn.Ploidy, connectionCount, foldbackCons, compDupCons, assembledLinks);
+                        svConn.Jcn, connectionCount, foldbackCons, compDupCons, assembledLinks);
 
                 logCsv("MULTI_CONN", svConn.SV,
                         String.format("conns(%d) ploidy(%s-%s-%s) foldbacks(%d) compDups(%d) asmb(%d) otherSVs(%s)",
-                                connectionCount, formatPloidy(svConn.MinPloidy), formatPloidy(svConn.Ploidy), formatPloidy(svConn.MaxPloidy),
+                                connectionCount, formatJcn(svConn.MinJcn), formatJcn(svConn.Jcn), formatJcn(svConn.MaxJcn),
                                 foldbackCons, compDupCons, assembledLinks, otherSVs));
 
                 ++invalidCount;
@@ -227,7 +227,7 @@ public class ChainDiagnostics
 
             LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} ploidy={}) breakends({} ploidy={})",
                     mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mClusterCount,
-                    mUnlinkedSvCount, formatPloidy(unlinkedPloidySVs), mUnlinkedBreakendCount, formatPloidy(unlinkedPloidyBreakends));
+                    mUnlinkedSvCount, formatJcn(unlinkedPloidySVs), mUnlinkedBreakendCount, formatJcn(unlinkedPloidyBreakends));
         }
         else
         {
@@ -258,9 +258,9 @@ public class ChainDiagnostics
 
             int sglCount = (int) svConnections.stream().filter(x -> x.SV.isSglBreakend()).count();
 
-            double ploidyTotal = svConnections.stream().mapToDouble(x -> x.Ploidy).sum();
+            double ploidyTotal = svConnections.stream().mapToDouble(x -> x.Jcn).sum();
 
-            double maxPloidy = mHasReplication ? svConnections.stream().mapToDouble(x -> x.Ploidy).max().getAsDouble() : 1;
+            double maxPloidy = mHasReplication ? svConnections.stream().mapToDouble(x -> x.Jcn).max().getAsDouble() : 1;
 
             mFileWriter.write(String.format("%s,%d,%s,%d,%.1f,%d,%d,%d,%d",
                     mSampleId, mClusterId, mHasReplication, mClusterCount, ploidyTotal,

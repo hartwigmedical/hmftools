@@ -15,10 +15,10 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLOIDY;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_JCN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_CONSECUTIVE_BREAKENDS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_PLOIDY_MATCH;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_JCN_MATCH;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 
 import static org.junit.Assert.assertEquals;
@@ -317,7 +317,7 @@ public class MergeRuleTest
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3, var4, var5));
         assertTrue(cluster != null);
         assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
-        assertTrue(cluster.getClusteringReasons().contains(CR_MAJOR_AP_PLOIDY));
+        assertTrue(cluster.getClusteringReasons().contains(CR_MAJOR_AP_JCN));
 
         /*
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
@@ -612,8 +612,8 @@ public class MergeRuleTest
 
         assertTrue(mainCluster != null);
 
-        assertTrue(var6.getClusterReason().contains(CR_TI_PLOIDY_MATCH));
-        assertTrue(mainCluster.getClusteringReasons().contains(CR_TI_PLOIDY_MATCH));
+        assertTrue(var6.getClusterReason().contains(CR_TI_JCN_MATCH));
+        assertTrue(mainCluster.getClusteringReasons().contains(CR_TI_JCN_MATCH));
 
     }
 

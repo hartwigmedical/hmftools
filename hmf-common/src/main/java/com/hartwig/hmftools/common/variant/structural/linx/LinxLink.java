@@ -18,7 +18,7 @@ public abstract class LinxLink
     public abstract boolean assembled();
     public abstract int traversedSVCount();
     public abstract long length();
-    public abstract double ploidy();
-    public abstract double ploidyUncertainty();
+    public abstract double junctionCopyNumber();
+    public abstract double junctionCopyNumberUncertainty();
     public abstract String pseudogeneInfo();
 }

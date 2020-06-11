@@ -22,9 +22,9 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CnPloidyCalcs
+public class CnJcnCalcs
 {
-    private final Map<Integer,PloidyCalcData> mSvPloidyCalcMap; // map of sample to SV Id & ploidy calc data
+    private final Map<Integer, JcnCalcData> mSvJcnCalcMap; // map of sample to SV Id & JCN calc data
 
     // references
     private final Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
@@ -35,11 +35,11 @@ public class CnPloidyCalcs
     private static double RELATIVE_UNCERTAINTY = 0.10;
     private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
     private static double ADDITIONAL_REL_UNCERTAINTY = 0.15;
-    private static double PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC = 0.5;
+    private static double PROPORTION_CNCHANGE_USED_IN_JCN_UNC = 0.5;
 
     private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 
-    public CnPloidyCalcs(
+    public CnJcnCalcs(
             final Map<String,List<SvCNData>> chrCnDataMap,
             final Map<Integer,SvCNData[]> svIdCnDataMap,
             final List<StructuralVariantData> svDataList)
@@ -48,14 +48,14 @@ public class CnPloidyCalcs
         mSvIdCnDataMap = svIdCnDataMap;
         mSvDataList = svDataList;
 
-        mSvPloidyCalcMap = Maps.newHashMap();
+        mSvJcnCalcMap = Maps.newHashMap();
     }
 
-    public final Map<Integer,PloidyCalcData> getSvPloidyCalcMap() { return mSvPloidyCalcMap; }
+    public final Map<Integer, JcnCalcData> getSvJcnCalcMap() { return mSvJcnCalcMap; }
 
-    public void calculateAdjustedPloidy(final String sampleId)
+    public void calculateAdjustedJcn(final String sampleId)
     {
-        mSvPloidyCalcMap.clear();
+        mSvJcnCalcMap.clear();
 
         for (Map.Entry<Integer, SvCNData[]> entry : mSvIdCnDataMap.entrySet())
         {
@@ -117,25 +117,25 @@ public class CnPloidyCalcs
                 }
             }
 
-            final PloidyCalcData calcResults = calcAdjustedPloidyValues(cnChgStart, cnChgEnd,
-                    tumorReadCountStart, svData.ploidy(), maxCNStart, maxCNEnd,
+            final JcnCalcData calcResults = calcAdjustedJcnValues(cnChgStart, cnChgEnd,
+                    tumorReadCountStart, svData.junctionCopyNumber(), maxCNStart, maxCNEnd,
                     startDepthData, cnEndData != null ? endDepthData : null);
 
             if(!calcResults.Valid)
             {
-                LOGGER.debug("sample({}) svID({} type={}) unexpected ploidy(est={} unc={})",
-                        sampleId, svData.id(), svData.type(), calcResults.PloidyEstimate, calcResults.PloidyUncertainty);
+                LOGGER.debug("sample({}) svID({} type={}) unexpected JCN(est={} unc={})",
+                        sampleId, svData.id(), svData.type(), calcResults.JcnEstimate, calcResults.JcnUncertainty);
             }
 
-            mSvPloidyCalcMap.put(svData.id(), calcResults);
+            mSvJcnCalcMap.put(svData.id(), calcResults);
         }
     }
 
     private static double POIS_PROB_LOW = 0.005;
     private static double POIS_PROB_HIGH = 0.995;
 
-    public static PloidyCalcData calcAdjustedPloidyValues(double cnChgStart, double cnChgEnd,
-            int tumorReadCount, double ploidy, double maxCNStart, double maxCNEnd, final int[] startDepthData, final int[] endDepthData)
+    public static JcnCalcData calcAdjustedJcnValues(double cnChgStart, double cnChgEnd,
+            int tumorReadCount, double jcn, double maxCNStart, double maxCNEnd, final int[] startDepthData, final int[] endDepthData)
     {
         double cnUncertaintyStart = calcCopyNumberSideUncertainty(maxCNStart, startDepthData);
         double cnUncertaintyEnd = endDepthData != null ? calcCopyNumberSideUncertainty(maxCNEnd, endDepthData) : 0;
@@ -160,29 +160,29 @@ public class CnPloidyCalcs
             double poissonRCLow = calcPoisonReadCount(tumorReadCount, POIS_PROB_LOW);
             double poissonRCHigh = calcPoisonReadCount(tumorReadCount, POIS_PROB_HIGH);
 
-            double rcAdjustedPloidy = ploidy * ((poissonRCLow + poissonRCHigh) * 0.5) / tumorReadCount;
+            double rcAdjustedJcn = jcn * ((poissonRCLow + poissonRCHigh) * 0.5) / tumorReadCount;
 
             // Ploidy Uncertainty = Ploidy * (ReadCountUpperCI-ReadCountLowerCI)* 0.5 / ObservedReadCount + 0.5 * min(CNChangeUncertaintyStart,CNChangeUncertaintyEnd)
 
-            double ploidyUncertainty = rcAdjustedPloidy * (poissonRCHigh - poissonRCLow) / tumorReadCount * 0.5;
+            double jcnUncertainty = rcAdjustedJcn * (poissonRCHigh - poissonRCLow) / tumorReadCount * 0.5;
 
             double cnUncertaintyFactor = !uncertainties.isEmpty() ? uncertainties.stream().mapToDouble(x -> x).sum() / uncertainties.size() : 0;
 
-            ploidyUncertainty += cnUncertaintyFactor * PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC;
+            jcnUncertainty += cnUncertaintyFactor * PROPORTION_CNCHANGE_USED_IN_JCN_UNC;
 
-            if (ploidyUncertainty > 0)
+            if (jcnUncertainty > 0)
             {
-                observations.add(rcAdjustedPloidy);
-                uncertainties.add(ploidyUncertainty);
+                observations.add(rcAdjustedJcn);
+                uncertainties.add(jcnUncertainty);
             }
         }
 
-        double estPloidy = 0;
+        double estJcn = 0;
         double estUncertainty = 0;
 
         if(observations.size() == 1)
         {
-            estPloidy = observations.get(0);
+            estJcn = observations.get(0);
             estUncertainty = uncertainties.get(0);
         }
         else
@@ -203,24 +203,24 @@ public class CnPloidyCalcs
             }
 
             // consolidatedPloidy =  SUM[Observation(i)*(1/Uncertainty(i)^2)] / Sum[1/Uncertainty(i)^2]
-            estPloidy = sumObservedUncertainty / sumUncertainty;
+            estJcn = sumObservedUncertainty / sumUncertainty;
 
             double adjUncertainty = 0;
 
             for(int i = 0; i < observations.size(); ++i)
             {
                 double uncertInvSqrd = 1 / pow(uncertainties.get(i), 2);
-                double relativeUncertainty = uncertInvSqrd * pow(max(observations.get(i) - estPloidy, uncertainties.get(i)/2),2);
+                double relativeUncertainty = uncertInvSqrd * pow(max(observations.get(i) - estJcn, uncertainties.get(i)/2),2);
                 adjUncertainty += relativeUncertainty;
             }
 
             estUncertainty = sqrt(observations.size() / (double)(observations.size() - 1) * adjUncertainty / sumUncertainty);
         }
 
-        if(Double.isNaN(estPloidy) || estPloidy <= 0 || Double.isNaN(estUncertainty) || estUncertainty <= 0)
-            return new PloidyCalcData(0,0, false);
+        if(Double.isNaN(estJcn) || estJcn <= 0 || Double.isNaN(estUncertainty) || estUncertainty <= 0)
+            return new JcnCalcData(0,0, false);
 
-        return new PloidyCalcData(estPloidy, estUncertainty, true);
+        return new JcnCalcData(estJcn, estUncertainty, true);
     }
 
     private static double calcCopyNumberSideUncertainty(double copyNumber, final int[] depthData)

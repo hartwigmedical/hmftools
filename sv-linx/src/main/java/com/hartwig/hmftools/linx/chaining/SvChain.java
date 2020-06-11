@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
@@ -40,8 +40,8 @@ public class SvChain {
     private List<SvVarData> mSvList;
     private List<SvLinkedPair> mLinkedPairs;
     private SvBreakend[] mOpenBreakends; // cached for convenience
-    private double mPloidy;
-    private double mPloidyUncertainty;
+    private double mJcn;
+    private double mJcnUncertainty;
 
     private boolean mIsClosedLoop;
     private int mLinkSum; // simple comparison check
@@ -53,8 +53,8 @@ public class SvChain {
         mId = chainId;
         mSvList = Lists.newArrayList();
         mLinkedPairs = Lists.newArrayList();
-        mPloidy = 0;
-        mPloidyUncertainty = 0;
+        mJcn = 0;
+        mJcnUncertainty = 0;
         mIsClosedLoop = false;
         mLinkSum = 0;
         mOpenBreakends = new SvBreakend[SE_PAIR];
@@ -110,14 +110,14 @@ public class SvChain {
         updateBreakends();
     }
 
-    public void setPloidyData(double ploidy, double uncertainty)
+    public void setJcnData(double jcn, double uncertainty)
     {
-        mPloidy = ploidy;
-        mPloidyUncertainty = uncertainty;
+        mJcn = jcn;
+        mJcnUncertainty = uncertainty;
     }
 
-    public double ploidy() { return mPloidy; }
-    public double ploidyUncertainty() { return mPloidyUncertainty; }
+    public double jcn() { return mJcn; }
+    public double jcnUncertainty() { return mJcnUncertainty; }
 
     public SvVarData getChainEndSV(boolean isStart)
     {
@@ -521,7 +521,7 @@ public class SvChain {
     public static void reconcileChains(final List<SvChain> chains, boolean checkChainSplits, int nextChainId, boolean useChainEndPloidies)
     {
         // join 2 chains into a single chain if they have the same SV's opposing breakends on their ends
-        // if the chains differ in ploidy then either skip merging them or split off (copy) the larger ploidy chain before joining
+        // if the chains differ in JCN then either skip merging them or split off (copy) the larger JCN chain before joining
         if(chains.size() <= 1)
             return;
 
@@ -544,7 +544,7 @@ public class SvChain {
 
                 if(checkChainSplits && chain1.identicalChain(chain2, false, false))
                 {
-                    chain1.setPloidyData(chain1.ploidy() + chain2.ploidy(), chain1.ploidyUncertainty());
+                    chain1.setJcnData(chain1.jcn() + chain2.jcn(), chain1.jcnUncertainty());
                     chains.remove(index2);
                     chainsMerged = true;
                     break;
@@ -565,9 +565,9 @@ public class SvChain {
                 }
                 */
 
-                boolean ploidyMatched = ploidyMatch(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty());
+                boolean jcnMatched = jcnMatch(chain1.jcn(), chain1.jcnUncertainty(), chain2.jcn(), chain2.jcnUncertainty());
 
-                if(!ploidyMatched && !checkChainSplits && !useChainEndPloidies)
+                if(!jcnMatched && !checkChainSplits && !useChainEndPloidies)
                     continue;
 
                 for (int be1 = SE_START; be1 <= SE_END; ++be1)
@@ -593,13 +593,13 @@ public class SvChain {
                         if(!couldJoinChains)
                             continue;
 
-                        if(useChainEndPloidies && !ploidyMatched)
+                        if(useChainEndPloidies && !jcnMatched)
                         {
                             // even if the chains don't have a match, check the breakends themselves vs the chains
-                            if(ploidyMatch(chain1.ploidy(), chain1.ploidyUncertainty(), breakend1.ploidy(), breakend1.ploidyUncertainty())
-                            && ploidyMatch(chain2.ploidy(), chain2.ploidyUncertainty(), breakend1.ploidy(), breakend1.ploidyUncertainty()))
+                            if(jcnMatch(chain1.jcn(), chain1.jcnUncertainty(), breakend1.jcn(), breakend1.jcnUncertainty())
+                            && jcnMatch(chain2.jcn(), chain2.jcnUncertainty(), breakend1.jcn(), breakend1.jcnUncertainty()))
                             {
-                                ploidyMatched = true;
+                                jcnMatched = true;
                             }
                             else if(!checkChainSplits)
                             {
@@ -607,23 +607,23 @@ public class SvChain {
                             }
                         }
 
-                        if(!ploidyMatched)
+                        if(!jcnMatched)
                         {
-                            // lower the ploidy of the higher chain and add its copy to the end of the chains list
+                            // lower the JCN of the higher chain and add its copy to the end of the chains list
                             SvChain newChain = new SvChain(nextChainId++);
 
-                            SvChain higherPloidyChain = chain1.ploidy() > chain2.ploidy() ? chain1 : chain2;
-                            SvChain lowerPloidyChain = higherPloidyChain == chain1 ? chain2 : chain1;
+                            SvChain higherJcnChain = chain1.jcn() > chain2.jcn() ? chain1 : chain2;
+                            SvChain lowerJcnChain = higherJcnChain == chain1 ? chain2 : chain1;
 
-                            newChain.copyFrom(higherPloidyChain);
-                            newChain.setPloidyData(higherPloidyChain.ploidy() - lowerPloidyChain.ploidy(), higherPloidyChain.ploidyUncertainty());
+                            newChain.copyFrom(higherJcnChain);
+                            newChain.setJcnData(higherJcnChain.jcn() - lowerJcnChain.jcn(), higherJcnChain.jcnUncertainty());
 
-                            LOGGER.debug("splitting chain({}) ploidy({}) vs chain({}) ploidy({}) into new chain({}) ploidy({})",
-                                    higherPloidyChain.id(), formatPloidy(higherPloidyChain.ploidy()),
-                                    lowerPloidyChain.id(), formatPloidy(lowerPloidyChain.ploidy()),
-                                    newChain.id(), formatPloidy(newChain.ploidy()));
+                            LOGGER.debug("splitting chain({}) jcn({}) vs chain({}) jcn({}) into new chain({}) JCN({})",
+                                    higherJcnChain.id(), formatJcn(higherJcnChain.jcn()),
+                                    lowerJcnChain.id(), formatJcn(lowerJcnChain.jcn()),
+                                    newChain.id(), formatJcn(newChain.jcn()));
 
-                            higherPloidyChain.setPloidyData(lowerPloidyChain.ploidy(), higherPloidyChain.ploidyUncertainty());
+                            higherJcnChain.setJcnData(lowerJcnChain.jcn(), higherJcnChain.jcnUncertainty());
 
                             chains.add(newChain);
                         }

@@ -38,7 +38,7 @@ public class ClusterMetrics
     public long TotalDeleted; // bases with traversed range but without cluster CN support
 
     // output from chaining routine - % of copy number segments had discernable A, B and cluster ploidy
-    public double ValidAllelePloidySegmentPerc;
+    public double ValidAlleleJcnSegmentPerc;
 
     public int IndelCount; // count of indels on TIs
     public double IndelProbability; // of seeing X indels within the range of the cluster
@@ -56,7 +56,7 @@ public class ClusterMetrics
         TotalRange = 0;
         TraversedRange = 0;
         TotalDeleted = 0;
-        ValidAllelePloidySegmentPerc = 1;
+        ValidAlleleJcnSegmentPerc = 1;
         IndelCount = 0;
         IndelProbability = 1;
     }

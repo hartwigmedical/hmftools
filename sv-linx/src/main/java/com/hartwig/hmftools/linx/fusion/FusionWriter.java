@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile.context;
-import static com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile.fusionPloidy;
+import static com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile.fusionJcn;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -118,7 +118,7 @@ public class FusionWriter
                         .geneEnd(fusion.geneName(FS_DOWNSTREAM))
                         .geneTranscriptEnd(fusion.downstreamTrans().StableId)
                         .geneContextEnd(context(fusion.downstreamTrans(), fusion.getFusedExon(false)))
-                        .ploidy(fusionPloidy(fusion.upstreamTrans().gene().ploidy(), fusion.downstreamTrans().gene().ploidy()))
+                        .junctionCopyNumber(fusionJcn(fusion.upstreamTrans().gene().jcn(), fusion.downstreamTrans().gene().jcn()))
                         .build());
             }
         }
@@ -230,7 +230,7 @@ public class FusionWriter
 
                 writer.write(String.format(",%d,%s,%d,%d,%s,%.6f",
                         gene.id(), gene.chromosome(), gene.position(), gene.orientation(),
-                        gene.type(), gene.ploidy()));
+                        gene.type(), gene.jcn()));
 
                 writer.write(String.format(",%s,%s,%s,%d,%s,%s",
                         gene.StableId, fusion.geneName(fs), trans.StableId,

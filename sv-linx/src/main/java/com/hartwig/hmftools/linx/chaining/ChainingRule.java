@@ -11,11 +11,11 @@ public enum ChainingRule
     FOLDBACK_SPLIT,
     COMP_DUP_SPLIT,
     FOLDBACK,
-    PLOIDY_MATCH,
-    PLOIDY_OVERLAP,
+    JCN_MATCH,
+    JCN_OVERLAP,
     ADJACENT,
     ADJACENT_MATCH,
-    PLOIDY_MAX,
+    JCN_MAX,
     NEAREST;
 
     public static int ruleToPriority(ChainingRule rule)
@@ -27,11 +27,11 @@ public enum ChainingRule
             case FOLDBACK_SPLIT: return 7;
             case COMP_DUP_SPLIT: return 7;
             case FOLDBACK: return 6;
-            case PLOIDY_MATCH: return 5;
-            case PLOIDY_OVERLAP: return 4;
+            case JCN_MATCH: return 5;
+            case JCN_OVERLAP: return 4;
             case ADJACENT: return 3;
             case ADJACENT_MATCH: return 3;
-            case PLOIDY_MAX: return 2;
+            case JCN_MAX: return 2;
             case NEAREST: return 1;
             default: return 0;
         }

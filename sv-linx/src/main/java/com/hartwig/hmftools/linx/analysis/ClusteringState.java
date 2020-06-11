@@ -34,8 +34,8 @@ public class ClusteringState
     public static String CR_LONG_DEL_DUP = "LongDelDup";
     public static String CR_LONG_INV = "LongInv";
     public static String CR_SATELLITE_SGL = "SatelliteSgl";
-    public static String CR_MAJOR_AP_PLOIDY = "MajorAP";
-    public static String CR_TI_PLOIDY_MATCH = "TiPloidyMatch";
+    public static String CR_MAJOR_AP_JCN = "MajorAP";
+    public static String CR_TI_JCN_MATCH = "TiJcnMatch";
 
     public ClusteringState()
     {

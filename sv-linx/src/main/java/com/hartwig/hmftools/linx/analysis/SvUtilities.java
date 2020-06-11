@@ -300,12 +300,17 @@ public class SvUtilities {
 
     public static String formatPloidy(double ploidy)
     {
-        if(ploidy > 10)
-            return String.format("%.0f", ploidy);
-        else if(ploidy < 0.5)
-            return String.format("%.2f", ploidy);
+        return String.format("%.3f", ploidy);
+    }
+
+    public static String formatJcn(double jcn)
+    {
+        if(jcn > 10)
+            return String.format("%.0f", jcn);
+        else if(jcn < 0.5)
+            return String.format("%.2f", jcn);
         else
-            return String.format("%.1f", ploidy);
+            return String.format("%.1f", jcn);
     }
 
     public static final String makeChrArmStr(final SvVarData var, boolean useStart)

@@ -52,7 +52,7 @@ public class CnDataLoader
     private List<LohEvent> mLohEventData;
     private List<HomLossEvent> mHomLossData;
     private Map<String, TelomereCentromereCnData> mChrEndsCNMap; // telemore and centromere CN values
-    private CnPloidyCalcs mCnPloidyCalcs;
+    private CnJcnCalcs mCnJcnCalcs;
 
     public static final double MIN_LOH_CN = 0.5;
     public static final double TOTAL_CN_LOSS = 0.5;
@@ -77,10 +77,10 @@ public class CnDataLoader
         mHomLossData = Lists.newArrayList();
         mRecordId = 0;
 
-        mCnPloidyCalcs = new CnPloidyCalcs(mChrCnDataMap, mSvIdCnDataMap, mSvDataList);
+        mCnJcnCalcs = new CnJcnCalcs(mChrCnDataMap, mSvIdCnDataMap, mSvDataList);
     }
 
-    public final Map<Integer,PloidyCalcData> getSvPloidyCalcMap() { return mCnPloidyCalcs.getSvPloidyCalcMap(); }
+    public final Map<Integer, JcnCalcData> getSvJcnCalcMap() { return mCnJcnCalcs.getSvJcnCalcMap(); }
     public final List<LohEvent> getLohData() { return mLohEventData; }
     public final List<HomLossEvent> getHomLossData() { return mHomLossData; }
     public final Map<String, TelomereCentromereCnData> getChrTeleCentroData() { return mChrEndsCNMap; }
@@ -101,9 +101,9 @@ public class CnDataLoader
         processSampleData(sampleId);
     }
 
-    public void calculateAdjustedPloidy(final String sampleId)
+    public void calculateAdjustedJcn(final String sampleId)
     {
-        mCnPloidyCalcs.calculateAdjustedPloidy(sampleId);
+        mCnJcnCalcs.calculateAdjustedJcn(sampleId);
     }
 
     private void processSampleData(final String sampleId)
@@ -112,7 +112,7 @@ public class CnDataLoader
 
         findLohEvents(sampleId);
 
-        mCnPloidyCalcs.calculateAdjustedPloidy(sampleId);
+        mCnJcnCalcs.calculateAdjustedJcn(sampleId);
     }
 
     private void loadCopyNumberData(final String sampleId)
@@ -308,7 +308,7 @@ public class CnDataLoader
             {
                 final SvCNData cnData = cnDataList.get(index);
 
-                double minCN = cnData.minorAllelePloidy();
+                double minCN = cnData.minorAlleleJcn();
 
                 boolean newChromosome = (index == 0);
                 boolean reset = newChromosome;
@@ -353,7 +353,7 @@ public class CnDataLoader
                         if (lohRegained && cnData.EndPos - cnData.StartPos <= SHORT_TI_LENGTH && index < cnDataList.size() - 1)
                         {
                             final SvCNData nextData = cnDataList.get(index + 1);
-                            double nextMinCN = nextData.minorAllelePloidy();
+                            double nextMinCN = nextData.minorAlleleJcn();
 
                             if (nextData.EndPos - cnData.StartPos > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
                             && lohStartCnData != null && cnData.StartPos - lohStartCnData.StartPos > REMOTE_SV_DISTANCE)

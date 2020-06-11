@@ -190,7 +190,7 @@ public class VisualiserWriter
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
                         beStart.getSV().getFoldbackBreakend(beStart.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
                         beEnd!= null ? (beEnd.getSV().getFoldbackBreakend(beEnd.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
-                        var.ploidy()));
+                        var.jcn()));
             }
         }
 
@@ -242,7 +242,7 @@ public class VisualiserWriter
                 int index = 0;
                 while(index < chains.size())
                 {
-                    if(chain.ploidy() > chains.get(index).ploidy())
+                    if(chain.jcn() > chains.get(index).jcn())
                         break;
                     else
                         ++index;
@@ -255,7 +255,7 @@ public class VisualiserWriter
             {
                 // log the start of the chain
                 boolean startsOnEnd = chain.getFirstSV() == chain.getLastSV(); // closed loop chains eg DMs
-                double chainPloidy = chain.ploidy();
+                double chainPloidy = chain.jcn();
 
                 if(!chain.isClosedLoop())
                 {
@@ -284,7 +284,7 @@ public class VisualiserWriter
                         for (final SvChain otherChain : cluster.getChains())
                         {
                             int linkRepeats = (int) otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
-                            linkPloidy += linkRepeats * otherChain.ploidy();
+                            linkPloidy += linkRepeats * otherChain.jcn();
                         }
                     }
                     else
@@ -325,7 +325,7 @@ public class VisualiserWriter
                         continue;
 
                     segments.add(new VisSegmentFile(mSampleId, cluster.id(), chainId, breakend.chromosome(),
-                            getPositionValue(breakend, true), getPositionValue(breakend, false), var.ploidy()));
+                            getPositionValue(breakend, true), getPositionValue(breakend, false), var.jcn()));
                 }
             }
         }

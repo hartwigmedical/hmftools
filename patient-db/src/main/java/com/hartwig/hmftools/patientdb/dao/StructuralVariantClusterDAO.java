@@ -86,8 +86,8 @@ class StructuralVariantClusterDAO {
                     SVANNOTATION.ISFOLDBACK,
                     SVANNOTATION.LINETYPESTART,
                     SVANNOTATION.LINETYPEEND,
-                    SVANNOTATION.PLOIDYMIN,
-                    SVANNOTATION.PLOIDYMAX,
+                    SVANNOTATION.JUNCTIONCOPYNUMBERMIN,
+                    SVANNOTATION.JUNCTIONCOPYNUMBERMAX,
                     SVANNOTATION.GENESTART,
                     SVANNOTATION.GENEEND,
                     SVANNOTATION.REPLICATIONTIMINGSTART,
@@ -116,8 +116,8 @@ class StructuralVariantClusterDAO {
                 svData.isFoldback(),
                 svData.lineTypeStart(),
                 svData.lineTypeEnd(),
-                DatabaseUtil.decimal(svData.ploidyMin()),
-                DatabaseUtil.decimal(svData.ploidyMax()),
+                DatabaseUtil.decimal(svData.junctionCopyNumberMin()),
+                DatabaseUtil.decimal(svData.junctionCopyNumberMax()),
                 DatabaseUtil.checkStringLength(svData.geneStart(), SVANNOTATION.GENESTART),
                 DatabaseUtil.checkStringLength(svData.geneEnd(), SVANNOTATION.GENEEND),
                 DatabaseUtil.decimal(svData.replicationTimingStart()),
@@ -152,8 +152,8 @@ class StructuralVariantClusterDAO {
                     SVLINK.ASSEMBLED,
                     SVLINK.TRAVERSEDSVCOUNT,
                     SVLINK.LINKLENGTH,
-                    SVLINK.PLOIDY,
-                    SVLINK.PLOIDYUNCERTAINTY,
+                    SVLINK.JUNCTIONCOPYNUMBER,
+                    SVLINK.JUNCTIONCOPYNUMBERUNCERTAINTY,
                     SVLINK.PSEUDOGENEINFO);
 
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
@@ -178,8 +178,8 @@ class StructuralVariantClusterDAO {
                 link.assembled(),
                 link.traversedSVCount(),
                 link.length(),
-                link.ploidy(),
-                link.ploidyUncertainty(),
+                link.junctionCopyNumber(),
+                link.junctionCopyNumberUncertainty(),
                 link.pseudogeneInfo());
     }
 

@@ -93,7 +93,7 @@ public class LoadStructuralVariants {
                 .endOrientation(end == null ? (byte) 0 : end.orientation())
                 .startHomologySequence(start.homology())
                 .endHomologySequence(end == null ? "" : end.homology())
-                .ploidy(getValueNotNull(var.junctionCopyNumber()))
+                .junctionCopyNumber(getValueNotNull(var.junctionCopyNumber()))
                 .startAF(getValueNotNull(start.alleleFrequency()))
                 .endAF(end == null ? 0 : getValueNotNull(end.alleleFrequency()))
                 .adjustedStartAF(getValueNotNull(start.adjustedAlleleFrequency()))

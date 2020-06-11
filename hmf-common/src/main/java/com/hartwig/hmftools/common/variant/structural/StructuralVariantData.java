@@ -16,7 +16,7 @@ public abstract class StructuralVariantData {
     public abstract String endHomologySequence();
     public abstract double startAF();
     public abstract double endAF();
-    public abstract double ploidy();
+    public abstract double junctionCopyNumber();
     public abstract double adjustedStartAF();
     public abstract double adjustedEndAF();
     public abstract double adjustedStartCopyNumber();

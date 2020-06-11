@@ -36,7 +36,7 @@ public class DoubleMinuteTest
 
         // first a simple DUP
         final SvVarData dup = createTestSv(2,"1","1",50000,55000,-1,1, DUP,10);
-        dup.setPloidyRecalcData(8, 12);
+        dup.setJcnRecalcData(8, 12);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(dup);

@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterRecipro
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterTemplatedInsertionType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
@@ -38,6 +38,7 @@ import static com.hartwig.hmftools.linx.types.SvConstants.MIN_DEL_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -399,7 +400,7 @@ public class SvClassification
             return NONE;
 
         // check copy number consistency
-        if(!ploidyMatch(sgl1, sgl2))
+        if(!ChainJcnLimits.jcnMatch(sgl1, sgl2))
             return NONE;
 
         boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)

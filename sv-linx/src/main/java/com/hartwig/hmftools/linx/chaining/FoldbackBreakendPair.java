@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.chaining;
 
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class FoldbackBreakendPair
 
     public String toString()
     {
-        return String.format("%s & %s ploidy(%s)", BreakendStart, BreakendEnd, formatPloidy(Ploidy));
+        return String.format("%s & %s ploidy(%s)", BreakendStart, BreakendEnd, formatJcn(Ploidy));
     }
 
     public boolean matches(final FoldbackBreakendPair other)

@@ -13,16 +13,16 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_INV;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLOIDY;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_JCN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_PROXIMITY;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
-import static com.hartwig.hmftools.linx.types.SvConstants.LOW_PLOIDY_THRESHOLD;
+import static com.hartwig.hmftools.linx.types.SvConstants.LOW_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.types.SvConstants.MAX_MERGE_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -267,7 +267,7 @@ public class SimpleClustering
 
         mergeOnLOHEvents(clusters);
 
-        mergeOnMajorAllelePloidyBounds(clusters);
+        mergeOnMajorAlleleJcnBounds(clusters);
 
         mergeLOHResolvingClusters(clusters);
 
@@ -299,12 +299,12 @@ public class SimpleClustering
         }
     }
 
-    public static boolean hasLowPloidy(final SvVarData var)
+    public static boolean hasLowJcn(final SvVarData var)
     {
         if(var.type() == INS)
             return false;
 
-        return var.ploidyMax() < LOW_PLOIDY_THRESHOLD;
+        return var.jcnMax() < LOW_JCN_THRESHOLD;
     }
 
     private void mergeOnLOHEvents(List<SvCluster> clusters)
@@ -330,7 +330,7 @@ public class SimpleClustering
                 if (lohClusterStart.hasLinkingLineElements() || lohClusterEnd.hasLinkingLineElements())
                     continue;
 
-                if(variantsHaveDifferentPloidy(lohBeStart, lohBeEnd))
+                if(variantsHaveDifferentJcn(lohBeStart, lohBeEnd))
                     continue;
 
                 LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event({})",
@@ -373,7 +373,7 @@ public class SimpleClustering
                     if(cluster == otherCluster) // protect against clusters already merged or removed
                         continue;
 
-                    if(variantsHaveDifferentPloidy(homLossBeStart, homLossBeEnd))
+                    if(variantsHaveDifferentJcn(homLossBeStart, homLossBeEnd))
                         continue;
 
                     LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on hom-loss({}: {} -> {}) inside LOH event({} -> {})",
@@ -430,7 +430,7 @@ public class SimpleClustering
                 SvBreakend lohBeStart = lohEvent.getBreakend(true);
                 SvBreakend lohBeEnd = lohEvent.getBreakend(false);
 
-                if(variantsHaveDifferentPloidy(lohBeStart, lohBeEnd))
+                if(variantsHaveDifferentJcn(lohBeStart, lohBeEnd))
                     continue;
 
                 SvCluster cluster = lohBeStart.getCluster();
@@ -512,7 +512,7 @@ public class SimpleClustering
                 if(cluster == otherCluster)
                     continue;
 
-                if(variantsHaveDifferentPloidy(breakend1, breakend2))
+                if(variantsHaveDifferentJcn(breakend1, breakend2))
                     continue;
 
                 LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on unclustered LOH and hom-loss breakends",
@@ -679,7 +679,7 @@ public class SimpleClustering
                             continue;
                         }
 
-                        if(variantsHaveDifferentPloidy(var1, var2))
+                        if(variantsHaveDifferentJcn(var1, var2))
                             continue;
 
                         if(allowDelDupOverlaps && (!(copyNumbersEqual(var1.copyNumber(true), var2.copyNumber(true)))
@@ -793,31 +793,31 @@ public class SimpleClustering
         return lohEvents.stream().anyMatch(x -> otherBreakend.position() > x.PosStart && otherBreakend.position() < x.PosEnd);
     }
 
-    protected static boolean variantsHaveDifferentPloidy(final SvBreakend breakend1, final SvBreakend breakend2)
+    protected static boolean variantsHaveDifferentJcn(final SvBreakend breakend1, final SvBreakend breakend2)
     {
-        return variantsHaveDifferentPloidy(breakend1.getSV(), breakend2.getSV());
+        return variantsHaveDifferentJcn(breakend1.getSV(), breakend2.getSV());
     }
 
-    protected static boolean variantsHaveDifferentPloidy(final SvVarData var1, final SvVarData var2)
+    protected static boolean variantsHaveDifferentJcn(final SvVarData var1, final SvVarData var2)
     {
         // We identify high confidence subclonal variants using the uncertainty bounds, using the threshold of maximum ploidy < 0.75.
         // Clonal and subclonal variants are unlikely to have occured at the same time and hence all subclonal variants are excluded from
         // clustering with any variant that does not overlap in ploidy uncertainty and does not have a ploidy within 0.5 of the subclonal
         // variants. Proximity clustering is still allowed, since the ploidy estimates for proximate variants are more uncertain.
-        boolean var1IsLowPloidy = var1.ploidy() < LOW_PLOIDY_THRESHOLD;
-        boolean var2IsLowPloidy = var2.ploidy() < LOW_PLOIDY_THRESHOLD;
+        boolean var1IsLowJcn = var1.jcn() < LOW_JCN_THRESHOLD;
+        boolean var2IsLowJcn = var2.jcn() < LOW_JCN_THRESHOLD;
 
-        if(var1IsLowPloidy == var2IsLowPloidy)
+        if(var1IsLowJcn == var2IsLowJcn)
             return false;
 
-        double ploidyDiff = abs(var1.ploidy() - var2.ploidy());
+        double ploidyDiff = abs(var1.jcn() - var2.jcn());
 
         if(ploidyDiff < MAX_COPY_NUM_DIFF)
             return false;
 
-        if(var1IsLowPloidy && var1.ploidyMax() < var2.ploidyMin())
+        if(var1IsLowJcn && var1.jcnMax() < var2.jcnMin())
             return true;
-        else if(var2IsLowPloidy && var2.ploidyMax() < var1.ploidyMin())
+        else if(var2IsLowJcn && var2.jcnMax() < var1.jcnMin())
             return true;
         else
             return false;
@@ -885,7 +885,7 @@ public class SimpleClustering
         return false;
     }
 
-    private boolean mergeOnMajorAllelePloidyBounds(List<SvCluster> clusters)
+    private boolean mergeOnMajorAlleleJcnBounds(List<SvCluster> clusters)
     {
         /* The major allele ploidy of a segment is the maximum ploidy any derivative chromosome which includes that segment can have.
         Hence a breakend cannot chain completely across a region with major allele ploidy < ploidy of the breakend, or
@@ -942,7 +942,7 @@ public class SimpleClustering
                         if((breakend.orientation() == -1) != traverseUp)
                             continue;
 
-                        double breakendPloidy = breakend.ploidy();
+                        double breakendJcn = breakend.jcn();
 
                         // now walk from this location onwards using the full arm breakend list
                         int chrIndex = breakend.getChrPosIndex();
@@ -972,9 +972,9 @@ public class SimpleClustering
 
                             if(nextBreakend.getCluster() == cluster)
                             {
-                                breakendPloidy -= nextBreakend.ploidy();
+                                breakendJcn -= nextBreakend.jcn();
 
-                                if(breakendPloidy <= 0)
+                                if(breakendJcn <= 0)
                                     break;
 
                                 continue;
@@ -983,32 +983,32 @@ public class SimpleClustering
                             if(nextBreakend.isAssembledLink())
                                 continue;
 
-                            if(variantsHaveDifferentPloidy(breakend, nextBreakend))
+                            if(variantsHaveDifferentJcn(breakend, nextBreakend))
                                 continue;
 
                             opposingBreakends.add(nextBreakend);
 
                             // should this next breakend be merged in?
-                            double followingMajorAP = nextBreakend.majorAllelePloidy(!traverseUp);
+                            double followingMajorAP = nextBreakend.majorAlleleJcn(!traverseUp);
 
-                            if(!copyNumbersEqual(breakendPloidy, followingMajorAP) && breakendPloidy > followingMajorAP)
+                            if(!copyNumbersEqual(breakendJcn, followingMajorAP) && breakendJcn > followingMajorAP)
                             {
                                 // take the highest of the opposing breakends which were encountered, and if the highest match, then the first
-                                double maxOpposingPloidy = opposingBreakends.stream().mapToDouble(x -> x.ploidy()).max().getAsDouble();
+                                double maxOpposingJcn = opposingBreakends.stream().mapToDouble(x -> x.jcn()).max().getAsDouble();
 
                                 SvBreakend opposingBreakend = opposingBreakends.stream()
-                                        .filter(x -> copyNumbersEqual(x.ploidy(), maxOpposingPloidy)).findFirst().get();
+                                        .filter(x -> copyNumbersEqual(x.jcn(), maxOpposingJcn)).findFirst().get();
 
                                 SvCluster otherCluster = opposingBreakend.getCluster();
 
-                                LOGGER.debug("cluster({}) breakend({} netPloidy={}) merges cluster({}) breakend({} ploidy={}) prior to MAP drop({})",
-                                        cluster.id(), breakend, formatPloidy(breakendPloidy), otherCluster.id(), opposingBreakend.toString(),
-                                        formatPloidy(opposingBreakend.ploidy()), formatPloidy(followingMajorAP));
+                                LOGGER.debug("cluster({}) breakend({} netJCN={}) merges cluster({}) breakend({} ploidy={}) prior to MAP drop({})",
+                                        cluster.id(), breakend, formatJcn(breakendJcn), otherCluster.id(), opposingBreakend.toString(),
+                                        formatJcn(opposingBreakend.jcn()), formatJcn(followingMajorAP));
 
-                                addClusterReasons(breakend.getSV(), opposingBreakend.getSV(), CR_MAJOR_AP_PLOIDY);
+                                addClusterReasons(breakend.getSV(), opposingBreakend.getSV(), CR_MAJOR_AP_JCN);
 
-                                otherCluster.addClusterReason(CR_MAJOR_AP_PLOIDY);
-                                cluster.addClusterReason(CR_MAJOR_AP_PLOIDY);
+                                otherCluster.addClusterReason(CR_MAJOR_AP_JCN);
+                                cluster.addClusterReason(CR_MAJOR_AP_JCN);
 
                                 cluster.mergeOtherCluster(otherCluster);
 
@@ -1135,7 +1135,7 @@ public class SimpleClustering
                         if(nextBreakend.isAssembledLink())
                             continue;
 
-                        if(variantsHaveDifferentPloidy(lohBreakend, nextBreakend))
+                        if(variantsHaveDifferentJcn(lohBreakend, nextBreakend))
                             continue;
 
                         SvCluster otherCluster = nextBreakend.getCluster();

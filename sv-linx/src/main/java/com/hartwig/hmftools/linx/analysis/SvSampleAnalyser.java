@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
@@ -72,7 +72,7 @@ import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
-import com.hartwig.hmftools.linx.cn.PloidyCalcData;
+import com.hartwig.hmftools.linx.cn.JcnCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.ResolvedType;
@@ -213,7 +213,7 @@ public class SvSampleAnalyser {
             // look-up and cache relevant CN data into each SV
             setSvCopyNumberData(
                     mAllVariants,
-                    mCnDataLoader.getSvPloidyCalcMap(),
+                    mCnDataLoader.getSvJcnCalcMap(),
                     mCnDataLoader.getSvIdCnDataMap(),
                     mCnDataLoader.getChrCnDataMap());
         }
@@ -221,24 +221,24 @@ public class SvSampleAnalyser {
         LOGGER.debug("loaded {} SVs", mAllVariants.size());
     }
 
-    public static void setSvCopyNumberData(List<SvVarData> svList, final Map<Integer,PloidyCalcData> svPloidyCalcDataMap,
+    public static void setSvCopyNumberData(List<SvVarData> svList, final Map<Integer, JcnCalcData> svJcnCalcDataMap,
             final Map<Integer,SvCNData[]> svIdCnDataMap, final Map<String,List<SvCNData>> chrCnDataMap)
     {
-        if((svPloidyCalcDataMap == null || svPloidyCalcDataMap.isEmpty()) && svIdCnDataMap.isEmpty())
+        if((svJcnCalcDataMap == null || svJcnCalcDataMap.isEmpty()) && svIdCnDataMap.isEmpty())
             return;
 
         List<SvCNData> cnDataList = null;
         String currentChromosome = "";
         for(final SvVarData var : svList)
         {
-            if(svPloidyCalcDataMap != null)
+            if(svJcnCalcDataMap != null)
             {
-                final PloidyCalcData ploidyData = svPloidyCalcDataMap.get(var.id());
-                if (ploidyData != null)
+                final JcnCalcData jcnData = svJcnCalcDataMap.get(var.id());
+                if (jcnData != null)
                 {
-                    double estPloidy = ploidyData.PloidyEstimate;
-                    double estUncertainty = ploidyData.PloidyUncertainty;
-                    var.setPloidyRecalcData(estPloidy - estUncertainty, estPloidy + estUncertainty);
+                    double estJcn = jcnData.JcnEstimate;
+                    double estUncertainty = jcnData.JcnUncertainty;
+                    var.setJcnRecalcData(estJcn - estUncertainty, estJcn + estUncertainty);
                 }
             }
 
@@ -489,7 +489,7 @@ public class SvSampleAnalyser {
 
         setSvCopyNumberData(
                 mAllVariants,
-                mCnDataLoader.getSvPloidyCalcMap(),
+                mCnDataLoader.getSvJcnCalcMap(),
                 mCnDataLoader.getSvIdCnDataMap(),
                 mCnDataLoader.getChrCnDataMap());
     }
@@ -521,7 +521,7 @@ public class SvSampleAnalyser {
             mSvFileWriter.write(",ChrStart,PosStart,OrientStart,ArmStart,ChrEnd,PosEnd,OrientEnd,ArmEnd");
 
             // position and copy number
-            mSvFileWriter.write(",CNStart,CNChgStart,CNEnd,CNChgEnd,Ploidy,PloidyMin,PloidyMax");
+            mSvFileWriter.write(",CNStart,CNChgStart,CNEnd,CNChgEnd,Jcn,JcnMin,JcnMax");
 
             // cluster info
             mSvFileWriter.write(",ClusterReason,ClusterDesc,ResolvedType");
@@ -600,7 +600,7 @@ public class SvSampleAnalyser {
                     mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
                             dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
                             dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(),
-                            dbData.ploidy(), var.ploidyMin(), var.ploidyMax()));
+                            dbData.junctionCopyNumber(), var.jcnMin(), var.jcnMax()));
 
                     mSvFileWriter.write(String.format(",%s,%s,%s",
                             var.getClusterReason(), cluster.getDesc(), cluster.getResolvedType()));
@@ -695,10 +695,10 @@ public class SvSampleAnalyser {
                     if(mConfig.Output.WriteSvData)
                     {
                         mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                                var.getBreakend(true).minorAllelePloidy(true),
-                                var.getBreakend(true).minorAllelePloidy(false),
-                                !var.isSglBreakend() ? var.getBreakend(false).minorAllelePloidy(true) : 0,
-                                !var.isSglBreakend() ? var.getBreakend(false).minorAllelePloidy(false) : 0,
+                                var.getBreakend(true).minorAlleleJcn(true),
+                                var.getBreakend(true).minorAlleleJcn(false),
+                                !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(true) : 0,
+                                !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(false) : 0,
                                 dbData.adjustedStartAF(), dbData.adjustedEndAF()));
 
                         final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
@@ -729,8 +729,8 @@ public class SvSampleAnalyser {
                             .isFoldback(var.isFoldback())
                             .lineTypeStart(var.getLineElement(true))
                             .lineTypeEnd(var.getLineElement(false))
-                            .ploidyMin(var.ploidyMin())
-                            .ploidyMax(var.ploidyMax())
+                            .junctionCopyNumberMin(var.jcnMin())
+                            .junctionCopyNumberMax(var.jcnMax())
                             .geneStart(var.getGeneInBreakend(true, false))
                             .geneEnd(var.getGeneInBreakend(true, false))
                             .replicationTimingStart(var.getReplicationOrigin(true))
@@ -761,7 +761,7 @@ public class SvSampleAnalyser {
 
             mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,SuperType,ResolvedType,Synthetic,Subclonal,FullyChained,ChainCount");
             mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
-            mClusterFileWriter.write(",ClusterReasons,Consistency,IsLINE,Replication,MinPloidy,MaxPloidy,Foldbacks");
+            mClusterFileWriter.write(",ClusterReasons,Consistency,IsLINE,Replication,MinJcn,MaxJcn,Foldbacks");
             mClusterFileWriter.write(",ArmCount,OriginArms,FragmentArms,ConsistentArms,ComplexArms,Annotations,AlleleValidPerc");
 
             mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain");
@@ -823,13 +823,13 @@ public class SvSampleAnalyser {
 
                     mClusterFileWriter.write(String.format(",%s,%d,%s,%s,%.1f,%.1f,%.0f",
                             cluster.getClusteringReasons(), cluster.getConsistencyCount(), cluster.hasLinkingLineElements(),
-                            cluster.requiresReplication(), cluster.getMinPloidy(), cluster.getMaxPloidy(), foldbackCount));
+                            cluster.requiresReplication(), cluster.getMinJcn(), cluster.getMaxJcn(), foldbackCount));
 
                     final ClusterMetrics metrics = cluster.getMetrics();
 
                     mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%.2f",
                             cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(), cluster.getConsistentArms(),
-                            cluster.getComplexArms(), cluster.getAnnotations(), metrics.ValidAllelePloidySegmentPerc));
+                            cluster.getComplexArms(), cluster.getAnnotations(), metrics.ValidAlleleJcnSegmentPerc));
 
                     long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.length() <= SHORT_TI_LENGTH).count();
 
@@ -899,7 +899,7 @@ public class SvSampleAnalyser {
             mLinksFileWriter = createBufferedWriter(outputFileName, false);
 
             mLinksFileWriter.write("SampleId,ClusterId,ClusterCount,ResolvedType");
-            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChainIndex,Ploidy,PloidyUncertainty");
+            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChainIndex,Jcn,JcnUncertainty");
             mLinksFileWriter.write(",IsAssembled,TILength,NextSvDist,NextClusteredSvDist,TraversedSVCount");
             mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
             mLinksFileWriter.write(",Id1,Id2,ChrArm,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
@@ -961,7 +961,7 @@ public class SvSampleAnalyser {
 
                             mLinksFileWriter.write(String.format(",%d,%d,%s,%s,%d,%s,%s,%.3f",
                                     chain.id(), chainSvCount, chainConsistent, pair.getLinkReason(), pair.getLinkIndex(),
-                                    chainIndexStr, formatPloidy(chain.ploidy()), chain.ploidyUncertainty()));
+                                    chainIndexStr, formatJcn(chain.jcn()), chain.jcnUncertainty()));
 
                             mLinksFileWriter.write(String.format(",%s,%d,%d,%d,%d,%s,%d,%s",
                                     pair.isAssembled(), pair.length(),
@@ -999,8 +999,8 @@ public class SvSampleAnalyser {
                                     .assembled(pair.isAssembled())
                                     .traversedSVCount(pair.getTraversedSVCount())
                                     .length(pair.length())
-                                    .ploidy(DatabaseUtil.decimal(chain.ploidy()))
-                                    .ploidyUncertainty(DatabaseUtil.decimal(chain.ploidyUncertainty()))
+                                    .junctionCopyNumber(DatabaseUtil.decimal(chain.jcn()))
+                                    .junctionCopyNumberUncertainty(DatabaseUtil.decimal(chain.jcnUncertainty()))
                                     .pseudogeneInfo(pair.getExonMatchData())
                                     .build());
                         }

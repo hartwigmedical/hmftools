@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomeLength;
@@ -54,7 +55,7 @@ public class CopyNumberAnalyser
 {
 
     private boolean mWriteLohEvents;
-    private boolean mWritePloidyCalcs;
+    private boolean mWriteJcnCalcs;
     private boolean mWriteChrArmData;
     private boolean mWriteCnSegmentStats;
 
@@ -65,14 +66,14 @@ public class CopyNumberAnalyser
 
     private final List<String> mSampleIds;
     private BufferedWriter mLohEventWriter;
-    private BufferedWriter mPloidyCalcWriter;
+    private BufferedWriter mJcnCalcWriter;
     private BufferedWriter mChrArmWriter;
     private BufferedWriter mCnSegmentWriter;
 
     private PerformanceCounter mPerfCounter;
 
     private static final String WRITE_LOH_TO_FILE = "write_loh_data";
-    private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_data";
+    private static final String WRITE_JCN_TO_FILE = "write_jcn_data";
     private static final String WRITE_CHR_ARM_DATA = "write_chr_arm_data";
     private static final String WRITE_CN_SEGMENT_DATA = "write_cn_segment_data";
 
@@ -90,10 +91,10 @@ public class CopyNumberAnalyser
 
         mWriteChrArmData = false;
         mWriteLohEvents = false;
-        mWritePloidyCalcs = false;
+        mWriteJcnCalcs = false;
 
         mLohEventWriter = null;
-        mPloidyCalcWriter = null;
+        mJcnCalcWriter = null;
         mChrArmWriter = null;
         mCnSegmentWriter = null;
     }
@@ -106,7 +107,7 @@ public class CopyNumberAnalyser
         options.addOption(DB_URL, true, "Database URL");
         options.addOption(SAMPLE, true, "Sample(s) or CSV file with sample IDs");
         options.addOption(WRITE_LOH_TO_FILE, false, "Write LOH events to CSV");
-        options.addOption(WRITE_PLOIDY_TO_FILE, false, "Write adjusted ploidy to CSV");
+        options.addOption(WRITE_JCN_TO_FILE, false, "Write adjusted JCN to CSV");
         options.addOption(WRITE_CHR_ARM_DATA, false, "Write chromosomal arm data");
         options.addOption(WRITE_CN_SEGMENT_DATA, false, "Write CN segment data to CSV");
         options.addOption(LOG_DEBUG, false, "Log verbose");
@@ -119,7 +120,7 @@ public class CopyNumberAnalyser
             mSampleIds.addAll(sampleListFromConfigStr(cmd.getOptionValue(SAMPLE)));
         }
 
-        mWritePloidyCalcs = cmd.hasOption(WRITE_PLOIDY_TO_FILE);
+        mWriteJcnCalcs = cmd.hasOption(WRITE_JCN_TO_FILE);
         mWriteLohEvents = cmd.hasOption(WRITE_LOH_TO_FILE);
         mWriteChrArmData = cmd.hasOption(WRITE_CHR_ARM_DATA);
         mWriteCnSegmentStats = cmd.hasOption(WRITE_CN_SEGMENT_DATA);
@@ -149,8 +150,8 @@ public class CopyNumberAnalyser
             if(mWriteLohEvents)
                 writeLohData(sampleId);
 
-            if(mWritePloidyCalcs)
-                writePloidyCalcData(sampleId);
+            if(mWriteJcnCalcs)
+                writeJcnCalcData(sampleId);
 
             if(mWriteChrArmData)
                 writeChrArmData(sampleId);
@@ -579,22 +580,22 @@ public class CopyNumberAnalyser
         }
     }
 
-    private void writePloidyCalcData(final String sampleId)
+    private void writeJcnCalcData(final String sampleId)
     {
         try
         {
-            if (mPloidyCalcWriter == null)
+            if (mJcnCalcWriter == null)
             {
-                String outputFileName = mOutputPath + "LNX_CN_PLOIDY_CALC_DATA.csv";
+                String outputFileName = mOutputPath + "LNX_CN_JCN_CALC_DATA.csv";
 
-                mPloidyCalcWriter = createBufferedWriter(outputFileName, false);
+                mJcnCalcWriter = createBufferedWriter(outputFileName, false);
 
-                mPloidyCalcWriter.write("SampleId,SvId,Type,Ploidy,VafStart,VafEnd,TumorRCStart,TumorRCEnd");
-                mPloidyCalcWriter.write(",ChrStart,PosStart,OrientStart,MaxCNStart,CNChgStart,PrevDWCountStart,NextDWCountStart");
-                mPloidyCalcWriter.write(",ChrEnd,PosEnd,OrientEnd,MaxCNEnd,CNChgEnd,PrevDWCountEnd,NextDWCountEnd");
-                mPloidyCalcWriter.write(",EstPloidy,EstUncertainty,MinPloidy,MaxPloidy");
+                mJcnCalcWriter.write("SampleId,SvId,Type,Ploidy,VafStart,VafEnd,TumorRCStart,TumorRCEnd");
+                mJcnCalcWriter.write(",ChrStart,PosStart,OrientStart,MaxCNStart,CNChgStart,PrevDWCountStart,NextDWCountStart");
+                mJcnCalcWriter.write(",ChrEnd,PosEnd,OrientEnd,MaxCNEnd,CNChgEnd,PrevDWCountEnd,NextDWCountEnd");
+                mJcnCalcWriter.write(",EstPloidy,EstUncertainty,MinPloidy,MaxPloidy");
 
-                mPloidyCalcWriter.newLine();
+                mJcnCalcWriter.newLine();
             }
 
             /*
@@ -626,7 +627,7 @@ public class CopyNumberAnalyser
     public void close()
     {
         closeBufferedWriter(mLohEventWriter);
-        closeBufferedWriter(mPloidyCalcWriter);
+        closeBufferedWriter(mJcnCalcWriter);
         closeBufferedWriter(mChrArmWriter);
         closeBufferedWriter(mCnSegmentWriter);
     }

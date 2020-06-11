@@ -2,14 +2,14 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
-import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowPloidyThreshold;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatchForSplits;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
+import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowJcnThreshold;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.CLUSTER_ALLELE_JCN_MIN;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatchForSplits;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.chaining.LinkSkipType.PLOIDY_MISMATCH;
+import static com.hartwig.hmftools.linx.chaining.LinkSkipType.JCN_MISMATCH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
 import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
@@ -83,7 +83,7 @@ public class ChainFinder
     private ChainLinkAllocator mLinkAllocator;
 
     // a cache of cluster ploidy boundaries which links cannot cross
-    private final ChainPloidyLimits mClusterPloidyLimits;
+    private final ChainJcnLimits mClusterPloidyLimits;
 
     // determined up-front - the set of all possible links from a specific breakend to other breakends
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
@@ -91,7 +91,7 @@ public class ChainFinder
     private List<SvVarData> mReplicatedSVs;
     private List<SvBreakend> mReplicatedBreakends;
 
-    public static final double MIN_CHAINING_PLOIDY_LEVEL = 0.05;
+    public static final double MIN_CHAINING_JCN_LEVEL = 0.05;
 
     private boolean mIsValid;
     private boolean mLogVerbose;
@@ -115,7 +115,7 @@ public class ChainFinder
         mAssembledLinks = Lists.newArrayList();
         mChrBreakendMap = null;
 
-        mClusterPloidyLimits = new ChainPloidyLimits();
+        mClusterPloidyLimits = new ChainJcnLimits();
 
         mAdjacentMatchingPairs = Lists.newArrayList();
         mAdjacentPairs = Lists.newArrayList();
@@ -319,10 +319,10 @@ public class ChainFinder
                 if (chain.identicalChain(newChain, false))
                 {
                     LOGGER.debug("cluster({}) skipping duplicate chain({}) ploidy({}) vs origChain({}) ploidy({})",
-                            mClusterId, newChain.id(), formatPloidy(newChain.ploidy()), chain.id(), formatPloidy(chain.ploidy()));
+                            mClusterId, newChain.id(), formatJcn(newChain.jcn()), chain.id(), formatJcn(chain.jcn()));
 
                     // combine the ploidies
-                    chain.setPloidyData(chain.ploidy() + newChain.ploidy(), chain.ploidyUncertainty());
+                    chain.setJcnData(chain.jcn() + newChain.jcn(), chain.jcnUncertainty());
                     matched = true;
                     break;
                 }
@@ -348,7 +348,7 @@ public class ChainFinder
             if(LOGGER.isDebugEnabled())
             {
                 LOGGER.debug("cluster({}) added chain({}) ploidy({}) with {} linked pairs:",
-                        mClusterId, chain.id(), formatPloidy(chain.ploidy()), chain.getLinkCount());
+                        mClusterId, chain.id(), formatJcn(chain.jcn()), chain.getLinkCount());
                 chain.logLinks();
             }
 
@@ -376,7 +376,7 @@ public class ChainFinder
 
     private void buildChains(boolean assembledLinksOnly)
     {
-        mLinkAllocator.populateSvPloidyMap(mSvList, mHasReplication);
+        mLinkAllocator.populateSvJcnMap(mSvList, mHasReplication);
 
         mDiagnostics.initialise(mClusterId, mHasReplication);
 
@@ -431,7 +431,7 @@ public class ChainFinder
                     LOGGER.info("cluster({}) {} iterations without adding a link, skipped pairs: closing({}) ploidyMismatch({})",
                             mClusterId, iterationsWithoutNewLinks,
                             mLinkAllocator.getSkippedPairCount(LinkSkipType.CLOSING),
-                            mLinkAllocator.getSkippedPairCount(LinkSkipType.PLOIDY_MISMATCH));
+                            mLinkAllocator.getSkippedPairCount(LinkSkipType.JCN_MISMATCH));
 
                     // mIsValid = false;
                     break;
@@ -446,25 +446,25 @@ public class ChainFinder
         }
 
         // TEMP - analysis of links not made due to chain ploidy mismatches where the SVs themselves would satisfy the same test
-        if(mLinkAllocator.getSkippedPairCount(LinkSkipType.PLOIDY_MISMATCH) > 0)
+        if(mLinkAllocator.getSkippedPairCount(LinkSkipType.JCN_MISMATCH) > 0)
         {
             int ploidyMismatches = 0;
             int ploidyOverlaps = 0;
             for(Map.Entry<SvLinkedPair,LinkSkipType> entry : mLinkAllocator.getSkippedPairs().entrySet())
             {
-                if(entry.getValue() != PLOIDY_MISMATCH)
+                if(entry.getValue() != JCN_MISMATCH)
                     continue;
 
                 ++ploidyMismatches;
 
                 final SvLinkedPair pair = entry.getKey();
 
-                if(ploidyMatch(pair.firstBreakend(), pair.secondBreakend()))
+                if(ChainJcnLimits.jcnMatch(pair.firstBreakend(), pair.secondBreakend()))
                 {
                     ++ploidyOverlaps;
                     LOGGER.debug("skipped pair({}) has ploidy overlap be1({} & {}) and be2({} & {})",
-                            pair.toString(), formatPloidy(pair.firstBreakend().ploidy()), formatPloidy(pair.firstBreakend().ploidyUncertainty()),
-                            formatPloidy(pair.secondBreakend().ploidy()), formatPloidy(pair.secondBreakend().ploidyUncertainty()));
+                            pair.toString(), formatJcn(pair.firstBreakend().jcn()), formatJcn(pair.firstBreakend().jcnUncertainty()),
+                            formatJcn(pair.secondBreakend().jcn()), formatJcn(pair.secondBreakend().jcnUncertainty()));
                 }
             }
 
@@ -504,13 +504,13 @@ public class ChainFinder
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
-            final List<SegmentPloidy> allelePloidies = mClusterPloidyLimits.getChrAllelePloidies().get(chromosome);
+            final List<SegmentJcn> allelePloidies = mClusterPloidyLimits.getChrAllelePloidies().get(chromosome);
 
             for (int i = 0; i < breakendList.size() -1; ++i)
             {
                 final SvBreakend lowerBreakend = breakendList.get(i);
 
-                if(belowPloidyThreshold(lowerBreakend.getSV()))
+                if(belowJcnThreshold(lowerBreakend.getSV()))
                     continue;
 
                 if(lowerBreakend.orientation() != -1)
@@ -523,7 +523,7 @@ public class ChainFinder
 
                 final SvVarData lowerSV = lowerBreakend.getSV();
 
-                boolean lowerValidAP = mUseAllelePloidies && mClusterPloidyLimits.hasValidAllelePloidyData(
+                boolean lowerValidAP = mUseAllelePloidies && mClusterPloidyLimits.hasValidAlleleJcnData(
                         getClusterChrBreakendIndex(lowerBreakend), allelePloidies);
 
                 double lowerPloidy = mLinkAllocator.getUnlinkedBreakendCount(lowerBreakend);
@@ -534,7 +534,7 @@ public class ChainFinder
                 {
                     final SvBreakend upperBreakend = breakendList.get(j);
 
-                    if(belowPloidyThreshold(upperBreakend.getSV()))
+                    if(belowJcnThreshold(upperBreakend.getSV()))
                         continue;
 
                     if(skippedNonAssembledIndex == -1)
@@ -627,17 +627,17 @@ public class ChainFinder
                         }
                     }
 
-                    if(lowerValidAP && mClusterPloidyLimits.hasValidAllelePloidyData(
+                    if(lowerValidAP && mClusterPloidyLimits.hasValidAlleleJcnData(
                             getClusterChrBreakendIndex(upperBreakend), allelePloidies))
                     {
                         int breakendIndex = getClusterChrBreakendIndex(upperBreakend);
-                        double clusterAP = allelePloidies.get(breakendIndex).clusterPloidy();
+                        double clusterAP = allelePloidies.get(breakendIndex).clusterJcn();
 
-                        if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
+                        if(clusterAP < CLUSTER_ALLELE_JCN_MIN)
                         {
                             // this lower breakend cannot match with anything further upstream
                             LOGGER.trace("breakends lower({}: {}) limited at upper({}: {}) with clusterAP({})",
-                                    i, lowerBreakend.toString(), j, upperBreakend.toString(), formatPloidy(clusterAP));
+                                    i, lowerBreakend.toString(), j, upperBreakend.toString(), formatJcn(clusterAP));
 
                             break;
                         }
@@ -652,7 +652,7 @@ public class ChainFinder
         // check if the lower ploidy SV connects to both ends of another SV to replicate it
         final SvVarData var = lowerPloidyBreakend.getSV();
 
-        if(var.ploidy() < 1) // maintain a minimum to avoid ploidy comparison issues for lower values
+        if(var.jcn() < 1) // maintain a minimum to avoid ploidy comparison issues for lower values
             return;
 
         if(var.isSglBreakend() || var.type() == DEL || higherPloidyBreakend.getSV().isSglBreakend())
@@ -666,10 +666,10 @@ public class ChainFinder
 
         final SvVarData otherSV = higherPloidyBreakend.getSV();
 
-        if(var.ploidy() > otherSV.ploidy() || var.ploidyMin() * 2 > otherSV.ploidyMax())
+        if(var.jcn() > otherSV.jcn() || var.jcnMin() * 2 > otherSV.jcnMax())
             return;
 
-        if(!ploidyMatchForSplits(var.ploidy(), var.ploidyUncertainty(), otherSV.ploidy(), otherSV.ploidyUncertainty()))
+        if(!jcnMatchForSplits(var.jcn(), var.jcnUncertainty(), otherSV.jcn(), otherSV.jcnUncertainty()))
             return;
 
         // check whether the other breakend satisfies the same ploidy comparison criteria
@@ -700,7 +700,7 @@ public class ChainFinder
 
             SvVarData otherSV2 = breakend.getSV();
 
-            if(!ploidyMatchForSplits(var.ploidy(), var.ploidyUncertainty(), otherSV2.ploidy(), otherSV2.ploidyUncertainty()))
+            if(!jcnMatchForSplits(var.jcn(), var.jcnUncertainty(), otherSV2.jcn(), otherSV2.jcnUncertainty()))
                 return;
 
             List<SvLinkedPair> links = Lists.newArrayList(SvLinkedPair.from(lowerPloidyBreakend, higherPloidyBreakend),
@@ -709,13 +709,13 @@ public class ChainFinder
             if(otherSV == otherSV2)
             {
                 logInfo(String.format("identified complex dup(%s %s) ploidy(%s) vs SV(%s) ploidy(%s)",
-                        var.posId(), var.type(), formatPloidy(var.ploidy()), otherSV.id(), formatPloidy(otherSV.ploidy())));
+                        var.posId(), var.type(), formatJcn(var.jcn()), otherSV.id(), formatJcn(otherSV.jcn())));
             }
             else
             {
                 logInfo(String.format("identified complex dup(%s %s) ploidy(%s) vs SVs(%s & %s) ploidy(%s & %s)",
-                        var.posId(), var.type(), formatPloidy(var.ploidy()), otherSV.id(), otherSV2.id(),
-                        formatPloidy(otherSV.ploidy()), formatPloidy(otherSV2.ploidy())));
+                        var.posId(), var.type(), formatJcn(var.jcn()), otherSV.id(), otherSV2.id(),
+                        formatJcn(otherSV.jcn()), formatJcn(otherSV2.jcn())));
             }
 
             mComplexDupCandidates.put(var, links);

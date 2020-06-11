@@ -7,9 +7,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowPloidy;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.hasPolyAorTMotif;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -126,7 +126,7 @@ public class SvFilters
                 }
 
                 if(var.type() == INF && nextVar.type() == INF && breakend.orientation() != nextBreakend.orientation()
-                && ploidyMatch(var, nextVar) && !mExcludedSVs.containsKey(var) && !mExcludedSVs.containsKey(nextVar))
+                && ChainJcnLimits.jcnMatch(var, nextVar) && !mExcludedSVs.containsKey(var) && !mExcludedSVs.containsKey(nextVar))
                 {
                     LOGGER.trace("SV({} & {}) filtered pair of ploidy-match INFs", var.id(), nextVar.id());
                     removalList.add(breakend);
@@ -267,7 +267,7 @@ public class SvFilters
 
     private boolean isIsolatedLowVafBnd(final SvVarData var)
     {
-        if(!hasLowPloidy(var))
+        if(!hasLowJcn(var))
             return false;
 
         // ignore possible LINE insertions
@@ -304,7 +304,7 @@ public class SvFilters
         if(nextBreakend.getSV() != var || nextBreakend.position() - breakend.position() > SHORT_INV_DISTANCE)
             return false;
 
-        return hasLowPloidy(var) || var.calcVaf(true) < LOW_VAF_THRESHOLD;
+        return hasLowJcn(var) || var.calcVaf(true) < LOW_VAF_THRESHOLD;
     }
 
     private boolean isSingleDuplicateBreakend(final SvVarData var)

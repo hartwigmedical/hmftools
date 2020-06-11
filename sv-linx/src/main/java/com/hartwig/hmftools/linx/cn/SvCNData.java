@@ -70,8 +70,8 @@ public class SvCNData {
     public int getIndex() { return mIndex; }
     public void setIndex(int index) { mIndex = index; }
 
-    public double majorAllelePloidy() { return ActualBaf * CopyNumber; }
-    public double minorAllelePloidy() { return max((1 - ActualBaf) * CopyNumber,0); }
+    public double majorAlleleJcn() { return ActualBaf * CopyNumber; }
+    public double minorAlleleJcn() { return max((1 - ActualBaf) * CopyNumber,0); }
 
     public void setStructuralVariantData(final StructuralVariantData svData, boolean linkOnStart)
     {

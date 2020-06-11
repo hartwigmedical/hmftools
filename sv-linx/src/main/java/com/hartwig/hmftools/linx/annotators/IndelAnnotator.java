@@ -162,7 +162,7 @@ public class IndelAnnotator
         metrics.IndelCount = totalIndels;
         metrics.IndelProbability = 1; // default indicates nothing unexpected
 
-        if(!cluster.hasVariedPloidy() && metrics.TotalRange > 0 && metrics.TotalDeleted < metrics.TotalRange)
+        if(!cluster.hasVariedJcn() && metrics.TotalRange > 0 && metrics.TotalDeleted < metrics.TotalRange)
         {
             long clusterRange = metrics.TotalRange - metrics.TotalDeleted;
             double expectedIndelCount = min(clusterRange / GENOME_LENGTH, 1) * (mIndelCount - mMsiIndelCount);

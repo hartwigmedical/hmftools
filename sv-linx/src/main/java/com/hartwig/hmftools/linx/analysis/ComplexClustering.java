@@ -11,12 +11,12 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_SATELLITE_SGL;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_CONSECUTIVE_BREAKENDS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_PLOIDY_MATCH;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_JCN_MATCH;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.skipClusterType;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsHaveDifferentPloidy;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsHaveDifferentJcn;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsViolateLohHomLoss;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -128,7 +129,7 @@ public class ComplexClustering
             if(mergeBreakendStraddledClusters(complexClusters))
                 foundMerges = true;
 
-            if(mergeFacingPloidyLinkedClusters(complexClusters))
+            if(mergeFacingJcnLinkedClusters(complexClusters))
                 foundMerges = true;
 
             if(mergeSingleSatelliteRepeats(complexClusters))
@@ -182,7 +183,7 @@ public class ComplexClustering
                             if (!var1.chromosome(v1Start).equals(var2.chromosome(v2Start)) || !var1.arm(v1Start).equals(var2.arm(v2Start)))
                                 continue;
 
-                            if(variantsHaveDifferentPloidy(var1, var2))
+                            if(variantsHaveDifferentJcn(var1, var2))
                                 continue;
 
                             LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
@@ -225,7 +226,7 @@ public class ComplexClustering
                 if (variantsViolateLohHomLoss(var1, var2))
                     continue;
 
-                if(variantsHaveDifferentPloidy(var1, var2))
+                if(variantsHaveDifferentJcn(var1, var2))
                     continue;
 
                 LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
@@ -320,7 +321,7 @@ public class ComplexClustering
                             }
                         }
 
-                        if(!ploidyMatch(lowerBreakend, upperBreakend))
+                        if(!ChainJcnLimits.jcnMatch(lowerBreakend, upperBreakend))
                             continue;
                     }
 
@@ -400,7 +401,7 @@ public class ComplexClustering
         return true;
     }
 
-    private boolean mergeFacingPloidyLinkedClusters(List<SvCluster> clusters)
+    private boolean mergeFacingJcnLinkedClusters(List<SvCluster> clusters)
     {
         // Extended proximity for complex and incomplete events
         // Merge any neighbouring (excluding resolved events) remaining incomplete or complex clusters that are within 5M bases and which
@@ -449,7 +450,7 @@ public class ComplexClustering
 
                         final SvBreakend nextBreakend = fullBreakendList.get(index);
 
-                        if(variantsHaveDifferentPloidy(boundaryBreakend, nextBreakend))
+                        if(SimpleClustering.variantsHaveDifferentJcn(boundaryBreakend, nextBreakend))
                             continue;
 
                         if(abs(nextBreakend.position() - boundaryBreakend.position()) > MAX_MERGE_DISTANCE)
@@ -466,15 +467,15 @@ public class ComplexClustering
                         if(nextBreakend.orientation() == boundaryBreakend.orientation())
                             break;
 
-                        if(copyNumbersEqual(boundaryBreakend.ploidy(), nextBreakend.ploidy()))
+                        if(copyNumbersEqual(boundaryBreakend.jcn(), nextBreakend.jcn()))
                         {
                             LOGGER.debug("cluster({}) boundary breakend({}) ploidy TI match with cluster({}) breakend({})",
                                     cluster.id(), boundaryBreakend, otherCluster.id(), nextBreakend);
 
-                            mSimpleClustering.addClusterReasons(boundaryBreakend.getSV(), nextBreakend.getSV(), CR_TI_PLOIDY_MATCH);
+                            mSimpleClustering.addClusterReasons(boundaryBreakend.getSV(), nextBreakend.getSV(), CR_TI_JCN_MATCH);
 
-                            otherCluster.addClusterReason(CR_TI_PLOIDY_MATCH);
-                            cluster.addClusterReason(CR_TI_PLOIDY_MATCH);
+                            otherCluster.addClusterReason(CR_TI_JCN_MATCH);
+                            cluster.addClusterReason(CR_TI_JCN_MATCH);
 
                             cluster.mergeOtherCluster(otherCluster);
 
@@ -566,7 +567,7 @@ public class ComplexClustering
                                 .filter(x -> x.sglToSatelliteRepeats() && x.chromosome(true).equals(chromosome))
                                 .findFirst().get();
 
-                        if(variantsHaveDifferentPloidy(var, otherSV))
+                        if(variantsHaveDifferentJcn(var, otherSV))
                             continue;
 
                         LOGGER.debug("cluster({}) has same chromosome({}) link with satellite cluster({}) SV({})",

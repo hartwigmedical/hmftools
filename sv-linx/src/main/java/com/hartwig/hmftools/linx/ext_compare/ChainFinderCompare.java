@@ -7,16 +7,9 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_INV;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_PROXIMITY;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfSvChainData.CF_DATA_DELIMITER;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
-import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -299,7 +292,7 @@ public class ChainFinderCompare
             final SvChain chain = var.getCluster().findChain(var);
 
             mSvDataWriter.write(String.format(",%s,%.2f,%d,%d",
-                    var.getClusterReason(), var.ploidy(),
+                    var.getClusterReason(), var.jcn(),
                     chain != null ? chain.id() : -1, chain != null ? chain.getSvCount() : 0));
 
             mSvDataWriter.newLine();

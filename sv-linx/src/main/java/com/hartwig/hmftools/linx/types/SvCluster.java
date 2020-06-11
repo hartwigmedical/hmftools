@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowPloidy;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -83,8 +83,8 @@ public class SvCluster
     private final List<SvVarData> mShortTIRemoteSVs;
     private final List<SvVarData> mUnlinkedRemoteSVs;
 
-    private double mMinPloidy;
-    private double mMaxPloidy;
+    private double mMinJcn;
+    private double mMaxJcn;
 
     private int mOriginArms;
     private int mFragmentArms;
@@ -138,8 +138,8 @@ public class SvCluster
 
         mRequiresReplication = false;
 
-        mMinPloidy = 0;
-        mMaxPloidy = 0;
+        mMinJcn = 0;
+        mMaxJcn = 0;
         mClusteringReasons = "";
 
         mOriginArms = 0;
@@ -540,7 +540,7 @@ public class SvCluster
 
     public void markSubclonal()
     {
-        int lowCNChangeSupportCount = (int)mSVs.stream().filter(x -> hasLowPloidy(x)).count();
+        int lowCNChangeSupportCount = (int)mSVs.stream().filter(x -> hasLowJcn(x)).count();
         mIsSubclonal = lowCNChangeSupportCount / (double)mSVs.size() > 0.5;
     }
 
@@ -587,100 +587,100 @@ public class SvCluster
     {
         if(mSVs.size() == 1)
         {
-            mMinPloidy = mMaxPloidy = mSVs.get(0).ploidy();
+            mMinJcn = mMaxJcn = mSVs.get(0).jcn();
             return;
         }
 
         // establish the high and low ploidy from all SVs
-        mMinPloidy = -1;
-        mMaxPloidy = 0;
+        mMinJcn = -1;
+        mMaxJcn = 0;
 
-        int svCalcPloidyCount = 0;
-        Map<Integer,Integer> ploidyFrequency = new HashMap();
+        int svCalcJcnCount = 0;
+        Map<Integer,Integer> jcnFrequency = new HashMap();
 
-        double tightestMinPloidy = 0;
-        double tightestMaxPloidy = -1;
-        int countHalfToOnePloidy = 0;
-        double minSvPloidy = -1;
+        double tightestMinJcn = 0;
+        double tightestMaxJcn = -1;
+        int countHalfToOneJcn = 0;
+        double minSvJcn = -1;
         int maxAssembledMultiple = 1; // the highest multiple of a breakend linked to other assembled breakends
 
         for (final SvVarData var : mSVs)
         {
-            int svPloidy = var.getImpliedPloidy();
+            int svJcn = var.getImpliedJcn();
             maxAssembledMultiple = max(maxAssembledMultiple, var.getMaxAssembledBreakend());
 
-            if (mMinPloidy < 0 || svPloidy < mMinPloidy)
+            if (mMinJcn < 0 || svJcn < mMinJcn)
             {
-                mMinPloidy = svPloidy;
-                minSvPloidy = svPloidy;
+                mMinJcn = svJcn;
+                minSvJcn = svJcn;
             }
 
-            mMaxPloidy = max(mMaxPloidy, svPloidy);
+            mMaxJcn = max(mMaxJcn, svJcn);
 
-            if(var.hasCalculatedPloidy())
+            if(var.hasCalculatedJcn())
             {
-                ++svCalcPloidyCount;
+                ++svCalcJcnCount;
 
-                int minPloidyInt = (int)ceil(var.ploidyMin());
-                int maxPloidyInt = (int)floor(var.ploidyMax());
-                maxPloidyInt = max(minPloidyInt, maxPloidyInt);
+                int minJcnInt = (int)ceil(var.jcnMin());
+                int maxJcnInt = (int)floor(var.jcnMax());
+                maxJcnInt = max(minJcnInt, maxJcnInt);
 
-                if(tightestMaxPloidy == -1 || var.ploidyMax() < tightestMaxPloidy)
-                    tightestMaxPloidy = var.ploidyMax();
+                if(tightestMaxJcn == -1 || var.jcnMax() < tightestMaxJcn)
+                    tightestMaxJcn = var.jcnMax();
 
-                tightestMinPloidy = max(var.ploidyMin(), tightestMinPloidy);
+                tightestMinJcn = max(var.jcnMin(), tightestMinJcn);
 
-                if(var.ploidyMin() < 1 && var.ploidyMax() > 0.5)
-                    ++countHalfToOnePloidy;
+                if(var.jcnMin() < 1 && var.jcnMax() > 0.5)
+                    ++countHalfToOneJcn;
 
-                for(int i = minPloidyInt; i <= maxPloidyInt; ++i)
+                for(int i = minJcnInt; i <= maxJcnInt; ++i)
                 {
-                    Integer svCount = ploidyFrequency.get(i);
+                    Integer svCount = jcnFrequency.get(i);
                     if(svCount == null)
-                        ploidyFrequency.put(i, 1);
+                        jcnFrequency.put(i, 1);
                     else
-                        ploidyFrequency.put(i, svCount+1);
+                        jcnFrequency.put(i, svCount+1);
                 }
             }
         }
 
-        if(svCalcPloidyCount > 0)
+        if(svCalcJcnCount > 0)
         {
-            mMinPloidy = -1;
-            mMaxPloidy = 0;
+            mMinJcn = -1;
+            mMaxJcn = 0;
 
-            for (Map.Entry<Integer, Integer> entry : ploidyFrequency.entrySet())
+            for (Map.Entry<Integer, Integer> entry : jcnFrequency.entrySet())
             {
                 int ploidy = entry.getKey();
                 int svCount = entry.getValue();
 
-                if (svCount == svCalcPloidyCount)
+                if (svCount == svCalcJcnCount)
                 {
                     // all SVs can settle on the same ploidy value, so take this
-                    mMaxPloidy = ploidy;
-                    mMinPloidy = ploidy;
+                    mMaxJcn = ploidy;
+                    mMinJcn = ploidy;
                     break;
                 }
 
-                if (ploidy > 0 && (mMinPloidy < 0 || ploidy < mMinPloidy))
-                     mMinPloidy = ploidy;
+                if (ploidy > 0 && (mMinJcn < 0 || ploidy < mMinJcn))
+                     mMinJcn = ploidy;
 
-                mMinPloidy = max(mMinPloidy, minSvPloidy);
-                mMaxPloidy = max(mMaxPloidy, ploidy);
+                mMinJcn = max(mMinJcn, minSvJcn);
+                mMaxJcn = max(mMaxJcn, ploidy);
             }
 
-            if(mMinPloidy < mMaxPloidy && maxAssembledMultiple == 1)
+            if(mMinJcn < mMaxJcn && maxAssembledMultiple == 1)
             {
-                if (tightestMaxPloidy > tightestMinPloidy && tightestMaxPloidy - tightestMinPloidy < 1)
+                if (tightestMaxJcn > tightestMinJcn && tightestMaxJcn - tightestMinJcn < 1)
                 {
                     // if all SVs cover the same value but it's not an integer, still consider them uniform
-                    mMinPloidy = 1;
-                    mMaxPloidy = 1;
+                    mMinJcn = 1;
+                    mMaxJcn = 1;
                 }
-                else if (countHalfToOnePloidy == svCalcPloidyCount)
+                else if (countHalfToOneJcn == svCalcJcnCount)
                 {
-                    mMinPloidy = 1;
-                    mMaxPloidy = 1;
+                    mMinJcn = 1;
+                    mMaxJcn = 1;
                 }
             }
         }
@@ -688,14 +688,14 @@ public class SvCluster
         // correct for the ploidy ratios implied from the assembled links
         if(maxAssembledMultiple > 1)
         {
-            mMaxPloidy = max(mMaxPloidy, maxAssembledMultiple * mMinPloidy);
+            mMaxJcn = max(mMaxJcn, maxAssembledMultiple * mMinJcn);
         }
     }
 
-    public double getMaxPloidy() { return mMaxPloidy; }
-    public double getMinPloidy() { return mMinPloidy; }
+    public double getMaxJcn() { return mMaxJcn; }
+    public double getMinJcn() { return mMinJcn; }
 
-    public boolean hasVariedPloidy()
+    public boolean hasVariedJcn()
     {
         if(mRequiresRecalc)
             updateClusterDetails();
@@ -703,7 +703,7 @@ public class SvCluster
         if(mSVs.size() == 1)
             return false;
 
-        return (mMaxPloidy > mMinPloidy && mMinPloidy >= 0);
+        return (mMaxJcn > mMinJcn && mMinJcn >= 0);
     }
 
     private void resetBreakendMapIndices()
@@ -908,19 +908,19 @@ public class SvCluster
 
     public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (";")); }
 
-    public void setPloidyReplication(int chainingSvLimit)
+    public void setJcnReplication(int chainingSvLimit)
     {
-        if(!hasVariedPloidy() && !requiresReplication())
+        if(!hasVariedJcn() && !requiresReplication())
             return;
 
         // use the relative copy number change to replicate some SVs within a cluster
-        double clusterMinPloidy = getMinPloidy();
-        double clusterMaxPloidy = getMaxPloidy();
+        double clusterMinJcn = getMinJcn();
+        double clusterMaxJcn = getMaxJcn();
 
-        if(clusterMinPloidy <= 0)
+        if(clusterMinJcn <= 0)
         {
-            LOGGER.debug("cluster({}) warning: invalid ploidy variation(min={} max={})",
-                    mId, clusterMinPloidy, clusterMaxPloidy);
+            LOGGER.debug("cluster({}) warning: invalid JCN variation(min={} max={})",
+                    mId, clusterMinJcn, clusterMaxJcn);
             return;
         }
 
@@ -930,8 +930,8 @@ public class SvCluster
 
         for(SvVarData var : mSVs)
         {
-            int svPloidy = var.getImpliedPloidy();
-            int svMultiple = (int)max(round(svPloidy / clusterMinPloidy),1);
+            int svJcn = var.getImpliedJcn();
+            int svMultiple = (int)max(round(svJcn / clusterMinJcn),1);
             totalReplicationCount += svMultiple;
         }
 
@@ -939,7 +939,7 @@ public class SvCluster
         if(totalReplicationCount > replicationCap)
         {
             LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled vs limit({})",
-                    mId, totalReplicationCount, getSvCount(), clusterMinPloidy, clusterMaxPloidy, replicationCap);
+                    mId, totalReplicationCount, getSvCount(), clusterMinJcn, clusterMaxJcn, replicationCap);
 
             replicationFactor = replicationCap / (double)totalReplicationCount;
         }
@@ -947,10 +947,10 @@ public class SvCluster
         // replicate the SVs which have a higher copy number than their peers
         for(SvVarData var : mSVs)
         {
-            int svPloidy = var.getImpliedPloidy();
+            int svJcn = var.getImpliedJcn();
             int maxAssemblyBreakends = var.getMaxAssembledBreakend();
 
-            int svMultiple = (int)round(svPloidy / clusterMinPloidy);
+            int svMultiple = (int)round(svJcn / clusterMinJcn);
 
             if(maxAssemblyBreakends > 1)
                 svMultiple = max(svMultiple, maxAssemblyBreakends);
@@ -961,7 +961,7 @@ public class SvCluster
                 continue;
 
             LOGGER.debug("cluster({}) SV({}) ploidy multiple({}, ploidy({} vs min={})",
-                    mId, var.posId(), svMultiple, svPloidy, clusterMinPloidy);
+                    mId, var.posId(), svMultiple, svJcn, clusterMinJcn);
 
             if(!requiresReplication())
                 setRequiresReplication();

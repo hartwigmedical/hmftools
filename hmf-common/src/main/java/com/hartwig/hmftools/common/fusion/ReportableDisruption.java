@@ -28,7 +28,7 @@ public abstract class ReportableDisruption
     public abstract String type();
 
     @Nullable
-    public abstract Double ploidy();
+    public abstract Double junctionCopyNumber();
 
     public abstract int exonUp();
 

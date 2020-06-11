@@ -53,7 +53,7 @@ public class SampleDataLoader
             if(items.length < COL_EXPECTED)
                 return svList;
 
-            var.setPloidyRecalcData(Double.valueOf(items[COL_PLOIDY_MIN]), Double.valueOf(items[COL_PLOIDY_MAX]));
+            var.setJcnRecalcData(Double.valueOf(items[COL_PLOIDY_MIN]), Double.valueOf(items[COL_PLOIDY_MAX]));
         }
 
         return svList;

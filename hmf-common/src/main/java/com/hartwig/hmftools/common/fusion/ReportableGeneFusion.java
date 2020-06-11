@@ -28,5 +28,5 @@ public abstract class ReportableGeneFusion {
     public abstract String geneTranscriptEnd();
 
     @Nullable
-    public abstract Double ploidy();
+    public abstract Double junctionCopyNumber();
 }

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.COMP_DUP_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.calcRulePriority;
@@ -29,13 +29,13 @@ public class ProposedLinks
     // chain operating as a foldback - only relevant for foldback-splitting links
     private SvChain mFoldbackChain;
 
-    private double mPloidy; // the min ploidy if the breakends differ, otherwise the average
-    private Map<SvBreakend, Double> mBreakendPloidy;
+    private double mJcn; // the min ploidy if the breakends differ, otherwise the average
+    private Map<SvBreakend, Double> mBreakendJcn;
 
     // indication of whether a breakend is exhausted by making these links
     private Map<SvBreakend, Boolean> mExhaustBreakend;
 
-    private String mPloidyMatchType;
+    private String mJcnMatchType;
     private int mShortestDistance;
 
     public static String PM_MATCHED = "Matched";
@@ -49,12 +49,12 @@ public class ProposedLinks
         mRules = Lists.newArrayList(rule);
         mPriority = calcRulePriority(mRules);
 
-        mPloidy = 0;
-        mBreakendPloidy = Maps.newHashMap();
+        mJcn = 0;
+        mBreakendJcn = Maps.newHashMap();
         mExhaustBreakend = Maps.newHashMap();
         mChainTarget = null;
         mFoldbackChain = null;
-        mPloidyMatchType = PM_NONE;
+        mJcnMatchType = PM_NONE;
 
         mShortestDistance = link.length();
     }
@@ -66,12 +66,12 @@ public class ProposedLinks
         mRules = Lists.newArrayList(rule);
         mPriority = calcRulePriority(mRules);
 
-        mPloidy = 0;
-        mBreakendPloidy = Maps.newHashMap();
+        mJcn = 0;
+        mBreakendJcn = Maps.newHashMap();
         mExhaustBreakend = Maps.newHashMap();
         mChainTarget = targetChain;
         mFoldbackChain = foldbackChain;
-        mPloidyMatchType = PM_NONE;
+        mJcnMatchType = PM_NONE;
 
         mShortestDistance = Links.stream().mapToInt(x -> x.length()).min().getAsInt();
     }
@@ -89,117 +89,117 @@ public class ProposedLinks
 
     public final boolean multiConnection() { return Links.size() > 1; };
 
-    public double ploidy() { return mPloidy; }
+    public double jcn() { return mJcn; }
 
-    public void setLowerPloidy(double ploidy)
+    public void setLowerJcn(double jcn)
     {
-        if(ploidy >= mPloidy || multiConnection())
+        if(jcn >= mJcn || multiConnection())
             return;
 
-        mPloidy = ploidy;
+        mJcn = jcn;
 
         // this may change whether a link is exhausted
-        for(Map.Entry<SvBreakend,Double> entry : mBreakendPloidy.entrySet())
+        for(Map.Entry<SvBreakend,Double> entry : mBreakendJcn.entrySet())
         {
             final SvBreakend breakend = entry.getKey();
-            double bePloidy = entry.getValue();
-            mExhaustBreakend.put(breakend, Doubles.equal(bePloidy, mPloidy));
+            double beJcn = entry.getValue();
+            mExhaustBreakend.put(breakend, Doubles.equal(beJcn, mJcn));
         }
     }
 
     public void addComDupBreakends(
-            final SvBreakend compDupStart, final SvBreakend compDupEnd, double compDupPloidy,
-            final SvBreakend otherStart, final SvBreakend otherEnd, double otherPloidy)
+            final SvBreakend compDupStart, final SvBreakend compDupEnd, double compDupJcn,
+            final SvBreakend otherStart, final SvBreakend otherEnd, double otherJcn)
     {
-        if(compDupPloidy == 0 || otherPloidy == 0)
+        if(compDupJcn == 0 || otherJcn == 0)
             return;
 
         // no match for this type of connection
 
-        mPloidy = compDupPloidy;
+        mJcn = compDupJcn;
 
-        mBreakendPloidy.put(compDupStart, compDupPloidy);
-        mBreakendPloidy.put(compDupEnd, compDupPloidy);
+        mBreakendJcn.put(compDupStart, compDupJcn);
+        mBreakendJcn.put(compDupEnd, compDupJcn);
         mExhaustBreakend.put(compDupStart, true);
         mExhaustBreakend.put(compDupEnd, true);
 
-        mBreakendPloidy.put(otherStart, otherPloidy);
-        mBreakendPloidy.put(otherEnd, otherPloidy);
+        mBreakendJcn.put(otherStart, otherJcn);
+        mBreakendJcn.put(otherEnd, otherJcn);
     }
 
     public void addFoldbackBreakends(
-            final SvBreakend foldbackStart, final SvBreakend foldbackEnd, double foldbackPloidy,
-            final SvBreakend otherBreakend, double otherPloidy, double otherUncertainty)
+            final SvBreakend foldbackStart, final SvBreakend foldbackEnd, double foldbackJcn,
+            final SvBreakend otherBreakend, double otherJcn, double otherUncertainty)
     {
-        if(foldbackPloidy == 0 || otherPloidy == 0)
+        if(foldbackJcn == 0 || otherJcn == 0)
             return;
 
-        if (copyNumbersEqual(foldbackPloidy * 2, otherPloidy))
+        if (copyNumbersEqual(foldbackJcn * 2, otherJcn))
         {
-            mPloidyMatchType = PM_MATCHED;
+            mJcnMatchType = PM_MATCHED;
         }
-        else if (ploidyOverlap(foldbackPloidy * 2, foldbackStart.ploidyUncertainty(), otherPloidy, otherUncertainty))
+        else if (jcnOverlap(foldbackJcn * 2, foldbackStart.jcnUncertainty(), otherJcn, otherUncertainty))
         {
-            mPloidyMatchType = PM_OVERLAP;
+            mJcnMatchType = PM_OVERLAP;
         }
 
-        if(mPloidyMatchType == PM_NONE)
-            mPloidy = foldbackPloidy;
+        if(mJcnMatchType == PM_NONE)
+            mJcn = foldbackJcn;
         else
-            mPloidy = (foldbackPloidy + otherPloidy/2) * 0.5;
+            mJcn = (foldbackJcn + otherJcn/2) * 0.5;
 
-        mBreakendPloidy.put(foldbackStart, foldbackPloidy);
-        mBreakendPloidy.put(foldbackEnd, foldbackPloidy);
+        mBreakendJcn.put(foldbackStart, foldbackJcn);
+        mBreakendJcn.put(foldbackEnd, foldbackJcn);
 
-        if(foldbackStart.getSV() == foldbackEnd.getSV() && copyNumbersEqual(foldbackStart.ploidy(), foldbackPloidy))
+        if(foldbackStart.getSV() == foldbackEnd.getSV() && copyNumbersEqual(foldbackStart.jcn(), foldbackJcn))
         {
             // mark the foldback breakends as exhausted only if clear that they are fully used in this pair of links
             mExhaustBreakend.put(foldbackStart, true);
             mExhaustBreakend.put(foldbackEnd, true);
         }
 
-        mBreakendPloidy.put(otherBreakend, otherPloidy);
+        mBreakendJcn.put(otherBreakend, otherJcn);
     }
 
     public void addBreakendPloidies(
-            final SvBreakend breakend1, double ploidy1,
-            final SvBreakend breakend2, double ploidy2)
+            final SvBreakend breakend1, double jcn1,
+            final SvBreakend breakend2, double jcn2)
     {
-        if(ploidy1 == 0 || ploidy2 == 0)
+        if(jcn1 == 0 || jcn2 == 0)
             return;
 
-        mBreakendPloidy.put(breakend1, ploidy1);
-        mBreakendPloidy.put(breakend2, ploidy2);
+        mBreakendJcn.put(breakend1, jcn1);
+        mBreakendJcn.put(breakend2, jcn2);
 
-        if (copyNumbersEqual(ploidy1, ploidy2))
+        if (copyNumbersEqual(jcn1, jcn2))
         {
-            mPloidyMatchType = PM_MATCHED;
+            mJcnMatchType = PM_MATCHED;
         }
-        else if (ploidyOverlap(ploidy1, breakend1.ploidyUncertainty(), ploidy2, breakend2.ploidyUncertainty()))
+        else if (jcnOverlap(jcn1, breakend1.jcnUncertainty(), jcn2, breakend2.jcnUncertainty()))
         {
-            mPloidyMatchType = PM_OVERLAP;
+            mJcnMatchType = PM_OVERLAP;
         }
 
-        if(mPloidyMatchType == PM_NONE)
+        if(mJcnMatchType == PM_NONE)
         {
-            if(ploidy1 > ploidy2)
+            if(jcn1 > jcn2)
             {
-                mPloidy = ploidy2;
+                mJcn = jcn2;
             }
             else
             {
-                mPloidy = ploidy1;
+                mJcn = jcn1;
             }
         }
         else
         {
-            mPloidy = (ploidy1 + ploidy2) * 0.5;
+            mJcn = (jcn1 + jcn2) * 0.5;
         }
     }
 
-    public double breakendPloidy(final SvBreakend breakend)
+    public double breakendJcn(final SvBreakend breakend)
     {
-        return mBreakendPloidy.get(breakend);
+        return mBreakendJcn.get(breakend);
     }
 
     public boolean exhaustBreakend(final SvBreakend breakend)
@@ -208,13 +208,13 @@ public class ProposedLinks
         return exhausted != null && exhausted;
     }
 
-    public void overrideBreakendPloidyMatched(final SvBreakend breakend, boolean matched)
+    public void overrideBreakendJcnMatched(final SvBreakend breakend, boolean matched)
     {
         mExhaustBreakend.put(breakend, matched);
     }
 
-    public final String ploidyMatchType() { return mPloidyMatchType; }
-    public boolean linkPloidyMatch() { return mPloidyMatchType != PM_NONE; }
+    public final String jcnMatchType() { return mJcnMatchType; }
+    public boolean linkJcnMatch() { return mJcnMatchType != PM_NONE; }
 
     public void addRule(ChainingRule rule)
     {
@@ -234,9 +234,9 @@ public class ProposedLinks
 
     public String toString()
     {
-        return String.format("pair(%s) rule(%s) ploidy(%s) match(%s) length(%d) priority(%d)",
-                Links.get(0).toString(), mRules.get(0), formatPloidy(mPloidy),
-                mPloidyMatchType, mShortestDistance, mPriority);
+        return String.format("pair(%s) rule(%s) jcn(%s) match(%s) length(%d) priority(%d)",
+                Links.get(0).toString(), mRules.get(0), formatJcn(mJcn),
+                mJcnMatchType, mShortestDistance, mPriority);
     }
 
     public boolean isValid()
@@ -244,19 +244,19 @@ public class ProposedLinks
         if(Links.isEmpty() || Links.size() > 2)
             return false;
 
-        if(mBreakendPloidy.isEmpty())
+        if(mBreakendJcn.isEmpty())
             return false;
 
-        if(Links.size() == 1 && mBreakendPloidy.size() != 2)
+        if(Links.size() == 1 && mBreakendJcn.size() != 2)
             return false;
 
-        if(Links.size() == 2 && mBreakendPloidy.size() < 3)
+        if(Links.size() == 2 && mBreakendJcn.size() < 3)
         {
             if(!Links.get(0).matches(Links.get(1)))
                 return false;
         }
 
-        return mPloidy > 0;
+        return mJcn > 0;
     }
 
 }

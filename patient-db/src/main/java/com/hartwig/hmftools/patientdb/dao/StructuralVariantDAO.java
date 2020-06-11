@@ -68,7 +68,7 @@ class StructuralVariantDAO {
                     .endHomologySequence(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE)))
                     .startAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTAF)))
                     .endAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDAF)))
-                    .ploidy(getValueNotNull(ploidy))
+                    .junctionCopyNumber(getValueNotNull(ploidy))
                     .adjustedStartAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDAFSTART)))
                     .adjustedEndAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDAFEND)))
                     .adjustedStartCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERSTART)))
@@ -228,7 +228,7 @@ class StructuralVariantDAO {
                 isSingle ? null : DatabaseUtil.decimal(variant.adjustedEndAF()),
                 isSingle ? null : DatabaseUtil.decimal(variant.adjustedEndCopyNumber()),
                 isSingle ? null : DatabaseUtil.decimal(variant.adjustedEndCopyNumberChange()),
-                variant.ploidy(),
+                variant.junctionCopyNumber(),
                 variant.filter(),
                 variant.imprecise(),
                 DatabaseUtil.decimal(variant.qualityScore()),

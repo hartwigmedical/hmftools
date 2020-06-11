@@ -10,7 +10,7 @@ public class DoubleMinuteData
     public final SvCluster Cluster;
     public final List<SvVarData> SVs;
 
-    public double MaxBFBPloidy;
+    public double MaxBFBJcn;
     public double MinAdjacentMARatio;
 
     public final List<SvVarData> CandidateSVs;
@@ -23,7 +23,7 @@ public class DoubleMinuteData
         SVs = svList;
 
         MinAdjacentMARatio = 0;
-        MaxBFBPloidy = 0;
+        MaxBFBJcn = 0;
 
         Chains = Lists.newArrayList();
         CandidateSVs = Lists.newArrayList();

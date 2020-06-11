@@ -34,8 +34,8 @@ final class ReportableGeneDisruptionFactory {
                 double lowestUndisruptedCopyNumber =
                         Math.min(primaryDisruptionLeft.undisruptedCopyNumber(), primaryDisruptionRight.undisruptedCopyNumber());
 
-                Double ploidyLeft = primaryDisruptionLeft.ploidy();
-                Double ploidyRight = primaryDisruptionRight.ploidy();
+                Double ploidyLeft = primaryDisruptionLeft.junctionCopyNumber();
+                Double ploidyRight = primaryDisruptionRight.junctionCopyNumber();
                 if (ploidyLeft != null && ploidyRight != null && !Doubles.equal(ploidyLeft, ploidyRight)) {
                     LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryDisruptionLeft.gene());
                 }
@@ -44,7 +44,7 @@ final class ReportableGeneDisruptionFactory {
                         .gene(primaryDisruptionLeft.gene())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
-                        .ploidy(primaryDisruptionLeft.ploidy())
+                        .ploidy(primaryDisruptionLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, lowestUndisruptedCopyNumber))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());
@@ -54,7 +54,7 @@ final class ReportableGeneDisruptionFactory {
                         .gene(primaryDisruptionLeft.gene())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
-                        .ploidy(primaryDisruptionLeft.ploidy())
+                        .ploidy(primaryDisruptionLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, primaryDisruptionLeft.undisruptedCopyNumber()))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());

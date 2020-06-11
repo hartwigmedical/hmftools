@@ -182,7 +182,7 @@ public class LinxTester
         mCnSegmentBuilder.createCopyNumberData(CnDataLoader, Analyser.getState().getChrBreakendMap());
 
         if(includePloidyCalcs)
-            CnDataLoader.calculateAdjustedPloidy(SampleId);
+            CnDataLoader.calculateAdjustedJcn(SampleId);
 
         mCnSegmentBuilder.setSamplePurity(CnDataLoader, 1, 2, MALE);
 
@@ -190,7 +190,7 @@ public class LinxTester
 
         setSvCopyNumberData(
                 AllVariants,
-                CnDataLoader.getSvPloidyCalcMap(),
+                CnDataLoader.getSvJcnCalcMap(),
                 CnDataLoader.getSvIdCnDataMap(),
                 CnDataLoader.getChrCnDataMap());
     }

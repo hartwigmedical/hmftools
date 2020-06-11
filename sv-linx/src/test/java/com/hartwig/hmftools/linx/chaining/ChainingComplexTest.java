@@ -264,7 +264,7 @@ public class ChainingComplexTest
 
         assertEquals(10, chain.getLinkCount());
         assertEquals(6, chain.getSvCount());
-        assertEquals(1, chain.ploidy(), 0.01);
+        assertEquals(1, chain.jcn(), 0.01);
     }
 
     @Test
@@ -309,7 +309,7 @@ public class ChainingComplexTest
 
         assertEquals(6, chain.getLinkCount());
         assertEquals(5, chain.getSvCount());
-        assertEquals(1, chain.ploidy(), 0.01);
+        assertEquals(1, chain.jcn(), 0.01);
     }
 
     @Test

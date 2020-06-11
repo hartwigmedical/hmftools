@@ -35,22 +35,21 @@ import org.apache.logging.log4j.Logger;
 public class CnSegmentBuilder
 {
     // assume an A-allele which is unaffected by the SVs, and a B-allele which is
-    private double mOtherAllelePloidy;
-    private double mUndisruptedAllelePloidy; // the ploidy of the undisrupted B-allele
-
+    private double mOtherAlleleJcn;
+    private double mUndisruptedAlleleJcn; // the JCN of the undisrupted B-allele
 
     private static final Logger LOGGER = LogManager.getLogger(CnSegmentBuilder.class);
 
     public CnSegmentBuilder()
     {
-        mOtherAllelePloidy = 1;
-        mUndisruptedAllelePloidy = 0;
+        mOtherAlleleJcn = 1;
+        mUndisruptedAlleleJcn = 0;
     }
 
     public void setAllelePloidies(double otherAllele, double undisruptedAllele)
     {
-        mOtherAllelePloidy = otherAllele;
-        mUndisruptedAllelePloidy = undisruptedAllele;
+        mOtherAlleleJcn = otherAllele;
+        mUndisruptedAlleleJcn = undisruptedAllele;
     }
 
     public void createCopyNumberData(final CnDataLoader cnDataLoader, final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -72,9 +71,9 @@ public class CnSegmentBuilder
             chrCnDataMap.put(chromosome, cnDataList);
 
             // work out the net copy number from all SVs going out to P-arm telomere for the correct starting copy number
-            double netSvPloidy = max(breakendList.stream().mapToDouble(x -> x.ploidy() * x.orientation()).sum(), 0);
+            double netSvJcn = max(breakendList.stream().mapToDouble(x -> x.jcn() * x.orientation()).sum(), 0);
 
-            double currentCopyNumber = mOtherAllelePloidy + mUndisruptedAllelePloidy + netSvPloidy;
+            double currentCopyNumber = mOtherAlleleJcn + mUndisruptedAlleleJcn + netSvJcn;
 
             int centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, P_ARM);
             int chromosomeLength = SvUtilities.getChromosomeLength(chromosome);
@@ -84,9 +83,9 @@ public class CnSegmentBuilder
                 final SvBreakend breakend = breakendList.get(i);
                 final StructuralVariantData svData = breakend.getSV().getSvData();
                 final SvVarData var = breakend.getSV();
-                double ploidy = var.ploidy();
+                double jcn = var.jcn();
 
-                double ploidyChange = -ploidy * breakend.orientation();
+                double jcnChange = -jcn * breakend.orientation();
 
                 SvCNData cnData = null;
 
@@ -95,11 +94,11 @@ public class CnSegmentBuilder
                     if(breakend.getSV().type() == DUP && breakendList.get(i + 1).getSV() == breakend.getSV())
                     {
                         // starts with a DUP so don't treat the first breakend as a copy-number drop
-                        currentCopyNumber += ploidyChange;
+                        currentCopyNumber += jcnChange;
                     }
                     else
                     {
-                        currentCopyNumber += max(-ploidyChange, 0);
+                        currentCopyNumber += max(-jcnChange, 0);
                     }
 
                     if(currentCopyNumber < 0)
@@ -139,7 +138,7 @@ public class CnSegmentBuilder
                 }
 
                 // orientation determines copy number drop or gain
-                currentCopyNumber += ploidyChange;
+                currentCopyNumber += jcnChange;
 
                 if(currentCopyNumber < 0)
                 {
@@ -226,8 +225,8 @@ public class CnSegmentBuilder
                 cnDataPair[breakend.usesStart() ? SE_START : SE_END] = cnData;
 
                 // set copy number data back into the SV
-                double beCopyNumber = breakend.orientation() == 1 ? currentCopyNumber + ploidy : currentCopyNumber;
-                breakend.getSV().setCopyNumberData(breakend.usesStart(), beCopyNumber, ploidy);
+                double beCopyNumber = breakend.orientation() == 1 ? currentCopyNumber + jcn : currentCopyNumber;
+                breakend.getSV().setCopyNumberData(breakend.usesStart(), beCopyNumber, jcn);
             }
         }
     }
@@ -237,12 +236,12 @@ public class CnSegmentBuilder
         if(copyNumber == 0)
             return 0;
 
-        double bAllelePloidy = max(copyNumber - mOtherAllelePloidy, 0);
+        double bAlleleJcn = max(copyNumber - mOtherAlleleJcn, 0);
 
-        if(bAllelePloidy >= mOtherAllelePloidy)
-            return bAllelePloidy / copyNumber;
+        if(bAlleleJcn >= mOtherAlleleJcn)
+            return bAlleleJcn / copyNumber;
         else
-            return mOtherAllelePloidy / copyNumber;
+            return mOtherAlleleJcn / copyNumber;
     }
 
     public void setSamplePurity(final CnDataLoader cnDataLoader, double purity, double ploidy, Gender gender)
