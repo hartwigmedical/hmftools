@@ -29,13 +29,26 @@ public class TransvarTestApplication {
         // (different bases encoding for the same AA)
         // Eg, While the mutations that delete codons 842-845 from PDGFRA are genomically different from 843-846, in terms of AA they will
         // have the same impact due to redundancy in trinucleotide encoding.
-        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "D842_H845del");
-        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "I843_D846del");
-        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "K550_W557del");
-        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "P551_K558del");
+//        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "D842_H845del");
+//        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "I843_D846del");
+//
+//        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "K550_W557del");
+//        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "P551_K558del");
+//
+//        extractAndPrintHotspots(transvar, "KIT", null, "V555_V559del");
+//        extractAndPrintHotspots(transvar, "KIT", null, "Q556_V560del");
+
+//        extractAndPrintHotspots(transvar, "KIT", null, "P577_W582delinsPYD");
+//        extractAndPrintHotspots(transvar, "KIT", null, "H580_W582del");
 
         // Below variant is annotated as p.DI842IM by SnpEff which is functionally identical to below.
-        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "D842_I843delinsIM");
+//        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "D842_I843delinsIM");
+
+        extractAndPrintHotspots(transvar, "BRAF", null, "L485_P490delinsY");
+        extractAndPrintHotspots(transvar, "BRAF", null, "L485_P490delinsV");
+
+
+
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,

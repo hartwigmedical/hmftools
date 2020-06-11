@@ -27,6 +27,12 @@ public final class FeatureCurator {
                         .originalFeatureName("533_534del")
                         .curatedFeatureName("I533_P534del")
                         .build()));
+
+        ONCOKB_FEATURE_NAME_MAPPINGS_PER_GENE.put("KIT",
+                Lists.newArrayList(ImmutableFeatureNameMapping.builder()
+                        .originalFeatureName("V559del")
+                        .curatedFeatureName("V560del")
+                        .build()));
     }
 
     private FeatureCurator() {
