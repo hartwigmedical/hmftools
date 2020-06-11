@@ -50,14 +50,15 @@ public class CopyNumberExtractor {
             ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
         } else if (viccEntry.source() == ViccSource.CGI) {
             ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
-        } return ampsDelsPerFeature;
+        }
+        return ampsDelsPerFeature;
     }
 
     @NotNull
     private static Map<Feature, KnownAmplificationDeletion> extractAmpsDelsInformation(@NotNull ViccEntry viccEntry,
             @NotNull Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature) {
         for (Feature feature : viccEntry.features()) {
-            LOGGER.info(feature.name());
+           // LOGGER.info(feature.name());
             if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
                 ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
             } else if (ONCOKB_DELETIONS.contains(feature.name())) {
