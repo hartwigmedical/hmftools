@@ -17,7 +17,7 @@ public class TransvarTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarTestApplication.class);
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
@@ -25,43 +25,17 @@ public class TransvarTestApplication {
 
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
-        // Leads to a warning which we can ignore.
-        extractAndPrintHotspots(transvar, "PDGFRA", null, "D842_I843delinsIM");
-//        extractAndPrintHotspots(transvar, "PDGFRA", null, "R560_V561insRG");
+        // Below cases are different genomic mutations leading to identical protein impacts due to redundancy in trinucleotide encoding
+        // (different bases encoding for the same AA)
+        // Eg, While the mutations that delete codons 842-845 from PDGFRA are genomically different from 843-846, in terms of AA they will
+        // have the same impact due to redundancy in trinucleotide encoding.
+        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "D842_H845del");
+        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "I843_D846del");
+        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "K550_W557del");
+        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "P551_K558del");
 
-        // Repeat issue - These 2 variants are identical (the trinucleotide is repeated)
-//        extractAndPrintHotspots(transvar, "KIT", null, "V560del");
-//        extractAndPrintHotspots(transvar, "KIT", null, "V559del");
-//
-//        // Transcript issue - These variants lead to the same gDNA because D1739Y is not defined on the canonical transcript of BRCA1
-//        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1739Y");
-//        extractAndPrintHotspots(transvar, "BRCA1", "ENST00000357654", "D1692Y");
-//
-//        // This variant doesn't work properly yet (complex del-then-insertion)
-//        extractAndPrintHotspots(transvar, "EGFR", null, "L747_A750delinsP");
-//
-//        // Transcript issue
-//        extractAndPrintHotspots(transvar, "FBXW7", null, "R658Q");
-//        extractAndPrintHotspots(transvar, "FBXW7", null, "R482Q");
-//
-//        // Transcript issue
-//        extractAndPrintHotspots(transvar, "FGFR2", null, "M537I");
-//        extractAndPrintHotspots(transvar, "FGFR2", null, "M535I");
-//
-//        // Transcript issue
-//        extractAndPrintHotspots(transvar, "GNAS", null, "R201H");
-//        extractAndPrintHotspots(transvar, "GNAS", null, "R844H");
-//
-//        // Repeat issue
-//        extractAndPrintHotspots(transvar, "PTEN", null, "I33del");
-//        extractAndPrintHotspots(transvar, "PTEN", null, "I32del");
-//
-//        // Transcript issue - Complex?
-//        extractAndPrintHotspots(transvar, "RUNX1", null, "R174*");
-//        extractAndPrintHotspots(transvar, "RUNX1", null, "R177*");
-//        extractAndPrintHotspots(transvar, "RUNX1", null, "R177Q");
-//        extractAndPrintHotspots(transvar, "RUNX1", null, "R201Q");
-//        extractAndPrintHotspots(transvar, "RUNX1", null, "R174Q");
+        // Below variant is annotated as p.DI842IM by SnpEff which is functionally identical to below.
+        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "D842_I843delinsIM");
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,
