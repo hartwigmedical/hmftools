@@ -69,7 +69,8 @@ public final class FeatureCurator {
         return feature;
     }
 
-    private static class CurationKey {
+    @VisibleForTesting
+    static class CurationKey {
         @NotNull
         private final String gene;
         @Nullable
@@ -78,6 +79,18 @@ public final class FeatureCurator {
         public CurationKey(@NotNull final String gene, @Nullable final String transcript) {
             this.gene = gene;
             this.transcript = transcript;
+        }
+
+        @VisibleForTesting
+        @NotNull
+        String gene() {
+            return gene;
+        }
+
+        @VisibleForTesting
+        @Nullable
+        String transcript() {
+            return transcript;
         }
 
         @Override
