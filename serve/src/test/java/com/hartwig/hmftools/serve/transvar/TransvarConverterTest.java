@@ -184,10 +184,10 @@ public class TransvarConverterTest {
         TransvarComplexInsertDelete insertionDeletion = (TransvarComplexInsertDelete) record.annotation();
         assertEquals(12, insertionDeletion.deletedBaseCount());
         assertEquals("CCT", insertionDeletion.insertedSequence());
-        assertEquals("CCT", insertionDeletion.candidateAlternativeSequences().get(0));
-        assertEquals("CCG", insertionDeletion.candidateAlternativeSequences().get(1));
-        assertEquals("CCA", insertionDeletion.candidateAlternativeSequences().get(2));
-        assertEquals("CCC", insertionDeletion.candidateAlternativeSequences().get(3));
+        assertEquals("CCT", insertionDeletion.candidateAlternativeCodons().get(0));
+        assertEquals("CCG", insertionDeletion.candidateAlternativeCodons().get(1));
+        assertEquals("CCA", insertionDeletion.candidateAlternativeCodons().get(2));
+        assertEquals("CCC", insertionDeletion.candidateAlternativeCodons().get(3));
 
         String delInsLineWithoutCandidateAlternateSequence = "EGFR:p.I744_K745delinsKIPVAI\tENST00000275493 (protein_coding)\tEGFR\t+\t"
                 + "chr7:g.55242460_55242465delinsAAGATCCCTGTAGCAATC/c.2230_2235delinsAAGATCCCTGTAGCAATC/p.I744_K745delinsKIPVAI\t"
@@ -202,7 +202,7 @@ public class TransvarConverterTest {
         TransvarComplexInsertDelete insertionDeletion2 = (TransvarComplexInsertDelete) record2.annotation();
         assertEquals(6, insertionDeletion2.deletedBaseCount());
         assertEquals("AAGATCCCTGTAGCAATC", insertionDeletion2.insertedSequence());
-        assertTrue(insertionDeletion2.candidateAlternativeSequences().isEmpty());
+        assertTrue(insertionDeletion2.candidateAlternativeCodons().isEmpty());
     }
 
     @Test

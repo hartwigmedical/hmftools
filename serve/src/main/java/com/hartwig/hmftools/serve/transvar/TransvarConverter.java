@@ -121,7 +121,7 @@ final class TransvarConverter {
                     return ImmutableTransvarComplexInsertDelete.builder()
                             .deletedBaseCount(deletedBaseCount)
                             .insertedSequence(insertedBases)
-                            .candidateAlternativeSequences(extractCandidateAlternativeSequencesFromMessageField(messageField))
+                            .candidateAlternativeCodons(extractCandidateAlternativeCodonsFromMessageField(messageField))
                             .build();
                 } else {
                     // This should look like '123delCinsG'
@@ -225,7 +225,7 @@ final class TransvarConverter {
     }
 
     @NotNull
-    private static List<String> extractCandidateAlternativeSequencesFromMessageField(@NotNull String messageField) {
+    private static List<String> extractCandidateAlternativeCodonsFromMessageField(@NotNull String messageField) {
         String fieldValue = extractOptionalValueFromMessageField(messageField, "candidate_alternative_sequence");
 
         return fieldValue != null ? Arrays.asList(fieldValue.split("/")) : Lists.newArrayList();

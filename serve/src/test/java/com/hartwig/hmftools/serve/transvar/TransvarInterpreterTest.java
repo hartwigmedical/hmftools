@@ -161,10 +161,10 @@ public class TransvarInterpreterTest {
     public void canConvertComplexDeletionInsertionsToHotspots() {
         TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
-                        .deletedBaseCount(4)
+                        .deletedBaseCount(3)
                         .insertedSequence("GGG")
-                        .addCandidateAlternativeSequences("GGG")
-                        .addCandidateAlternativeSequences("CCC")
+                        .addCandidateAlternativeCodons("GGG")
+                        .addCandidateAlternativeCodons("CCC")
                         .build())
                 .build();
 
@@ -172,15 +172,15 @@ public class TransvarInterpreterTest {
 
         assertEquals(2, hotspots1.size());
 
-        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGG").build(), hotspots1.get(0));
-        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GCCC").build(), hotspots1.get(1));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("GGG").build(), hotspots1.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("CCC").build(), hotspots1.get(1));
 
         TransvarRecord twoAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
-                        .deletedBaseCount(4)
+                        .deletedBaseCount(3)
                         .insertedSequence("GGGTTT")
-                        .addCandidateAlternativeSequences("GGGTTT")
-                        .addCandidateAlternativeSequences("CCCAAA")
+                        .addCandidateAlternativeCodons("GGGTTT")
+                        .addCandidateAlternativeCodons("CCCAAA")
                         .build())
                 .build();
 
@@ -188,20 +188,26 @@ public class TransvarInterpreterTest {
 
         assertEquals(1, hotspots2.size());
 
-        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGGTTT").build(), hotspots2.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("GGGTTT").build(), hotspots2.get(0));
+    }
 
-        TransvarRecord balancedDeleteInsert = baseRecord().gdnaPosition(2)
+    @Test
+    public void canConvertComplexDeletionInsertionOnReverseStrand() {
+        TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
                         .deletedBaseCount(3)
-                        .insertedSequence("GGG")
+                        .insertedSequence("TAA")
+                        .addCandidateAlternativeCodons("TTA")
+                        .addCandidateAlternativeCodons("GCG")
                         .build())
                 .build();
 
-        List<VariantHotspot> hotspots3 = testInterpreter().convertRecordToHotspots(balancedDeleteInsert, Strand.FORWARD);
+        List<VariantHotspot> hotspots1 = testInterpreter().convertRecordToHotspots(oneAminoAcidInsert, Strand.REVERSE);
 
-        assertEquals(1, hotspots3.size());
+        assertEquals(2, hotspots1.size());
 
-        assertHotspot(baseHotspot().position(1).ref("ATC").alt("GGG").build(), hotspots3.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("TAA").build(), hotspots1.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("CGC").build(), hotspots1.get(1));
     }
 
     @Test
