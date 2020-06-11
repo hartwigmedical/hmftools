@@ -33,13 +33,13 @@ public class CopyNumberExtractor {
 
     private static final Set<String> ONCOKB_DELETIONS = Sets.newHashSet("Deletion");
 
-    private static final Set<String> CGI_AMPLIFICATIONS = Sets.newHashSet("");
+    private static final Set<String> CGI_AMPLIFICATIONS = Sets.newHashSet("amplification");
 
-    private static final Set<String> CGI_DELETIONS = Sets.newHashSet("");
+    private static final Set<String> CGI_DELETIONS = Sets.newHashSet("deletion");
 
-    private static final Set<String> CIVIC_AMPLIFICATIONS = Sets.newHashSet("");
+    private static final Set<String> CIVIC_AMPLIFICATIONS = Sets.newHashSet("AMPLIFICATION");
 
-    private static final Set<String> CIVIC_DELETIONS = Sets.newHashSet("");
+    private static final Set<String> CIVIC_DELETIONS = Sets.newHashSet("DELETION");
 
     @NotNull
     public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {

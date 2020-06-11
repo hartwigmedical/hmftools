@@ -38,9 +38,17 @@ public class FusionExtractor {
                 }
             }
         } else if (viccEntry.source() == ViccSource.CGI) {
-
+            for (Feature feature : viccEntry.features()) {
+                if (feature.name().toLowerCase().contains("fusions")) {
+                    fusionsPerFeature.put(feature, feature.name());
+                }
+            }
         } else if (viccEntry.source() == ViccSource.CIVIC) {
-
+            for (Feature feature : viccEntry.features()) {
+                if (feature.name().toLowerCase().contains("fusions")) {
+                    fusionsPerFeature.put(feature, feature.name());
+                }
+            }
         }
         return fusionsPerFeature;
     }
