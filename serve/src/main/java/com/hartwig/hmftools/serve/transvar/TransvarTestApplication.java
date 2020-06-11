@@ -26,7 +26,7 @@ public class TransvarTestApplication {
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
         // Leads to a warning which we can ignore.
-        extractAndPrintHotspots(transvar, "PDGFRA", null, "E311_K312del");
+        extractAndPrintHotspots(transvar, "PDGFRA", null, "D842_I843delinsIM");
 //        extractAndPrintHotspots(transvar, "PDGFRA", null, "R560_V561insRG");
 
         // Repeat issue - These 2 variants are identical (the trinucleotide is repeated)
@@ -65,7 +65,7 @@ public class TransvarTestApplication {
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,
-            @NotNull String proteinAnnotation) throws IOException, InterruptedException {
+            @NotNull String proteinAnnotation) {
         List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(gene, specificTranscript, proteinAnnotation);
 
         LOGGER.info("Printing hotspots for '{}:p.{}' on transcript {}", gene, proteinAnnotation, specificTranscript);

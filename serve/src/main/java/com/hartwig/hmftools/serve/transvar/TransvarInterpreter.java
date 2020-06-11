@@ -174,17 +174,23 @@ class TransvarInterpreter {
 
             String deletedBases =
                     refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + insDel.deletedBaseCount()).getBaseString();
+            String insertedBases = insDel.insertedSequence();
+            boolean balancedDelIns = deletedBases.length() == insertedBases.length();
+
             ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder()
                     .chromosome(record.chromosome())
                     .position(position)
-                    .ref(preMutatedSequence + deletedBases);
+                    .ref(balancedDelIns ? deletedBases : preMutatedSequence + deletedBases);
 
-            hotspots.add(hotspotBuilder.alt(preMutatedSequence + insDel.insertedSequence()).build());
+            hotspots.add(hotspotBuilder.alt(balancedDelIns ? insertedBases : preMutatedSequence + insertedBases).build());
             // For now we only add alternative sequences for insertions of one AA
             if (insDel.insertedSequence().length() == 3) {
                 for (String candidateAlternativeSequence : insDel.candidateAlternativeSequences()) {
-                    if (!candidateAlternativeSequence.equals(insDel.insertedSequence())) {
-                        hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
+                    assert candidateAlternativeSequence.length() == insertedBases.length();
+                    if (!candidateAlternativeSequence.equals(insertedBases)) {
+                        hotspots.add(hotspotBuilder.alt(balancedDelIns
+                                ? candidateAlternativeSequence
+                                : preMutatedSequence + candidateAlternativeSequence).build());
                     }
                 }
             }

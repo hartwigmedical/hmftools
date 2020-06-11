@@ -158,7 +158,7 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    public void canConvertComplexDeletionInsertionToHotspot() {
+    public void canConvertComplexDeletionInsertionsToHotspots() {
         TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
                         .deletedBaseCount(4)
@@ -189,6 +189,19 @@ public class TransvarInterpreterTest {
         assertEquals(1, hotspots2.size());
 
         assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGGTTT").build(), hotspots2.get(0));
+
+        TransvarRecord balancedDeleteInsert = baseRecord().gdnaPosition(2)
+                .annotation(ImmutableTransvarComplexInsertDelete.builder()
+                        .deletedBaseCount(3)
+                        .insertedSequence("GGG")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots3 = testInterpreter().convertRecordToHotspots(balancedDeleteInsert, Strand.FORWARD);
+
+        assertEquals(1, hotspots3.size());
+
+        assertHotspot(baseHotspot().position(1).ref("ATC").alt("GGG").build(), hotspots3.get(0));
     }
 
     @Test
