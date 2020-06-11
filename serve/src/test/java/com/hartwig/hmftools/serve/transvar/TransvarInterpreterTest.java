@@ -147,8 +147,8 @@ public class TransvarInterpreterTest {
 
         assertEquals(2, forwardHotspots.size());
 
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAG").build(), forwardHotspots.get(0));
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAA").build(), forwardHotspots.get(1));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGAG").build(), forwardHotspots.get(0));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGAA").build(), forwardHotspots.get(1));
 
         TransvarRecord reverseRecord =
                 baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
@@ -157,8 +157,8 @@ public class TransvarInterpreterTest {
 
         assertEquals(2, reverseHotspots.size());
 
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CAAA").build(), reverseHotspots.get(0));
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAA").build(), reverseHotspots.get(1));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GAAA").build(), reverseHotspots.get(0));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGAA").build(), reverseHotspots.get(1));
     }
 
     @Test

@@ -106,7 +106,7 @@ class TransvarInterpreter {
     @NotNull
     private List<VariantHotspot> convertInsertionToHotspots(@NotNull TransvarRecord record, @NotNull TransvarInsertion insertion,
             @NotNull Strand strand) {
-        long position = record.gdnaPosition() - 1;
+        long position = record.gdnaPosition();
         String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
 
         ImmutableVariantHotspotImpl.Builder hotspotBuilder =

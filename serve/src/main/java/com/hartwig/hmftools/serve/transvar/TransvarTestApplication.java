@@ -26,8 +26,8 @@ public class TransvarTestApplication {
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
         // Leads to a warning which we can ignore.
-        extractAndPrintHotspots(transvar, "VHL", null, "G114R");
-        extractAndPrintHotspots(transvar, "VHL", null, "G114S");
+        extractAndPrintHotspots(transvar, "PDGFRA", null, "R560_V561insER");
+        extractAndPrintHotspots(transvar, "PDGFRA", null, "R560_V561insRG");
 
         // Repeat issue - These 2 variants are identical (the trinucleotide is repeated)
 //        extractAndPrintHotspots(transvar, "KIT", null, "V560del");
