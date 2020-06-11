@@ -33,6 +33,12 @@ public final class FeatureCurator {
                         .originalFeatureName("V559del")
                         .curatedFeatureName("V560del")
                         .build()));
+
+        ONCOKB_FEATURE_NAME_MAPPINGS_PER_GENE.put("PTEN",
+                Lists.newArrayList(ImmutableFeatureNameMapping.builder()
+                        .originalFeatureName("I32del")
+                        .curatedFeatureName("I33del")
+                        .build()));
     }
 
     private FeatureCurator() {
