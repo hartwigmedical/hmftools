@@ -23,7 +23,7 @@ public class SvAnalyzerTest {
     public void canAnalyzeFusionsDisruptions() throws IOException {
         List<ReportableGeneFusion> testFusions = Lists.newArrayList(createTestFusionBuilder().geneStart("X").geneEnd("Y").build());
         List<ReportableDisruption> testDisruptions =
-                Lists.newArrayList(createTestDisruptionBuilder().gene(DISRUPTED_GENE).ploidy(1.0).undisruptedCopyNumber(1.0).build());
+                Lists.newArrayList(createTestDisruptionBuilder().gene(DISRUPTED_GENE).junctionCopyNumber(1.0).undisruptedCopyNumber(1.0).build());
 
         SvAnalysis analysis = SvAnalyzer.run(testFusions, testDisruptions, testActionabilityAnalyzer(), null);
 

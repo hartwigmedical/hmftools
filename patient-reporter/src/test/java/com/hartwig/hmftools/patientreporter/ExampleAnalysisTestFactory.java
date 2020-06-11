@@ -712,7 +712,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneEnd("PNPLA7")
                 .geneTranscriptEnd("ENST00000406427")
                 .geneContextEnd("Intron 3")
-                .ploidy(0.4)
+                .junctionCopyNumber(0.4)
                 .build();
 
         ReportableGeneFusion fusion2 = ImmutableReportableGeneFusion.builder()
@@ -722,7 +722,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneEnd("BRAF")
                 .geneTranscriptEnd("ENST00000288602")
                 .geneContextEnd("Intron 8")
-                .ploidy(1D)
+                .junctionCopyNumber(1D)
                 .build();
 
         return Lists.newArrayList(fusion1, fusion2);

@@ -20,7 +20,7 @@ public class ReportableGeneDisruptionFactoryTest {
     @Test
     public void canConvertPairedDisruption() {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder =
-                createTestDisruptionBuilder().svId(1).gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").ploidy(1.12);
+                createTestDisruptionBuilder().svId(1).gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").junctionCopyNumber(1.12);
 
         List<ReportableDisruption> pairedDisruptions =
                 Lists.newArrayList(pairedDisruptionBuilder.exonUp(3).exonDown(4).undisruptedCopyNumber(4.3).build(),
@@ -48,9 +48,9 @@ public class ReportableGeneDisruptionFactoryTest {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
 
         List<ReportableDisruption> pairedDisruptions =
-                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").svId(1).ploidy(1.0).undisruptedCopyNumber(1.0).build(),
-                        pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.0).undisruptedCopyNumber(2.3).build(),
-                        pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.0).undisruptedCopyNumber(1.7).build());
+                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(1.0).build(),
+                        pairedDisruptionBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(2.3).build(),
+                        pairedDisruptionBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(1.7).build());
 
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
 

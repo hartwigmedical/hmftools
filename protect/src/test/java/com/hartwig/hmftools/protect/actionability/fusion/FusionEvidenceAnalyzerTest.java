@@ -67,6 +67,6 @@ public class FusionEvidenceAnalyzerTest {
                 .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptStart(Strings.EMPTY)
                 .geneTranscriptEnd(Strings.EMPTY)
-                .ploidy(1D);
+                .junctionCopyNumber(1D);
     }
 }

@@ -18,7 +18,7 @@ final class SvAnalysisDatamodelTestFactory {
                 .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptStart(Strings.EMPTY)
                 .geneTranscriptEnd(Strings.EMPTY)
-                .ploidy(1D);
+                .junctionCopyNumber(1D);
     }
 
     @NotNull
