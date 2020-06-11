@@ -182,7 +182,7 @@ The filters and thresholds per tier are as follows:
 
 Filter | definition | Known pathogenic fusions | Splice Site-Splice Site* | Splice Site-Canonical | Canonical-Canonical | Other
 ---|---|---|---|---|---|---
-min_fragment_support | total fragments supporting fusion | Known splice sites: 1; Other: 2  | 2 | 3 | 4 | 10
+min_fragment_support | total fragments supporting fusion | Splice Site-Splic Site or Splice Site-Canonical: 2; Other: 4  | 2 | 3 | 4 | 10
 min_af | min(AFUp, AFDown) | 0 | 0.005 | 0.005 | 0.005 | 0.05
 min_anchor | min(maxAnchorLengthUp, maxAnchorLengthDown) | 0 | 20 | 20 | 20 | 20 
 max_cohort_frequency** | count of observations in cohort | NA if known;  5 if either gene known | 2 | 2 | 2 | 2
