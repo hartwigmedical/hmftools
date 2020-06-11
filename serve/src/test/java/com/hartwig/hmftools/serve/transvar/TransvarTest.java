@@ -2,8 +2,6 @@ package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
@@ -16,17 +14,18 @@ import org.junit.Test;
 public class TransvarTest {
 
     @Test
-    public void noHotspotsWhenTransvarProcessReturnsEmpty() throws IOException, InterruptedException {
+    public void noHotspotsWhenTransvarProcessReturnsEmpty() {
         Transvar transvar = returnsNoTransvarRecord();
         assertTrue(transvar.extractHotspotsFromProteinAnnotation("BRAF", "ENST00000288602", "V600E").isEmpty());
     }
 
     @Test
-    public void noHotspotsWhenGeneIsUnknown() throws IOException, InterruptedException {
+    public void noHotspotsWhenGeneIsUnknown() {
         TransvarRecord record = ImmutableTransvarRecord.builder()
                 .chromosome("7")
                 .gdnaPosition(10)
                 .transcript("ENST00000288602")
+                .variantSpanMultipleExons(false)
                 .annotation(new TransvarAnnotation() {})
                 .build();
 
@@ -36,11 +35,12 @@ public class TransvarTest {
     }
 
     @Test
-    public void noHotspotsWhenRecordIsNotOnSpecificTranscript() throws IOException, InterruptedException {
+    public void noHotspotsWhenRecordIsNotOnSpecificTranscript() {
         TransvarRecord record = ImmutableTransvarRecord.builder()
                 .chromosome("7")
                 .gdnaPosition(10)
                 .transcript("ENST00000288602")
+                .variantSpanMultipleExons(false)
                 .annotation(new TransvarAnnotation() {})
                 .build();
 
