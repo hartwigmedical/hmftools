@@ -139,23 +139,19 @@ class TransvarInterpreter {
     private List<VariantHotspot> convertDeletionToHotspots(@NotNull TransvarRecord record, @NotNull TransvarDeletion deletion) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         if (!record.variantSpanMultipleExons()) {
-            if (deletion.unalignedGDNAPosition() <= record.gdnaPosition()) {
-                ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome());
-                for (long start = deletion.unalignedGDNAPosition(); start <= record.gdnaPosition(); start++) {
-                    long adjustedPosition = start - 1;
-                    String preMutatedSequence =
-                            refGenome.getSubsequenceAt(record.chromosome(), adjustedPosition, adjustedPosition).getBaseString();
-                    String deletedSequence = refGenome.getSubsequenceAt(record.chromosome(),
-                            adjustedPosition + 1,
-                            adjustedPosition + deletion.deletedBaseCount()).getBaseString();
+            ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome());
+            for (long start = deletion.leftAlignedGDNAPosition(); start <= record.gdnaPosition(); start++) {
+                long adjustedPosition = start - 1;
+                String preMutatedSequence =
+                        refGenome.getSubsequenceAt(record.chromosome(), adjustedPosition, adjustedPosition).getBaseString();
+                String deletedSequence = refGenome.getSubsequenceAt(record.chromosome(),
+                        adjustedPosition + 1,
+                        adjustedPosition + deletion.deletedBaseCount()).getBaseString();
 
-                    hotspots.add(hotspotBuilder.position(adjustedPosition)
-                            .ref(preMutatedSequence + deletedSequence)
-                            .alt(preMutatedSequence)
-                            .build());
-                }
-            } else {
-                LOGGER.warn("Unaligned GDNA > position. Unsure why! Record={}", record);
+                hotspots.add(hotspotBuilder.position(adjustedPosition)
+                        .ref(preMutatedSequence + deletedSequence)
+                        .alt(preMutatedSequence)
+                        .build());
             }
         } else {
             LOGGER.debug("Deletion spanning multiple exons. Ignoring {}", record);

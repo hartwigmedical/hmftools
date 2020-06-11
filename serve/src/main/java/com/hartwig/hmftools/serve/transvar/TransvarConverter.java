@@ -145,7 +145,7 @@ final class TransvarConverter {
             int deletedBaseCount = isInteger(deletedBases) ? Integer.parseInt(deletedBases) : deletedBases.length();
             return ImmutableTransvarDeletion.builder()
                     .deletedBaseCount(deletedBaseCount)
-                    .unalignedGDNAPosition(extractUnalignedGDNAPositionFromMessageField(messageField))
+                    .leftAlignedGDNAPosition(extractLeftAlignedGDNAPositionFromMessageField(messageField))
                     .build();
         }
     }
@@ -206,10 +206,10 @@ final class TransvarConverter {
         return recordBuilder.gdnaPosition(Long.parseLong(gdnaPos.toString())).annotation(snvAnnotation).build();
     }
 
-    private static long extractUnalignedGDNAPositionFromMessageField(@NotNull String messageField) {
+    private static long extractLeftAlignedGDNAPositionFromMessageField(@NotNull String messageField) {
         // Looks like g.139399409_139399411delCAC
-        String unalignedGDNA = extractValueFromMessageField(messageField, "unaligned_gDNA");
-        return Long.parseLong(unalignedGDNA.substring(2).split(HGVS_RANGE_INDICATOR)[0]);
+        String leftAlignedGDNA = extractValueFromMessageField(messageField, "left_align_gDNA");
+        return Long.parseLong(leftAlignedGDNA.substring(2).split(HGVS_RANGE_INDICATOR)[0]);
     }
 
     @NotNull

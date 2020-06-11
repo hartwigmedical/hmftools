@@ -110,7 +110,7 @@ public class TransvarConverterTest {
 
         TransvarDeletion deletion = (TransvarDeletion) record.annotation();
         assertEquals(3, deletion.deletedBaseCount());
-        assertEquals(139399409, deletion.unalignedGDNAPosition());
+        assertEquals(139399409, deletion.leftAlignedGDNAPosition());
 
         String longDeletionLine = "KIT:p.K558_E562del\tENST00000288135 (protein_coding)\tKIT\t+\t"
                 + "chr4:g.55593607_55593621del15/c.1673_1687del15/p.K558_E562delKVVEE\tinside_[cds_in_exon_11]\t"
@@ -127,7 +127,7 @@ public class TransvarConverterTest {
 
         TransvarDeletion deletion2 = (TransvarDeletion) record2.annotation();
         assertEquals(15, deletion2.deletedBaseCount());
-        assertEquals(55593606, deletion2.unalignedGDNAPosition());
+        assertEquals(55593605, deletion2.leftAlignedGDNAPosition());
 
         String deletionSpanningMultipleExons = "PDGFRA:p.E311_K312del\tENST00000257290 (protein_coding)\tPDGFRA\t+\t"
                 + "chr4:g.55133630_55133726del97/c.931+3_939del97/p.E311_K312delEK\tfrom_[cds_in_exon_6]_to_[cds_in_exon_7]\t"
@@ -144,7 +144,7 @@ public class TransvarConverterTest {
 
         TransvarDeletion deletion3 = (TransvarDeletion) record3.annotation();
         assertEquals(97, deletion3.deletedBaseCount());
-        assertEquals(55133627, deletion3.unalignedGDNAPosition());
+        assertEquals(55133627, deletion3.leftAlignedGDNAPosition());
     }
 
     @Test

@@ -44,8 +44,8 @@ public class TransvarTestApplication {
         // Below variant is annotated as p.DI842IM by SnpEff which is functionally identical to below.
 //        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "D842_I843delinsIM");
 
-        extractAndPrintHotspots(transvar, "BRAF", null, "L485_P490delinsY");
-        extractAndPrintHotspots(transvar, "BRAF", null, "L485_P490delinsV");
+        extractAndPrintHotspots(transvar, "NOTCH1", null, "P2411del");
+        extractAndPrintHotspots(transvar, "NOTCH1", null, "P2415del");
 
 
 
