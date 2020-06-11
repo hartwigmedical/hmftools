@@ -29,6 +29,7 @@ final class TransvarConverter {
 
     private static final int TRANSCRIPT_COLUMN = 1;
     private static final int COORDINATES_COLUMN = 4;
+    private static final int LOCATION_COLUMN = 5;
     private static final int MESSAGE_COLUMN = 6;
 
     private static final String MSG_NO_VALID_TRANSCRIPT_FOUND = "no_valid_transcript_found";
@@ -41,12 +42,12 @@ final class TransvarConverter {
     static TransvarRecord toTransvarRecord(@NotNull String transvarLine) {
         String[] fields = transvarLine.split(FIELD_DELIMITER);
 
-        String message = fields[MESSAGE_COLUMN];
-        if (message.contains(MSG_NO_VALID_TRANSCRIPT_FOUND) || message.trim().startsWith(MSG_ERROR_INDICATION_PREFIX)) {
+        String messageField = fields[MESSAGE_COLUMN];
+        if (messageField.contains(MSG_NO_VALID_TRANSCRIPT_FOUND) || messageField.trim().startsWith(MSG_ERROR_INDICATION_PREFIX)) {
             return null;
         }
 
-        TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], message);
+        TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], fields[LOCATION_COLUMN], messageField);
 
         // (Very) long insertions report a deleted count rather than a list of bases. We ignore these.
         if (record.annotation() instanceof TransvarInsertion && isInteger(((TransvarInsertion) record.annotation()).insertedBases())) {
@@ -63,7 +64,7 @@ final class TransvarConverter {
 
     @NotNull
     private static TransvarRecord createRecord(@NotNull String transcriptField, @NotNull String coordinateField,
-            @NotNull String messageField) {
+            @NotNull String locationField, @NotNull String messageField) {
         ImmutableTransvarRecord.Builder recordBuilder = ImmutableTransvarRecord.builder();
 
         // Field looks like "${transcript} (protein_coding)"
@@ -87,20 +88,20 @@ final class TransvarConverter {
 
             TransvarAnnotation annotation;
             if (gdna.contains(HGVS_INSERTION) || gdna.contains(HGVS_DELETION)) {
-                annotation = annotationForInsertionDeletion(position, gdnaParts[1], messageField);
+                annotation = annotationForInsertionDeletion(position, gdnaParts[1], locationField, messageField);
             } else {
                 annotation = annotationForDuplication(position, gdnaParts[1]);
             }
 
             return recordBuilder.annotation(annotation).build();
         } else {
-            return createForSNV(recordBuilder, gdna, messageField);
+            return createForSNV(recordBuilder, gdna, locationField, messageField);
         }
     }
 
     @NotNull
     private static TransvarAnnotation annotationForInsertionDeletion(long position, @NotNull String delInsPart,
-            @NotNull String messageField) {
+            @NotNull String locationField, @NotNull String messageField) {
         int delStart = delInsPart.indexOf(HGVS_DELETION);
         int insStart = delInsPart.indexOf(HGVS_INSERTION);
 
@@ -131,6 +132,7 @@ final class TransvarConverter {
                             .gdnaAlt(insertedBases)
                             .referenceCodon(extractReferenceCodonFromMessageField(messageField))
                             .candidateCodons(extractCandidateCodonsFromMessageField(messageField))
+                            .candidateCodonsSpanMultipleExons(candidateCodonsSpanMultipleExons(locationField))
                             .build();
                 }
             } else {
@@ -164,7 +166,7 @@ final class TransvarConverter {
 
     @NotNull
     private static TransvarRecord createForSNV(@NotNull ImmutableTransvarRecord.Builder recordBuilder, @NotNull String gdna,
-            @NotNull String messageField) {
+            @NotNull String locationField, @NotNull String messageField) {
         // SNVs look like 1234T>C
         StringBuilder gdnaPos = new StringBuilder();
         StringBuilder gdnaRef = new StringBuilder();
@@ -199,6 +201,7 @@ final class TransvarConverter {
                 .gdnaAlt(gdnaAlt.toString())
                 .referenceCodon(extractReferenceCodonFromMessageField(messageField))
                 .candidateCodons(extractCandidateCodonsFromMessageField(messageField))
+                .candidateCodonsSpanMultipleExons(candidateCodonsSpanMultipleExons(locationField))
                 .build();
 
         return recordBuilder.gdnaPosition(Long.parseLong(gdnaPos.toString())).annotation(snvAnnotation).build();
@@ -227,6 +230,10 @@ final class TransvarConverter {
         String fieldValue = extractOptionalValueFromMessageField(messageField, "candidate_alternative_sequence");
 
         return fieldValue != null ? Arrays.asList(fieldValue.split("/")) : Lists.newArrayList();
+    }
+
+    private static boolean candidateCodonsSpanMultipleExons(@NotNull String locationField) {
+        return locationField.contains("cds_in_exons");
     }
 
     @NotNull

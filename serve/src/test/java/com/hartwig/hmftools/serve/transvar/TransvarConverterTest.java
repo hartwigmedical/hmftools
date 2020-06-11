@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -37,6 +38,7 @@ public class TransvarConverterTest {
         assertEquals("GTC", snv.candidateCodons().get(1));
         assertEquals("GTG", snv.candidateCodons().get(2));
         assertEquals("GTT", snv.candidateCodons().get(3));
+        assertFalse(snv.candidateCodonsSpanMultipleExons());
     }
 
     @Test
@@ -61,6 +63,34 @@ public class TransvarConverterTest {
         assertEquals("GCC", mnv.candidateCodons().get(1));
         assertEquals("GCG", mnv.candidateCodons().get(2));
         assertEquals("GCT", mnv.candidateCodons().get(3));
+        assertFalse(mnv.candidateCodonsSpanMultipleExons());
+    }
+
+    @Test
+    public void canConvertSnvMnvSpanningMultipleExons() {
+        String line = "VHL:p.G114R\tENST00000256474 (protein_coding)\tVHL\t+\tchr3:g.10183871G>C/c.340G>C/p.G114R\t"
+                + "inside_[cds_in_exons_[1,2]]\tCSQN=Missense;reference_codon=GGT;candidate_codons=AGG,AGA,CGA,CGC,CGG,CGT;"
+                + "candidate_mnv_variants=chr3:g.10183871_10188199delGGTinsAGG,chr3:g.10183871_10188199delGGTinsAGA,"
+                + "chr3:g.10183871_10188199delGGTinsCGA,chr3:g.10183871_10188199delGGTinsCGC,chr3:g.10183871_10188199delGGTinsCGG;"
+                + "aliases=ENSP00000256474;source=Ensembl";
+
+        TransvarRecord record = TransvarConverter.toTransvarRecord(line);
+
+        assertEquals("ENST00000256474", record.transcript());
+        assertEquals("3", record.chromosome());
+        assertEquals(10183871, record.gdnaPosition());
+
+        TransvarSnvMnv mnv = (TransvarSnvMnv) record.annotation();
+        assertEquals("G", mnv.gdnaRef());
+        assertEquals("C", mnv.gdnaAlt());
+        assertEquals("GGT", mnv.referenceCodon());
+        assertEquals("AGG", mnv.candidateCodons().get(0));
+        assertEquals("AGA", mnv.candidateCodons().get(1));
+        assertEquals("CGA", mnv.candidateCodons().get(2));
+        assertEquals("CGC", mnv.candidateCodons().get(3));
+        assertEquals("CGG", mnv.candidateCodons().get(4));
+        assertEquals("CGT", mnv.candidateCodons().get(5));
+        assertTrue(mnv.candidateCodonsSpanMultipleExons());
     }
 
     @Test
@@ -81,11 +111,11 @@ public class TransvarConverterTest {
         assertEquals(3, deletion.deletedBaseCount());
         assertEquals(139399409, deletion.unalignedGDNAPosition());
 
-        String complexDeletionLine = "KIT:p.K558_E562del\tENST00000288135 (protein_coding)\tKIT\t+\t" +
-                "chr4:g.55593607_55593621del15/c.1673_1687del15/p.K558_E562delKVVEE\tinside_[cds_in_exon_11]\t" +
-                "CSQN=InFrameDeletion;left_align_gDNA=g.55593605_55593619del15;unaligned_gDNA=g.55593606_55593620del15;" +
-                "left_align_cDNA=c.1671_1685del15;unalign_cDNA=c.1672_1686del15;left_align_protein=p.K558_E562delKVVEE;" +
-                "unalign_protein=p.K558_E562delKVVEE;imprecise;aliases=ENSP00000288135;source=Ensembl";
+        String complexDeletionLine = "KIT:p.K558_E562del\tENST00000288135 (protein_coding)\tKIT\t+\t"
+                + "chr4:g.55593607_55593621del15/c.1673_1687del15/p.K558_E562delKVVEE\tinside_[cds_in_exon_11]\t"
+                + "CSQN=InFrameDeletion;left_align_gDNA=g.55593605_55593619del15;unaligned_gDNA=g.55593606_55593620del15;"
+                + "left_align_cDNA=c.1671_1685del15;unalign_cDNA=c.1672_1686del15;left_align_protein=p.K558_E562delKVVEE;"
+                + "unalign_protein=p.K558_E562delKVVEE;imprecise;aliases=ENSP00000288135;source=Ensembl";
 
         TransvarRecord record2 = TransvarConverter.toTransvarRecord(complexDeletionLine);
 
@@ -200,8 +230,8 @@ public class TransvarConverterTest {
 
     @Test
     public void weirdVariantsShouldNotLeadToDuplications() {
-        String line = "CARD11:p.L225LI\tENST00000396946 (protein_coding)\tCARD11\t-\tchr7:g.2983855_2983857/c.673_675/p.L225\t" +
-                "inside_[cds_in_exon_5]\tCSQN=Unclassified;aliases=ENSP00000380150;source=Ensembl";
+        String line = "CARD11:p.L225LI\tENST00000396946 (protein_coding)\tCARD11\t-\tchr7:g.2983855_2983857/c.673_675/p.L225\t"
+                + "inside_[cds_in_exon_5]\tCSQN=Unclassified;aliases=ENSP00000380150;source=Ensembl";
 
         assertNull(TransvarConverter.toTransvarRecord(line));
     }

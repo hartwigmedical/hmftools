@@ -30,6 +30,7 @@ public class TransvarInterpreterTest {
                         .gdnaAlt("C")
                         .referenceCodon("TTA")
                         .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
+                        .candidateCodonsSpanMultipleExons(false)
                         .build())
                 .build();
 
@@ -44,6 +45,25 @@ public class TransvarInterpreterTest {
     }
 
     @Test
+    public void canInterpretSnvSpanningMultipleExons() {
+        TransvarRecord record = baseRecord().gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("A")
+                        .gdnaAlt("C")
+                        .referenceCodon("TTA")
+                        .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
+                        .candidateCodonsSpanMultipleExons(true)
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
+
+        assertEquals(1, hotspots.size());
+
+        assertHotspot(baseHotspot().position(10).ref("A").alt("C").build(), hotspots.get(0));
+    }
+
+    @Test
     public void canConvertMnvForwardStrandToHotspots() {
         TransvarRecord record = baseRecord().gdnaPosition(10)
                 .annotation(ImmutableTransvarSnvMnv.builder()
@@ -51,6 +71,7 @@ public class TransvarInterpreterTest {
                         .gdnaAlt("GC")
                         .referenceCodon("TAC")
                         .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
+                        .candidateCodonsSpanMultipleExons(false)
                         .build())
                 .build();
 
@@ -72,6 +93,7 @@ public class TransvarInterpreterTest {
                         .gdnaAlt("GC")
                         .referenceCodon("TGG")
                         .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
+                        .candidateCodonsSpanMultipleExons(false)
                         .build())
                 .build();
 
