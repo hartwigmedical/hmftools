@@ -49,12 +49,12 @@ final class TransvarConverter {
 
         TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], fields[LOCATION_COLUMN], messageField);
 
-        // (Very) long insertions report a inserted count rather than a list of bases. We ignore these.
+        // (Very) long insertions report an inserted count rather than a list of bases. We ignore these.
         if (record.annotation() instanceof TransvarInsertion && isInteger(((TransvarInsertion) record.annotation()).insertedBases())) {
             return null;
         }
 
-        // Duplications are somewhat educated guesses, so need to be sure they refer to a dup at least once.
+        // Duplications are somewhat educated guesses, so need to be sure they refer to a dup at least once in the raw output.
         if (record.annotation() instanceof TransvarDuplication && !transvarLine.contains(HGVS_DUPLICATION)) {
             return null;
         }
@@ -106,12 +106,10 @@ final class TransvarConverter {
         int delStart = delInsPart.indexOf(HGVS_DELETION);
         int insStart = delInsPart.indexOf(HGVS_INSERTION);
 
-        if (delStart < 0 && insStart < 0) {
-            throw new IllegalStateException(
-                    "Cannot process range gDNA as no '" + HGVS_DELETION + "' or  '" + HGVS_INSERTION + "' found: " + delInsPart);
-        }
+        assert delStart >= 0 || insStart >= 0;
 
         if (insStart >= 0) {
+            // This should end in something like 'insG'
             String insertedBases = delInsPart.substring(insStart + HGVS_INSERTION.length());
 
             if (delStart >= 0) {
@@ -140,7 +138,7 @@ final class TransvarConverter {
                 return ImmutableTransvarInsertion.builder().insertedBases(insertedBases).build();
             }
         } else {
-            // This should look like '123delC'
+            // This should look like '123delC' or '123del97' in case of very long dels.
             String deletedBases = delInsPart.substring(delStart + HGVS_DELETION.length());
             int deletedBaseCount = isInteger(deletedBases) ? Integer.parseInt(deletedBases) : deletedBases.length();
             return ImmutableTransvarDeletion.builder()
@@ -155,7 +153,7 @@ final class TransvarConverter {
         int duplicatedBaseCount;
         if (dupPart.contains(HGVS_DUPLICATION)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(HGVS_DUPLICATION))) - position);
-        } else if (isInteger(dupPart)) {
+        } else if (isLong(dupPart)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart) - position);
         } else {
             throw new IllegalStateException("Cannot process duplication for gDNA: " + dupPart);
@@ -262,6 +260,14 @@ final class TransvarConverter {
         return null;
     }
 
+    private static boolean isLong(@NotNull String value) {
+        try {
+            Long.parseLong(value);
+            return true;
+        } catch (NumberFormatException exp) {
+            return false;
+        }
+    }
     private static boolean isInteger(@NotNull String value) {
         try {
             Integer.parseInt(value);

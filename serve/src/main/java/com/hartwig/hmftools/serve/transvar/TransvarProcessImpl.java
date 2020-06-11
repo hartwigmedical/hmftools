@@ -22,7 +22,7 @@ class TransvarProcessImpl implements TransvarProcess {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarProcessImpl.class);
 
-    // DUPs result in warnings in transvar but do lead to interpretable output so warn can be ignored.
+    // DUPs give rise to errors in transvar but do lead to interpretable output so error can be ignored.
     private static final Set<String> ERRORS_TO_IGNORE = Sets.newHashSet("warning: unknown alternative: DUP, ignore alternative");
 
     private static final int TRANSVAR_TIMEOUT_SEC = 90;
@@ -63,7 +63,7 @@ class TransvarProcessImpl implements TransvarProcess {
             String warning =
                     String.format("Timeout. '%s' took more than '%s %s' to execute", command, TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS);
             LOGGER.warn(warning);
-            // We still continue to wait for ever.
+            // We still continue to wait for ever. Assume transvar will eventually succeed.
             process.waitFor();
         }
 
