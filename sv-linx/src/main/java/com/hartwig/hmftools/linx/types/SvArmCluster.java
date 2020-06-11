@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.linx.types;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 
@@ -11,9 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 // clusters of proximate SVs on an arm
 public class SvArmCluster
@@ -29,8 +25,6 @@ public class SvArmCluster
 
     private int mType;
     private int mTICount;
-
-    private static final Logger LOGGER = LogManager.getLogger(SvArmCluster.class);
 
     public SvArmCluster(int id, final SvCluster cluster, final String chr, final ChromosomeArm arm)
     {
@@ -206,7 +200,7 @@ public class SvArmCluster
 
         if((foldbackCount % 2) == 2)
         {
-            LOGGER.warn("cluster({}) armGroup({}) has invalid foldback count({})", mCluster.id(), toString(), foldbackCount);
+            LNX_LOGGER.warn("cluster({}) armGroup({}) has invalid foldback count({})", mCluster.id(), toString(), foldbackCount);
         }
         else
         {
@@ -305,7 +299,7 @@ public class SvArmCluster
     {
         for(final SvArmCluster armCluster : cluster.getArmClusters())
         {
-            LOGGER.debug("cluster({}) armCluster({}) breakends({}) type({})",
+            LNX_LOGGER.debug("cluster({}) armCluster({}) breakends({}) type({})",
                     cluster.id(), armCluster.toString(), armCluster.getBreakends().size(), typeToString(armCluster.getType()));
         }
     }

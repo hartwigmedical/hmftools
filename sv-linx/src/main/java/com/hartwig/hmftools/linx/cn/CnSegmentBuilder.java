@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROME
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -29,16 +30,11 @@ import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class CnSegmentBuilder
 {
     // assume an A-allele which is unaffected by the SVs, and a B-allele which is
     private double mOtherAlleleJcn;
     private double mUndisruptedAlleleJcn; // the JCN of the undisrupted B-allele
-
-    private static final Logger LOGGER = LogManager.getLogger(CnSegmentBuilder.class);
 
     public CnSegmentBuilder()
     {
@@ -103,7 +99,7 @@ public class CnSegmentBuilder
 
                     if(currentCopyNumber < 0)
                     {
-                        LOGGER.error("invalid copy number({}) at telomere", currentCopyNumber);
+                        LNX_LOGGER.error("invalid copy number({}) at telomere", currentCopyNumber);
                         return;
                     }
 
@@ -142,7 +138,7 @@ public class CnSegmentBuilder
 
                 if(currentCopyNumber < 0)
                 {
-                    LOGGER.error("invalid copy number({}) at breakend({})", currentCopyNumber, breakend);
+                    LNX_LOGGER.error("invalid copy number({}) at breakend({})", currentCopyNumber, breakend);
                     return;
                 }
 

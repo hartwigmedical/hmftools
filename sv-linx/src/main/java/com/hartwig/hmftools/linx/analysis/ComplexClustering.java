@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_COMMON_ARMS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_SATELLITE_SGL;
@@ -34,9 +35,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class ComplexClustering
 {
     // references only
@@ -45,8 +43,6 @@ public class ComplexClustering
     private final SimpleClustering mSimpleClustering;
     private CnDataLoader mCopyNumberData;
     private String mSampleId;
-
-    private static final Logger LOGGER = LogManager.getLogger(ComplexClustering.class);
 
     public ComplexClustering(final ClusteringState state, final List<SvCluster> clusters, final SimpleClustering simpleClustering)
     {
@@ -139,7 +135,7 @@ public class ComplexClustering
 
             if(iterations > 20)
             {
-                LOGGER.warn("sample({}) reached {} iterations of clustering merging", mSampleId, iterations);
+                LNX_LOGGER.warn("sample({}) reached {} iterations of clustering merging", mSampleId, iterations);
                 break;
             }
         }
@@ -186,7 +182,7 @@ public class ComplexClustering
                             if(variantsHaveDifferentJcn(var1, var2))
                                 continue;
 
-                            LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
+                            LNX_LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
                                     cluster1.id(), var1.posId(), cluster2.id(), var2.posId());
 
                             mSimpleClustering.addClusterReasons(var1, var2, CR_FOLDBACKS);
@@ -229,7 +225,7 @@ public class ComplexClustering
                 if(variantsHaveDifferentJcn(var1, var2))
                     continue;
 
-                LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
+                LNX_LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
                         cluster1.id(), cluster2.id(), var1.posId(), var2.posId());
 
                 mSimpleClustering.addClusterReasons(var1, var2, CR_COMMON_ARMS);
@@ -361,7 +357,7 @@ public class ComplexClustering
                     if(!isFoldbackPair && otherBreakend.orientation() == lowerBreakend.orientation())
                         continue;
 
-                    LOGGER.debug("cluster({}) {} breakends({} & {}) overlap cluster({}) breakend({})",
+                    LNX_LOGGER.debug("cluster({}) {} breakends({} & {}) overlap cluster({}) breakend({})",
                             cluster.id(), isFoldbackPair ? "foldback" : "consecutive",
                             lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
 
@@ -469,7 +465,7 @@ public class ComplexClustering
 
                         if(copyNumbersEqual(boundaryBreakend.jcn(), nextBreakend.jcn()))
                         {
-                            LOGGER.debug("cluster({}) boundary breakend({}) ploidy TI match with cluster({}) breakend({})",
+                            LNX_LOGGER.debug("cluster({}) boundary breakend({}) ploidy TI match with cluster({}) breakend({})",
                                     cluster.id(), boundaryBreakend, otherCluster.id(), nextBreakend);
 
                             mSimpleClustering.addClusterReasons(boundaryBreakend.getSV(), nextBreakend.getSV(), CR_TI_JCN_MATCH);
@@ -570,7 +566,7 @@ public class ComplexClustering
                         if(variantsHaveDifferentJcn(var, otherSV))
                             continue;
 
-                        LOGGER.debug("cluster({}) has same chromosome({}) link with satellite cluster({}) SV({})",
+                        LNX_LOGGER.debug("cluster({}) has same chromosome({}) link with satellite cluster({}) SV({})",
                                 srCluster.id(), chromosome, sglCluster.id(), var.id());
 
                         mSimpleClustering.addClusterReasons(otherSV, var, CR_SATELLITE_SGL);

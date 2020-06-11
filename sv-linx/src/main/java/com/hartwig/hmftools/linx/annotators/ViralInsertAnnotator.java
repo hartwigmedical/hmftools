@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.annotators;
 
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,15 +10,11 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class ViralInsertAnnotator
 {
     final private Map<String, String> mVirualHosts;
-
-    private static final Logger LOGGER = LogManager.getLogger(ViralInsertAnnotator.class);
 
     public ViralInsertAnnotator()
     {
@@ -40,7 +38,7 @@ public class ViralInsertAnnotator
 
                 if(items.length < 2)
                 {
-                    LOGGER.debug("invalid data, entry {}", mVirualHosts.size());
+                    LNX_LOGGER.debug("invalid data, entry {}", mVirualHosts.size());
                     break;
                 }
 
@@ -50,11 +48,11 @@ public class ViralInsertAnnotator
                 mVirualHosts.put(vhId, vhName);
             }
 
-            LOGGER.debug("loaded {} viral host data", mVirualHosts.size());
+            LNX_LOGGER.debug("loaded {} viral host data", mVirualHosts.size());
         }
         catch(IOException exception)
         {
-            LOGGER.error("failed to read viral host CSV file({})", filename);
+            LNX_LOGGER.error("failed to read viral host CSV file({})", filename);
         }
     }
 

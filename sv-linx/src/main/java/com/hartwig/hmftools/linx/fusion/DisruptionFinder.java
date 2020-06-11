@@ -6,6 +6,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -39,8 +40,6 @@ import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class DisruptionFinder
 {
@@ -54,8 +53,6 @@ public class DisruptionFinder
     private final String mOutputDir;
 
     public static final int MAX_NON_DISRUPTED_CHAIN_LENGTH = 5000;
-
-    private static final Logger LOGGER = LogManager.getLogger(DisruptionFinder.class);
 
     public DisruptionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache, final String outputDir)
     {
@@ -208,7 +205,7 @@ public class DisruptionFinder
                 {
                     if(markNonDisruptiveTranscripts(transList, otherTransList, "IntronicSection"))
                     {
-                        LOGGER.debug("pair({}) length({}) fully intronic)", pair, pair.length());
+                        LNX_LOGGER.debug("pair({}) length({}) fully intronic)", pair, pair.length());
                         removeNonDisruptedTranscripts(transList);
                     }
                 }
@@ -335,7 +332,7 @@ public class DisruptionFinder
                     {
                         removeNonDisruptedTranscripts(transList);
 
-                        LOGGER.debug("breakends({} & {}) return to same intron, chain({}) links({}) length({})",
+                        LNX_LOGGER.debug("breakends({} & {}) return to same intron, chain({}) links({}) length({})",
                                 breakend, nextBreakend, chain.id(), abs(index - startIndex), chainLength);
 
                         if (transList.isEmpty())
@@ -431,7 +428,7 @@ public class DisruptionFinder
         if(!transcript.isCanonical() || !matchesDisruptionGene(transcript.gene()))
             return;
 
-        LOGGER.debug("excluding gene({}) svId({}) reason({})", transcript.geneName(), transcript.gene().id(), context);
+        LNX_LOGGER.debug("excluding gene({}) svId({}) reason({})", transcript.geneName(), transcript.gene().id(), context);
 
         mRemovedDisruptions.put(transcript, context);
     }
@@ -484,7 +481,7 @@ public class DisruptionFinder
                                     continue;
                             }
 
-                            LOGGER.trace("pair({}) direction({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
+                            LNX_LOGGER.trace("pair({}) direction({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
                                     pair.toString(), fusionDirection, geneData.GeneName, transData.TransName,
                                     exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
 
@@ -526,7 +523,7 @@ public class DisruptionFinder
 
                     for(Transcript transcript : reportableDisruptions)
                     {
-                        LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
+                        LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
                                 var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId,
                                 formatJcn(transcript.undisruptedCopyNumber()));
 
@@ -582,7 +579,7 @@ public class DisruptionFinder
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write sample disruptions file: {}", e.toString());
+            LNX_LOGGER.error("failed to write sample disruptions file: {}", e.toString());
         }
     }
 
@@ -604,7 +601,7 @@ public class DisruptionFinder
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing disruptions: {}", e.toString());
+            LNX_LOGGER.error("error writing disruptions: {}", e.toString());
         }
     }
 
@@ -671,7 +668,7 @@ public class DisruptionFinder
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing fusions: {}", e.toString());
+            LNX_LOGGER.error("error writing fusions: {}", e.toString());
         }
     }
 

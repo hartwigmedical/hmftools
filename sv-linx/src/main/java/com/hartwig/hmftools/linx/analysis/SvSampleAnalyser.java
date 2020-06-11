@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
@@ -85,8 +86,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class SvSampleAnalyser {
@@ -118,8 +117,6 @@ public class SvSampleAnalyser {
     private final PerformanceCounter mPcClusterAnalyse;
     private final PerformanceCounter mPcAnnotation;
     private final PerformanceCounter mPcWrite;
-
-    private static final Logger LOGGER = LogManager.getLogger(SvSampleAnalyser.class);
 
     public SvSampleAnalyser(final LinxConfig config, DatabaseAccess dbAccess)
     {
@@ -218,7 +215,7 @@ public class SvSampleAnalyser {
                     mCnDataLoader.getChrCnDataMap());
         }
 
-        LOGGER.debug("loaded {} SVs", mAllVariants.size());
+        LNX_LOGGER.debug("loaded {} SVs", mAllVariants.size());
     }
 
     public static void setSvCopyNumberData(List<SvVarData> svList, final Map<Integer, JcnCalcData> svJcnCalcDataMap,
@@ -330,7 +327,7 @@ public class SvSampleAnalyser {
         if(mAllVariants.isEmpty())
             return;
 
-        LOGGER.debug("sample({}) analysing {} variants", mSampleId, mAllVariants.size());
+        LNX_LOGGER.debug("sample({}) analysing {} variants", mSampleId, mAllVariants.size());
 
         mPcPrep.start();
 
@@ -410,7 +407,7 @@ public class SvSampleAnalyser {
 
             } catch (IOException e)
             {
-                LOGGER.error("failed to write sample SV data: {}", e.toString());
+                LNX_LOGGER.error("failed to write sample SV data: {}", e.toString());
             }
         }
 
@@ -443,7 +440,7 @@ public class SvSampleAnalyser {
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to write sample SV data: {}", e.toString());
+            LNX_LOGGER.error("failed to write sample SV data: {}", e.toString());
         }
     }
 
@@ -562,7 +559,7 @@ public class SvSampleAnalyser {
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to open and write output file headers");
+            LNX_LOGGER.error("failed to open and write output file headers");
         }
     }
 
@@ -578,7 +575,7 @@ public class SvSampleAnalyser {
 
                 if(cluster == null)
                 {
-                    LOGGER.error("SV({}) not assigned to any cluster", var.posId());
+                    LNX_LOGGER.error("SV({}) not assigned to any cluster", var.posId());
                     continue;
                 }
 
@@ -747,7 +744,7 @@ public class SvSampleAnalyser {
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing to outputFile: {}", e.toString());
         }
     }
 
@@ -780,7 +777,7 @@ public class SvSampleAnalyser {
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
         }
     }
 
@@ -883,7 +880,7 @@ public class SvSampleAnalyser {
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
         }
     }
 
@@ -907,7 +904,7 @@ public class SvSampleAnalyser {
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing links to outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing links to outputFile: {}", e.toString());
         }
     }
 
@@ -1010,7 +1007,7 @@ public class SvSampleAnalyser {
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing links to outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing links to outputFile: {}", e.toString());
         }
     }
 
@@ -1033,7 +1030,7 @@ public class SvSampleAnalyser {
 
     public void close()
     {
-        if(mConfig.hasMultipleSamples() || LOGGER.isDebugEnabled())
+        if(mConfig.hasMultipleSamples() || LNX_LOGGER.isDebugEnabled())
         {
             // log perf stats
             mPcPrep.logStats();

@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -17,9 +18,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class KataegisAnnotator
 {
     private Map<String,Map<String,List<KataegisData>>> mSampleChrData;
@@ -27,8 +25,6 @@ public class KataegisAnnotator
     private BufferedWriter mFileWriter;
 
     private static int PROXIMITY_THRESHOLD = 100000;
-
-    private static final Logger LOGGER = LogManager.getLogger(KataegisAnnotator.class);
 
     public KataegisAnnotator(final String outputDir)
     {
@@ -148,7 +144,7 @@ public class KataegisAnnotator
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing kataegis output file: {}", e.toString());
+            LNX_LOGGER.error("error writing kataegis output file: {}", e.toString());
         }
     }
 
@@ -217,11 +213,11 @@ public class KataegisAnnotator
                 ++recordCount;
             }
 
-            LOGGER.debug("loaded {} kataegis data records, samples({})", recordCount, mSampleChrData.size());
+            LNX_LOGGER.debug("loaded {} kataegis data records, samples({})", recordCount, mSampleChrData.size());
         }
         catch(IOException exception)
         {
-            LOGGER.error("Failed to read kataegis CSV file({})", filename);
+            LNX_LOGGER.error("Failed to read kataegis CSV file({})", filename);
         }
     }
 

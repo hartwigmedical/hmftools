@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
@@ -33,9 +34,6 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class CnDataLoader
 {
     private final String mPurpleDataPath;
@@ -56,8 +54,6 @@ public class CnDataLoader
 
     public static final double MIN_LOH_CN = 0.5;
     public static final double TOTAL_CN_LOSS = 0.5;
-
-    private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 
     public CnDataLoader(final String purpleDataPath, DatabaseAccess dbAccess)
     {
@@ -129,14 +125,14 @@ public class CnDataLoader
             }
             catch(IOException e)
             {
-                LOGGER.error("failed to load purity context: {}", e.toString());
+                LNX_LOGGER.error("failed to load purity context: {}", e.toString());
                 return;
             }
         }
         else
         {
             mCnRecords = mDbAccess.readCopynumbers(sampleId);
-            LOGGER.debug("sample({}) retrieved {} CN entries", sampleId, mCnRecords.size());
+            LNX_LOGGER.debug("sample({}) retrieved {} CN entries", sampleId, mCnRecords.size());
             mPurityContext = mDbAccess.readPurityContext(sampleId);
         }
 
@@ -204,7 +200,7 @@ public class CnDataLoader
                         else
                         {
                             // allow matches if the position if correct
-                            LOGGER.trace("SV({} chr={} pos={} type={}) matches {} CN segment: id({})",
+                            LNX_LOGGER.trace("SV({} chr={} pos={} type={}) matches {} CN segment: id({})",
                                     svData.id(), svChromosome, svPosition, svData.type(), cnData.SegStart, cnData.id());
                         }
                     }
@@ -233,7 +229,7 @@ public class CnDataLoader
 
                 if(!cnDataFound && svData.type() != INS)
                 {
-                    LOGGER.debug("SV({} chr={} pos={} type={}) {} unmatched)",
+                    LNX_LOGGER.debug("SV({} chr={} pos={} type={}) {} unmatched)",
                             svData.id(), svChromosome, svPosition, svData.type(), isStart ? "start" : "end");
 
                     ++unmatchedSVs;
@@ -243,7 +239,7 @@ public class CnDataLoader
 
         if(unmatchedSVs > 0)
         {
-            LOGGER.warn("sample({}) has {} unmatched CN-SV segments", sampleId, unmatchedSVs);
+            LNX_LOGGER.warn("sample({}) has {} unmatched CN-SV segments", sampleId, unmatchedSVs);
         }
     }
 
@@ -326,7 +322,7 @@ public class CnDataLoader
                             svData != null ? svData.id() : CN_DATA_NO_SV,
                             nextSvData != null ? nextSvData.id() : CN_DATA_NO_SV);
 
-                    LOGGER.trace("chromosome({}) HOM-loss at positions({} -> {}) segments({} - {})",
+                    LNX_LOGGER.trace("chromosome({}) HOM-loss at positions({} -> {}) segments({} - {})",
                             chromosome, homLoss.PosStart, homLoss.PosEnd, homLoss.SegStart, homLoss.SegEnd);
 
                     mHomLossData.add(homLoss);
@@ -344,7 +340,7 @@ public class CnDataLoader
                     {
                         lohRegained = false;
 
-                        LOGGER.debug("skipping LOH end segment({}) with no SV match", cnData);
+                        LNX_LOGGER.debug("skipping LOH end segment({}) with no SV match", cnData);
                     }
 
                     if (lohRegained || reset)
@@ -358,7 +354,7 @@ public class CnDataLoader
                             if (nextData.EndPos - cnData.StartPos > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
                             && lohStartCnData != null && cnData.StartPos - lohStartCnData.StartPos > REMOTE_SV_DISTANCE)
                             {
-                                LOGGER.trace("chr({}) skipping short isolated TI seg({}) length({})",
+                                LNX_LOGGER.trace("chr({}) skipping short isolated TI seg({}) length({})",
                                         chromosome, cnData, cnData.EndPos - cnData.StartPos);
                                 continue;
                             }
@@ -394,7 +390,7 @@ public class CnDataLoader
                         if (cnData.matchesSegment(SegmentSupport.DEL, true) && cnData.matchesSegment(SegmentSupport.DEL, false)
                                 && isSingleVariant(cnData))
                         {
-                            LOGGER.trace("total CN loss matches single SV({} : {} -> {})", chromosome, cnData.StartPos, cnData.EndPos);
+                            LNX_LOGGER.trace("total CN loss matches single SV({} : {} -> {})", chromosome, cnData.StartPos, cnData.EndPos);
                         }
                         else
                         {
@@ -434,11 +430,11 @@ public class CnDataLoader
 
                         if (lohOnStartTelomere)
                         {
-                            LOGGER.trace("chr({}) LOH at telemore", chromosome);
+                            LNX_LOGGER.trace("chr({}) LOH at telemore", chromosome);
                         }
                         else
                         {
-                            LOGGER.trace(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
+                            LNX_LOGGER.trace(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
                                     chromosome, cnData.StartPos, cnData.CopyNumber, cnData.ActualBaf, lohMinCN, priorCN));
 
                             // check for segments ending on telomere
@@ -471,7 +467,7 @@ public class CnDataLoader
             }
         }
 
-        LOGGER.debug("sample({}) LOH sections({}) fullMatched({})",
+        LNX_LOGGER.debug("sample({}) LOH sections({}) fullMatched({})",
                 sampleId, lohSectionCount, lohSVsMatchedCount);
     }
 
@@ -538,7 +534,7 @@ public class CnDataLoader
 
                 if(cnDataItems != null && cnDataItems[SE_START].getIndex() == cnDataItems[SE_END].getIndex() - 1)
                 {
-                    LOGGER.debug("segs start({}) and end({}) skipped since bounded by simpleSV({})",
+                    LNX_LOGGER.debug("segs start({}) and end({}) skipped since bounded by simpleSV({})",
                             startData, endData, startSvData.id());
                     return 1;
                 }
@@ -551,30 +547,30 @@ public class CnDataLoader
 
                 if(cnDataItems != null && cnDataItems != null && cnDataItems[SE_START].getIndex() == cnDataItems[SE_END].getIndex() - 1)
                 {
-                    LOGGER.debug("segs start({}) and end({}) skipped since bounded by simpleSV({})",
+                    LNX_LOGGER.debug("segs start({}) and end({}) skipped since bounded by simpleSV({})",
                             startData, endData, endSvData.id());
                     return 1;
                 }
             }
         }
 
-        if(LOGGER.isDebugEnabled())
+        if(LNX_LOGGER.isDebugEnabled())
         {
             if (lohLength <= 0)
             {
-                LOGGER.warn("negative length({})", lohLength);
+                LNX_LOGGER.warn("negative length({})", lohLength);
             }
 
             if (startSvData != null && endSvData != null)
             {
                 if (startSvData.id() == endSvData.id())
                 {
-                    LOGGER.trace("segs start({}) and end({}) matches singleSV({} - {})",
+                    LNX_LOGGER.trace("segs start({}) and end({}) matches singleSV({} - {})",
                             startData, endData, startSvData.id(), startSvData.type());
                 }
                 else
                 {
-                    LOGGER.trace("segs start({}) and end({}) matches pairSV({} -> {})",
+                    LNX_LOGGER.trace("segs start({}) and end({}) matches pairSV({} -> {})",
                             startData, endData, startSvData.id(), endSvData.id());
                 }
             }
@@ -586,18 +582,18 @@ public class CnDataLoader
                     {
                         boolean incorrectOrientation = (startData.getStructuralVariantData() != null);
 
-                        LOGGER.debug("LOH start seg({}) no SV match: orient({})", startData, incorrectOrientation ? "wrong" : "ok");
+                        LNX_LOGGER.debug("LOH start seg({}) no SV match: orient({})", startData, incorrectOrientation ? "wrong" : "ok");
                     }
 
                     if (!incomplete && endSvData == null && endData.matchesSV(true))
                     {
                         boolean incorrectOrientation = (endData.getStructuralVariantData() != null);
 
-                        LOGGER.debug("LOH end segment({}) no SV match: orient({})", endData, incorrectOrientation ? "wrong" : "ok");
+                        LNX_LOGGER.debug("LOH end segment({}) no SV match: orient({})", endData, incorrectOrientation ? "wrong" : "ok");
                     }
                 }
 
-                LOGGER.debug("segs start({}) and end({}) not fully matched pairSV({} -> {})",
+                LNX_LOGGER.debug("segs start({}) and end({}) not fully matched pairSV({} -> {})",
                         startData, endData, startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
             }
         }

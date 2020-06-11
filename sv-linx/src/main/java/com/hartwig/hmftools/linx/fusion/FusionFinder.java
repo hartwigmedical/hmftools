@@ -63,8 +63,6 @@ public class FusionFinder
 
     private static boolean mLogInvalidReasons;
 
-    private static final int EXON_THRESHOLD = 1;
-
     public FusionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache)
     {
         mGeneTransCache = geneTransCache;

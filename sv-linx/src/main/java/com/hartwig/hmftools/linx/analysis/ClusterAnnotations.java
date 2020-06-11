@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -40,15 +41,11 @@ import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 // post-clustering and chaining routines for annotating clusters, chains and links
 
 public class ClusterAnnotations
 {
-    private static final Logger LOGGER = LogManager.getLogger(ClusterAnnotations.class);
-
     public static final String ALL_ANNOTATIONS = "ALL";
     public static final String DOUBLE_MINUTES = "DM";
     public static final String FOLDBACK_MATCHES = "FBM";
@@ -255,7 +252,7 @@ public class ClusterAnnotations
         }
         else if(lowerIndex < 0 || upperIndex >= breakendList.size())
         {
-            LOGGER.error("invalid indices({} & {}) vs breakend list size({})", lowerIndex, upperIndex, breakendList.size());
+            LNX_LOGGER.error("invalid indices({} & {}) vs breakend list size({})", lowerIndex, upperIndex, breakendList.size());
             return "";
         }
 
@@ -496,7 +493,7 @@ public class ClusterAnnotations
                         }
                     }
 
-                    LOGGER.info("sampleId({}) cluster({} count={}) proxCount({}) with cluster({} count={}) prob({}) chromosomes({}) lossRelated({})",
+                    LNX_LOGGER.info("sampleId({}) cluster({} count={}) proxCount({}) with cluster({} count={}) prob({}) chromosomes({}) lossRelated({})",
                             sampleId, cluster.id(), cluster.getSvCount(), matchCount, otherCluster.id(), otherCluster.getSvCount(),
                             String.format("%.6f exp=%.2f span=%.1fM", poissonProb, expectedHits, genomicSpan/1e6),
                             overlappingChrStr, lossRelated);
@@ -630,7 +627,7 @@ public class ClusterAnnotations
             boolean isComplex = cluster.requiresReplication() || !cluster.getFoldbacks().isEmpty();
             boolean isComplete = (inconsistentChains == 0) && (consistentArmCount == originArms.size());
 
-            LOGGER.debug("cluster({}) {} chains({} incons={}) arms({} frag={} origin={} consis={}) tiCount(short={} long={})",
+            LNX_LOGGER.debug("cluster({}) {} chains({} incons={}) arms({} frag={} origin={} consis={}) tiCount(short={} long={})",
                     cluster.id(), isComplete ? "COMPLETE" : "incomplete", chainCount, inconsistentChains,
                     cluster.getArmGroups().size(), fragmentArms.size(), originArms.size(), consistentArmCount,
                     shortTiCount, longTiCount);
@@ -716,7 +713,7 @@ public class ClusterAnnotations
             {
                 cluster.addAnnotation(CLUSTER_ANNOT_REP_REPAIR);
 
-                LOGGER.debug("cluster({} desc={} type={}) chain({} cn={}) rep-repair: links({} internal={} withGain={} overlaps={}) length(chain={} gain={} perc={})",
+                LNX_LOGGER.debug("cluster({} desc={} type={}) chain({} cn={}) rep-repair: links({} internal={} withGain={} overlaps={}) length(chain={} gain={} perc={})",
                         cluster.id(), cluster.getDesc(), cluster.getResolvedType(), chain.id(), formatJcn(chainEndsCN),
                         chain.getLinkCount(), chainMetrics.InternalTIs, chainMetrics.InternalTICnGain, chainMetrics.OverlappingTIs,
                         chainRange, internalGainLength, String.format("%.2f", gainPercent));

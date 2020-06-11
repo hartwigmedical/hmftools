@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
@@ -12,14 +11,13 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.classifyPairClusters;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterPairType;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterReciprocalType;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterTemplatedInsertionType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
@@ -46,9 +44,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class SvClassification
 {
     // super category for an SV or cluster
@@ -60,9 +55,6 @@ public class SvClassification
     public static final String SUPER_TYPE_DOUBLE_MINUTE = "DOUBLE_MINUTE";
     public static final String SUPER_TYPE_INCOMPLETE = "INCOMPLETE";
     public static final String SUPER_TYPE_ARTIFACT = "ARTIFACT";
-
-    private static final Logger LOGGER = LogManager.getLogger(SvClassification.class);
-
 
     public static String getSuperType(SvCluster cluster)
     {
@@ -378,7 +370,7 @@ public class SvClassification
         if (resolvedType == NONE)
             return;
 
-        LOGGER.debug("cluster({}) chain(links=({} len={} tiLen({}) marked as {}",
+        LNX_LOGGER.debug("cluster({}) chain(links=({} len={} tiLen({}) marked as {}",
                 cluster.id(), chain.getLinkCount(), totalChainLength, longestTILength, resolvedType);
 
         cluster.setResolved(false, resolvedType);

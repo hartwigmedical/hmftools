@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
@@ -29,15 +30,10 @@ import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class ClusteringPrep
 {
     private static int DEL_DUP_LENGTH_TRIM_COUNT = 5;
     private static int MAX_ARM_COUNT = 41; // excluding the 5 short arms
-
-    private static final Logger LOGGER = LogManager.getLogger(ClusteringPrep.class);
 
     public static void populateChromosomeBreakendMap(final List<SvVarData> allVariants, final ClusteringState state)
     {
@@ -128,7 +124,7 @@ public class ClusteringPrep
                     dupLengthsList.add(var.length());
             }
 
-            // LOGGER.debug("sample({}) chr({}) svCount({} delDups({})", sampleId, chromosome, breakendList.size(), armCount);
+            // LNX_LOGGER.debug("sample({}) chr({}) svCount({} delDups({})", sampleId, chromosome, breakendList.size(), armCount);
         }
 
         int trimCount = (int)round(simpleArmCount / (double)MAX_ARM_COUNT * DEL_DUP_LENGTH_TRIM_COUNT);
@@ -150,7 +146,7 @@ public class ClusteringPrep
         delCutoffLength = min(max(delCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
         dupCutoffLength = min(max(dupCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
 
-        LOGGER.debug("simple dels count({}) cutoff-length({}), dups count({}) cutoff-length({}) simpleArms({}) trimCount({})",
+        LNX_LOGGER.debug("simple dels count({}) cutoff-length({}), dups count({}) cutoff-length({}) simpleArms({}) trimCount({})",
                 delLengthsList.size(), delCutoffLength, dupLengthsList.size(), dupCutoffLength, simpleArmCount, trimCount);
 
         state.setCutoffLengths(delCutoffLength, dupCutoffLength);
@@ -320,7 +316,7 @@ public class ClusteringPrep
         if(missedEvents > 0)
         {
             // a common cause for these are filtered breakends (eg low VAF or inferred pairs)
-            LOGGER.debug("sample({}) missed {} links to LOH and hom-loss events", sampleId, missedEvents);
+            LNX_LOGGER.debug("sample({}) missed {} links to LOH and hom-loss events", sampleId, missedEvents);
         }
     }
 

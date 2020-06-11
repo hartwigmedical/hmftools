@@ -7,6 +7,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 
 import java.util.HashMap;
@@ -20,9 +21,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class ChainJcnLimits
 {
     private Map<String, List<SegmentJcn>> mChrAlleleJCNs;
@@ -34,8 +32,6 @@ public class ChainJcnLimits
 
     // JCN level below which a chain segment cannot cross
     public static final double CLUSTER_ALLELE_JCN_MIN = 0.15;
-
-    private static final Logger LOGGER = LogManager.getLogger(ChainJcnLimits.class);
 
     public ChainJcnLimits()
     {
@@ -135,7 +131,7 @@ public class ChainJcnLimits
             calculateClusterSegmentPloidies(allelePloidies);
         }
 
-        LOGGER.debug("cluster({}) chromosomes({}) AP totalSegments({} valid={})",
+        LNX_LOGGER.debug("cluster({}) chromosomes({}) AP totalSegments({} valid={})",
                 mClusterId, mChrBreakendMap.size(), totalSegCount, totalValidSegCount);
     }
 

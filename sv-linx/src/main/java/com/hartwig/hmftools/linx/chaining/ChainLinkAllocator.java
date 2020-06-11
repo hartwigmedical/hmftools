@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.MIN_CHAINING_JCN_LEVEL;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.UNCERTAINTY_SCALE_FACTOR;
@@ -28,9 +29,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class ChainLinkAllocator
 {
     private int mClusterId;
@@ -52,8 +50,6 @@ public class ChainLinkAllocator
     private final List<SvChain> mChains;
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
     private final List<SvVarData> mDoubleMinuteSVs;
-
-    private static final Logger LOGGER = LogManager.getLogger(ChainLinkAllocator.class);
 
     public ChainLinkAllocator(
             final ChainJcnLimits jcnLimits,
@@ -129,7 +125,7 @@ public class ChainLinkAllocator
             if(belowJcnThreshold(var))
             {
                 // for now skip these
-                LOGGER.debug("cluster({}) skipping SV({}) with low JCN({} min={} max={})",
+                LNX_LOGGER.debug("cluster({}) skipping SV({}) with low JCN({} min={} max={})",
                         mClusterId, var.id(), formatJcn(var.jcn()), formatJcn(var.jcnMin()), formatJcn(var.jcnMax()));
                 continue;
             }
@@ -154,7 +150,7 @@ public class ChainLinkAllocator
 
                 if(!proposedLink.isValid())
                 {
-                    LOGGER.debug("cluster({}) skipping assembled link({}) with low JCN", mClusterId, proposedLink);
+                    LNX_LOGGER.debug("cluster({}) skipping assembled link({}) with low JCN", mClusterId, proposedLink);
                     continue;
                 }
 
@@ -193,7 +189,7 @@ public class ChainLinkAllocator
 
             if(firstJcn == 0 || secondJcn == 0)
             {
-                LOGGER.debug("cluster({}) skipping assembled pair({}) with low ploidy({} & {})",
+                LNX_LOGGER.debug("cluster({}) skipping assembled pair({}) with low ploidy({} & {})",
                         mClusterId, pair, formatJcn(firstJcn), formatJcn(secondJcn));
 
                 assemblyLinks.remove(index);
@@ -246,7 +242,7 @@ public class ChainLinkAllocator
 
                 if(firstJcn == 0 || secondJcn == 0)
                 {
-                    LOGGER.debug("cluster({}) pair({}) assembly links already exhausted: first({}) second({})",
+                    LNX_LOGGER.debug("cluster({}) pair({}) assembly links already exhausted: first({}) second({})",
                             mClusterId, pair.toString(), formatJcn(firstJcn), formatJcn(secondJcn));
                     assemblyLinks.remove(index);
                     continue;
@@ -265,7 +261,7 @@ public class ChainLinkAllocator
                     proposedLink.overrideBreakendJcnMatched(secondBreakend, false);
                 }
 
-                LOGGER.debug("assembly multi-sgl-conn pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
+                LNX_LOGGER.debug("assembly multi-sgl-conn pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
                         pair.toString(), formatJcn(proposedLink.jcn()),
                         formatJcn(proposedLink.breakendJcn(firstBreakend)), firstBreakend.getSV().getMaxAssembledBreakend(),
                         formatJcn(proposedLink.breakendJcn(secondBreakend)), secondBreakend.getSV().getMaxAssembledBreakend());
@@ -298,7 +294,7 @@ public class ChainLinkAllocator
 
             if(firstRemainingLinks == 0 || secondRemainingLinks == 0)
             {
-                LOGGER.error("cluster({}) pair({}) unexpected remaining assembly link count: first({}) second({})",
+                LNX_LOGGER.error("cluster({}) pair({}) unexpected remaining assembly link count: first({}) second({})",
                         mClusterId, pair.toString(), firstRemainingLinks, secondRemainingLinks);
                 break;
             }
@@ -308,7 +304,7 @@ public class ChainLinkAllocator
 
             if(firstJcn == 0 || secondJcn == 0)
             {
-                LOGGER.debug("cluster({}) pair({}) assembly links already exhausted: first({}) second({})",
+                LNX_LOGGER.debug("cluster({}) pair({}) assembly links already exhausted: first({}) second({})",
                         mClusterId, pair.toString(), formatJcn(firstJcn), formatJcn(secondJcn));
                 bothMultiPairs.remove(index);
                 continue;
@@ -335,7 +331,7 @@ public class ChainLinkAllocator
 
                 if(iterations > bothMultiPairs.size() * 3)
                 {
-                    LOGGER.debug("cluster({}) assembly multi-connection breakends missed", mClusterId);
+                    LNX_LOGGER.debug("cluster({}) assembly multi-connection breakends missed", mClusterId);
                     break;
                 }
 
@@ -352,7 +348,7 @@ public class ChainLinkAllocator
                 proposedLink.overrideBreakendJcnMatched(secondBreakend, false);
             }
 
-            LOGGER.debug("assembly multi-conn pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
+            LNX_LOGGER.debug("assembly multi-conn pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
                     pair.toString(), formatJcn(proposedLink.jcn()),
                     formatJcn(firstJcn), firstBreakend.getSV().getMaxAssembledBreakend(),
                     formatJcn(secondJcn), secondBreakend.getSV().getMaxAssembledBreakend());
@@ -364,7 +360,7 @@ public class ChainLinkAllocator
 
         if(!mChains.isEmpty())
         {
-            LOGGER.debug("created {} partial chains from {} assembly links", mChains.size(), assembledLinks.size());
+            LNX_LOGGER.debug("created {} partial chains from {} assembly links", mChains.size(), assembledLinks.size());
         }
     }
 
@@ -384,7 +380,7 @@ public class ChainLinkAllocator
 
             if (!proposedLinks.isValid())
             {
-                LOGGER.error("cluster({}) skipping invalid proposed links: {}", mClusterId, proposedLinks.toString());
+                LNX_LOGGER.error("cluster({}) skipping invalid proposed links: {}", mClusterId, proposedLinks.toString());
                 continue;
             }
 
@@ -496,7 +492,7 @@ public class ChainLinkAllocator
                     {
                         if(!allowChainSplits)
                         {
-                            LOGGER.trace("skipping linked pair({}) with 2 required chains({} & {}) with diff ploidies",
+                            LNX_LOGGER.trace("skipping linked pair({}) with 2 required chains({} & {}) with diff ploidies",
                                     newPair.toString(), requiredChains[SE_START].id(), requiredChains[SE_END].id());
                             addSkippedPair(newPair, JCN_MISMATCH);
                             return false;
@@ -509,7 +505,7 @@ public class ChainLinkAllocator
 
                     if (requiredChains[SE_START] == requiredChains[SE_END])
                     {
-                        LOGGER.trace("skipping linked pair({}) would close existing chain({})",
+                        LNX_LOGGER.trace("skipping linked pair({}) would close existing chain({})",
                                 newPair.toString(), requiredChains[SE_START].id());
                         addSkippedPair(newPair, CLOSING);
                         return false;
@@ -548,7 +544,7 @@ public class ChainLinkAllocator
                 {
                     if(!allowChainSplits)
                     {
-                        LOGGER.trace("skipping targetChain({} ploidy={}) for proposedLink({}) on ploidy mismatch",
+                        LNX_LOGGER.trace("skipping targetChain({} ploidy={}) for proposedLink({}) on ploidy mismatch",
                                 targetChain.id(), formatJcn(targetChain.jcn()), proposedLinks);
 
                         addSkippedPair(newPair, JCN_MISMATCH);
@@ -566,7 +562,7 @@ public class ChainLinkAllocator
                     newSvJcn = targetChain.jcn();
                 }
 
-                LOGGER.trace("pair({}) links {} breakend to chain({}) as only possible connection",
+                LNX_LOGGER.trace("pair({}) links {} breakend to chain({}) as only possible connection",
                         newPair, pairLinkedOnFirst ? "first" : "second", targetChain.id());
 
                 if(matchesChainJcn)
@@ -623,7 +619,7 @@ public class ChainLinkAllocator
 
                     if (couldCloseChain)
                     {
-                        LOGGER.trace("skipping linked pair({}) would close existing chain({})", newPair.toString(), chain.id());
+                        LNX_LOGGER.trace("skipping linked pair({}) would close existing chain({})", newPair.toString(), chain.id());
                         addSkippedPair(newPair, CLOSING);
                         return false;
                     }
@@ -661,7 +657,7 @@ public class ChainLinkAllocator
             // for now don't allow chains to be split, so prevent a mismatch if the chain has a higher ploidy
             if(!allowChainSplits && targetChain != null && !matchesChainJcn && targetChain.jcn() > proposedLinks.jcn())
             {
-                LOGGER.debug("skipping targetChain({} ploidy={}) for proposedLink({}) on ploidy mismatch",
+                LNX_LOGGER.debug("skipping targetChain({} ploidy={}) for proposedLink({}) on ploidy mismatch",
                         targetChain.id(), formatJcn(targetChain.jcn()), proposedLinks);
 
                 targetChain = null;
@@ -727,12 +723,12 @@ public class ChainLinkAllocator
                 targetChain.setJcnData(newSvJcn * 2, targetChain.jcnUncertainty());
             }
 
-            LOGGER.debug("new chain({}) ploidy({}) from chain({}) ploidy({}) from new SV ploidy({})",
+            LNX_LOGGER.debug("new chain({}) ploidy({}) from chain({}) ploidy({}) from new SV ploidy({})",
                     newChain.id(), formatJcn(newChain.jcn()),
                     targetChain.id(), formatJcn(targetChain.jcn()), formatJcn(newSvJcn));
         }
 
-        LOGGER.debug("duplicating chain({} links={} sv={}) for multi-connect {}",
+        LNX_LOGGER.debug("duplicating chain({} links={} sv={}) for multi-connect {}",
                 targetChain.id(), targetChain.getLinkCount(), targetChain.getSvCount(), proposedLinks.getSplittingRule());
 
         if (proposedLinks.getSplittingRule() == FOLDBACK_SPLIT)
@@ -761,7 +757,7 @@ public class ChainLinkAllocator
 
         for (SvLinkedPair pair : proposedLinks.Links)
         {
-            LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} unc={}) match({})",
+            LNX_LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} unc={}) match({})",
                     mLinkIndex, proposedLinks.topRule(), pair.toString(), formatJcn(proposedLinks.jcn()), targetChain.id(),
                     formatJcn(targetChain.jcn()), formatJcn(targetChain.jcnUncertainty()), proposedLinks.jcnMatchType());
         }
@@ -788,7 +784,7 @@ public class ChainLinkAllocator
             newChain.setJcnData(targetChain.jcn() - newSvJcn, targetChain.jcnUncertainty());
             targetChain.setJcnData(newSvJcn, targetChain.jcnUncertainty());
 
-            LOGGER.debug("new chain({}) ploidy({}) from chain({}) ploidy({}) from new SV ploidy({})",
+            LNX_LOGGER.debug("new chain({}) ploidy({}) from chain({}) ploidy({}) from new SV ploidy({})",
                     newChain.id(), formatJcn(newChain.jcn()),
                     targetChain.id(), formatJcn(targetChain.jcn()), formatJcn(newSvJcn));
         }
@@ -820,7 +816,7 @@ public class ChainLinkAllocator
 
         targetChain.addLink(proposedLinks.Links.get(0), addToStart);
 
-        LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} unc={}) match({})",
+        LNX_LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} unc={}) match({})",
                 mLinkIndex, proposedLinks.topRule(), newPair.toString(), formatJcn(proposedLinks.jcn()), targetChain.id(),
                 formatJcn(targetChain.jcn()), formatJcn(targetChain.jcnUncertainty()), proposedLinks.jcnMatchType());
     }
@@ -880,7 +876,7 @@ public class ChainLinkAllocator
                 newChain.setJcnData(ploidyData.JcnEstimate, ploidyData.JcnUncertainty);
             }
 
-            LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to new chain({}) ploidy({} unc={}) match({})",
+            LNX_LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to new chain({}) ploidy({} unc={}) match({})",
                     mLinkIndex, proposedLinks.topRule(), pair.toString(), formatJcn(proposedLinks.jcn()), newChain.id(),
                     formatJcn(newChain.jcn()), formatJcn(newChain.jcnUncertainty()), proposedLinks.jcnMatchType());
         }
@@ -915,7 +911,7 @@ public class ChainLinkAllocator
 
                 if (otherPairBreakend == null || breakend == null)
                 {
-                    LOGGER.error("cluster({}) invalid breakend in proposed link: {}", mClusterId, proposedLink.toString());
+                    LNX_LOGGER.error("cluster({}) invalid breakend in proposed link: {}", mClusterId, proposedLink.toString());
                     mIsValid = false;
                     return;
                 }
@@ -924,7 +920,7 @@ public class ChainLinkAllocator
 
                 if (svConn == null || svConn.breakendExhaustedVsMax(beIsStart))
                 {
-                    LOGGER.error("breakend({}) breakend already exhausted: {} with proposedLink({})",
+                    LNX_LOGGER.error("breakend({}) breakend already exhausted: {} with proposedLink({})",
                             breakend.toString(), svConn != null ? svConn.toString() : "null", proposedLink.toString());
                     mIsValid = false;
                     return;
@@ -959,7 +955,7 @@ public class ChainLinkAllocator
 
                 if (breakendExhausted)
                 {
-                    LOGGER.trace("{} breakend exhausted: {}", beIsStart? "start" : "end", svConn.toString());
+                    LNX_LOGGER.trace("{} breakend exhausted: {}", beIsStart? "start" : "end", svConn.toString());
                     exhaustedBreakends.add(breakend);
                 }
 
@@ -1100,7 +1096,7 @@ public class ChainLinkAllocator
     {
         if (svConn.breakendExhausted(true) && (svConn.SV.isSglBreakend() || svConn.breakendExhausted(false)))
         {
-            LOGGER.trace("SV({}) both breakends exhausted", svConn.toString());
+            LNX_LOGGER.trace("SV({}) both breakends exhausted", svConn.toString());
             mSvConnectionsMap.remove(svConn.SV);
             mSvCompletedConnections.add(svConn);
         }

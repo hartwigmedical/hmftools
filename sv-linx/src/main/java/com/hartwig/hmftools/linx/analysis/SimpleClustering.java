@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
@@ -45,9 +46,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class SimpleClustering
 {
     private ClusteringState mState;
@@ -56,8 +54,6 @@ public class SimpleClustering
 
     private int mClusteringIndex;
     private BufferedWriter mClusterHistoryWriter;
-
-    private static final Logger LOGGER = LogManager.getLogger(SimpleClustering.class);
 
     public SimpleClustering(ClusteringState state, final LinxConfig config)
     {
@@ -240,7 +236,7 @@ public class SimpleClustering
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to open and write output file headers");
+            LNX_LOGGER.error("failed to open and write output file headers");
         }
 
         ++mClusteringIndex;
@@ -288,14 +284,14 @@ public class SimpleClustering
             if(iterations >= 10)
             {
                 if(foundMerges)
-                    LOGGER.warn("sample({}) exiting simple merge loop after {} iterations with merge just found", mSampleId, iterations);
+                    LNX_LOGGER.warn("sample({}) exiting simple merge loop after {} iterations with merge just found", mSampleId, iterations);
                 break;
             }
         }
 
         if(clusters.size() < initClusterCount)
         {
-            LOGGER.debug("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
+            LNX_LOGGER.debug("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
         }
     }
 
@@ -333,7 +329,7 @@ public class SimpleClustering
                 if(variantsHaveDifferentJcn(lohBeStart, lohBeEnd))
                     continue;
 
-                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event({})",
+                LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event({})",
                         lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(), lohEvent);
 
                 addClusterReasons(lohSvStart, lohSvEnd, CR_LOH);
@@ -376,7 +372,7 @@ public class SimpleClustering
                     if(variantsHaveDifferentJcn(homLossBeStart, homLossBeEnd))
                         continue;
 
-                    LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on hom-loss({}: {} -> {}) inside LOH event({} -> {})",
+                    LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on hom-loss({}: {} -> {}) inside LOH event({} -> {})",
                             cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount(),
                             homLoss.Chromosome, homLoss.PosStart, homLoss.PosEnd, lohEvent.PosStart, lohEvent.PosEnd);
 
@@ -438,7 +434,7 @@ public class SimpleClustering
 
                 lohEvent.setIsValid(true);
 
-                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on no unclustered hom-loss events",
+                LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on no unclustered hom-loss events",
                         cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount());
 
                 addClusterReasons(lohBeStart.getSV(), lohBeEnd.getSV(), CR_HOM_LOSS);
@@ -515,7 +511,7 @@ public class SimpleClustering
                 if(variantsHaveDifferentJcn(breakend1, breakend2))
                     continue;
 
-                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on unclustered LOH and hom-loss breakends",
+                LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on unclustered LOH and hom-loss breakends",
                         cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount());
 
                 addClusterReasons(breakend1.getSV(), breakend2.getSV(), CR_HOM_LOSS);
@@ -594,7 +590,7 @@ public class SimpleClustering
             if(iterations >= 5)
             {
                 if(foundMerges)
-                    LOGGER.warn("sample({}) exiting simple merge loop after {} iterations with merge just found", mSampleId, iterations);
+                    LNX_LOGGER.warn("sample({}) exiting simple merge loop after {} iterations with merge just found", mSampleId, iterations);
                 break;
             }
         }
@@ -611,7 +607,7 @@ public class SimpleClustering
         if(longDDIClusters.size() <= 1)
             return false;
 
-        LOGGER.debug("checking long {}} overlaps for {} clusters",
+        LNX_LOGGER.debug("checking long {}} overlaps for {} clusters",
                 !allowDelDupOverlaps ? "DEL_DUP-requiring-INV" : "multiple DDI overlaps", longDDIClusters.size());
 
         List<SvCluster> mergedClusters = Lists.newArrayList();
@@ -674,7 +670,7 @@ public class SimpleClustering
                         // check for conflicting LOH / hom-loss events
                         if(variantsViolateLohHomLoss(var1, var2))
                         {
-                            LOGGER.trace("cluster({}) SV({}) and cluster({}) var({}) have conflicting LOH & hom-loss events",
+                            LNX_LOGGER.trace("cluster({}) SV({}) and cluster({}) var({}) have conflicting LOH & hom-loss events",
                                     cluster1.id(), var1.id(), cluster2.id(), var2.id());
                             continue;
                         }
@@ -705,14 +701,14 @@ public class SimpleClustering
                         {
                             if(closeLink && pairContainsInv)
                             {
-                                LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have INV-DEL-DUP overlap",
+                                LNX_LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have INV-DEL-DUP overlap",
                                         cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
 
                                 mergeReason = CR_LONG_INV;
                             }
                             else
                             {
-                                LOGGER.debug("cluster({}) and cluster({}) have {} DEL-DUP overlaps and {} close pairs",
+                                LNX_LOGGER.debug("cluster({}) and cluster({}) have {} DEL-DUP overlaps and {} close pairs",
                                         cluster1.id(), cluster2.id(), delDupOverlapCount, closeLinkPairs);
 
                                 mergeReason = CR_LONG_DEL_DUP;
@@ -1001,7 +997,7 @@ public class SimpleClustering
 
                                 SvCluster otherCluster = opposingBreakend.getCluster();
 
-                                LOGGER.debug("cluster({}) breakend({} netJCN={}) merges cluster({}) breakend({} ploidy={}) prior to MAP drop({})",
+                                LNX_LOGGER.debug("cluster({}) breakend({} netJCN={}) merges cluster({}) breakend({} ploidy={}) prior to MAP drop({})",
                                         cluster.id(), breakend, formatJcn(breakendJcn), otherCluster.id(), opposingBreakend.toString(),
                                         formatJcn(opposingBreakend.jcn()), formatJcn(followingMajorAP));
 
@@ -1115,7 +1111,7 @@ public class SimpleClustering
                             if(resolvingCluster == null)
                                 break;
 
-                            LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
+                            LNX_LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
                                     lohCluster.id(), lohBreakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString());
 
                             addClusterReasons(lohBreakend.getSV(), resolvingBreakend.getSV(), CR_LOH_CHAIN);
@@ -1180,7 +1176,7 @@ public class SimpleClustering
                 SvVarData var = breakend.getSV();
                 if(var.getCluster() == null)
                 {
-                    LOGGER.error("var({}) not clustered", var.posId());
+                    LNX_LOGGER.error("var({}) not clustered", var.posId());
                     return false;
                 }
             }
@@ -1196,7 +1192,7 @@ public class SimpleClustering
             {
                 if(var.getCluster() != cluster1)
                 {
-                    LOGGER.error("var({}) in cluster({}) has incorrect ref", var.posId(), cluster1.id());
+                    LNX_LOGGER.error("var({}) in cluster({}) has incorrect ref", var.posId(), cluster1.id());
                     return false;
                 }
             }
@@ -1209,7 +1205,7 @@ public class SimpleClustering
                 {
                     if(cluster2.getSVs().contains(var))
                     {
-                        LOGGER.error("var({}) in 2 clusters({} and {})", var.posId(), cluster1.id(), cluster2.id());
+                        LNX_LOGGER.error("var({}) in 2 clusters({} and {})", var.posId(), cluster1.id(), cluster2.id());
                         return false;
                     }
                 }
@@ -1230,7 +1226,7 @@ public class SimpleClustering
 
                 if(cluster1 == cluster2 || cluster1.id() == cluster2.id())
                 {
-                    LOGGER.error("cluster({}) exists twice in list", cluster1.id());
+                    LNX_LOGGER.error("cluster({}) exists twice in list", cluster1.id());
                     return false;
                 }
             }

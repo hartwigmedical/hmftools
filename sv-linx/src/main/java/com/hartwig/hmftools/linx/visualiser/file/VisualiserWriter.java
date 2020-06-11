@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.visualiser.file;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
@@ -32,9 +33,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class VisualiserWriter
 {
     // references only
@@ -59,8 +57,6 @@ public class VisualiserWriter
     public final static String GENE_TYPE_FUSION = "FUSION";
     public final static String GENE_TYPE_PSEUDOGENE = "PSEUDO";
     public final static String GENE_TYPE_EXON_LOST = "EXON_LOST";
-
-    private static final Logger LOGGER = LogManager.getLogger(VisualiserWriter.class);
 
     public VisualiserWriter(final String outputDir, boolean enabled, boolean isBatchOutput)
     {
@@ -111,7 +107,7 @@ public class VisualiserWriter
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to open and write output file headers");
+            LNX_LOGGER.error("failed to open and write output file headers");
         }
     }
 
@@ -211,7 +207,7 @@ public class VisualiserWriter
         }
         catch(IOException e)
         {
-            LOGGER.error("filed to write VIS copy number output");
+            LNX_LOGGER.error("filed to write VIS copy number output");
         }
     }
 
@@ -347,7 +343,7 @@ public class VisualiserWriter
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to visualiser segments file: {}", e.toString());
+            LNX_LOGGER.error("error writing to visualiser segments file: {}", e.toString());
         }
     }
 
@@ -488,7 +484,7 @@ public class VisualiserWriter
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to visualiser gene-exons file: {}", e.toString());
+            LNX_LOGGER.error("error writing to visualiser gene-exons file: {}", e.toString());
         }
     }
 
@@ -524,7 +520,7 @@ public class VisualiserWriter
         }
         catch(IOException e)
         {
-            LOGGER.error("filed to write VIS copy number output");
+            LNX_LOGGER.error("filed to write VIS copy number output");
         }
     }
 
@@ -547,7 +543,7 @@ public class VisualiserWriter
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to write fusions vis file: {}", e.toString());
+            LNX_LOGGER.error("failed to write fusions vis file: {}", e.toString());
         }
 
     }

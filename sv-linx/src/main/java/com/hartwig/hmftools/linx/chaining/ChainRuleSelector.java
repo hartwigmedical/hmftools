@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
@@ -41,9 +42,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class ChainRuleSelector
 {
     private ChainLinkAllocator mLinkAllocator;
@@ -64,8 +62,6 @@ public class ChainRuleSelector
     private final List<SvLinkedPair> mAdjacentMatchingPairs;
     private final List<SvLinkedPair> mAdjacentPairs;
     private final List<SvChain> mChains;
-
-    private static final Logger LOGGER = LogManager.getLogger(ChainRuleSelector.class);
 
     public ChainRuleSelector(
             final ChainLinkAllocator linkAllocator,
@@ -205,7 +201,7 @@ public class ChainRuleSelector
 
                         if(possiblePairs == null)
                         {
-                            LOGGER.error("breakend({}) has no possible pairs, from proposedLink: {}",
+                            LNX_LOGGER.error("breakend({}) has no possible pairs, from proposedLink: {}",
                                     pair.getBreakend(isStart(se)), proposedLink);
                             continue;
                         }
@@ -230,7 +226,7 @@ public class ChainRuleSelector
         {
             if(entry.getValue().isEmpty())
             {
-                LOGGER.warn("breakend({}) has no possibles left, should be purged", entry.getKey().toString());
+                LNX_LOGGER.warn("breakend({}) has no possibles left, should be purged", entry.getKey().toString());
                 continue;
             }
 
@@ -393,7 +389,7 @@ public class ChainRuleSelector
 
                 if(minUnlinkedPloidy == 0 || chainHasSimpleFoldback)
                 {
-                    LOGGER.debug("foldback pair({}) removed from consideration: minUnlinkedPloidy({}) chainHasSimpleFoldback({})",
+                    LNX_LOGGER.debug("foldback pair({}) removed from consideration: minUnlinkedPloidy({}) chainHasSimpleFoldback({})",
                             fbPair, formatJcn(minUnlinkedPloidy), chainHasSimpleFoldback);
                     mFoldbackBreakendPairs.remove(index);
                     continue;
@@ -452,7 +448,7 @@ public class ChainRuleSelector
 
             if(!alreadyExists)
             {
-                LOGGER.debug("chain({}) adding chained foldback breakends({})", chain.id(), fbPair);
+                LNX_LOGGER.debug("chain({}) adding chained foldback breakends({})", chain.id(), fbPair);
                 addByPloidy(mFoldbackBreakendPairs, fbPair);
             }
             else
@@ -584,7 +580,7 @@ public class ChainRuleSelector
                             foldbackStart, foldbackEnd, foldbackPloidy,
                             otherBreakend, nonFbPloidy, nonFbVar.jcnUncertainty());
 
-                    LOGGER.trace("type-A: foldback breakends({} & {}) ploidy({}) exact split of breakend({}) ploidy({})",
+                    LNX_LOGGER.trace("type-A: foldback breakends({} & {}) ploidy({}) exact split of breakend({}) ploidy({})",
                             foldbackStart, foldbackEnd, formatJcn(foldbackPloidy), otherBreakend, formatJcn(nonFbPloidy));
 
                     newProposedLinks.add(proposedLink);
@@ -619,7 +615,7 @@ public class ChainRuleSelector
                     ProposedLinks proposedLink = new ProposedLinks(SvLinkedPair.from(fbBreakend, otherBreakend), FOLDBACK);
                     proposedLink.addBreakendPloidies(fbBreakend, foldbackPloidy, otherBreakend, nonFbPloidy);
 
-                    LOGGER.trace("type-B: foldback({}) ploidy({}) matched with {}({}) ploidy({})",
+                    LNX_LOGGER.trace("type-B: foldback({}) ploidy({}) matched with {}({}) ploidy({})",
                             fbBreakend, formatJcn(foldbackPloidy), otherFbPair != null ? "foldback breakend" : "breakend",
                             otherBreakend, formatJcn(nonFbPloidy));
 
@@ -656,7 +652,7 @@ public class ChainRuleSelector
 
                     newProposedLinks.add(proposedLink);
 
-                    LOGGER.trace("type-C: foldback breakends({} & {}) ploidy({}) non-exact split of foldback breakend({}) ploidy({})",
+                    LNX_LOGGER.trace("type-C: foldback breakends({} & {}) ploidy({}) non-exact split of foldback breakend({}) ploidy({})",
                             foldbackStart, foldbackEnd, formatJcn(foldbackPloidy), otherBreakend, formatJcn(nonFbPloidy));
 
                     continue;
@@ -681,7 +677,7 @@ public class ChainRuleSelector
 
                     newProposedLinks.add(proposedLink);
 
-                    LOGGER.trace("type-D: foldback breakend({}) ploidy({}) split by other foldback pair({})",
+                    LNX_LOGGER.trace("type-D: foldback breakend({}) ploidy({}) split by other foldback pair({})",
                             foldbackStart, formatJcn(foldbackPloidy), otherFbPair);
 
                     continue;
@@ -810,7 +806,7 @@ public class ChainRuleSelector
 
                 newProposedLinks.add(proposedLink);
 
-                LOGGER.trace("comDup({}) ploidy({}) matched with single SV breakends({} & {}) ploidy({})",
+                LNX_LOGGER.trace("comDup({}) ploidy({}) matched with single SV breakends({} & {}) ploidy({})",
                         compDup.id(), formatJcn(compDupPloidy), otherBreakend1,
                         otherBreakend2, formatJcn(otherSvConn.Jcn));
             }
@@ -842,7 +838,7 @@ public class ChainRuleSelector
 
                         newProposedLinks.add(proposedLink);
 
-                        LOGGER.trace("comDup({}) ploidy({}) matched with chain breakends({} & {}) ploidy({})",
+                        LNX_LOGGER.trace("comDup({}) ploidy({}) matched with chain breakends({} & {}) ploidy({})",
                                 compDup.id(), formatJcn(compDupPloidy),
                                 chainBeStart.toString(), chainBeEnd.toString(), formatJcn(chain.jcn()));
 
@@ -940,7 +936,7 @@ public class ChainRuleSelector
                         continue;
                     }
 
-                    // LOGGER.trace("pair({}) with {} ploidy({} & {})",
+                    // LNX_LOGGER.trace("pair({}) with {} ploidy({} & {})",
                     //        pair.toString(), ploidyMatch, formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy));
 
                     if(bestProposedLink != null && bestProposedLink.topRule() == JCN_OVERLAP && ploidyMatch != PM_MATCHED)
@@ -1148,7 +1144,7 @@ public class ChainRuleSelector
 
                     currentMaxPloidy = max(minPairPloidy, currentMaxPloidy);
 
-                    LOGGER.trace("pair({}) with max ploidy({} & {})",
+                    LNX_LOGGER.trace("pair({}) with max ploidy({} & {})",
                             pair.toString(), formatJcn(breakendPloidy), formatJcn(otherBreakendPloidy));
 
                     ProposedLinks proposedLink = new ProposedLinks(pair, JCN_MAX);
@@ -1259,14 +1255,14 @@ public class ChainRuleSelector
                 ++index;
             }
 
-            LOGGER.trace("adding shortest proposed link: {} index({})", proposedLink.toString(), index);
+            LNX_LOGGER.trace("adding shortest proposed link: {} index({})", proposedLink.toString(), index);
 
             shortestLinks.add(index, proposedLink);
         }
 
         if(shortestLinks.size() > 1)
         {
-            LOGGER.trace("found {} shortest non-clashing proposed links", shortestLinks.size());
+            LNX_LOGGER.trace("found {} shortest non-clashing proposed links", shortestLinks.size());
         }
 
         return shortestLinks;

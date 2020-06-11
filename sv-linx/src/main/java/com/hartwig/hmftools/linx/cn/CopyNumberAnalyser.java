@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.cn;
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
@@ -14,13 +13,13 @@ import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
 import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomeLength;
@@ -46,14 +45,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberAnalyser
 {
-
     private boolean mWriteLohEvents;
     private boolean mWriteJcnCalcs;
     private boolean mWriteChrArmData;
@@ -76,8 +72,6 @@ public class CopyNumberAnalyser
     private static final String WRITE_JCN_TO_FILE = "write_jcn_data";
     private static final String WRITE_CHR_ARM_DATA = "write_chr_arm_data";
     private static final String WRITE_CN_SEGMENT_DATA = "write_cn_segment_data";
-
-    private static final Logger LOGGER = LogManager.getLogger(CopyNumberAnalyser.class);
 
     public CopyNumberAnalyser(final String outputPath, DatabaseAccess dbAccess)
     {
@@ -143,7 +137,7 @@ public class CopyNumberAnalyser
                 continue;
             }
 
-            LOGGER.info("analysing sample({}), totalProcessed({})", sampleId, sampleCount);
+            LNX_LOGGER.info("analysing sample({}), totalProcessed({})", sampleId, sampleCount);
 
             mCnDataLoader.loadSampleData(sampleId, svRecords);
 
@@ -189,7 +183,7 @@ public class CopyNumberAnalyser
             double samplePloidy = mCnDataLoader.getPurityContext().bestFit().ploidy();
             boolean isMale = mCnDataLoader.getPurityContext().gender().toString().startsWith("MALE");
 
-            LOGGER.debug("sample({}) ploidy({})", sampleId, formatPloidy(samplePloidy));
+            LNX_LOGGER.debug("sample({}) ploidy({})", sampleId, formatPloidy(samplePloidy));
 
             for(HumanChromosome chrEntry : HumanChromosome.values())
             {
@@ -303,7 +297,7 @@ public class CopyNumberAnalyser
                             if (avgCopyNumber > samplePloidy && !copyNumbersEqual(avgCopyNumber, samplePloidy))
                                 ++elevatedCnWindows;
 
-                            LOGGER.debug("segment({}) windowStart({}) avgCN({}) elevatedWindows({})",
+                            LNX_LOGGER.debug("segment({}) windowStart({}) avgCN({}) elevatedWindows({})",
                                     cnData.toString(), lastWindowStart, formatPloidy(avgCopyNumber), elevatedCnWindows);
 
                             //if(cnData.EndPos <= segmentEndPos)
@@ -325,7 +319,7 @@ public class CopyNumberAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to copy number segments outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing to copy number segments outputFile: {}", e.toString());
         }
     }
 
@@ -386,7 +380,7 @@ public class CopyNumberAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to copy number chr-arm outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing to copy number chr-arm outputFile: {}", e.toString());
         }
     }
 
@@ -576,7 +570,7 @@ public class CopyNumberAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to copy number LOH outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing to copy number LOH outputFile: {}", e.toString());
         }
     }
 
@@ -620,7 +614,7 @@ public class CopyNumberAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to ploidy recalc outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing to ploidy recalc outputFile: {}", e.toString());
         }
     }
 
@@ -655,7 +649,7 @@ public class CopyNumberAnalyser
         cnAnalyser.runAnalysis();
         cnAnalyser.close();
 
-        LOGGER.info("CN analysis complete");
+        LNX_LOGGER.info("CN analysis complete");
     }
 
 

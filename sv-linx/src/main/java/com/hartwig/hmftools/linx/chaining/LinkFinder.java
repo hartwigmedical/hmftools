@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -23,14 +24,9 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class LinkFinder
 {
     private boolean mLogVerbose;
-
-    private static final Logger LOGGER = LogManager.getLogger(LinkFinder.class);
 
     public LinkFinder()
     {
@@ -125,7 +121,7 @@ public class LinkFinder
                     linkedPairs.add(newPair);
 
                     // to avoid logging unlikely long TIs
-                    LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",
+                    LNX_LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",
                             cluster.id(), newPair.linkType(), newPair.toString(), newPair.length());
                 }
             }
@@ -183,7 +179,7 @@ public class LinkFinder
 
                     if(otherLinks.stream().anyMatch(x -> x.hasBreakend(otherBreakend1)))
                     {
-                        LOGGER.debug("cluster({}) breakends({} & {} type={}) both assemble to breakend({}), removing outer link({})",
+                        LNX_LOGGER.debug("cluster({}) breakends({} & {} type={}) both assemble to breakend({}), removing outer link({})",
                                 cluster.id(), breakend, otherBreakend, otherSv.type(), otherBreakend1, otherPair);
 
                         spanningLinks.add(otherPair);
@@ -436,7 +432,7 @@ public class LinkFinder
                         if(mLogVerbose) //  && !var1.isReplicatedSv() && !var2.isReplicatedSv()
                         {
                             // to avoid logging unlikely long TIs
-                            LOGGER.debug("cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
+                            LNX_LOGGER.debug("cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
                                     cluster.id(), newPair.linkType(), newPair.toString(), newPair.length(), index);
                         }
                     }
@@ -450,7 +446,7 @@ public class LinkFinder
         if(linkedPairs.isEmpty())
             return linkedPairs;
 
-        LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.id(), linkedPairs.size());
+        LNX_LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.id(), linkedPairs.size());
 
         return linkedPairs;
     }

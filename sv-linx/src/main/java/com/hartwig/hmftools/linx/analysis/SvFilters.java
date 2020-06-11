@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.hasPolyAorTMotif;
-import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
@@ -30,9 +29,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class SvFilters
 {
     private Map<SvVarData,ResolvedType> mExcludedSVs; // SV and exclusion reason eg duplicate breakends
@@ -40,8 +36,6 @@ public class SvFilters
     private Map<SvBreakend,SvBreakend> mNonSglDuplicateBreakends;
 
     private final ClusteringState mState;
-
-    private static final Logger LOGGER = LogManager.getLogger(SvFilters.class);
 
     public SvFilters(final ClusteringState state)
     {
@@ -100,7 +94,7 @@ public class SvFilters
 
                 if((var.type() == BND || var.type() == SGL) && isIsolatedLowVafBnd(var))
                 {
-                    LOGGER.trace("SV({}) filtered low VAF isolated BND or SGL", var.id());
+                    LNX_LOGGER.trace("SV({}) filtered low VAF isolated BND or SGL", var.id());
                     removalList.add(breakend);
 
                     if(var.type() == BND)
@@ -118,7 +112,7 @@ public class SvFilters
 
                 if(var.type() == INV && nextVar == var && isLowVafInversion(breakend, nextBreakend))
                 {
-                    LOGGER.trace("SV({}) filtered low VAF / CN change INV", var.id());
+                    LNX_LOGGER.trace("SV({}) filtered low VAF / CN change INV", var.id());
                     removalList.add(breakend);
                     removalList.add(nextBreakend);
                     mExcludedSVs.put(var, LOW_VAF);
@@ -128,7 +122,7 @@ public class SvFilters
                 if(var.type() == INF && nextVar.type() == INF && breakend.orientation() != nextBreakend.orientation()
                 && ChainJcnLimits.jcnMatch(var, nextVar) && !mExcludedSVs.containsKey(var) && !mExcludedSVs.containsKey(nextVar))
                 {
-                    LOGGER.trace("SV({} & {}) filtered pair of ploidy-match INFs", var.id(), nextVar.id());
+                    LNX_LOGGER.trace("SV({} & {}) filtered pair of ploidy-match INFs", var.id(), nextVar.id());
                     removalList.add(breakend);
                     removalList.add(nextBreakend);
                     mExcludedSVs.put(var, PAIR_INF);
@@ -154,7 +148,7 @@ public class SvFilters
 
                 if(distance <= PERMITED_SGL_DUP_BE_DISTANCE && (var.type() == SGL || nextVar.type() == SGL))
                 {
-                    LOGGER.trace("SV({}) filtered proximate duplicate breakend", var.type() == SGL ? var.id() : nextVar.id());
+                    LNX_LOGGER.trace("SV({}) filtered proximate duplicate breakend", var.type() == SGL ? var.id() : nextVar.id());
 
                     if(var.type() == SGL)
                     {
@@ -182,7 +176,7 @@ public class SvFilters
                         if((var.getTIAssemblies(true).isEmpty() && !nextVar.getTIAssemblies(true).isEmpty())
                         || (var.getTIAssemblies(false).isEmpty() && !nextVar.getTIAssemblies(false).isEmpty()))
                         {
-                            LOGGER.trace("SV({}) filtered eqv-duplicate breakend", var.id());
+                            LNX_LOGGER.trace("SV({}) filtered eqv-duplicate breakend", var.id());
 
                             mExcludedSVs.put(var, DUP_BE);
                             removalList.add(breakend);
@@ -198,7 +192,7 @@ public class SvFilters
                         }
                         else
                         {
-                            LOGGER.trace("SV({}) filtered eqv-duplicate breakend", nextVar.id());
+                            LNX_LOGGER.trace("SV({}) filtered eqv-duplicate breakend", nextVar.id());
 
                             mExcludedSVs.put(nextVar, DUP_BE);
                             removalList.add(nextBreakend);
@@ -338,7 +332,7 @@ public class SvFilters
                 {
                     final SvVarData var = breakend.getSV();
 
-                    LOGGER.trace("SV({}) has duplicate breakends with assembled breakends({} & {})",
+                    LNX_LOGGER.trace("SV({}) has duplicate breakends with assembled breakends({} & {})",
                             var.id(), nextBreakend, nextBreakend2);
 
                     removalList.add(breakend);

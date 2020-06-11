@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.annotators.IndelData.CSV_REQUIRED_FIELDS;
 import static com.hartwig.hmftools.linx.annotators.IndelData.INDEL_COL_SAMPLE;
 import static com.hartwig.hmftools.linx.annotators.IndelData.fromString;
@@ -30,8 +31,6 @@ import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class IndelAnnotator
 {
@@ -46,8 +45,6 @@ public class IndelAnnotator
 
     private static final int INDEL_THRESHOLD = 500;
     private static final int MSI_THRESHOLD = 250;
-
-    private static final Logger LOGGER = LogManager.getLogger(IndelAnnotator.class);
 
     public IndelAnnotator(final DatabaseAccess dbAccess, final LinxConfig config)
     {
@@ -128,7 +125,7 @@ public class IndelAnnotator
         // ignore samples with high INDEL count or MSI evidence
         if(mIndelCount >= INDEL_THRESHOLD || mMsiIndelCount >= MSI_THRESHOLD)
         {
-            LOGGER.debug("skipped indel annotation, high indel({}) msi({}) counts", mIndelCount, mMsiIndelCount);
+            LNX_LOGGER.debug("skipped indel annotation, high indel({}) msi({}) counts", mIndelCount, mMsiIndelCount);
             return true;
         }
 
@@ -153,7 +150,7 @@ public class IndelAnnotator
             if(pair.getIndelCount() > 0)
             {
                 totalIndels += pair.getIndelCount();
-                LOGGER.debug("cluster({}) pair({} len={}) indelCount({})",
+                LNX_LOGGER.debug("cluster({}) pair({} len={}) indelCount({})",
                         cluster.id(), pair, pair.length(), pair.getIndelCount());
             }
         }
@@ -175,7 +172,7 @@ public class IndelAnnotator
 
                 if(indelProbability < 0.01)
                 {
-                    LOGGER.debug(String.format("cluster(%d) indelCount(%d) range(%d) expected(%.1f) probability(%.9f)",
+                    LNX_LOGGER.debug(String.format("cluster(%d) indelCount(%d) range(%d) expected(%.1f) probability(%.9f)",
                             cluster.id(), totalIndels, clusterRange, expectedIndelCount, indelProbability));
                 }
             }
@@ -227,11 +224,11 @@ public class IndelAnnotator
                 indelDataList.add(indel);
             }
 
-            LOGGER.debug("loaded {} indel data records, samples({})", recordCount, mSampleIndelData.size());
+            LNX_LOGGER.debug("loaded {} indel data records, samples({})", recordCount, mSampleIndelData.size());
         }
         catch(IOException exception)
         {
-            LOGGER.error("Failed to read indel CSV file({})", filename);
+            LNX_LOGGER.error("Failed to read indel CSV file({})", filename);
         }
     }
 
@@ -249,7 +246,7 @@ public class IndelAnnotator
                     variant.microhomology(), variant.repeatCount(), variant.variantCopyNumber()));
         }
 
-        LOGGER.debug("sample({}) retrieved {} indels", sampleId, sampleIndelList.size());
+        LNX_LOGGER.debug("sample({}) retrieved {} indels", sampleId, sampleIndelList.size());
 
         return sampleIndelList;
     }
@@ -266,7 +263,7 @@ public class IndelAnnotator
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing indel output file: {}", e.toString());
+            LNX_LOGGER.error("error writing indel output file: {}", e.toString());
         }
     }
 
@@ -288,7 +285,7 @@ public class IndelAnnotator
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing indel output file: {}", e.toString());
+            LNX_LOGGER.error("error writing indel output file: {}", e.toString());
         }
     }
 

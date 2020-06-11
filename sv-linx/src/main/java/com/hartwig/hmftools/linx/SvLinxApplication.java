@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
 import static com.hartwig.hmftools.linx.LinxConfig.DRIVERS_CHECK;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
@@ -44,8 +45,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,12 +53,10 @@ public class SvLinxApplication
 {
     private static final String FILTER_QC_PASS = "filter_qc_pass";
 
-    private static final Logger LOGGER = LogManager.getLogger(SvLinxApplication.class);
-
     public static void main(@NotNull final String[] args) throws ParseException, SQLException
     {
         final VersionInfo version = new VersionInfo("linx.version");
-        LOGGER.info("LINX version: {}", version.version());
+        LNX_LOGGER.info("LINX version: {}", version.version());
 
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
@@ -75,7 +72,7 @@ public class SvLinxApplication
 
         if(!LinxConfig.validConfig(cmd))
         {
-            LOGGER.error("exiting on invalid config");
+            LNX_LOGGER.error("exiting on invalid config");
             return;
         }
 
@@ -91,13 +88,13 @@ public class SvLinxApplication
         {
             if((config.hasMultipleSamples() || samplesList.isEmpty()))
             {
-                LOGGER.error("batch mode requires a DB connection");
+                LNX_LOGGER.error("batch mode requires a DB connection");
                 return;
             }
 
             if(!sampleDataFromFile)
             {
-                LOGGER.error("no DB connection and no purple data directory specified");
+                LNX_LOGGER.error("no DB connection and no purple data directory specified");
                 return;
             }
         }
@@ -107,18 +104,18 @@ public class SvLinxApplication
             boolean filterQCPassOnly = cmd.hasOption(FILTER_QC_PASS);
             samplesList = getStructuralVariantSamplesList(dbAccess, filterQCPassOnly);
 
-            LOGGER.info("retrieved {} samples {}", samplesList.size(), filterQCPassOnly ? "QC-pass-filtered" : "");
+            LNX_LOGGER.info("retrieved {} samples {}", samplesList.size(), filterQCPassOnly ? "QC-pass-filtered" : "");
 
             config.setSampleIds(samplesList);
         }
 
         if (samplesList.isEmpty())
         {
-            LOGGER.info("not samples loaded, exiting");
+            LNX_LOGGER.info("not samples loaded, exiting");
             return;
         }
 
-        LOGGER.info("running SV analysis for {}",
+        LNX_LOGGER.info("running SV analysis for {}",
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
 
         SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(config, dbAccess);
@@ -148,7 +145,7 @@ public class SvLinxApplication
 
             if(!ensemblDataCache.load(selectiveGeneLoading))
             {
-                LOGGER.error("Ensembl data cache load failed, exiting");
+                LNX_LOGGER.error("Ensembl data cache load failed, exiting");
                 return;
             }
 
@@ -170,7 +167,7 @@ public class SvLinxApplication
                     samplesList.clear();
                     samplesList.addAll(fusionAnalyser.getRnaSampleIds());
 
-                    LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
+                    LNX_LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
                 }
             }
 
@@ -198,7 +195,7 @@ public class SvLinxApplication
 
             if(svDataList.isEmpty())
             {
-                LOGGER.info("sample({}) has no passing SVs", sampleId);
+                LNX_LOGGER.info("sample({}) has no passing SVs", sampleId);
 
                 if(config.isSingleSample())
                 {
@@ -210,7 +207,7 @@ public class SvLinxApplication
 
             if(config.hasMultipleSamples())
             {
-                LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svDataList.size(), count - 1);
+                LNX_LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svDataList.size(), count - 1);
             }
 
             if(!config.IsGermline)
@@ -227,7 +224,7 @@ public class SvLinxApplication
 
             if(!sampleAnalyser.inValidState())
             {
-                LOGGER.info("exiting after sample({}), in invalid state", sampleId);
+                LNX_LOGGER.info("exiting after sample({}), in invalid state", sampleId);
                 break;
             }
 
@@ -260,12 +257,12 @@ public class SvLinxApplication
 
             if(config.MaxSamples > 0 && count >= config.MaxSamples)
             {
-                LOGGER.info("exiting after max sample count {} reached", count);
+                LNX_LOGGER.info("exiting after max sample count {} reached", count);
                 break;
             }
         }
 
-        if(LOGGER.isDebugEnabled() || config.hasMultipleSamples())
+        if(LNX_LOGGER.isDebugEnabled() || config.hasMultipleSamples())
         {
             prefCounter.logStats();
         }
@@ -286,7 +283,7 @@ public class SvLinxApplication
             try { version.write(config.OutputDataPath); } catch(IOException e) {}
         }
 
-        LOGGER.info("SV analysis complete for {}",
+        LNX_LOGGER.info("SV analysis complete for {}",
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
     }
 

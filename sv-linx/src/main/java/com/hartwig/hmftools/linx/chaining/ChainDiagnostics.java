@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 
@@ -14,9 +15,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class ChainDiagnostics
 {
@@ -44,8 +42,6 @@ public class ChainDiagnostics
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<SvLinkedPair> mUniquePairs;
-
-    private static final Logger LOGGER = LogManager.getLogger(ChainDiagnostics.class);
 
     public ChainDiagnostics(final Map<SvVarData,SvChainState> svConnMap, final List<SvChainState> svCompleteConns,
             final List<SvChain> chains, final List<SvChain> uniqueChains,
@@ -131,13 +127,13 @@ public class ChainDiagnostics
 
         writeResults(svConnections, invalidBreakends);
 
-        if(!LOGGER.isDebugEnabled())
+        if(!LNX_LOGGER.isDebugEnabled())
             return;
 
         if(!mLogMessages.isEmpty())
         {
-            LOGGER.debug("diagnostic log:");
-            mLogMessages.stream().forEach(x -> LOGGER.debug(x));
+            LNX_LOGGER.debug("diagnostic log:");
+            mLogMessages.stream().forEach(x -> LNX_LOGGER.debug(x));
         }
     }
 
@@ -183,7 +179,7 @@ public class ChainDiagnostics
 
             if(connectionCount - foldbackCons - compDupCons > 1)
             {
-                LOGGER.debug("cluster({} count={}) breakend({}) rep({}) conns({}) foldbacks({}) compDups({}) asmb({})",
+                LNX_LOGGER.debug("cluster({} count={}) breakend({}) rep({}) conns({}) foldbacks({}) compDups({}) asmb({})",
                         mClusterId, mSvConnectionsMap.keySet().size(), svConn.SV.getBreakend(useStart).toString(),
                         svConn.Jcn, connectionCount, foldbackCons, compDupCons, assembledLinks);
 
@@ -204,7 +200,7 @@ public class ChainDiagnostics
         if(mMaxClusterSize == 0)
             return;
 
-        LOGGER.info("CHAIN_DIAG: {},{},{},{},{}", type, mSampleId, mClusterId, var.id(), otherInfo);
+        LNX_LOGGER.info("CHAIN_DIAG: {},{},{},{},{}", type, mSampleId, mClusterId, var.id(), otherInfo);
     }
 
     public void chainingComplete()
@@ -215,7 +211,7 @@ public class ChainDiagnostics
         mUnlinkedSvCount = (int) mSvConnectionsMap.values().stream()
                 .filter(x -> x.breakendCount(true) == 0 && x.breakendCount(false) == 0).count();
 
-        if(!LOGGER.isDebugEnabled())
+        if(!LNX_LOGGER.isDebugEnabled())
             return;
 
         if(mHasReplication)
@@ -225,13 +221,13 @@ public class ChainDiagnostics
 
             double unlinkedPloidySVs = mSvConnectionsMap.values().stream().mapToDouble(x -> x.unlinked()).sum();
 
-            LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} ploidy={}) breakends({} ploidy={})",
+            LNX_LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} ploidy={}) breakends({} ploidy={})",
                     mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mClusterCount,
                     mUnlinkedSvCount, formatJcn(unlinkedPloidySVs), mUnlinkedBreakendCount, formatJcn(unlinkedPloidyBreakends));
         }
         else
         {
-            LOGGER.debug("cluster({}) chaining finished: chains({} links={}) SVs({}) unlinked SVs({}) breakends({})",
+            LNX_LOGGER.debug("cluster({}) chaining finished: chains({} links={}) SVs({}) unlinked SVs({}) breakends({})",
                     mClusterId, mUniqueChains.size(), mUniquePairs.size(), mClusterCount, mUnlinkedSvCount, mUnlinkedBreakendCount);
         }
     }
@@ -274,7 +270,7 @@ public class ChainDiagnostics
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing DM data: {}", e.toString());
+            LNX_LOGGER.error("error writing DM data: {}", e.toString());
         }
     }
 
@@ -285,7 +281,7 @@ public class ChainDiagnostics
 
     public void checkProgress(int linkIndex)
     {
-        if(!LOGGER.isDebugEnabled())
+        if(!LNX_LOGGER.isDebugEnabled())
             return;
 
         if(!mHasReplication || mSvConnectionsMap.size() < 100)
@@ -294,7 +290,7 @@ public class ChainDiagnostics
         if(linkIndex >= mLastProgressIndex + 100)
         {
             mLastProgressIndex = linkIndex;
-            LOGGER.debug("cluster({}) chaining progress: index({}) SVs(incomplete={} complete={}) partialChains({})",
+            LNX_LOGGER.debug("cluster({}) chaining progress: index({}) SVs(incomplete={} complete={}) partialChains({})",
                     mClusterId, linkIndex, mSvConnectionsMap.size(), mSvCompletedConnections.size(), mChains.size());
         }
     }
@@ -312,7 +308,7 @@ public class ChainDiagnostics
 
             if(breakendList == null)
             {
-                LOGGER.error("cluster({}) runIndex({}): breakend({}) has {} possible pairs but no available breakends",
+                LNX_LOGGER.error("cluster({}) runIndex({}): breakend({}) has {} possible pairs but no available breakends",
                         mClusterId, linkIndex, breakend.toString(), entry.getValue().size());
 
                 isValid = false;

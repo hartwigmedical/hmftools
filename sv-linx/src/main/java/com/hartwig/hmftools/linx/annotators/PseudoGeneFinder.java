@@ -26,15 +26,10 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class PseudoGeneFinder
 {
     private final VisualiserWriter mVisWriter;
     private EnsemblDataCache mGeneTransCache;
-
-    private static final Logger LOGGER = LogManager.getLogger(PseudoGeneFinder.class);
 
     public PseudoGeneFinder(final VisualiserWriter visWriter)
     {

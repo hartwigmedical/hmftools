@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
@@ -20,13 +21,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class FoldbackFinder
 {
-    private static final Logger LOGGER = LogManager.getLogger(FoldbackFinder.class);
-
     public static void markFoldbacks(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
         markFoldbacks(chrBreakendMap, false);
@@ -205,7 +201,7 @@ public class FoldbackFinder
             if(chainLength > MAX_FOLDBACK_CHAIN_LENGTH)
             {
                 /*
-                LOGGER.info("sample({}) chained foldback breakends({} and {}) have long length({} links={} asmb={})",
+                LNX_LOGGER.info("sample({}) chained foldback breakends({} and {}) have long length({} links={} asmb={})",
                         mSampleId, beEnd.toString(), beStart.toString(),
                         chainLength, chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT]);
                 */
@@ -252,11 +248,11 @@ public class FoldbackFinder
 
         if(varEnd.equals(varStart))
         {
-            LOGGER.debug("cluster({}) foldback inversion SV({}) length({})", cluster.id(), varEnd.posId(), length);
+            LNX_LOGGER.debug("cluster({}) foldback inversion SV({}) length({})", cluster.id(), varEnd.posId(), length);
         }
         else
         {
-            LOGGER.debug("cluster({}) foldback be1({}) be2({}) length({})", cluster.id(), beEnd.toString(), beStart.toString(), length);
+            LNX_LOGGER.debug("cluster({}) foldback be1({}) be2({}) length({})", cluster.id(), beEnd.toString(), beStart.toString(), length);
         }
 
         return true;
@@ -284,7 +280,7 @@ public class FoldbackFinder
 
             var.setFoldbackLink(be.usesStart(), be, 0, chainInfo);
 
-            LOGGER.debug("cluster({}) foldback SV({} : {}) with own breakend({}) chain({})",
+            LNX_LOGGER.debug("cluster({}) foldback SV({} : {}) with own breakend({}) chain({})",
                     var.getCluster().id(), var.posId(), var.type(), be.toString(), chain.id());
         }
     }

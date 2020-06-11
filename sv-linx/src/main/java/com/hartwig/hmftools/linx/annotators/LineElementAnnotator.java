@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_DEL_LENGTH;
@@ -26,9 +27,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class LineElementAnnotator {
 
     private final List<GenomeRegion> mKnownLineElements;
@@ -46,8 +44,6 @@ public class LineElementAnnotator {
     private static final int LE_COL_CHR = 0;
     private static final int LE_COL_POS_START = 1;
     private static final int LE_COL_POS_END = 2;
-
-    private static final Logger LOGGER = LogManager.getLogger(LineElementAnnotator.class);
 
     public LineElementAnnotator()
     {
@@ -88,15 +84,15 @@ public class LineElementAnnotator {
 
                 mKnownLineElements.add(genomeRegion);
 
-//                LOGGER.debug("loaded line element: chr({}) pos({}-{})",
+//                LNX_LOGGER.debug("loaded line element: chr({}) pos({}-{})",
 //                        genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
             }
 
-            LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);
+            LNX_LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);
         }
         catch(IOException exception)
         {
-            LOGGER.error("Failed to read line element CSV file({})", filename);
+            LNX_LOGGER.error("Failed to read line element CSV file({})", filename);
         }
     }
 
@@ -114,7 +110,7 @@ public class LineElementAnnotator {
             if(svData.position(useStart) >= genomeRegion.start() - PERMITTED_DISTANCE
             && svData.position(useStart) <= genomeRegion.end() + PERMITTED_DISTANCE)
             {
-                LOGGER.debug("var({}) found in known line element({} -> {})",
+                LNX_LOGGER.debug("var({}) found in known line element({} -> {})",
                         svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
                 return KNOWN_LINE_ELEMENT;
             }
@@ -307,7 +303,7 @@ public class LineElementAnnotator {
 
                     if(pseduoDel != null)
                     {
-                        LOGGER.debug("cluster({}) proximate DEL({}) matches pseudogene exon boundaries",
+                        LNX_LOGGER.debug("cluster({}) proximate DEL({}) matches pseudogene exon boundaries",
                                 cluster.id(), pseduoDel.getSV().posId());
                         continue;
                     }
@@ -315,7 +311,7 @@ public class LineElementAnnotator {
 
                 final String linkingIdsStr = linkingBnds.stream().map(x -> x.id()).collect(Collectors.toList()).toString();
 
-                LOGGER.debug("cluster({}) lineChr({}) uniqueChr({}) linkingSVs({}) remoteShortDB({}) proxPolyATCount({})",
+                LNX_LOGGER.debug("cluster({}) lineChr({}) uniqueChr({}) linkingSVs({}) remoteShortDB({}) proxPolyATCount({})",
                         cluster.id(), breakend.chromosome(), uniqueBndChromosomes.toString(), linkingIdsStr,
                         hasRemoteShortBndDB, polyAtSVs.size());
 
@@ -328,7 +324,7 @@ public class LineElementAnnotator {
 
         if(cluster.getSvCount() == knownCount && cluster.getTypeCount(BND) >= 1)
         {
-            LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownCount);
+            LNX_LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownCount);
             cluster.markAsLine();
             return;
         }
@@ -336,14 +332,14 @@ public class LineElementAnnotator {
         {
             long svInLineCount = cluster.getSVs().stream().filter(x-> x.inLineElement()).count();
 
-            if(LOGGER.isDebugEnabled())
+            if(LNX_LOGGER.isDebugEnabled())
             {
                 long polyAorT = cluster.getSVs().stream().filter(x -> hasPolyAorTMotif(x)).count();
                 long suspectLine = cluster.getSVs().stream()
                         .filter(x -> (x.getLineElement(true).contains(SUSPECTED_LINE_ELEMENT)
                         || x.getLineElement(false).contains(SUSPECTED_LINE_ELEMENT))).count();
 
-                LOGGER.debug("cluster({}) anyLine({}) suspect({}) known({}) polyAT({})",
+                LNX_LOGGER.debug("cluster({}) anyLine({}) suspect({}) known({}) polyAT({})",
                         cluster.id(), svInLineCount, suspectLine, knownCount, polyAorT);
             }
 
@@ -358,7 +354,7 @@ public class LineElementAnnotator {
 
             if(sglCount >= 1 && sglCount <= 2 && sglCount == cluster.getSvCount())
             {
-                LOGGER.debug("cluster({}) marked as line with poly A/T SGL", cluster.id());
+                LNX_LOGGER.debug("cluster({}) marked as line with poly A/T SGL", cluster.id());
                 cluster.markAsLine();
             }
             else if(cluster.getTypeCount(INS) == 1 && cluster.getSvCount() == 1)

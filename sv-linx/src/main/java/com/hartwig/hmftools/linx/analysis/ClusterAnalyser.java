@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.linx.analysis;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.round;
-
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.UNDER_CLUSTERING;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateClusterDeletions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateReplicationBeforeRepair;
@@ -48,9 +44,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.LinxConfig;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class ClusterAnalyser {
 
     private final LinxConfig mConfig;
@@ -76,8 +69,6 @@ public class ClusterAnalyser {
     PerformanceCounter mPcChaining;
 
     public static int SMALL_CLUSTER_SIZE = 3;
-
-    private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
     public ClusterAnalyser(final LinxConfig config)
     {
@@ -187,7 +178,7 @@ public class ClusterAnalyser {
         {
             if(!mSimpleClustering.validateClustering(mClusters))
             {
-                LOGGER.info("exiting with cluster-validation errors");
+                LNX_LOGGER.info("exiting with cluster-validation errors");
                 return false;
             }
         }
@@ -223,7 +214,7 @@ public class ClusterAnalyser {
         {
             if(!mSimpleClustering.validateClustering(mClusters) || !checkClusterDuplicates(mClusters))
             {
-                LOGGER.warn("exiting with cluster-validation errors");
+                LNX_LOGGER.warn("exiting with cluster-validation errors");
                 return false;
             }
         }
@@ -284,7 +275,7 @@ public class ClusterAnalyser {
 
                 if(cluster.isFullyChained(true))
                 {
-                    LOGGER.debug("cluster({}) simple and consistent with {} SVs", cluster.id(), cluster.getSvCount());
+                    LNX_LOGGER.debug("cluster({}) simple and consistent with {} SVs", cluster.id(), cluster.getSvCount());
                 }
             }
         }
@@ -386,7 +377,7 @@ public class ClusterAnalyser {
 
             if(allSVsLinked)
             {
-                LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({}) shortDB({})",
+                LNX_LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({}) shortDB({})",
                         cluster.id(), cluster.getDesc(), assemblyLinks, lohLinks, dbLinks);
                 continue;
             }
@@ -399,7 +390,7 @@ public class ClusterAnalyser {
 
                 if (cluster.hasAnnotation(CLUSTER_ANNOT_REP_REPAIR))
                 {
-                    LOGGER.debug("cluster({}: {}) simple group kept with rep-repair",
+                    LNX_LOGGER.debug("cluster({}: {}) simple group kept with rep-repair",
                             cluster.id(), cluster.getDesc());
                     continue;
                 }
@@ -407,7 +398,7 @@ public class ClusterAnalyser {
 
             mClusters.remove(cluster);
 
-            LOGGER.debug("cluster({}: {}) de-merged into simple SVs", cluster.id(), cluster.getDesc());
+            LNX_LOGGER.debug("cluster({}: {}) de-merged into simple SVs", cluster.id(), cluster.getDesc());
 
             for(SvVarData var : cluster.getSVs())
             {
@@ -434,7 +425,7 @@ public class ClusterAnalyser {
 
         if(mConfig.ChainingSvLimit > 0 && svCount > mConfig.ChainingSvLimit)
         {
-            LOGGER.debug("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",
+            LNX_LOGGER.debug("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",
                     mSampleId, cluster.id(), cluster.getSvCount(), svCount);
             return;
         }

@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowJcnThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.CLUSTER_ALLELE_JCN_MIN;
-import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatchForSplits;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -30,8 +30,6 @@ import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 /* ChainFinder - forms one or more chains from the SVs in a cluster
@@ -104,8 +102,6 @@ public class ChainFinder
     // self-analysis only
     private final ChainDiagnostics mDiagnostics;
 
-    private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
-
     public ChainFinder()
     {
         mSvList = Lists.newArrayList();
@@ -135,7 +131,7 @@ public class ChainFinder
 
         mHasReplication = false;
         mLogVerbose = false;
-        mLogLevel = LOGGER.getLevel();
+        mLogLevel = LNX_LOGGER.getLevel();
         mRunValidation = false;
         mIsValid = true;
         mSampleId= "";
@@ -273,7 +269,7 @@ public class ChainFinder
 
         if (mSvList.size() >= 4)
         {
-            LOGGER.debug("cluster({}) starting chaining with assemblyLinks({}) svCount({}) replication({})",
+            LNX_LOGGER.debug("cluster({}) starting chaining with assemblyLinks({}) svCount({}) replication({})",
                     mClusterId, mAssembledLinks.size(), mSvList.size(), mHasReplication);
         }
 
@@ -292,7 +288,7 @@ public class ChainFinder
 
         if(!isValid())
         {
-            LOGGER.warn("cluster({}) chain finding failed", mClusterId);
+            LNX_LOGGER.warn("cluster({}) chain finding failed", mClusterId);
             return;
         }
     }
@@ -318,7 +314,7 @@ public class ChainFinder
             {
                 if (chain.identicalChain(newChain, false))
                 {
-                    LOGGER.debug("cluster({}) skipping duplicate chain({}) ploidy({}) vs origChain({}) ploidy({})",
+                    LNX_LOGGER.debug("cluster({}) skipping duplicate chain({}) ploidy({}) vs origChain({}) ploidy({})",
                             mClusterId, newChain.id(), formatJcn(newChain.jcn()), chain.id(), formatJcn(chain.jcn()));
 
                     // combine the ploidies
@@ -345,9 +341,9 @@ public class ChainFinder
         {
             final SvChain chain = cluster.getChains().get(i);
 
-            if(LOGGER.isDebugEnabled())
+            if(LNX_LOGGER.isDebugEnabled())
             {
-                LOGGER.debug("cluster({}) added chain({}) ploidy({}) with {} linked pairs:",
+                LNX_LOGGER.debug("cluster({}) added chain({}) ploidy({}) with {} linked pairs:",
                         mClusterId, chain.id(), formatJcn(chain.jcn()), chain.getLinkCount());
                 chain.logLinks();
             }
@@ -428,7 +424,7 @@ public class ChainFinder
 
                 if (iterationsWithoutNewLinks >= 50)
                 {
-                    LOGGER.info("cluster({}) {} iterations without adding a link, skipped pairs: closing({}) ploidyMismatch({})",
+                    LNX_LOGGER.info("cluster({}) {} iterations without adding a link, skipped pairs: closing({}) ploidyMismatch({})",
                             mClusterId, iterationsWithoutNewLinks,
                             mLinkAllocator.getSkippedPairCount(LinkSkipType.CLOSING),
                             mLinkAllocator.getSkippedPairCount(LinkSkipType.JCN_MISMATCH));
@@ -462,7 +458,7 @@ public class ChainFinder
                 if(ChainJcnLimits.jcnMatch(pair.firstBreakend(), pair.secondBreakend()))
                 {
                     ++ploidyOverlaps;
-                    LOGGER.debug("skipped pair({}) has ploidy overlap be1({} & {}) and be2({} & {})",
+                    LNX_LOGGER.debug("skipped pair({}) has ploidy overlap be1({} & {}) and be2({} & {})",
                             pair.toString(), formatJcn(pair.firstBreakend().jcn()), formatJcn(pair.firstBreakend().jcnUncertainty()),
                             formatJcn(pair.secondBreakend().jcn()), formatJcn(pair.secondBreakend().jcnUncertainty()));
                 }
@@ -470,7 +466,7 @@ public class ChainFinder
 
             if(ploidyOverlaps > 0)
             {
-                LOGGER.info("sample({}) cluster({}) ploidy skips({}) with overlaps({}) chainCount({})",
+                LNX_LOGGER.info("sample({}) cluster({}) ploidy skips({}) with overlaps({}) chainCount({})",
                         mSampleId, mClusterId, ploidyMismatches, ploidyOverlaps, mChains.size());
             }
         }
@@ -636,7 +632,7 @@ public class ChainFinder
                         if(clusterAP < CLUSTER_ALLELE_JCN_MIN)
                         {
                             // this lower breakend cannot match with anything further upstream
-                            LOGGER.trace("breakends lower({}: {}) limited at upper({}: {}) with clusterAP({})",
+                            LNX_LOGGER.trace("breakends lower({}: {}) limited at upper({}: {}) with clusterAP({})",
                                     i, lowerBreakend.toString(), j, upperBreakend.toString(), formatJcn(clusterAP));
 
                             break;
@@ -768,7 +764,7 @@ public class ChainFinder
                     if (chain.linkWouldCloseChain(pair))
                     {
                         chain.closeChain(LR_METHOD_DM_CLOSE, mLinkAllocator.getLinkIndex());
-                        LOGGER.debug("cluster({}) closed DM chain({})", mClusterId, chain.id());
+                        LNX_LOGGER.debug("cluster({}) closed DM chain({})", mClusterId, chain.id());
                     }
                 }
             }
@@ -781,7 +777,7 @@ public class ChainFinder
 
         if(!dmChainMatched && dmChain != null)
         {
-            LOGGER.debug("cluster({}) added pre-formed DM chain", mClusterId);
+            LNX_LOGGER.debug("cluster({}) added pre-formed DM chain", mClusterId);
             mChains.add(dmChain);
         }
     }
@@ -792,7 +788,7 @@ public class ChainFinder
         {
             if(!checkIsValid(chain))
             {
-                LOGGER.error("cluster({}) has invalid chain({})", mClusterId, chain.id());
+                LNX_LOGGER.error("cluster({}) has invalid chain({})", mClusterId, chain.id());
                 chain.logLinks();
                 mIsValid = false;
             }
@@ -811,7 +807,7 @@ public class ChainFinder
                 {
                     if(chain1.getLinkedPairs().stream().anyMatch(x -> x == pair))
                     {
-                        LOGGER.error("cluster({}) chain({}) and chain({}) share pair({})",
+                        LNX_LOGGER.error("cluster({}) chain({}) and chain({}) share pair({})",
                                 mClusterId, chain1.id(), chain2.id(), pair.toString());
                         mIsValid = false;
                     }
@@ -823,7 +819,7 @@ public class ChainFinder
     protected void logInfo(final String message)
     {
         mDiagnostics.addMessage(message);
-        LOGGER.debug(message);
+        LNX_LOGGER.debug(message);
     }
 
     public void setLogVerbose(boolean toggle)
@@ -837,7 +833,7 @@ public class ChainFinder
         if(!mLogVerbose)
             return;
 
-        mLogLevel = LOGGER.getLevel();
+        mLogLevel = LNX_LOGGER.getLevel();
         Configurator.setRootLevel(TRACE);
     }
 

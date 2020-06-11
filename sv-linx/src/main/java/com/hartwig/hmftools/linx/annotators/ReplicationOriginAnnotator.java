@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.annotators;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -14,9 +15,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.ReplicationOriginRegion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
@@ -25,8 +23,6 @@ import htsjdk.tribble.readers.LineIterator;
 public class ReplicationOriginAnnotator
 {
     Map<String, List<ReplicationOriginRegion>> mReplicationOrigins; // regions by chromosome
-
-    private static final Logger LOGGER = LogManager.getLogger(ReplicationOriginAnnotator.class);
 
     public ReplicationOriginAnnotator()
     {
@@ -73,11 +69,11 @@ public class ReplicationOriginAnnotator
                         originValue));
             }
 
-            LOGGER.debug("loaded {} replication origins", regionCount);
+            LNX_LOGGER.debug("loaded {} replication origins", regionCount);
         }
         catch(IOException exception)
         {
-            LOGGER.error("Failed to read replication origin BED file({})", filename);
+            LNX_LOGGER.error("Failed to read replication origin BED file({})", filename);
         }
     }
 

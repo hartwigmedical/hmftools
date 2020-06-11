@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
@@ -42,14 +43,10 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class PairResolution
 {
-    private static final Logger LOGGER = LogManager.getLogger(PairResolution.class);
-
     public static boolean isClusterPairType(final ResolvedType resolvedType)
     {
         return isClusterReciprocalType(resolvedType) || isClusterTemplatedInsertionType(resolvedType);
@@ -308,7 +305,7 @@ public class PairResolution
 
         ResolvedType resolvedType = faceAway ? ResolvedType.DEL : ResolvedType.DUP;
 
-        LOGGER.debug("cluster({}) chain(links=({} len={} synLen({}) marked as {}",
+        LNX_LOGGER.debug("cluster({}) chain(links=({} len={} synLen({}) marked as {}",
                 cluster.id(), chain.getLinkCount(), totalChainLength, syntheticLength, resolvedType);
 
         boolean withinLongThreshold = resolvedType == ResolvedType.DEL ?
@@ -464,12 +461,12 @@ public class PairResolution
             }
         }
 
-        LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
+        LNX_LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
                 cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
 
         if(rearrangedChains != null)
         {
-            LOGGER.debug("cluster({}) splitting existing chain into {} for resolvedType({})",
+            LNX_LOGGER.debug("cluster({}) splitting existing chain into {} for resolvedType({})",
                     cluster.id(), rearrangedChains.size(), cluster.getResolvedType());
 
             final SvChain existingChain = cluster.getChains().get(0);
@@ -594,7 +591,7 @@ public class PairResolution
 
                     if(chain.reverseSectionOnBreakend(breakendToSwitch))
                     {
-                        LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
+                        LNX_LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
                         chain.logLinks();
                     }
 
@@ -627,7 +624,7 @@ public class PairResolution
 
                 if(chain.reverseSectionOnBreakend(breakendToSwitch))
                 {
-                    LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
+                    LNX_LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
                     chain.logLinks();
                 }
 
@@ -656,7 +653,7 @@ public class PairResolution
             isResolved = false;
         }
 
-        LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
+        LNX_LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
                 cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
 
         cluster.setResolved(isResolved, resolvedType);

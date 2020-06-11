@@ -10,6 +10,7 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.util.List;
 import java.util.Map;
@@ -19,8 +20,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class CnJcnCalcs
 {
@@ -36,8 +35,6 @@ public class CnJcnCalcs
     private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
     private static double ADDITIONAL_REL_UNCERTAINTY = 0.15;
     private static double PROPORTION_CNCHANGE_USED_IN_JCN_UNC = 0.5;
-
-    private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 
     public CnJcnCalcs(
             final Map<String,List<SvCNData>> chrCnDataMap,
@@ -66,7 +63,7 @@ public class CnJcnCalcs
 
             if (cnStartData == null || cnStartData.getStructuralVariantData() == null)
             {
-                LOGGER.error("SV({}) missing start copy number data or unlined SV data", svId);
+                LNX_LOGGER.error("SV({}) missing start copy number data or unlined SV data", svId);
                 continue;
             }
 
@@ -80,7 +77,7 @@ public class CnJcnCalcs
             /*
             if(svId == SPECIFIC_SV_ID)
             {
-                LOGGER.debug("spec SV({})", svId);
+                LNX_LOGGER.debug("spec SV({})", svId);
             }
             */
 
@@ -123,7 +120,7 @@ public class CnJcnCalcs
 
             if(!calcResults.Valid)
             {
-                LOGGER.debug("sample({}) svID({} type={}) unexpected JCN(est={} unc={})",
+                LNX_LOGGER.debug("sample({}) svID({} type={}) unexpected JCN(est={} unc={})",
                         sampleId, svData.id(), svData.type(), calcResults.JcnEstimate, calcResults.JcnUncertainty);
             }
 
@@ -304,7 +301,7 @@ public class CnJcnCalcs
 
         if(iterations >= maxIterations)
         {
-            LOGGER.warn(String.format("max iterations reached: value(%d) test(%d) prob(%.4f diff=%.4f)",
+            LNX_LOGGER.warn(String.format("max iterations reached: value(%d) test(%d) prob(%.4f diff=%.4f)",
                     expectedVal, testValue, currentProb, probDiff));
         }
 

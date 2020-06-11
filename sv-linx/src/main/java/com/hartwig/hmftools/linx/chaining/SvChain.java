@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
@@ -28,9 +27,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class SvChain {
 
     private int mId;
@@ -45,8 +41,6 @@ public class SvChain {
 
     private boolean mIsClosedLoop;
     private int mLinkSum; // simple comparison check
-
-    private static final Logger LOGGER = LogManager.getLogger(SvChain.class);
 
     public SvChain(int chainId)
     {
@@ -91,7 +85,7 @@ public class SvChain {
         // validate can be added
         if((addToStart && !canAddLinkedPairToStart(newPair)) || (!addToStart && !canAddLinkedPairToEnd(newPair)))
         {
-            LOGGER.error("chain({}) trying to add invalid link({}) to {}", mId, newPair.toString(), addToStart ? "start" : "end");
+            LNX_LOGGER.error("chain({}) trying to add invalid link({}) to {}", mId, newPair.toString(), addToStart ? "start" : "end");
             return;
         }
 
@@ -258,7 +252,7 @@ public class SvChain {
 
         if(!chainStart.chromosome().equals(chainEnd.chromosome()))
         {
-            LOGGER.error("chain({}) cannot close chain with ends: {} & {}",
+            LNX_LOGGER.error("chain({}) cannot close chain with ends: {} & {}",
                     mId, chainStart.toString(), chainEnd.toString());
             return;
         }
@@ -288,7 +282,7 @@ public class SvChain {
         }
         else
         {
-            LOGGER.error("chain({}) failed to add foldback pairs: {} and {}", mId, pair1, pair2);
+            LNX_LOGGER.error("chain({}) failed to add foldback pairs: {} and {}", mId, pair1, pair2);
             return;
         }
 
@@ -345,7 +339,7 @@ public class SvChain {
 
         if((connectOnStart && !pair2.hasBreakend(chainStart)) || (!connectOnStart && !pair2.hasBreakend(chainEnd)))
         {
-            LOGGER.error("chain({}) failed to add foldback pairs: {} and {}", mId, pair1, pair2);
+            LNX_LOGGER.error("chain({}) failed to add foldback pairs: {} and {}", mId, pair1, pair2);
             return;
         }
 
@@ -618,7 +612,7 @@ public class SvChain {
                             newChain.copyFrom(higherJcnChain);
                             newChain.setJcnData(higherJcnChain.jcn() - lowerJcnChain.jcn(), higherJcnChain.jcnUncertainty());
 
-                            LOGGER.debug("splitting chain({}) jcn({}) vs chain({}) jcn({}) into new chain({}) JCN({})",
+                            LNX_LOGGER.debug("splitting chain({}) jcn({}) vs chain({}) jcn({}) into new chain({}) JCN({})",
                                     higherJcnChain.id(), formatJcn(higherJcnChain.jcn()),
                                     lowerJcnChain.id(), formatJcn(lowerJcnChain.jcn()),
                                     newChain.id(), formatJcn(newChain.jcn()));
@@ -628,7 +622,7 @@ public class SvChain {
                             chains.add(newChain);
                         }
 
-                        LOGGER.debug("merging chain({} links={}) {} to chain({} links={}) {}",
+                        LNX_LOGGER.debug("merging chain({} links={}) {} to chain({} links={}) {}",
                                 chain1.id(), chain1.getLinkCount(), c1Start ? "start" : "end",
                                 chain2.id(), chain2.getLinkCount(), c2Start ? "start" : "end");
 
@@ -712,14 +706,14 @@ public class SvChain {
     {
         if(mLinkedPairs.size() < 50)
         {
-            LOGGER.debug("chain({}): {}", mId, getSequenceStr(this));
+            LNX_LOGGER.debug("chain({}): {}", mId, getSequenceStr(this));
         }
 
         for(int i = 0; i < mLinkedPairs.size(); ++i)
         {
             final SvLinkedPair pair = mLinkedPairs.get(i);
 
-            LOGGER.debug("chain({}) {}: pair({}) {} length({}) index({})",
+            LNX_LOGGER.debug("chain({}) {}: pair({}) {} length({}) index({})",
                     mId, i, pair.toString(), pair.getLinkReason(), pair.length(), pair.getLinkIndex());
         }
     }

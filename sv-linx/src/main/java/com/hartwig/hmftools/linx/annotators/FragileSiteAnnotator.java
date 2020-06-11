@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.annotators;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 
 import java.io.BufferedReader;
@@ -13,16 +14,11 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class FragileSiteAnnotator
 {
     private List<GenomeRegion> mFragileSites;
 
     private final static int CSV_REQUIRED_FIELDS = 3;
-
-    private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
     public FragileSiteAnnotator()
     {
@@ -62,11 +58,11 @@ public class FragileSiteAnnotator
                 mFragileSites.add(genomeRegion);
             }
 
-            LOGGER.info("loaded {} known fragile sites from file: {}", mFragileSites.size(), filename);
+            LNX_LOGGER.info("loaded {} known fragile sites from file: {}", mFragileSites.size(), filename);
         }
         catch(IOException exception)
         {
-            LOGGER.error("Failed to read fragile site CSV file({})", filename);
+            LNX_LOGGER.error("Failed to read fragile site CSV file({})", filename);
         }
     }
 
@@ -80,7 +76,7 @@ public class FragileSiteAnnotator
             if(genomeRegion.chromosome().equals(svData.chromosome(useStart))
             && genomeRegion.start() <= svData.position(useStart) && genomeRegion.end() >= svData.position(useStart))
             {
-                LOGGER.debug("var({}) found in known fragile site",
+                LNX_LOGGER.debug("var({}) found in known fragile site",
                         svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
                 return true;
             }

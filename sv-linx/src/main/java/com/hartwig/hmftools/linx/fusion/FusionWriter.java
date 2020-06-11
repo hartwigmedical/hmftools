@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile.contex
 import static com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile.fusionJcn;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -28,15 +29,10 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class FusionWriter
 {
     private final String mOutputDir;
     private BufferedWriter mFusionWriter;
-
-    private static final Logger LNX_LOGGER = LogManager.getLogger(FusionWriter.class);
 
     public FusionWriter(final String outputDir)
     {

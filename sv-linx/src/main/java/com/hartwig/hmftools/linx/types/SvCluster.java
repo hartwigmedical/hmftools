@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
@@ -32,9 +33,6 @@ import com.hartwig.hmftools.linx.analysis.SvClassification;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.LohEvent;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -98,8 +96,6 @@ public class SvCluster
     public static String CLUSTER_ANNOT_SHATTERING = "CHROMO_THRIP";
     public static String CLUSTER_ANNOT_CHROMOPLEXY = "CHROMO_PLEX";
 
-    private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
-
     public SvCluster(final int clusterId)
     {
         mId = clusterId;
@@ -162,7 +158,7 @@ public class SvCluster
     {
         if(mSVs.contains(var))
         {
-            LOGGER.error("cluster({}) attempting to add SV({}) again", mId, var.id());
+            LNX_LOGGER.error("cluster({}) attempting to add SV({}) again", mId, var.id());
             return;
         }
 
@@ -297,7 +293,7 @@ public class SvCluster
     {
         if(other == this || other.id() == id())
         {
-            LOGGER.error("attempting to merge same cluster({})", id());
+            LNX_LOGGER.error("attempting to merge same cluster({})", id());
             return;
         }
 
@@ -306,7 +302,7 @@ public class SvCluster
         {
             if(logDetails)
             {
-                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) and adopts new ID",
+                LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) and adopts new ID",
                         id(), getSvCount(), other.id(), other.getSvCount());
             }
 
@@ -315,7 +311,7 @@ public class SvCluster
         }
         else if(logDetails)
         {
-            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
+            LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
                     id(), getSvCount(), other.id(), other.getSvCount());
         }
 
@@ -426,7 +422,7 @@ public class SvCluster
 
         if(isSimpleSingleSV(this))
         {
-            LOGGER.debug("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
+            LNX_LOGGER.debug("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
                     id(), getSvCount(), getDesc(), getArmCount(), getConsistencyCount());
         }
         else
@@ -465,7 +461,7 @@ public class SvCluster
                 otherInfo = appendStr(otherInfo, String.format("unlnk-bnd=%d", mUnlinkedRemoteSVs.size()), ' ');
             }
 
-            LOGGER.debug(String.format("cluster(%d) complex SVs(%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
+            LNX_LOGGER.debug(String.format("cluster(%d) complex SVs(%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
                     id(), getSvCount(), getDesc(), mResolvedType, getArmCount(), getConsistencyCount(),
                     mChains.size(), chainedPerc, mRequiresReplication, otherInfo));
         }
@@ -919,7 +915,7 @@ public class SvCluster
 
         if(clusterMinJcn <= 0)
         {
-            LOGGER.debug("cluster({}) warning: invalid JCN variation(min={} max={})",
+            LNX_LOGGER.debug("cluster({}) warning: invalid JCN variation(min={} max={})",
                     mId, clusterMinJcn, clusterMaxJcn);
             return;
         }
@@ -938,7 +934,7 @@ public class SvCluster
         int replicationCap = chainingSvLimit > 0 ? min(chainingSvLimit, DEFAULT_CHAINING_SV_LIMIT) : DEFAULT_CHAINING_SV_LIMIT;
         if(totalReplicationCount > replicationCap)
         {
-            LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled vs limit({})",
+            LNX_LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled vs limit({})",
                     mId, totalReplicationCount, getSvCount(), clusterMinJcn, clusterMaxJcn, replicationCap);
 
             replicationFactor = replicationCap / (double)totalReplicationCount;
@@ -960,7 +956,7 @@ public class SvCluster
             if(svMultiple <= 1)
                 continue;
 
-            LOGGER.debug("cluster({}) SV({}) ploidy multiple({}, ploidy({} vs min={})",
+            LNX_LOGGER.debug("cluster({}) SV({}) ploidy multiple({}, ploidy({} vs min={})",
                     mId, var.posId(), svMultiple, svJcn, clusterMinJcn);
 
             if(!requiresReplication())

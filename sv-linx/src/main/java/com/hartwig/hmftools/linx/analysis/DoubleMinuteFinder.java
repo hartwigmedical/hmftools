@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -48,9 +49,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class DoubleMinuteFinder
 {
     private CnDataLoader mCnAnalyser;
@@ -66,8 +64,6 @@ public class DoubleMinuteFinder
     private static final double JCN_THRESHOLD = 8;
     private static final double ADJACENT_JCN_RATIO = 2.3;
     private static final int INF_PAIR_MIN_DISTANCE = 50000;
-
-    private static final Logger LOGGER = LogManager.getLogger(DoubleMinuteFinder.class);
 
     public DoubleMinuteFinder()
     {
@@ -220,7 +216,7 @@ public class DoubleMinuteFinder
 
         if(maxBFBJcn > clusterMaxJcn)
         {
-            LOGGER.debug(String.format("cluster(%s) BFB maxJCN(%.1f) plausible jcn(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
+            LNX_LOGGER.debug(String.format("cluster(%s) BFB maxJCN(%.1f) plausible jcn(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
                     cluster.id(), clusterMaxJcn, maxBFBJcn, sumFbJcn, maxSglJcn, armBfbCopyNumber));
 
             cluster.addAnnotation(CLUSTER_ANNOT_BFB);
@@ -230,7 +226,7 @@ public class DoubleMinuteFinder
         if(!possibleDM)
             return;
 
-        LOGGER.debug(String.format("cluster(%s) possible DM: maxJCN(%.1f) dmSvCount(%d) maxBFBJcn(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
+        LNX_LOGGER.debug(String.format("cluster(%s) possible DM: maxJCN(%.1f) dmSvCount(%d) maxBFBJcn(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
                 cluster.id(), clusterMaxJcn, candidateDMSVs.size(), maxBFBJcn, sumFbJcn, maxSglJcn, armBfbCopyNumber));
 
         // other the criteria to be a DM are:
@@ -243,7 +239,7 @@ public class DoubleMinuteFinder
 
             if(distance < INF_PAIR_MIN_DISTANCE)
             {
-                LOGGER.debug(String.format("cluster(%s) possible DM: inf-pair distance(%d) too small",
+                LNX_LOGGER.debug(String.format("cluster(%s) possible DM: inf-pair distance(%d) too small",
                         cluster.id(), distance));
                 return;
             }
@@ -279,7 +275,7 @@ public class DoubleMinuteFinder
         {
             if(clusterMaxJcn < maxArmEndCopyNumber * ADJACENT_JCN_RATIO)
             {
-                LOGGER.debug("cluster({}}) possible DM: not amplified vs max armEndCopyNumber({}}) centro({}})",
+                LNX_LOGGER.debug("cluster({}}) possible DM: not amplified vs max armEndCopyNumber({}}) centro({}})",
                         cluster.id(), formatJcn(maxArmEndCopyNumber));
                 return;
             }
@@ -315,7 +311,7 @@ public class DoubleMinuteFinder
             cluster.addChain(dmChain, false);
         }
 
-        LOGGER.debug(String.format("cluster(%s) identified DM: maxPloidy(%.1f) dmSvCount(%d) fullyChained(%s)",
+        LNX_LOGGER.debug(String.format("cluster(%s) identified DM: maxPloidy(%.1f) dmSvCount(%d) fullyChained(%s)",
                 cluster.id(), clusterMaxJcn, candidateDMSVs.size(), fullyChained));
     }
 
@@ -373,7 +369,7 @@ public class DoubleMinuteFinder
         double samplePloidy = samplePurity.score().maxPloidy();
         if(dmPloidy > 50 * samplePloidy) // effectively disabled for now
         {
-            LOGGER.debug("cluster({}}) DM amplified vs sample({}})",
+            LNX_LOGGER.debug("cluster({}}) DM amplified vs sample({}})",
                     cluster.id(), formatPloidy(samplePloidy));
 
             return true;
@@ -646,7 +642,7 @@ public class DoubleMinuteFinder
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing DM data: {}", e.toString());
+            LNX_LOGGER.error("error writing DM data: {}", e.toString());
         }
     }
 

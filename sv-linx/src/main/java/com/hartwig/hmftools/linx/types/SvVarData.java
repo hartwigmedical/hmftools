@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
@@ -27,9 +28,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.linx.cn.SvCNData;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class SvVarData
 {
@@ -83,8 +81,6 @@ public class SvVarData
 
     public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
     public static String RELATION_TYPE_OVERLAP = "OVRL";
-
-    private static final Logger LOGGER = LogManager.getLogger(SvVarData.class);
 
     public SvVarData(final StructuralVariantData svData)
     {
@@ -219,7 +215,7 @@ public class SvVarData
 
         if(otherId == id())
         {
-            LOGGER.warn("SV({}) reason({}) setting to own ID", id(), reason);
+            LNX_LOGGER.warn("SV({}) reason({}) setting to own ID", id(), reason);
         }
     }
 
