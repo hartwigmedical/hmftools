@@ -12,6 +12,7 @@ import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -37,7 +38,7 @@ public class ViccAnnotatedVCFChecker {
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature() && annotation.transcript().equals(featureTranscript)) {
                     String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                    if (!snpeffProteinAnnotation.equals(featureProteinAnnotation)) {
+                    if (!snpeffProteinAnnotation.equals(toSnpEffProtein(featureProteinAnnotation))) {
                         LOGGER.info("Difference on gene '{}' - {}:{} {}->{} : Feature protein '{}' vs SnpEff protein '{}'",
                                 featureGene,
                                 variant.getContig(),
@@ -49,6 +50,15 @@ public class ViccAnnotatedVCFChecker {
                     }
                 }
             }
+        }
+    }
+
+    @NotNull
+    private static String toSnpEffProtein(@NotNull String feature) {
+        if (feature.startsWith("p.M1") && feature.length() == 5) {
+            return "p.M1?";
+        } else {
+            return feature;
         }
     }
 }
