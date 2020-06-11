@@ -22,6 +22,4 @@ public abstract class TransvarSnvMnv implements TransvarAnnotation {
 
     @NotNull
     public abstract List<String> candidateCodons();
-
-    public abstract boolean candidateCodonsSpanMultipleExons();
 }

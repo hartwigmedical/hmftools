@@ -17,6 +17,8 @@ public abstract class TransvarRecord {
 
     public abstract long gdnaPosition();
 
+    public abstract boolean variantSpanMultipleExons();
+
     @NotNull
     public abstract TransvarAnnotation annotation();
 }

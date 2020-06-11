@@ -30,7 +30,6 @@ public class TransvarInterpreterTest {
                         .gdnaAlt("C")
                         .referenceCodon("TTA")
                         .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
-                        .candidateCodonsSpanMultipleExons(false)
                         .build())
                 .build();
 
@@ -46,13 +45,12 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canInterpretSnvSpanningMultipleExons() {
-        TransvarRecord record = baseRecord().gdnaPosition(10)
+        TransvarRecord record = baseRecord().variantSpanMultipleExons(true).gdnaPosition(10)
                 .annotation(ImmutableTransvarSnvMnv.builder()
                         .gdnaRef("A")
                         .gdnaAlt("C")
                         .referenceCodon("TTA")
                         .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
-                        .candidateCodonsSpanMultipleExons(true)
                         .build())
                 .build();
 
@@ -71,7 +69,6 @@ public class TransvarInterpreterTest {
                         .gdnaAlt("GC")
                         .referenceCodon("TAC")
                         .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
-                        .candidateCodonsSpanMultipleExons(false)
                         .build())
                 .build();
 
@@ -93,7 +90,6 @@ public class TransvarInterpreterTest {
                         .gdnaAlt("GC")
                         .referenceCodon("TGG")
                         .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
-                        .candidateCodonsSpanMultipleExons(false)
                         .build())
                 .build();
 
@@ -216,7 +212,7 @@ public class TransvarInterpreterTest {
 
     @NotNull
     private static ImmutableTransvarRecord.Builder baseRecord() {
-        return ImmutableTransvarRecord.builder().transcript("irrelevant").chromosome("1");
+        return ImmutableTransvarRecord.builder().transcript("irrelevant").chromosome("1").variantSpanMultipleExons(false);
     }
 
     @NotNull

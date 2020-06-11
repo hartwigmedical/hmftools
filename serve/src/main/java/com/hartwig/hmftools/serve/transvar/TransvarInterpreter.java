@@ -64,7 +64,7 @@ class TransvarInterpreter {
             @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
-        if (snvMnv.candidateCodonsSpanMultipleExons()) {
+        if (record.variantSpanMultipleExons()) {
             // In this case we only generate hotspots for a simple SNV.
             if (snvMnv.gdnaRef().length() == 1) {
                 hotspots.add(ImmutableVariantHotspotImpl.builder()
@@ -88,89 +88,108 @@ class TransvarInterpreter {
 
     @NotNull
     private List<VariantHotspot> convertDuplicationToHotspots(@NotNull TransvarRecord record, @NotNull TransvarDuplication dup) {
-        // Dups don't have ref and alt information so need to look it up in ref genome.
-        long position = record.gdnaPosition() - 1;
-        String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
-
-        String dupBases =
-                refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + dup.duplicatedBaseCount()).getBaseString();
-
-        return Lists.newArrayList(ImmutableVariantHotspotImpl.builder()
-                .chromosome(record.chromosome())
-                .position(position)
-                .ref(preMutatedSequence)
-                .alt(preMutatedSequence + dupBases)
-                .build());
-    }
-
-    @NotNull
-    private List<VariantHotspot> convertInsertionToHotspots(@NotNull TransvarRecord record, @NotNull TransvarInsertion insertion,
-            @NotNull Strand strand) {
-        long position = record.gdnaPosition();
-        String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
-
-        ImmutableVariantHotspotImpl.Builder hotspotBuilder =
-                ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position).ref(preMutatedSequence);
-
         List<VariantHotspot> hotspots = Lists.newArrayList();
-        // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
-        if (insertion.insertedBases().length() == 3) {
-            for (String trinucleotide : AminoAcidFunctions.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
-                hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
-            }
+        if (!record.variantSpanMultipleExons()) {
+            // Dups don't have ref and alt information so need to look it up in ref genome.
+            long position = record.gdnaPosition() - 1;
+            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+
+            String dupBases =
+                    refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + dup.duplicatedBaseCount()).getBaseString();
+
+            hotspots.add(ImmutableVariantHotspotImpl.builder()
+                    .chromosome(record.chromosome())
+                    .position(position)
+                    .ref(preMutatedSequence)
+                    .alt(preMutatedSequence + dupBases)
+                    .build());
         } else {
-            hotspots.add(hotspotBuilder.alt(preMutatedSequence + insertion.insertedBases()).build());
+            LOGGER.debug("Duplication spanning multiple exons. Ignoring {}", record);
         }
 
         return hotspots;
     }
 
     @NotNull
-    private List<VariantHotspot> convertDeletionToHotspots(@NotNull TransvarRecord record, @NotNull TransvarDeletion deletion) {
-        ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome());
+    private List<VariantHotspot> convertInsertionToHotspots(@NotNull TransvarRecord record, @NotNull TransvarInsertion insertion,
+            @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
-        if (deletion.unalignedGDNAPosition() <= record.gdnaPosition()) {
-            for (long start = deletion.unalignedGDNAPosition(); start <= record.gdnaPosition(); start++) {
-                long adjustedPosition = start - 1;
-                String preMutatedSequence =
-                        refGenome.getSubsequenceAt(record.chromosome(), adjustedPosition, adjustedPosition).getBaseString();
-                String deletedSequence = refGenome.getSubsequenceAt(record.chromosome(),
-                        adjustedPosition + 1,
-                        adjustedPosition + deletion.deletedBaseCount()).getBaseString();
+        if (!record.variantSpanMultipleExons()) {
+            long position = record.gdnaPosition();
+            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
 
-                hotspots.add(hotspotBuilder.position(adjustedPosition)
-                        .ref(preMutatedSequence + deletedSequence)
-                        .alt(preMutatedSequence)
-                        .build());
+            ImmutableVariantHotspotImpl.Builder hotspotBuilder =
+                    ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position).ref(preMutatedSequence);
+
+            // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
+            if (insertion.insertedBases().length() == 3) {
+                for (String trinucleotide : AminoAcidFunctions.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
+                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
+                }
+            } else {
+                hotspots.add(hotspotBuilder.alt(preMutatedSequence + insertion.insertedBases()).build());
             }
         } else {
-            LOGGER.warn("Unaligned GDNA > position. Unsure why! Record={}", record);
+            LOGGER.debug("Insertion spanning multiple exons. Ignoring {}", record);
         }
+        return hotspots;
+    }
+
+    @NotNull
+    private List<VariantHotspot> convertDeletionToHotspots(@NotNull TransvarRecord record, @NotNull TransvarDeletion deletion) {
+        List<VariantHotspot> hotspots = Lists.newArrayList();
+        if (!record.variantSpanMultipleExons()) {
+            if (deletion.unalignedGDNAPosition() <= record.gdnaPosition()) {
+                ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome());
+                for (long start = deletion.unalignedGDNAPosition(); start <= record.gdnaPosition(); start++) {
+                    long adjustedPosition = start - 1;
+                    String preMutatedSequence =
+                            refGenome.getSubsequenceAt(record.chromosome(), adjustedPosition, adjustedPosition).getBaseString();
+                    String deletedSequence = refGenome.getSubsequenceAt(record.chromosome(),
+                            adjustedPosition + 1,
+                            adjustedPosition + deletion.deletedBaseCount()).getBaseString();
+
+                    hotspots.add(hotspotBuilder.position(adjustedPosition)
+                            .ref(preMutatedSequence + deletedSequence)
+                            .alt(preMutatedSequence)
+                            .build());
+                }
+            } else {
+                LOGGER.warn("Unaligned GDNA > position. Unsure why! Record={}", record);
+            }
+        } else {
+            LOGGER.debug("Deletion spanning multiple exons. Ignoring {}", record);
+        }
+
         return hotspots;
     }
 
     @NotNull
     private List<VariantHotspot> convertComplexInsertDeleteToHotspots(@NotNull TransvarRecord record,
             @NotNull TransvarComplexInsertDelete insDel) {
-        long position = record.gdnaPosition() - 1;
-        String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
-
-        String deletedBases =
-                refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + insDel.deletedBaseCount()).getBaseString();
-        ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder()
-                .chromosome(record.chromosome())
-                .position(position)
-                .ref(preMutatedSequence + deletedBases);
-
         List<VariantHotspot> hotspots = Lists.newArrayList();
-        hotspots.add(hotspotBuilder.alt(preMutatedSequence + insDel.insertedSequence()).build());
-        // For now we only add alternative sequences for insertions of one AA
-        if (insDel.insertedSequence().length() == 3) {
-            for (String candidateAlternativeSequence : insDel.candidateAlternativeSequences()) {
-                if (!candidateAlternativeSequence.equals(insDel.insertedSequence())) {
-                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
+        if (!record.variantSpanMultipleExons()) {
+            long position = record.gdnaPosition() - 1;
+            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+
+            String deletedBases =
+                    refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + insDel.deletedBaseCount()).getBaseString();
+            ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder()
+                    .chromosome(record.chromosome())
+                    .position(position)
+                    .ref(preMutatedSequence + deletedBases);
+
+            hotspots.add(hotspotBuilder.alt(preMutatedSequence + insDel.insertedSequence()).build());
+            // For now we only add alternative sequences for insertions of one AA
+            if (insDel.insertedSequence().length() == 3) {
+                for (String candidateAlternativeSequence : insDel.candidateAlternativeSequences()) {
+                    if (!candidateAlternativeSequence.equals(insDel.insertedSequence())) {
+                        hotspots.add(hotspotBuilder.alt(preMutatedSequence + candidateAlternativeSequence).build());
+                    }
                 }
             }
+        } else {
+            LOGGER.debug("Complex insert/delete spanning multiple exons. Ignoring {}", record);
         }
         return hotspots;
     }

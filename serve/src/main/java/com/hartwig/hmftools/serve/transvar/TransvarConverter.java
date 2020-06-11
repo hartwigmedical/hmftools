@@ -49,7 +49,7 @@ final class TransvarConverter {
 
         TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], fields[LOCATION_COLUMN], messageField);
 
-        // (Very) long insertions report a deleted count rather than a list of bases. We ignore these.
+        // (Very) long insertions report a inserted count rather than a list of bases. We ignore these.
         if (record.annotation() instanceof TransvarInsertion && isInteger(((TransvarInsertion) record.annotation()).insertedBases())) {
             return null;
         }
@@ -69,6 +69,7 @@ final class TransvarConverter {
 
         // Field looks like "${transcript} (protein_coding)"
         recordBuilder.transcript(transcriptField.trim().split(" ")[0]);
+        recordBuilder.variantSpanMultipleExons(variantSpanMultipleExons(locationField));
 
         // General case: "chr${chr}:g.${gdnaPos}${gdnaRef}>${dnaAlt}/c.${cdnaPos}${cdnaRef}>${cdnaAlt}/p.${aaRef}${aaPos}{aaAlt}"
         //  For MNV the g. part looks like ${gdnaPosStart}_${gdnaPosEnd}del${ref}ins${alt}
@@ -88,20 +89,20 @@ final class TransvarConverter {
 
             TransvarAnnotation annotation;
             if (gdna.contains(HGVS_INSERTION) || gdna.contains(HGVS_DELETION)) {
-                annotation = annotationForInsertionDeletion(position, gdnaParts[1], locationField, messageField);
+                annotation = annotationForInsertionDeletion(position, gdnaParts[1], messageField);
             } else {
                 annotation = annotationForDuplication(position, gdnaParts[1]);
             }
 
             return recordBuilder.annotation(annotation).build();
         } else {
-            return createForSNV(recordBuilder, gdna, locationField, messageField);
+            return createForSNV(recordBuilder, gdna, messageField);
         }
     }
 
     @NotNull
     private static TransvarAnnotation annotationForInsertionDeletion(long position, @NotNull String delInsPart,
-            @NotNull String locationField, @NotNull String messageField) {
+            @NotNull String messageField) {
         int delStart = delInsPart.indexOf(HGVS_DELETION);
         int insStart = delInsPart.indexOf(HGVS_INSERTION);
 
@@ -132,7 +133,6 @@ final class TransvarConverter {
                             .gdnaAlt(insertedBases)
                             .referenceCodon(extractReferenceCodonFromMessageField(messageField))
                             .candidateCodons(extractCandidateCodonsFromMessageField(messageField))
-                            .candidateCodonsSpanMultipleExons(candidateCodonsSpanMultipleExons(locationField))
                             .build();
                 }
             } else {
@@ -166,7 +166,7 @@ final class TransvarConverter {
 
     @NotNull
     private static TransvarRecord createForSNV(@NotNull ImmutableTransvarRecord.Builder recordBuilder, @NotNull String gdna,
-            @NotNull String locationField, @NotNull String messageField) {
+            @NotNull String messageField) {
         // SNVs look like 1234T>C
         StringBuilder gdnaPos = new StringBuilder();
         StringBuilder gdnaRef = new StringBuilder();
@@ -201,7 +201,6 @@ final class TransvarConverter {
                 .gdnaAlt(gdnaAlt.toString())
                 .referenceCodon(extractReferenceCodonFromMessageField(messageField))
                 .candidateCodons(extractCandidateCodonsFromMessageField(messageField))
-                .candidateCodonsSpanMultipleExons(candidateCodonsSpanMultipleExons(locationField))
                 .build();
 
         return recordBuilder.gdnaPosition(Long.parseLong(gdnaPos.toString())).annotation(snvAnnotation).build();
@@ -232,8 +231,11 @@ final class TransvarConverter {
         return fieldValue != null ? Arrays.asList(fieldValue.split("/")) : Lists.newArrayList();
     }
 
-    private static boolean candidateCodonsSpanMultipleExons(@NotNull String locationField) {
-        return locationField.contains("cds_in_exons");
+    private static boolean variantSpanMultipleExons(@NotNull String locationField) {
+        // This looks like:
+        //  - "inside_[cds_in_exons_[1,2]]" for SNV
+        //  - "from_[cds_in_exon_6]_to_[cds_in_exon_7]" for inframes.
+        return locationField.contains("cds_in_exons") || (locationField.contains("from") && locationField.contains("to"));
     }
 
     @NotNull

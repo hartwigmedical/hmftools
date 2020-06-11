@@ -29,6 +29,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000361445", record.transcript());
         assertEquals("1", record.chromosome());
         assertEquals(11182158, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarSnvMnv snv = (TransvarSnvMnv) record.annotation();
         assertEquals("A", snv.gdnaRef());
@@ -38,7 +39,6 @@ public class TransvarConverterTest {
         assertEquals("GTC", snv.candidateCodons().get(1));
         assertEquals("GTG", snv.candidateCodons().get(2));
         assertEquals("GTT", snv.candidateCodons().get(3));
-        assertFalse(snv.candidateCodonsSpanMultipleExons());
     }
 
     @Test
@@ -54,6 +54,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000540549", record.transcript());
         assertEquals("4", record.chromosome());
         assertEquals(106180852, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarSnvMnv mnv = (TransvarSnvMnv) record.annotation();
         assertEquals("TA", mnv.gdnaRef());
@@ -63,7 +64,6 @@ public class TransvarConverterTest {
         assertEquals("GCC", mnv.candidateCodons().get(1));
         assertEquals("GCG", mnv.candidateCodons().get(2));
         assertEquals("GCT", mnv.candidateCodons().get(3));
-        assertFalse(mnv.candidateCodonsSpanMultipleExons());
     }
 
     @Test
@@ -79,6 +79,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000256474", record.transcript());
         assertEquals("3", record.chromosome());
         assertEquals(10183871, record.gdnaPosition());
+        assertTrue(record.variantSpanMultipleExons());
 
         TransvarSnvMnv mnv = (TransvarSnvMnv) record.annotation();
         assertEquals("G", mnv.gdnaRef());
@@ -90,7 +91,6 @@ public class TransvarConverterTest {
         assertEquals("CGC", mnv.candidateCodons().get(3));
         assertEquals("CGG", mnv.candidateCodons().get(4));
         assertEquals("CGT", mnv.candidateCodons().get(5));
-        assertTrue(mnv.candidateCodonsSpanMultipleExons());
     }
 
     @Test
@@ -106,6 +106,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000277541", record.transcript());
         assertEquals("9", record.chromosome());
         assertEquals(139399420, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarDeletion deletion = (TransvarDeletion) record.annotation();
         assertEquals(3, deletion.deletedBaseCount());
@@ -122,10 +123,28 @@ public class TransvarConverterTest {
         assertEquals("ENST00000288135", record2.transcript());
         assertEquals("4", record2.chromosome());
         assertEquals(55593607, record2.gdnaPosition());
+        assertFalse(record2.variantSpanMultipleExons());
 
         TransvarDeletion deletion2 = (TransvarDeletion) record2.annotation();
         assertEquals(15, deletion2.deletedBaseCount());
         assertEquals(55593606, deletion2.unalignedGDNAPosition());
+
+        String deletionSpanningMultipleExons = "PDGFRA:p.E311_K312del\tENST00000257290 (protein_coding)\tPDGFRA\t+\t"
+                + "chr4:g.55133630_55133726del97/c.931+3_939del97/p.E311_K312delEK\tfrom_[cds_in_exon_6]_to_[cds_in_exon_7]\t"
+                + "CSQN=InFrameDeletion;left_align_gDNA=g.55133627_55133723del97;unaligned_gDNA=g.55133627_55133723del97;"
+                + "left_align_cDNA=c.931_936del97;unalign_cDNA=c.931_936del97;left_align_protein=p.E311_K312delEK;"
+                + "unalign_protein=p.E311_K312delEK;imprecise;aliases=ENSP00000257290;source=Ensembl";
+
+        TransvarRecord record3 = TransvarConverter.toTransvarRecord(deletionSpanningMultipleExons);
+
+        assertEquals("ENST00000257290", record3.transcript());
+        assertEquals("4", record3.chromosome());
+        assertEquals(55133630, record3.gdnaPosition());
+        assertTrue(record3.variantSpanMultipleExons());
+
+        TransvarDeletion deletion3 = (TransvarDeletion) record3.annotation();
+        assertEquals(97, deletion3.deletedBaseCount());
+        assertEquals(55133627, deletion3.unalignedGDNAPosition());
     }
 
     @Test
@@ -143,6 +162,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000584450", record.transcript());
         assertEquals("17", record.chromosome());
         assertEquals(37880999, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarInsertion insertion = (TransvarInsertion) record.annotation();
         assertEquals("TATGTAATGGCA", insertion.insertedBases());
@@ -159,6 +179,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000275493", record.transcript());
         assertEquals("7", record.chromosome());
         assertEquals(55242469, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarComplexInsertDelete insertionDeletion = (TransvarComplexInsertDelete) record.annotation();
         assertEquals(12, insertionDeletion.deletedBaseCount());
@@ -195,6 +216,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000584450", record1.transcript());
         assertEquals("17", record1.chromosome());
         assertEquals(37880985, record1.gdnaPosition());
+        assertFalse(record1.variantSpanMultipleExons());
 
         TransvarDuplication duplication1 = (TransvarDuplication) record1.annotation();
         assertEquals(12, duplication1.duplicatedBaseCount());
@@ -210,6 +232,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000288602", record2.transcript());
         assertEquals("7", record2.chromosome());
         assertEquals(140453136, record2.gdnaPosition());
+        assertFalse(record2.variantSpanMultipleExons());
 
         TransvarDuplication duplication2 = (TransvarDuplication) record2.annotation();
 
@@ -218,7 +241,6 @@ public class TransvarConverterTest {
 
     @Test
     public void longInsertLeadsToNull() {
-        // TODO Check whether this actually happens in practice.
         String line = "BRCA2:p.V1839_E1901ins\tENST00000544455 (protein_coding)\tBRCA2\t+\tchr13:g.32914008_32914196ins189/"
                 + "c.5516_5704del189/p.V1839_E1901del63\tinside_[cds_in_exon_11]\tCSQN=InFrameDeletion;left_align_gDNA="
                 + "g.32914004_32914192del189;unaligned_gDNA=g.32914007_32914195del189;left_align_cDNA=c.5512_5700del189;"
