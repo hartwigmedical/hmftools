@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -33,17 +34,20 @@ import org.jetbrains.annotations.Nullable;
 public class ChainFinderCompare
 {
     private final String mDataDirectory;
+    private final boolean mUseSampleDirectories;
     private CfSampleData mSampleData;
     private BufferedWriter mSvDataWriter;
 
-    public static final String CHAIN_FINDER_SAMPLE_DATA_DIR = "chain_finder_data_dir";
+    public static final String CHAIN_FINDER_DATA_DIR = "chain_finder_data_dir";
+    private static final String USE_SAMPLE_DIRECTORIES = "use_sample_dir";
 
     // chain-finder won't form chains of only 2 SVs
     private static final int CF_MIN_CHAIN_COUNT = 3;
 
     public ChainFinderCompare(final String outputDir, final CommandLine cmd)
     {
-        mDataDirectory = formOutputPath(cmd.getOptionValue(CHAIN_FINDER_SAMPLE_DATA_DIR));
+        mDataDirectory = formOutputPath(cmd.getOptionValue(CHAIN_FINDER_DATA_DIR));
+        mUseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRECTORIES);
         mSampleData = null;
         mSvDataWriter = null;
 
@@ -52,14 +56,18 @@ public class ChainFinderCompare
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(CHAIN_FINDER_SAMPLE_DATA_DIR, true, "Directory containing each sample's ChainFinder run results");
+        options.addOption(CHAIN_FINDER_DATA_DIR, true, "Root dfirectory for ChainFinder sample run results");
+        options.addOption(USE_SAMPLE_DIRECTORIES, false, "All sample ChainFinder results in a single directory");
     }
 
     public void close() { closeBufferedWriter(mSvDataWriter); }
 
-    public void processSample(final String sampleId, final List<SvVarData> svDataList, final Map<String, List<SvBreakend>> chrBreakendMap)
+    public void processSample(
+            final String sampleId, final List<SvVarData> svDataList,
+            final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        final String resultsDir = mDataDirectory + sampleId + File.separator + "results" + File.separator + sampleId + File.separator;
+        final String resultsDir = mUseSampleDirectories ?
+                mDataDirectory + sampleId + File.separator + "results" + File.separator + sampleId + File.separator : mDataDirectory;
 
         if(!Files.exists(Paths.get(resultsDir)))
         {
@@ -70,9 +78,14 @@ public class ChainFinderCompare
         // check whether any chaining results have been written for this sample - it's possible for CF to not find any chains
         final String chainDataFile =  sampleId + "_chains_final.txt";
 
+        mSampleData = new CfSampleData(sampleId);
+
+        // set clustered SV distances
+        clusters.forEach(x -> mSampleData.setSvClusterDistances(x));
+
         if(!Files.exists(Paths.get(resultsDir + chainDataFile)))
         {
-            LNX_LOGGER.debug("sample({}) invalid chain-finder results file({} + {})", sampleId, resultsDir, chainDataFile);
+            LNX_LOGGER.info("sample({}) invalid chain-finder results file({} + {})", sampleId, resultsDir, chainDataFile);
             writeUnchainedSVs(svDataList);
             return;
         }
@@ -82,7 +95,6 @@ public class ChainFinderCompare
         if(breakendDataList.isEmpty())
             return;
 
-        mSampleData = new CfSampleData(sampleId);
 
         mSampleData.UnchainedSvList.addAll(svDataList.stream()
                 .filter(x -> !x.isSglBreakend()) // SGLs aren't handled by CF and so are considered out of scope
@@ -212,7 +224,7 @@ public class ChainFinderCompare
             final String outputFileName = outputDir + "LNX_CHAIN_FINDER_SVS.csv";
             mSvDataWriter = createBufferedWriter(outputFileName, false);
 
-            mSvDataWriter.write("SampleId,SvId,ClusterId,ClusterCount,SglCount,ResolvedType,Type,ClusterReason");
+            mSvDataWriter.write("SampleId,SvId,ClusterId,ClusterCount,SglCount,ResolvedType,Type,ClusterReason,ClusterDistance");
             mSvDataWriter.write(",CfSvId,CfChainId,CfChainCount,SharedSvCount,DbMatchedStart,DbMatchedEnd");
 
             // written again for convenience
@@ -247,10 +259,12 @@ public class ChainFinderCompare
     {
         try
         {
-            mSvDataWriter.write(String.format("%s,%d,%d,%d,%d,%s,%s,%s",
+            Integer clusterDistance = mSampleData.SvClusteringDistance.get(var);
+
+            mSvDataWriter.write(String.format("%s,%d,%d,%d,%d,%s,%s,%s,%d",
                 mSampleData.SampleId, var.id(), var.getCluster().id(), var.getCluster().getSvCount(),
-                    var.getCluster().getSglBreakendCount(), var.getCluster().getResolvedType(),
-                    var.type(), parseMainClusterReason(var.getClusterReason())));
+                    var.getCluster().getSglBreakendCount(), var.getCluster().getResolvedType(), var.type(),
+                    parseMainClusterReason(var.getClusterReason()), clusterDistance != null ? clusterDistance : 0));
 
             final SvLinkedPair[] dbLinks = new SvLinkedPair[] { var.getDBLink(true), var.getDBLink(false) };
 

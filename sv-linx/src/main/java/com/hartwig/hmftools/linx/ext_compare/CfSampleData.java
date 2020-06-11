@@ -1,13 +1,17 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.linx.ext_compare.CfBreakendData.NO_ID;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.compress.utils.Lists;
@@ -16,11 +20,12 @@ public class CfSampleData
 {
     public final String SampleId;
     public final List<CfSvChainData> CfSvList;
-    public final List<SvVarData> UnchainedSvList;
+    public final List<SvVarData> UnchainedSvList; // SVs not clustered by CF
     public final Map<Integer,CfChain> Chains;
 
     public final Map<String,CfChainClusterOverlap> LinkedClusterChains;
 
+    public final Map<SvVarData,Integer> SvClusteringDistance;
 
     public CfSampleData(final String sampleId)
     {
@@ -29,6 +34,7 @@ public class CfSampleData
         CfSvList = Lists.newArrayList();
         UnchainedSvList = Lists.newArrayList();
         LinkedClusterChains = Maps.newHashMap();
+        SvClusteringDistance = Maps.newHashMap();
     }
 
     public void processNewSV(final CfSvChainData cfSvData)
@@ -95,4 +101,41 @@ public class CfSampleData
         }
     }
 
+    public void setSvClusterDistances(final SvCluster cluster)
+    {
+        if(cluster.getSvCount() == 1)
+            return;
+
+        for(int i = 0; i < cluster.getSvCount(); ++i)
+        {
+            final SvVarData var1 = cluster.getSV(i);
+
+            final int otherSvId = Integer.parseInt(var1.getClusterReason().split(";", -1)[0].split("_")[1]);
+
+            for(int j = 0; j < cluster.getSvCount(); ++j)
+            {
+                if(j == i)
+                    continue;
+
+                final SvVarData var2 = cluster.getSV(j);
+
+                if(var2.id() == otherSvId)
+                {
+                    int distance = getProximity(var1, var2);
+
+                    if(SvClusteringDistance.containsKey(var1))
+                        SvClusteringDistance.put(var1, min(distance, SvClusteringDistance.get(var1)));
+                    else
+                        SvClusteringDistance.put(var1, distance);
+
+                    if(SvClusteringDistance.containsKey(var2))
+                        SvClusteringDistance.put(var2, min(distance, SvClusteringDistance.get(var2)));
+                    else
+                        SvClusteringDistance.put(var2, distance);
+
+                    break;
+                }
+            }
+        }
+    }
 }

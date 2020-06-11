@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromGermlineVcf;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
-import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_SAMPLE_DATA_DIR;
+import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_DATA_DIR;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 
 import java.io.IOException;
@@ -129,7 +129,7 @@ public class SvLinxApplication
         FusionDisruptionAnalyser fusionAnalyser = null;
         boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
 
-        ChainFinderCompare chainFinderCompare = cmd.hasOption(CHAIN_FINDER_SAMPLE_DATA_DIR) ?
+        ChainFinderCompare chainFinderCompare = cmd.hasOption(CHAIN_FINDER_DATA_DIR) ?
                 new ChainFinderCompare(config.OutputDataPath, cmd) : null;
 
         boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
@@ -252,7 +252,7 @@ public class SvLinxApplication
 
             if(chainFinderCompare != null)
             {
-                chainFinderCompare.processSample(sampleId, svDataList, sampleAnalyser.getChrBreakendMap());
+                chainFinderCompare.processSample(sampleId, svDataList, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
             }
 
             if(config.MaxSamples > 0 && count >= config.MaxSamples)
