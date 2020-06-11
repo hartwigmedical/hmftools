@@ -67,7 +67,12 @@ public class FusionFilters
     {
         if(fusion.getKnownFusionType() == KNOWN_PAIR)
         {
-            if(!fusion.hasKnownSpliceSites() && fusion.totalFragments() < 2)
+            int requiredFragments = fusion.hasKnownSpliceSites()
+                    || (fusion.JunctionTypes[SE_START] == FusionJunctionType.CANONICAL && fusion.JunctionTypes[SE_END] == FusionJunctionType.KNOWN)
+                    || (fusion.JunctionTypes[SE_START] == FusionJunctionType.KNOWN && fusion.JunctionTypes[SE_END] == FusionJunctionType.CANONICAL) ?
+                    2 : 4;
+
+            if(fusion.totalFragments() < requiredFragments)
             {
                 fusion.setFilter(FILTER_SUPPORT);
                 return false;
