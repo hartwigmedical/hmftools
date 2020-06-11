@@ -94,7 +94,7 @@ public class TransvarConverterTest {
     }
 
     @Test
-    public void canConvertDeletionToRecord() {
+    public void canConvertDeletionsToRecord() {
         String simpleDeletionLine =
                 "NOTCH1:p.V1578del\tENST00000277541 (protein_coding)\tNOTCH1\t-\tchr9:g.139399420_139399422delCCA/c.4732_4734delGTG/"
                         + "p.V1578delV\tinside_[cds_in_exon_26]\tCSQN=InFrameDeletion;left_align_gDNA=g.139399409_139399411delCAC;"
@@ -112,13 +112,13 @@ public class TransvarConverterTest {
         assertEquals(3, deletion.deletedBaseCount());
         assertEquals(139399409, deletion.unalignedGDNAPosition());
 
-        String complexDeletionLine = "KIT:p.K558_E562del\tENST00000288135 (protein_coding)\tKIT\t+\t"
+        String longDeletionLine = "KIT:p.K558_E562del\tENST00000288135 (protein_coding)\tKIT\t+\t"
                 + "chr4:g.55593607_55593621del15/c.1673_1687del15/p.K558_E562delKVVEE\tinside_[cds_in_exon_11]\t"
                 + "CSQN=InFrameDeletion;left_align_gDNA=g.55593605_55593619del15;unaligned_gDNA=g.55593606_55593620del15;"
                 + "left_align_cDNA=c.1671_1685del15;unalign_cDNA=c.1672_1686del15;left_align_protein=p.K558_E562delKVVEE;"
                 + "unalign_protein=p.K558_E562delKVVEE;imprecise;aliases=ENSP00000288135;source=Ensembl";
 
-        TransvarRecord record2 = TransvarConverter.toTransvarRecord(complexDeletionLine);
+        TransvarRecord record2 = TransvarConverter.toTransvarRecord(longDeletionLine);
 
         assertEquals("ENST00000288135", record2.transcript());
         assertEquals("4", record2.chromosome());
