@@ -74,11 +74,13 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for whether transvar is enabled", TRANSVAR_ENABLED);
 
+        FeatureCurator curator = new FeatureCurator();
+
         ViccSource source = ViccSource.ONCOKB;
         LOGGER.info("Reading VICC json from '{}' with source '{}'", viccJsonPath, source);
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).maxEntriesToInclude(MAX_ENTRIES).build();
-        List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection));
+        List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection), curator);
         LOGGER.info(" Read and curated {} entries", viccEntries.size());
 
         HotspotExtractor hotspotExtractor = TRANSVAR_ENABLED
@@ -102,14 +104,17 @@ public class ViccExtractorTestApplication {
     }
 
     @NotNull
-    private static List<ViccEntry> curate(@NotNull List<ViccEntry> viccEntries) {
+    private static List<ViccEntry> curate(@NotNull List<ViccEntry> viccEntries, @NotNull FeatureCurator curator) {
         List<ViccEntry> curatedViccEntries = Lists.newArrayList();
 
         for (ViccEntry entry : viccEntries) {
             ImmutableViccEntry.Builder builder = ImmutableViccEntry.builder().from(entry);
             List<Feature> curatedFeatures = Lists.newArrayList();
             for (Feature feature : entry.features()) {
-                curatedFeatures.add(FeatureCurator.curate(entry, feature));
+                Feature curatedFeature = curator.curate(entry, feature);
+                if (curatedFeature != null) {
+                    curatedFeatures.add(curator.curate(entry, feature));
+                }
             }
             curatedViccEntries.add(builder.features(curatedFeatures).build());
         }

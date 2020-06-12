@@ -14,14 +14,14 @@ public class FeatureCuratorTest {
 
     @Test
     public void canCurateFeatures() {
-        FeatureCurator.CurationKey firstKey = FeatureCurator.ONCOKB_FEATURE_NAME_MAPPINGS.keySet().iterator().next();
-        FeatureNameMapping firstMapping = FeatureCurator.ONCOKB_FEATURE_NAME_MAPPINGS.get(firstKey).get(0);
+        CurationKey firstKey = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.keySet().iterator().next();
+        String firstMappedFeature = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.get(firstKey);
 
         ViccEntry entry =
                 ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB, ViccTestFactory.testOncoKbWithTranscript(firstKey.transcript()));
 
-        Feature feature = ImmutableFeature.builder().geneSymbol(firstKey.gene()).name(firstMapping.originalFeatureName()).build();
+        Feature feature = ImmutableFeature.builder().geneSymbol(firstKey.gene()).name(firstKey.featureName()).build();
 
-        assertEquals(firstMapping.curatedFeatureName(), FeatureCurator.curate(entry, feature).name());
+        assertEquals(firstMappedFeature, new FeatureCurator().curate(entry, feature).name());
     }
 }
