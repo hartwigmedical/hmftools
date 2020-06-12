@@ -8,8 +8,8 @@ class LocationTest {
 
     @Test
     fun testBEALN() {
-        val line = "X:52729547|+|608M|0,X:52786405|-|608M|,X:48209476|+|608M|"
-        val breakends = Breakend.fromBealn(line)
+        val line = "X:52729547|+|608M|0,X:52786405|-|608M|,X:48209476|+|608M|".split(",")
+        val breakends = line.map { Breakend.fromBealn(it) }
 
         Assert.assertEquals(Breakend("X", 52729547, 52729547, 1), breakends[0])
         Assert.assertEquals(Breakend("X", 52786405, 52786405, -1), breakends[1])
