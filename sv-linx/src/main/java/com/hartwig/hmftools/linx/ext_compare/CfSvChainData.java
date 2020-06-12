@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.lowerChromosome;
 import static com.hartwig.hmftools.linx.ext_compare.CfBreakendData.NO_ID;
-import static com.hartwig.hmftools.linx.ext_compare.CfChainClusterOverlap.formClusterChainId;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.CF_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.DIFF;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
@@ -74,8 +73,6 @@ public class CfSvChainData
     }
 
     public boolean svMatched() { return mSvData != null; }
-
-    public String clusterChainId() { return formClusterChainId(mSvData.getCluster().id(), ChainId); };
 
     public boolean matches(final SvVarData var)
     {

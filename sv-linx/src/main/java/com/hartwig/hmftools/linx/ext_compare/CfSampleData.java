@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -23,9 +25,9 @@ public class CfSampleData
     public final List<SvVarData> UnchainedSvList; // SVs not clustered by CF
     public final Map<Integer,CfChain> Chains;
 
-    public final Map<String,CfChainClusterOverlap> LinkedClusterChains;
+    public final List<CfChainClusterOverlap> ClusterChainOverlaps;
 
-    public final Map<SvVarData,Integer> SvClusteringDistance;
+    public final Map<SvVarData,Integer> SvProximityDistance;
 
     public CfSampleData(final String sampleId)
     {
@@ -33,8 +35,8 @@ public class CfSampleData
         Chains = Maps.newHashMap();
         CfSvList = Lists.newArrayList();
         UnchainedSvList = Lists.newArrayList();
-        LinkedClusterChains = Maps.newHashMap();
-        SvClusteringDistance = Maps.newHashMap();
+        ClusterChainOverlaps = Lists.newArrayList();
+        SvProximityDistance = Maps.newHashMap();
     }
 
     public void processNewSV(final CfSvChainData cfSvData)
@@ -54,15 +56,40 @@ public class CfSampleData
         {
             UnchainedSvList.remove(cfSvData.getSvData());
 
-            CfChainClusterOverlap clusterOverlap = LinkedClusterChains.get(cfSvData.clusterChainId());
-            if(clusterOverlap == null)
+            boolean clusterFound = false;
+
+            for(CfChainClusterOverlap clusterOverlap : ClusterChainOverlaps)
             {
-                clusterOverlap = new CfChainClusterOverlap(cfSvData.getSvData().getCluster(), chain);
-                LinkedClusterChains.put(cfSvData.clusterChainId(), clusterOverlap);
+                boolean hasChain = clusterOverlap.chains().contains(chain);
+                boolean hasCluster = clusterOverlap.clusters().contains(cfSvData.getSvData().getCluster());
+
+                if(hasChain || hasCluster)
+                {
+                    clusterFound = true;
+
+                    if(!hasCluster)
+                        clusterOverlap.addCluster(cfSvData.getSvData().getCluster());
+
+                    if(!hasChain)
+                        clusterOverlap.addChain(chain);
+
+                    break;
+                }
             }
 
-            clusterOverlap.SharedSVs.add(cfSvData);
+            if(!clusterFound)
+            {
+                CfChainClusterOverlap clusterOverlap = new CfChainClusterOverlap(ClusterChainOverlaps.size());
+                clusterOverlap.addCluster(cfSvData.getSvData().getCluster());
+                clusterOverlap.addChain(chain);
+                ClusterChainOverlaps.add(clusterOverlap);
+            }
         }
+    }
+
+    public final CfChainClusterOverlap findClusterChainOverlap(final CfChain chain)
+    {
+        return ClusterChainOverlaps.stream().filter(x -> x.chains().contains(chain)).findFirst().orElse(null);
     }
 
     public void setDeletionBridgeData()
@@ -106,13 +133,22 @@ public class CfSampleData
         if(cluster.getSvCount() == 1)
             return;
 
+        /*
+        if(cluster.getSvCount() == 1)
+        {
+            // check for evidence of clustering which was later dissolved
+            if(cluster.getSV(0).getClusterReason().isEmpty())
+                return;
+        }
+        */
+
         for(int i = 0; i < cluster.getSvCount(); ++i)
         {
             final SvVarData var1 = cluster.getSV(i);
 
             final int otherSvId = Integer.parseInt(var1.getClusterReason().split(";", -1)[0].split("_")[1]);
 
-            for(int j = 0; j < cluster.getSvCount(); ++j)
+            for(int j = 0; j < cluster.getSVs().size(); ++j)
             {
                 if(j == i)
                     continue;
@@ -123,19 +159,59 @@ public class CfSampleData
                 {
                     int distance = getProximity(var1, var2);
 
-                    if(SvClusteringDistance.containsKey(var1))
-                        SvClusteringDistance.put(var1, min(distance, SvClusteringDistance.get(var1)));
+                    if(SvProximityDistance.containsKey(var1))
+                        SvProximityDistance.put(var1, min(distance, SvProximityDistance.get(var1)));
                     else
-                        SvClusteringDistance.put(var1, distance);
+                        SvProximityDistance.put(var1, distance);
 
-                    if(SvClusteringDistance.containsKey(var2))
-                        SvClusteringDistance.put(var2, min(distance, SvClusteringDistance.get(var2)));
+                    if(SvProximityDistance.containsKey(var2))
+                        SvProximityDistance.put(var2, min(distance, SvProximityDistance.get(var2)));
                     else
-                        SvClusteringDistance.put(var2, distance);
+                        SvProximityDistance.put(var2, distance);
 
                     break;
                 }
             }
+        }
+    }
+
+    public void setUnclusteredDistances(final Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        for(CfSvChainData cfSvData : CfSvList)
+        {
+            final SvVarData var = cfSvData.getSvData();
+
+            if(var == null || var.isSglBreakend())
+                continue;
+
+            if(var.getCluster().getSvCount() > 1)
+                continue;
+
+            // find the nearest SV distance for this unclustered SV
+            int minDistance = -1;
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                final SvBreakend breakend = var.getBreakend(se);
+
+                final List<SvBreakend> breakendList = chrBreakendMap.get(breakend.chromosome());
+
+                for(final SvBreakend otherBreakend : breakendList)
+                {
+                    if(otherBreakend.getSV() == breakend.getSV())
+                        continue;
+
+                    int distance = abs(breakend.position() - otherBreakend.position());
+
+                    if(minDistance == -1 || distance < minDistance)
+                    {
+                        minDistance = distance;
+                    }
+                }
+            }
+
+            if(minDistance >= 0)
+                SvProximityDistance.put(var, minDistance);
         }
     }
 }

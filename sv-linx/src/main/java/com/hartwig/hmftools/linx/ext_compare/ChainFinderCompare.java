@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfSvChainData.CF_DATA_DELIMITER;
@@ -37,6 +38,7 @@ public class ChainFinderCompare
     private final boolean mUseSampleDirectories;
     private CfSampleData mSampleData;
     private BufferedWriter mSvDataWriter;
+    private BufferedWriter mClusterChainOverlapWriter;
 
     public static final String CHAIN_FINDER_DATA_DIR = "chain_finder_data_dir";
     private static final String USE_SAMPLE_DIRECTORIES = "use_sample_dir";
@@ -50,8 +52,10 @@ public class ChainFinderCompare
         mUseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRECTORIES);
         mSampleData = null;
         mSvDataWriter = null;
+        mClusterChainOverlapWriter = null;
 
         initialiseSvDataWriter(outputDir);
+        initialiseClusterChainOverlapWriter(outputDir);
     }
 
     public static void addCmdLineArgs(Options options)
@@ -60,7 +64,11 @@ public class ChainFinderCompare
         options.addOption(USE_SAMPLE_DIRECTORIES, false, "All sample ChainFinder results in a single directory");
     }
 
-    public void close() { closeBufferedWriter(mSvDataWriter); }
+    public void close()
+    {
+        closeBufferedWriter(mSvDataWriter);
+        closeBufferedWriter(mClusterChainOverlapWriter);
+    }
 
     public void processSample(
             final String sampleId, final List<SvVarData> svDataList,
@@ -81,6 +89,9 @@ public class ChainFinderCompare
         mSampleData = new CfSampleData(sampleId);
 
         // set clustered SV distances
+        // final List<SvVarData> unclusteredSVs = clusters.stream()
+        //        .filter(x -> x.getSvCount() == 1).map(x -> x.getSV(0)).collect(Collectors.toList());
+
         clusters.forEach(x -> mSampleData.setSvClusterDistances(x));
 
         if(!Files.exists(Paths.get(resultsDir + chainDataFile)))
@@ -95,12 +106,13 @@ public class ChainFinderCompare
         if(breakendDataList.isEmpty())
             return;
 
-
         mSampleData.UnchainedSvList.addAll(svDataList.stream()
                 .filter(x -> !x.isSglBreakend()) // SGLs aren't handled by CF and so are considered out of scope
                 .collect(Collectors.toList()));
 
         mapChainSvData(breakendDataList, chrBreakendMap);
+
+        mSampleData.setUnclusteredDistances(chrBreakendMap);
 
         for(CfSvChainData cfSvData : mSampleData.CfSvList)
         {
@@ -112,6 +124,8 @@ public class ChainFinderCompare
 
         // write out any SV clustered by Linx if it's not chained by CF
         writeUnchainedSVs(mSampleData.UnchainedSvList);
+
+        mSampleData.ClusterChainOverlaps.forEach(x -> writeClusterChainOverlapData(x));
     }
 
     private void mapChainSvData(final List<CfBreakendData> breakendDataList, final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -224,8 +238,8 @@ public class ChainFinderCompare
             final String outputFileName = outputDir + "LNX_CHAIN_FINDER_SVS.csv";
             mSvDataWriter = createBufferedWriter(outputFileName, false);
 
-            mSvDataWriter.write("SampleId,SvId,ClusterId,ClusterCount,SglCount,ResolvedType,Type,ClusterReason,ClusterDistance");
-            mSvDataWriter.write(",CfSvId,CfChainId,CfChainCount,SharedSvCount,DbMatchedStart,DbMatchedEnd");
+            mSvDataWriter.write("SampleId,SvId,ClusterId,ClusterCount,SglCount,ResolvedType,Type,ClusterReason,ProximityDistance");
+            mSvDataWriter.write(",CfSvId,CfChainId,CfChainCount,SharedSvCount,OverlapGroupId,DbMatchedStart,DbMatchedEnd");
 
             // written again for convenience
             mSvDataWriter.write(",ChrStart,PosStart,OrientStart,ArmStart,ChrEnd,PosEnd,OrientEnd,ArmEnd");
@@ -259,24 +273,31 @@ public class ChainFinderCompare
     {
         try
         {
-            Integer clusterDistance = mSampleData.SvClusteringDistance.get(var);
+            Integer proximityDistance = mSampleData.SvProximityDistance.get(var);
 
             mSvDataWriter.write(String.format("%s,%d,%d,%d,%d,%s,%s,%s,%d",
                 mSampleData.SampleId, var.id(), var.getCluster().id(), var.getCluster().getSvCount(),
                     var.getCluster().getSglBreakendCount(), var.getCluster().getResolvedType(), var.type(),
-                    parseMainClusterReason(var.getClusterReason()), clusterDistance != null ? clusterDistance : 0));
+                    parseMainClusterReason(var.getClusterReason()), proximityDistance != null ? proximityDistance : -1));
 
             final SvLinkedPair[] dbLinks = new SvLinkedPair[] { var.getDBLink(true), var.getDBLink(false) };
 
             if(cfSvData != null)
             {
                 final CfChain chain = mSampleData.Chains.get(cfSvData.ChainId);
-                final CfChainClusterOverlap clusterOverlap = mSampleData.LinkedClusterChains.get(cfSvData.clusterChainId());
+                final CfChainClusterOverlap clusterOverlap = mSampleData.findClusterChainOverlap(chain);
+
+                if(chain == null || clusterOverlap == null)
+                {
+                    LNX_LOGGER.error("here");
+                    return;
+                }
+
                 final CfDbMatchType[] dbMatchTypes = cfSvData.getDeletionBridgeMatchTypes();
 
-                mSvDataWriter.write(String.format(",%d,%d,%d,%d,%s,%s",
-                        cfSvData.RearrangeId, cfSvData.ChainId, chain.ChainSVs.size(), clusterOverlap.SharedSVs.size(),
-                        dbMatchTypes[SE_START], dbMatchTypes[SE_END]));
+                mSvDataWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%s",
+                        cfSvData.RearrangeId, cfSvData.ChainId, chain.ChainSVs.size(), chain.getSharedSvCount(cfSvData),
+                        clusterOverlap.Id, dbMatchTypes[SE_START], dbMatchTypes[SE_END]));
                 /*
                 mSvDataWriter.write(String.format(",%d,%d,%d,%d,%s,%s,%d,%d,%d,%d",
                         dbLinks[SE_START] != null ? dbLinks[SE_START].length() : NO_DB_MARKER,
@@ -316,6 +337,35 @@ public class ChainFinderCompare
         catch(IOException e)
         {
             LNX_LOGGER.error("error writing chain-finder SV data file: {}", e.toString());
+        }
+    }
+
+    private void initialiseClusterChainOverlapWriter(final String outputDir)
+    {
+        try
+        {
+            final String outputFileName = outputDir + "LNX_CHAIN_FINDER_GROUPS.csv";
+            mClusterChainOverlapWriter = createBufferedWriter(outputFileName, false);
+
+            mClusterChainOverlapWriter.write(CfChainClusterOverlap.header());
+            mClusterChainOverlapWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            LNX_LOGGER.error("error writing chain-finder cluster-chain overlap data file: {}", e.toString());
+        }
+    }
+
+    private void writeClusterChainOverlapData(final CfChainClusterOverlap overlapData)
+    {
+        try
+        {
+            mClusterChainOverlapWriter.write(String.format("%s,%s", mSampleData.SampleId, overlapData.toCsv()));
+            mClusterChainOverlapWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            LNX_LOGGER.error("error writing chain-finder cluster-chain overlap data file: {}", e.toString());
         }
     }
 
