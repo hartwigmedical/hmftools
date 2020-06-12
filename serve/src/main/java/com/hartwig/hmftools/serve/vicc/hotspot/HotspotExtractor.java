@@ -51,11 +51,11 @@ public class HotspotExtractor {
     public Map<Feature, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            String featureKey = feature.geneSymbol() + ":p." + feature.name() + " - " + viccEntry.transcriptId();
             if (isResolvableProteinAnnotation(feature.name())) {
                 List<VariantHotspot> hotspots = proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                         viccEntry.transcriptId(),
                         feature.name());
+                String featureKey = feature.geneSymbol() + "|" + viccEntry.transcriptId() + "|p." + feature.name();
                 LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
                 if (hotspots.isEmpty()) {
                     unresolvableFeatures.add(featureKey);
