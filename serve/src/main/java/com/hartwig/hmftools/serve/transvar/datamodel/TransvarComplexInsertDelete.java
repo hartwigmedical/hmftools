@@ -17,5 +17,5 @@ public abstract class TransvarComplexInsertDelete implements TransvarAnnotation 
     public abstract String insertedSequence();
 
     @NotNull
-    public abstract List<String> candidateAlternativeSequences();
+    public abstract List<String> candidateAlternativeCodons();
 }

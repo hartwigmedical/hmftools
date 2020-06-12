@@ -503,9 +503,22 @@ For example, because of the `AG` microhomology at this (hg19) location, the foll
 A number of post processing steps are applied to the SAGE output.
 
 ## PON Filtering
-To eliminate recurrent variants and artifacts we constructed a Panel of Normal (PON) by first running SAGE over 200 germline samples and recording any variants with at least 3 reads and total base quality 30. The frequency (`PON_COUNT`) of each variant was then aggregated into the PON file.  Variants with more than 1 observation are retained.
+To eliminate recurrent variants and artifacts we constructed a Panel of Normal (PON) by first running SAGE over 1000 germline samples and recording any variants with at least 3 reads and total base quality 30. 
+The frequency (`PON_COUNT`) of each variant is then aggregated into the PON file.  
+Variants with more than 1 observation are retained.
 
-We use the PON file to filter SAGE output of any variant that appears in more than 3 samples for the LOW_CONFIDENCE & HIGH_CONFIDENCE & PANEL tiers and 10 samples for HOTSPOTS.  Additionally, PANEL and HOTSPOT variants must have at least 1 sample with 5 or more reads support to be PON filtered
+We use the PON file to filter SAGE output of any variant that appears in more than 6 samples for the LOW_CONFIDENCE & HIGH_CONFIDENCE & PANEL tiers and 10 samples for HOTSPOTS.  
+Additionally, PANEL and HOTSPOT variants must have at least 1 sample with 5 or more reads support to be PON filtered.
+
+The annotation and filtering are done with BCFTools using commands similar to the following:
+
+```
+bcftools annotate -a SageGermlinePon.hg19.1000x.vcf.gz -c PON_COUNT,PON_MAX $sage_vcf -O z -o $annotated_vcf
+
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER="HOTSPOT" && PON_MAX>=5 && PON_COUNT >= 10' -s 1000_PON -m+ $annotated_vcf -O u | \
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER="PANEL" && PON_MAX>=5 && PON_COUNT >= 6' -s 1000_PON -m+ -O u | \
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER!="HOTSPOT" && INFO/TIER!="PANEL" && PON_COUNT >= 6' -s 1000_PON -m+ -O z -o $pon_filtered_vcf
+```
 
 ## SnpEff
 SnpEff is run over the output and then summarised for each variant with a separate post processing application.

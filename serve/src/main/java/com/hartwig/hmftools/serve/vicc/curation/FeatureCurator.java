@@ -1,55 +1,59 @@
 package com.hartwig.hmftools.serve.vicc.curation;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
+import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class FeatureCurator {
+public class FeatureCurator {
 
     private static final Logger LOGGER = LogManager.getLogger(FeatureCurator.class);
 
-    @VisibleForTesting
-    static final Map<String, List<FeatureNameMapping>> ONCOKB_FEATURE_NAME_MAPPINGS_PER_GENE = Maps.newHashMap();
-
-    static {
-        ONCOKB_FEATURE_NAME_MAPPINGS_PER_GENE.put("EPAS1",
-                Lists.newArrayList(ImmutableFeatureNameMapping.builder()
-                        .originalFeatureName("533_534del")
-                        .curatedFeatureName("I533_P534del")
-                        .build()));
-    }
-
-    private FeatureCurator() {
-    }
-
     @NotNull
-    public static Feature curate(@NotNull ViccSource source, @NotNull Feature feature) {
-        if (source == ViccSource.ONCOKB) {
-            List<FeatureNameMapping> mappings = ONCOKB_FEATURE_NAME_MAPPINGS_PER_GENE.get(feature.geneSymbol());
-            if (mappings != null) {
-                for (FeatureNameMapping mapping : mappings) {
-                    if (mapping.originalFeatureName().equals(feature.name())) {
-                        LOGGER.debug("Curating feature '{}' to '{}' for gene {} in {}",
-                                mapping.originalFeatureName(),
-                                mapping.curatedFeatureName(),
-                                feature.geneSymbol(),
-                                source);
-                        return ImmutableFeature.builder().from(feature).name(mapping.curatedFeatureName()).build();
-                    }
+    private final Set<CurationKey> evaluatedCurationKeys = Sets.newHashSet();
+
+    public FeatureCurator() {
+    }
+
+    @Nullable
+    public Feature curate(@NotNull ViccEntry entry, @NotNull Feature feature) {
+        CurationKey key = new CurationKey(feature.geneSymbol(), entry.transcriptId(), feature.name());
+        evaluatedCurationKeys.add(key);
+
+        if (entry.source() == ViccSource.ONCOKB) {
+            if (CurationFactory.ONCOKB_FEATURE_BLACKLIST.contains(key)) {
+                LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
+                return null;
+            } else {
+                String mappedFeatureName = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.get(key);
+                if (mappedFeatureName != null) {
+                    LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
+                            feature.name(),
+                            mappedFeatureName,
+                            feature.geneSymbol(),
+                            entry.source());
+                    return ImmutableFeature.builder().from(feature).name(mappedFeatureName).build();
                 }
             }
         }
 
         return feature;
+    }
+
+    @NotNull
+    public Set<CurationKey> unusedCurationKeys() {
+        Set<CurationKey> unusedKeys = Sets.newHashSet();
+        unusedKeys.addAll(CurationFactory.ONCOKB_FEATURE_BLACKLIST);
+        unusedKeys.addAll(CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.keySet());
+        unusedKeys.removeAll(evaluatedCurationKeys);
+        return unusedKeys;
     }
 }

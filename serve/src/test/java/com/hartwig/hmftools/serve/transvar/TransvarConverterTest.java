@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -28,6 +29,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000361445", record.transcript());
         assertEquals("1", record.chromosome());
         assertEquals(11182158, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarSnvMnv snv = (TransvarSnvMnv) record.annotation();
         assertEquals("A", snv.gdnaRef());
@@ -52,6 +54,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000540549", record.transcript());
         assertEquals("4", record.chromosome());
         assertEquals(106180852, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarSnvMnv mnv = (TransvarSnvMnv) record.annotation();
         assertEquals("TA", mnv.gdnaRef());
@@ -64,7 +67,34 @@ public class TransvarConverterTest {
     }
 
     @Test
-    public void canConvertDeletionToRecord() {
+    public void canConvertSnvMnvSpanningMultipleExons() {
+        String line = "VHL:p.G114R\tENST00000256474 (protein_coding)\tVHL\t+\tchr3:g.10183871G>C/c.340G>C/p.G114R\t"
+                + "inside_[cds_in_exons_[1,2]]\tCSQN=Missense;reference_codon=GGT;candidate_codons=AGG,AGA,CGA,CGC,CGG,CGT;"
+                + "candidate_mnv_variants=chr3:g.10183871_10188199delGGTinsAGG,chr3:g.10183871_10188199delGGTinsAGA,"
+                + "chr3:g.10183871_10188199delGGTinsCGA,chr3:g.10183871_10188199delGGTinsCGC,chr3:g.10183871_10188199delGGTinsCGG;"
+                + "aliases=ENSP00000256474;source=Ensembl";
+
+        TransvarRecord record = TransvarConverter.toTransvarRecord(line);
+
+        assertEquals("ENST00000256474", record.transcript());
+        assertEquals("3", record.chromosome());
+        assertEquals(10183871, record.gdnaPosition());
+        assertTrue(record.variantSpanMultipleExons());
+
+        TransvarSnvMnv mnv = (TransvarSnvMnv) record.annotation();
+        assertEquals("G", mnv.gdnaRef());
+        assertEquals("C", mnv.gdnaAlt());
+        assertEquals("GGT", mnv.referenceCodon());
+        assertEquals("AGG", mnv.candidateCodons().get(0));
+        assertEquals("AGA", mnv.candidateCodons().get(1));
+        assertEquals("CGA", mnv.candidateCodons().get(2));
+        assertEquals("CGC", mnv.candidateCodons().get(3));
+        assertEquals("CGG", mnv.candidateCodons().get(4));
+        assertEquals("CGT", mnv.candidateCodons().get(5));
+    }
+
+    @Test
+    public void canConvertDeletionsToRecord() {
         String simpleDeletionLine =
                 "NOTCH1:p.V1578del\tENST00000277541 (protein_coding)\tNOTCH1\t-\tchr9:g.139399420_139399422delCCA/c.4732_4734delGTG/"
                         + "p.V1578delV\tinside_[cds_in_exon_26]\tCSQN=InFrameDeletion;left_align_gDNA=g.139399409_139399411delCAC;"
@@ -76,31 +106,50 @@ public class TransvarConverterTest {
         assertEquals("ENST00000277541", record.transcript());
         assertEquals("9", record.chromosome());
         assertEquals(139399420, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarDeletion deletion = (TransvarDeletion) record.annotation();
         assertEquals(3, deletion.deletedBaseCount());
-        assertEquals(139399409, deletion.unalignedGDNAPosition());
+        assertEquals(139399409, deletion.leftAlignedGDNAPosition());
 
-        String complexDeletionLine = "KIT:p.K558_E562del\tENST00000288135 (protein_coding)\tKIT\t+\t" +
-                "chr4:g.55593607_55593621del15/c.1673_1687del15/p.K558_E562delKVVEE\tinside_[cds_in_exon_11]\t" +
-                "CSQN=InFrameDeletion;left_align_gDNA=g.55593605_55593619del15;unaligned_gDNA=g.55593606_55593620del15;" +
-                "left_align_cDNA=c.1671_1685del15;unalign_cDNA=c.1672_1686del15;left_align_protein=p.K558_E562delKVVEE;" +
-                "unalign_protein=p.K558_E562delKVVEE;imprecise;aliases=ENSP00000288135;source=Ensembl";
+        String longDeletionLine = "KIT:p.K558_E562del\tENST00000288135 (protein_coding)\tKIT\t+\t"
+                + "chr4:g.55593607_55593621del15/c.1673_1687del15/p.K558_E562delKVVEE\tinside_[cds_in_exon_11]\t"
+                + "CSQN=InFrameDeletion;left_align_gDNA=g.55593605_55593619del15;unaligned_gDNA=g.55593606_55593620del15;"
+                + "left_align_cDNA=c.1671_1685del15;unalign_cDNA=c.1672_1686del15;left_align_protein=p.K558_E562delKVVEE;"
+                + "unalign_protein=p.K558_E562delKVVEE;imprecise;aliases=ENSP00000288135;source=Ensembl";
 
-        TransvarRecord record2 = TransvarConverter.toTransvarRecord(complexDeletionLine);
+        TransvarRecord record2 = TransvarConverter.toTransvarRecord(longDeletionLine);
 
         assertEquals("ENST00000288135", record2.transcript());
         assertEquals("4", record2.chromosome());
         assertEquals(55593607, record2.gdnaPosition());
+        assertFalse(record2.variantSpanMultipleExons());
 
         TransvarDeletion deletion2 = (TransvarDeletion) record2.annotation();
         assertEquals(15, deletion2.deletedBaseCount());
-        assertEquals(55593606, deletion2.unalignedGDNAPosition());
+        assertEquals(55593605, deletion2.leftAlignedGDNAPosition());
+
+        String deletionSpanningMultipleExons = "PDGFRA:p.E311_K312del\tENST00000257290 (protein_coding)\tPDGFRA\t+\t"
+                + "chr4:g.55133630_55133726del97/c.931+3_939del97/p.E311_K312delEK\tfrom_[cds_in_exon_6]_to_[cds_in_exon_7]\t"
+                + "CSQN=InFrameDeletion;left_align_gDNA=g.55133627_55133723del97;unaligned_gDNA=g.55133627_55133723del97;"
+                + "left_align_cDNA=c.931_936del97;unalign_cDNA=c.931_936del97;left_align_protein=p.E311_K312delEK;"
+                + "unalign_protein=p.E311_K312delEK;imprecise;aliases=ENSP00000257290;source=Ensembl";
+
+        TransvarRecord record3 = TransvarConverter.toTransvarRecord(deletionSpanningMultipleExons);
+
+        assertEquals("ENST00000257290", record3.transcript());
+        assertEquals("4", record3.chromosome());
+        assertEquals(55133630, record3.gdnaPosition());
+        assertTrue(record3.variantSpanMultipleExons());
+
+        TransvarDeletion deletion3 = (TransvarDeletion) record3.annotation();
+        assertEquals(97, deletion3.deletedBaseCount());
+        assertEquals(55133627, deletion3.leftAlignedGDNAPosition());
     }
 
     @Test
-    public void canConvertInsertionToRecord() {
-        String insertionLine =
+    public void canConvertInsertionsToRecord() {
+        String simpleInsertionLine =
                 "ERBB2:p.G776_V777insYVMA\tENST00000584450 (protein_coding)\tERBB2\t+\tchr17:g.37880999_37881000insTATGTAATGGCA/"
                         + "c.2328_2329insTATGTAATGGCA/p.G776_V777insYVMA\tinside_[cds_in_exon_20]\tCSQN=InFrameInsertion;"
                         + "left_align_protein=p.G776_V777insYVMA;unalign_protein=p.G776_V777insYVMA;left_align_gDNA="
@@ -108,14 +157,31 @@ public class TransvarConverterTest {
                         + "c.2328_2329insTATGTAATGGCA;unalign_cDNA=c.2328_2329insTATGTAATGGCA;32_CandidatesOmitted;"
                         + "aliases=ENSP00000463714;source=Ensembl";
 
-        TransvarRecord record = TransvarConverter.toTransvarRecord(insertionLine);
+        TransvarRecord record = TransvarConverter.toTransvarRecord(simpleInsertionLine);
 
         assertEquals("ENST00000584450", record.transcript());
         assertEquals("17", record.chromosome());
         assertEquals(37880999, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarInsertion insertion = (TransvarInsertion) record.annotation();
         assertEquals("TATGTAATGGCA", insertion.insertedBases());
+        assertEquals(37880999, insertion.leftAlignedGDNAPosition());
+
+        String leftAlignedInsertionLine = "AR:p.Q58_Q59insL\tENST00000374690 (protein_coding)\tAR\t+\tchrX:g.66765163_66765164insTTC/"
+                + "c.175_176insTTC/p.Q58_Q59insL\tinside_[cds_in_exon_1]\tCSQN=InFrameInsertion;left_align_protein=p.Q58_Q59insL;"
+                + "unalign_protein=p.Q58_Q59insL;left_align_gDNA=g.66765162_66765163insCTT;unalign_gDNA=g.66765162_66765163insCTT;"
+                + "left_align_cDNA=c.174_175insCTT;unalign_cDNA=c.174_175insCTT;6_CandidatesOmitted;aliases=ENSP00000363822;source=Ensembl";
+
+        TransvarRecord record2 = TransvarConverter.toTransvarRecord(leftAlignedInsertionLine);
+        assertEquals("ENST00000374690", record2.transcript());
+        assertEquals("X", record2.chromosome());
+        assertEquals(66765163, record2.gdnaPosition());
+        assertFalse(record2.variantSpanMultipleExons());
+
+        TransvarInsertion insertion2 = (TransvarInsertion) record2.annotation();
+        assertEquals("TTC", insertion2.insertedBases());
+        assertEquals(66765162, insertion2.leftAlignedGDNAPosition());
     }
 
     @Test
@@ -129,14 +195,15 @@ public class TransvarConverterTest {
         assertEquals("ENST00000275493", record.transcript());
         assertEquals("7", record.chromosome());
         assertEquals(55242469, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
 
         TransvarComplexInsertDelete insertionDeletion = (TransvarComplexInsertDelete) record.annotation();
         assertEquals(12, insertionDeletion.deletedBaseCount());
         assertEquals("CCT", insertionDeletion.insertedSequence());
-        assertEquals("CCT", insertionDeletion.candidateAlternativeSequences().get(0));
-        assertEquals("CCG", insertionDeletion.candidateAlternativeSequences().get(1));
-        assertEquals("CCA", insertionDeletion.candidateAlternativeSequences().get(2));
-        assertEquals("CCC", insertionDeletion.candidateAlternativeSequences().get(3));
+        assertEquals("CCT", insertionDeletion.candidateAlternativeCodons().get(0));
+        assertEquals("CCG", insertionDeletion.candidateAlternativeCodons().get(1));
+        assertEquals("CCA", insertionDeletion.candidateAlternativeCodons().get(2));
+        assertEquals("CCC", insertionDeletion.candidateAlternativeCodons().get(3));
 
         String delInsLineWithoutCandidateAlternateSequence = "EGFR:p.I744_K745delinsKIPVAI\tENST00000275493 (protein_coding)\tEGFR\t+\t"
                 + "chr7:g.55242460_55242465delinsAAGATCCCTGTAGCAATC/c.2230_2235delinsAAGATCCCTGTAGCAATC/p.I744_K745delinsKIPVAI\t"
@@ -151,7 +218,7 @@ public class TransvarConverterTest {
         TransvarComplexInsertDelete insertionDeletion2 = (TransvarComplexInsertDelete) record2.annotation();
         assertEquals(6, insertionDeletion2.deletedBaseCount());
         assertEquals("AAGATCCCTGTAGCAATC", insertionDeletion2.insertedSequence());
-        assertTrue(insertionDeletion2.candidateAlternativeSequences().isEmpty());
+        assertTrue(insertionDeletion2.candidateAlternativeCodons().isEmpty());
     }
 
     @Test
@@ -165,6 +232,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000584450", record1.transcript());
         assertEquals("17", record1.chromosome());
         assertEquals(37880985, record1.gdnaPosition());
+        assertFalse(record1.variantSpanMultipleExons());
 
         TransvarDuplication duplication1 = (TransvarDuplication) record1.annotation();
         assertEquals(12, duplication1.duplicatedBaseCount());
@@ -180,6 +248,7 @@ public class TransvarConverterTest {
         assertEquals("ENST00000288602", record2.transcript());
         assertEquals("7", record2.chromosome());
         assertEquals(140453136, record2.gdnaPosition());
+        assertFalse(record2.variantSpanMultipleExons());
 
         TransvarDuplication duplication2 = (TransvarDuplication) record2.annotation();
 
@@ -188,7 +257,6 @@ public class TransvarConverterTest {
 
     @Test
     public void longInsertLeadsToNull() {
-        // TODO Check whether this actually happens in practice.
         String line = "BRCA2:p.V1839_E1901ins\tENST00000544455 (protein_coding)\tBRCA2\t+\tchr13:g.32914008_32914196ins189/"
                 + "c.5516_5704del189/p.V1839_E1901del63\tinside_[cds_in_exon_11]\tCSQN=InFrameDeletion;left_align_gDNA="
                 + "g.32914004_32914192del189;unaligned_gDNA=g.32914007_32914195del189;left_align_cDNA=c.5512_5700del189;"
@@ -200,8 +268,8 @@ public class TransvarConverterTest {
 
     @Test
     public void weirdVariantsShouldNotLeadToDuplications() {
-        String line = "CARD11:p.L225LI\tENST00000396946 (protein_coding)\tCARD11\t-\tchr7:g.2983855_2983857/c.673_675/p.L225\t" +
-                "inside_[cds_in_exon_5]\tCSQN=Unclassified;aliases=ENSP00000380150;source=Ensembl";
+        String line = "CARD11:p.L225LI\tENST00000396946 (protein_coding)\tCARD11\t-\tchr7:g.2983855_2983857/c.673_675/p.L225\t"
+                + "inside_[cds_in_exon_5]\tCSQN=Unclassified;aliases=ENSP00000380150;source=Ensembl";
 
         assertNull(TransvarConverter.toTransvarRecord(line));
     }

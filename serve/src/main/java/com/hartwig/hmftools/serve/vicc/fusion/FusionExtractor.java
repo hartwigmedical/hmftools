@@ -15,12 +15,37 @@ import org.jetbrains.annotations.NotNull;
 public class FusionExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
+    private static final String FUSION_PAIR = "fusion pair";
+    private static final String FUSION_PROMISCUOUS = "fusion promiscuous";
 
     public Map<Feature, String> extractKnownFusions(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> fusionsPerFeature = Maps.newHashMap();
         if (viccEntry.source() == ViccSource.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
-                if (feature.name().toLowerCase().contains("fusion")) {
+                if (feature.name().toLowerCase().contains("fusions")) {
+                    fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
+
+                } else if (feature.name().toLowerCase().contains("fusion")) {
+                    if (feature.name().toLowerCase().contains("-")) {
+                       //TODO: check if needed -->
+                        //gene = name.split(" Fusion")[0];
+                        fusionsPerFeature.put(feature, FUSION_PAIR);
+                    } else {
+                        // TODO: check if needed
+                       // gene = name.split(" ")[0];
+                        fusionsPerFeature.put(feature, FUSION_PAIR);
+                    }
+                }
+            }
+        } else if (viccEntry.source() == ViccSource.CGI) {
+            for (Feature feature : viccEntry.features()) {
+                if (feature.name().toLowerCase().contains("fusions")) {
+                    fusionsPerFeature.put(feature, feature.name());
+                }
+            }
+        } else if (viccEntry.source() == ViccSource.CIVIC) {
+            for (Feature feature : viccEntry.features()) {
+                if (feature.name().toLowerCase().contains("fusions")) {
                     fusionsPerFeature.put(feature, feature.name());
                 }
             }

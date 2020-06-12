@@ -43,6 +43,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
     val breakpoint: Breakpoint? = endBreakend?.let { Breakpoint(startBreakend, it) }
     val minStart = startBreakend.start
+    val potentialAlignementLocations = context.potentialAlignmentLocations()
 
     val maxStart = startBreakend.end
     val insertSequenceLength = variantType.insertSequence.length
@@ -149,6 +150,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         }
     }
 
+
     fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
@@ -181,7 +183,9 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(MIN_TUMOR_AF)
         }
 
-
+        if (shortDelInsertArtifact()) {
+            result.add(SHORT_DEL_INS_ARTIFACT)
+        }
 
         if (qualFilter(config.minQualBreakEnd, config.minQualBreakPoint)) {
             result.add(MIN_QUAL)
@@ -295,6 +299,14 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
 
     fun allelicFrequencyFilter(minTumorAf: Double): Boolean {
         return tumorAF < minTumorAf
+    }
+
+    fun shortDelInsertArtifact(): Boolean {
+        if (isShortDel) {
+            val deletion = variantType as Deletion
+            return deletion.length - 1 == deletion.insertSequence.length
+        }
+        return false;
     }
 
     fun normalCoverageFilter(minNormalCoverage: Int): Boolean {

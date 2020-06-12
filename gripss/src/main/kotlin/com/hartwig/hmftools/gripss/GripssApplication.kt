@@ -43,7 +43,6 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         const val PON_ADDITIONAL_DISTANCE = 1
         const val MIN_HOTSPOT_DISTANCE = 1000
         const val MIN_RESCUE_QUAL = 100
-        const val MIN_DSB_RESCUE_LENGTH = 1000
 
         val logger = LogManager.getLogger(this::class.java)
         val version = VersionInfo("gripss.version")
@@ -116,7 +115,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private fun hotspotFilter(hotspotStore: LocationStore): (StructuralVariantContext) -> Boolean {
         val minQualFilter = { x: StructuralVariantContext -> x.qual >= MIN_RESCUE_QUAL }
         val minDistanceFilter = { x: StructuralVariantContext -> x.isSingle || x.isTranslocation || (x.variantType as Paired).length > MIN_HOTSPOT_DISTANCE }
-        return {variant -> minQualFilter(variant) && minDistanceFilter(variant) && hotspotStore.contains(variant)}
+        return {variant -> minQualFilter(variant) && minDistanceFilter(variant) && hotspotStore.contains(variant, true)}
     }
 
     private fun ponFiltered(contigComparator: ContigComparator, variants: List<StructuralVariantContext>): Set<String> {
@@ -125,7 +124,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val ponStore = LocationStore(contigComparator, breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
 
         logger.info("Applying PON file")
-        return ponStore.matching(variants).map { it.vcfId }.toSet()
+        return  variants.filter { ponStore.contains(it, false) }.map { it.vcfId }.toSet()
     }
 
     private fun hardFilterAndRealign(fileReader: VCFFileReader, hotspotFilter: (StructuralVariantContext) -> Boolean, contigComparator: ContigComparator): List<StructuralVariantContext> {

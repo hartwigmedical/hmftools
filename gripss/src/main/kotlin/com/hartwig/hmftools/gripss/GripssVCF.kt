@@ -12,6 +12,7 @@ const val IMPRECISE = "imprecise";
 const val SHORT_SR_NORMAL = "shortSRNormalSupport"
 const val SHORT_SR_SUPPORT = "shortSRTumorSupport"
 const val SHORT_STRAND_BIAS = "shortStrandBias"
+const val SHORT_DEL_INS_ARTIFACT = "smallDelInsertionArtifact"
 
 const val MAX_POLY_G_LENGTH = "maxPolyGLength"
 
@@ -63,6 +64,7 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artefact"))
         header.addMetaDataLine(VCFFilterHeaderLine(IMPRECISE, "Imprecise variant"))
         header.addMetaDataLine(VCFFilterHeaderLine(PASS, "Variant passes all filters"))
+        header.addMetaDataLine(VCFFilterHeaderLine(SHORT_DEL_INS_ARTIFACT, "Filter any short DEL where the insert sequence length + 1 = deletion length. This is a known GRIDSS artefact."))
 
         header.addMetaDataLine(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Description"))
         header.addMetaDataLine(VCFInfoHeaderLine(ALT_PATH, 1, VCFHeaderLineType.String, "Alternate path"))

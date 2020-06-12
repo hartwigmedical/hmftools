@@ -2,8 +2,6 @@ package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
@@ -16,37 +14,35 @@ import org.junit.Test;
 public class TransvarTest {
 
     @Test
-    public void noHotspotsWhenTransvarProcessReturnsEmpty() throws IOException, InterruptedException {
+    public void noHotspotsWhenTransvarProcessReturnsEmpty() {
         Transvar transvar = returnsNoTransvarRecord();
         assertTrue(transvar.extractHotspotsFromProteinAnnotation("BRAF", "ENST00000288602", "V600E").isEmpty());
     }
 
     @Test
-    public void noHotspotsWhenGeneIsUnknown() throws IOException, InterruptedException {
-        TransvarRecord record = ImmutableTransvarRecord.builder()
-                .chromosome("7")
-                .gdnaPosition(10)
-                .transcript("ENST00000288602")
-                .annotation(new TransvarAnnotation() {})
-                .build();
-
-        Transvar transvar = returnsSingleTransvarRecord(record);
+    public void noHotspotsWhenGeneIsUnknown() {
+        Transvar transvar = returnsSingleTransvarRecord(createTestRecord());
 
         assertTrue(transvar.extractHotspotsFromProteinAnnotation("DoesNotExist", null, Strings.EMPTY).isEmpty());
     }
 
     @Test
-    public void noHotspotsWhenRecordIsNotOnSpecificTranscript() throws IOException, InterruptedException {
-        TransvarRecord record = ImmutableTransvarRecord.builder()
-                .chromosome("7")
-                .gdnaPosition(10)
-                .transcript("ENST00000288602")
-                .annotation(new TransvarAnnotation() {})
-                .build();
-
-        Transvar transvar = returnsSingleTransvarRecord(record);
+    public void noHotspotsWhenRecordIsNotOnSpecificTranscript() {
+        Transvar transvar = returnsSingleTransvarRecord(createTestRecord());
 
         assertTrue(transvar.extractHotspotsFromProteinAnnotation("BRAF", "DoesNotExist", Strings.EMPTY).isEmpty());
+    }
+
+    @NotNull
+    private static TransvarRecord createTestRecord() {
+        return ImmutableTransvarRecord.builder()
+                .chromosome("7")
+                .gdnaPosition(10)
+                .transcript("X")
+                .variantSpanMultipleExons(false)
+                .annotation(new TransvarAnnotation() {
+                })
+                .build();
     }
 
     @NotNull

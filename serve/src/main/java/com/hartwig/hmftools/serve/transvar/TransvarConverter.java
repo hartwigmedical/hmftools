@@ -29,6 +29,7 @@ final class TransvarConverter {
 
     private static final int TRANSCRIPT_COLUMN = 1;
     private static final int COORDINATES_COLUMN = 4;
+    private static final int LOCATION_COLUMN = 5;
     private static final int MESSAGE_COLUMN = 6;
 
     private static final String MSG_NO_VALID_TRANSCRIPT_FOUND = "no_valid_transcript_found";
@@ -41,19 +42,19 @@ final class TransvarConverter {
     static TransvarRecord toTransvarRecord(@NotNull String transvarLine) {
         String[] fields = transvarLine.split(FIELD_DELIMITER);
 
-        String message = fields[MESSAGE_COLUMN];
-        if (message.contains(MSG_NO_VALID_TRANSCRIPT_FOUND) || message.trim().startsWith(MSG_ERROR_INDICATION_PREFIX)) {
+        String messageField = fields[MESSAGE_COLUMN];
+        if (messageField.contains(MSG_NO_VALID_TRANSCRIPT_FOUND) || messageField.trim().startsWith(MSG_ERROR_INDICATION_PREFIX)) {
             return null;
         }
 
-        TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], message);
+        TransvarRecord record = createRecord(fields[TRANSCRIPT_COLUMN], fields[COORDINATES_COLUMN], fields[LOCATION_COLUMN], messageField);
 
-        // (Very) long insertions report a deleted count rather than a list of bases. We ignore these.
+        // (Very) long insertions report an inserted count rather than a list of bases. We ignore these.
         if (record.annotation() instanceof TransvarInsertion && isInteger(((TransvarInsertion) record.annotation()).insertedBases())) {
             return null;
         }
 
-        // Duplications are somewhat educated guesses, so need to be sure they refer to a dup at least once.
+        // Duplications are somewhat educated guesses, so need to be sure they refer to a dup at least once in the raw output.
         if (record.annotation() instanceof TransvarDuplication && !transvarLine.contains(HGVS_DUPLICATION)) {
             return null;
         }
@@ -63,11 +64,12 @@ final class TransvarConverter {
 
     @NotNull
     private static TransvarRecord createRecord(@NotNull String transcriptField, @NotNull String coordinateField,
-            @NotNull String messageField) {
+            @NotNull String locationField, @NotNull String messageField) {
         ImmutableTransvarRecord.Builder recordBuilder = ImmutableTransvarRecord.builder();
 
         // Field looks like "${transcript} (protein_coding)"
         recordBuilder.transcript(transcriptField.trim().split(" ")[0]);
+        recordBuilder.variantSpanMultipleExons(variantSpanMultipleExons(locationField));
 
         // General case: "chr${chr}:g.${gdnaPos}${gdnaRef}>${dnaAlt}/c.${cdnaPos}${cdnaRef}>${cdnaAlt}/p.${aaRef}${aaPos}{aaAlt}"
         //  For MNV the g. part looks like ${gdnaPosStart}_${gdnaPosEnd}del${ref}ins${alt}
@@ -104,12 +106,10 @@ final class TransvarConverter {
         int delStart = delInsPart.indexOf(HGVS_DELETION);
         int insStart = delInsPart.indexOf(HGVS_INSERTION);
 
-        if (delStart < 0 && insStart < 0) {
-            throw new IllegalStateException(
-                    "Cannot process range gDNA as no '" + HGVS_DELETION + "' or  '" + HGVS_INSERTION + "' found: " + delInsPart);
-        }
+        assert delStart >= 0 || insStart >= 0;
 
         if (insStart >= 0) {
+            // This should end in something like 'insG'
             String insertedBases = delInsPart.substring(insStart + HGVS_INSERTION.length());
 
             if (delStart >= 0) {
@@ -119,7 +119,7 @@ final class TransvarConverter {
                     return ImmutableTransvarComplexInsertDelete.builder()
                             .deletedBaseCount(deletedBaseCount)
                             .insertedSequence(insertedBases)
-                            .candidateAlternativeSequences(extractCandidateAlternativeSequencesFromMessageField(messageField))
+                            .candidateAlternativeCodons(extractCandidateAlternativeCodonsFromMessageField(messageField))
                             .build();
                 } else {
                     // This should look like '123delCinsG'
@@ -135,15 +135,18 @@ final class TransvarConverter {
                 }
             } else {
                 // This should look like '123insC'
-                return ImmutableTransvarInsertion.builder().insertedBases(insertedBases).build();
+                return ImmutableTransvarInsertion.builder()
+                        .insertedBases(insertedBases)
+                        .leftAlignedGDNAPosition(extractLeftAlignedGDNAPositionFromMessageField(messageField))
+                        .build();
             }
         } else {
-            // This should look like '123delC'
+            // This should look like '123delC' or '123del97' in case of very long dels.
             String deletedBases = delInsPart.substring(delStart + HGVS_DELETION.length());
             int deletedBaseCount = isInteger(deletedBases) ? Integer.parseInt(deletedBases) : deletedBases.length();
             return ImmutableTransvarDeletion.builder()
                     .deletedBaseCount(deletedBaseCount)
-                    .unalignedGDNAPosition(extractUnalignedGDNAPositionFromMessageField(messageField))
+                    .leftAlignedGDNAPosition(extractLeftAlignedGDNAPositionFromMessageField(messageField))
                     .build();
         }
     }
@@ -153,7 +156,7 @@ final class TransvarConverter {
         int duplicatedBaseCount;
         if (dupPart.contains(HGVS_DUPLICATION)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(HGVS_DUPLICATION))) - position);
-        } else if (isInteger(dupPart)) {
+        } else if (isLong(dupPart)) {
             duplicatedBaseCount = 1 + (int) (Long.parseLong(dupPart) - position);
         } else {
             throw new IllegalStateException("Cannot process duplication for gDNA: " + dupPart);
@@ -204,10 +207,10 @@ final class TransvarConverter {
         return recordBuilder.gdnaPosition(Long.parseLong(gdnaPos.toString())).annotation(snvAnnotation).build();
     }
 
-    private static long extractUnalignedGDNAPositionFromMessageField(@NotNull String messageField) {
+    private static long extractLeftAlignedGDNAPositionFromMessageField(@NotNull String messageField) {
         // Looks like g.139399409_139399411delCAC
-        String unalignedGDNA = extractValueFromMessageField(messageField, "unaligned_gDNA");
-        return Long.parseLong(unalignedGDNA.substring(2).split(HGVS_RANGE_INDICATOR)[0]);
+        String leftAlignedGDNA = extractValueFromMessageField(messageField, "left_align_gDNA");
+        return Long.parseLong(leftAlignedGDNA.substring(2).split(HGVS_RANGE_INDICATOR)[0]);
     }
 
     @NotNull
@@ -223,10 +226,17 @@ final class TransvarConverter {
     }
 
     @NotNull
-    private static List<String> extractCandidateAlternativeSequencesFromMessageField(@NotNull String messageField) {
+    private static List<String> extractCandidateAlternativeCodonsFromMessageField(@NotNull String messageField) {
         String fieldValue = extractOptionalValueFromMessageField(messageField, "candidate_alternative_sequence");
 
         return fieldValue != null ? Arrays.asList(fieldValue.split("/")) : Lists.newArrayList();
+    }
+
+    private static boolean variantSpanMultipleExons(@NotNull String locationField) {
+        // This looks like:
+        //  - "inside_[cds_in_exons_[1,2]]" for SNV
+        //  - "from_[cds_in_exon_6]_to_[cds_in_exon_7]" for inframes.
+        return locationField.contains("cds_in_exons") || (locationField.contains("from") && locationField.contains("to"));
     }
 
     @NotNull
@@ -251,6 +261,15 @@ final class TransvarConverter {
         }
 
         return null;
+    }
+
+    private static boolean isLong(@NotNull String value) {
+        try {
+            Long.parseLong(value);
+            return true;
+        } catch (NumberFormatException exp) {
+            return false;
+        }
     }
 
     private static boolean isInteger(@NotNull String value) {

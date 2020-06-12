@@ -44,6 +44,25 @@ public class TransvarInterpreterTest {
     }
 
     @Test
+    public void canInterpretSnvSpanningMultipleExons() {
+        TransvarRecord record = baseRecord().variantSpanMultipleExons(true)
+                .gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("A")
+                        .gdnaAlt("C")
+                        .referenceCodon("TTA")
+                        .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
+
+        assertEquals(1, hotspots.size());
+
+        assertHotspot(baseHotspot().position(10).ref("A").alt("C").build(), hotspots.get(0));
+    }
+
+    @Test
     public void canConvertMnvForwardStrandToHotspots() {
         TransvarRecord record = baseRecord().gdnaPosition(10)
                 .annotation(ImmutableTransvarSnvMnv.builder()
@@ -88,7 +107,7 @@ public class TransvarInterpreterTest {
     @Test
     public void canConvertDeletionToHotspots() {
         TransvarRecord record = baseRecord().gdnaPosition(5)
-                .annotation(ImmutableTransvarDeletion.builder().deletedBaseCount(3).unalignedGDNAPosition(5).build())
+                .annotation(ImmutableTransvarDeletion.builder().deletedBaseCount(3).leftAlignedGDNAPosition(5).build())
                 .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
@@ -103,7 +122,7 @@ public class TransvarInterpreterTest {
         // In this situation the mutation is "GATCGATC -> GATC",
         //  Normally the unaligned DNA would be 1 here but that would imply we need to read the 0th ref base.
         TransvarRecord record = baseRecord().gdnaPosition(5)
-                .annotation(ImmutableTransvarDeletion.builder().deletedBaseCount(4).unalignedGDNAPosition(2).build())
+                .annotation(ImmutableTransvarDeletion.builder().deletedBaseCount(4).leftAlignedGDNAPosition(2).build())
                 .build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
@@ -117,36 +136,48 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    public void canConvertInsertionToHotspots() {
-        TransvarRecord forwardRecord =
-                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
+    public void canConvertInsertionsToHotspots() {
+        TransvarRecord forwardRecord = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").leftAlignedGDNAPosition(5).build())
+                .build();
 
         List<VariantHotspot> forwardHotspots = testInterpreter().convertRecordToHotspots(forwardRecord, Strand.FORWARD);
 
         assertEquals(2, forwardHotspots.size());
 
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAG").build(), forwardHotspots.get(0));
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAA").build(), forwardHotspots.get(1));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGAG").build(), forwardHotspots.get(0));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGAA").build(), forwardHotspots.get(1));
 
-        TransvarRecord reverseRecord =
-                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
+        TransvarRecord reverseRecord = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").leftAlignedGDNAPosition(5).build())
+                .build();
 
         List<VariantHotspot> reverseHotspots = testInterpreter().convertRecordToHotspots(reverseRecord, Strand.REVERSE);
 
         assertEquals(2, reverseHotspots.size());
 
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CAAA").build(), reverseHotspots.get(0));
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAA").build(), reverseHotspots.get(1));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GAAA").build(), reverseHotspots.get(0));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGAA").build(), reverseHotspots.get(1));
+
+        TransvarRecord realignedRecord = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").leftAlignedGDNAPosition(4).build())
+                .build();
+
+        List<VariantHotspot> realignedHotspots = testInterpreter().convertRecordToHotspots(realignedRecord, Strand.FORWARD);
+
+        assertEquals(1, realignedHotspots.size());
+
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGAA").build(), realignedHotspots.get(0));
     }
 
     @Test
-    public void canConvertComplexDeletionInsertionToHotspot() {
+    public void canConvertComplexDeletionInsertionsToHotspots() {
         TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
-                        .deletedBaseCount(4)
+                        .deletedBaseCount(3)
                         .insertedSequence("GGG")
-                        .addCandidateAlternativeSequences("GGG")
-                        .addCandidateAlternativeSequences("CCC")
+                        .addCandidateAlternativeCodons("GGG")
+                        .addCandidateAlternativeCodons("CCC")
                         .build())
                 .build();
 
@@ -154,15 +185,15 @@ public class TransvarInterpreterTest {
 
         assertEquals(2, hotspots1.size());
 
-        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGG").build(), hotspots1.get(0));
-        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GCCC").build(), hotspots1.get(1));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("GGG").build(), hotspots1.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("CCC").build(), hotspots1.get(1));
 
         TransvarRecord twoAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
-                        .deletedBaseCount(4)
+                        .deletedBaseCount(3)
                         .insertedSequence("GGGTTT")
-                        .addCandidateAlternativeSequences("GGGTTT")
-                        .addCandidateAlternativeSequences("CCCAAA")
+                        .addCandidateAlternativeCodons("GGGTTT")
+                        .addCandidateAlternativeCodons("CCCAAA")
                         .build())
                 .build();
 
@@ -170,7 +201,26 @@ public class TransvarInterpreterTest {
 
         assertEquals(1, hotspots2.size());
 
-        assertHotspot(baseHotspot().position(1).ref("GATCG").alt("GGGGTTT").build(), hotspots2.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("GGGTTT").build(), hotspots2.get(0));
+    }
+
+    @Test
+    public void canConvertComplexDeletionInsertionOnReverseStrand() {
+        TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
+                .annotation(ImmutableTransvarComplexInsertDelete.builder()
+                        .deletedBaseCount(3)
+                        .insertedSequence("TAA")
+                        .addCandidateAlternativeCodons("TTA")
+                        .addCandidateAlternativeCodons("GCG")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots1 = testInterpreter().convertRecordToHotspots(oneAminoAcidInsert, Strand.REVERSE);
+
+        assertEquals(2, hotspots1.size());
+
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("TAA").build(), hotspots1.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("CGC").build(), hotspots1.get(1));
     }
 
     @Test
@@ -194,7 +244,7 @@ public class TransvarInterpreterTest {
 
     @NotNull
     private static ImmutableTransvarRecord.Builder baseRecord() {
-        return ImmutableTransvarRecord.builder().transcript("irrelevant").chromosome("1");
+        return ImmutableTransvarRecord.builder().transcript("irrelevant").chromosome("1").variantSpanMultipleExons(false);
     }
 
     @NotNull

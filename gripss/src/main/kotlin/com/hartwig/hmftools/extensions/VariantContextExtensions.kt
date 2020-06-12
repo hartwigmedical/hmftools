@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.extensions
 
+import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.gripss.VariantType
 import htsjdk.variant.variantcontext.VariantContext
 import org.apache.logging.log4j.util.Strings
@@ -60,6 +61,14 @@ fun VariantContext.mate(): String? {
     }
 
     return null
+}
+
+fun VariantContext.potentialAlignmentLocations(): List<Breakend> {
+    if (this.hasAttribute("BEALN")) {
+        return this.getAttributeAsStringList("BEALN", "").map { Breakend.fromBealn(it) }
+    }
+
+    return listOf()
 }
 
 fun VariantContext.confidenceInterval(): Pair<Int, Int> = this.confidenceInterval(CIPOS)
