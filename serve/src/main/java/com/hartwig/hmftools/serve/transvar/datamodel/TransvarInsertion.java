@@ -11,4 +11,6 @@ public abstract class TransvarInsertion implements TransvarAnnotation {
 
     @NotNull
     public abstract String insertedBases();
+
+    public abstract long leftAlignedGDNAPosition();
 }

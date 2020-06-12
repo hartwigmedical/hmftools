@@ -119,8 +119,10 @@ class TransvarInterpreter {
             ImmutableVariantHotspotImpl.Builder hotspotBuilder =
                     ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position).ref(preMutatedSequence);
 
-            // We assume inserts of length 3 are always (inframe) amino acid inserts, we expand those hotspots.
-            if (insertion.insertedBases().length() == 3) {
+            // We assume inserts of length 3 are always (inframe) amino acid inserts,
+            //  we expand those hotspots but only if there are no potential re-alignments possible
+            //  and we know the inserted bases match the proteins inserted.
+            if (insertion.insertedBases().length() == 3 && insertion.leftAlignedGDNAPosition() == position) {
                 for (String trinucleotide : AminoAcidFunctions.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
                     hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
                 }

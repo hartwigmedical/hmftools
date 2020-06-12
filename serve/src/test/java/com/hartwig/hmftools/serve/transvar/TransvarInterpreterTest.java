@@ -45,7 +45,8 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canInterpretSnvSpanningMultipleExons() {
-        TransvarRecord record = baseRecord().variantSpanMultipleExons(true).gdnaPosition(10)
+        TransvarRecord record = baseRecord().variantSpanMultipleExons(true)
+                .gdnaPosition(10)
                 .annotation(ImmutableTransvarSnvMnv.builder()
                         .gdnaRef("A")
                         .gdnaAlt("C")
@@ -135,9 +136,10 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    public void canConvertInsertionToHotspots() {
-        TransvarRecord forwardRecord =
-                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
+    public void canConvertInsertionsToHotspots() {
+        TransvarRecord forwardRecord = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").leftAlignedGDNAPosition(5).build())
+                .build();
 
         List<VariantHotspot> forwardHotspots = testInterpreter().convertRecordToHotspots(forwardRecord, Strand.FORWARD);
 
@@ -146,8 +148,9 @@ public class TransvarInterpreterTest {
         assertHotspot(baseHotspot().position(5).ref("G").alt("GGAG").build(), forwardHotspots.get(0));
         assertHotspot(baseHotspot().position(5).ref("G").alt("GGAA").build(), forwardHotspots.get(1));
 
-        TransvarRecord reverseRecord =
-                baseRecord().gdnaPosition(5).annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").build()).build();
+        TransvarRecord reverseRecord = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").leftAlignedGDNAPosition(5).build())
+                .build();
 
         List<VariantHotspot> reverseHotspots = testInterpreter().convertRecordToHotspots(reverseRecord, Strand.REVERSE);
 
@@ -155,6 +158,16 @@ public class TransvarInterpreterTest {
 
         assertHotspot(baseHotspot().position(5).ref("G").alt("GAAA").build(), reverseHotspots.get(0));
         assertHotspot(baseHotspot().position(5).ref("G").alt("GGAA").build(), reverseHotspots.get(1));
+
+        TransvarRecord realignedRecord = baseRecord().gdnaPosition(5)
+                .annotation(ImmutableTransvarInsertion.builder().insertedBases("GAA").leftAlignedGDNAPosition(4).build())
+                .build();
+
+        List<VariantHotspot> realignedHotspots = testInterpreter().convertRecordToHotspots(realignedRecord, Strand.FORWARD);
+
+        assertEquals(1, realignedHotspots.size());
+
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGAA").build(), realignedHotspots.get(0));
     }
 
     @Test

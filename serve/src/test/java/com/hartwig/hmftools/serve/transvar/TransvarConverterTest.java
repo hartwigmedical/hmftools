@@ -148,8 +148,8 @@ public class TransvarConverterTest {
     }
 
     @Test
-    public void canConvertInsertionToRecord() {
-        String insertionLine =
+    public void canConvertInsertionsToRecord() {
+        String simpleInsertionLine =
                 "ERBB2:p.G776_V777insYVMA\tENST00000584450 (protein_coding)\tERBB2\t+\tchr17:g.37880999_37881000insTATGTAATGGCA/"
                         + "c.2328_2329insTATGTAATGGCA/p.G776_V777insYVMA\tinside_[cds_in_exon_20]\tCSQN=InFrameInsertion;"
                         + "left_align_protein=p.G776_V777insYVMA;unalign_protein=p.G776_V777insYVMA;left_align_gDNA="
@@ -157,7 +157,7 @@ public class TransvarConverterTest {
                         + "c.2328_2329insTATGTAATGGCA;unalign_cDNA=c.2328_2329insTATGTAATGGCA;32_CandidatesOmitted;"
                         + "aliases=ENSP00000463714;source=Ensembl";
 
-        TransvarRecord record = TransvarConverter.toTransvarRecord(insertionLine);
+        TransvarRecord record = TransvarConverter.toTransvarRecord(simpleInsertionLine);
 
         assertEquals("ENST00000584450", record.transcript());
         assertEquals("17", record.chromosome());
@@ -166,6 +166,22 @@ public class TransvarConverterTest {
 
         TransvarInsertion insertion = (TransvarInsertion) record.annotation();
         assertEquals("TATGTAATGGCA", insertion.insertedBases());
+        assertEquals(37880999, insertion.leftAlignedGDNAPosition());
+
+        String leftAlignedInsertionLine = "AR:p.Q58_Q59insL\tENST00000374690 (protein_coding)\tAR\t+\tchrX:g.66765163_66765164insTTC/"
+                + "c.175_176insTTC/p.Q58_Q59insL\tinside_[cds_in_exon_1]\tCSQN=InFrameInsertion;left_align_protein=p.Q58_Q59insL;"
+                + "unalign_protein=p.Q58_Q59insL;left_align_gDNA=g.66765162_66765163insCTT;unalign_gDNA=g.66765162_66765163insCTT;"
+                + "left_align_cDNA=c.174_175insCTT;unalign_cDNA=c.174_175insCTT;6_CandidatesOmitted;aliases=ENSP00000363822;source=Ensembl";
+
+        TransvarRecord record2 = TransvarConverter.toTransvarRecord(leftAlignedInsertionLine);
+        assertEquals("ENST00000374690", record2.transcript());
+        assertEquals("X", record2.chromosome());
+        assertEquals(66765163, record2.gdnaPosition());
+        assertFalse(record2.variantSpanMultipleExons());
+
+        TransvarInsertion insertion2 = (TransvarInsertion) record2.annotation();
+        assertEquals("TTC", insertion2.insertedBases());
+        assertEquals(66765162, insertion2.leftAlignedGDNAPosition());
     }
 
     @Test

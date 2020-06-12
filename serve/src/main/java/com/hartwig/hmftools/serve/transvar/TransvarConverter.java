@@ -135,7 +135,10 @@ final class TransvarConverter {
                 }
             } else {
                 // This should look like '123insC'
-                return ImmutableTransvarInsertion.builder().insertedBases(insertedBases).build();
+                return ImmutableTransvarInsertion.builder()
+                        .insertedBases(insertedBases)
+                        .leftAlignedGDNAPosition(extractLeftAlignedGDNAPositionFromMessageField(messageField))
+                        .build();
             }
         } else {
             // This should look like '123delC' or '123del97' in case of very long dels.
@@ -268,6 +271,7 @@ final class TransvarConverter {
             return false;
         }
     }
+
     private static boolean isInteger(@NotNull String value) {
         try {
             Integer.parseInt(value);
