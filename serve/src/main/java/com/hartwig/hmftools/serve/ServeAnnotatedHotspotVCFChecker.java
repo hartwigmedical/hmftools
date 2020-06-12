@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc;
+package com.hartwig.hmftools.serve;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -22,11 +22,11 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class ViccAnnotatedVCFChecker {
+public class ServeAnnotatedHotspotVCFChecker {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccAnnotatedVCFChecker.class);
+    private static final Logger LOGGER = LogManager.getLogger(ServeAnnotatedHotspotVCFChecker.class);
 
-    private static final Map<String, Map<String, List<String>>> VICC_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
+    private static final Map<String, Map<String, List<String>>> SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
 
     public static void main(String[] args) throws IOException {
         String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspotsVicc.vcf";
@@ -44,7 +44,7 @@ public class ViccAnnotatedVCFChecker {
                 if (annotation.isTranscriptFeature() && annotation.transcript().equals(featureTranscript)) {
                     String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
                     if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
-                        LOGGER.info("Difference on gene '{}-{}' - {}:{} {}->{} : VICC protein '{}' vs SnpEff protein '{}'",
+                        LOGGER.info("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
                                 featureGene,
                                 featureTranscript,
                                 variant.getContig(),
@@ -66,7 +66,7 @@ public class ViccAnnotatedVCFChecker {
             return true;
         }
 
-        Map<String, List<String>> transcriptMapping = VICC_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.get(transcript);
+        Map<String, List<String>> transcriptMapping = SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.get(transcript);
         if (transcriptMapping != null) {
             List<String> mappedAnnotations = transcriptMapping.get(featureAnnotation);
             if (mappedAnnotations != null) {
@@ -79,23 +79,23 @@ public class ViccAnnotatedVCFChecker {
 
     @NotNull
     private static Map<String, Map<String, List<String>>> createMappings() {
-        Map<String, Map<String, List<String>>> viccToSnpEffMappings = Maps.newHashMap();
+        Map<String, Map<String, List<String>>> serveToSnpEffMappings = Maps.newHashMap();
 
-        viccToSnpEffMappings.put("ENST00000257290", createPDGFRAMap());
-        viccToSnpEffMappings.put("ENST00000288135", createKITMap());
-        viccToSnpEffMappings.put("ENST00000274335", createPIK3R1Map());
-        viccToSnpEffMappings.put("ENST00000275493", createEGFRMap());
-        viccToSnpEffMappings.put("ENST00000288602", createBRAFMap());
-        viccToSnpEffMappings.put("ENST00000277541", createNOTCH1Map());
-        viccToSnpEffMappings.put("ENST00000227507", createCCND1Map());
-        viccToSnpEffMappings.put("ENST00000256078", createKRASMap());
-        viccToSnpEffMappings.put("ENST00000241453", createFLT3Map());
-        viccToSnpEffMappings.put("ENST00000262367", createCREBBPMap());
-        viccToSnpEffMappings.put("ENST00000269571", createERBB2Map());
-        viccToSnpEffMappings.put("ENST00000357654", createBRCA1Map());
-        viccToSnpEffMappings.put("ENST00000377045", createARAFMap());
+        serveToSnpEffMappings.put("ENST00000257290", createPDGFRAMap());
+        serveToSnpEffMappings.put("ENST00000288135", createKITMap());
+        serveToSnpEffMappings.put("ENST00000274335", createPIK3R1Map());
+        serveToSnpEffMappings.put("ENST00000275493", createEGFRMap());
+        serveToSnpEffMappings.put("ENST00000288602", createBRAFMap());
+        serveToSnpEffMappings.put("ENST00000277541", createNOTCH1Map());
+        serveToSnpEffMappings.put("ENST00000227507", createCCND1Map());
+        serveToSnpEffMappings.put("ENST00000256078", createKRASMap());
+        serveToSnpEffMappings.put("ENST00000241453", createFLT3Map());
+        serveToSnpEffMappings.put("ENST00000262367", createCREBBPMap());
+        serveToSnpEffMappings.put("ENST00000269571", createERBB2Map());
+        serveToSnpEffMappings.put("ENST00000357654", createBRCA1Map());
+        serveToSnpEffMappings.put("ENST00000377045", createARAFMap());
 
-        return viccToSnpEffMappings;
+        return serveToSnpEffMappings;
     }
 
     @NotNull
@@ -217,11 +217,11 @@ public class ViccAnnotatedVCFChecker {
 
 
     @NotNull
-    private static String curateStartCodonAnnotation(@NotNull String viccAnnotation) {
-        if (viccAnnotation.startsWith("p.M1") && viccAnnotation.length() == 5) {
+    private static String curateStartCodonAnnotation(@NotNull String serveAnnotation) {
+        if (serveAnnotation.startsWith("p.M1") && serveAnnotation.length() == 5) {
             return "p.M1?";
         } else {
-            return viccAnnotation;
+            return serveAnnotation;
         }
     }
 }
