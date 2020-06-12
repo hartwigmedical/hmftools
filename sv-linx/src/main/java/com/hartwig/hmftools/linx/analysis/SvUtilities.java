@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
@@ -167,26 +168,6 @@ public class SvUtilities {
         }
 
         return clusterTypeStr;
-    }
-
-    public static String appendStr(final String dest, final String source, char delim)
-    {
-        return dest.isEmpty() ? source : dest + delim + source;
-    }
-
-    public static String appendStrList(final List<String> sourceList, char delim)
-    {
-        if(sourceList.isEmpty())
-            return "";
-
-        final StringBuilder combinedStr = new StringBuilder(sourceList.get(0));
-
-        for(int i = 1; i < sourceList.size(); ++i)
-        {
-            combinedStr.append(delim + sourceList.get(i));
-        }
-
-        return combinedStr.toString();
     }
 
     public static boolean isWithin(final SvVarData variant, final String chromosome, final int position)

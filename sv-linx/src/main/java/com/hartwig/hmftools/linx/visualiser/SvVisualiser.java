@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
+import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 
 import java.io.File;
 import java.io.IOException;
