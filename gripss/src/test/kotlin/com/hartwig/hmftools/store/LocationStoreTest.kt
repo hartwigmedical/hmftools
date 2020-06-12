@@ -58,7 +58,6 @@ class LocationStoreTest {
         Assert.assertTrue(store.contains(Breakpoint(entry2.startBreakend, entry1.endBreakend)))
     }
 
-
     @Test
     fun testSingleHotspot() {
 
@@ -70,10 +69,11 @@ class LocationStoreTest {
         val variant = VariantContextTestFactory.decode(variantString).toSv()
 
         val store1 = LocationStore(contigComparator, listOf(), listOf(entry1))
-        Assert.assertFalse(store1.contains(variant))
+        Assert.assertFalse(store1.contains(variant, true))
 
         val store2 = LocationStore(contigComparator, listOf(), listOf(entry2))
-        Assert.assertTrue(store2.contains(variant))
+        Assert.assertTrue(store2.contains(variant, true))
+        Assert.assertFalse(store2.contains(variant, false))
     }
 
     @Ignore
