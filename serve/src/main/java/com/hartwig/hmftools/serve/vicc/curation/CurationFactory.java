@@ -19,6 +19,10 @@ final class CurationFactory {
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("PTEN", "ENST00000371953", "I32del"), "I33del");
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
 
+        // The below variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
+        ONCOKB_FEATURE_BLACKLIST.add(new CurationKey("PDGFRA", "ENST00000257290", "E311_K312del"));
+        ONCOKB_FEATURE_BLACKLIST.add(new CurationKey("ETV6", "ENST00000396373", "385_418del"));
+
         // The below variants don't exist
         //  - Below is called a "silent promoter" according to https://pubmed.ncbi.nlm.nih.gov/11606402/
         ONCOKB_FEATURE_BLACKLIST.add(new CurationKey("APC", "ENST00000257430", "A290T"));
