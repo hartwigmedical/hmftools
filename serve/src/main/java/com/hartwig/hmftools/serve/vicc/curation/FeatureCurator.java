@@ -30,16 +30,16 @@ public class FeatureCurator {
 
         if (entry.source() == ViccSource.ONCOKB) {
             if (CurationFactory.ONCOKB_FEATURE_BLACKLIST.contains(key)) {
-                LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry);
+                LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
                 return null;
             } else {
                 String mappedFeatureName = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.get(key);
                 if (mappedFeatureName != null) {
-                    LOGGER.debug("Curating feature '{}' to '{}' for gene {} in {}",
+                    LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
                             feature.name(),
                             mappedFeatureName,
                             feature.geneSymbol(),
-                            entry);
+                            entry.source());
                     return ImmutableFeature.builder().from(feature).name(mappedFeatureName).build();
                 }
             }
