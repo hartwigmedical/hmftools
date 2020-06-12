@@ -29,14 +29,19 @@ public class FeatureCurator {
         evaluatedCurationKeys.add(key);
 
         if (entry.source() == ViccSource.ONCOKB) {
-            String mappedFeatureName = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.get(key);
-            if (mappedFeatureName != null) {
-                LOGGER.debug("Curating feature '{}' to '{}' for gene {} in {}",
-                        feature.name(),
-                        mappedFeatureName,
-                        feature.geneSymbol(),
-                        entry);
-                return ImmutableFeature.builder().from(feature).name(mappedFeatureName).build();
+            if (CurationFactory.ONCOKB_FEATURE_BLACKLIST.contains(key)) {
+                LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry);
+                return null;
+            } else {
+                String mappedFeatureName = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.get(key);
+                if (mappedFeatureName != null) {
+                    LOGGER.debug("Curating feature '{}' to '{}' for gene {} in {}",
+                            feature.name(),
+                            mappedFeatureName,
+                            feature.geneSymbol(),
+                            entry);
+                    return ImmutableFeature.builder().from(feature).name(mappedFeatureName).build();
+                }
             }
         }
 
@@ -45,7 +50,10 @@ public class FeatureCurator {
 
     @NotNull
     public Set<CurationKey> unusedCurationKeys() {
-        // TODO implement
-        return evaluatedCurationKeys;
+        Set<CurationKey> unusedKeys = Sets.newHashSet();
+        unusedKeys.addAll(CurationFactory.ONCOKB_FEATURE_BLACKLIST);
+        unusedKeys.addAll(CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.keySet());
+        unusedKeys.removeAll(evaluatedCurationKeys);
+        return unusedKeys;
     }
 }
