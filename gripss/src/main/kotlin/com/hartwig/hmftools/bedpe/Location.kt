@@ -26,6 +26,24 @@ data class Breakend(override val contig: String, override val start: Int, overri
             val (contig1, start1, end1, _, _, strand1) = line.split("\t")
             return Breakend(contig1, start1.toInt() + 1, end1.toInt(), strand1.toOrientation())
         }
+
+        fun fromBealn(line: String): List<Breakend> {
+            val result = mutableListOf<Breakend>()
+            if (line.isNotEmpty()) {
+                val entries = line.split(",")
+                for (entry in entries) {
+                    val fields = entry.split("|")
+                    val (chromosome, location) = fields[0].split(":")
+                    val orientation = when (fields[1]) {
+                        "+" -> 1.toByte()
+                        "-" -> (-1).toByte()
+                        else -> 0.toByte()
+                    }
+                    result.add(Breakend(chromosome, location.toInt(), location.toInt(), orientation))
+                }
+            }
+            return result
+        }
     }
 
     fun expand(distance: Int): Breakend {
@@ -58,7 +76,7 @@ data class Breakpoint(val startBreakend: Breakend, val endBreakend: Breakend) : 
     }
 
     fun isValid(comparator: ContigComparator): Boolean {
-        val contigDiff =  comparator.compare(this.startBreakend.contig, this.endBreakend.contig)
+        val contigDiff = comparator.compare(this.startBreakend.contig, this.endBreakend.contig)
         return contigDiff < 0 || contigDiff == 0 && startBreakend.start <= startBreakend.end
     }
 
