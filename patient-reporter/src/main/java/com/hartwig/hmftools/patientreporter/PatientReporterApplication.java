@@ -7,7 +7,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -82,16 +81,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
-        SampleReport sampleReport = patientReport.sampleReport();
-        LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
-
-        String filePrefix = study == LimsStudy.CORE
-                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
-                : sampleReport.tumorSampleId();
-
-        String fileSuffix = patientReport.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
-
-        return reportDirectory + File.separator + filePrefix + "_hmf_report" + fileSuffix;
+        return reportDirectory + File.separator + OutputFileUtil.generateOutputFileNameForReport(patientReport);
     }
 
     @NotNull

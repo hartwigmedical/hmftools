@@ -279,12 +279,12 @@ public final class ExampleAnalysisTestFactory {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .cohort("A")
-                .projectName("TEST")
-                .submissionId("10")
+                .cohort("TEST")
+                .projectName("TEST-001-002")
+                .submissionId("SUBM")
                 .hospitalContactData(createTestHospitalContactData())
-                .hospitalPatientId("4567")
-                .hospitalPathologySampleId("1234")
+                .hospitalPatientId("HOSP1")
+                .hospitalPathologySampleId("PA1")
                 .build();
     }
 
