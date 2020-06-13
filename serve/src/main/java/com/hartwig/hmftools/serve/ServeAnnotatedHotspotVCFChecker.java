@@ -29,24 +29,28 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static final Map<String, Map<String, List<String>>> SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
 
     public static void main(String[] args) throws IOException {
-//        Configurator.setRootLevel(Level.DEBUG);
+        //        Configurator.setRootLevel(Level.DEBUG);
 
         String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspotsVicc.vcf";
+        int totalCount = 0;
+        int matchCount = 0;
+        int whitelistedMatchCount = 0;
+        int diffCount = 0;
 
+        LOGGER.info("Loading hotspots from '{}'", annotatedHotspotVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedHotspotVcf, new VCFCodec(), false);
-
         for (VariantContext variant : reader.iterator()) {
+            totalCount++;
             String[] featureParts = variant.getAttributeAsString("feature", Strings.EMPTY).split("\\|");
             String featureGene = featureParts[0];
             String featureTranscript = featureParts[1];
             String featureProteinAnnotation = featureParts[2];
-
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature() && annotation.transcript().equals(featureTranscript)) {
                     String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
                     if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
-                        LOGGER.info("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
+                        LOGGER.warn("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
                                 featureGene,
                                 featureTranscript,
                                 variant.getContig(),
@@ -55,19 +59,28 @@ public class ServeAnnotatedHotspotVCFChecker {
                                 variant.getAlternateAllele(0).getBaseString(),
                                 featureProteinAnnotation,
                                 snpeffProteinAnnotation);
+                        diffCount++;
                     } else {
                         if (snpeffProteinAnnotation.equals(featureProteinAnnotation)) {
                             LOGGER.debug("Identical match found on {} for '{}'", featureGene, featureProteinAnnotation);
                         } else {
+                            whitelistedMatchCount++;
                             LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
                                     featureGene,
                                     featureProteinAnnotation,
                                     snpeffProteinAnnotation);
                         }
+                        matchCount++;
                     }
                 }
             }
         }
+
+        LOGGER.info("Done comparing {} records: {} ({} whitelisted) matches and {} differences found.",
+                totalCount,
+                matchCount,
+                whitelistedMatchCount,
+                diffCount);
     }
 
     private static boolean isSameAnnotation(@NotNull String transcript, @NotNull String featureAnnotation,
