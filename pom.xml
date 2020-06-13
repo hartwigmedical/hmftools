@@ -28,7 +28,7 @@
         <module>bachelor</module>
         <module>sv-linx</module>
         <module>sig-analyser</module>
-<!--        <module>sv-tools</module>-->
+        <module>sv-tools</module>
         <module>isofox</module>
         <module>stat-calcs</module>
         <module>knowledgebase-importer</module>
