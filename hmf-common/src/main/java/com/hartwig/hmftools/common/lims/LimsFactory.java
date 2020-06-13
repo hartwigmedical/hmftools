@@ -58,7 +58,7 @@ public final class LimsFactory {
         Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
         Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
 
-        HospitalModel model = HospitalModelFactory.fromLimsDirectory(limsDirectory);
+        HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(limsDirectory);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
@@ -66,7 +66,7 @@ public final class LimsFactory {
                 preLimsArrivalDates,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                model);
+                hospitalModel);
     }
 
     @NotNull
@@ -86,7 +86,7 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, LimsJsonSampleData> readLimsJsonSamples(@NotNull final String limsJsonPath) throws FileNotFoundException {
+    static Map<String, LimsJsonSampleData> readLimsJsonSamples(@NotNull String limsJsonPath) throws FileNotFoundException {
         Gson gson = LimsGsonAdapter.buildSampleGson();
         JsonObject jsonObject = new JsonParser().parse(new FileReader(limsJsonPath)).getAsJsonObject();
         Set<Map.Entry<String, JsonElement>> jsonSamples = jsonObject.getAsJsonObject("samples").entrySet();
