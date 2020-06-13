@@ -90,48 +90,43 @@ public class CFReportWriterTest {
     }
 
     @Test
-    public void canGenerateLowDNAYieldFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01", "60%", QCFailReason.LOW_DNA_YIELD, false, COMMENT_STRING_QC_FAIL);
+    public void canGenerateInsufficientDNAReport() throws IOException {
+        generateQCFailCPCTReport("CPCT01", "60%", QCFailReason.INSUFFICIENT_DNA, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
-    public void canGenerateLowDNAYieldFailReportCorrected() throws IOException {
-        generateQCFailCPCTReport("CPCT01", "60%", QCFailReason.LOW_DNA_YIELD, true, COMMENT_STRING_QC_FAIL_CORRECTED);
+    public void canGenerateCorrectedInsufficientDNAReport() throws IOException {
+        generateQCFailCPCTReport("CPCT01", "60%", QCFailReason.INSUFFICIENT_DNA, true, COMMENT_STRING_QC_FAIL_CORRECTED);
     }
 
     @Test
-    public void canGenerateBelowDetectionThresholdWithoutGenomicAlterationsFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT02", "60%", QCFailReason.BELOW_DETECTION_THRESHOLD, false, COMMENT_STRING_QC_FAIL);
+    public void canGenerateTechnicalFailureReport() throws IOException {
+        generateQCFailCPCTReport("CPCT03", "60%", QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
-    public void canGenerateLabFailureFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT03", "60%", QCFailReason.LAB_FAILURE, false, COMMENT_STRING_QC_FAIL);
+    public void canGenerateSufficientTCPQCFailReport() throws IOException {
+        generateQCFailCPCTReport("CPCT05", "60%", QCFailReason.SUFFICIENT_TCP_QC_FAILURE, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
-    public void canGenerateInsufficientTissueFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT04", "60%", QCFailReason.INSUFFICIENT_TISSUE, false, COMMENT_STRING_QC_FAIL);
+    public void canGenerateInsufficientTCPAfterDeepWGSReport() throws IOException {
+        generateQCFailCPCTReport("CPCT02", "60%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
-    public void canGeneratePostAnalysisFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT05", "60%", QCFailReason.POST_ANALYSIS_FAIL, false, COMMENT_STRING_QC_FAIL);
+    public void canGenerateInsufficientTCPAfterShallowReport() throws IOException {
+        generateQCFailCPCTReport("CPCT06", "15%", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
-    public void canGenerateShallowSeqLowTumorPurityFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT06", "15%", QCFailReason.SHALLOW_SEQ_LOW_PURITY, false, COMMENT_STRING_QC_FAIL);
+    public void canGenerateInsufficientTCPAfterShallowReportCORE() throws IOException {
+        generateQCFailCPCTReport("CORE01", "15%", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
-    public void canGenerateShallowSeqLowTumorPurityFailReportCORE() throws IOException {
-        generateQCFailCPCTReport("CORE01", "15%", QCFailReason.SHALLOW_SEQ_LOW_PURITY, false, COMMENT_STRING_QC_FAIL);
-    }
-
-    @Test
-    public void canGenerateShallowSeqLowTumorPurityFailReportWIDE() throws IOException {
-        generateQCFailCPCTReport("WIDE01", "15%", QCFailReason.SHALLOW_SEQ_LOW_PURITY, false, COMMENT_STRING_QC_FAIL);
+    public void canGenerateInsufficientTCPAfterShallowReportWIDE() throws IOException {
+        generateQCFailCPCTReport("WIDE01", "15%", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @NotNull

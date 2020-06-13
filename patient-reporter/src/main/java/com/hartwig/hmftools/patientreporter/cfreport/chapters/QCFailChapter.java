@@ -100,24 +100,23 @@ public class QCFailChapter implements ReportChapter {
         }
 
         switch (failReason) {
-            case INSUFFICIENT_TISSUE:
-            case LOW_DNA_YIELD: {
+            case INSUFFICIENT_DNA: {
                 explanationDetail =
                         "The tumor percentage based on molecular estimation could not be determined due to insufficient tumor DNA";
                 break;
             }
-            case SHALLOW_SEQ_LOW_PURITY:
-            case BELOW_DETECTION_THRESHOLD: {
+            case INSUFFICIENT_TCP_DEEP_WGS:
+            case INSUFFICIENT_TCP_SHALLOW_WGS: {
                 explanationDetail = "The tumor percentage based on molecular estimation was below the minimal of 20% tumor cells \n"
                         + "and could not be further analyzed.";
                 break;
             }
-            case POST_ANALYSIS_FAIL: {
+            case SUFFICIENT_TCP_QC_FAILURE: {
                 explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
                         + "could not be further analyzed due to insufficient quality.";
                 break;
             }
-            case LAB_FAILURE: {
+            case TECHNICAL_FAILURE: {
                 explanationDetail = Strings.EMPTY;
                 break;
             }

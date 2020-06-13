@@ -5,24 +5,23 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum QCFailReason {
-    LOW_DNA_YIELD("low_dna_yield", QCFailType.LOW_QUALITY_BIOPSY, false),
-    POST_ANALYSIS_FAIL("post_analysis_fail", QCFailType.LOW_QUALITY_BIOPSY, true),
-    SHALLOW_SEQ_LOW_PURITY("shallow_seq_low_purity", QCFailType.LOW_QUALITY_BIOPSY, false),
-    INSUFFICIENT_TISSUE("insufficient_tissue_delivered", QCFailType.LOW_QUALITY_BIOPSY, false),
-    BELOW_DETECTION_THRESHOLD("below_detection_threshold", QCFailType.LOW_QUALITY_BIOPSY, true),
-    LAB_FAILURE("lab_failure", QCFailType.TECHNICAL_FAILURE, false),
+    TECHNICAL_FAILURE("technical_failure", QCFailType.TECHNICAL_FAILURE, false),
+    SUFFICIENT_TCP_QC_FAILURE("sufficient_tcp_qc_failure", QCFailType.LOW_QUALITY_BIOPSY, true),
+    INSUFFICIENT_TCP_SHALLOW_WGS("insufficient_tcp_shallow_wgs", QCFailType.LOW_QUALITY_BIOPSY, false),
+    INSUFFICIENT_TCP_DEEP_WGS("insufficient_tcp_deep_wgs", QCFailType.LOW_QUALITY_BIOPSY, true),
+    INSUFFICIENT_DNA("insufficient_dna", QCFailType.LOW_QUALITY_BIOPSY, false),
     UNDEFINED(Strings.EMPTY, QCFailType.UNDEFINED, false);
 
     @NotNull
     private final String identifier;
     @NotNull
     private final QCFailType type;
-    private final boolean fullWgsDataAvailable;
+    private final boolean deepWGSDataAvailable;
 
-    QCFailReason(@NotNull final String identifier, @NotNull final QCFailType type, final boolean fullWgsDataAvailable) {
+    QCFailReason(@NotNull final String identifier, @NotNull final QCFailType type, final boolean deepWGSDataAvailable) {
         this.identifier = identifier;
         this.type = type;
-        this.fullWgsDataAvailable = fullWgsDataAvailable;
+        this.deepWGSDataAvailable = deepWGSDataAvailable;
     }
 
     @NotNull
@@ -35,8 +34,8 @@ public enum QCFailReason {
         return type;
     }
 
-    public boolean isFullWgsDataAvailable() {
-        return fullWgsDataAvailable;
+    public boolean isDeepWGSDataAvailable() {
+        return deepWGSDataAvailable;
     }
 
     @NotNull

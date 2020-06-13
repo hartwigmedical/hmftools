@@ -32,22 +32,23 @@ public final class ReportingDb {
 
     public static void addSequenceReportToReportingDb(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
             throws IOException {
-        String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String sampleId = report.sampleReport().tumorSampleId();
-        String cohort = !report.sampleReport().cohort().isEmpty() ? report.sampleReport().cohort() : NA_STRING;
-        String reportDate = ReportResources.REPORT_DATE;
-        String purity = new DecimalFormat("0.00").format(report.impliedPurity());
-
-        boolean hasReliableQuality = report.hasReliableQuality();
-        boolean hasReliablePurity = report.hasReliablePurity();
-
-        String reportType = report.isCorrectedReport() ? "sequence_report_corrected" : "sequence_report";
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
         if (requiresSummary(sampleId, study) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
         } else if (study != LimsStudy.NON_CANCER_STUDY) {
+            String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+            String cohort = !report.sampleReport().cohort().isEmpty() ? report.sampleReport().cohort() : NA_STRING;
+            String reportDate = ReportResources.REPORT_DATE;
+            String purity = new DecimalFormat("0.00").format(report.impliedPurity());
+
+            boolean hasReliableQuality = report.hasReliableQuality();
+            boolean hasReliablePurity = report.hasReliablePurity();
+
+            String reportType = report.isCorrectedReport() ? "dna_analysis_report_corrected" : "dna_analysis_report";
+
             addToReportingDb(reportingDbTsv,
                     tumorBarcode,
                     sampleId,
