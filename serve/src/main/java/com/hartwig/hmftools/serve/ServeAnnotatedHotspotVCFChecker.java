@@ -76,7 +76,7 @@ public class ServeAnnotatedHotspotVCFChecker {
             }
         }
 
-        LOGGER.info("Done comparing {} records: {} ({} whitelisted) matches and {} differences found.",
+        LOGGER.info("Done comparing {} records: {} matches (of which {} through whitelisting) and {} differences found.",
                 totalCount,
                 matchCount,
                 whitelistedMatchCount,
