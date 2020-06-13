@@ -29,6 +29,8 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static final Map<String, Map<String, List<String>>> SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
 
     public static void main(String[] args) throws IOException {
+//        Configurator.setRootLevel(Level.DEBUG);
+
         String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspotsVicc.vcf";
 
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedHotspotVcf, new VCFCodec(), false);
@@ -53,6 +55,15 @@ public class ServeAnnotatedHotspotVCFChecker {
                                 variant.getAlternateAllele(0).getBaseString(),
                                 featureProteinAnnotation,
                                 snpeffProteinAnnotation);
+                    } else {
+                        if (snpeffProteinAnnotation.equals(featureProteinAnnotation)) {
+                            LOGGER.debug("Identical match found on {} for '{}'", featureGene, featureProteinAnnotation);
+                        } else {
+                            LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
+                                    featureGene,
+                                    featureProteinAnnotation,
+                                    snpeffProteinAnnotation);
+                        }
                     }
                 }
             }
@@ -214,7 +225,6 @@ public class ServeAnnotatedHotspotVCFChecker {
         map.put("p.Q347_A348del", Lists.newArrayList("p.Q349_A350del"));
         return map;
     }
-
 
     @NotNull
     private static String curateStartCodonAnnotation(@NotNull String serveAnnotation) {
