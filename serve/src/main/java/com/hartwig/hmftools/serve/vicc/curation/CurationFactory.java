@@ -19,6 +19,10 @@ final class CurationFactory {
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("PTEN", "ENST00000371953", "I32del"), "I33del");
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
 
+        // The below variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine
+        ONCOKB_FEATURE_BLACKLIST.add(new CurationKey("BRAF", "ENST00000288602", "R506_K507insVLR"));
+
         // The below variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
         ONCOKB_FEATURE_BLACKLIST.add(new CurationKey("PDGFRA", "ENST00000257290", "E311_K312del"));
         ONCOKB_FEATURE_BLACKLIST.add(new CurationKey("ETV6", "ENST00000396373", "385_418del"));
