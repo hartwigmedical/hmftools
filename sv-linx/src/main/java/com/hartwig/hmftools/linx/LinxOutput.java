@@ -23,6 +23,9 @@ public class LinxOutput
     private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
 
+    public static final char SUBSET_DELIM = ';';
+    public static final String SUBSET_SPLIT = ";";
+
     public LinxOutput(final CommandLine cmd, boolean defaultWrite)
     {
         WriteAll = cmd.hasOption(WRITE_ALL);

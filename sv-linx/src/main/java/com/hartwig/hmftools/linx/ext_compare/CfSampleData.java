@@ -5,8 +5,10 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.linx.ext_compare.CfBreakendData.NO_ID;
+import static com.hartwig.hmftools.linx.types.SvVarData.CR_DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -146,7 +148,7 @@ public class CfSampleData
         {
             final SvVarData var1 = cluster.getSV(i);
 
-            final int otherSvId = Integer.parseInt(var1.getClusterReason().split(";", -1)[0].split("_")[1]);
+            final int otherSvId = Integer.parseInt(var1.getClusterReason().split(SUBSET_SPLIT, -1)[0].split(CR_DELIM)[1]);
 
             for(int j = 0; j < cluster.getSVs().size(); ++j)
             {

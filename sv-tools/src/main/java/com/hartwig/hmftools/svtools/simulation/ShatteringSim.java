@@ -2,9 +2,9 @@ package com.hartwig.hmftools.svtools.simulation;
 
 import static java.lang.Math.floor;
 
+import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

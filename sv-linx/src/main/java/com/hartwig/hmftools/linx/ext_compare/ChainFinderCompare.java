@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfSvChainData.CF_DATA_DELIMITER;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,6 +37,8 @@ public class ChainFinderCompare
 {
     private final String mDataDirectory;
     private final boolean mUseSampleDirectories;
+    private final boolean mLogDbData;
+
     private CfSampleData mSampleData;
     private BufferedWriter mSvDataWriter;
     private BufferedWriter mClusterChainOverlapWriter;
@@ -53,6 +56,7 @@ public class ChainFinderCompare
         mSampleData = null;
         mSvDataWriter = null;
         mClusterChainOverlapWriter = null;
+        mLogDbData = true;
 
         initialiseSvDataWriter(outputDir);
         initialiseClusterChainOverlapWriter(outputDir);
@@ -245,10 +249,10 @@ public class ChainFinderCompare
             mSvDataWriter.write(",ChrStart,PosStart,OrientStart,ArmStart,ChrEnd,PosEnd,OrientEnd,ArmEnd");
             mSvDataWriter.write(",ClusteringDetails,Ploidy,ChainId,ChainCount");
 
-            // skip the detailed DB output for now
-            // mSvDataWriter.write(",DbMatchedStart,DbMatchedEnd,LnxDbLenStart,LnxDbLenEnd,CfDbLenStart,CfDbLenEnd");
-
-            // mSvDataWriter.write(",Foldback");
+            if(mLogDbData)
+            {
+                mSvDataWriter.write(",LnxDbLenStart,LnxDbLenEnd,CfDbLenStart,CfDbLenEnd");
+            }
 
             mSvDataWriter.newLine();
         }
@@ -289,7 +293,7 @@ public class ChainFinderCompare
 
                 if(chain == null || clusterOverlap == null)
                 {
-                    LNX_LOGGER.error("here");
+                    LNX_LOGGER.error("cfSvid({}) invalid chain or overlap group", cfSvData);
                     return;
                 }
 
@@ -298,26 +302,13 @@ public class ChainFinderCompare
                 mSvDataWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%s",
                         cfSvData.RearrangeId, cfSvData.ChainId, chain.ChainSVs.size(), chain.getSharedSvCount(cfSvData),
                         clusterOverlap.Id, dbMatchTypes[SE_START], dbMatchTypes[SE_END]));
-                /*
-                mSvDataWriter.write(String.format(",%d,%d,%d,%d,%s,%s,%d,%d,%d,%d",
-                        dbLinks[SE_START] != null ? dbLinks[SE_START].length() : NO_DB_MARKER,
-                        dbLinks[SE_END] != null ? dbLinks[SE_END].length() : NO_DB_MARKER,
-                        cfSvData.getDbLengths()[SE_START], cfSvData.getDbLengths()[SE_END]));
-                */
             }
             else
             {
-                mSvDataWriter.write(String.format(",-1,-1,0,0,%s,%s",
+                mSvDataWriter.write(String.format(",-1,-1,0,0,-1,%s,%s",
                         dbLinks[SE_START] != null ? LINX_ONLY : CfDbMatchType.NONE,
                         dbLinks[SE_END] != null ? LINX_ONLY : CfDbMatchType.NONE));
 
-                /*
-                mSvDataWriter.write(String.format(",-1,-1,0,0,%s,%s,%d,%d,%d,%d",
-                        dbLinks[SE_START] != null ? LINX_ONLY : CfDbMatchType.NONE,
-                        dbLinks[SE_END] != null ? LINX_ONLY : CfDbMatchType.NONE,
-                        dbLinks[SE_START] != null ? dbLinks[SE_START].length() : NO_DB_MARKER,
-                        dbLinks[SE_END] != null ? dbLinks[SE_END].length() : NO_DB_MARKER, NO_DB_MARKER, NO_DB_MARKER));
-                */
             }
 
             mSvDataWriter.write(String.format(",%s,%d,%d,%s,%s,%d,%d,%s",
@@ -329,6 +320,15 @@ public class ChainFinderCompare
             mSvDataWriter.write(String.format(",%s,%.2f,%d,%d",
                     var.getClusterReason(), var.jcn(),
                     chain != null ? chain.id() : -1, chain != null ? chain.getSvCount() : 0));
+
+            if(mLogDbData)
+            {
+                mSvDataWriter.write(String.format(",%d,%d,%d,%d",
+                        dbLinks[SE_START] != null ? dbLinks[SE_START].length() : NO_DB_MARKER,
+                        dbLinks[SE_END] != null ? dbLinks[SE_END].length() : NO_DB_MARKER,
+                        cfSvData != null ? cfSvData.getDbLengths()[SE_START] : NO_DB_MARKER,
+                        cfSvData != null ? cfSvData.getDbLengths()[SE_END] : NO_DB_MARKER));
+            }
 
             mSvDataWriter.newLine();
 

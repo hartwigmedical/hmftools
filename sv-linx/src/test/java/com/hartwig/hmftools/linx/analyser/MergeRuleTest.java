@@ -3,8 +3,14 @@ package com.hartwig.hmftools.linx.analyser;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_INV;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.CONSEC_BREAKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.HOM_LOSS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH_CHAIN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LONG_DEL_DUP_INV;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.MAJOR_ALLELE_JCN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.OVERLAP_FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.TI_JCN_MATCH;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -12,13 +18,6 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createIns;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_JCN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_CONSECUTIVE_BREAKENDS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_JCN_MATCH;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 
 import static org.junit.Assert.assertEquals;
@@ -157,8 +156,8 @@ public class MergeRuleTest
 
         SvCluster cluster = tester.getClusters().get(0);
 
-        assertTrue(var1.getClusterReason().contains(CR_LONG_INV));
-        assertTrue(cluster.getClusteringReasons().contains(CR_LONG_INV));
+        assertTrue(var1.hasClusterReason(LONG_DEL_DUP_INV));
+        assertTrue(cluster.hasClusterReason(LONG_DEL_DUP_INV));
 
         // test again with some very distance but overlapping SVs ignored, and others in a DB included
         tester.clearClustersAndSVs();
@@ -208,8 +207,8 @@ public class MergeRuleTest
 
         cluster = tester.getClusters().get(0);
 
-        assertTrue(tester.AllVariants.stream().anyMatch(x -> x.getClusterReason().contains(CR_LONG_DEL_DUP)));
-        assertTrue(cluster.getClusteringReasons().contains(CR_LONG_DEL_DUP));
+        assertTrue(tester.AllVariants.stream().anyMatch(x -> x.hasClusterReason(LONG_DEL_DUP_INV)));
+        assertTrue(cluster.hasClusterReason(LONG_DEL_DUP_INV));
     }
 
     @Test
@@ -229,8 +228,8 @@ public class MergeRuleTest
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(1, tester.getClusters().size());
-        assertTrue(inv1.getClusterReason().contains(CR_FOLDBACKS));
-        assertTrue(inv2.getClusterReason().contains(CR_FOLDBACKS));
+        assertTrue(inv1.hasClusterReason(FOLDBACKS));
+        assertTrue(inv2.hasClusterReason(FOLDBACKS));
     }
 
     @Test
@@ -274,7 +273,7 @@ public class MergeRuleTest
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
+        assertTrue(cluster.hasClusterReason(HOM_LOSS));
 
         // scenario 2: multiple hom-loss events clustered because LOH is clustered
         tester.clearClustersAndSVs();
@@ -316,17 +315,17 @@ public class MergeRuleTest
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3, var4, var5));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
-        assertTrue(cluster.getClusteringReasons().contains(CR_MAJOR_AP_JCN));
+        assertTrue(cluster.hasClusterReason(HOM_LOSS));
+        assertTrue(cluster.hasClusterReason(MAJOR_ALLELE_JCN));
 
         /*
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
+        assertTrue(cluster.hasClusterReason(CR_HOM_LOSS));
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var4, var5));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
+        assertTrue(cluster.hasClusterReason(CR_HOM_LOSS));
         */
 
 
@@ -360,7 +359,7 @@ public class MergeRuleTest
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
+        assertTrue(cluster.hasClusterReason(HOM_LOSS));
 
         // again but with more SVs involved
         tester.clearClustersAndSVs();
@@ -397,7 +396,7 @@ public class MergeRuleTest
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var3, var4));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
+        assertTrue(cluster.hasClusterReason(HOM_LOSS));
     }
 
     @Test
@@ -447,9 +446,9 @@ public class MergeRuleTest
         assertEquals(2, tester.Analyser.getClusters().size());
         assertTrue(var10.getCluster().getSvCount() == 1);
 
-        assertTrue(var2.getClusterReason().contains(CR_LOH_CHAIN));
+        assertTrue(var2.hasClusterReason(LOH_CHAIN));
         assertTrue(var2.getClusterReason().contains(String.valueOf(var4.id())));
-        assertTrue(var4.getClusterReason().contains(CR_LOH_CHAIN));
+        assertTrue(var4.hasClusterReason(LOH_CHAIN));
         assertTrue(var4.getClusterReason().contains(String.valueOf(var2.id())));
     }
 
@@ -504,8 +503,8 @@ public class MergeRuleTest
         if(mainCluster == null)
             assertTrue(false);
 
-        assertTrue(overlap1.getClusterReason().contains(CR_STRADDLING_CONSECUTIVE_BREAKENDS));
-        assertTrue(overlap2.getClusterReason().contains(CR_STRADDLING_CONSECUTIVE_BREAKENDS));
+        assertTrue(overlap1.hasClusterReason(CONSEC_BREAKS));
+        assertTrue(overlap2.hasClusterReason(CONSEC_BREAKS));
     }
 
     @Test
@@ -542,8 +541,8 @@ public class MergeRuleTest
 
         assertTrue(mainCluster != null);
 
-        assertTrue(var4.getClusterReason().contains(CR_STRADDLING_FOLDBACK_BREAKENDS));
-        assertTrue(mainCluster.getClusteringReasons().contains(CR_STRADDLING_FOLDBACK_BREAKENDS));
+        assertTrue(var4.hasClusterReason(OVERLAP_FOLDBACKS));
+        assertTrue(mainCluster.hasClusterReason(OVERLAP_FOLDBACKS));
 
         // don't merge if both foldbacks face away
         tester.clearClustersAndSVs();
@@ -612,8 +611,8 @@ public class MergeRuleTest
 
         assertTrue(mainCluster != null);
 
-        assertTrue(var6.getClusterReason().contains(CR_TI_JCN_MATCH));
-        assertTrue(mainCluster.getClusteringReasons().contains(CR_TI_JCN_MATCH));
+        assertTrue(var6.hasClusterReason(TI_JCN_MATCH));
+        assertTrue(mainCluster.hasClusterReason(TI_JCN_MATCH));
 
     }
 

@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
+import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
@@ -29,6 +31,7 @@ import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
+import com.hartwig.hmftools.linx.analysis.ClusteringReason;
 import com.hartwig.hmftools.linx.analysis.SvClassification;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -319,10 +322,13 @@ public class SvCluster
 
         other.getLohEvents().stream().forEach(this::addLohEvent);
 
-        String[] clusterReasons = other.getClusteringReasons().split(";");
+        String[] clusterReasons = other.getClusteringReasons().split(SUBSET_SPLIT);
         for(int i = 0; i < clusterReasons.length; ++i)
         {
-            addClusterReason(clusterReasons[i]);
+            if(clusterReasons[i].isEmpty())
+                break;
+
+            addClusterReason(ClusteringReason.valueOf(clusterReasons[i]));
         }
 
         if(other.hasLinkingLineElements())
@@ -356,15 +362,16 @@ public class SvCluster
         mLongDelDups.addAll(other.getLongDelDups());
     }
 
-    public void addClusterReason(final String reason)
+    public void addClusterReason(final ClusteringReason reason)
     {
-        if(!mClusteringReasons.contains(reason))
+        if(!mClusteringReasons.contains(reason.toString()))
         {
-            mClusteringReasons = appendStr(mClusteringReasons, reason, ';');
+            mClusteringReasons = appendStr(mClusteringReasons, reason.toString(), SUBSET_DELIM);
         }
     }
 
     public final String getClusteringReasons() { return mClusteringReasons; }
+    public boolean hasClusterReason(ClusteringReason reason) { return mClusteringReasons.contains(reason.toString()); }
 
     public boolean isConsistent()
     {

@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
@@ -27,6 +28,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.linx.analysis.ClusteringReason;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 
 public class SvVarData
@@ -203,15 +205,17 @@ public class SvVarData
         return abs(position(false) - position(true));
     }
 
-    public void addClusterReason(final String reason, final int otherId)
+    public static final String CR_DELIM = "-";
+
+    public void addClusterReason(final ClusteringReason reason, final int otherId)
     {
-        if(mClusterReason.contains(reason))
+        if(mClusterReason.contains(reason.toString()))
             return;
 
-        mClusterReason = appendStr(mClusterReason, reason, ';');
+        mClusterReason = appendStr(mClusterReason, reason.toString(), SUBSET_DELIM);
 
         if(otherId > -1)
-            mClusterReason += "_" + otherId;
+            mClusterReason += CR_DELIM + otherId;
 
         if(otherId == id())
         {
@@ -220,6 +224,7 @@ public class SvVarData
     }
 
     public final String getClusterReason() { return mClusterReason; }
+    public boolean hasClusterReason(ClusteringReason reason) { return mClusterReason.contains(reason.toString()); }
 
     public double jcn() { return mJcn; }
 

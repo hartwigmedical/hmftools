@@ -7,12 +7,12 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_COMMON_ARMS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_SATELLITE_SGL;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_CONSECUTIVE_BREAKENDS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_JCN_MATCH;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.COMMON_ARMS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.CONSEC_BREAKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.OVERLAP_FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.SATELLITE_SGL;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.TI_JCN_MATCH;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.skipClusterType;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsHaveDifferentJcn;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsViolateLohHomLoss;
@@ -185,10 +185,10 @@ public class ComplexClustering
                             LNX_LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
                                     cluster1.id(), var1.posId(), cluster2.id(), var2.posId());
 
-                            mSimpleClustering.addClusterReasons(var1, var2, CR_FOLDBACKS);
+                            mSimpleClustering.addClusterReasons(var1, var2, FOLDBACKS);
 
-                            cluster1.addClusterReason(CR_FOLDBACKS);
-                            cluster2.addClusterReason(CR_FOLDBACKS);
+                            cluster1.addClusterReason(FOLDBACKS);
+                            cluster2.addClusterReason(FOLDBACKS);
                             return true;
                         }
                     }
@@ -228,10 +228,10 @@ public class ComplexClustering
                 LNX_LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
                         cluster1.id(), cluster2.id(), var1.posId(), var2.posId());
 
-                mSimpleClustering.addClusterReasons(var1, var2, CR_COMMON_ARMS);
+                mSimpleClustering.addClusterReasons(var1, var2, COMMON_ARMS);
 
-                cluster1.addClusterReason(CR_COMMON_ARMS);
-                cluster2.addClusterReason(CR_COMMON_ARMS);
+                cluster1.addClusterReason(COMMON_ARMS);
+                cluster2.addClusterReason(COMMON_ARMS);
                 return true;
             }
         }
@@ -361,7 +361,7 @@ public class ComplexClustering
                             cluster.id(), isFoldbackPair ? "foldback" : "consecutive",
                             lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
 
-                    final String reason = isFoldbackPair ? CR_STRADDLING_FOLDBACK_BREAKENDS : CR_STRADDLING_CONSECUTIVE_BREAKENDS;
+                    final ClusteringReason reason = isFoldbackPair ? OVERLAP_FOLDBACKS : CONSEC_BREAKS;
                     mSimpleClustering.addClusterReasons(otherBreakend.getSV(), lowerBreakend.getSV(), reason);
 
                     otherCluster.addClusterReason(reason);
@@ -468,10 +468,10 @@ public class ComplexClustering
                             LNX_LOGGER.debug("cluster({}) boundary breakend({}) ploidy TI match with cluster({}) breakend({})",
                                     cluster.id(), boundaryBreakend, otherCluster.id(), nextBreakend);
 
-                            mSimpleClustering.addClusterReasons(boundaryBreakend.getSV(), nextBreakend.getSV(), CR_TI_JCN_MATCH);
+                            mSimpleClustering.addClusterReasons(boundaryBreakend.getSV(), nextBreakend.getSV(), TI_JCN_MATCH);
 
-                            otherCluster.addClusterReason(CR_TI_JCN_MATCH);
-                            cluster.addClusterReason(CR_TI_JCN_MATCH);
+                            otherCluster.addClusterReason(TI_JCN_MATCH);
+                            cluster.addClusterReason(TI_JCN_MATCH);
 
                             cluster.mergeOtherCluster(otherCluster);
 
@@ -569,8 +569,8 @@ public class ComplexClustering
                         LNX_LOGGER.debug("cluster({}) has same chromosome({}) link with satellite cluster({}) SV({})",
                                 srCluster.id(), chromosome, sglCluster.id(), var.id());
 
-                        mSimpleClustering.addClusterReasons(otherSV, var, CR_SATELLITE_SGL);
-                        srCluster.addClusterReason(CR_SATELLITE_SGL);
+                        mSimpleClustering.addClusterReasons(otherSV, var, SATELLITE_SGL);
+                        srCluster.addClusterReason(SATELLITE_SGL);
 
                         srCluster.mergeOtherCluster(sglCluster);
                         mergedClusters.add(sglCluster);

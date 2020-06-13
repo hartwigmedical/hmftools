@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
@@ -270,7 +270,7 @@ public class ChainingActualTest
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertEquals(4, cluster.getFoldbacks().size());
-        assertTrue(cluster.getClusteringReasons().contains(CR_FOLDBACKS));
+        assertTrue(cluster.getClusteringReasons().contains(FOLDBACKS.toString()));
 
         assertEquals(1, cluster.getChains().size());
 

@@ -9,13 +9,12 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_INV;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_JCN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_PROXIMITY;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.HOM_LOSS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH_CHAIN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LONG_DEL_DUP_INV;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.MAJOR_ALLELE_JCN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.PROXIMITY;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
@@ -150,14 +149,14 @@ public class SimpleClustering
                             cluster = new SvCluster(getNextClusterId());
                             cluster.addVariant(var);
                             cluster.addVariant(nextVar);
-                            cluster.addClusterReason(CR_PROXIMITY);
+                            cluster.addClusterReason(PROXIMITY);
                             clusters.add(cluster);
                         }
                         else if (cluster != null && nextCluster != null)
                         {
                             // keep one and remove the other
                             cluster.mergeOtherCluster(nextCluster, false);
-                            cluster.addClusterReason(CR_PROXIMITY);
+                            cluster.addClusterReason(PROXIMITY);
                             clusters.remove(nextCluster);
                         }
                         else
@@ -165,22 +164,22 @@ public class SimpleClustering
                             if (cluster == null)
                             {
                                 nextCluster.addVariant(var);
-                                nextCluster.addClusterReason(CR_PROXIMITY);
+                                nextCluster.addClusterReason(PROXIMITY);
                             }
                             else
                             {
                                 cluster.addVariant(nextVar);
-                                cluster.addClusterReason(CR_PROXIMITY);
+                                cluster.addClusterReason(PROXIMITY);
                             }
                         }
 
                         if (var.getClusterReason().isEmpty())
-                            var.addClusterReason(CR_PROXIMITY, nextVar.id());
+                            var.addClusterReason(PROXIMITY, nextVar.id());
 
                         if (nextVar.getClusterReason().isEmpty())
-                            nextVar.addClusterReason(CR_PROXIMITY, var.id());
+                            nextVar.addClusterReason(PROXIMITY, var.id());
 
-                        // checkClusteringClonalDiscrepancy(var, nextVar, CR_PROXIMITY);
+                        // checkClusteringClonalDiscrepancy(var, nextVar, PROXIMITY);
                     }
                 }
 
@@ -190,7 +189,7 @@ public class SimpleClustering
         }
     }
 
-    public void addClusterReasons(final SvVarData var1, final SvVarData var2, final String clusterReason)
+    public void addClusterReasons(final SvVarData var1, final SvVarData var2, final ClusteringReason clusterReason)
     {
         var1.addClusterReason(clusterReason, var2.id());
         var2.addClusterReason(clusterReason, var1.id());
@@ -203,7 +202,7 @@ public class SimpleClustering
         // checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
     }
 
-    protected void logClusteringDetails(final SvVarData var1, final SvVarData var2, final String reason)
+    protected void logClusteringDetails(final SvVarData var1, final SvVarData var2, final ClusteringReason reason)
     {
         if(!mConfig.Output.WriteClusterHistory)
             return;
@@ -332,8 +331,8 @@ public class SimpleClustering
                 LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event({})",
                         lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(), lohEvent);
 
-                addClusterReasons(lohSvStart, lohSvEnd, CR_LOH);
-                lohClusterStart.addClusterReason(CR_LOH);
+                addClusterReasons(lohSvStart, lohSvEnd, LOH);
+                lohClusterStart.addClusterReason(LOH);
 
                 lohClusterStart.mergeOtherCluster(lohClusterEnd);
                 clusters.remove(lohClusterEnd);
@@ -376,8 +375,8 @@ public class SimpleClustering
                             cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount(),
                             homLoss.Chromosome, homLoss.PosStart, homLoss.PosEnd, lohEvent.PosStart, lohEvent.PosEnd);
 
-                    addClusterReasons(homLossBeStart.getSV(), homLossBeEnd.getSV(), CR_HOM_LOSS);
-                    cluster.addClusterReason(CR_HOM_LOSS);
+                    addClusterReasons(homLossBeStart.getSV(), homLossBeEnd.getSV(), HOM_LOSS);
+                    cluster.addClusterReason(HOM_LOSS);
 
                     cluster.mergeOtherCluster(otherCluster);
                     clusters.remove(otherCluster);
@@ -437,8 +436,8 @@ public class SimpleClustering
                 LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on no unclustered hom-loss events",
                         cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount());
 
-                addClusterReasons(lohBeStart.getSV(), lohBeEnd.getSV(), CR_HOM_LOSS);
-                cluster.addClusterReason(CR_HOM_LOSS);
+                addClusterReasons(lohBeStart.getSV(), lohBeEnd.getSV(), HOM_LOSS);
+                cluster.addClusterReason(HOM_LOSS);
 
                 cluster.mergeOtherCluster(otherCluster);
                 clusters.remove(otherCluster);
@@ -514,8 +513,8 @@ public class SimpleClustering
                 LNX_LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on unclustered LOH and hom-loss breakends",
                         cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount());
 
-                addClusterReasons(breakend1.getSV(), breakend2.getSV(), CR_HOM_LOSS);
-                cluster.addClusterReason(CR_HOM_LOSS);
+                addClusterReasons(breakend1.getSV(), breakend2.getSV(), HOM_LOSS);
+                cluster.addClusterReason(HOM_LOSS);
 
                 cluster.mergeOtherCluster(otherCluster);
                 clusters.remove(otherCluster);
@@ -624,7 +623,7 @@ public class SimpleClustering
             }
 
             boolean mergedOtherClusters = false;
-            String mergeReason = "";
+            ClusteringReason mergeReason = ClusteringReason.NONE;
 
             List<SvVarData> cluster1Svs = Lists.newArrayList(cluster1.getLongDelDups());
             cluster1Svs.addAll(cluster1.getInversions());
@@ -703,17 +702,14 @@ public class SimpleClustering
                             {
                                 LNX_LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have INV-DEL-DUP overlap",
                                         cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
-
-                                mergeReason = CR_LONG_INV;
                             }
                             else
                             {
                                 LNX_LOGGER.debug("cluster({}) and cluster({}) have {} DEL-DUP overlaps and {} close pairs",
                                         cluster1.id(), cluster2.id(), delDupOverlapCount, closeLinkPairs);
-
-                                mergeReason = CR_LONG_DEL_DUP;
                             }
 
+                            mergeReason = LONG_DEL_DUP_INV;
                             addClusterReasons(var1, var2, mergeReason);
                             mergedOtherClusters = true;
                             break;
@@ -1001,10 +997,10 @@ public class SimpleClustering
                                         cluster.id(), breakend, formatJcn(breakendJcn), otherCluster.id(), opposingBreakend.toString(),
                                         formatJcn(opposingBreakend.jcn()), formatJcn(followingMajorAP));
 
-                                addClusterReasons(breakend.getSV(), opposingBreakend.getSV(), CR_MAJOR_AP_JCN);
+                                addClusterReasons(breakend.getSV(), opposingBreakend.getSV(), MAJOR_ALLELE_JCN);
 
-                                otherCluster.addClusterReason(CR_MAJOR_AP_JCN);
-                                cluster.addClusterReason(CR_MAJOR_AP_JCN);
+                                otherCluster.addClusterReason(MAJOR_ALLELE_JCN);
+                                cluster.addClusterReason(MAJOR_ALLELE_JCN);
 
                                 cluster.mergeOtherCluster(otherCluster);
 
@@ -1114,10 +1110,10 @@ public class SimpleClustering
                             LNX_LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
                                     lohCluster.id(), lohBreakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString());
 
-                            addClusterReasons(lohBreakend.getSV(), resolvingBreakend.getSV(), CR_LOH_CHAIN);
+                            addClusterReasons(lohBreakend.getSV(), resolvingBreakend.getSV(), LOH_CHAIN);
 
-                            resolvingCluster.addClusterReason(CR_LOH_CHAIN);
-                            lohCluster.addClusterReason(CR_LOH_CHAIN);
+                            resolvingCluster.addClusterReason(LOH_CHAIN);
+                            lohCluster.addClusterReason(LOH_CHAIN);
 
                             lohCluster.mergeOtherCluster(resolvingCluster);
 
