@@ -48,7 +48,7 @@ public class ViccExtractorTestApplication {
     private static final boolean TRANSVAR_ENABLED = true;
     private static final Integer MAX_ENTRIES = null;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
 
         String hostname = InetAddress.getLocalHost().getHostName();
