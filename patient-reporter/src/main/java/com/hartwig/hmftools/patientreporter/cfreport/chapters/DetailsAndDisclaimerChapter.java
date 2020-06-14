@@ -94,12 +94,16 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                     sampleReport.submissionId()));
         }
 
+        patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
+
         return div;
     }
 
     @NotNull
     private static Div createDisclaimerDiv(@NotNull AnalysedPatientReport patientReport) {
         Div div = new Div();
+
+        div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
 
         div.add(createContentParagraph("The results stated in this report are based on the tested tumor and blood sample."));
         div.add(createContentParagraph("The data on which this report is based is generated "
@@ -114,7 +118,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection "
                 + "of somatic variants and >95% for detection of translocations and gene copy number changes. For samples "
                 + "with a purity above 20%, the test has a sensitivity of >90%."));
-        patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
         div.add(createContentParagraphTwice("For feedback or complaints please contact ",
                 ReportResources.CONTACT_EMAIL_QA,
                 " and for general questions, please contact ",

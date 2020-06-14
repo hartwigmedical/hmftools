@@ -36,15 +36,16 @@ public class CFReportWriterTest {
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
-    private static final String COMMENT_STRING = "This is a test report and is based off COLO829";
-    private static final String COMMENT_STRING_CORRECTED = "This is a corrected test report and is based off COLO829";
+    private static final String COLO_COMMENT_STRING = "This is a test report and is based off COLO829";
+    private static final String COLO_COMMENT_STRING_CORRECTED = "This is a corrected test report and is based off COLO829";
+    private static final String FULL_TABLES_COMMENT_STRING = "This is a test report with all tables filled in";
 
     private static final String COMMENT_STRING_QC_FAIL = "This is a test QC fail report";
     private static final String COMMENT_STRING_QC_FAIL_CORRECTED = "This is a corrected test QC fail report";
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829(false, COMMENT_STRING);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829(false, COLO_COMMENT_STRING);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -52,7 +53,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829(true, COMMENT_STRING_CORRECTED);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829(true, COLO_COMMENT_STRING_CORRECTED);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -60,7 +61,8 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCPCTSample() throws IOException {
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_FULL");
+        AnalysedPatientReport patientReport =
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_FULL", FULL_TABLES_COMMENT_STRING);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -68,7 +70,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCORESample() throws IOException {
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CORE01_FULL");
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CORE01_FULL", null);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -76,7 +78,8 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForWIDESample() throws IOException {
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("WIDE01_FULL");
+        AnalysedPatientReport patientReport =
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("WIDE01_FULL", FULL_TABLES_COMMENT_STRING);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
