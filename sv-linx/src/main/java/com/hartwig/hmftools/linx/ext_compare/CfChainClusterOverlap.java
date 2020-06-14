@@ -1,15 +1,9 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
-import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile.DELIMITER;
-
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -58,7 +52,7 @@ public class CfChainClusterOverlap
             if(existingChain == chain)
                 return;
 
-            if(chain.ChainSVs.size() > existingChain.ChainSVs.size())
+            if(chain.SVs.size() > existingChain.SVs.size())
             {
                 mChains.add(index, chain);
                 return;
@@ -117,11 +111,11 @@ public class CfChainClusterOverlap
         int chainedSVs = 0;
         for(final CfChain chain : mChains)
         {
-            sharedSVs += chain.ChainSVs.stream().filter(x -> x.getSvData() != null && x.getSvData().getCluster().getSvCount() > 1).count();
-            chainedSVs += chain.ChainSVs.size();
+            sharedSVs += chain.SVs.stream().filter(x -> x.getSvData() != null && x.getSvData().getCluster().getSvCount() > 1).count();
+            chainedSVs += chain.SVs.size();
 
-            chainIds.add(String.valueOf(chain.ChainId));
-            chainCounts.add(String.valueOf(chain.ChainSVs.size()));
+            chainIds.add(String.valueOf(chain.Id));
+            chainCounts.add(String.valueOf(chain.SVs.size()));
         }
 
         csvOutput.add(String.valueOf(totalSVs));

@@ -45,6 +45,9 @@ public class CfBreakendData
 
     public static CfBreakendData fromData(final String data, final Map<String,Integer> fieldIndexMap)
     {
+        // Sample	 Chain	 Breakpoint	 Rearrangement	 Chromosome:position	 Strand
+        // Potential chromosomal end loss (left)	 Potential chromosomal end loss (right)	 Deletion bridge partner breakpoint
+        // Adjacent breakpoint(s)	 Site annotation
         //CPCT02010452T	 3	 196	 360203	 14:49979403	 1	 0	 0	 195	 |195|197|	 na
         //CPCT02010452T	 3	 197	 360204	 14:49983004	 0	 0	 0	 198	 |196|198|	 na
 

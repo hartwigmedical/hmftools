@@ -17,7 +17,7 @@ import java.util.List;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class CfSvChainData
+public class CfSvData
 {
     public final int RearrangeId;
     public final int ChainId;
@@ -32,7 +32,9 @@ public class CfSvChainData
     private final SvVarData[] mDbSvData;
     private final int[] mDbLengths;
 
-    public CfSvChainData(final CfBreakendData[] breakends)
+    private final CfLink[] mChainLinks;
+
+    public CfSvData(final CfBreakendData[] breakends)
     {
         int startIndex = SE_START;
         int endIndex = SE_END;
@@ -56,6 +58,7 @@ public class CfSvChainData
         mSvData = null;
         mDbSvData = new SvVarData[] { null, null };
         mDbLengths = new int[] { NO_DB_MARKER, NO_DB_MARKER };
+        mChainLinks = new CfLink[] { null, null };
     }
 
     public static final String CF_DATA_DELIMITER = "\t\\s*";
@@ -65,6 +68,9 @@ public class CfSvChainData
 
     public final SvVarData[] getDbSvData() { return mDbSvData; }
     public final int[] getDbLengths() { return mDbLengths; }
+
+    public final CfLink[] getChainLinks() { return mChainLinks; }
+    public void setChainLink(final CfLink link, int index) { mChainLinks[index] = link; }
 
     public void setDbSvData(int se, final SvVarData var, int length)
     {
@@ -91,7 +97,7 @@ public class CfSvChainData
         return true;
     }
 
-    public int calcDbLength(final CfSvChainData other, int se, int seOther)
+    public int calcDbLength(final CfSvData other, int se, int seOther)
     {
         if(Orientations[se] == other.Orientations[seOther])
             return NO_DB_MARKER;

@@ -23,7 +23,7 @@ import org.apache.commons.compress.utils.Lists;
 public class CfSampleData
 {
     public final String SampleId;
-    public final List<CfSvChainData> CfSvList;
+    public final List<CfSvData> CfSvList;
     public final List<SvVarData> UnchainedSvList; // SVs not clustered by CF
     public final Map<Integer,CfChain> Chains;
 
@@ -41,7 +41,7 @@ public class CfSampleData
         SvProximityDistance = Maps.newHashMap();
     }
 
-    public void processNewSV(final CfSvChainData cfSvData)
+    public void processNewSV(final CfSvData cfSvData)
     {
         // keep a cache of chains
         CfChain chain = Chains.get(cfSvData.ChainId);
@@ -52,7 +52,7 @@ public class CfSampleData
             Chains.put(cfSvData.ChainId, chain);
         }
 
-        chain.ChainSVs.add(cfSvData);
+        chain.addSV(cfSvData);
 
         if(cfSvData.svMatched())
         {
@@ -96,7 +96,7 @@ public class CfSampleData
 
     public void setDeletionBridgeData()
     {
-        for(CfSvChainData cfSvData : CfSvList)
+        for(CfSvData cfSvData : CfSvList)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -105,7 +105,7 @@ public class CfSampleData
 
                 boolean found = false;
 
-                for(CfSvChainData otherSv : CfSvList)
+                for(CfSvData otherSv : CfSvList)
                 {
                     if(otherSv == cfSvData)
                         continue;
@@ -126,23 +126,19 @@ public class CfSampleData
                         break;
                 }
             }
-
         }
+    }
+
+    public void setChainLinks()
+    {
+        Chains.values().forEach(x -> x.buildLinks());
     }
 
     public void setSvClusterDistances(final SvCluster cluster)
     {
+        // set the distance to the first SV marked in the clustering reasons
         if(cluster.getSvCount() == 1)
             return;
-
-        /*
-        if(cluster.getSvCount() == 1)
-        {
-            // check for evidence of clustering which was later dissolved
-            if(cluster.getSV(0).getClusterReason().isEmpty())
-                return;
-        }
-        */
 
         for(int i = 0; i < cluster.getSvCount(); ++i)
         {
@@ -179,7 +175,8 @@ public class CfSampleData
 
     public void setUnclusteredDistances(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        for(CfSvChainData cfSvData : CfSvList)
+        // sets distance to nearest SVs for unclustered SVs
+        for(CfSvData cfSvData : CfSvList)
         {
             final SvVarData var = cfSvData.getSvData();
 

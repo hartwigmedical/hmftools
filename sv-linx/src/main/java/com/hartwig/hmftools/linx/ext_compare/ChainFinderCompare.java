@@ -6,12 +6,13 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
+import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
-import static com.hartwig.hmftools.linx.ext_compare.CfSvChainData.CF_DATA_DELIMITER;
+import static com.hartwig.hmftools.linx.ext_compare.CfSvData.CF_DATA_DELIMITER;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
+import static com.hartwig.hmftools.linx.types.SvVarData.CR_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -118,7 +119,7 @@ public class ChainFinderCompare
 
         mSampleData.setUnclusteredDistances(chrBreakendMap);
 
-        for(CfSvChainData cfSvData : mSampleData.CfSvList)
+        for(CfSvData cfSvData : mSampleData.CfSvList)
         {
             if(cfSvData.getSvData() == null)
                 continue;
@@ -164,7 +165,7 @@ public class ChainFinderCompare
             {
                 if(breakendDataList.get(j).RearrangeId == firstBreakend.RearrangeId)
                 {
-                    mSampleData.CfSvList.add(new CfSvChainData(new CfBreakendData[] { firstBreakend, breakendDataList.get(j)} ));
+                    mSampleData.CfSvList.add(new CfSvData(new CfBreakendData[] { firstBreakend, breakendDataList.get(j)} ));
                     breakendDataList.remove(j);
                     found = true;
                     break;
@@ -183,7 +184,7 @@ public class ChainFinderCompare
         }
 
         // find and link to corresponding SVs
-        for(CfSvChainData cfSvData : mSampleData.CfSvList)
+        for(CfSvData cfSvData : mSampleData.CfSvList)
         {
             if(!mapToLinx(cfSvData, chrBreakendMap))
             {
@@ -196,9 +197,10 @@ public class ChainFinderCompare
         }
 
         mSampleData.setDeletionBridgeData();
+        mSampleData.setChainLinks();
     }
 
-    private boolean mapToLinx(final CfSvChainData cfSvData, final Map<String, List<SvBreakend>> chrBreakendMap)
+    private boolean mapToLinx(final CfSvData cfSvData, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
         final List<SvBreakend> breakendList = chrBreakendMap.get(cfSvData.Chromosomes[SE_START]);
 
@@ -242,8 +244,9 @@ public class ChainFinderCompare
             final String outputFileName = outputDir + "LNX_CHAIN_FINDER_SVS.csv";
             mSvDataWriter = createBufferedWriter(outputFileName, false);
 
-            mSvDataWriter.write("SampleId,SvId,ClusterId,ClusterCount,SglCount,ResolvedType,Type,ClusterReason,ProximityDistance");
-            mSvDataWriter.write(",CfSvId,CfChainId,CfChainCount,SharedSvCount,OverlapGroupId,DbMatchedStart,DbMatchedEnd");
+            mSvDataWriter.write("SampleId,SvId,ClusterId,ClusterCount,SglCount,ResolvedType,Type,ClusterReason,ProxDistance");
+            mSvDataWriter.write(",CfSvId,CfChainId,CfChainCount,SharedSvCount,OverlapGroupId,CfProxDistance");
+            mSvDataWriter.write(",DbMatchedStart,DbMatchedEnd,CfLinkSvIdStart,CfLinkSvIdEnd,CfLinkLenStart,CfLinkLenEnd");
 
             // written again for convenience
             mSvDataWriter.write(",ChrStart,PosStart,OrientStart,ArmStart,ChrEnd,PosEnd,OrientEnd,ArmEnd");
@@ -267,13 +270,13 @@ public class ChainFinderCompare
         if(clusterReason.isEmpty())
             return "NONE";
 
-        final String[] reasons = clusterReason.split(";", -1);
-        final String firstReason = reasons[0].split("_")[0];
+        final String[] reasons = clusterReason.split(SUBSET_SPLIT, -1);
+        final String firstReason = reasons[0].split(CR_DELIM)[0];
 
         return firstReason;
     }
 
-    private void writeMatchData(final SvVarData var, @Nullable final CfSvChainData cfSvData)
+    private void writeMatchData(final SvVarData var, @Nullable final CfSvData cfSvData)
     {
         try
         {
@@ -299,13 +302,21 @@ public class ChainFinderCompare
 
                 final CfDbMatchType[] dbMatchTypes = cfSvData.getDeletionBridgeMatchTypes();
 
-                mSvDataWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%s",
-                        cfSvData.RearrangeId, cfSvData.ChainId, chain.ChainSVs.size(), chain.getSharedSvCount(cfSvData),
-                        clusterOverlap.Id, dbMatchTypes[SE_START], dbMatchTypes[SE_END]));
+                mSvDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%s,%s",
+                        cfSvData.RearrangeId, cfSvData.ChainId, chain.SVs.size(), chain.getSharedSvCount(cfSvData),
+                        clusterOverlap.Id, chain.findMinBreakendDistance(cfSvData), dbMatchTypes[SE_START], dbMatchTypes[SE_END]));
+
+                final CfLink[] cfLinks = cfSvData.getChainLinks();
+
+                mSvDataWriter.write(String.format(",%d,%d,%d,%d",
+                        cfLinks[SE_START] != null ? cfLinks[SE_START].getOtherSv(cfSvData).getSvData().id() : -1,
+                        cfLinks[SE_END] != null ? cfLinks[SE_END].getOtherSv(cfSvData).getSvData().id() : -1,
+                        cfLinks[SE_START] != null ? cfLinks[SE_START].length() : -1,
+                        cfLinks[SE_END] != null ? cfLinks[SE_END].length() : -1));
             }
             else
             {
-                mSvDataWriter.write(String.format(",-1,-1,0,0,-1,%s,%s",
+                mSvDataWriter.write(String.format(",-1,-1,0,0,-1,-1,%s,%s,-1,-1,-1,-1",
                         dbLinks[SE_START] != null ? LINX_ONLY : CfDbMatchType.NONE,
                         dbLinks[SE_END] != null ? LINX_ONLY : CfDbMatchType.NONE));
 
@@ -331,8 +342,6 @@ public class ChainFinderCompare
             }
 
             mSvDataWriter.newLine();
-
-            // mSvDataWriter.write(String.format(",%s,%.2f,%s",var.isFoldback()));
         }
         catch(IOException e)
         {
