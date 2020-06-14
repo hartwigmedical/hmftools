@@ -204,7 +204,6 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(testsArePerformedByAccreditedLab());
         divColumn.add(reportIsVerifiedByAndAddressedTo());
-        divColumn.add(reportIsRequestedBy());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         divColumn.add(resubmitSample());
@@ -303,15 +302,6 @@ public class QCFailChapter implements ReportChapter {
                 DataUtil.formatDate(failReport.sampleReport().refArrivalDate()),
                 " with internal blood barcode ",
                 failReport.sampleReport().refSampleBarcode());
-    }
-
-    @NotNull
-    private Paragraph reportIsRequestedBy() {
-        String requesterName = failReport.sampleReport().hospitalContactData().requesterName();
-        String requesterEmail = failReport.sampleReport().hospitalContactData().requesterEmail();
-        return createContentParagraph("The requester is : ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull

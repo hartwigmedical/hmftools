@@ -26,6 +26,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class CFReportWriterTest {
@@ -92,42 +93,47 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateInsufficientDNAReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01", Lims.NOT_PERFORMED_STRING, QCFailReason.INSUFFICIENT_DNA, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT01", Lims.NOT_PERFORMED_STRING, null, QCFailReason.INSUFFICIENT_DNA, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateCorrectedInsufficientDNAReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01", Lims.NOT_PERFORMED_STRING, QCFailReason.INSUFFICIENT_DNA, true, COMMENT_STRING_QC_FAIL_CORRECTED);
+        generateQCFailCPCTReport("CPCT01",
+                Lims.NOT_PERFORMED_STRING,
+                null,
+                QCFailReason.INSUFFICIENT_DNA,
+                true,
+                COMMENT_STRING_QC_FAIL_CORRECTED);
     }
 
     @Test
     public void canGenerateTechnicalFailureReport() throws IOException {
-        generateQCFailCPCTReport("CPCT02", "60%", QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT02", "60%", null, QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateSufficientTCPQCFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT03", "60%", QCFailReason.SUFFICIENT_TCP_QC_FAILURE, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT03", "60%", "70%", QCFailReason.SUFFICIENT_TCP_QC_FAILURE, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterDeepWGSReport() throws IOException {
-        generateQCFailCPCTReport("CPCT04", "18%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT04", "22%", "18%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReport() throws IOException {
-        generateQCFailCPCTReport("CPCT05", "15%", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT05", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReportCORE() throws IOException {
-        generateQCFailCPCTReport("CORE01", "15%", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CORE01", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReportWIDE() throws IOException {
-        generateQCFailCPCTReport("WIDE01", "15%", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("WIDE01", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @NotNull
@@ -141,8 +147,9 @@ public class CFReportWriterTest {
                 .build();
     }
 
-    private static void generateQCFailCPCTReport(@NotNull String sampleId, @NotNull String shallowSeqPurity, @NotNull QCFailReason reason,
-            boolean correctedReport, @NotNull String comments) throws IOException {
+    private static void generateQCFailCPCTReport(@NotNull String sampleId, @NotNull String shallowSeqPurity,
+            @Nullable String wgsPurityString, @NotNull QCFailReason reason, boolean correctedReport, @NotNull String comments)
+            throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId("x")
                 .refSampleBarcode("FR12123488")
@@ -168,7 +175,7 @@ public class CFReportWriterTest {
         QCFailReport patientReport = ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
-                .wgsPurityString(null)
+                .wgsPurityString(wgsPurityString)
                 .comments(comments)
                 .isCorrectedReport(correctedReport)
                 .signaturePath(testReportData().signaturePath())
