@@ -55,17 +55,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         SampleReport sampleReport = patientReport.sampleReport();
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
-        Paragraph sampleIdentificationLineOnReport;
-        if (patientReport.sampleReport().hospitalPathologySampleId() != null) {
-            sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
-                    patientReport.sampleReport().tumorSampleId(),
-                    " and the pathology tissue ID is: ",
-                    patientReport.sampleReport().hospitalPathologySampleId());
-        } else {
-            sampleIdentificationLineOnReport =
-                    createContentParagraph("The HMF sample ID is: ", patientReport.sampleReport().tumorSampleId());
-        }
-
         Div div = new Div();
 
         div.add(new Paragraph("Sample details").addStyle(ReportResources.smallBodyHeadingStyle()));
@@ -73,13 +62,14 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing using Whole Genome Sequencing"));
 
+        div.add(generateHMFAndPathologySampleIDParagraph(patientReport.sampleReport()));
+
         String earliestArrivalDate = sampleReport.earliestArrivalDate();
         div.add(createContentParagraphTwice("The results in this report have been obtained between ",
                 earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
                 " and ",
                 ReportResources.REPORT_DATE));
 
-        div.add(sampleIdentificationLineOnReport);
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
                 " with internal tumor barcode ",
@@ -102,7 +92,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                     sampleReport.projectName(),
                     " and the submission ID is ",
                     sampleReport.submissionId()));
-            div.add(createContentParagraphRequest(sampleReport));
+            div.add(createRequesterParagraph(sampleReport));
         }
         patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
 
@@ -137,6 +127,28 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     }
 
     @NotNull
+    private static Paragraph generateHMFAndPathologySampleIDParagraph(@NotNull SampleReport sampleReport) {
+        if (sampleReport.hospitalPathologySampleId() != null) {
+            return createContentParagraphTwice("The HMF sample ID is: ",
+                    sampleReport.tumorSampleId(),
+                    " and the pathology tissue ID is: ",
+                    sampleReport.hospitalPathologySampleId());
+        } else {
+            return createContentParagraph("The HMF sample ID is: ", sampleReport.tumorSampleId());
+        }
+    }
+
+    @NotNull
+    private static Paragraph createRequesterParagraph(@NotNull SampleReport sampleReport) {
+        String requesterName = sampleReport.hospitalContactData().requesterName();
+        String requesterEmail = sampleReport.hospitalContactData().requesterEmail();
+
+        return createContentParagraph("The requester is: ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
+
+    @NotNull
     private static Paragraph createContentParagraph(@NotNull String text) {
         return new Paragraph(text).addStyle(ReportResources.smallBodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
@@ -153,16 +165,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(regularPart2)
                 .add(new Text(boldPart2).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
-    }
-
-    @NotNull
-    private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        String requesterName = sampleReport.hospitalContactData().requesterName();
-        String requesterEmail = sampleReport.hospitalContactData().requesterEmail();
-
-        return createContentParagraph("The requester is: ").add(new Text(requesterName).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .add(new Text(" (" + requesterEmail + ")").addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 }

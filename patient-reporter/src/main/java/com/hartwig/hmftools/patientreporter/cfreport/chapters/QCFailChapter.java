@@ -112,8 +112,8 @@ public class QCFailChapter implements ReportChapter {
                 break;
             }
             case SUFFICIENT_TCP_QC_FAILURE: {
-                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n but "
-                        + "could not be further analyzed due to insufficient quality.";
+                explanationDetail = "The tumor percentage based on molecular estimation was above the minimal of 20% tumor cells \n"
+                        + "but could not be further analyzed due to insufficient quality.";
                 break;
             }
             case TECHNICAL_FAILURE: {
@@ -146,17 +146,17 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createWIDESampleDetailsColumn() {
         Div div = createSampleDetailsDiv();
-        div.add(resubmitSample());
+        div.add(samplesAreEvaluatedAtHMFAndWithSampleID());
+        div.add(reportIsBasedOnTumorSampleArrivedAt());
+        div.add(reportIsBasedOnBloodSampleArrivedAt());
+        div.add(resultsAreObtainedBetweenDates());
         if (failReport.sampleReport().hospitalPathologySampleId() != null) {
             div.add(reportIsForPathologySampleID());
         }
-        div.add(resultsAreObtainedBetweenDates());
-        div.add(reportIsBasedOnTumorSampleArrivedAt());
-        div.add(reportIsBasedOnBloodSampleArrivedAt());
         if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
             div.add(sampleHasMolecularTumorPercentage());
         }
-        failReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
+        div.add(resubmitSample());
 
         return div;
     }
@@ -164,11 +164,11 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createWIDEDisclaimerColumn() {
         Div div = createDisclaimerDiv();
-        div.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        div.add(reportIsVerifiedByAndAddressedTo());
         div.add(reportIsBasedOnBloodAndTumorSamples());
-        div.add(reportIsGeneratedByPatientReporterVersion());
         div.add(testsArePerformedByAccreditedLab());
+        div.add(reportIsVerifiedByAndAddressedTo());
+        div.add(reportIsGeneratedByPatientReporterVersion());
+        failReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
         div.add(forQuestionsPleaseContactHMF());
         return div;
     }
@@ -186,31 +186,31 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createCORESampleDetailsColumn() {
         Div divColumn = createSampleDetailsDiv();
-        divColumn.add(resubmitSample());
+        divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
+        divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
+        divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
+        divColumn.add(resultsAreObtainedBetweenDates());
+        divColumn.add(reportIsForHospitalPatientID());
         if (failReport.sampleReport().hospitalPathologySampleId() != null) {
             divColumn.add(reportIsForPathologySampleID());
         }
-        divColumn.add(reportIsForHospitalPatientID());
         divColumn.add(reportIsForProjectAndSubmission());
-        divColumn.add(resultsAreObtainedBetweenDates());
-        divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
-        divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
         if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
             divColumn.add(sampleHasMolecularTumorPercentage());
         }
-        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
+        divColumn.add(resubmitSample());
         return divColumn;
     }
 
     @NotNull
     private Div createCOREDisclaimerColumn() {
         Div divColumn = createDisclaimerDiv();
-        divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
+        divColumn.add(testsArePerformedByAccreditedLab());
+        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsRequestedBy());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
-        divColumn.add(testsArePerformedByAccreditedLab());
+        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         divColumn.add(forQuestionsPleaseContactHMF());
         return divColumn;
     }
@@ -228,14 +228,14 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createCPCTDRUPSampleDetailsColumn() {
         Div divColumn = createSampleDetailsDiv();
-        divColumn.add(resubmitSample());
-        divColumn.add(resultsAreObtainedBetweenDates());
+        divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
+        divColumn.add(resultsAreObtainedBetweenDates());
+        divColumn.add(resubmitSample());
         if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
             divColumn.add(sampleHasMolecularTumorPercentage());
         }
-        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
 
         return divColumn;
     }
@@ -243,11 +243,11 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createCPCTDRUPDisclaimerColumn() {
         Div divColumn = createDisclaimerDiv();
-        divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
-        divColumn.add(reportIsGeneratedByPatientReporterVersion());
         divColumn.add(testsArePerformedByAccreditedLab());
+        divColumn.add(reportIsVerifiedByAndAddressedTo());
+        divColumn.add(reportIsGeneratedByPatientReporterVersion());
+        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         divColumn.add(forQuestionsPleaseContactHMF());
         return divColumn;
     }
@@ -338,7 +338,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph samplesAreEvaluatedAtHMFAndWithSampleID() {
-        return createContentParagraphTwice("The tumor material is evaluated at ",
+        return createContentParagraphTwice("The biomaterials are evaluated at ",
                 ReportResources.HARTWIG_ADDRESS,
                 " and are known under HMF sample ID  ",
                 failReport.sampleReport().tumorSampleId());
