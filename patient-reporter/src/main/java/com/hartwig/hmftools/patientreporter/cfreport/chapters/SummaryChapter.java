@@ -73,23 +73,36 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location' and 'cancer subtype'  is based on "
                 + "information received \nfrom the originating hospital.").addStyle(ReportResources.subTextStyle()));
 
-        renderSummaryText(reportDocument, patientReport.clinicalSummary());
+        renderSummaryText(reportDocument, patientReport);
         renderTreatmentIndications(reportDocument, patientReport.tumorSpecificEvidence(), patientReport.clinicalTrials());
         renderTumorCharacteristics(reportDocument, patientReport);
         renderGenomicAlterations(reportDocument, patientReport);
     }
 
-    private void renderSummaryText(@NotNull Document reportDocument, @NotNull String text) {
+    private void renderSummaryText(@NotNull Document reportDocument, @NotNull AnalysedPatientReport report) {
+        String text = report.clinicalSummary();
         if (text.isEmpty()) {
-            return;
+            double impliedPurityPercentage = MathUtil.mapPercentage(report.impliedPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
+            if (!report.hasReliablePurity()) {
+                text = "Of note, WGS analysis indicated a very low abundance of genomic aberrations, which can be caused "
+                        + "by a low tumor percentage in the received tumor material or due to genomic very stable/normal tumor type. "
+                        + "As a consequence no reliable tumor purity assessment is possible and no information regarding "
+                        + "mutation ploidy and tVAF can be provided.";
+            } else if (impliedPurityPercentage < 0.195) {
+                text = "Due to the lower tumor purity (" + DataUtil.formatPercentage(impliedPurityPercentage) + ") "
+                        + "potential (subclonal) DNA aberrations might not have been detected using this test. " + ""
+                        + "This result should therefore be considered with caution.";
+            }
         }
 
-        Div div = createSectionStartDiv(contentWidth());
-        div.add(new Paragraph("Conclusion").addStyle(ReportResources.sectionTitleStyle()));
+        if (!text.isEmpty()) {
+            Div div = createSectionStartDiv(contentWidth());
+            div.add(new Paragraph("Conclusion").addStyle(ReportResources.sectionTitleStyle()));
 
-        div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
+            div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
 
-        reportDocument.add(div);
+            reportDocument.add(div);
+        }
     }
 
     private void renderTreatmentIndications(@NotNull Document reportDocument, @NotNull List<EvidenceItem> tumorSpecificEvidence,
@@ -173,7 +186,7 @@ public class SummaryChapter implements ReportChapter {
 
     private static void renderTumorPurity(boolean hasReliablePurity, @NotNull String valueLabel, double value, double min, double max,
             @NotNull Table table) {
-        String label = "Tumor purity of biopsy";
+        String label = "Tumor purity";
         table.addCell(createMiddleAlignedCell().add(new Paragraph(label).addStyle(ReportResources.bodyTextStyle())));
 
         if (hasReliablePurity) {

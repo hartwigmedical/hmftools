@@ -89,7 +89,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 " with internal blood barcode ",
                 sampleReport.refSampleBarcode()));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
-        div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
+        String whoVerified = "This report is generated and verified by: " + patientReport.user();
+        if (!patientReport.clinicalSummary().isEmpty()) {
+            whoVerified += " and Paul Roepman";
+        }
+        div.add(createContentParagraph(whoVerified));
         div.add(createContentParagraph("This report is addressed to: ", sampleReport.addressee()));
 
         if (study == LimsStudy.CORE) {
