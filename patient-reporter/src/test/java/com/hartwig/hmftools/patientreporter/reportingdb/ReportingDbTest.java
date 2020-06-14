@@ -63,7 +63,7 @@ public class ReportingDbTest {
             }
 
             ReportingDb.addSequenceReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_SUCCESS"));
+                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_SUCCESS", null));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
                     ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS));
