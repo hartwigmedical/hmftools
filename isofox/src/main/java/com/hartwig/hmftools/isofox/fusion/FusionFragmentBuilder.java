@@ -2,8 +2,8 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_ORIENT;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;

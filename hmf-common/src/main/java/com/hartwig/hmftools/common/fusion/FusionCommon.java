@@ -6,9 +6,6 @@ public class FusionCommon
     public static final int FS_DOWNSTREAM = 1;
     public static final int FS_PAIR = 2;
 
-    public static byte POS_ORIENT = 1;
-    public static byte NEG_ORIENT = -1;
-
     public static byte POS_STRAND = 1;
     public static byte NEG_STRAND = -1;
 

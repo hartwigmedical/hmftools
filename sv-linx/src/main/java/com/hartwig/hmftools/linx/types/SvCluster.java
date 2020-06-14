@@ -909,7 +909,7 @@ public class SvCluster
 
     public boolean hasAnnotation(final String annotation) { return mAnnotationList.contains(annotation); }
 
-    public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (";")); }
+    public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (SUBSET_SPLIT)); }
 
     public void setJcnReplication(int chainingSvLimit)
     {

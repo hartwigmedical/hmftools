@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -240,7 +241,7 @@ public class ClusterAnnotations
         if(traversedInfo.isEmpty())
             return 0;
 
-        String[] items = traversedInfo.split(";");
+        String[] items = traversedInfo.split(SUBSET_SPLIT);
         return items.length;
     }
 

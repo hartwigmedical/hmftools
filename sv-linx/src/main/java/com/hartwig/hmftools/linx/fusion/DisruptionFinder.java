@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -650,7 +651,7 @@ public class DisruptionFinder
                 String exclusionReason = exclusionInfo;
                 String extraInfo = "";
 
-                String[] contextInfo = exclusionInfo.split(";");
+                String[] contextInfo = exclusionInfo.split(SUBSET_SPLIT);
 
                 if(contextInfo.length == 2)
                 {

@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
+import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
@@ -281,7 +282,7 @@ public class SvVarData
         else if(mLineElement[seIndex].equals(NO_LINE_ELEMENT))
             mLineElement[seIndex] = type;
         else
-            mLineElement[seIndex] = mLineElement[seIndex] + ";" + type;
+            mLineElement[seIndex] = mLineElement[seIndex] + SUBSET_SPLIT + type;
     }
 
     public boolean isLineElement(boolean useStart)
