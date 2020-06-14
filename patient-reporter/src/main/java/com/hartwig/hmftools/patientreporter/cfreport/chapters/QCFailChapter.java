@@ -156,7 +156,6 @@ public class QCFailChapter implements ReportChapter {
         if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
             div.add(sampleHasMolecularTumorPercentage());
         }
-        div.add(resubmitSample());
 
         return div;
     }
@@ -169,6 +168,7 @@ public class QCFailChapter implements ReportChapter {
         div.add(reportIsVerifiedByAndAddressedTo());
         div.add(reportIsGeneratedByPatientReporterVersion());
         failReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
+        div.add(resubmitSample());
         div.add(forQuestionsPleaseContactHMF());
         return div;
     }
@@ -190,15 +190,11 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
         divColumn.add(resultsAreObtainedBetweenDates());
-        divColumn.add(reportIsForHospitalPatientID());
-        if (failReport.sampleReport().hospitalPathologySampleId() != null) {
-            divColumn.add(reportIsForPathologySampleID());
-        }
+        divColumn.add(reportIsForHospitalPatientIDAndPathologySampleId());
         divColumn.add(reportIsForProjectAndSubmission());
         if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
             divColumn.add(sampleHasMolecularTumorPercentage());
         }
-        divColumn.add(resubmitSample());
         return divColumn;
     }
 
@@ -211,6 +207,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(reportIsRequestedBy());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
+        divColumn.add(resubmitSample());
         divColumn.add(forQuestionsPleaseContactHMF());
         return divColumn;
     }
@@ -232,7 +229,6 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
         divColumn.add(resultsAreObtainedBetweenDates());
-        divColumn.add(resubmitSample());
         if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
             divColumn.add(sampleHasMolecularTumorPercentage());
         }
@@ -248,6 +244,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
+        divColumn.add(resubmitSample());
         divColumn.add(forQuestionsPleaseContactHMF());
         return divColumn;
     }
@@ -259,8 +256,15 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph reportIsForHospitalPatientID() {
-        return createContentParagraph("The hospital patient ID is ", failReport.sampleReport().hospitalPatientId());
+    private Paragraph reportIsForHospitalPatientIDAndPathologySampleId() {
+        if (failReport.sampleReport().hospitalPathologySampleId() != null) {
+            return createContentParagraphTwice("The hospital patient ID is ",
+                    failReport.sampleReport().hospitalPatientId(),
+                    " and the pathology tissue ID is: ",
+                    failReport.sampleReport().hospitalPathologySampleId());
+        } else {
+            return createContentParagraph("The hospital patient ID is ", failReport.sampleReport().hospitalPatientId());
+        }
     }
 
     @NotNull

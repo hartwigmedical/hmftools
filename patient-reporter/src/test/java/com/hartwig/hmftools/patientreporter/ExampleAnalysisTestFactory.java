@@ -255,11 +255,11 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static HospitalContactData createTestHospitalContactData(){
         return ImmutableHospitalContactData.builder()
-                .hospitalPI("AB")
+                .hospitalPI("PI")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")
                 .hospitalName("HMF Testing Center")
-                .hospitalAddress("Zip City")
+                .hospitalAddress("1000 AB AMSTERDAM")
                 .build();
     }
 

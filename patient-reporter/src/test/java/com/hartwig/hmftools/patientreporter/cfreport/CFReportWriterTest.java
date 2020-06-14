@@ -112,7 +112,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateInsufficientTCPAfterDeepWGSReport() throws IOException {
-        generateQCFailCPCTReport("CPCT04", "20%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT04", "18%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
@@ -133,7 +133,7 @@ public class CFReportWriterTest {
     @NotNull
     private static HospitalContactData createTestHospitalContactData() {
         return ImmutableHospitalContactData.builder()
-                .hospitalPI("AB")
+                .hospitalPI("PI")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")
                 .hospitalName("HMF Testing Center")
