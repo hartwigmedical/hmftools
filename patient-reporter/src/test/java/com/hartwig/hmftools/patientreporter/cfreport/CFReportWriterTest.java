@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -91,32 +92,32 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateInsufficientDNAReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01", "60%", QCFailReason.INSUFFICIENT_DNA, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT01", Lims.NOT_PERFORMED_STRING, QCFailReason.INSUFFICIENT_DNA, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateCorrectedInsufficientDNAReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01", "60%", QCFailReason.INSUFFICIENT_DNA, true, COMMENT_STRING_QC_FAIL_CORRECTED);
+        generateQCFailCPCTReport("CPCT01", Lims.NOT_PERFORMED_STRING, QCFailReason.INSUFFICIENT_DNA, true, COMMENT_STRING_QC_FAIL_CORRECTED);
     }
 
     @Test
     public void canGenerateTechnicalFailureReport() throws IOException {
-        generateQCFailCPCTReport("CPCT03", "60%", QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT02", "60%", QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateSufficientTCPQCFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT05", "60%", QCFailReason.SUFFICIENT_TCP_QC_FAILURE, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT03", "60%", QCFailReason.SUFFICIENT_TCP_QC_FAILURE, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterDeepWGSReport() throws IOException {
-        generateQCFailCPCTReport("CPCT02", "60%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT04", "20%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReport() throws IOException {
-        generateQCFailCPCTReport("CPCT06", "15%", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT05", "15%", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
     }
 
     @Test

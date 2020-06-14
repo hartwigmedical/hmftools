@@ -59,7 +59,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         if (patientReport.sampleReport().hospitalPathologySampleId() != null) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
                     patientReport.sampleReport().tumorSampleId(),
-                    " and the tissue ID of pathology is: ",
+                    " and the pathology tissue ID is: ",
                     patientReport.sampleReport().hospitalPathologySampleId());
         } else {
             sampleIdentificationLineOnReport =
@@ -71,7 +71,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(new Paragraph("Sample details").addStyle(ReportResources.smallBodyHeadingStyle()));
 
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
-        div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
+        div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing using Whole Genome Sequencing"));
 
         String earliestArrivalDate = sampleReport.earliestArrivalDate();
         div.add(createContentParagraphTwice("The results in this report have been obtained between ",

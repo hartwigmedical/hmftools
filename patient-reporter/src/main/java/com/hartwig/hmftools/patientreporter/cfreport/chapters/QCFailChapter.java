@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
 
-    private static final String TITLE_REPORT = "Failed Sample Report";
+    private static final String TITLE_REPORT = "Failed DNA Analysis Report";
 
     @NotNull
     private final QCFailReport failReport;
@@ -94,7 +94,7 @@ public class QCFailChapter implements ReportChapter {
             }
             case TECHNICAL_FAILURE: {
                 reason = "Technical failure";
-                explanation = "Whole Genome Sequencing could not be successfully performed on the received biopsy \n"
+                explanation = "Whole Genome Sequencing could not be successfully performed on the received biomaterial(s) \n"
                         + "due to technical problems";
             }
         }
@@ -265,7 +265,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsForPathologySampleID() {
-        return createContentParagraph("The tissue ID is: ", failReport.sampleReport().hospitalPathologySampleId());
+        return createContentParagraph("The pathology tissue ID is: ", failReport.sampleReport().hospitalPathologySampleId());
     }
 
     @NotNull
@@ -338,7 +338,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph samplesAreEvaluatedAtHMFAndWithSampleID() {
-        return createContentParagraphTwice("The biopsies are evaluated at ",
+        return createContentParagraphTwice("The tumor material is evaluated at ",
                 ReportResources.HARTWIG_ADDRESS,
                 " and are known under HMF sample ID  ",
                 failReport.sampleReport().tumorSampleId());
