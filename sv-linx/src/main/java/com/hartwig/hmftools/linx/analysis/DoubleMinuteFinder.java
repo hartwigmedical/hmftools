@@ -214,7 +214,7 @@ public class DoubleMinuteFinder
 
         double maxBFBJcn = min(2 * sumFbJcn + maxSglJcn, min(6 * maxFbJcn, armBfbCopyNumber));
 
-        if(maxBFBJcn > clusterMaxJcn)
+        if(maxBFBJcn > clusterMaxJcn && foldbackCount > 0)
         {
             LNX_LOGGER.debug(String.format("cluster(%s) BFB maxJCN(%.1f) plausible jcn(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
                     cluster.id(), clusterMaxJcn, maxBFBJcn, sumFbJcn, maxSglJcn, armBfbCopyNumber));

@@ -141,4 +141,10 @@ public class GeneAnnotation {
         return false;
     }
 
+    public String toString()
+    {
+        return String.format("gene(%s:%s strand=%d) breakend(sv=%d pos=%s:%d:%d) trans(%d)",
+                mGeneData.GeneId, mGeneData.GeneName, mGeneData.Strand, mVarId, mChromosome, mPosition, mOrientation, mTranscripts.size());
+    }
+
 }

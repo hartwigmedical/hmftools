@@ -153,9 +153,21 @@ public class FusionFinder
 
                 for(final Transcript upstreamTrans : upGene.transcripts())
                 {
+                    if(!isValidUpstreamTranscript(upstreamTrans, true, params.RequireUpstreamBiotypes))
+                    {
+                        logInvalidReasonInfo(upstreamTrans, null, INVALID_REASON_CODING_TYPE, "invalid up trans");
+                        continue;
+                    }
+
                     for(final Transcript downstreamTrans : downGene.transcripts())
                     {
-                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, params, !knownPair);
+                        if(!isValidDownstreamTranscript(downstreamTrans))
+                        {
+                            logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid down trans");
+                            continue;
+                        }
+
+                        GeneFusion geneFusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, !knownPair);
 
                         if(geneFusion == null)
                             continue;
@@ -173,82 +185,6 @@ public class FusionFinder
         return potentialFusions;
     }
 
-    private void checkIgFusion(final GeneAnnotation startGene, final GeneAnnotation endGene, final List<GeneFusion> potentialFusions)
-    {
-        /* Criteria:
-            - These are allowed to fuse with 5’UTR splice donors from 10kb upstream. Phasing is assumed to be -1.
-            - In the case of IGH-BCL2 specifically, allow fusions in the 3’UTR region and up to 40k bases downstream of BCL2 ((common in Folicular Lymphomas[PP1] )
-        */
-
-        boolean startIsIgGene = mKnownFusionCache.matchesIgGene(startGene.chromosome(), startGene.position(), startGene.orientation());
-        boolean endIsIgGene = !startIsIgGene && mKnownFusionCache.matchesIgGene(endGene.chromosome(), endGene.position(), endGene.orientation());
-
-        if(!startIsIgGene && !endIsIgGene)
-            return;
-
-        final GeneAnnotation igGene = startIsIgGene ? startGene : endGene;
-        final GeneAnnotation downGene = startIsIgGene ? endGene : startGene;
-
-        KnownFusionType knownType = NONE;
-
-        final List<Transcript> candidateTranscripts = downGene.transcripts().stream()
-                .filter(x -> x.codingType().equals(UTR_5P)).collect(Collectors.toList());
-
-        KnownFusionData knownFusionData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
-                .filter(x -> x.ThreeGene.equals(downGene.GeneName))
-                .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
-                .findFirst().orElse(null);
-
-        if(knownFusionData != null)
-        {
-            // a known IG-partner gene
-            if(knownFusionData.igDownstreamDistance() > 0)
-            {
-                candidateTranscripts.addAll(downGene.transcripts().stream().filter(x -> x.postCoding()).collect(Collectors.toList()));
-            }
-
-            knownType = IG_KNOWN_PAIR;
-        }
-        else
-        {
-            knownFusionData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
-                    .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
-                    .findFirst().orElse(null);
-
-            // check within the promiscuous region bounds
-            if(knownFusionData == null)
-                return;
-
-            knownType = IG_PROMISCUOUS;
-        }
-
-        final Transcript upTrans = generateIgTranscript(igGene, knownFusionData);
-
-        if(!candidateTranscripts.isEmpty())
-        {
-            for(final Transcript downTrans : candidateTranscripts)
-            {
-                GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
-                fusion.setKnownType(knownType);
-                potentialFusions.add(fusion);
-            }
-        }
-    }
-
-    private Transcript generateIgTranscript(final GeneAnnotation gene, final KnownFusionData knownFusionData)
-    {
-        Transcript transcript = new Transcript(
-                gene, 0, String.format("@%s", knownFusionData.FiveGene),
-                -1,-1, 1, -1,
-        0, 0,   0, false,
-                knownFusionData.igRegion()[SE_START], knownFusionData.igRegion()[SE_END], null, null);
-
-        transcript.setCodingType(ENHANCER);
-        transcript.setRegionType(TranscriptRegionType.IG);
-        transcript.setIsDisruptive(true);
-        return transcript;
-    }
-
     private static void logInvalidReasonInfo(final Transcript trans1, final Transcript trans2, final String reasonType, final String reason)
     {
         if(!mLogInvalidReasons)
@@ -263,56 +199,63 @@ public class FusionFinder
 
     public static boolean validFusionTranscript(final Transcript transcript)
     {
-        return validFusionTranscript(transcript, true, false);
+        if(transcript.isUpstream())
+            return isValidUpstreamTranscript(transcript, true, false);
+        else
+            return isValidDownstreamTranscript(transcript);
     }
 
-    private static boolean validFusionTranscript(
+    private static boolean isValidUpstreamTranscript(
             final Transcript transcript, boolean requireUpstreamDisruptive, boolean requireUpstreamBiotypes)
     {
         // check any conditions which would preclude this transcript being a part of a fusion no matter the other end
-        if(transcript.isUpstream())
-        {
-            if(transcript.isPromoter())
-                return false;
+        if(transcript.isPromoter())
+            return false;
 
-            if(requireUpstreamDisruptive && !transcript.isDisruptive())
-                return false;
+        if(requireUpstreamDisruptive && !transcript.isDisruptive())
+            return false;
 
-            if(requireUpstreamBiotypes && !REQUIRED_BIOTYPES.contains(transcript.bioType()))
-                return false;
-        }
-        else
-        {
-            if(transcript.postCoding())
-                return false;
+        if(requireUpstreamBiotypes && !REQUIRED_BIOTYPES.contains(transcript.bioType()))
+            return false;
 
-            if(transcript.nonCoding())
-                return false;
+        return true;
+    }
 
-            if(transcript.ExonMax == 1)
-                return false;
-        }
+    private static boolean isValidDownstreamTranscript(final Transcript transcript)
+    {
+        if(transcript.postCoding())
+            return false;
+
+        if(transcript.nonCoding())
+            return false;
+
+        if(transcript.ExonMax == 1)
+            return false;
 
         return true;
     }
 
     public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params)
     {
-        return checkFusionLogic(upstreamTrans, downstreamTrans, params, true);
+        if(!isValidUpstreamTranscript(upstreamTrans, true, params.RequireUpstreamBiotypes))
+        {
+            logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid up trans");
+            return null;
+        }
+        else if(!isValidDownstreamTranscript(downstreamTrans))
+        {
+            logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid down trans");
+            return null;
+        }
+
+        return transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, true);
     }
 
-    private static GeneFusion checkFusionLogic(
+    private static GeneFusion transcriptPairHasFusion(
             final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params, boolean requireUpstreamDisruptive)
     {
         // see SV Fusions document for permitted combinations
         boolean checkExactMatch = false;
-
-        if(!validFusionTranscript(upstreamTrans, requireUpstreamDisruptive, params.RequireUpstreamBiotypes)
-        || !validFusionTranscript(downstreamTrans))
-        {
-            logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid trans");
-            return null;
-        }
 
         if(upstreamTrans.preCoding())
         {
@@ -487,6 +430,82 @@ public class FusionFinder
             return true;
 
         return ((upPhase + 1) % 3) == (downPhase % 3);
+    }
+
+    private void checkIgFusion(final GeneAnnotation startGene, final GeneAnnotation endGene, final List<GeneFusion> potentialFusions)
+    {
+        /* Criteria:
+            - These are allowed to fuse with 5’UTR splice donors from 10kb upstream. Phasing is assumed to be -1.
+            - In the case of IGH-BCL2 specifically, allow fusions in the 3’UTR region and up to 40k bases downstream of BCL2 ((common in Folicular Lymphomas[PP1] )
+        */
+
+        boolean startIsIgGene = mKnownFusionCache.matchesIgGene(startGene.chromosome(), startGene.position(), startGene.orientation());
+        boolean endIsIgGene = !startIsIgGene && mKnownFusionCache.matchesIgGene(endGene.chromosome(), endGene.position(), endGene.orientation());
+
+        if(!startIsIgGene && !endIsIgGene)
+            return;
+
+        final GeneAnnotation igGene = startIsIgGene ? startGene : endGene;
+        final GeneAnnotation downGene = startIsIgGene ? endGene : startGene;
+
+        KnownFusionType knownType = NONE;
+
+        final List<Transcript> candidateTranscripts = downGene.transcripts().stream()
+                .filter(x -> x.codingType().equals(UTR_5P)).collect(Collectors.toList());
+
+        KnownFusionData knownFusionData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
+                .filter(x -> x.ThreeGene.equals(downGene.GeneName))
+                .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
+                .findFirst().orElse(null);
+
+        if(knownFusionData != null)
+        {
+            // a known IG-partner gene
+            if(knownFusionData.igDownstreamDistance() > 0)
+            {
+                candidateTranscripts.addAll(downGene.transcripts().stream().filter(x -> x.postCoding()).collect(Collectors.toList()));
+            }
+
+            knownType = IG_KNOWN_PAIR;
+        }
+        else
+        {
+            knownFusionData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
+                    .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
+                    .findFirst().orElse(null);
+
+            // check within the promiscuous region bounds
+            if(knownFusionData == null)
+                return;
+
+            knownType = IG_PROMISCUOUS;
+        }
+
+        final Transcript upTrans = generateIgTranscript(igGene, knownFusionData);
+
+        if(!candidateTranscripts.isEmpty())
+        {
+            for(final Transcript downTrans : candidateTranscripts)
+            {
+                GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
+                fusion.setKnownType(knownType);
+                potentialFusions.add(fusion);
+            }
+        }
+    }
+
+    private Transcript generateIgTranscript(final GeneAnnotation gene, final KnownFusionData knownFusionData)
+    {
+        Transcript transcript = new Transcript(
+                gene, 0, String.format("@%s", knownFusionData.FiveGene),
+                -1,-1, 1, -1,
+                0, 0,   0, false,
+                knownFusionData.igRegion()[SE_START], knownFusionData.igRegion()[SE_END], null, null);
+
+        transcript.setCodingType(ENHANCER);
+        transcript.setRegionType(TranscriptRegionType.IG);
+        transcript.setIsDisruptive(true);
+        return transcript;
     }
 
     public static boolean isIrrelevantSameGene(final Transcript upTrans, final Transcript downTrans)
