@@ -75,12 +75,17 @@ public class HotspotExtractor {
 
     @VisibleForTesting
     static boolean isResolvableProteinAnnotation(@NotNull String feature) {
-        if (isFrameshift(feature)) {
+        try {
+            if (isFrameshift(feature)) {
+                return false;
+            } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
+                return isValidRangeMutation(feature);
+            } else {
+                return isValidSingleCodonMutation(feature);
+            }
+        } catch (Exception exception) {
+            LOGGER.warn("Could not determine whether feature is protein annotation due to '{}'", exception.getMessage(), exception);
             return false;
-        } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
-            return isValidRangeMutation(feature);
-        } else {
-            return isValidSingleCodonMutation(feature);
         }
     }
 

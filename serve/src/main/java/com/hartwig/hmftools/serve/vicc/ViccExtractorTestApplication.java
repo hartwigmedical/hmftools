@@ -76,7 +76,7 @@ public class ViccExtractorTestApplication {
 
         FeatureCurator curator = new FeatureCurator();
 
-        ViccSource source = ViccSource.ONCOKB;
+        ViccSource source = ViccSource.CGI;
         LOGGER.info("Reading VICC json from '{}' with source '{}'", viccJsonPath, source);
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).maxEntriesToInclude(MAX_ENTRIES).build();
