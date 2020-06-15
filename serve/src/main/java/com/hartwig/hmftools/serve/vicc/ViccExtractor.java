@@ -70,10 +70,20 @@ public final class ViccExtractor {
                             .build());
         }
 
+        LOGGER.info("unique known amps '{}'", copyNumberExtractor.uniqueAmps().size());
+//        for (String amps: copyNumberExtractor.uniqueAmps()) {
+//            LOGGER.info(amps);
+//        }
+
+        LOGGER.info("unique known dels '{}'", copyNumberExtractor.uniqueDels().size());
+//        for (String dels: copyNumberExtractor.uniqueDels()) {
+//            LOGGER.info(dels);
+//        }
+
         LOGGER.info("Finished hotspot extraction and could not resolve hotspots for {} features",
                 hotspotExtractor.unresolvableFeatures().size());
         for (String feature : hotspotExtractor.unresolvableFeatures()) {
-            LOGGER.debug(" {}", feature);
+     //       LOGGER.debug(" {}", feature);
         }
 
         return extractionResultsPerEntry;

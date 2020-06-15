@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.serve.vicc.copynumber;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -29,6 +31,11 @@ public class CopyNumberExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberExtractor.class);
 
+    @NotNull
+    private final Set<String> uniqueAmps = Sets.newHashSet();
+    @NotNull
+    private final Set<String> uniqueDels = Sets.newHashSet();
+
     private static final Set<String> ONCOKB_AMPLIFICATIONS = Sets.newHashSet("Amplification");
 
     private static final Set<String> ONCOKB_DELETIONS = Sets.newHashSet("Deletion");
@@ -40,6 +47,16 @@ public class CopyNumberExtractor {
     private static final Set<String> CIVIC_AMPLIFICATIONS = Sets.newHashSet("AMPLIFICATION");
 
     private static final Set<String> CIVIC_DELETIONS = Sets.newHashSet("DELETION");
+
+    @NotNull
+    public Set<String> uniqueAmps() {
+        return uniqueAmps;
+    }
+
+    @NotNull
+    public Set<String> uniqueDels() {
+        return uniqueDels;
+    }
 
     @NotNull
     public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
@@ -55,14 +72,16 @@ public class CopyNumberExtractor {
     }
 
     @NotNull
-    private static Map<Feature, KnownAmplificationDeletion> extractAmpsDelsInformation(@NotNull ViccEntry viccEntry,
+    private Map<Feature, KnownAmplificationDeletion> extractAmpsDelsInformation(@NotNull ViccEntry viccEntry,
             @NotNull Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature) {
         for (Feature feature : viccEntry.features()) {
            // LOGGER.info(feature.name());
             if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
                 ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                uniqueAmps.add(feature.geneSymbol());
             } else if (ONCOKB_DELETIONS.contains(feature.name())) {
                 ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                uniqueDels.add(feature.geneSymbol());
             }
         }
         return ampsDelsPerFeature;
