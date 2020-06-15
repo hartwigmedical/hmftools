@@ -86,13 +86,13 @@ public final class ViccExtractor {
        // }
 
         LOGGER.info("unique known fusion promiscuous '{}'", fusionExtractor.uniqueFusionsPromiscuous().size());
-        //for (String knownFusionPromiscous : fusionExtractor.uniqueFusionsPromiscuous()) {
-         //   LOGGER.info(knownFusionPromiscous);
+        //for (String knownFusionPromiscuous : fusionExtractor.uniqueFusionsPromiscuous()) {
+         //   LOGGER.info(knownFusionPromiscuous);
         //}
 
         LOGGER.info("Finished hotspot extraction and could not resolve hotspots for {} features",
-                hotspotExtractor.unresolvableFeatures().size());
-        for (String feature : hotspotExtractor.unresolvableFeatures()) {
+                hotspotExtractor.unresolvedProteinAnnotations().size());
+        for (String feature : hotspotExtractor.unresolvedProteinAnnotations()) {
             LOGGER.debug(" {}", feature);
         }
 
