@@ -57,6 +57,7 @@ public class HotspotExtractor {
                         feature.name());
                 String featureKey = feature.geneSymbol() + "|" + viccEntry.transcriptId() + "|p." + feature.name();
                 LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
+                // TODO Move unresolvable features to protein resolver implementation.
                 if (hotspots.isEmpty() && proteinResolver instanceof Transvar) {
                     unresolvableFeatures.add(featureKey);
                 }
