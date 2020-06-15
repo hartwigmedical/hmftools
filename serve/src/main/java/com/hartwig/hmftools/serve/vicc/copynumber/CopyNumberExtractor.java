@@ -114,17 +114,7 @@ public class CopyNumberExtractor {
                     if (combinedEventConvertToSingleEvent.length == 2) {
                         combinedEvent = true;
 
-                        //TODO: fix combined events, to map
-
-                        //                        if (eventMap.size() == 0) {
-                        //                            eventMap.put(gene, Lists.newArrayList(eventInfo));
-                        //                            if (eventMap.containsKey(geneCombined)) {
-                        //                                eventMap.put(geneCombined, Lists.newArrayList(eventInfo, eventInfoCombined));
-                        //                            } else {
-                        //                                eventMap.put(gene, Lists.newArrayList(eventInfo));
-                        //                                eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
-                        //                            }
-                        //                        }
+                        //TODO: fix combined events, to map (add gene, and gecombined as one value in Map
                     }
 
                 } else if (feature.name().split(" ", 2).length == 2) {
