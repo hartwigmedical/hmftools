@@ -11,6 +11,14 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Feature {
 
     @NotNull
+    @Value.Derived
+    public String proteinAnnotation() {
+        String cleanedName = name().trim();
+        // Many KBs include the gene in the feature name in some form (eg "EGFR E709K").
+        return cleanedName.contains(" ") ? cleanedName.split(" ")[1] : cleanedName;
+    }
+
+    @NotNull
     public abstract String name();
 
     @Nullable

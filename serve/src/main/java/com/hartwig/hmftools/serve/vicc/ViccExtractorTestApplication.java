@@ -253,6 +253,6 @@ public class ViccExtractorTestApplication {
 
     @NotNull
     private static String toAttribute(@NotNull ViccEntry viccEntry, @NotNull Feature feature) {
-        return ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), viccEntry.transcriptId(), feature.name());
+        return ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), viccEntry.transcriptId(), feature.proteinAnnotation());
     }
 }
