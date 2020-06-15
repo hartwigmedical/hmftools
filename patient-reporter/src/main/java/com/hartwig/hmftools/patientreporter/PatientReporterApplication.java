@@ -16,6 +16,7 @@ import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
@@ -31,11 +32,17 @@ public class PatientReporterApplication {
     // Uncomment this line when generating an example report using PDFWriterTest
 //                public static final String VERSION = "7.13";
 
-    public static void main(final String... args) throws ParseException, IOException {
+    public static void main(@NotNull String[] args) throws IOException {
         Options options = PatientReporterConfig.createOptions();
-        CommandLine cmd = createCommandLine(options, args);
 
-        PatientReporterConfig config = PatientReporterConfig.createConfig(cmd);
+        PatientReporterConfig config = null;
+        try {
+            config = PatientReporterConfig.createConfig(createCommandLine(options, args));
+        } catch (ParseException exception) {
+            LOGGER.warn(exception);
+            new HelpFormatter().printHelp("PatientReporter", options);
+            System.exit(1);
+        }
 
         LOGGER.info("Running patient reporter v{}", VERSION);
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
