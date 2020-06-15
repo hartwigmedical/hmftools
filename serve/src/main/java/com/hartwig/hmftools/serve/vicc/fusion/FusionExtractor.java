@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.serve.vicc.fusion;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -15,30 +17,55 @@ import org.jetbrains.annotations.NotNull;
 public class FusionExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
+    @NotNull
+    private final Set<String> uniqueFusionsPair = Sets.newHashSet();
+    @NotNull
+    private final Set<String> uniqueFusionsPromiscuous = Sets.newHashSet();
     private static final String FUSION_PAIR = "fusion pair";
     private static final String FUSION_PROMISCUOUS = "fusion promiscuous";
 
+    @NotNull
+    public Set<String> uniqueFusionsPair() {
+        return uniqueFusionsPair;
+    }
+    @NotNull
+    public Set<String> uniqueFusionsPromiscuous() {
+        return uniqueFusionsPromiscuous;
+    }
+
     public Map<Feature, String> extractKnownFusions(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> fusionsPerFeature = Maps.newHashMap();
+        String gene = Strings.EMPTY;
         if (viccEntry.source() == ViccSource.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
                 if (feature.name().toLowerCase().contains("fusions")) {
                     fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
 
                 } else if (feature.name().toLowerCase().contains("fusion")) {
-                    if (feature.name().toLowerCase().contains("-")) {
-                       //TODO: check if needed -->
-                        //gene = name.split(" Fusion")[0];
+                    if (feature.name().toLowerCase().contains(" - ")) {
+                        gene = feature.name().split(" Fusion")[0];
                         fusionsPerFeature.put(feature, FUSION_PAIR);
+                        uniqueFusionsPair.add(gene);
                     } else {
-                        // TODO: check if needed
-                       // gene = name.split(" ")[0];
+                        gene = feature.name().split(" ")[0];
                         fusionsPerFeature.put(feature, FUSION_PAIR);
+                        uniqueFusionsPromiscuous.add(gene);
                     }
                 }
             }
         } else if (viccEntry.source() == ViccSource.CGI) {
             for (Feature feature : viccEntry.features()) {
+                if (feature.name().split(" ", 2).length == 1 && feature.geneSymbol().contains("-") && !feature.biomarkerType().equals("mutant")){
+                    fusionsPerFeature.put(feature, FUSION_PAIR);
+                    if (feature.name().toLowerCase().contains("fusion")) {
+                        if (feature.geneSymbol().contains("-")) {
+                            fusionsPerFeature.put(feature, FUSION_PAIR);
+                        } else {
+                            fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
+                        }
+                    }
+
+                }
                 if (feature.name().toLowerCase().contains("fusions")) {
                     fusionsPerFeature.put(feature, feature.name());
                 }

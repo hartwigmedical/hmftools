@@ -37,7 +37,7 @@ public class ExplanationChapter implements ReportChapter {
                                 + "Patient-Reporting and are generally the canonical transcripts as defined by Ensembl.",
                         "Variant detection in samples with lower tumor content is less sensitive. In case of a low tumor "
                                 + "purity (below 20%) likelihood of failing to detect potential variants increases.",
-                        "The (implied) tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
+                        "The (implied) tumor purity is the percentage of tumor cells in the tumor material based on analysis of "
                                 + "whole genome data." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()

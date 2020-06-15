@@ -11,7 +11,14 @@ public interface PatientReport {
 
     @NotNull
     default String user() {
-        return System.getProperty("user.name");
+        String systemUser = System.getProperty("user.name");
+        if (systemUser.equals("lieke")) {
+            return "Lieke Schoenmaker";
+        } else if (systemUser.equals("korneel") || systemUser.equals("korneelduyvesteyn")) {
+            return "Korneel Duyvesteyn";
+        } else {
+            return systemUser;
+        }
     }
 
     @NotNull

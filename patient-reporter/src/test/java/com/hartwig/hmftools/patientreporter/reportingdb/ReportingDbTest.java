@@ -21,7 +21,7 @@ public class ReportingDbTest {
 
     private static final String REPORTING_DB_TSV = Resources.getResource("reporting_db/reporting_db_example.tsv").getPath();
 
-    private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
+    private static final String TEST_DB_OUTPUT_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
     private static final boolean WRITE_TO_TSV = false;
 
     @Test
@@ -35,7 +35,7 @@ public class ReportingDbTest {
         assertEquals("sampleId1", reportingEntry1.sampleId());
         assertEquals("A", reportingEntry1.cohort());
         assertEquals("22-Oct-2019", reportingEntry1.reportDate());
-        assertEquals("sequence_report", reportingEntry1.reportType());
+        assertEquals("dna_analysis_report", reportingEntry1.reportType());
         assertEquals("0.70", reportingEntry1.purity());
         assertEquals("true", reportingEntry1.hasReliableQuality());
         assertEquals("false", reportingEntry1.hasReliablePurity());
@@ -44,8 +44,8 @@ public class ReportingDbTest {
         assertEquals("EFGH", reportingEntry2.tumorBarcode());
         assertEquals("sampleId2", reportingEntry2.sampleId());
         assertEquals("B", reportingEntry2.cohort());
-        assertEquals("22-Oct-2019", reportingEntry2.reportDate());
-        assertEquals("shallow_seq_low_purity", reportingEntry2.reportType());
+        assertEquals("23-Oct-2019", reportingEntry2.reportDate());
+        assertEquals("insufficient_dna", reportingEntry2.reportType());
         assertEquals("N/A", reportingEntry2.purity());
         assertEquals("N/A", reportingEntry2.hasReliableQuality());
         assertEquals("N/A", reportingEntry2.hasReliablePurity());
@@ -54,7 +54,7 @@ public class ReportingDbTest {
     @Test
     public void canWriteReportDatesToTsv() throws IOException {
         if (WRITE_TO_TSV) {
-            File reportDatesTsv = new File(REPORT_BASE_DIR + File.separator + "reporting_db_test.tsv");
+            File reportDatesTsv = new File(TEST_DB_OUTPUT_DIR + File.separator + "reporting_db_test.tsv");
 
             if (reportDatesTsv.createNewFile()) {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
@@ -62,10 +62,11 @@ public class ReportingDbTest {
                 writer.close();
             }
 
-            ReportingDb.addSequenceReportToReportingDb(reportDatesTsv.getPath(), ExampleAnalysisTestFactory.buildCOLO829(false, ""));
+            ReportingDb.addSequenceReportToReportingDb(reportDatesTsv.getPath(),
+                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_SUCCESS", null));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("LowMolecularTumorSample", QCFailReason.SHALLOW_SEQ_LOW_PURITY));
+                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS));
         }
     }
 

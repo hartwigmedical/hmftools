@@ -4,14 +4,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
+import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.vicc.hotspot.ProteinResolver;
 
 import org.apache.logging.log4j.LogManager;
@@ -29,6 +32,8 @@ public class Transvar implements ProteinResolver {
     private final TransvarInterpreter interpreter;
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    @NotNull
+    private final Set<String> unresolvedProteinAnnotations = Sets.newHashSet();
 
     @NotNull
     public static Transvar withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
@@ -50,13 +55,27 @@ public class Transvar implements ProteinResolver {
     @NotNull
     public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) {
-        List<TransvarRecord> records;
-        try {
-            records = process.runTransvarPanno(gene, proteinAnnotation);
-        } catch (InterruptedException | IOException e) {
-            LOGGER.error("Exception thrown by transvar");
-            throw new RuntimeException(e);
+        List<VariantHotspot> hotspots = extractHotspotsForAnnotation(gene, specificTranscript, proteinAnnotation);
+
+        String proteinKey = ProteinKeyFormatter.toProteinKey(gene, specificTranscript, proteinAnnotation);
+        LOGGER.debug("Converted '{}' to {} hotspot(s)", proteinKey, hotspots.size());
+        if (hotspots.isEmpty()) {
+            unresolvedProteinAnnotations.add(proteinKey);
         }
+
+        return hotspots;
+    }
+
+    @Override
+    @NotNull
+    public Set<String> unresolvedProteinAnnotations() {
+        return unresolvedProteinAnnotations;
+    }
+
+    @NotNull
+    private List<VariantHotspot> extractHotspotsForAnnotation(@NotNull String gene, @Nullable String specificTranscript,
+            @NotNull String proteinAnnotation) {
+        List<TransvarRecord> records = runTransvarProcess(gene, proteinAnnotation);
 
         if (records.isEmpty()) {
             LOGGER.warn("Transvar could not resolve any genomic coordinates for '{}:p.{}'", gene, proteinAnnotation);
@@ -95,6 +114,18 @@ public class Transvar implements ProteinResolver {
         }
 
         return hotspots;
+    }
+
+    @NotNull
+    private List<TransvarRecord> runTransvarProcess(@NotNull String gene, @NotNull String proteinAnnotation) {
+        List<TransvarRecord> records;
+        try {
+            records = process.runTransvarPanno(gene, proteinAnnotation);
+        } catch (InterruptedException | IOException e) {
+            LOGGER.error("Exception thrown by transvar");
+            throw new RuntimeException(e);
+        }
+        return records;
     }
 
     @NotNull

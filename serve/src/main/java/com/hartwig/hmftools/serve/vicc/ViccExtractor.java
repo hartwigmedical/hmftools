@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.vicc;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -49,8 +48,7 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    public Map<ViccEntry, ViccExtractionResult> extractFromViccEntries(@NotNull List<ViccEntry> viccEntries)
-            throws IOException, InterruptedException {
+    public Map<ViccEntry, ViccExtractionResult> extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) {
         Map<ViccEntry, ViccExtractionResult> extractionResultsPerEntry = Maps.newHashMap();
         for (ViccEntry viccEntry : viccEntries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(viccEntry);
@@ -72,8 +70,29 @@ public final class ViccExtractor {
                             .build());
         }
 
-        LOGGER.info("Could not resolve hotspots for {} features", hotspotExtractor.unresolvableFeatures().size());
-        for (String feature : hotspotExtractor.unresolvableFeatures()) {
+        LOGGER.info("unique known amps '{}'", copyNumberExtractor.uniqueAmps().size());
+        //        for (String amps: copyNumberExtractor.uniqueAmps()) {
+        //            LOGGER.info(amps);
+        //        }
+
+        LOGGER.info("unique known dels '{}'", copyNumberExtractor.uniqueDels().size());
+        //        for (String dels: copyNumberExtractor.uniqueDels()) {
+        //            LOGGER.info(dels);
+        //        }
+
+        LOGGER.info("unique known fusion pairs '{}'", fusionExtractor.uniqueFusionsPair().size());
+       // for (String knownFusionsPairs : fusionExtractor.uniqueFusionsPair()) {
+         //   LOGGER.info(knownFusionsPairs);
+       // }
+
+        LOGGER.info("unique known fusion promiscuous '{}'", fusionExtractor.uniqueFusionsPromiscuous().size());
+        //for (String knownFusionPromiscuous : fusionExtractor.uniqueFusionsPromiscuous()) {
+         //   LOGGER.info(knownFusionPromiscuous);
+        //}
+
+        LOGGER.info("Finished hotspot extraction and could not resolve hotspots for {} features",
+                hotspotExtractor.unresolvedProteinAnnotations().size());
+        for (String feature : hotspotExtractor.unresolvedProteinAnnotations()) {
             LOGGER.debug(" {}", feature);
         }
 

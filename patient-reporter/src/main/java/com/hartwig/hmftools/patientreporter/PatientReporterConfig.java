@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.io.File;
 import java.nio.file.Files;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;
@@ -81,10 +82,7 @@ public interface PatientReporterConfig {
         options.addOption(SIGNATURE, true, "Path towards an image file containing the signature to be appended at the end of the report.");
 
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
-        options.addOption(QC_FAIL_REASON,
-                true,
-                "Either 'low_dna_yield', 'post_analysis_fail', 'shallow_seq_low_purity', 'insufficient_tissue_delivered',"
-                        + "'below_detection_threshold', 'lab_failure'");
+        options.addOption(QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -227,7 +225,7 @@ public interface PatientReporterConfig {
         String germlineGenesCsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
 
-        if (qcFailReason.isFullWgsDataAvailable()) {
+        if (qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
         } else if (!isQCFail) {
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);

@@ -46,6 +46,7 @@ import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ExampleAnalysisTestFactory {
 
@@ -56,7 +57,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829(boolean correctionReport, @NotNull String commentString) {
+    public static AnalysedPatientReport buildCOLO829(boolean correctionReport, @Nullable String comments) {
         boolean hasReliablePurity = true;
         double impliedTumorPurity = 1D;
         double averageTumorPloidy = 3.1;
@@ -112,7 +113,7 @@ public final class ExampleAnalysisTestFactory {
                 .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
-                .comments(Optional.of(commentString))
+                .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctionReport)
                 .isUnofficialReport(false)
                 .signaturePath(reportData.signaturePath())
@@ -122,7 +123,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId) {
+    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId, @Nullable String comments) {
         boolean hasReliablePurity = true;
         double impliedTumorPurity = 1D;
         double averageTumorPloidy = 3.1;
@@ -170,7 +171,7 @@ public final class ExampleAnalysisTestFactory {
                 .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
-                .comments(Optional.of("This is a test report and does not relate to any real patient"))
+                .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(false)
                 .isUnofficialReport(false)
                 .signaturePath(reportData.signaturePath())
@@ -255,11 +256,11 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static HospitalContactData createTestHospitalContactData(){
         return ImmutableHospitalContactData.builder()
-                .hospitalPI("AB")
+                .hospitalPI("PI")
                 .requesterName("Paul")
                 .requesterEmail("paul@hartwig.com")
                 .hospitalName("HMF Testing Center")
-                .hospitalAddress("Zip City")
+                .hospitalAddress("1000 AB AMSTERDAM")
                 .build();
     }
 
@@ -279,12 +280,12 @@ public final class ExampleAnalysisTestFactory {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .cohort("A")
-                .projectName("TEST")
-                .submissionId("10")
+                .cohort("TEST")
+                .projectName("TEST-001-002")
+                .submissionId("SUBM")
                 .hospitalContactData(createTestHospitalContactData())
-                .hospitalPatientId("4567")
-                .hospitalPathologySampleId("1234")
+                .hospitalPatientId("HOSP1")
+                .hospitalPathologySampleId("PA1")
                 .build();
     }
 

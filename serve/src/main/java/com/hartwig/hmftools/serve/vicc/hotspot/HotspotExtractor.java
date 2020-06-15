@@ -14,7 +14,6 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.Transvar;
@@ -33,8 +32,6 @@ public class HotspotExtractor {
 
     @NotNull
     private final ProteinResolver proteinResolver;
-    @NotNull
-    private final Set<String> unresolvableFeatures = Sets.newHashSet();
 
     @NotNull
     public static HotspotExtractor transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
@@ -55,11 +52,7 @@ public class HotspotExtractor {
                 List<VariantHotspot> hotspots = proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                         viccEntry.transcriptId(),
                         feature.name());
-                String featureKey = feature.geneSymbol() + "|" + viccEntry.transcriptId() + "|p." + feature.name();
-                LOGGER.debug("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
-                if (hotspots.isEmpty()) {
-                    unresolvableFeatures.add(featureKey);
-                }
+
                 allHotspotsPerFeature.put(feature, hotspots);
             }
         }
@@ -68,18 +61,23 @@ public class HotspotExtractor {
     }
 
     @NotNull
-    public Set<String> unresolvableFeatures() {
-        return unresolvableFeatures;
+    public Set<String> unresolvedProteinAnnotations() {
+        return proteinResolver.unresolvedProteinAnnotations();
     }
 
     @VisibleForTesting
     static boolean isResolvableProteinAnnotation(@NotNull String feature) {
-        if (isFrameshift(feature)) {
+        try {
+            if (isFrameshift(feature)) {
+                return false;
+            } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
+                return isValidRangeMutation(feature);
+            } else {
+                return isValidSingleCodonMutation(feature);
+            }
+        } catch (Exception exception) {
+            LOGGER.warn("Could not determine whether feature is protein annotation due to '{}'", exception.getMessage(), exception);
             return false;
-        } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
-            return isValidRangeMutation(feature);
-        } else {
-            return isValidSingleCodonMutation(feature);
         }
     }
 

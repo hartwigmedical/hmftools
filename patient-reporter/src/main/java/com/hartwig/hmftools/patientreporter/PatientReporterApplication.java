@@ -7,7 +7,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -17,6 +16,7 @@ import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
@@ -30,13 +30,19 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //            public static final String VERSION = "7.12";
+//                public static final String VERSION = "7.13";
 
-    public static void main(final String... args) throws ParseException, IOException {
+    public static void main(@NotNull String[] args) throws IOException {
         Options options = PatientReporterConfig.createOptions();
-        CommandLine cmd = createCommandLine(options, args);
 
-        PatientReporterConfig config = PatientReporterConfig.createConfig(cmd);
+        PatientReporterConfig config = null;
+        try {
+            config = PatientReporterConfig.createConfig(createCommandLine(options, args));
+        } catch (ParseException exception) {
+            LOGGER.warn(exception);
+            new HelpFormatter().printHelp("PatientReporter", options);
+            System.exit(1);
+        }
 
         LOGGER.info("Running patient reporter v{}", VERSION);
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
@@ -82,16 +88,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
-        SampleReport sampleReport = patientReport.sampleReport();
-        LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
-
-        String filePrefix = study == LimsStudy.CORE
-                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
-                : sampleReport.tumorSampleId();
-
-        String fileSuffix = patientReport.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
-
-        return reportDirectory + File.separator + filePrefix + "_hmf_report" + fileSuffix;
+        return reportDirectory + File.separator + OutputFileUtil.generateOutputFileNameForReport(patientReport);
     }
 
     @NotNull

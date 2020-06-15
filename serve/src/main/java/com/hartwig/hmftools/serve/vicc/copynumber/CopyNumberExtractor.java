@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.serve.vicc.copynumber;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -29,6 +32,11 @@ public class CopyNumberExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberExtractor.class);
 
+    @NotNull
+    private final Set<String> uniqueAmps = Sets.newHashSet();
+    @NotNull
+    private final Set<String> uniqueDels = Sets.newHashSet();
+
     private static final Set<String> ONCOKB_AMPLIFICATIONS = Sets.newHashSet("Amplification");
 
     private static final Set<String> ONCOKB_DELETIONS = Sets.newHashSet("Deletion");
@@ -42,27 +50,83 @@ public class CopyNumberExtractor {
     private static final Set<String> CIVIC_DELETIONS = Sets.newHashSet("DELETION");
 
     @NotNull
-    public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
-        Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
-        if (viccEntry.source() == ViccSource.ONCOKB) {
-            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
-        } else if (viccEntry.source() == ViccSource.CIVIC) {
-            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
-        } else if (viccEntry.source() == ViccSource.CGI) {
-            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
-        }
-        return ampsDelsPerFeature;
+    public Set<String> uniqueAmps() {
+        return uniqueAmps;
     }
 
     @NotNull
-    private static Map<Feature, KnownAmplificationDeletion> extractAmpsDelsInformation(@NotNull ViccEntry viccEntry,
-            @NotNull Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature) {
-        for (Feature feature : viccEntry.features()) {
-           // LOGGER.info(feature.name());
-            if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
-                ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
-            } else if (ONCOKB_DELETIONS.contains(feature.name())) {
-                ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+    public Set<String> uniqueDels() {
+        return uniqueDels;
+    }
+
+    @NotNull
+    public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
+        Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
+        boolean combinedEvent = false;
+
+        if (viccEntry.source() == ViccSource.ONCOKB) {
+            for (Feature feature : viccEntry.features()) {
+                if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                    uniqueAmps.add(feature.geneSymbol());
+                } else if (ONCOKB_DELETIONS.contains(feature.name())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                    uniqueDels.add(feature.geneSymbol());
+                }
+            }
+        } else if (viccEntry.source() == ViccSource.CIVIC) {
+            for (Feature feature : viccEntry.features()) {
+                if (CIVIC_AMPLIFICATIONS.contains(feature.name())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                    uniqueAmps.add(feature.geneSymbol());
+                } else if (CIVIC_DELETIONS.contains(feature.name())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                    uniqueDels.add(feature.geneSymbol());
+                }
+            }
+        } else if (viccEntry.source() == ViccSource.CGI) {
+            for (Feature feature : viccEntry.features()) {
+                String event = Strings.EMPTY;
+                if (feature.name().contains("+")) {
+                    LOGGER.info(feature);
+                    String[] combinedEventConvertToSingleEvent = feature.name().split(" \\+ ", 2);
+                    String gene = combinedEventConvertToSingleEvent[0].split(" ", 2)[0];
+
+                    String geneCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[0];
+                    String eventInfoCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[1];
+
+                    //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
+                    if (combinedEventConvertToSingleEvent.length == 2) {
+                        combinedEvent = true;
+
+                        //TODO: fix combined events, to map
+
+//                        if (eventMap.size() == 0) {
+//                            eventMap.put(gene, Lists.newArrayList(eventInfo));
+//                            if (eventMap.containsKey(geneCombined)) {
+//                                eventMap.put(geneCombined, Lists.newArrayList(eventInfo, eventInfoCombined));
+//                            } else {
+//                                eventMap.put(gene, Lists.newArrayList(eventInfo));
+//                                eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
+//                            }
+//                        }
+                    }
+
+                } else if (feature.name().split(" ", 2).length == 2) {
+                    event = feature.name().split(" ")[1];
+                } else {
+                    if (feature.name().contains(":")) {
+                        event = feature.name().split(":")[1];
+                    }
+                }
+
+                if (CGI_AMPLIFICATIONS.contains(event)) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                    uniqueAmps.add(feature.geneSymbol());
+                } else if (CGI_DELETIONS.contains(event)) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                    uniqueDels.add(feature.geneSymbol());
+                }
             }
         }
         return ampsDelsPerFeature;
