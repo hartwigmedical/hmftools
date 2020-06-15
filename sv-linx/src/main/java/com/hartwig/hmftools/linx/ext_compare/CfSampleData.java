@@ -87,6 +87,43 @@ public class CfSampleData
                 ClusterChainOverlaps.add(clusterOverlap);
             }
         }
+
+        reconcileOverlaps();
+    }
+
+    private void reconcileOverlaps()
+    {
+        if(ClusterChainOverlaps.size() == 1)
+            return;
+
+        int index = 0;
+        while(index < ClusterChainOverlaps.size())
+        {
+            CfChainClusterOverlap clusterOverlap = ClusterChainOverlaps.get(index);
+
+            boolean linkFound = false;
+
+            for(int i = index + 1; i < ClusterChainOverlaps.size(); ++i)
+            {
+                CfChainClusterOverlap otherOverlap = ClusterChainOverlaps.get(i);
+
+                if(clusterOverlap.clusters().stream().anyMatch(x -> otherOverlap.clusters().contains(x))
+                || clusterOverlap.chains().stream().anyMatch(x -> otherOverlap.chains().contains(x)))
+                {
+                    linkFound = true;
+
+                    otherOverlap.clusters().forEach(x -> clusterOverlap.addCluster(x));
+                    otherOverlap.chains().forEach(x -> clusterOverlap.addChain(x));
+                    ClusterChainOverlaps.remove(i);
+                    break;
+                }
+            }
+
+            if(!linkFound)
+            {
+                ++index;
+            }
+        }
     }
 
     public final CfChainClusterOverlap findClusterChainOverlap(final CfChain chain)

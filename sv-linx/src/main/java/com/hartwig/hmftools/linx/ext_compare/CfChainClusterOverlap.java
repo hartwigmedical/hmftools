@@ -66,8 +66,8 @@ public class CfChainClusterOverlap
 
     public static String header()
     {
-        return "SampleId,OverlapGroupId,Clusters,Chains,TotalSVs,SharedSVs,ClusteredSvCount,SimpleSVs,SGLs,ChainedSvCount"
-                + ",ClusterIds,ClusterCounts,ResolvedTypes,ChainIds,ChainCounts";
+        return "SampleId,OverlapGroupId,Clusters,Chains,TotalSVs,SharedSVs,ClusteredSvCount,SimpleSVs,Cluster2s,SGLs"
+                + ",ChainedSvCount,ClusterIds,ClusterCounts,ResolvedTypes,ChainIds,ChainCounts";
     }
 
     public String toCsv()
@@ -87,6 +87,7 @@ public class CfChainClusterOverlap
         int sglSVs = 0;
         int simpleSVs = 0;
         int clusteredSVs = 0;
+        int cluster2s = 0;
 
         for(final SvCluster cluster : mClusters)
         {
@@ -99,6 +100,9 @@ public class CfChainClusterOverlap
                 clusterIds.add(String.valueOf(cluster.id()));
                 clusterCounts.add(String.valueOf(cluster.getSvCount()));
                 resolvedTypes.add(cluster.getResolvedType().toString());
+
+                if(cluster.getSvCount() == 2) // special case since CF doesn't cluster these
+                    ++cluster2s;
             }
             else
             {
@@ -124,6 +128,7 @@ public class CfChainClusterOverlap
         csvOutput.add(String.valueOf(sharedSVs));
         csvOutput.add(String.valueOf(clusteredSVs));
         csvOutput.add(String.valueOf(simpleSVs));
+        csvOutput.add(String.valueOf(cluster2s));
         csvOutput.add(String.valueOf(sglSVs));
         csvOutput.add(String.valueOf(chainedSVs));
 
@@ -138,7 +143,13 @@ public class CfChainClusterOverlap
 
     public String toString()
     {
-        return String.format("%d: clusters(%d) chains(%d)", Id, mClusters.size(), mChains.size());
+        StringJoiner clusterIds = new StringJoiner(SUBSET_SPLIT);
+        StringJoiner chainIds = new StringJoiner(SUBSET_SPLIT);
+        mChains.forEach(x -> chainIds.add(String.valueOf(x.Id)));
+        mClusters.forEach(x -> clusterIds.add(String.valueOf(x.id())));
+
+        return String.format("%d: clusters(%d: %s) chains(%d: %s)",
+                Id, mClusters.size(), clusterIds, mChains.size(), chainIds);
     }
 
 }

@@ -123,4 +123,9 @@ public class CfChain
         return minDistance;
     }
 
+    public String toString()
+    {
+        return String.format("%d: SV(%s) links(%d)", Id, SVs.size(), Links.size()); 
+    }
+
 }
