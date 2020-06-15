@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -61,6 +62,8 @@ public class CopyNumberExtractor {
     @NotNull
     public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
+        boolean combinedEvent = false;
+
         if (viccEntry.source() == ViccSource.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
                 if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
@@ -84,14 +87,39 @@ public class CopyNumberExtractor {
         } else if (viccEntry.source() == ViccSource.CGI) {
             for (Feature feature : viccEntry.features()) {
                 String event = Strings.EMPTY;
-                if (feature.name().split(" ", 2).length == 2) {
+                if (feature.name().contains("+")) {
+                    LOGGER.info(feature);
+                    String[] combinedEventConvertToSingleEvent = feature.name().split(" \\+ ", 2);
+                    String gene = combinedEventConvertToSingleEvent[0].split(" ", 2)[0];
+
+                    String geneCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[0];
+                    String eventInfoCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[1];
+
+                    //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
+                    if (combinedEventConvertToSingleEvent.length == 2) {
+                        combinedEvent = true;
+
+                        //TODO: fix combined events, to map
+
+//                        if (eventMap.size() == 0) {
+//                            eventMap.put(gene, Lists.newArrayList(eventInfo));
+//                            if (eventMap.containsKey(geneCombined)) {
+//                                eventMap.put(geneCombined, Lists.newArrayList(eventInfo, eventInfoCombined));
+//                            } else {
+//                                eventMap.put(gene, Lists.newArrayList(eventInfo));
+//                                eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
+//                            }
+//                        }
+                    }
+
+                } else if (feature.name().split(" ", 2).length == 2) {
                     event = feature.name().split(" ")[1];
                 } else {
                     if (feature.name().contains(":")) {
                         event = feature.name().split(":")[1];
                     }
-
                 }
+
                 if (CGI_AMPLIFICATIONS.contains(event)) {
                     ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
                     uniqueAmps.add(feature.geneSymbol());
