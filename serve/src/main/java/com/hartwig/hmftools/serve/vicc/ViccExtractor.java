@@ -71,19 +71,29 @@ public final class ViccExtractor {
         }
 
         LOGGER.info("unique known amps '{}'", copyNumberExtractor.uniqueAmps().size());
-//        for (String amps: copyNumberExtractor.uniqueAmps()) {
-//            LOGGER.info(amps);
-//        }
+        //        for (String amps: copyNumberExtractor.uniqueAmps()) {
+        //            LOGGER.info(amps);
+        //        }
 
         LOGGER.info("unique known dels '{}'", copyNumberExtractor.uniqueDels().size());
-//        for (String dels: copyNumberExtractor.uniqueDels()) {
-//            LOGGER.info(dels);
-//        }
+        //        for (String dels: copyNumberExtractor.uniqueDels()) {
+        //            LOGGER.info(dels);
+        //        }
+
+        LOGGER.info("unique known fusion pairs '{}'", fusionExtractor.uniqueFusionsPair().size());
+       // for (String knownFusionsPairs : fusionExtractor.uniqueFusionsPair()) {
+         //   LOGGER.info(knownFusionsPairs);
+       // }
+
+        LOGGER.info("unique known fusion promiscuous '{}'", fusionExtractor.uniqueFusionsPromiscuous().size());
+        //for (String knownFusionPromiscous : fusionExtractor.uniqueFusionsPromiscuous()) {
+         //   LOGGER.info(knownFusionPromiscous);
+        //}
 
         LOGGER.info("Finished hotspot extraction and could not resolve hotspots for {} features",
                 hotspotExtractor.unresolvableFeatures().size());
         for (String feature : hotspotExtractor.unresolvableFeatures()) {
-     //       LOGGER.debug(" {}", feature);
+            //       LOGGER.debug(" {}", feature);
         }
 
         return extractionResultsPerEntry;
