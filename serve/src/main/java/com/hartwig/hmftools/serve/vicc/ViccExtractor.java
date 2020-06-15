@@ -51,7 +51,8 @@ public final class ViccExtractor {
     public Map<ViccEntry, ViccExtractionResult> extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) {
         Map<ViccEntry, ViccExtractionResult> extractionResultsPerEntry = Maps.newHashMap();
         for (ViccEntry viccEntry : viccEntries) {
-            Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(viccEntry);
+            Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
+           // Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(viccEntry);
             Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature =
                     copyNumberExtractor.extractKnownAmplificationsDeletions(viccEntry);
             Map<Feature, String> fusionsPerFeature = fusionExtractor.extractKnownFusions(viccEntry);

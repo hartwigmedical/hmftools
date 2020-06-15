@@ -40,9 +40,9 @@ public class CopyNumberExtractor {
 
     private static final Set<String> ONCOKB_DELETIONS = Sets.newHashSet("Deletion");
 
-    private static final Set<String> CGI_AMPLIFICATIONS = Sets.newHashSet("amplification");
+    private static final Set<String> CGI_AMPLIFICATIONS = Sets.newHashSet("amp");
 
-    private static final Set<String> CGI_DELETIONS = Sets.newHashSet("deletion");
+    private static final Set<String> CGI_DELETIONS = Sets.newHashSet("del");
 
     private static final Set<String> CIVIC_AMPLIFICATIONS = Sets.newHashSet("AMPLIFICATION");
 
@@ -62,26 +62,34 @@ public class CopyNumberExtractor {
     public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
         if (viccEntry.source() == ViccSource.ONCOKB) {
-            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
+            for (Feature feature : viccEntry.features()) {
+                if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                    uniqueAmps.add(feature.geneSymbol());
+                } else if (ONCOKB_DELETIONS.contains(feature.name())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                    uniqueDels.add(feature.geneSymbol());
+                }
+            }
         } else if (viccEntry.source() == ViccSource.CIVIC) {
-            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
+            for (Feature feature : viccEntry.features()) {
+                if (CIVIC_AMPLIFICATIONS.contains(feature.name())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                    uniqueAmps.add(feature.geneSymbol());
+                } else if (CIVIC_DELETIONS.contains(feature.name())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                    uniqueDels.add(feature.geneSymbol());
+                }
+            }
         } else if (viccEntry.source() == ViccSource.CGI) {
-            ampsDelsPerFeature = extractAmpsDelsInformation(viccEntry, ampsDelsPerFeature);
-        }
-        return ampsDelsPerFeature;
-    }
-
-    @NotNull
-    private Map<Feature, KnownAmplificationDeletion> extractAmpsDelsInformation(@NotNull ViccEntry viccEntry,
-            @NotNull Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature) {
-        for (Feature feature : viccEntry.features()) {
-           // LOGGER.info(feature.name());
-            if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
-                ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
-                uniqueAmps.add(feature.geneSymbol());
-            } else if (ONCOKB_DELETIONS.contains(feature.name())) {
-                ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
-                uniqueDels.add(feature.geneSymbol());
+            for (Feature feature : viccEntry.features()) {
+                if (CGI_AMPLIFICATIONS.contains(feature.biomarkerType())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                    uniqueAmps.add(feature.geneSymbol());
+                } else if (CGI_DELETIONS.contains(feature.biomarkerType())) {
+                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                    uniqueDels.add(feature.geneSymbol());
+                }
             }
         }
         return ampsDelsPerFeature;
