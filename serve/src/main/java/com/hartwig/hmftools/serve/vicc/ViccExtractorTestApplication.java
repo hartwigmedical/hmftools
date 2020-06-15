@@ -45,7 +45,7 @@ public class ViccExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
-    private static final boolean TRANSVAR_ENABLED = true;
+    private static final boolean TRANSVAR_ENABLED = false;
     private static final Integer MAX_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {
@@ -184,9 +184,9 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} gene ranges", featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
 
-        LOGGER.info("No genomic events found for {} features", featuresWithoutGenomicEvents.size());
+        LOGGER.info("No genomic events derived for {} features", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
-            LOGGER.debug(" {} in {}: {}", feature.name(), feature.geneSymbol(), feature);
+            LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
         }
     }
 

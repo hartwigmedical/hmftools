@@ -51,8 +51,7 @@ public final class ViccExtractor {
     public Map<ViccEntry, ViccExtractionResult> extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) {
         Map<ViccEntry, ViccExtractionResult> extractionResultsPerEntry = Maps.newHashMap();
         for (ViccEntry viccEntry : viccEntries) {
-            Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
-           // Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(viccEntry);
+            Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(viccEntry);
             Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature =
                     copyNumberExtractor.extractKnownAmplificationsDeletions(viccEntry);
             Map<Feature, String> fusionsPerFeature = fusionExtractor.extractKnownFusions(viccEntry);
@@ -94,7 +93,7 @@ public final class ViccExtractor {
         LOGGER.info("Finished hotspot extraction and could not resolve hotspots for {} features",
                 hotspotExtractor.unresolvableFeatures().size());
         for (String feature : hotspotExtractor.unresolvableFeatures()) {
-            //       LOGGER.debug(" {}", feature);
+            LOGGER.debug(" {}", feature);
         }
 
         return extractionResultsPerEntry;
