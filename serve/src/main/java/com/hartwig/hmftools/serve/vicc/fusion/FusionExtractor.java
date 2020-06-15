@@ -78,6 +78,7 @@ public class FusionExtractor {
                         && !featureName.contains("c.") && !featureName.contains("MUT") && !featureName.equals("LOSS-OF-FUNCTION")
                         && !featureName.equals("Gain-of-Function") && !featureName.contains("C.") && !featureName.equals(
                         "N-TERMINAL FRAME SHIFT") && !featureName.equals("COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
+                    //TODO: more implementations
                     if (featureName.contains("-") && !feature.biomarkerType().equals("Missense Variant")) {
                         fusionsPerFeature.put(feature, FUSION_PAIR);
                     } else if (featureName.contains("FUSION") || featureName.contains("FUSIONS")) {

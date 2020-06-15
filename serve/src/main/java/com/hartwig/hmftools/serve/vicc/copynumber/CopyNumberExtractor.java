@@ -79,10 +79,14 @@ public class CopyNumberExtractor {
                         && !featureName.contains("c.") && !featureName.contains("MUT") && !featureName.equals("LOSS-OF-FUNCTION")
                         && !featureName.equals("Gain-of-Function") && !featureName.contains("C.") && !featureName.equals(
                         "N-TERMINAL FRAME SHIFT") && !featureName.equals("COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
-                    //TODO
+                    //TODO: implement
                 } else if (featureName.contains("+") && !featureName.contains("c.") && !featureName.contains("C.")) {
-                    //TODO
+                    combinedEvent = true;
+                    String[] combinedEventConvertToSingleEvent = featureName.split("\\+", 2);
+                    String event1 = combinedEventConvertToSingleEvent[0];
+                    String event2 = combinedEventConvertToSingleEvent[1];
 
+                    //TODO: implement in map combined event
                 } else {
                     ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "CiViC"));
                 }
