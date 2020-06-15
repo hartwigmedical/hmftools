@@ -55,6 +55,17 @@ public class FusionExtractor {
             }
         } else if (viccEntry.source() == ViccSource.CGI) {
             for (Feature feature : viccEntry.features()) {
+                if (feature.name().split(" ", 2).length == 1 && feature.geneSymbol().contains("-") && !feature.biomarkerType().equals("mutant")){
+                    fusionsPerFeature.put(feature, FUSION_PAIR);
+                    if (feature.name().toLowerCase().contains("fusion")) {
+                        if (feature.geneSymbol().contains("-")) {
+                            fusionsPerFeature.put(feature, FUSION_PAIR);
+                        } else {
+                            fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
+                        }
+                    }
+
+                }
                 if (feature.name().toLowerCase().contains("fusions")) {
                     fusionsPerFeature.put(feature, feature.name());
                 }

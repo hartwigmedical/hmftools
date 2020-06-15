@@ -40,9 +40,9 @@ public class CopyNumberExtractor {
 
     private static final Set<String> ONCOKB_DELETIONS = Sets.newHashSet("Deletion");
 
-    private static final Set<String> CGI_AMPLIFICATIONS = Sets.newHashSet("amp");
+    private static final Set<String> CGI_AMPLIFICATIONS = Sets.newHashSet("amplification");
 
-    private static final Set<String> CGI_DELETIONS = Sets.newHashSet("del");
+    private static final Set<String> CGI_DELETIONS = Sets.newHashSet("deletion");
 
     private static final Set<String> CIVIC_AMPLIFICATIONS = Sets.newHashSet("AMPLIFICATION");
 
@@ -83,10 +83,19 @@ public class CopyNumberExtractor {
             }
         } else if (viccEntry.source() == ViccSource.CGI) {
             for (Feature feature : viccEntry.features()) {
-                if (CGI_AMPLIFICATIONS.contains(feature.biomarkerType())) {
+                String event = Strings.EMPTY;
+                if (feature.name().split(" ", 2).length == 2) {
+                    event = feature.name().split(" ")[1];
+                } else {
+                    if (feature.name().contains(":")) {
+                        event = feature.name().split(":")[1];
+                    }
+
+                }
+                if (CGI_AMPLIFICATIONS.contains(event)) {
                     ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
                     uniqueAmps.add(feature.geneSymbol());
-                } else if (CGI_DELETIONS.contains(feature.biomarkerType())) {
+                } else if (CGI_DELETIONS.contains(event)) {
                     ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
                     uniqueDels.add(feature.geneSymbol());
                 }
