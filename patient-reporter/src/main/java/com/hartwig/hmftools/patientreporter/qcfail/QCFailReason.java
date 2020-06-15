@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.qcfail;
 
+import java.util.List;
+
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,5 +54,14 @@ public enum QCFailReason {
         }
 
         return UNDEFINED;
+    }
+
+    @NotNull
+    public static List<String> validIdentifiers() {
+        List<String> identifiers = Lists.newArrayList();
+        for (QCFailReason reason : QCFailReason.values()) {
+            identifiers.add(reason.identifier);
+        }
+        return identifiers;
     }
 }
