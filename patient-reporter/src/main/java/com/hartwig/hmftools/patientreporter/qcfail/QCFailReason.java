@@ -60,7 +60,9 @@ public enum QCFailReason {
     public static List<String> validIdentifiers() {
         List<String> identifiers = Lists.newArrayList();
         for (QCFailReason reason : QCFailReason.values()) {
-            identifiers.add(reason.identifier);
+            if (reason != QCFailReason.UNDEFINED) {
+                identifiers.add(reason.identifier);
+            }
         }
         return identifiers;
     }
