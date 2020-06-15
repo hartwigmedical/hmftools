@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.serve.vicc.copynumber;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -67,20 +64,34 @@ public class CopyNumberExtractor {
         if (viccEntry.source() == ViccSource.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
                 if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
-                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", "OncoKB"));
                     uniqueAmps.add(feature.geneSymbol());
                 } else if (ONCOKB_DELETIONS.contains(feature.name())) {
-                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "OncoKB"));
                     uniqueDels.add(feature.geneSymbol());
                 }
             }
         } else if (viccEntry.source() == ViccSource.CIVIC) {
             for (Feature feature : viccEntry.features()) {
-                if (CIVIC_AMPLIFICATIONS.contains(feature.name())) {
-                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                String event = Strings.EMPTY;
+                String featureName = feature.name();
+                if (!featureName.contains("DEL") && !featureName.contains("Splicing alteration") && !featureName.contains("EXON")
+                        && !featureName.contains("c.") && !featureName.contains("MUT") && !featureName.equals("LOSS-OF-FUNCTION")
+                        && !featureName.equals("Gain-of-Function") && !featureName.contains("C.") && !featureName.equals(
+                        "N-TERMINAL FRAME SHIFT") && !featureName.equals("COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
+                    //TODO
+                } else if (featureName.contains("+") && !featureName.contains("c.") && !featureName.contains("C.")) {
+                    //TODO
+
+                } else {
+                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "CiViC"));
+                }
+
+                if (CIVIC_AMPLIFICATIONS.contains(event)) {
+                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", "CiViC"));
                     uniqueAmps.add(feature.geneSymbol());
-                } else if (CIVIC_DELETIONS.contains(feature.name())) {
-                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                } else if (CIVIC_DELETIONS.contains(event)) {
+                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "CiViC"));
                     uniqueDels.add(feature.geneSymbol());
                 }
             }
@@ -101,15 +112,15 @@ public class CopyNumberExtractor {
 
                         //TODO: fix combined events, to map
 
-//                        if (eventMap.size() == 0) {
-//                            eventMap.put(gene, Lists.newArrayList(eventInfo));
-//                            if (eventMap.containsKey(geneCombined)) {
-//                                eventMap.put(geneCombined, Lists.newArrayList(eventInfo, eventInfoCombined));
-//                            } else {
-//                                eventMap.put(gene, Lists.newArrayList(eventInfo));
-//                                eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
-//                            }
-//                        }
+                        //                        if (eventMap.size() == 0) {
+                        //                            eventMap.put(gene, Lists.newArrayList(eventInfo));
+                        //                            if (eventMap.containsKey(geneCombined)) {
+                        //                                eventMap.put(geneCombined, Lists.newArrayList(eventInfo, eventInfoCombined));
+                        //                            } else {
+                        //                                eventMap.put(gene, Lists.newArrayList(eventInfo));
+                        //                                eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
+                        //                            }
+                        //                        }
                     }
 
                 } else if (feature.name().split(" ", 2).length == 2) {
@@ -121,10 +132,10 @@ public class CopyNumberExtractor {
                 }
 
                 if (CGI_AMPLIFICATIONS.contains(event)) {
-                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "amp"));
+                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", "CGI"));
                     uniqueAmps.add(feature.geneSymbol());
                 } else if (CGI_DELETIONS.contains(event)) {
-                    ampsDelsPerFeature.put(feature, oncoKbEventForGene(feature.geneSymbol(), "del"));
+                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "CGI"));
                     uniqueDels.add(feature.geneSymbol());
                 }
             }
@@ -133,8 +144,8 @@ public class CopyNumberExtractor {
     }
 
     @NotNull
-    private static KnownAmplificationDeletion oncoKbEventForGene(@NotNull String gene, @NotNull String eventType) {
-        return ImmutableKnownAmplificationDeletion.builder().gene(gene).source("OncoKB").eventType(eventType).sourceLink("link").build();
+    private static KnownAmplificationDeletion eventForGene(@NotNull String gene, @NotNull String eventType, @NotNull String database) {
+        return ImmutableKnownAmplificationDeletion.builder().gene(gene).source(database).eventType(eventType).sourceLink("link").build();
     }
 
     @NotNull

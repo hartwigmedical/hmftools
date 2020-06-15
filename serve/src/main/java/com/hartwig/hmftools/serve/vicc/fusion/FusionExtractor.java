@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.vicc.fusion;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -72,6 +73,18 @@ public class FusionExtractor {
             }
         } else if (viccEntry.source() == ViccSource.CIVIC) {
             for (Feature feature : viccEntry.features()) {
+                String featureName = feature.name();
+                if (!featureName.contains("DEL") && !featureName.contains("Splicing alteration") && !featureName.contains("EXON")
+                        && !featureName.contains("c.") && !featureName.contains("MUT") && !featureName.equals("LOSS-OF-FUNCTION")
+                        && !featureName.equals("Gain-of-Function") && !featureName.contains("C.") && !featureName.equals(
+                        "N-TERMINAL FRAME SHIFT") && !featureName.equals("COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
+                    if (featureName.contains("-") && !feature.biomarkerType().equals("Missense Variant")) {
+                        fusionsPerFeature.put(feature, FUSION_PAIR);
+                    } else if (featureName.contains("FUSION") || featureName.contains("FUSIONS")) {
+                        fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
+                    }
+                }
+
                 if (feature.name().toLowerCase().contains("fusions")) {
                     fusionsPerFeature.put(feature, feature.name());
                 }
