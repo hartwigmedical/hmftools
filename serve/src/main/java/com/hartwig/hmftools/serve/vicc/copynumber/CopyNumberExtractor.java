@@ -35,9 +35,9 @@ public class CopyNumberExtractor {
     @NotNull
     private final Set<String> uniqueDels = Sets.newHashSet();
 
-    private static final Set<String> AMPLIFICATIONS = Sets.newHashSet("Amplification", "amplification", "AMPLIFICATION");
+    private static final Set<String> AMPLIFICATIONS = Sets.newHashSet("Amplification", "amplification", "AMPLIFICATION", "amp");
 
-    private static final Set<String> DELETIONS = Sets.newHashSet("Deletion", "deletion", "DELETION");
+    private static final Set<String> DELETIONS = Sets.newHashSet("Deletion", "deletion", "DELETION", "del");
 
     @NotNull
     public Set<String> uniqueAmps() {
@@ -70,6 +70,10 @@ public class CopyNumberExtractor {
     }
 
     private String extractKeyAmplificationDeletion(@NotNull String featureName) {
+        if (featureName.contains(" ")) {
+            featureName = featureName.split(" ", 2)[1].replaceAll("\\s+","");
+        }
+
         if (AMPLIFICATIONS.contains(featureName)) {
             return "Amplification";
         } else if (DELETIONS.contains(featureName)) {
