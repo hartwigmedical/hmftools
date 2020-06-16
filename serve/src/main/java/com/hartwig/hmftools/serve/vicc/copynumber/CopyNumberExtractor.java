@@ -91,21 +91,7 @@ public class CopyNumberExtractor {
                 ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "OncoKB"));
                 uniqueDels.add(feature.geneSymbol());
             }
-
-
         }
-//        boolean combinedEvent = false;
-//
-//        if (viccEntry.source() == ViccSource.ONCOKB) {
-//            for (Feature feature : viccEntry.features()) {
-//                if (ONCOKB_AMPLIFICATIONS.contains(feature.name())) {
-//                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", "OncoKB"));
-//                    uniqueAmps.add(feature.geneSymbol());
-//                } else if (ONCOKB_DELETIONS.contains(feature.name())) {
-//                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "OncoKB"));
-//                    uniqueDels.add(feature.geneSymbol());
-//                }
-//            }
 //        } else if (viccEntry.source() == ViccSource.JAX) {
 //
 //        } else if (viccEntry.source() == ViccSource.CIVIC) {

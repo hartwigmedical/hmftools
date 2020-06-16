@@ -56,16 +56,12 @@ public class FusionExtractor {
     @NotNull
     private String extractKeyFusion(@NotNull String featureName){
         if (featureName.toLowerCase().contains("fusions")) {
-            return "fusion";
+            return FUSION_PAIR;
         } else if (featureName.toLowerCase().contains("fusion")) {
-            return "fusion promiscuous";
+            return FUSION_PROMISCUOUS;
         } else {
             return Strings.EMPTY;
         }
-    }
-
-    private String extractKeyFusionPromiscuous(@NotNull String featureName){
-        return "fusion promiscuous";
     }
 
     public Map<Feature, String> extractKnownFusions(@NotNull ViccEntry viccEntry) {
@@ -81,25 +77,6 @@ public class FusionExtractor {
             }
         }
 
-//        boolean combinedEvent = false;
-//        String gene = Strings.EMPTY;
-//        if (viccEntry.source() == ViccSource.ONCOKB) {
-//            for (Feature feature : viccEntry.features()) {
-//                if (feature.name().toLowerCase().contains("fusions")) {
-//                    fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
-//
-//                } else if (feature.name().toLowerCase().contains("fusion")) {
-//                    if (feature.name().toLowerCase().contains(" - ")) {
-//                        gene = feature.name().split(" Fusion")[0];
-//                        fusionsPerFeature.put(feature, FUSION_PAIR);
-//                        uniqueFusionsPair.add(gene);
-//                    } else {
-//                        gene = feature.name().split(" ")[0];
-//                        fusionsPerFeature.put(feature, FUSION_PAIR);
-//                        uniqueFusionsPromiscuous.add(gene);
-//                    }
-//                }
-//            }
 //        } else if (viccEntry.source() == ViccSource.JAX) {
 //
 //        } else if (viccEntry.source() == ViccSource.CGI) {
