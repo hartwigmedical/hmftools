@@ -93,7 +93,7 @@ public class ServeAnnotatedHotspotVCFChecker {
                 for (SnpEffAnnotation annotation : annotations) {
                     if (annotation.isTranscriptFeature()) {
                         String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                        if (snpeffProteinAnnotation.equals(curateStartCodonAnnotation(featureProteinAnnotation))) {
+                        if (isSameAnnotation(annotation.transcript(), featureProteinAnnotation, snpeffProteinAnnotation)) {
                             matchFound = true;
                         }
                     }
