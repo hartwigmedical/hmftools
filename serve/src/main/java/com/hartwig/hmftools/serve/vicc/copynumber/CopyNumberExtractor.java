@@ -89,126 +89,13 @@ public class CopyNumberExtractor {
 
         for (Feature feature: viccEntry.features()) {
             if (isAmplification(feature)) {
-                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", "OncoKB"));
+                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", viccEntry.source().displayString()));
                 uniqueAmps.add(feature.geneSymbol());
             } else if (isDeletion(feature)) {
-                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "OncoKB"));
+                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", viccEntry.source().displayString()));
                 uniqueDels.add(feature.geneSymbol());
             }
         }
-//        } else if (viccEntry.source() == ViccSource.JAX) {
-//
-//        } else if (viccEntry.source() == ViccSource.CIVIC) {
-//            for (Feature feature : viccEntry.features()) {
-//                String event = Strings.EMPTY;
-//                String featureName = feature.name();
-//                if (!featureName.contains("DEL") && !featureName.contains("Splicing alteration") && !featureName.contains("EXON")
-//                        && !featureName.contains("c.") && !featureName.contains("MUT") && !featureName.equals("LOSS-OF-FUNCTION")
-//                        && !featureName.equals("Gain-of-Function") && !featureName.contains("C.") && !featureName.equals(
-//                        "N-TERMINAL FRAME SHIFT") && !featureName.equals("COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
-//
-//                    if (featureName.contains("-") && featureName.contains(" ")) {
-//                        String[] combinedEventConvertToSingleEvent = featureName.split(" ", 2);
-//
-//                        String fusion = combinedEventConvertToSingleEvent[0];
-//                        String variant = combinedEventConvertToSingleEvent[1];
-//                        String geneVariant = fusion.split("-")[1];
-//
-//                        //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
-//                        if (combinedEventConvertToSingleEvent.length == 2) {
-//                            combinedEvent = true;
-//
-//                            //TODO: fix combined event
-//                            //                            if (eventMap.size() == 0) {
-//                            //                                eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
-//                            //                                if (eventMap.containsKey(geneVariant)) {
-//                            //                                    eventMap.put(geneVariant, Lists.newArrayList(FUSION_PAIR, variant));
-//                            //                                } else {
-//                            //                                    eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
-//                            //                                    eventMap.put(geneVariant, Lists.newArrayList(variant));
-//                            //                                }
-//                            //                            }
-//                        }
-//                    } else if (featureName.equals("TRUNCATING FUSION")) {
-//                        event = featureName;
-//                    } else {
-//                        if (featureName.contains("+")) {
-//
-//                            combinedEvent = true;
-//                            String[] combinedEventConvertToSingleEvent = featureName.replace("+", " ").split(" ", 2);
-//
-//                            String event1 = combinedEventConvertToSingleEvent[0];
-//                            String event2 = combinedEventConvertToSingleEvent[1];
-//
-//                            //TODO: fix combined event
-//                            //                            if (eventMap.size() == 0) {
-//                            //                                eventMap.put(gene, Lists.newArrayList(event1));
-//                            //                                if (eventMap.containsKey(gene)) {
-//                            //                                    eventMap.put(gene, Lists.newArrayList(event1, event2));
-//                            //                                }
-//                            //                            } else {
-//                            //                                event = featureName;
-//                            //                            }
-//
-//                        } else {
-//                            event = featureName;
-//                        }
-//                    }
-//                } else if (featureName.contains("+") && !featureName.contains("c.") && !featureName.contains("C.")) {
-//                    combinedEvent = true;
-//                    String[] combinedEventConvertToSingleEvent = featureName.split("\\+", 2);
-//                    String event1 = combinedEventConvertToSingleEvent[0];
-//                    String event2 = combinedEventConvertToSingleEvent[1];
-//
-//                    //TODO: combined event
-//
-//                } else {
-//                    event = featureName;
-//                }
-//
-//                if (CIVIC_AMPLIFICATIONS.contains(event)) {
-//                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", "CiViC"));
-//                    uniqueAmps.add(feature.geneSymbol());
-//                } else if (CIVIC_DELETIONS.contains(event)) {
-//                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "CiViC"));
-//                    uniqueDels.add(feature.geneSymbol());
-//                }
-//            }
-//        } else if (viccEntry.source() == ViccSource.CGI) {
-//            for (Feature feature : viccEntry.features()) {
-//                String event = Strings.EMPTY;
-//                if (feature.name().contains("+")) {
-//                    LOGGER.info(feature);
-//                    String[] combinedEventConvertToSingleEvent = feature.name().split(" \\+ ", 2);
-//                    String gene = combinedEventConvertToSingleEvent[0].split(" ", 2)[0];
-//
-//                    String geneCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[0];
-//                    String eventInfoCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[1];
-//
-//                    //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
-//                    if (combinedEventConvertToSingleEvent.length == 2) {
-//                        combinedEvent = true;
-//
-//                        //TODO: fix combined events, to map (add gene, and gecombined as one value in Map
-//                    }
-//
-//                } else if (feature.name().split(" ", 2).length == 2) {
-//                    event = feature.name().split(" ")[1];
-//                } else {
-//                    if (feature.name().contains(":")) {
-//                        event = feature.name().split(":")[1];
-//                    }
-//                }
-//
-//                if (CGI_AMPLIFICATIONS.contains(event)) {
-//                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", "CGI"));
-//                    uniqueAmps.add(feature.geneSymbol());
-//                } else if (CGI_DELETIONS.contains(event)) {
-//                    ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", "CGI"));
-//                    uniqueDels.add(feature.geneSymbol());
-//                }
-//            }
-//        }
         return ampsDelsPerFeature;
     }
 

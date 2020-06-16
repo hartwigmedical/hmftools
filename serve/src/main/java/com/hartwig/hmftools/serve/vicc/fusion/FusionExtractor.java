@@ -71,70 +71,12 @@ public class FusionExtractor {
         Map<Feature, String> fusionsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            String gene = Strings.EMPTY;
-
             if (isFusion(feature)) {
                 fusionsPerFeature.put(feature, FUSION_PAIR);
             } else if (isFusionPromiscuous(feature)) {
                 fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
             }
         }
-
-//        } else if (viccEntry.source() == ViccSource.JAX) {
-//
-//        } else if (viccEntry.source() == ViccSource.CGI) {
-//            for (Feature feature : viccEntry.features()) {
-//                if (feature.name().split(" ", 2).length == 1 && feature.geneSymbol().contains("-") && !feature.biomarkerType()
-//                        .equals("mutant")) {
-//                    fusionsPerFeature.put(feature, FUSION_PAIR);
-//                    if (feature.name().toLowerCase().contains("fusion")) {
-//                        if (feature.geneSymbol().contains("-")) {
-//                            fusionsPerFeature.put(feature, FUSION_PAIR);
-//                        } else {
-//                            fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
-//                        }
-//                    }
-//
-//                }
-//            }
-//        } else if (viccEntry.source() == ViccSource.CIVIC) {
-//            for (Feature feature : viccEntry.features()) {
-//                String featureName = feature.name();
-//                if (!featureName.contains("DEL") && !featureName.contains("Splicing alteration") && !featureName.contains("EXON")
-//                        && !featureName.contains("c.") && !featureName.contains("MUT") && !featureName.equals("LOSS-OF-FUNCTION")
-//                        && !featureName.equals("Gain-of-Function") && !featureName.contains("C.") && !featureName.equals(
-//                        "N-TERMINAL FRAME SHIFT") && !featureName.equals("COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
-//
-//                    if (featureName.contains("-") && featureName.contains(" ")) {
-//                        String[] combinedEventConvertToSingleEvent = featureName.split(" ", 2);
-//
-//                        String fusion = combinedEventConvertToSingleEvent[0];
-//                        String variant = combinedEventConvertToSingleEvent[1];
-//                        String geneVariant = fusion.split("-")[1];
-//
-//                        //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
-//                        if (combinedEventConvertToSingleEvent.length == 2) {
-//                            combinedEvent = true;
-//
-//                            //TODO fix combined
-//                            //                            if (eventMap.size() == 0) {
-//                            //                                fusionsPerFeature.put(feature, FUSION_PAIR);
-//                            //                                if (eventMap.containsKey(geneVariant)) {
-//                            //                                    eventMap.put(geneVariant, Lists.newArrayList(FUSION_PAIR, variant));
-//                            //                                } else {
-//                            //                                    fusionsPerFeature.put(feature, FUSION_PAIR);
-//                            //                                    eventMap.put(geneVariant, Lists.newArrayList(variant));
-//                            //                                }
-//                            //                            }
-//                        }
-//                    } else if (featureName.contains("-") && !feature.biomarkerType().equals("Missense Variant")) {
-//                        fusionsPerFeature.put(feature, FUSION_PAIR);
-//                    } else if (featureName.contains("FUSION") || featureName.contains("FUSIONS")) {
-//                        fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
-//                    }
-//                }
-//            }
-//        }
         return fusionsPerFeature;
     }
 
