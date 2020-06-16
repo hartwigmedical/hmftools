@@ -36,7 +36,6 @@ public class FeatureCurator {
         evaluatedCurationKeysPerSource.put(entry.source(), keys);
 
         Set<CurationKey> blacklistForSource = blacklistForSource(entry.source());
-
         if (blacklistForSource.contains(key)) {
             LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
             return null;

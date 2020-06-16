@@ -111,17 +111,19 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Read and curated {} entries", viccEntries.size());
 
         LOGGER.info("Analyzing usage of curation configuration keys");
+        int issueCount = 0;
         for (Map.Entry<ViccSource, Set<CurationKey>> entry : curator.unusedCurationKeysPerSource().entrySet()) {
             ViccSource source = entry.getKey();
             Set<CurationKey> unusedKeys = entry.getValue();
             if (!unusedKeys.isEmpty()) {
                 LOGGER.warn("Found {} unused curation configuration entries for {}", unusedKeys.size(), source);
                 for (CurationKey unusedKey : unusedKeys) {
+                    issueCount++;
                     LOGGER.warn(" - {}", unusedKey);
                 }
             }
         }
-        LOGGER.info("Finished analyzing usage of curation configuration keys");
+        LOGGER.info("Finished analyzing usage of curation configuration keys. Found {} issues", issueCount);
 
         return viccEntries;
     }

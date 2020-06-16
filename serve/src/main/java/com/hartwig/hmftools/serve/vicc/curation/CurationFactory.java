@@ -20,29 +20,29 @@ final class CurationFactory {
     }
 
     private static void populateJaxCuration() {
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3CA", null, "E545k"), "E545K");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3CA", null, "PIK3CA E545k "), "PIK3CA E545K ");
 
         // These mappings are to work around the missing transcripts in JAX.
         // We map every mutation that appears on both the canonical + non-canonical form to its canonical form.
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "Y641F"), "Y646F");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "Y641H"), "Y646H");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "Y641N"), "Y646N");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "Y641S"), "Y646S");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR2", null, "V564I"), "V565I");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR3", null, "Y373C"), "Y375C");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR3", null, "K650E"), "K652E");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "L1195V"), "L1213V");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "Y1230H"), "Y1248H");
-        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "M1250T"), "M1268T");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641F "), "EZH2 Y646F ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641H "), "EZH2 Y646H ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641N "), "EZH2 Y646N ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641S "), "EZH2 Y646S ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR2", null, "FGFR2 V564I "), "FGFR2 V565I ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR3", null, "FGFR3 Y373C "), "FGFR3 Y375C ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR3", null, "FGFR3 K650E "), "FGFR3 K652E ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET L1195V "), "MET L1213V ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET Y1230H "), "MET Y1248H ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET M1250T "), "MET M1268T ");
 
         // This is not necessarily wrong, but we skip annotations that imply logical OR for now.
-        JAX_FEATURE_BLACKLIST.add(new CurationKey("BRAF", null, "V600E/K"));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("BRAF", null, "BRAF V600E/K "));
 
         // These mutations don't exist in GRCh37
-        JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL"));
-        JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "E612_F613insGYVDFREYEYDLKWEFRPRENLEF"));
-        JAX_FEATURE_BLACKLIST.add(new CurationKey("APC", null, "S1197*"));
-        JAX_FEATURE_BLACKLIST.add(new CurationKey("PIK3CA", null, "R425L"));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "FLT3 L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL "));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "FLT3 E612_F613insGYVDFREYEYDLKWEFRPRENLEF "));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("APC", null, "APC S1197* "));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("PIK3CA", null, "PIK3CA R425L "));
     }
 
     private static void populateOncoKBCuration() {
