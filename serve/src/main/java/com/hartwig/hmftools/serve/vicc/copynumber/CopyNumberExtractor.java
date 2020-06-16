@@ -72,14 +72,16 @@ public class CopyNumberExtractor {
                     uniqueDels.add(feature.geneSymbol());
                 }
             }
+        } else if (viccEntry.source() == ViccSource.JAX) {
+
         } else if (viccEntry.source() == ViccSource.CIVIC) {
             for (Feature feature : viccEntry.features()) {
                 String event = Strings.EMPTY;
                 String featureName = feature.name();
-                if (!featureName.contains("DEL") && !featureName.contains("Splicing alteration") && !featureName.contains("EXON") && !featureName.contains("c.")
-                        && !featureName.contains("MUT") && !featureName.equals("LOSS-OF-FUNCTION") && !featureName.equals("Gain-of-Function")
-                        && !featureName.contains("C.") && !featureName.equals("N-TERMINAL FRAME SHIFT") && !featureName.equals(
-                        "COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
+                if (!featureName.contains("DEL") && !featureName.contains("Splicing alteration") && !featureName.contains("EXON")
+                        && !featureName.contains("c.") && !featureName.contains("MUT") && !featureName.equals("LOSS-OF-FUNCTION")
+                        && !featureName.equals("Gain-of-Function") && !featureName.contains("C.") && !featureName.equals(
+                        "N-TERMINAL FRAME SHIFT") && !featureName.equals("COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
 
                     if (featureName.contains("-") && featureName.contains(" ")) {
                         String[] combinedEventConvertToSingleEvent = featureName.split(" ", 2);
@@ -93,15 +95,15 @@ public class CopyNumberExtractor {
                             combinedEvent = true;
 
                             //TODO: fix combined event
-//                            if (eventMap.size() == 0) {
-//                                eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
-//                                if (eventMap.containsKey(geneVariant)) {
-//                                    eventMap.put(geneVariant, Lists.newArrayList(FUSION_PAIR, variant));
-//                                } else {
-//                                    eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
-//                                    eventMap.put(geneVariant, Lists.newArrayList(variant));
-//                                }
-//                            }
+                            //                            if (eventMap.size() == 0) {
+                            //                                eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
+                            //                                if (eventMap.containsKey(geneVariant)) {
+                            //                                    eventMap.put(geneVariant, Lists.newArrayList(FUSION_PAIR, variant));
+                            //                                } else {
+                            //                                    eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
+                            //                                    eventMap.put(geneVariant, Lists.newArrayList(variant));
+                            //                                }
+                            //                            }
                         }
                     } else if (featureName.equals("TRUNCATING FUSION")) {
                         event = featureName;
@@ -115,14 +117,14 @@ public class CopyNumberExtractor {
                             String event2 = combinedEventConvertToSingleEvent[1];
 
                             //TODO: fix combined event
-//                            if (eventMap.size() == 0) {
-//                                eventMap.put(gene, Lists.newArrayList(event1));
-//                                if (eventMap.containsKey(gene)) {
-//                                    eventMap.put(gene, Lists.newArrayList(event1, event2));
-//                                }
-//                            } else {
-//                                event = featureName;
-//                            }
+                            //                            if (eventMap.size() == 0) {
+                            //                                eventMap.put(gene, Lists.newArrayList(event1));
+                            //                                if (eventMap.containsKey(gene)) {
+                            //                                    eventMap.put(gene, Lists.newArrayList(event1, event2));
+                            //                                }
+                            //                            } else {
+                            //                                event = featureName;
+                            //                            }
 
                         } else {
                             event = featureName;
@@ -139,7 +141,6 @@ public class CopyNumberExtractor {
                 } else {
                     event = featureName;
                 }
-
 
                 if (CIVIC_AMPLIFICATIONS.contains(event)) {
                     ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", "CiViC"));
