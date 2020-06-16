@@ -8,15 +8,15 @@ import com.google.common.collect.Sets;
 
 final class CurationFactory {
 
-    static final Map<CurationKey, String> ONCOKB_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
     static final Map<CurationKey, String> JAX_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
+    static final Map<CurationKey, String> ONCOKB_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
 
-    static final Set<CurationKey> ONCOKB_FEATURE_BLACKLIST = Sets.newHashSet();
     static final Set<CurationKey> JAX_FEATURE_BLACKLIST = Sets.newHashSet();
+    static final Set<CurationKey> ONCOKB_FEATURE_BLACKLIST = Sets.newHashSet();
 
     static {
-        populateOncoKBCuration();
         populateJaxCuration();
+        populateOncoKBCuration();
     }
 
     private static void populateJaxCuration() {
