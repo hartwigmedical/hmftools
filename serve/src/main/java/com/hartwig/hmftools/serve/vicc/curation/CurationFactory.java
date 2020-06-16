@@ -38,8 +38,7 @@ final class CurationFactory {
         // This is not necessarily wrong, but we skip annotations that imply logical OR for now.
         JAX_FEATURE_BLACKLIST.add(new CurationKey("BRAF", null, "V600E/K"));
 
-        // TODO: Double-check below list
-        // No valid transcript found?
+        // These mutations don't exist in GRCh37
         JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL"));
         JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "E612_F613insGYVDFREYEYDLKWEFRPRENLEF"));
         JAX_FEATURE_BLACKLIST.add(new CurationKey("APC", null, "S1197*"));
