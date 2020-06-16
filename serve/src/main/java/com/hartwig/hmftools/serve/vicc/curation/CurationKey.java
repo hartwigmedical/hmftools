@@ -56,4 +56,10 @@ public class CurationKey {
     public int hashCode() {
         return Objects.hash(gene, transcript, featureName);
     }
+
+    @Override
+    public String toString() {
+        return "CurationKey{" + "gene='" + gene + '\'' + ", transcript='" + transcript + '\'' + ", featureName='" + featureName + '\''
+                + '}';
+    }
 }

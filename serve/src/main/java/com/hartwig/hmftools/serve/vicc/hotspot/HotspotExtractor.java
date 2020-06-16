@@ -116,12 +116,13 @@ public class HotspotExtractor {
         if (featureEndPart.contains(HGVS_INSERTION) || featureEndPart.contains(HGVS_DUPLICATION)
                 || featureEndPart.contains(HGVS_DELETION)) {
             int indexOfEvent;
-            if (featureEndPart.contains(HGVS_INSERTION)) {
-                indexOfEvent = featureEndPart.indexOf(HGVS_INSERTION);
+            // Keep in mind that 'del' always comes prior to 'ins' in situations of complex inframes.
+            if (featureEndPart.contains(HGVS_DELETION)) {
+                indexOfEvent = featureEndPart.indexOf(HGVS_DELETION);
             } else if (featureEndPart.contains(HGVS_DUPLICATION)) {
                 indexOfEvent = featureEndPart.indexOf(HGVS_DUPLICATION);
             } else {
-                indexOfEvent = featureEndPart.indexOf(HGVS_DELETION);
+                indexOfEvent = featureEndPart.indexOf(HGVS_INSERTION);
             }
 
             long start = Long.parseLong(featureStartPart.substring(1));
