@@ -55,7 +55,7 @@ public abstract class ViccEntry {
                     return null;
                 }
                 int versionSeparator = transcriptId.indexOf(".");
-                return versionSeparator >= 0 ? transcriptId.substring(1, versionSeparator - 1) : transcriptId;
+                return versionSeparator >= 0 ? transcriptId.substring(0, versionSeparator) : transcriptId;
             }
             case CGI: {
                 List<String> transcripts = ((Cgi) kbSpecificObject()).transcripts();

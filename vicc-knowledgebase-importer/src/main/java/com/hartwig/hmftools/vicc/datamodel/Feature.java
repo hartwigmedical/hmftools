@@ -15,9 +15,11 @@ public abstract class Feature {
     public String proteinAnnotation() {
         String trimmedName = name().trim();
         // Many KBs include the gene in the feature name in some form (eg "EGFR E709K" or "EGFR:E709K").
+        // Other KBs put the coding info behind the protein annotation ("V130L (c.388G>C)" rather than the gene in front of it)
         String proteinAnnotation;
         if (trimmedName.contains(" ")) {
-            proteinAnnotation = trimmedName.split(" ")[1];
+            String[] trimmedParts = trimmedName.split(" ");
+            proteinAnnotation = trimmedParts[1].contains("(c.") ? trimmedParts[0] : trimmedParts[1];
         } else if (trimmedName.contains(":")) {
             proteinAnnotation = trimmedName.split(":")[1];
         } else {
