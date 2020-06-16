@@ -55,6 +55,7 @@ public class FusionExtractor {
 
     @NotNull
     private String extractKeyFusion(@NotNull String featureName){
+        //TODO: fix combi events
         if (featureName.contains("-")) {
             featureName = "fusions";
         }

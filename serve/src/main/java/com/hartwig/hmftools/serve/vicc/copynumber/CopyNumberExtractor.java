@@ -70,6 +70,7 @@ public class CopyNumberExtractor {
     }
 
     private String extractKeyAmplificationDeletion(@NotNull String featureName) {
+        //TODO: fix combi events
         if (featureName.contains(" ")) {
             featureName = featureName.split(" ", 2)[1].replaceAll("\\s+","");
         }
