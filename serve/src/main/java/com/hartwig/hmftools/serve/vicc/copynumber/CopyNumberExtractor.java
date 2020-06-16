@@ -51,30 +51,32 @@ public class CopyNumberExtractor {
 
 
     private boolean isAmplification(@NotNull Feature feature) {
-        String eventKeyAmplification = extractKeyAmplification(feature.name());
-        if (AMPLIFICATIONS.contains(eventKeyAmplification)) {
+        String eventKeyAmplification = extractKeyAmplificationDeletion(feature.name());
+        if (eventKeyAmplification.equals("Amplification")) {
             return true;
         } else {
             return false;
         }
-    }
-
-    private String extractKeyAmplification(@NotNull String featureName) {
-        return "Amplification";
     }
 
     private boolean isDeletion(@NotNull Feature feature) {
-        String eventKeyDeletion = extractKeyDeletion(feature.name());
+        String eventKeyDeletion = extractKeyAmplificationDeletion(feature.name());
 
-        if (DELETIONS.contains(eventKeyDeletion)) {
+        if (eventKeyDeletion.equals("Deletion")) {
             return true;
         } else {
             return false;
         }
     }
 
-    private String extractKeyDeletion(@NotNull String featureName) {
-        return "Amplification";
+    private String extractKeyAmplificationDeletion(@NotNull String featureName) {
+        if (AMPLIFICATIONS.contains(featureName)) {
+            return "Amplification";
+        } else if (DELETIONS.contains(featureName)) {
+            return "Deletion";
+        }else {
+            return Strings.EMPTY;
+        }
     }
 
     @NotNull
