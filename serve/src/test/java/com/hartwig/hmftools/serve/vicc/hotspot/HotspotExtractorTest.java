@@ -16,6 +16,7 @@ public class HotspotExtractorTest {
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("L755_T759del"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("G10dup"));
 
+        // Just plain wrong protein annotations
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation(Strings.EMPTY));
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("truncating"));
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("20LtoV"));
@@ -25,8 +26,16 @@ public class HotspotExtractorTest {
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L2"));
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L20Pdel5"));
 
+        // Splice variants are ignored by hotspot extractor:
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("963_D1010splice"));
+
+        // Not a correctly formatted insert (position not clear)
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("T599insTT"));
+
+        // Deletion is too long
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L4_T40del"));
+
+        // Wild-type mutations are ignored
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("V600X"));
     }
 }

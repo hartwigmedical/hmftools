@@ -142,14 +142,25 @@ public class HotspotExtractor {
         }
 
         boolean haveObservedNonDigit = !Character.isDigit(feature.charAt(2));
+        int firstNotDigit = -1;
         for (int i = 3; i < feature.length(); i++) {
             char charToEvaluate = feature.charAt(i);
             if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
                 return false;
             }
-            haveObservedNonDigit = haveObservedNonDigit || !Character.isDigit(charToEvaluate);
+            boolean isDigit = Character.isDigit(charToEvaluate);
+            if (!isDigit && firstNotDigit == -1) {
+                firstNotDigit = i;
+            }
+
+            haveObservedNonDigit = haveObservedNonDigit || !isDigit;
         }
 
-        return haveObservedNonDigit;
+        if (!haveObservedNonDigit) {
+            return false;
+        }
+
+        String newAminoAcid = feature.substring(firstNotDigit);
+        return !newAminoAcid.equals("X");
     }
 }

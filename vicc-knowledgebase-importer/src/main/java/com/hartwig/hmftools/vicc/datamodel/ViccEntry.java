@@ -47,9 +47,9 @@ public abstract class ViccEntry {
             return !transcriptId.isEmpty() ? transcriptId : null;
         }
 
+        // JAX Does not provide transcript information.
         // TODO Implemented for all sources.
         return null;
     }
-
 }
 
