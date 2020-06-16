@@ -55,6 +55,9 @@ public class FusionExtractor {
 
     @NotNull
     private String extractKeyFusion(@NotNull String featureName){
+        if (featureName.contains("-")) {
+            featureName = "fusions";
+        }
         if (featureName.toLowerCase().contains("fusions")) {
             return FUSION_PAIR;
         } else if (featureName.toLowerCase().contains("fusion")) {
