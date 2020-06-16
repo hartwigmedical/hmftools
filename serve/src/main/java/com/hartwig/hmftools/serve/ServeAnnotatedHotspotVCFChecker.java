@@ -18,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -51,11 +52,14 @@ public class ServeAnnotatedHotspotVCFChecker {
             totalCount++;
             String[] featureParts = variant.getAttributeAsString("feature", Strings.EMPTY).split("\\|");
             String featureGene = featureParts[0];
-            String featureTranscript = featureParts[1];
+            String featureTranscript = featureParts[1].equals("null") ? null : featureParts[1];
             String featureProteinAnnotation = featureParts[2];
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-            for (SnpEffAnnotation annotation : annotations) {
-                if (annotation.isTranscriptFeature() && annotation.transcript().equals(featureTranscript)) {
+
+            if (featureTranscript != null) {
+                SnpEffAnnotation annotation = annotationForTranscript(annotations, featureTranscript);
+
+                if (annotation != null) {
                     String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
                     if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
                         LOGGER.warn("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
@@ -80,6 +84,29 @@ public class ServeAnnotatedHotspotVCFChecker {
                         }
                         matchCount++;
                     }
+                } else {
+                    LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", featureTranscript, featureGene);
+                    diffCount++;
+                }
+            } else {
+                boolean matchFound = false;
+                for (SnpEffAnnotation annotation : annotations) {
+                    if (annotation.isTranscriptFeature()) {
+                        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                        if (snpeffProteinAnnotation.equals(curateStartCodonAnnotation(featureProteinAnnotation))) {
+                            matchFound = true;
+                        }
+                    }
+                }
+
+                if (matchFound) {
+                    LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", featureProteinAnnotation, featureGene);
+                    matchCount++;
+                } else {
+                    LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
+                            featureProteinAnnotation,
+                            featureGene);
+                    diffCount++;
                 }
             }
         }
@@ -93,8 +120,17 @@ public class ServeAnnotatedHotspotVCFChecker {
         checkForUnusedMappings();
     }
 
-    private boolean isSameAnnotation(@NotNull String transcript, @NotNull String featureAnnotation,
-            @NotNull String snpeffAnnotation) {
+    @Nullable
+    private static SnpEffAnnotation annotationForTranscript(@NotNull List<SnpEffAnnotation> annotations, @NotNull String transcript) {
+        for (SnpEffAnnotation annotation : annotations) {
+            if (annotation.isTranscriptFeature() && annotation.transcript().equals(transcript)) {
+                return annotation;
+            }
+        }
+        return null;
+    }
+
+    private boolean isSameAnnotation(@NotNull String transcript, @NotNull String featureAnnotation, @NotNull String snpeffAnnotation) {
         String curatedFeatureAnnotation = curateStartCodonAnnotation(featureAnnotation);
         if (curatedFeatureAnnotation.equals(snpeffAnnotation)) {
             return true;
