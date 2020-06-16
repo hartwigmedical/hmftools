@@ -16,24 +16,24 @@ public class FeatureCuratorTest {
 
     @Test
     public void canCurateFeatures() {
-        CurationKey firstKey = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.keySet().iterator().next();
-        String firstMappedFeature = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.get(firstKey);
+        CurationKey firstOncoKbKey = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.keySet().iterator().next();
+        String firstMappedFeature = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.get(firstOncoKbKey);
 
-        ViccEntry entry =
-                ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB, ViccTestFactory.testOncoKbWithTranscript(firstKey.transcript()));
+        ViccEntry entry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
+                ViccTestFactory.testOncoKbWithTranscript(firstOncoKbKey.transcript()));
 
-        Feature feature = ImmutableFeature.builder().geneSymbol(firstKey.gene()).name(firstKey.featureName()).build();
+        Feature feature = ImmutableFeature.builder().geneSymbol(firstOncoKbKey.gene()).name(firstOncoKbKey.featureName()).build();
 
         assertEquals(firstMappedFeature, new FeatureCurator().curate(entry, feature).name());
     }
 
     @Test
     public void canBlacklistFeatures() {
-        CurationKey firstKey = CurationFactory.ONCOKB_FEATURE_BLACKLIST.iterator().next();
-        ViccEntry entry =
-                ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB, ViccTestFactory.testOncoKbWithTranscript(firstKey.transcript()));
+        CurationKey firstOncoKbKey = CurationFactory.ONCOKB_FEATURE_BLACKLIST.iterator().next();
+        ViccEntry entry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
+                ViccTestFactory.testOncoKbWithTranscript(firstOncoKbKey.transcript()));
 
-        Feature feature = ImmutableFeature.builder().geneSymbol(firstKey.gene()).name(firstKey.featureName()).build();
+        Feature feature = ImmutableFeature.builder().geneSymbol(firstOncoKbKey.gene()).name(firstOncoKbKey.featureName()).build();
         assertNull(new FeatureCurator().curate(entry, feature));
     }
 
@@ -45,16 +45,16 @@ public class FeatureCuratorTest {
         Feature feature = ImmutableFeature.builder().geneSymbol("any").name("any").build();
 
         assertNotNull(curator.curate(entry, feature));
-        int unusedCurationKeyCount = curator.unusedCurationKeys().size();
+        int unusedCurationKeyCount = curator.unusedCurationKeysPerSource().get(ViccSource.ONCOKB).size();
 
         CurationKey blacklistKey = CurationFactory.ONCOKB_FEATURE_BLACKLIST.iterator().next();
-        ViccEntry blacklistEntry =
-                ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB, ViccTestFactory.testOncoKbWithTranscript(blacklistKey.transcript()));
+        ViccEntry blacklistEntry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
+                ViccTestFactory.testOncoKbWithTranscript(blacklistKey.transcript()));
 
         Feature blacklistFeature = ImmutableFeature.builder().geneSymbol(blacklistKey.gene()).name(blacklistKey.featureName()).build();
 
         assertNull(curator.curate(blacklistEntry, blacklistFeature));
-        int newUnusedCurationKeyCount = curator.unusedCurationKeys().size();
+        int newUnusedCurationKeyCount = curator.unusedCurationKeysPerSource().get(ViccSource.ONCOKB).size();
         assertEquals(1, unusedCurationKeyCount - newUnusedCurationKeyCount);
     }
 }

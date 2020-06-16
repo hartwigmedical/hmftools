@@ -32,8 +32,9 @@ public class HotspotExtractorTest {
         // Not a correctly formatted insert (position not clear)
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("T599insTT"));
 
-        // Deletion is too long
+        // Inframe event is too long
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L4_T40del"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L698_S1037dup"));
 
         // Wild-type mutations are ignored
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("V600X"));

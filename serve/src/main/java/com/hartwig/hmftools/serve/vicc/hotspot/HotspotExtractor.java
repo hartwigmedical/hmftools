@@ -31,7 +31,7 @@ public class HotspotExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(HotspotExtractor.class);
 
-    private static final int MAX_AA_DELETION_LENGTH = 17; // We don't call deletions longer than 17 AA using standard indels.
+    private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
     @NotNull
     private final ProteinResolver proteinResolver;
@@ -110,13 +110,23 @@ public class HotspotExtractor {
         assert feature.contains(HGVS_RANGE_INDICATOR);
 
         // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
-        String featureToTest = feature.split(HGVS_RANGE_INDICATOR)[1];
-        if (featureToTest.contains(HGVS_INSERTION) || featureToTest.contains(HGVS_DUPLICATION)) {
-            return true;
-        } else if (featureToTest.contains(HGVS_DELETION)) {
-            long start = Long.parseLong(feature.split(HGVS_RANGE_INDICATOR)[0].substring(1));
-            long end = Long.parseLong(featureToTest.substring(1, featureToTest.indexOf(HGVS_DELETION)));
-            return (1 + end - start) <= MAX_AA_DELETION_LENGTH;
+        String[] featureParts = feature.split(HGVS_RANGE_INDICATOR);
+        String featureStartPart = featureParts[0];
+        String featureEndPart = featureParts[1];
+        if (featureEndPart.contains(HGVS_INSERTION) || featureEndPart.contains(HGVS_DUPLICATION)
+                || featureEndPart.contains(HGVS_DELETION)) {
+            int indexOfEvent;
+            if (featureEndPart.contains(HGVS_INSERTION)) {
+                indexOfEvent = featureEndPart.indexOf(HGVS_INSERTION);
+            } else if (featureEndPart.contains(HGVS_DUPLICATION)) {
+                indexOfEvent = featureEndPart.indexOf(HGVS_DUPLICATION);
+            } else {
+                indexOfEvent = featureEndPart.indexOf(HGVS_DELETION);
+            }
+
+            long start = Long.parseLong(featureStartPart.substring(1));
+            long end = Long.parseLong(featureEndPart.substring(1, indexOfEvent));
+            return 3 * (1 + end - start) <= MAX_INFRAME_BASE_LENGTH;
         } else {
             return false;
         }

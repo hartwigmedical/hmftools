@@ -9,13 +9,47 @@ import com.google.common.collect.Sets;
 final class CurationFactory {
 
     static final Map<CurationKey, String> ONCOKB_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
+    static final Map<CurationKey, String> JAX_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
 
     static final Set<CurationKey> ONCOKB_FEATURE_BLACKLIST = Sets.newHashSet();
+    static final Set<CurationKey> JAX_FEATURE_BLACKLIST = Sets.newHashSet();
 
     static {
+        populateOncoKBCuration();
+        populateJaxCuration();
+    }
+
+    private static void populateJaxCuration() {
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3CA", null, "E545k"), "E545K");
+
+        // These mappings are to work around the missing transcripts in JAX.
+        // We map every mutation that appears on both the canonical + non-canonical form to its canonical form.
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "Y641F"), "Y646F");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "Y641H"), "Y646H");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "Y641N"), "Y646N");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "Y641S"), "Y646S");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR2", null, "V564I"), "V565I");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR3", null, "Y373C"), "Y375C");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR3", null, "K650E"), "K652E");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "L1195V"), "L1213V");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "Y1230H"), "Y1248H");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "M1250T"), "M1268T");
+
+        // This is not necessarily wrong, but we skip annotations that imply logical OR for now.
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("BRAF", null, "V600E/K"));
+
+        // TODO: Double-check below list
+        // No valid transcript found?
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL"));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "E612_F613insGYVDFREYEYDLKWEFRPRENLEF"));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("APC", null, "S1197*"));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("PIK3CA", null, "R425L"));
+    }
+
+    private static void populateOncoKBCuration() {
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("EPAS1", "ENST00000263734", "533_534del"), "I533_P534del");
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("EPAS1", "ENST00000263734", "534_536del"), "P534_D536del");
-        ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("KIT", "ENST00000288135", "V559del"),"V560del");
+        ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("KIT", "ENST00000288135", "V559del"), "V560del");
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("PTEN", "ENST00000371953", "I32del"), "I33del");
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
 

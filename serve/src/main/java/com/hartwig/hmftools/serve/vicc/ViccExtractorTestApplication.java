@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.curation.CurationKey;
 import com.hartwig.hmftools.serve.vicc.curation.FeatureCurator;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
@@ -75,14 +77,10 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for whether transvar is enabled", TRANSVAR_ENABLED);
 
-        FeatureCurator curator = new FeatureCurator();
-
         List<ViccSource> sources = Lists.newArrayList(ViccSource.CGI);
-        LOGGER.info("Reading VICC json from '{}' with sources '{}'", viccJsonPath, sources);
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sources).maxEntriesToInclude(MAX_ENTRIES).build();
-        List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection), curator);
-        LOGGER.info(" Read and curated {} entries", viccEntries.size());
+        List<ViccEntry> viccEntries = readAndCurate(viccJsonPath, querySelection);
 
         HotspotExtractor hotspotExtractor =
                 TRANSVAR_ENABLED ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotExtractor.dummy();
@@ -101,6 +99,31 @@ public class ViccExtractorTestApplication {
         if (TRANSVAR_ENABLED) {
             writeHotspots(hotspotVcf, resultsPerEntry);
         }
+    }
+
+    @NotNull
+    private static List<ViccEntry> readAndCurate(@NotNull String viccJsonPath, @NotNull ViccQuerySelection querySelection)
+            throws IOException {
+        FeatureCurator curator = new FeatureCurator();
+
+        LOGGER.info("Reading VICC json from '{}' with sources '{}'", viccJsonPath, querySelection.sourcesToFilterOn());
+        List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection), curator);
+        LOGGER.info(" Read and curated {} entries", viccEntries.size());
+
+        LOGGER.info("Analyzing usage of curation configuration keys");
+        for (Map.Entry<ViccSource, Set<CurationKey>> entry : curator.unusedCurationKeysPerSource().entrySet()) {
+            ViccSource source = entry.getKey();
+            Set<CurationKey> unusedKeys = entry.getValue();
+            if (!unusedKeys.isEmpty()) {
+                LOGGER.warn("Found {} unused curation configuration entries for {}", unusedKeys.size(), source);
+                for (CurationKey unusedKey : unusedKeys) {
+                    LOGGER.warn(" - {}", unusedKey);
+                }
+            }
+        }
+        LOGGER.info("Finished analyzing usage of curation configuration keys");
+
+        return viccEntries;
     }
 
     @NotNull
