@@ -9,7 +9,7 @@ import org.junit.Test;
 public class FeatureTest {
 
     @Test
-    public void canCleanNames() {
+    public void canDeriveProteinAnnotation() {
         assertEquals("E709K", createFeatureWithName("E709K").proteinAnnotation());
         assertEquals("E709K", createFeatureWithName("EGFR E709K").proteinAnnotation());
         assertEquals("KIT", createFeatureWithName("KIT ").proteinAnnotation());
