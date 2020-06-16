@@ -11,6 +11,7 @@ public class HotspotExtractorTest {
 
     @Test
     public void canAssessWhetherFeatureIsProteinAnnotation() {
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("K5N"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("L2230V"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("V5del"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("L755_T759del"));

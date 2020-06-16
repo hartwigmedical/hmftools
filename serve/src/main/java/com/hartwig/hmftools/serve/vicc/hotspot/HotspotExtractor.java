@@ -153,7 +153,7 @@ public class HotspotExtractor {
         }
 
         boolean haveObservedNonDigit = !Character.isDigit(feature.charAt(2));
-        int firstNotDigit = -1;
+        int firstNotDigit = haveObservedNonDigit ? 2 : -1;
         for (int i = 3; i < feature.length(); i++) {
             char charToEvaluate = feature.charAt(i);
             if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {

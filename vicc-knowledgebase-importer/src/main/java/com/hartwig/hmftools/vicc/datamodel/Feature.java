@@ -14,8 +14,18 @@ public abstract class Feature {
     @Value.Derived
     public String proteinAnnotation() {
         String trimmedName = name().trim();
-        // Many KBs include the gene in the feature name in some form (eg "EGFR E709K").
-        return trimmedName.contains(" ") ? trimmedName.split(" ")[1] : trimmedName;
+        // Many KBs include the gene in the feature name in some form (eg "EGFR E709K" or "EGFR:E709K").
+        String proteinAnnotation;
+        if (trimmedName.contains(" ")) {
+            proteinAnnotation = trimmedName.split(" ")[1];
+        } else if (trimmedName.contains(":")) {
+            proteinAnnotation = trimmedName.split(":")[1];
+        } else {
+            proteinAnnotation = trimmedName;
+        }
+
+        // Some KBs include "p." in front of the protein annotation
+        return proteinAnnotation.startsWith("p.") ? proteinAnnotation.substring(2) : proteinAnnotation;
     }
 
     @NotNull

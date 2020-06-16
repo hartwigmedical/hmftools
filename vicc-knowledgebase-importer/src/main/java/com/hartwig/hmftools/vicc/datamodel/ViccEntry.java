@@ -2,6 +2,8 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
+import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
+import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 
 import org.immutables.value.Value;
@@ -42,14 +44,29 @@ public abstract class ViccEntry {
     @Nullable
     @Value.Derived
     public String transcriptId() {
-        if (source() == ViccSource.ONCOKB) {
-            String transcriptId = ((OncoKb)kbSpecificObject()).transcriptID();
-            return !transcriptId.isEmpty() ? transcriptId : null;
+        switch (source()) {
+            case ONCOKB: {
+                String transcriptId = ((OncoKb) kbSpecificObject()).transcriptID();
+                return !transcriptId.isEmpty() ? transcriptId : null;
+            }
+            case CIVIC: {
+                String transcriptId = ((Civic) kbSpecificObject()).coordinates().representativeTranscript();
+                if (transcriptId == null) {
+                    return null;
+                }
+                int versionSeparator = transcriptId.indexOf(".");
+                return versionSeparator >= 0 ? transcriptId.substring(1, versionSeparator - 1) : transcriptId;
+            }
+            case CGI: {
+                List<String> transcripts = ((Cgi) kbSpecificObject()).transcripts();
+                // Even though a vicc entry could have multiple different transcripts, in practice every vicc entry with more than one
+                // transcript only has one distinct transcript.
+                return !transcripts.isEmpty() ? transcripts.get(0) : null;
+            }
+            case JAX:
+            default:
+                return null;
         }
-
-        // JAX Does not provide transcript information.
-        // TODO Implemented for all sources.
-        return null;
     }
 }
 
