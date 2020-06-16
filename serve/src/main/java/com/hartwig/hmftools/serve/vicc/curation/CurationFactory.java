@@ -35,6 +35,10 @@ final class CurationFactory {
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET Y1230H "), "MET Y1248H ");
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET M1250T "), "MET M1268T ");
 
+        // These mappings are identical but used concurrently
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EGFR", null, "EGFR I744_K745insKIPVAI "), "EGFR K745_E746insIPVAIK ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("KIT", null, "KIT V559del "), "KIT V560del ");
+
         // This is not necessarily wrong, but we skip annotations that imply logical OR for now.
         JAX_FEATURE_BLACKLIST.add(new CurationKey("BRAF", null, "BRAF V600E/K "));
 
