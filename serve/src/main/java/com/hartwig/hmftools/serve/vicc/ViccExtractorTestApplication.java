@@ -130,6 +130,7 @@ public class ViccExtractorTestApplication {
 
     @NotNull
     private static List<ViccEntry> curate(@NotNull List<ViccEntry> viccEntries, @NotNull FeatureCurator curator) {
+        // TODO: Move to a function inside the curator and remove entries which have a blacklisted feature.
         List<ViccEntry> curatedViccEntries = Lists.newArrayList();
 
         for (ViccEntry entry : viccEntries) {
