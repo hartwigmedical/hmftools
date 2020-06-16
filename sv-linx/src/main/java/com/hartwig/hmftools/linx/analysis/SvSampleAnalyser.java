@@ -2,41 +2,17 @@ package com.hartwig.hmftools.linx.analysis;
 
 import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_LINE;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_ISOLATED_BE;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SAME_ORIENT;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SIMPLE_DUP;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
-import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
-import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +20,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
@@ -69,7 +44,6 @@ import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.annotators.PseudoGeneFinder;
 import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
-import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
@@ -86,21 +60,15 @@ import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
-import org.jetbrains.annotations.Nullable;
-
 public class SvSampleAnalyser {
 
     private final LinxConfig mConfig;
     private final ClusterAnalyser mAnalyser;
+    private final CohortDataWriter mCohortDataWriter;
 
     // data per run (ie sample)
     private String mSampleId;
     private final List<SvVarData> mAllVariants; // full list of SVs
-
-    private BufferedWriter mSvFileWriter;
-    private BufferedWriter mClusterFileWriter;
-    private BufferedWriter mLinksFileWriter;
-    private final VisualiserWriter mVisWriter;
 
     private final FragileSiteAnnotator mFragileSiteAnnotator;
     private final LineElementAnnotator mLineElementAnnotator;
@@ -109,7 +77,7 @@ public class SvSampleAnalyser {
     private final KataegisAnnotator mKataegisAnnotator;
     private CnDataLoader mCnDataLoader;
     private final PseudoGeneFinder mPseudoGeneFinder;
-    private IndelAnnotator mIndelAnnotator;
+    private final IndelAnnotator mIndelAnnotator;
 
     private boolean mIsValid;
 
@@ -124,16 +92,13 @@ public class SvSampleAnalyser {
         mSampleId = "";
 
         mAnalyser = new ClusterAnalyser(config);
-        mVisWriter = new VisualiserWriter(config.OutputDataPath, config.Output.WriteVisualisationData, config.hasMultipleSamples());
 
         mAllVariants = Lists.newArrayList();
         mCnDataLoader = null;
 
         mIsValid = true;
 
-        mSvFileWriter = null;
-        mLinksFileWriter = null;
-        mClusterFileWriter = null;
+        mCohortDataWriter = new CohortDataWriter(config, mAnalyser);
 
         mFragileSiteAnnotator = new FragileSiteAnnotator();
         mFragileSiteAnnotator.loadFragileSitesFile(mConfig.FragileSiteFile);
@@ -142,7 +107,7 @@ public class SvSampleAnalyser {
         mLineElementAnnotator.loadLineElementsFile(mConfig.LineElementFile);
         mAnalyser.setLineAnnotator(mLineElementAnnotator);
 
-        mPseudoGeneFinder = new PseudoGeneFinder(mVisWriter);
+        mPseudoGeneFinder = new PseudoGeneFinder(mCohortDataWriter.getVisWriter());
         mLineElementAnnotator.setPseudoGeneFinder(mPseudoGeneFinder);
 
         mReplicationOriginAnnotator = new ReplicationOriginAnnotator();
@@ -154,24 +119,19 @@ public class SvSampleAnalyser {
         mKataegisAnnotator = new KataegisAnnotator(mConfig.OutputDataPath);
         mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
 
-        if(config.IndelAnnotation)
-        {
-            mIndelAnnotator = new IndelAnnotator(dbAccess, config);
-        }
+        mIndelAnnotator = config.IndelAnnotation ? new IndelAnnotator(dbAccess, config) : null;
 
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
         mPcAnnotation = new PerformanceCounter("Annotation");
         mPcWrite = new PerformanceCounter("WriteCSV");
-
-        createOutputFiles();
     }
 
     public final List<SvVarData> getVariants() { return mAllVariants; }
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public boolean inValidState() { return mIsValid; }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mAnalyser.getState().getChrBreakendMap(); }
-    public final VisualiserWriter getVisWriter() { return mVisWriter; }
+    public final VisualiserWriter getVisWriter() { return mCohortDataWriter.getVisWriter(); }
 
     public void setCnDataLoader(CnDataLoader cnAnalyser)
     {
@@ -203,7 +163,7 @@ public class SvSampleAnalyser {
 
         mSampleId = sampleId;
         mAllVariants.addAll(variants);
-        mVisWriter.setSampleId(sampleId);
+        mCohortDataWriter.getVisWriter().setSampleId(sampleId);
 
         if(!mConfig.IsGermline)
         {
@@ -384,16 +344,19 @@ public class SvSampleAnalyser {
 
         boolean prepareSampleData = mConfig.isSingleSample() || mConfig.UploadToDB;
 
-        List<LinxSvData> linxSvData = prepareSampleData ? Lists.newArrayList() : null;
-        List<LinxCluster> clusterData = prepareSampleData ? Lists.newArrayList() : null;
-        List<LinxLink> linksData = prepareSampleData ? Lists.newArrayList() : null;
-        List<LinxViralInsertFile> viralInserts = prepareSampleData ? generateViralInserts() : null;
+        final List<LinxSvData> linxSvData = prepareSampleData ? generateSvDataOutput() : null;
+        final List<LinxCluster> clusterData = prepareSampleData ? generateClusterOutput() : null;
+        final List<LinxLink> linksData = prepareSampleData ? generateLinksOutput() : null;
+        final List<LinxViralInsertFile> viralInserts = prepareSampleData ? generateViralInserts() : null;
 
-        generateSvDataOutput(linxSvData);
-        generateClusterOutput(clusterData);
-        generateLinksOutput(linksData);
+        if(mConfig.hasMultipleSamples())
+        {
+            mCohortDataWriter.writeSvData(mSampleId, mAllVariants, mViralInsertAnnotator);
+            mCohortDataWriter.writeLinksData(mSampleId, mAnalyser.getClusters());
+            mCohortDataWriter.writeClusterData(mSampleId, mAnalyser.getClusters());
+        }
 
-        mVisWriter.writeOutput(mAnalyser.getClusters(), mAllVariants, mCnDataLoader.getChrCnDataMap());
+        mCohortDataWriter.getVisWriter().writeOutput(mAnalyser.getClusters(), mAllVariants, mCnDataLoader.getChrCnDataMap());
 
         if(mConfig.isSingleSample())
         {
@@ -491,524 +454,149 @@ public class SvSampleAnalyser {
                 mCnDataLoader.getChrCnDataMap());
     }
 
-    private void createOutputFiles()
+
+
+    private final List<LinxSvData> generateSvDataOutput()
     {
-        if(!mConfig.hasMultipleSamples())
-            return;
+        final List<LinxSvData> linxSvData = Lists.newArrayList();
 
-        if(mSvFileWriter != null || mClusterFileWriter != null || mLinksFileWriter != null)
-            return;
-
-        // open and write headers for multi-sample output files
-        createSvDataFile();
-        createClusterFile();
-        createLinksFile();
-    }
-
-    private void createSvDataFile()
-    {
-        try
+        for(final SvVarData var : mAllVariants)
         {
-            String outputFileName = mConfig.OutputDataPath + "LNX_SVS.csv";
+            final SvCluster cluster = var.getCluster();
 
-            mSvFileWriter = createBufferedWriter(outputFileName, false);
-
-            // definitional fields
-            mSvFileWriter.write("SampleId,Id,Type,ClusterId,ClusterCount");
-            mSvFileWriter.write(",ChrStart,PosStart,OrientStart,ArmStart,ChrEnd,PosEnd,OrientEnd,ArmEnd");
-
-            // position and copy number
-            mSvFileWriter.write(",CNStart,CNChgStart,CNEnd,CNChgEnd,Jcn,JcnMin,JcnMax");
-
-            // cluster info
-            mSvFileWriter.write(",ClusterReason,ClusterDesc,ResolvedType");
-
-            mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd");
-
-            // linked pair info
-            mSvFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd,AsmbStart,AsmbEnd");
-
-            // chain info
-            mSvFileWriter.write(",ChainId,ChainCount,ChainIndex");
-
-            // proximity info and other link info
-            mSvFileWriter.write(",NearestLen,NearestType,DBLenStart,DBLenEnd");
-
-            // proximity info and other link info
-            mSvFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackInfoEnd");
-
-            // local topology from arm cluster
-            mSvFileWriter.write(",LocTopIdStart,LocTopTypeStart,LocTopTIStart,LocTopIdEnd,LocTopTypeEnd,LocTopTIEnd");
-
-            // gene & replication info
-            mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd,VirusName");
-
-            if(mConfig.Output.WriteSvData)
+            if(cluster == null)
             {
-                // extra copy number info
-                mSvFileWriter.write(",MinorAPStartPrev,MinorAPStartPost,MinorAPEndPrev,MinorAPEndPost,AFStart,AFEnd");
-
-                // SV table info
-                mSvFileWriter.write(",HomologyStart,HomologyEnd,InsertSeq,Imprecise,QualScore");
-                mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments");
-                mSvFileWriter.write(",Recovered,RepeatClass,RepeatType,AnchorStart,AnchorEnd");
-                mAnalyser.writeComponentSvHeaders(mSvFileWriter);
+                LNX_LOGGER.error("SV({}) not assigned to any cluster", var.posId());
+                continue;
             }
 
-            mSvFileWriter.newLine();
+            final SvArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
+            final SvArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
+
+            linxSvData.add(ImmutableLinxSvData.builder()
+                    .svId(var.id())
+                    .clusterId(cluster.id())
+                    .clusterReason(var.getClusterReason())
+                    .fragileSiteStart(var.isFragileSite(true))
+                    .fragileSiteEnd(var.isFragileSite(false))
+                    .isFoldback(var.isFoldback())
+                    .lineTypeStart(var.getLineElement(true))
+                    .lineTypeEnd(var.getLineElement(false))
+                    .junctionCopyNumberMin(var.jcnMin())
+                    .junctionCopyNumberMax(var.jcnMax())
+                    .geneStart(var.getGeneInBreakend(true, false))
+                    .geneEnd(var.getGeneInBreakend(true, false))
+                    .replicationTimingStart(var.getReplicationOrigin(true))
+                    .replicationTimingEnd(var.getReplicationOrigin(false))
+                    .localTopologyIdStart(armClusterStart.id())
+                    .localTopologyIdEnd(armClusterEnd != null ? armClusterEnd.id() : -1)
+                    .localTopologyStart(armClusterStart.getTypeStr())
+                    .localTopologyEnd(armClusterEnd != null ? armClusterEnd.getTypeStr() : "")
+                    .localTICountStart(armClusterStart.getTICount())
+                    .localTICountEnd(armClusterEnd != null ? armClusterEnd.getTICount() : 0)
+                    .build());
         }
-        catch(IOException e)
-        {
-            LNX_LOGGER.error("failed to open and write output file headers");
-        }
+
+        return linxSvData;
     }
 
-    private static final int INF_DB_MARKER = -2000;
-
-    private void generateSvDataOutput(@Nullable  List<LinxSvData> linxSvData)
+    private final List<LinxCluster> generateClusterOutput()
     {
-        try
+        final List<LinxCluster> clusterData = Lists.newArrayList();
+
+        for(final SvCluster cluster : getClusters())
         {
-            for(final SvVarData var : mAllVariants)
+            int clusterSvCount = cluster.getSvCount();
+
+            if(clusterSvCount == 1 && !mConfig.Output.WriteSingleSVClusters)
+                continue;
+
+            ResolvedType resolvedType = cluster.getResolvedType();
+
+            final String superType = getSuperType(cluster);
+
+                clusterData.add(ImmutableLinxCluster.builder()
+                        .clusterId(cluster.id())
+                        .resolvedType(superType)
+                        .synthetic(cluster.isSyntheticType())
+                        .subClonal(cluster.isSubclonal())
+                        .subType(cluster.getResolvedType().toString())
+                        .clusterCount(clusterSvCount)
+                        .clusterDesc(cluster.getDesc())
+                        .build());
+        }
+
+        return clusterData;
+    }
+
+    private final List<LinxLink> generateLinksOutput()
+    {
+        final List<LinxLink> linksData = Lists.newArrayList();
+
+        if(!mConfig.Output.WriteLinks)
+            return linksData;
+
+        for(final SvCluster cluster : getClusters())
+        {
+            int clusterSvCount = cluster.getSvCount();
+
+            List<SvChain> chains = cluster.getChains();
+
+            for (final SvChain chain : chains)
             {
-                final SvCluster cluster = var.getCluster();
+                int chainSvCount = chain.getSvCount();
+                boolean chainConsistent = chain.isConsistent();
 
-                if(cluster == null)
+                List<SvLinkedPair> uniquePairs = Lists.newArrayList();
+                final List<SvLinkedPair> chainLinks = chain.getLinkedPairs();
+
+                for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                 {
-                    LNX_LOGGER.error("SV({}) not assigned to any cluster", var.posId());
-                    continue;
-                }
+                    final SvLinkedPair pair = chainLinks.get(chainIndex);
 
-                final StructuralVariantData dbData = var.getSvData();
+                    if(uniquePairs.stream().anyMatch(x -> x.matches(pair)))
+                        continue;
 
-                final SvArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
+                    uniquePairs.add(pair);
 
-                final SvArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
+                    String chainIndexStr = String.valueOf(chainIndex);
 
-                if(mSvFileWriter != null)
-                {
-                    mSvFileWriter.write(String.format("%s,%d,%s,%d,%d",
-                            mSampleId, var.id(), var.typeStr(), cluster.id(), cluster.getSvCount()));
-
-                    mSvFileWriter.write(String.format(",%s,%d,%d,%s,%s,%d,%d,%s",
-                            var.chromosome(true), var.position(true), var.orientation(true), asStr(var.arm(true)),
-                            var.chromosome(false), var.position(false), var.orientation(false), asStr(var.arm(false))));
-
-                    mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                            dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
-                            dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(),
-                            dbData.junctionCopyNumber(), var.jcnMin(), var.jcnMax()));
-
-                    mSvFileWriter.write(String.format(",%s,%s,%s",
-                            var.getClusterReason(), cluster.getDesc(), cluster.getResolvedType()));
-
-                    mSvFileWriter.write(String.format(",%s,%s,%s,%s",
-                            var.isFragileSite(true), var.isFragileSite(false),
-                            var.getLineElement(true), var.getLineElement(false)));
-
-                    // linked pair info
-                    for (int be = SE_START; be <= SE_END; ++be)
+                    for(int j = chainIndex + 1; j < chainLinks.size(); ++j)
                     {
-                        boolean isStart = isStart(be);
-                        final SvLinkedPair link = var.getLinkedPair(isStart);
-                        if (link != null)
+                        if(chainLinks.get(j).matches(pair))
                         {
-                            mSvFileWriter.write(String.format(",%s,%d",
-                                    link.first() == var ? link.second().id() : link.first().id(), link.length()));
-                        }
-                        else
-                        {
-                            mSvFileWriter.write(",,-1");
+                            chainIndexStr = appendStr(chainIndexStr, String.valueOf(j), ';');
                         }
                     }
 
-                    // assembly info
-                    mSvFileWriter.write(String.format(",%s,%s",
-                            var.getAssemblyData(true), var.getAssemblyData(false)));
+                    final SvBreakend beStart = pair.getBreakend(true);
+                    final SvBreakend beEnd = pair.getBreakend(false);
 
-                    // chain info
-                    final SvChain chain = cluster.findChain(var);
-                    String chainStr = "";
+                    final String linkArm = beStart.arm() == beEnd.arm() ? asStr(beStart.arm()) : asStr(beStart.arm()) + "_" + asStr(beEnd.arm());
 
-                    if (chain != null)
-                    {
-                        chainStr = String.format(",%d,%d,%s", chain.id(), chain.getSvCount(), chain.getSvIndices(var));
-                    }
-                    else
-                    {
-                        chainStr = String.format(",%d,0,", cluster.getChainId(var));
-                    }
-
-                    mSvFileWriter.write(chainStr);
-
-                    // only log DB lengths if the partner is in the cluster
-                    final SvLinkedPair dbStart = var.getDBLink(true);
-                    final SvLinkedPair dbEnd = var.getDBLink(false);
-
-                    int dbLenStart = NO_DB_MARKER;
-                    int dbLenEnd = NO_DB_MARKER;
-
-                    if(dbStart != null && cluster.getSVs().contains(dbStart.getOtherSV(var)))
-                    {
-                        dbLenStart = (!var.isInferredSgl() && !dbStart.getOtherSV(var).isInferredSgl()) ? dbStart.length() : INF_DB_MARKER;
-                    }
-
-                    if(dbEnd != null && cluster.getSVs().contains(dbEnd.getOtherSV(var)))
-                    {
-                        dbLenEnd = (!var.isInferredSgl() && !dbEnd.getOtherSV(var).isInferredSgl()) ? dbEnd.length() : INF_DB_MARKER;
-                    }
-
-                    mSvFileWriter.write(String.format(",%d,%s,%d,%d",
-                            var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd));
-
-                    mSvFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s",
-                            var.getFoldbackId(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
-                            var.getFoldbackId(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
-
-                    for (int be = SE_START; be <= SE_END; ++be)
-                    {
-                        SvArmCluster armCluster = be == SE_START ? armClusterStart : armClusterEnd;
-
-                        if (armCluster != null)
-                            mSvFileWriter.write(String.format(",%d,%s,%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
-                        else
-                            mSvFileWriter.write(",-1,,0");
-                    }
-
-                    String virusName = "";
-
-                    if(mViralInsertAnnotator != null)
-                    {
-                        final String[] viralInsertData = mViralInsertAnnotator.matchesViralInsert(var);
-
-                        if (viralInsertData != null)
-                            virusName = viralInsertData[VH_NAME];
-                    }
-
-                    mSvFileWriter.write(String.format(",%s,%s,%.4f,%.4f,%s",
-                            var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
-                            var.getReplicationOrigin(true), var.getReplicationOrigin(false), virusName));
-
-                    if(mConfig.Output.WriteSvData)
-                    {
-                        mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                                var.getBreakend(true).minorAlleleJcn(true),
-                                var.getBreakend(true).minorAlleleJcn(false),
-                                !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(true) : 0,
-                                !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(false) : 0,
-                                dbData.adjustedStartAF(), dbData.adjustedEndAF()));
-
-                        final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
-
-                        mSvFileWriter.write(String.format(",%s,%s,%s,%s,%.0f,%s,%s,%s",
-                                dbData.startHomologySequence(), dbData.endHomologySequence(),
-                                dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
-                                dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments));
-
-                        mSvFileWriter.write(String.format(",%s,%s,%s,%d,%d",
-                                dbData.recovered(), dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
-                                dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
-
-                        mAnalyser.writeComponentSvData(mSvFileWriter, var);
-                    }
-
-                    mSvFileWriter.newLine();
-                }
-
-                if(linxSvData != null)
-                {
-                    linxSvData.add(ImmutableLinxSvData.builder()
-                            .svId(var.id())
+                    linksData.add(ImmutableLinxLink.builder()
                             .clusterId(cluster.id())
-                            .clusterReason(var.getClusterReason())
-                            .fragileSiteStart(var.isFragileSite(true))
-                            .fragileSiteEnd(var.isFragileSite(false))
-                            .isFoldback(var.isFoldback())
-                            .lineTypeStart(var.getLineElement(true))
-                            .lineTypeEnd(var.getLineElement(false))
-                            .junctionCopyNumberMin(var.jcnMin())
-                            .junctionCopyNumberMax(var.jcnMax())
-                            .geneStart(var.getGeneInBreakend(true, false))
-                            .geneEnd(var.getGeneInBreakend(true, false))
-                            .replicationTimingStart(var.getReplicationOrigin(true))
-                            .replicationTimingEnd(var.getReplicationOrigin(false))
-                            .localTopologyIdStart(armClusterStart.id())
-                            .localTopologyIdEnd(armClusterEnd != null ? armClusterEnd.id() : -1)
-                            .localTopologyStart(armClusterStart.getTypeStr())
-                            .localTopologyEnd(armClusterEnd != null ? armClusterEnd.getTypeStr() : "")
-                            .localTICountStart(armClusterStart.getTICount())
-                            .localTICountEnd(armClusterEnd != null ? armClusterEnd.getTICount() : 0)
+                            .chainId(chain.id())
+                            .chainCount(chainSvCount)
+                            .chainIndex(chainIndexStr)
+                            .lowerSvId(beStart.getSV().id())
+                            .upperSvId(beEnd.getSV().id())
+                            .lowerBreakendIsStart(beStart.usesStart())
+                            .upperBreakendIsStart(beEnd.usesStart())
+                            .chromosome(beStart.chromosome())
+                            .arm(linkArm)
+                            .assembled(pair.isAssembled())
+                            .traversedSVCount(pair.getTraversedSVCount())
+                            .length(pair.length())
+                            .junctionCopyNumber(DatabaseUtil.decimal(chain.jcn()))
+                            .junctionCopyNumberUncertainty(DatabaseUtil.decimal(chain.jcnUncertainty()))
+                            .pseudogeneInfo(pair.getExonMatchData())
                             .build());
                 }
             }
         }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing to outputFile: {}", e.toString());
-        }
-    }
 
-    private void createClusterFile()
-    {
-        try
-        {
-            String outputFileName = mConfig.OutputDataPath + "LNX_CLUSTERS.csv";
-
-            mClusterFileWriter = createBufferedWriter(outputFileName, false);
-
-            mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,SuperType,ResolvedType,Synthetic,Subclonal,FullyChained,ChainCount");
-            mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
-            mClusterFileWriter.write(",ClusterReasons,Consistency,IsLINE,Replication,MinJcn,MaxJcn,Foldbacks");
-            mClusterFileWriter.write(",ArmCount,OriginArms,FragmentArms,ConsistentArms,ComplexArms,Annotations,AlleleValidPerc");
-
-            mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain");
-            mClusterFileWriter.write(",ExtTIsCnGain,OverlapTIs,ChainEndsFace,ChainEndsAway,UnchainedSVs");
-
-            mClusterFileWriter.write(",DBs,ShortDBs,TotalDBLength,TotalDeleted,TravDelCount,TravDelLength");
-            mClusterFileWriter.write(",TotalRange,ChainedLength,ImpliedTIs");
-
-            mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
-            mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcSameOrient,AcComplexOther");
-
-            if(mIndelAnnotator != null)
-                mClusterFileWriter.write(",IndelCount,IndelProb");
-
-            mClusterFileWriter.newLine();
-        }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
-        }
-    }
-
-    private void generateClusterOutput(@Nullable List<LinxCluster> clusterData)
-    {
-        try
-        {
-            for(final SvCluster cluster : getClusters())
-            {
-                int clusterSvCount = cluster.getSvCount();
-
-                if(clusterSvCount == 1 && !mConfig.Output.WriteSingleSVClusters)
-                    continue;
-
-                ResolvedType resolvedType = cluster.getResolvedType();
-
-                final String superType = getSuperType(cluster);
-
-                if(mClusterFileWriter != null)
-                {
-                    mClusterFileWriter.write(String.format("%s,%d,%s,%d,%s,%s,%s,%s,%s,%d",
-                            mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount,
-                            superType, resolvedType, cluster.isSyntheticType(),
-                            cluster.isSubclonal(), cluster.isFullyChained(false), cluster.getChains().size()));
-
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
-                            cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
-                            cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL), cluster.getTypeCount(INF)));
-
-                    double foldbackCount = 0;
-
-                    for (final SvVarData var : cluster.getFoldbacks())
-                    {
-                        // avoid double-count chained foldbacks
-                        if (var.getFoldbackBreakend(true) != null)
-                            foldbackCount += 0.5;
-                        if (var.getFoldbackBreakend(false) != null)
-                            foldbackCount += 0.5;
-                    }
-
-                    mClusterFileWriter.write(String.format(",%s,%d,%s,%s,%.1f,%.1f,%.0f",
-                            cluster.getClusteringReasons(), cluster.getConsistencyCount(), cluster.hasLinkingLineElements(),
-                            cluster.requiresReplication(), cluster.getMinJcn(), cluster.getMaxJcn(), foldbackCount));
-
-                    final ClusterMetrics metrics = cluster.getMetrics();
-
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%.2f",
-                            cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(), cluster.getConsistentArms(),
-                            cluster.getComplexArms(), cluster.getAnnotations(), metrics.ValidAlleleJcnSegmentPerc));
-
-                    long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.length() <= SHORT_TI_LENGTH).count();
-
-                    mClusterFileWriter.write(String.format(",%d,%d,%d",
-                            cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), shortTIs));
-
-                    final ChainMetrics chainMetrics = cluster.getLinkMetrics();
-
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                            chainMetrics.InternalTIs, chainMetrics.ExternalTIs, chainMetrics.InternalShortTIs, chainMetrics.ExternalShortTIs,
-                            chainMetrics.InternalTICnGain, chainMetrics.ExternalTICnGain, chainMetrics.OverlappingTIs,
-                            chainMetrics.ChainEndsFace, chainMetrics.ChainEndsAway, cluster.getUnlinkedSVs().size()));
-
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
-                            metrics.DBCount, metrics.ShortDBCount, metrics.TotalDBLength,
-                            metrics.TotalDeleted, metrics.TraversedDelCount, metrics.TraversedDelLength));
-
-                    mClusterFileWriter.write(String.format(",%d,%d,%d",
-                            metrics.TotalRange, metrics.ChainedLength, metrics.ImpliedTICount));
-
-                    final int[] armClusterData = getArmClusterData(cluster);
-                    long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
-
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                            cluster.getArmClusters().size(), armClusterTIs, armClusterData[ARM_CL_ISOLATED_BE],
-                            armClusterData[ARM_CL_TI_ONLY], armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_SIMPLE_DUP],
-                            armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_DSB], armClusterData[ARM_CL_COMPLEX_FOLDBACK],
-                            armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_SAME_ORIENT], armClusterData[ARM_CL_COMPLEX_OTHER]));
-
-                    if(mIndelAnnotator != null)
-                    {
-                        mClusterFileWriter.write(String.format(",%d,%f", metrics.IndelCount, metrics.IndelProbability));
-                    }
-
-                    mClusterFileWriter.newLine();
-                }
-
-                if(clusterData != null)
-                {
-                    clusterData.add(ImmutableLinxCluster.builder()
-                            .clusterId(cluster.id())
-                            .resolvedType(superType)
-                            .synthetic(cluster.isSyntheticType())
-                            .subClonal(cluster.isSubclonal())
-                            .subType(cluster.getResolvedType().toString())
-                            .clusterCount(clusterSvCount)
-                            .clusterDesc(cluster.getDesc())
-                            .build());
-                }
-            }
-        }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
-        }
-    }
-
-    private void createLinksFile()
-    {
-        if(!mConfig.Output.WriteLinks)
-            return;
-
-        try
-        {
-            String outputFileName = mConfig.OutputDataPath + "LNX_LINKS.csv";
-
-            mLinksFileWriter = createBufferedWriter(outputFileName, false);
-
-            mLinksFileWriter.write("SampleId,ClusterId,ClusterCount,ResolvedType");
-            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChainIndex,Jcn,JcnUncertainty");
-            mLinksFileWriter.write(",IsAssembled,TILength,NextSvDist,NextClusteredSvDist,TraversedSVCount");
-            mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
-            mLinksFileWriter.write(",Id1,Id2,ChrArm,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
-            mLinksFileWriter.newLine();
-        }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing links to outputFile: {}", e.toString());
-        }
-    }
-
-    private void generateLinksOutput(@Nullable List<LinxLink> linksData)
-    {
-        if(!mConfig.Output.WriteLinks)
-            return;
-
-        try
-        {
-            for(final SvCluster cluster : getClusters())
-            {
-                int clusterSvCount = cluster.getSvCount();
-
-                List<SvChain> chains = cluster.getChains();
-
-                for (final SvChain chain : chains)
-                {
-                    int chainSvCount = chain.getSvCount();
-                    boolean chainConsistent = chain.isConsistent();
-
-                    List<SvLinkedPair> uniquePairs = Lists.newArrayList();
-                    final List<SvLinkedPair> chainLinks = chain.getLinkedPairs();
-
-                    for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
-                    {
-                        final SvLinkedPair pair = chainLinks.get(chainIndex);
-
-                        if(uniquePairs.stream().anyMatch(x -> x.matches(pair)))
-                            continue;
-
-                        uniquePairs.add(pair);
-
-                        String chainIndexStr = String.valueOf(chainIndex);
-
-                        for(int j = chainIndex + 1; j < chainLinks.size(); ++j)
-                        {
-                            if(chainLinks.get(j).matches(pair))
-                            {
-                                chainIndexStr = appendStr(chainIndexStr, String.valueOf(j), ';');
-                            }
-                        }
-
-                        final SvBreakend beStart = pair.getBreakend(true);
-                        final SvBreakend beEnd = pair.getBreakend(false);
-
-                        if(mLinksFileWriter != null)
-                        {
-                            mLinksFileWriter.write(String.format("%s,%d,%d,%s",
-                                    mSampleId, cluster.id(), clusterSvCount, cluster.getResolvedType()));
-
-                            mLinksFileWriter.write(String.format(",%d,%d,%s,%s,%d,%s,%s,%.3f",
-                                    chain.id(), chainSvCount, chainConsistent, pair.getLinkReason(), pair.getLinkIndex(),
-                                    chainIndexStr, formatJcn(chain.jcn()), chain.jcnUncertainty()));
-
-                            mLinksFileWriter.write(String.format(",%s,%d,%d,%d,%d,%s,%d,%s",
-                                    pair.isAssembled(), pair.length(),
-                                    pair.getNextSvDistance(), pair.getNextClusteredSvDistance(), pair.getTraversedSVCount(),
-                                    pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));
-
-                            SvArmCluster acStart = cluster.findArmCluster(beStart);
-                            SvArmCluster acEnd = cluster.findArmCluster(beEnd);
-
-                            mLinksFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s,%s,%s,%s,%s",
-                                    beStart.getSV().id(), beEnd.getSV().id(),
-                                    beStart.getChrArm(), beStart.position(), beEnd.position(),
-                                    acStart != null ? acStart.getTypeStr() : "", acEnd != null ? acEnd.getTypeStr() : "",
-                                    beStart.getSV().getGeneInBreakend(beStart.usesStart(), false),
-                                    beEnd.getSV().getGeneInBreakend(beEnd.usesStart(), false), pair.getExonMatchData()));
-
-                            mLinksFileWriter.newLine();
-                        }
-
-                        if(linksData != null)
-                        {
-                            final String linkArm = beStart.arm() == beEnd.arm() ? asStr(beStart.arm()) : asStr(beStart.arm()) + "_" + asStr(beEnd.arm());
-
-                            linksData.add(ImmutableLinxLink.builder()
-                                    .clusterId(cluster.id())
-                                    .chainId(chain.id())
-                                    .chainCount(chainSvCount)
-                                    .chainIndex(chainIndexStr)
-                                    .lowerSvId(beStart.getSV().id())
-                                    .upperSvId(beEnd.getSV().id())
-                                    .lowerBreakendIsStart(beStart.usesStart())
-                                    .upperBreakendIsStart(beEnd.usesStart())
-                                    .chromosome(beStart.chromosome())
-                                    .arm(linkArm)
-                                    .assembled(pair.isAssembled())
-                                    .traversedSVCount(pair.getTraversedSVCount())
-                                    .length(pair.length())
-                                    .junctionCopyNumber(DatabaseUtil.decimal(chain.jcn()))
-                                    .junctionCopyNumberUncertainty(DatabaseUtil.decimal(chain.jcnUncertainty()))
-                                    .pseudogeneInfo(pair.getExonMatchData())
-                                    .build());
-                        }
-                    }
-                }
-            }
-        }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing links to outputFile: {}", e.toString());
-        }
+        return linksData;
     }
 
     private List<LinxViralInsertFile> generateViralInserts()
@@ -1040,11 +628,9 @@ public class SvSampleAnalyser {
             mPcWrite.logStats();
         }
 
-        closeBufferedWriter(mSvFileWriter);
-        closeBufferedWriter(mClusterFileWriter);
-        closeBufferedWriter(mLinksFileWriter);
+        mCohortDataWriter.close();
+
         mKataegisAnnotator.close();
-        mVisWriter.close();
         mAnalyser.close();
 
         if(mIndelAnnotator != null)
