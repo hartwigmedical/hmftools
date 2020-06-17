@@ -13,6 +13,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         private const val MAX_ALTERNATIVES_SEEK_DISTANCE = 1000
         private const val MAX_ALTERNATIVES_ADDITIONAL_DISTANCE = MAX_ALTERNATIVES_SEEK_DISTANCE // This needs to be high to account for insert sequences
 
+        private const val MAX_ASSEMBLY_JUMPS = 5
         private const val MAX_TRANSITIVE_JUMPS = 2
         private const val MAX_TRANSITIVE_SEEK_DISTANCE = 2000
         private const val MAX_TRANSITIVE_ADDITIONAL_DISTANCE = 1000
@@ -20,7 +21,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         private val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun transitiveLink(variant: StructuralVariantContext, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
+    fun transitiveLink(variant: StructuralVariantContext, maxAssemblyJumps: Int = MAX_ASSEMBLY_JUMPS, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
 
         if (!variant.isSingle) {
             val target = variantStore.select(variant.mateId!!)
@@ -30,7 +31,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
             if (alternativeStart.size in 1..MAX_ALTERNATIVES) {
                 logger.debug("Examining ${alternativeStart.size} alternative(s) to variant $target")
                 for (alternative in alternativeStart) {
-                    val assemblyLinks = findLinks("trs_${variant.vcfId}_", alternative, target, maxTransitiveJumps, mutableListOf())
+                    val assemblyLinks = findLinks("trs_${variant.vcfId}_", alternative, target, maxAssemblyJumps, maxTransitiveJumps, mutableListOf())
                     if (assemblyLinks.isNotEmpty()) {
                         return assemblyLinks
                     }
@@ -41,7 +42,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         return Collections.emptyList()
     }
 
-    private fun findLinks(transLinkPrefix: String, current: StructuralVariantContext, target: StructuralVariantContext, maxTransitiveJumps: Int, path: List<Link>)
+    private fun findLinks(transLinkPrefix: String, current: StructuralVariantContext, target: StructuralVariantContext, maxAssemblyJumps: Int, maxTransitiveJumps: Int, path: List<Link>)
             : List<Link> {
         val mate = variantStore.select(current.mateId!!)
         val newPath: List<Link> = path + Link(current)
@@ -57,13 +58,15 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         }
 
         // Always try assembled links first!
-        val assemblyLinkedVariants = assemblyLinkStore.linkedVariants(current.mateId).filter { x -> !path.contains(x)  }
-        for (link in assemblyLinkedVariants) {
-            val linkedVariant = variantStore.select(link.otherVcfId)
-            if (!linkedVariant.isSingle && !linkedVariant.imprecise) {
-                val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps, newPath + link)
-                if (newAssemblyLinks.isNotEmpty()) {
-                    return newAssemblyLinks
+        if (maxAssemblyJumps > 0) {
+            val assemblyLinkedVariants = assemblyLinkStore.linkedVariants(current.mateId).filter { x -> !path.contains(x) }
+            for (link in assemblyLinkedVariants) {
+                val linkedVariant = variantStore.select(link.otherVcfId)
+                if (!linkedVariant.isSingle && !linkedVariant.imprecise) {
+                    val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxAssemblyJumps - 1, maxTransitiveJumps, newPath + link)
+                    if (newAssemblyLinks.isNotEmpty()) {
+                        return newAssemblyLinks
+                    }
                 }
             }
         }
@@ -72,7 +75,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
             val transitiveLinkedVariants = variantStore.selectTransitive(mate).filter { x -> !x.imprecise && !x.isSingle }
             for (linkedVariant in transitiveLinkedVariants) {
                 val nextJump = Link("$transLinkPrefix${MAX_TRANSITIVE_JUMPS - maxTransitiveJumps}", Pair(mate, linkedVariant))
-                val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxTransitiveJumps - 1, newPath + nextJump)
+                val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxAssemblyJumps, maxTransitiveJumps - 1, newPath + nextJump)
                 if (newAssemblyLinks.isNotEmpty()) {
                     return newAssemblyLinks
                 }
