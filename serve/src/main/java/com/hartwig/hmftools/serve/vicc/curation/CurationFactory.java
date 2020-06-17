@@ -24,20 +24,21 @@ final class CurationFactory {
 
     private static void populateCIViCCuration() {
         // Below is not wrong but transvar struggles with interpreting start lost variants,
-        // so we map it to arbitrary other variant with same impact
-        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M1?"), "M1L");
+        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M1? (c.3G>A)"), "M1I (c.3G>A)");
+        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M1? (c.1-1_20del21)"), "M1I (c.1-1_20del21)");
         // Below is a mutation followed by a frameshift. The FS should be in small letters.
-        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M54IFS"), "M54Ifs");
+        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M54IFS (c.162_166delGGAGG)"),
+                "M54Ifs (c.162_166delGGAGG)");
 
         // The below variants don't exist
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("GNAS", "ENST00000371100", "T393C"));
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("TERT", "ENST00000310581", "C228T"));
-        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "P81delRVV"));
-        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "N167T"));
-        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "X214L"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "P81delRVV (c.243_251delGCGCGTCGT)"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "N167T (c.392A>C)"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "X214L (c.641G>T)"));
 
         // The below variant is unlikely to be real as it spans multiple exons
-        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "G114dup"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "G114dup (c.342dupGGT)"));
     }
 
     private static void populateJaxCuration() {
