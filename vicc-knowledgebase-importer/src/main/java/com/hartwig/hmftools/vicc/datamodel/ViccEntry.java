@@ -51,7 +51,7 @@ public abstract class ViccEntry {
             }
             case CIVIC: {
                 String transcriptId = ((Civic) kbSpecificObject()).coordinates().representativeTranscript();
-                if (transcriptId == null) {
+                if (transcriptId == null || transcriptId.isEmpty()) {
                     return null;
                 }
                 int versionSeparator = transcriptId.indexOf(".");
