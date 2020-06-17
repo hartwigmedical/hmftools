@@ -6,6 +6,7 @@ import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +62,8 @@ public abstract class ViccEntry {
                 List<String> transcripts = ((Cgi) kbSpecificObject()).transcripts();
                 // Even though a vicc entry could have multiple different transcripts, in practice every vicc entry with more than one
                 // transcript only has one distinct transcript.
-                return !transcripts.isEmpty() ? transcripts.get(0) : null;
+                String transcript = !transcripts.isEmpty() ? transcripts.get(0) : Strings.EMPTY;
+                return !transcript.isEmpty() ? transcript : null;
             }
             case JAX:
             default:
