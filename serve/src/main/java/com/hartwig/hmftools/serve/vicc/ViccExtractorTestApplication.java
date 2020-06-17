@@ -48,7 +48,6 @@ public class ViccExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
-    private static final boolean TRANSVAR_ENABLED = false;
     private static final Integer MAX_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {
@@ -59,15 +58,18 @@ public class ViccExtractorTestApplication {
 
         String viccJsonPath;
         String refGenomeFastaFile;
+        boolean generateHotspots;
         String hotspotVcf;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+            generateHotspots = true;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+            generateHotspots = false;
             hotspotVcf = System.getProperty("user.home") + "/hmf/tmp/hotspotsVicc.vcf";
         }
 
@@ -75,7 +77,7 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
-        LOGGER.debug("Configured '{}' for whether transvar is enabled", TRANSVAR_ENABLED);
+        LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
         List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC);
         ViccQuerySelection querySelection =
@@ -83,7 +85,7 @@ public class ViccExtractorTestApplication {
         List<ViccEntry> viccEntries = readAndCurate(viccJsonPath, querySelection);
 
         HotspotExtractor hotspotExtractor =
-                TRANSVAR_ENABLED ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotExtractor.dummy();
+                generateHotspots ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotExtractor.dummy();
 
         ViccExtractor viccExtractor = new ViccExtractor(hotspotExtractor,
                 new CopyNumberExtractor(),
@@ -96,7 +98,7 @@ public class ViccExtractorTestApplication {
 
         analyzeExtractionResults(resultsPerEntry);
 
-        if (TRANSVAR_ENABLED) {
+        if (generateHotspots) {
             writeHotspots(hotspotVcf, resultsPerEntry);
         }
     }
