@@ -37,6 +37,9 @@ final class CurationFactory {
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "N167T (c.392A>C)"));
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "X214L (c.641G>T)"));
 
+        // Synonymous variant, can't have an impact or evidence
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "R161R (c.481C>A)"));
+
         // The below variant is unlikely to be real as it spans multiple exons
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "G114dup (c.342dupGGT)"));
     }
