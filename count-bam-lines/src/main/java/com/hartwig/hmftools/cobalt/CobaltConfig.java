@@ -92,6 +92,10 @@ public interface CobaltConfig {
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String gcProfilePath = parameter(cmd, GC_PROFILE, missingJoiner);
+        if (gcProfilePath.endsWith("gz")) {
+            throw new ParseException("Please supply un-compressed " + GC_PROFILE + " file");
+        }
+
         final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
         final String referenceBamPath = parameter(cmd, REFERENCE_BAM, missingJoiner);
         final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
