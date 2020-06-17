@@ -1,17 +1,17 @@
 ALTER TABLE somaticVariant
-    RENAME COLUMN ploidy TO variantCopyNumber,
-    RENAME COLUMN minorAllelePloidy TO minorAlleleCopyNumber;
+    CHANGE COLUMN ploidy variantCopyNumber DOUBLE PRECISION NOT NULL,
+    CHANGE COLUMN minorAllelePloidy minorAlleleCopyNumber DOUBLE PRECISION NOT NULL;
 
 ALTER TABLE structuralVariant
-    RENAME COLUMN ploidy to junctionCopyNumber;
+    CHANGE COLUMN ploidy junctionCopyNumber DOUBLE PRECISION;
 
 ALTER TABLE copyNumber
-    RENAME COLUMN minorAllelePloidy TO minorAlleleCopyNumber,
-    RENAME COLUMN majorAllelePloidy TO majorAlleleCopyNumber;
+    CHANGE COLUMN minorAllelePloidy minorAlleleCopyNumber DOUBLE PRECISION not null,
+    CHANGE COLUMN majorAllelePloidy majorAlleleCopyNumber DOUBLE PRECISION not null;
 
 ALTER TABLE copyNumberGermline
-    RENAME COLUMN minorAllelePloidy TO minorAlleleCopyNumber,
-    RENAME COLUMN majorAllelePloidy TO majorAlleleCopyNumber;
+    CHANGE COLUMN minorAllelePloidy minorAlleleCopyNumber DOUBLE PRECISION not null,
+    CHANGE COLUMN majorAllelePloidy majorAlleleCopyNumber DOUBLE PRECISION not null;
 
 ALTER TABLE geneCopyNumber
-    RENAME COLUMN minMinorAllelePloidy to minMinorAlleleCopyNumber;
+    CHANGE COLUMN minMinorAllelePloidy minMinorAlleleCopyNumber DOUBLE PRECISION not null;
