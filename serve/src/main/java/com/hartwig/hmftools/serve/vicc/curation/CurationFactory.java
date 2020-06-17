@@ -34,8 +34,12 @@ final class CurationFactory {
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("GNAS", "ENST00000371100", "T393C"));
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("TERT", "ENST00000310581", "C228T"));
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "P81delRVV (c.243_251delGCGCGTCGT)"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "A121I (c.364_365GC>AT)"));
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "N167T (c.392A>C)"));
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "X214L (c.641G>T)"));
+
+        // The below variant is only possible through an MNV which spans an intron
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "V155C (c.462delA)"));
 
         // Synonymous variant, can't have an impact or evidence
         CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "R161R (c.481C>A)"));
