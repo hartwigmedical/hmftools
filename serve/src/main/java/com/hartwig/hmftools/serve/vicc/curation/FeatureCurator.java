@@ -58,10 +58,12 @@ public class FeatureCurator {
     @NotNull
     private static Set<CurationKey> blacklistForSource(@NotNull ViccSource source) {
         switch (source) {
-            case ONCOKB:
-                return CurationFactory.ONCOKB_FEATURE_BLACKLIST;
+            case CIVIC:
+                return CurationFactory.CIVIC_FEATURE_BLACKLIST;
             case JAX:
                 return CurationFactory.JAX_FEATURE_BLACKLIST;
+            case ONCOKB:
+                return CurationFactory.ONCOKB_FEATURE_BLACKLIST;
             default:
                 return Sets.newHashSet();
         }
@@ -70,10 +72,12 @@ public class FeatureCurator {
     @NotNull
     private static Map<CurationKey, String> mappingsForSource(@NotNull ViccSource source) {
         switch (source) {
-            case ONCOKB:
-                return CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS;
+            case CIVIC:
+                return CurationFactory.CIVIC_FEATURE_NAME_MAPPINGS;
             case JAX:
                 return CurationFactory.JAX_FEATURE_NAME_MAPPINGS;
+            case ONCOKB:
+                return CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS;
             default:
                 return Maps.newHashMap();
         }

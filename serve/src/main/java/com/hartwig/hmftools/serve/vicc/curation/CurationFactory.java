@@ -8,15 +8,36 @@ import com.google.common.collect.Sets;
 
 final class CurationFactory {
 
+    static final Map<CurationKey, String> CIVIC_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
     static final Map<CurationKey, String> JAX_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
     static final Map<CurationKey, String> ONCOKB_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
 
+    static final Set<CurationKey> CIVIC_FEATURE_BLACKLIST = Sets.newHashSet();
     static final Set<CurationKey> JAX_FEATURE_BLACKLIST = Sets.newHashSet();
     static final Set<CurationKey> ONCOKB_FEATURE_BLACKLIST = Sets.newHashSet();
 
     static {
+        populateCIViCCuration();
         populateJaxCuration();
         populateOncoKBCuration();
+    }
+
+    private static void populateCIViCCuration() {
+        // Below is not wrong but transvar struggles with interpreting start lost variants,
+        // so we map it to arbitrary other variant with same impact
+        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M1?"), "M1L");
+        // Below is a mutation followed by a frameshift. The FS should be in small letters.
+        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M54IFS"), "M54Ifs");
+
+        // The below variants don't exist
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("GNAS", "ENST00000371100", "T393C"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("TERT", "ENST00000310581", "C228T"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "P81delRVV"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "N167T"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "X214L"));
+
+        // The below variant is unlikely to be real as it spans multiple exons
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "G114dup"));
     }
 
     private static void populateJaxCuration() {
@@ -39,10 +60,7 @@ final class CurationFactory {
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EGFR", null, "EGFR I744_K745insKIPVAI "), "EGFR K745_E746insIPVAIK ");
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("KIT", null, "KIT V559del "), "KIT V560del ");
 
-        // This is not necessarily wrong, but we skip annotations that imply logical OR for now.
-        JAX_FEATURE_BLACKLIST.add(new CurationKey("BRAF", null, "BRAF V600E/K "));
-
-        // These mutations don't exist in GRCh37
+        // The below variants don't exist
         JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "FLT3 L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL "));
         JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "FLT3 E612_F613insGYVDFREYEYDLKWEFRPRENLEF "));
         JAX_FEATURE_BLACKLIST.add(new CurationKey("APC", null, "APC S1197* "));
