@@ -52,10 +52,10 @@ public final class SidePanel {
 
         if (page.getDocument().getNumberOfPages() == 1) {
             cv.add(new Paragraph(
-                    "v" + (PatientReporterApplication.VERSION != null ? PatientReporterApplication.VERSION : "X.X")).setFixedPosition(
+                    "FORXXX v" + (PatientReporterApplication.VERSION != null ? PatientReporterApplication.VERSION : "X.X")).setFixedPosition(
                     pageSize.getWidth() - RECTANGLE_WIDTH + 4,
                     40,
-                    30).setRotationAngle(Math.PI / 2).setFontColor(ReportResources.PALETTE_LIGHT_GREY).setFontSize(6));
+                    40).setRotationAngle(Math.PI / 2).setFontColor(ReportResources.PALETTE_LIGHT_GREY).setFontSize(6));
         }
 
         canvas.release();
