@@ -19,6 +19,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.SummaryChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOffLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOnLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
@@ -30,7 +31,9 @@ import com.itextpdf.layout.property.AreaBreakType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CFReportWriter implements ReportWriter {
 
@@ -63,20 +66,21 @@ public class CFReportWriter implements ReportWriter {
                     new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter() };
         }
 
-        writeReport(report, chapters, outputFilePath);
+        writeReport(report, chapters, outputFilePath, null, report.impliedPurity(), report.hasReliablePurity());
     }
 
     @Override
     public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
-        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
+        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath, report.reason(), 0, false);
     }
 
-    private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
+    private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath, @Nullable
+            QCFailReason reason, double purity, boolean hasReliablePurity)
             throws IOException {
         Document doc = initializeReport(outputFilePath, writeToFile);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
-        PageEventHandler pageEventHandler = new PageEventHandler(patientReport);
+        PageEventHandler pageEventHandler = new PageEventHandler(patientReport, reason, purity, hasReliablePurity);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for (int i = 0; i < chapters.length; i++) {

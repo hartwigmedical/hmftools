@@ -60,6 +60,20 @@ public class TransvarInterpreterTest {
         assertEquals(1, hotspots.size());
 
         assertHotspot(baseHotspot().position(10).ref("A").alt("C").build(), hotspots.get(0));
+
+        TransvarRecord record2 = baseRecord().variantSpanMultipleExons(true)
+                .gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("TTA")
+                        .gdnaAlt("GTA")
+                        .referenceCodon("TTA")
+                        .addCandidateCodons("GTA")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots2 = testInterpreter().convertRecordToHotspots(record2, Strand.FORWARD);
+
+        assertEquals(0, hotspots2.size());
     }
 
     @Test

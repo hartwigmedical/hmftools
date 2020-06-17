@@ -15,10 +15,10 @@ import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.curation.CurationKey;
 import com.hartwig.hmftools.serve.vicc.curation.FeatureCurator;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
-import com.hartwig.hmftools.serve.vicc.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
@@ -35,7 +35,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -49,7 +48,6 @@ public class ViccExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApplication.class);
 
-    private static final boolean TRANSVAR_ENABLED = false;
     private static final Integer MAX_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {
@@ -60,15 +58,18 @@ public class ViccExtractorTestApplication {
 
         String viccJsonPath;
         String refGenomeFastaFile;
+        boolean generateHotspots;
         String hotspotVcf;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+            generateHotspots = true;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+            generateHotspots = false;
             hotspotVcf = System.getProperty("user.home") + "/hmf/tmp/hotspotsVicc.vcf";
         }
 
@@ -76,20 +77,15 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
-        LOGGER.debug("Configured '{}' for whether transvar is enabled", TRANSVAR_ENABLED);
+        LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
-        FeatureCurator curator = new FeatureCurator();
-
-        ViccSource source = ViccSource.CGI;
-        LOGGER.info("Reading VICC json from '{}' with source '{}'", viccJsonPath, source);
+        List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC);
         ViccQuerySelection querySelection =
-                ImmutableViccQuerySelection.builder().addSourcesToFilterOn(source).maxEntriesToInclude(MAX_ENTRIES).build();
-        List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection), curator);
-        LOGGER.info(" Read and curated {} entries", viccEntries.size());
+                ImmutableViccQuerySelection.builder().sourcesToFilterOn(sources).maxEntriesToInclude(MAX_ENTRIES).build();
+        List<ViccEntry> viccEntries = readAndCurate(viccJsonPath, querySelection);
 
-        HotspotExtractor hotspotExtractor = TRANSVAR_ENABLED
-                ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
-                : new HotspotExtractor(new DummyProteinResolver());
+        HotspotExtractor hotspotExtractor =
+                generateHotspots ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotExtractor.dummy();
 
         ViccExtractor viccExtractor = new ViccExtractor(hotspotExtractor,
                 new CopyNumberExtractor(),
@@ -102,13 +98,41 @@ public class ViccExtractorTestApplication {
 
         analyzeExtractionResults(resultsPerEntry);
 
-        if (TRANSVAR_ENABLED) {
+        if (generateHotspots) {
             writeHotspots(hotspotVcf, resultsPerEntry);
         }
     }
 
     @NotNull
+    private static List<ViccEntry> readAndCurate(@NotNull String viccJsonPath, @NotNull ViccQuerySelection querySelection)
+            throws IOException {
+        FeatureCurator curator = new FeatureCurator();
+
+        LOGGER.info("Reading VICC json from '{}' with sources '{}'", viccJsonPath, querySelection.sourcesToFilterOn());
+        List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection), curator);
+        LOGGER.info(" Read and curated {} entries", viccEntries.size());
+
+        LOGGER.info("Analyzing usage of curation configuration keys");
+        int issueCount = 0;
+        for (Map.Entry<ViccSource, Set<CurationKey>> entry : curator.unusedCurationKeysPerSource().entrySet()) {
+            ViccSource source = entry.getKey();
+            Set<CurationKey> unusedKeys = entry.getValue();
+            if (!unusedKeys.isEmpty()) {
+                LOGGER.warn("Found {} unused curation configuration entries for {}", unusedKeys.size(), source);
+                for (CurationKey unusedKey : unusedKeys) {
+                    issueCount++;
+                    LOGGER.warn(" - {}", unusedKey);
+                }
+            }
+        }
+        LOGGER.info("Finished analyzing usage of curation configuration keys. Found {} issues", issueCount);
+
+        return viccEntries;
+    }
+
+    @NotNull
     private static List<ViccEntry> curate(@NotNull List<ViccEntry> viccEntries, @NotNull FeatureCurator curator) {
+        // TODO: Move to a function inside the curator and remove entries which have a blacklisted feature.
         List<ViccEntry> curatedViccEntries = Lists.newArrayList();
 
         for (ViccEntry entry : viccEntries) {
@@ -241,11 +265,14 @@ public class ViccExtractorTestApplication {
                 for (VariantHotspot hotspot : featureResult.getValue()) {
                     String existingFeatureAttribute = convertedMap.get(hotspot);
                     if (existingFeatureAttribute != null && !existingFeatureAttribute.equals(newFeatureAttribute)) {
-                        LOGGER.warn("Hotspot {} already recorded but for different feature! Existing feature={}, new feature={}",
-                                hotspot,
-                                existingFeatureAttribute,
-                                newFeatureAttribute);
-                    } else {
+                        if (!existingFeatureAttribute.contains("null") && !newFeatureAttribute.contains("null")) {
+                            LOGGER.warn("Hotspot {} already recorded but for different feature! Existing feature={}, new feature={}",
+                                    hotspot,
+                                    existingFeatureAttribute,
+                                    newFeatureAttribute);
+                        }
+                    } else if (existingFeatureAttribute == null || existingFeatureAttribute.contains("null")) {
+                        // We favor feature attributes which are based on explicit transcript.
                         convertedMap.put(hotspot, newFeatureAttribute);
                     }
                 }
@@ -257,22 +284,6 @@ public class ViccExtractorTestApplication {
 
     @NotNull
     private static String toAttribute(@NotNull ViccEntry viccEntry, @NotNull Feature feature) {
-        return ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), viccEntry.transcriptId(), feature.name());
-    }
-
-    private static class DummyProteinResolver implements ProteinResolver {
-
-        @NotNull
-        @Override
-        public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull final String gene,
-                @Nullable final String specificTranscript, @NotNull final String proteinAnnotation) {
-            return Lists.newArrayList();
-        }
-
-        @NotNull
-        @Override
-        public Set<String> unresolvedProteinAnnotations() {
-            return Sets.newHashSet();
-        }
+        return ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), viccEntry.transcriptId(), feature.proteinAnnotation());
     }
 }

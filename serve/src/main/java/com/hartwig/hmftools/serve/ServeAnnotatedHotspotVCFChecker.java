@@ -5,9 +5,11 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
@@ -16,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -28,26 +31,35 @@ public class ServeAnnotatedHotspotVCFChecker {
 
     private static final Map<String, Map<String, List<String>>> SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
 
+    private final Map<String, Set<String>> annotationsRequestedForMappingPerTranscript = Maps.newHashMap();
+
     public static void main(String[] args) throws IOException {
         //        Configurator.setRootLevel(Level.DEBUG);
 
         String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspotsVicc.vcf";
+        new ServeAnnotatedHotspotVCFChecker().run(annotatedHotspotVcf);
+    }
+
+    public void run(@NotNull String annotatedVcfFilePath) throws IOException {
         int totalCount = 0;
         int matchCount = 0;
         int whitelistedMatchCount = 0;
         int diffCount = 0;
 
-        LOGGER.info("Loading hotspots from '{}'", annotatedHotspotVcf);
-        AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedHotspotVcf, new VCFCodec(), false);
+        LOGGER.info("Loading hotspots from '{}'", annotatedVcfFilePath);
+        AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedVcfFilePath, new VCFCodec(), false);
         for (VariantContext variant : reader.iterator()) {
             totalCount++;
             String[] featureParts = variant.getAttributeAsString("feature", Strings.EMPTY).split("\\|");
             String featureGene = featureParts[0];
-            String featureTranscript = featureParts[1];
+            String featureTranscript = featureParts[1].equals("null") ? null : featureParts[1];
             String featureProteinAnnotation = featureParts[2];
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-            for (SnpEffAnnotation annotation : annotations) {
-                if (annotation.isTranscriptFeature() && annotation.transcript().equals(featureTranscript)) {
+
+            if (featureTranscript != null) {
+                SnpEffAnnotation annotation = annotationForTranscript(annotations, featureTranscript);
+
+                if (annotation != null) {
                     String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
                     if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
                         LOGGER.warn("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
@@ -72,6 +84,29 @@ public class ServeAnnotatedHotspotVCFChecker {
                         }
                         matchCount++;
                     }
+                } else {
+                    LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", featureTranscript, featureGene);
+                    diffCount++;
+                }
+            } else {
+                boolean matchFound = false;
+                for (SnpEffAnnotation annotation : annotations) {
+                    if (annotation.isTranscriptFeature()) {
+                        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                        if (isSameAnnotation(annotation.transcript(), featureProteinAnnotation, snpeffProteinAnnotation)) {
+                            matchFound = true;
+                        }
+                    }
+                }
+
+                if (matchFound) {
+                    LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", featureProteinAnnotation, featureGene);
+                    matchCount++;
+                } else {
+                    LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
+                            featureProteinAnnotation,
+                            featureGene);
+                    diffCount++;
                 }
             }
         }
@@ -81,10 +116,21 @@ public class ServeAnnotatedHotspotVCFChecker {
                 matchCount,
                 whitelistedMatchCount,
                 diffCount);
+
+        checkForUnusedMappings();
     }
 
-    private static boolean isSameAnnotation(@NotNull String transcript, @NotNull String featureAnnotation,
-            @NotNull String snpeffAnnotation) {
+    @Nullable
+    private static SnpEffAnnotation annotationForTranscript(@NotNull List<SnpEffAnnotation> annotations, @NotNull String transcript) {
+        for (SnpEffAnnotation annotation : annotations) {
+            if (annotation.isTranscriptFeature() && annotation.transcript().equals(transcript)) {
+                return annotation;
+            }
+        }
+        return null;
+    }
+
+    private boolean isSameAnnotation(@NotNull String transcript, @NotNull String featureAnnotation, @NotNull String snpeffAnnotation) {
         String curatedFeatureAnnotation = curateStartCodonAnnotation(featureAnnotation);
         if (curatedFeatureAnnotation.equals(snpeffAnnotation)) {
             return true;
@@ -92,6 +138,13 @@ public class ServeAnnotatedHotspotVCFChecker {
 
         Map<String, List<String>> transcriptMapping = SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.get(transcript);
         if (transcriptMapping != null) {
+            Set<String> requestedAnnotations = annotationsRequestedForMappingPerTranscript.get(transcript);
+            if (requestedAnnotations == null) {
+                requestedAnnotations = Sets.newHashSet(featureAnnotation);
+            } else {
+                requestedAnnotations.add(featureAnnotation);
+            }
+            annotationsRequestedForMappingPerTranscript.put(transcript, requestedAnnotations);
             List<String> mappedAnnotations = transcriptMapping.get(featureAnnotation);
             if (mappedAnnotations != null) {
                 return mappedAnnotations.contains(snpeffAnnotation);
@@ -99,6 +152,26 @@ public class ServeAnnotatedHotspotVCFChecker {
         }
 
         return false;
+    }
+
+    private void checkForUnusedMappings() {
+        int unusedMappingCount = 0;
+        for (Map.Entry<String, Map<String, List<String>>> entry : SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.entrySet()) {
+            Set<String> requestedAnnotations = annotationsRequestedForMappingPerTranscript.get(entry.getKey());
+            if (requestedAnnotations == null) {
+                LOGGER.warn("No annotation mapping requested at all for '{}'", entry.getKey());
+                unusedMappingCount += entry.getValue().keySet().size();
+            } else {
+                for (String annotationKey : entry.getValue().keySet()) {
+                    if (!requestedAnnotations.contains(annotationKey)) {
+                        LOGGER.warn("Unused annotation configured for '{}': '{}'", entry.getKey(), annotationKey);
+                        unusedMappingCount++;
+                    }
+                }
+            }
+        }
+
+        LOGGER.info("Analyzed usage of mapping configuration. Found {} unused mappings.", unusedMappingCount);
     }
 
     @NotNull
@@ -111,8 +184,7 @@ public class ServeAnnotatedHotspotVCFChecker {
         serveToSnpEffMappings.put("ENST00000275493", createEGFRMap());
         serveToSnpEffMappings.put("ENST00000288602", createBRAFMap());
         serveToSnpEffMappings.put("ENST00000277541", createNOTCH1Map());
-        serveToSnpEffMappings.put("ENST00000227507", createCCND1Map());
-        serveToSnpEffMappings.put("ENST00000256078", createKRASMap());
+        serveToSnpEffMappings.put("ENST00000358487", createFGFR2Map());
         serveToSnpEffMappings.put("ENST00000241453", createFLT3Map());
         serveToSnpEffMappings.put("ENST00000262367", createCREBBPMap());
         serveToSnpEffMappings.put("ENST00000269571", createERBB2Map());
@@ -142,18 +214,19 @@ public class ServeAnnotatedHotspotVCFChecker {
     @NotNull
     private static Map<String, List<String>> createPIK3R1Map() {
         Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.I559_D560insDKRMNS", Lists.newArrayList("p.Y556_K561dup"));
+        map.put("p.I559_D560insDKRMNS", Lists.newArrayList("p.K561_R562insRMNSDK"));
         return map;
     }
 
     @NotNull
     private static Map<String, List<String>> createEGFRMap() {
         Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.S768_V769insVAS", Lists.newArrayList("p.A767_V769dup"));
+        map.put("p.S768_V769insVAS", Lists.newArrayList("p.V769_D770insASV"));
         map.put("p.D770_N771insD", Lists.newArrayList("p.D770dup"));
         map.put("p.V769_D770insASV", Lists.newArrayList("p.A767_V769dup"));
+        map.put("p.V769_770insASV", Lists.newArrayList("p.A767_V769dup"));
         map.put("p.D770_N771insSVD", Lists.newArrayList("p.S768_D770dup"));
-        map.put("p.D770_N771insNPG", Lists.newArrayList("p.D770_P772dup"));
+        map.put("p.D770_N771insNPG", Lists.newArrayList("p.P772_H773insGNP"));
         map.put("p.H773_V774insH", Lists.newArrayList("p.H773dup"));
         return map;
     }
@@ -162,8 +235,8 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createBRAFMap() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.T599_V600insV", Lists.newArrayList("p.V600dup"));
-        map.put("p.T599_V600insEAT", Lists.newArrayList("p.G596_A598dup"));
-        map.put("p.T599_V600insETT", Lists.newArrayList("p.G596_A598dup"));
+        map.put("p.T599_V600insEAT", Lists.newArrayList("p.A598_T599insTEA"));
+        map.put("p.T599_V600insETT", Lists.newArrayList("p.A598_T599insTET"));
         map.put("p.L485_Q494del", Lists.newArrayList("p.N486_L495del"));
         return map;
     }
@@ -177,35 +250,19 @@ public class ServeAnnotatedHotspotVCFChecker {
     }
 
     @NotNull
-    private static Map<String, List<String>> createCCND1Map() {
+    private static Map<String, List<String>> createFGFR2Map() {
         Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.L283_D294del", Lists.newArrayList("p.V281_D292del", "p.D282_V293del"));
-        return map;
-    }
-
-    @NotNull
-    private static Map<String, List<String>> createKRASMap() {
-        Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.A11_G12insGA", Lists.newArrayList("p.G10_A11dup"));
+        map.put("p.S267_D273dup", Lists.newArrayList("p.D273_V274insSTVVGGD"));
         return map;
     }
 
     @NotNull
     private static Map<String, List<String>> createFLT3Map() {
         Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.S840_N841insGS", Lists.newArrayList("p.D839_S840dup"));
-        map.put("p.K602_W603insYEYDLK", Lists.newArrayList("p.Y597_K602dup"));
-        map.put("p.W603_E604insDREYEYDLKW", Lists.newArrayList("p.D593_K602dup"));
-        map.put("p.L601_K602insREYEYDL", Lists.newArrayList("p.R595_L601dup"));
-        map.put("p.D600_L601insFREYEYD", Lists.newArrayList("p.F594_D600dup"));
-        map.put("p.Y599_D600insPAPQIMSTSTLISENMNIA", Lists.newArrayList("p.V581_Y599dup"));
-        map.put("p.Y599_D600insEYEYEYEY", Lists.newArrayList("p.Y591_E598dup"));
-        map.put("p.Y599_D600insGLYVDFREYEY", Lists.newArrayList("p.E588_E598dup"));
-        map.put("p.D600_L601insDFREYEYD", Lists.newArrayList("p.D593_D600dup"));
-        map.put("p.E598_Y599insDVDFREYE", Lists.newArrayList("p.Y591_E598dup"));
-        map.put("p.Y599_D600insSTDNEYFYVDFREYEY", Lists.newArrayList("p.G583_E598dup"));
-        map.put("p.E598_Y599insGLVQVTGSSDNEYFYVDFREYE", Lists.newArrayList("p.Q577_E598dup"));
-        map.put("p.F594_R595insSDNEYFYVDF", Lists.newArrayList("p.S585_F594dup"));
+        map.put("p.W603_E604insDREYEYDLKW", Lists.newArrayList("p.K602_W603insWDREYEYDLK"));
+        map.put("p.Y599_D600insEYEYEYEY", Lists.newArrayList("p.E598_Y599insYEYEYEYE"));
+        map.put("p.Y599_D600insGLYVDFREYEY", Lists.newArrayList("p.E598_Y599insYGLYVDFREYE"));
+        map.put("p.Y599_D600insSTDNEYFYVDFREYEY", Lists.newArrayList("p.E598_Y599insYSTDNEYFYVDFREYE"));
         return map;
     }
 
@@ -219,7 +276,7 @@ public class ServeAnnotatedHotspotVCFChecker {
     @NotNull
     private static Map<String, List<String>> createERBB2Map() {
         Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.M774_A775insAYVM", Lists.newArrayList("p.Y772_A775dup"));
+        map.put("p.M774_A775insAYVM", Lists.newArrayList("p.A775_G776insYVMA"));
         map.put("p.A775_G776insYVMA", Lists.newArrayList("p.Y772_A775dup"));
         return map;
     }

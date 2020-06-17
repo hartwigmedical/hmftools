@@ -8,14 +8,77 @@ import com.google.common.collect.Sets;
 
 final class CurationFactory {
 
+    static final Map<CurationKey, String> CIVIC_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
+    static final Map<CurationKey, String> JAX_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
     static final Map<CurationKey, String> ONCOKB_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
 
+    static final Set<CurationKey> CIVIC_FEATURE_BLACKLIST = Sets.newHashSet();
+    static final Set<CurationKey> JAX_FEATURE_BLACKLIST = Sets.newHashSet();
     static final Set<CurationKey> ONCOKB_FEATURE_BLACKLIST = Sets.newHashSet();
 
     static {
+        populateCIViCCuration();
+        populateJaxCuration();
+        populateOncoKBCuration();
+    }
+
+    private static void populateCIViCCuration() {
+        // Below is not wrong but transvar struggles with interpreting start lost variants,
+        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M1? (c.3G>A)"), "M1I (c.3G>A)");
+        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M1? (c.1-1_20del21)"), "M1I (c.1-1_20del21)");
+        // Below is a mutation followed by a frameshift. The FS should be in small letters.
+        CIVIC_FEATURE_NAME_MAPPINGS.put(new CurationKey("VHL", "ENST00000256474", "M54IFS (c.162_166delGGAGG)"),
+                "M54Ifs (c.162_166delGGAGG)");
+
+        // The below variants don't exist
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("GNAS", "ENST00000371100", "T393C"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("TERT", "ENST00000310581", "C228T"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "P81delRVV (c.243_251delGCGCGTCGT)"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "A121I (c.364_365GC>AT)"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "N167T (c.392A>C)"));
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "X214L (c.641G>T)"));
+
+        // The below variant is only possible through an MNV which spans an intron
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "V155C (c.462delA)"));
+
+        // Synonymous variant, can't have an impact or evidence
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "R161R (c.481C>A)"));
+
+        // The below variant is unlikely to be real as it spans multiple exons
+        CIVIC_FEATURE_BLACKLIST.add(new CurationKey("VHL", null, "G114dup (c.342dupGGT)"));
+    }
+
+    private static void populateJaxCuration() {
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3CA", null, "PIK3CA E545k "), "PIK3CA E545K ");
+
+        // These mappings are to work around the missing transcripts in JAX.
+        // We map every mutation that appears on both the canonical + non-canonical form to its canonical form.
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641F "), "EZH2 Y646F ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641H "), "EZH2 Y646H ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641N "), "EZH2 Y646N ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641S "), "EZH2 Y646S ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR2", null, "FGFR2 V564I "), "FGFR2 V565I ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR3", null, "FGFR3 Y373C "), "FGFR3 Y375C ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("FGFR3", null, "FGFR3 K650E "), "FGFR3 K652E ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET L1195V "), "MET L1213V ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET Y1230H "), "MET Y1248H ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET M1250T "), "MET M1268T ");
+
+        // These mappings are identical but used concurrently
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EGFR", null, "EGFR I744_K745insKIPVAI "), "EGFR K745_E746insIPVAIK ");
+        JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("KIT", null, "KIT V559del "), "KIT V560del ");
+
+        // The below variants don't exist
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "FLT3 L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL "));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "FLT3 E612_F613insGYVDFREYEYDLKWEFRPRENLEF "));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("APC", null, "APC S1197* "));
+        JAX_FEATURE_BLACKLIST.add(new CurationKey("PIK3CA", null, "PIK3CA R425L "));
+    }
+
+    private static void populateOncoKBCuration() {
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("EPAS1", "ENST00000263734", "533_534del"), "I533_P534del");
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("EPAS1", "ENST00000263734", "534_536del"), "P534_D536del");
-        ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("KIT", "ENST00000288135", "V559del"),"V560del");
+        ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("KIT", "ENST00000288135", "V559del"), "V560del");
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("PTEN", "ENST00000371953", "I32del"), "I33del");
         ONCOKB_FEATURE_NAME_MAPPINGS.put(new CurationKey("EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
 

@@ -50,8 +50,8 @@ tumor_bam | Path to tumor BAM file
 output_dir | Path to the output directory. This directory will be created if it does not already exist
 gc_profile | Path to GC profile 
 
-The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
-A HG38 equivalent is also available.
+A compressed copy of the GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
+A HG38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
 
 COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome argument must be included.
 
@@ -104,6 +104,8 @@ Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio |
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
 ## Version History and Download Links
+- Upcoming
+  - Alert user that gc_profile should be un-compressed before use
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.8)
   - Added `validation_stringency` parameter.
   - Added explicit `stringsAsFactors = T` to R script

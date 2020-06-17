@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.vicc.fusion;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -28,53 +29,53 @@ public class FusionExtractor {
     public Set<String> uniqueFusionsPair() {
         return uniqueFusionsPair;
     }
+
     @NotNull
     public Set<String> uniqueFusionsPromiscuous() {
         return uniqueFusionsPromiscuous;
     }
 
+    private boolean isFusion(@NotNull Feature feature) {
+        String eventKeyFusion = extractKeyFusion(feature.name());
+        if (eventKeyFusion.equals(FUSION_PAIR)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isFusionPromiscuous(@NotNull Feature feature) {
+        String eventKeyFusion = extractKeyFusion(feature.name());
+        if (eventKeyFusion.equals(FUSION_PROMISCUOUS)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @NotNull
+    private String extractKeyFusion(@NotNull String featureName){
+        //TODO: fix combi events
+        if (featureName.contains("-")) {
+            featureName = "fusions";
+        }
+        if (featureName.toLowerCase().contains("fusions")) {
+            return FUSION_PAIR;
+        } else if (featureName.toLowerCase().contains("fusion")) {
+            return FUSION_PROMISCUOUS;
+        } else {
+            return Strings.EMPTY;
+        }
+    }
+
     public Map<Feature, String> extractKnownFusions(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> fusionsPerFeature = Maps.newHashMap();
-        String gene = Strings.EMPTY;
-        if (viccEntry.source() == ViccSource.ONCOKB) {
-            for (Feature feature : viccEntry.features()) {
-                if (feature.name().toLowerCase().contains("fusions")) {
-                    fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
 
-                } else if (feature.name().toLowerCase().contains("fusion")) {
-                    if (feature.name().toLowerCase().contains(" - ")) {
-                        gene = feature.name().split(" Fusion")[0];
-                        fusionsPerFeature.put(feature, FUSION_PAIR);
-                        uniqueFusionsPair.add(gene);
-                    } else {
-                        gene = feature.name().split(" ")[0];
-                        fusionsPerFeature.put(feature, FUSION_PAIR);
-                        uniqueFusionsPromiscuous.add(gene);
-                    }
-                }
-            }
-        } else if (viccEntry.source() == ViccSource.CGI) {
-            for (Feature feature : viccEntry.features()) {
-                if (feature.name().split(" ", 2).length == 1 && feature.geneSymbol().contains("-") && !feature.biomarkerType().equals("mutant")){
-                    fusionsPerFeature.put(feature, FUSION_PAIR);
-                    if (feature.name().toLowerCase().contains("fusion")) {
-                        if (feature.geneSymbol().contains("-")) {
-                            fusionsPerFeature.put(feature, FUSION_PAIR);
-                        } else {
-                            fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
-                        }
-                    }
-
-                }
-                if (feature.name().toLowerCase().contains("fusions")) {
-                    fusionsPerFeature.put(feature, feature.name());
-                }
-            }
-        } else if (viccEntry.source() == ViccSource.CIVIC) {
-            for (Feature feature : viccEntry.features()) {
-                if (feature.name().toLowerCase().contains("fusions")) {
-                    fusionsPerFeature.put(feature, feature.name());
-                }
+        for (Feature feature : viccEntry.features()) {
+            if (isFusion(feature)) {
+                fusionsPerFeature.put(feature, FUSION_PAIR);
+            } else if (isFusionPromiscuous(feature)) {
+                fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
             }
         }
         return fusionsPerFeature;

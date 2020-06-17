@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
+import com.hartwig.hmftools.vicc.util.TranscriptExtractor;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -42,14 +42,7 @@ public abstract class ViccEntry {
     @Nullable
     @Value.Derived
     public String transcriptId() {
-        if (source() == ViccSource.ONCOKB) {
-            String transcriptId = ((OncoKb)kbSpecificObject()).transcriptID();
-            return !transcriptId.isEmpty() ? transcriptId : null;
-        }
-
-        // TODO Implemented for all sources.
-        return null;
+        return TranscriptExtractor.extractTranscriptId(this);
     }
-
 }
 

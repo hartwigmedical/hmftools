@@ -7,7 +7,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class CurationKey {
+public class CurationKey {
 
     @NotNull
     private final String gene;
@@ -55,5 +55,11 @@ class CurationKey {
     @Override
     public int hashCode() {
         return Objects.hash(gene, transcript, featureName);
+    }
+
+    @Override
+    public String toString() {
+        return "CurationKey{" + "gene='" + gene + '\'' + ", transcript='" + transcript + '\'' + ", featureName='" + featureName + '\''
+                + '}';
     }
 }

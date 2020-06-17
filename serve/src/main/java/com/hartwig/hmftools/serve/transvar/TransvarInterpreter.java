@@ -65,13 +65,15 @@ class TransvarInterpreter {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
         if (record.variantSpanMultipleExons()) {
-            // In this case we only generate hotspots for the base mutation.
-            hotspots.add(ImmutableVariantHotspotImpl.builder()
-                    .chromosome(record.chromosome())
-                    .position(record.gdnaPosition())
-                    .ref(snvMnv.gdnaRef())
-                    .alt(snvMnv.gdnaAlt())
-                    .build());
+            // In this case we only generate hotspots for the base mutation in case it does not span entire codon.
+            if (snvMnv.gdnaRef().length() < 3) {
+                hotspots.add(ImmutableVariantHotspotImpl.builder()
+                        .chromosome(record.chromosome())
+                        .position(record.gdnaPosition())
+                        .ref(snvMnv.gdnaRef())
+                        .alt(snvMnv.gdnaAlt())
+                        .build());
+            }
         } else {
             // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
             int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(snvMnv, strand);
