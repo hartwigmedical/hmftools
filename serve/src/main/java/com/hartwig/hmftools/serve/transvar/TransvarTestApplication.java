@@ -25,23 +25,6 @@ public class TransvarTestApplication {
 
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
-        // Below cases are different genomic mutations leading to identical protein impacts due to redundancy in trinucleotide encoding
-        // (different bases encoding for the same AA)
-        // Eg, While the mutations that delete codons 842-845 from PDGFRA are genomically different from 843-846, in terms of AA they will
-        // have the same impact due to redundancy in trinucleotide encoding.
-//        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "D842_H845del");
-//        extractAndPrintHotspots(transvar, "PDGFRA", "ENST00000257290", "I843_D846del");
-//
-//        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "K550_W557del");
-//        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "P551_K558del");
-//
-//        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "V555_V559del");
-//        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "Q556_V560del");
-//
-//        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "P577_W582delinsPYD");
-//        extractAndPrintHotspots(transvar, "KIT", "ENST00000288135", "H580_W582del");
-
-        // Below variant is annotated as p.DI842IM by SnpEff which is functionally identical to below.
         extractAndPrintHotspots(transvar, "VHL", null, "V155C");
         extractAndPrintHotspots(transvar, "VHL", null, "R161R");
     }
