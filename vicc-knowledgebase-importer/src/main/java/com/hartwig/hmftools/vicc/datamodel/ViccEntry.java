@@ -56,7 +56,9 @@ public abstract class ViccEntry {
                     return null;
                 }
                 int versionSeparator = transcriptId.indexOf(".");
-                return versionSeparator >= 0 ? transcriptId.substring(0, versionSeparator) : transcriptId;
+                String transcript = versionSeparator >= 0 ? transcriptId.substring(0, versionSeparator) : transcriptId;
+                // CIVIC occasionally just contains "ENST" or "ENST0000" as transcript. Need to filter that out.
+                return transcript.length() == 15 ? transcript : null;
             }
             case CGI: {
                 List<String> transcripts = ((Cgi) kbSpecificObject()).transcripts();
