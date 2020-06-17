@@ -265,11 +265,14 @@ public class ViccExtractorTestApplication {
                 for (VariantHotspot hotspot : featureResult.getValue()) {
                     String existingFeatureAttribute = convertedMap.get(hotspot);
                     if (existingFeatureAttribute != null && !existingFeatureAttribute.equals(newFeatureAttribute)) {
-                        LOGGER.warn("Hotspot {} already recorded but for different feature! Existing feature={}, new feature={}",
-                                hotspot,
-                                existingFeatureAttribute,
-                                newFeatureAttribute);
-                    } else {
+                        if (!existingFeatureAttribute.contains("null") && !newFeatureAttribute.contains("null")) {
+                            LOGGER.warn("Hotspot {} already recorded but for different feature! Existing feature={}, new feature={}",
+                                    hotspot,
+                                    existingFeatureAttribute,
+                                    newFeatureAttribute);
+                        }
+                    } else if (existingFeatureAttribute == null || existingFeatureAttribute.contains("null")) {
+                        // We favor feature attributes which are based on explicit transcript.
                         convertedMap.put(hotspot, newFeatureAttribute);
                     }
                 }
