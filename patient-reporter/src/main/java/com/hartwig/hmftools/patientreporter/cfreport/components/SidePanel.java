@@ -77,7 +77,7 @@ public final class SidePanel {
         }
 
         if (page.getDocument().getNumberOfPages() == 1) {
-            cv.add(new Paragraph("FOR" + formNumber + "v" + (PatientReporterApplication.VERSION != null
+            cv.add(new Paragraph("FOR-" + formNumber + "v" + (PatientReporterApplication.VERSION != null
                     ? PatientReporterApplication.VERSION
                     : "X.X")).setFixedPosition(pageSize.getWidth() - RECTANGLE_WIDTH + 4, 40, 40)
                     .setRotationAngle(Math.PI / 2)
