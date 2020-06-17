@@ -4,6 +4,8 @@ import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailType;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -11,7 +13,9 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class SidePanel {
 
@@ -23,7 +27,8 @@ public final class SidePanel {
     private SidePanel() {
     }
 
-    public static void renderSidePanel(@NotNull PdfPage page, @NotNull SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
+    public static void renderSidePanel(@NotNull PdfPage page, @NotNull SampleReport sampleReport, boolean fullHeight, boolean fullContent,
+            @Nullable QCFailReason reason, double purity, boolean hasRealiablePurity) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
@@ -50,12 +55,34 @@ public final class SidePanel {
             }
         }
 
+        String formNumber = Strings.EMPTY;
+        if (QCFailReason.INSUFFICIENT_DNA == reason) {
+            formNumber = "102";
+        } else if (QCFailReason.TECHNICAL_FAILURE == reason) {
+            formNumber = "082";
+        } else if (QCFailReason.SUFFICIENT_TCP_QC_FAILURE == reason) {
+            formNumber = "083";
+        } else if (QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS == reason) {
+            formNumber = "100";
+        } else if (QCFailReason.INSUFFICIENT_TCP_DEEP_WGS == reason) {
+            formNumber = "100";
+        } else {
+            if (purity < 0.20 || !hasRealiablePurity) {
+                formNumber = "080";
+            } else {
+                formNumber = "XXX";
+
+            }
+
+        }
+
         if (page.getDocument().getNumberOfPages() == 1) {
-            cv.add(new Paragraph(
-                    "FORXXX v" + (PatientReporterApplication.VERSION != null ? PatientReporterApplication.VERSION : "X.X")).setFixedPosition(
-                    pageSize.getWidth() - RECTANGLE_WIDTH + 4,
-                    40,
-                    40).setRotationAngle(Math.PI / 2).setFontColor(ReportResources.PALETTE_LIGHT_GREY).setFontSize(6));
+            cv.add(new Paragraph("FOR" + formNumber + "v" + (PatientReporterApplication.VERSION != null
+                    ? PatientReporterApplication.VERSION
+                    : "X.X")).setFixedPosition(pageSize.getWidth() - RECTANGLE_WIDTH + 4, 40, 40)
+                    .setRotationAngle(Math.PI / 2)
+                    .setFontColor(ReportResources.PALETTE_LIGHT_GREY)
+                    .setFontSize(6));
         }
 
         canvas.release();

@@ -5,6 +5,7 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Header;
 import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanel;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -14,11 +15,16 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class PageEventHandler implements IEventHandler {
 
     @NotNull
     private final SampleReport sampleReport;
+    @Nullable
+    private final QCFailReason qcFailReason;
+    private final double purity;
+    private final boolean hasReliablePurity;
     @NotNull
     private final Footer footer;
     @NotNull
@@ -32,8 +38,11 @@ class PageEventHandler implements IEventHandler {
 
     private PdfOutline outline = null;
 
-    PageEventHandler(@NotNull final PatientReport patientReport) {
+    PageEventHandler(@NotNull final PatientReport patientReport, @Nullable final QCFailReason reason, double purity, boolean hasReliablePurity) {
         this.sampleReport = patientReport.sampleReport();
+        this.qcFailReason = reason;
+        this.purity = purity;
+        this.hasReliablePurity = hasReliablePurity;
         this.header = new Header(patientReport.logoCompanyPath());
         this.footer = new Footer();
     }
@@ -51,7 +60,7 @@ class PageEventHandler implements IEventHandler {
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
             }
 
-            SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
+            SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent, qcFailReason, purity, hasReliablePurity);
             footer.renderFooter(page, !fullSidebar);
         }
     }
