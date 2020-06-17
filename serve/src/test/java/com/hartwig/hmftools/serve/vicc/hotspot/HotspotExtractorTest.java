@@ -40,5 +40,8 @@ public class HotspotExtractorTest {
 
         // Wild-type mutations are ignored
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("V600X"));
+
+        // Mutations with logical OR are ignored
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("V600E/K"));
     }
 }

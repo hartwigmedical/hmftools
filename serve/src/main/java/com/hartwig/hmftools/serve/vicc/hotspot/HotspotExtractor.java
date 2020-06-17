@@ -172,6 +172,7 @@ public class HotspotExtractor {
         }
 
         String newAminoAcid = feature.substring(firstNotDigit);
-        return !newAminoAcid.equals("X");
+        // X is a wildcard that we don't support, and "/" indicates logical OR that we don't support.
+        return !newAminoAcid.equals("X") && !newAminoAcid.contains("/");
     }
 }

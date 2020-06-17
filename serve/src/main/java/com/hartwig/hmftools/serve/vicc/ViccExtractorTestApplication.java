@@ -77,7 +77,7 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for whether transvar is enabled", TRANSVAR_ENABLED);
 
-        List<ViccSource> sources = Lists.newArrayList(ViccSource.CGI);
+        List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC);
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sources).maxEntriesToInclude(MAX_ENTRIES).build();
         List<ViccEntry> viccEntries = readAndCurate(viccJsonPath, querySelection);
