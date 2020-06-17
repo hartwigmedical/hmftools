@@ -24,6 +24,12 @@ import java.io.IOException
 
 fun main(args: Array<String>) {
 
+    @Throws(ParseException::class)
+    fun createCommandLine(args: Array<String>, options: Options): CommandLine {
+        val parser: CommandLineParser = DefaultParser()
+        return parser.parse(options, args)
+    }
+
     val options = GripssConfig.createOptions()
     try {
         val cmd = createCommandLine(args, options)
@@ -161,9 +167,4 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     }
 }
 
-@Throws(ParseException::class)
-fun createCommandLine(args: Array<String>, options: Options): CommandLine {
-    val parser: CommandLineParser = DefaultParser()
-    return parser.parse(options, args)
-}
 
