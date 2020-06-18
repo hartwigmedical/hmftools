@@ -534,6 +534,12 @@ public class FusionDisruptionAnalyser
             if (lowerSV.isSglBreakend() && lowerSV.getSglMappings().isEmpty())
                 continue;
 
+            if(lowerBreakend == null)
+            {
+                // to-do - decide how to represent the mappings from a SGL
+                continue;
+            }
+
             final List<GeneAnnotation> genesListLower = getBreakendGeneList(lowerSV, lowerBreakend.usesStart());
 
             if (genesListLower.isEmpty())

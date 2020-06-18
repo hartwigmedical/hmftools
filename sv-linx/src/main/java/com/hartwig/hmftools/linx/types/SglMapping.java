@@ -51,7 +51,7 @@ public class SglMapping
         return new SglMapping(chromosome, position, orientation, cigar, qualScore);
     }
 
-    public static void converFromInsertSequenceAlignments(final List<SglMapping> mappings, final String alignments)
+    public static void convertFromInsertSequenceAlignments(final List<SglMapping> mappings, final String alignments)
     {
         if(alignments.isEmpty())
             return;

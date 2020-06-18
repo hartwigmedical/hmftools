@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
-import static com.hartwig.hmftools.linx.types.SglMapping.converFromInsertSequenceAlignments;
+import static com.hartwig.hmftools.linx.types.SglMapping.convertFromInsertSequenceAlignments;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
@@ -133,8 +133,15 @@ public class SvVarData
 
         setAssemblyData(false);
 
-        mSglMappings = mSVData.type() == SGL ? Lists.newArrayList() : null;
-        converFromInsertSequenceAlignments(mSglMappings, svData.insertSequenceAlignments());
+        if(isSglBreakend())
+        {
+            mSglMappings = Lists.newArrayList();
+            convertFromInsertSequenceAlignments(mSglMappings, svData.insertSequenceAlignments());
+        }
+        else
+        {
+            mSglMappings = null;
+        }
     }
 
     public final int id() { return mSVData.id(); }
