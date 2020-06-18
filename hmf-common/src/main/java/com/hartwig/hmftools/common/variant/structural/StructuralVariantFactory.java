@@ -103,7 +103,7 @@ public class StructuralVariantFactory {
                     }
                 }
             } else {
-                results.add(create(context));
+                results.add(createFromMantaWithBPI(context));
             }
         }
     }
@@ -129,15 +129,15 @@ public class StructuralVariantFactory {
     }
 
     @NotNull
-    private static StructuralVariant create(@NotNull VariantContext context) {
+    private static StructuralVariant createFromMantaWithBPI(@NotNull VariantContext context) {
         final StructuralVariantType type = type(context);
         Preconditions.checkArgument(!StructuralVariantType.BND.equals(type));
 
         final int start = context.getStart();
         final int end = context.getEnd();
-        final List<Double> af = context.hasAttribute(BPI_AF)
-                ? context.getAttributeAsDoubleList(BPI_AF, 0.0)
-                : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
+
+        // Don't try and use TAF
+        final List<Double> af =  context.getAttributeAsDoubleList(BPI_AF, 0.0);
 
         byte startOrientation = 0, endOrientation = 0;
         switch (type) {
@@ -217,9 +217,6 @@ public class StructuralVariantFactory {
 
         final int start = first.getStart();
         final int end = second.getStart();
-        final List<Double> af = first.hasAttribute(BPI_AF)
-                ? first.getAttributeAsDoubleList(BPI_AF, 0.0)
-                : first.hasAttribute(TAF) ? first.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         final String alt = first.getAlternateAllele(0).getDisplayString();
         final Matcher match = BREAKEND_REGEX.matcher(alt);
@@ -245,13 +242,13 @@ public class StructuralVariantFactory {
         final StructuralVariantLeg startLeg =
                 setLegCommon(ImmutableStructuralVariantLegImpl.builder(), first, isSmallDelDup, startOrientation).position(start)
                         .homology(first.getAttributeAsString(HOM_SEQ, ""))
-                        .alleleFrequency(af.size() == 2 ? af.get(0) : null)
+                        .alleleFrequency(unadjustedAllelicFrequency(first))
                         .build();
 
         final StructuralVariantLeg endLeg = setLegCommon(ImmutableStructuralVariantLegImpl.builder(), second, isSmallDelDup, endOrientation)
                 .position(end)
                 .homology(second.getAttributeAsString(HOM_SEQ, ""))
-                .alleleFrequency(af.size() == 2 ? af.get(1) : null)
+                .alleleFrequency(unadjustedAllelicFrequency(second))
                 .build();
 
         StructuralVariantType inferredType = StructuralVariantType.BND;
@@ -276,6 +273,18 @@ public class StructuralVariantFactory {
                 .startContext(first)
                 .endContext(second)
                 .build();
+    }
+
+    public static Double unadjustedAllelicFrequency(@NotNull VariantContext context) {
+        if (context.hasAttribute(TAF)) {
+            return context.getAttributeAsDoubleList(TAF, 0.0).get(0);
+        }
+
+        if (context.hasAttribute(BPI_AF)) {
+            return context.getAttributeAsDoubleList(BPI_AF, 0.0).get(0);
+        }
+
+        return null;
     }
 
     @NotNull
