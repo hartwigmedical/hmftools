@@ -11,6 +11,7 @@ class DsbLink(private val duplicates: Set<String>, private val variantStore: Var
     companion object {
         private const val MAX_DSB_SEEK_DISTANCE = 1000
         private const val MAX_DSB_ADDITIONAL_DISTANCE = 30
+        private const val MIN_DSB_QUAL = 100
 
         operator fun invoke(variantStore: VariantStore, assemblyLinkStore: LinkStore, duplicates: Set<String>): LinkStore {
 
@@ -29,9 +30,17 @@ class DsbLink(private val duplicates: Set<String>, private val variantStore: Var
     }
 
     fun dsbLinks(linkId: Int, variant: StructuralVariantContext): List<Link> {
+        if (variant.qual < MIN_DSB_QUAL) {
+            return Collections.emptyList()
+        }
+
         val nearby = findNearby(variant)
         if (nearby.size == 1) {
             val other = nearby.iterator().next()
+            if (other.qual < MIN_DSB_QUAL) {
+                return Collections.emptyList()
+            }
+
             val linkIsSymmetric = findNearby(other).size == 1
             if (!linkIsSymmetric) {
                 return Collections.emptyList()
