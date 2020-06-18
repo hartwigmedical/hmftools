@@ -106,9 +106,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         return Pair(minDistance, maxDistance)
     }
 
-    private fun isAlternative(target: StructuralVariantContext, other: StructuralVariantContext): Boolean {
-        return target.orientation == other.orientation && isMatchingPosition(target, other)
-    }
+
 
     private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
         val isMatchingPositionAndOrientation = { other: StructuralVariantContext -> isAlternative(variant, other) }
@@ -125,10 +123,14 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         return selectOthersNearby(variant, MAX_TRANSITIVE_ADDITIONAL_DISTANCE, MAX_TRANSITIVE_SEEK_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x) }
     }
 
-    private fun isMatchingPosition(target: StructuralVariantContext, other: StructuralVariantContext): Boolean {
+    private fun isAlternative(target: StructuralVariantContext, other: StructuralVariantContext, additionalAllowance: Int = 1): Boolean {
+        if (target.orientation != other.orientation) {
+            return false
+        }
+
         val targetInsDistance = insertSequenceAdditionalDistance(target)
-        val minStart = target.minStart - targetInsDistance.first
-        val maxStart = target.maxStart + targetInsDistance.second
+        val minStart = target.minStart - targetInsDistance.first - additionalAllowance
+        val maxStart = target.maxStart + targetInsDistance.second + additionalAllowance
 
         val otherInsDistance = insertSequenceAdditionalDistance(other);
         val otherMinStart = other.minStart - otherInsDistance.first
