@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 
 import static org.junit.Assert.assertEquals;
 
+import static junit.framework.TestCase.assertTrue;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -20,6 +22,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -29,7 +32,79 @@ import org.junit.Test;
 public class HomDisruptionsTest
 {
     @Test
-    public void testDelDisruption()
+    public void testSimpleDelDisruption()
+    {
+        LinxTester tester = new LinxTester();
+
+        tester.setNonClusterAllelePloidies(1, 0);
+
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+        tester.initialiseFusions(geneTransCache);
+
+        // must be a known TSG driver
+        String geneName = "TP53";
+        String geneId = "ENSG00000141510";
+        String chromosome = "17";
+        byte strand = 1;
+
+        int transStart = 10000;
+        int transEnd = 130000;
+
+        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
+
+        List<TranscriptData> transDataList = Lists.newArrayList();
+
+        int transId = 1;
+        int[] exonStarts = new int[] { 10000, 40000, 70000, 100000, 130000};
+        int[] exonPhases = new int[] {-1, 0, 0, 0, -1};
+
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        transDataList.add(transData);
+
+        addTransExonData(geneTransCache, geneId, transDataList);
+        addGeneData(geneTransCache, chromosome, geneList);
+
+        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
+        driverAnnotator.setSamplePurityData(2, false);
+
+        // one pair of DELs form a DB but the DELs themselves are not disruptive and since there's no way of knowing if they're phased,
+        // they aren't considered to make a hom-disruption
+        SvVarData del1 = createDel(tester.nextVarId(), chromosome, 12000, 24000);
+        SvVarData del2 = createDel(tester.nextVarId(), chromosome, 18000, 30000);
+
+        SvVarData del3 = createDel(tester.nextVarId(), chromosome, 42000, 85000);
+        SvVarData del4 = createDel(tester.nextVarId(), chromosome, 75000, 120000);
+
+        tester.AllVariants.add(del1);
+        tester.AllVariants.add(del2);
+        tester.AllVariants.add(del3);
+        tester.AllVariants.add(del4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(4, tester.Analyser.getClusters().size());
+
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
+
+        driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
+
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, driverAnnotator.getDriverGeneDataList().size());
+        DriverGeneData dgData = driverAnnotator.getDriverGeneDataList().get(0);
+
+        assertEquals(1, dgData.getEvents().size());
+        assertEquals(transData, dgData.TransData);
+        assertEquals(ResolvedType.DEL, dgData.getEvents().get(0).getCluster().getResolvedType());
+        assertTrue(dgData.getEvents().get(0).getCluster().getSVs().contains(del4));
+        assertEquals(HOM_DEL_DISRUPTION, dgData.getEvents().get(0).Type);
+    }
+
+    @Test
+    public void testChainedDelDisruption()
     {
         LinxTester tester = new LinxTester();
 

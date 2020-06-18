@@ -848,6 +848,9 @@ public class DriverGeneAnnotator
 
     private void findDisruptiveDelDrivers()
     {
+        // find homozygous disruptions by looking for either:
+        // 1. Evidence of copy number dropping to zero within a gene from disruptive SVs other than simple (unphased) DELs
+        // 2. Duplication of exons from DUPs or other complex clusters
         final List<String> delDriverGeneIds = mDriverGeneDataList.stream()
                 .filter(x -> x.DriverData.driver() == DriverType.DEL)
                 .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
@@ -864,7 +867,7 @@ public class DriverGeneAnnotator
                 if(!delType && !dupType)
                     continue;
 
-                List<GeneAnnotation> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
+                final List<GeneAnnotation> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
                         .filter(x -> !delDriverGeneIds.contains(x.StableId))
                         .filter(x -> mReportableDelGeneIds.contains(x.StableId))
                         .collect(Collectors.toList());
@@ -893,25 +896,36 @@ public class DriverGeneAnnotator
                         if(dbLink.length() < 0)
                             cnLowSide -= otherSvPloidy;
 
-                        if(cnLowSide < TOTAL_CN_LOSS)
-                        {
-                            delDriverGeneIds.add(gene.StableId);
+                        if(cnLowSide >= TOTAL_CN_LOSS)
+                            continue;
 
-                            LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozyous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
-                                    trans.geneName(), breakend.getCluster().id(), breakend,
-                                    formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvPloidy));
+                        // both the SVs involved in the deletion must be disruptive, ie cannot be simple intronic DELs
+                        final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
 
-                            DriverGeneData dgData = createDriverData(gene);
-                            DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
-                            event.addSvBreakendPair(dbLink.firstBreakend(), dbLink.secondBreakend(), "DB");
-                            event.setCluster(breakend.getCluster());
-                            dgData.addEvent(event);
-                            disDelDrivers.add(dgData);
-                        }
+                        final Transcript matchingTrans = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+                                .filter(x -> x.StableId.equals(gene.StableId))
+                                .map(x -> x.canonical())
+                                .findFirst().orElse(null);
+
+                        if(matchingTrans == null || !matchingTrans.isDisruptive())
+                            continue;
+
+                        delDriverGeneIds.add(gene.StableId);
+
+                        LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozyous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
+                                trans.geneName(), breakend.getCluster().id(), breakend,
+                                formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvPloidy));
+
+                        DriverGeneData dgData = createDriverData(gene);
+                        DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
+                        event.addSvBreakendPair(breakend, otherBreakend, "DB");
+                        event.setCluster(breakend.getCluster());
+                        dgData.addEvent(event);
+                        disDelDrivers.add(dgData);
                     }
                     else
                     {
-                        // DUP must be wholy contained within the same gene and
+                        // DUP must be wholy contained within the same gene
                         if(!breakend.getSV().getGenesList(!breakend.usesStart()).stream().anyMatch(x -> x.StableId == gene.StableId))
                             continue;
 
