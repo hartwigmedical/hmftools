@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
+import static com.hartwig.hmftools.linx.types.SglMapping.converFromInsertSequenceAlignments;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
@@ -36,36 +37,36 @@ public class SvVarData
 {
     // full set of DB fields
     private final StructuralVariantData mSVData;
-    private String[] mChr; // stripped of 'chr' for logging
-    private ChromosomeArm[] mArm;
-    private SvBreakend[] mBreakend;
-    private boolean[] mFragileSite;
-    private String[] mLineElement;
+    private final String[] mChr; // stripped of 'chr' for logging
+    private final ChromosomeArm[] mArm;
+    private final SvBreakend[] mBreakend;
+    private final boolean[] mFragileSite;
+    private final String[] mLineElement;
 
-    private String[] mAssemblyData;
+    private final String[] mAssemblyData;
 
     private SvCluster mCluster;
     private String mClusterReason;
 
-    private SvBreakend[] mFoldbackBreakends; // either the 2 breakends for this SV, or another SV's breaked
-    private int[] mFoldbackLength;
-    private String[] mFoldbackInfo;
+    private final SvBreakend[] mFoldbackBreakends; // either the 2 breakends for this SV, or another SV's breaked
+    private final int[] mFoldbackLength;
+    private final String[] mFoldbackInfo;
 
     private int mNearestSvDistance;
     private String mNearestSvRelation;
 
-    private List<List<SvLinkedPair>> mTiLinks; // start and end lists of inferred or assembled TIs
+    private final List<SvLinkedPair>[] mTiLinks; // start and end lists of inferred or assembled TIs
 
-    private SvLinkedPair[] mDbLink; // deletion bridge formed from this breakend to another
-    private List<List<String>> mTIAssemblies;
+    private final SvLinkedPair[] mDbLink; // deletion bridge formed from this breakend to another
+    private final List<String>[] mTIAssemblies;
 
-    private List<List<GeneAnnotation>> mGenes;
+    private final List<GeneAnnotation>[] mGenes;
 
-    private double[] mReplicationOrigin;
+    private final double[] mReplicationOrigin;
 
     // copy number related data
-    private double[] mCopyNumber; // cached from SV data but modifiable
-    private double[] mCopyNumberChange;
+    private final double[] mCopyNumber; // cached from SV data but modifiable
+    private final double[] mCopyNumberChange;
     private double mJcn;
 
     private boolean mHasCalcJcn;
@@ -75,6 +76,8 @@ public class SvVarData
     private SvCNData mCnDataPostStart; // segment starting with the position position
     private SvCNData mCnDataPrevEnd;
     private SvCNData mCnDataPostEnd;
+
+    private final List<SglMapping> mSglMappings;
 
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
     public static final String INF_SV_TYPE = "INF";
@@ -89,13 +92,6 @@ public class SvVarData
     {
         mSVData = svData;
 
-        init();
-
-        setAssemblyData(false);
-    }
-
-    private void init()
-    {
         mArm = new ChromosomeArm[SE_PAIR];
         mChr = new String[] { stripChromosome(chromosome(true)), stripChromosome(chromosome(false)) };
 
@@ -110,22 +106,18 @@ public class SvVarData
         mCluster = null;
 
         mDbLink = new SvLinkedPair[SE_PAIR];
-        mTiLinks = Lists.newArrayListWithExpectedSize(2);
-        mTiLinks.add(Lists.newArrayList());
-        mTiLinks.add(Lists.newArrayList());
+        mTiLinks = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         mFoldbackBreakends = new SvBreakend[SE_PAIR];
         mFoldbackLength = new int[] {-1, -1};
         mFoldbackInfo = new String[] {"", ""};
 
-        mGenes = Lists.newArrayListWithExpectedSize(2);
-        mGenes.add(Lists.newArrayList());
-        mGenes.add(Lists.newArrayList());
+        mGenes = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         mReplicationOrigin = new double[SE_PAIR];
 
         mAssemblyData = new String[SE_PAIR];
-        mTIAssemblies = Lists.newArrayListWithExpectedSize(2);
+        mTIAssemblies = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         mCopyNumber = new double[] { mSVData.adjustedStartCopyNumber(),  mSVData.adjustedEndCopyNumber() };
         mCopyNumberChange = new double[] {mSVData.adjustedStartCopyNumberChange(), mSVData.adjustedEndCopyNumberChange() };
@@ -138,6 +130,11 @@ public class SvVarData
         mCnDataPostStart = null;
         mCnDataPrevEnd = null;
         mCnDataPostEnd = null;
+
+        setAssemblyData(false);
+
+        mSglMappings = mSVData.type() == SGL ? Lists.newArrayList() : null;
+        converFromInsertSequenceAlignments(mSglMappings, svData.insertSequenceAlignments());
     }
 
     public final int id() { return mSVData.id(); }
@@ -295,23 +292,23 @@ public class SvVarData
 
     public final List<SvLinkedPair> getLinkedPairs(boolean isStart)
     {
-        return mTiLinks.get(seIndex(isStart));
+        return mTiLinks[seIndex(isStart)];
     }
 
     public final List<SvLinkedPair> getAssembledLinkedPairs(boolean isStart)
     {
-        return mTiLinks.get(seIndex(isStart)).stream().filter(SvLinkedPair::isAssembled).collect(Collectors.toList());
+        return mTiLinks[seIndex(isStart)].stream().filter(SvLinkedPair::isAssembled).collect(Collectors.toList());
     }
 
     public final SvLinkedPair getLinkedPair(boolean isStart)
     {
-        return mTiLinks.get(seIndex(isStart)).isEmpty() ? null : mTiLinks.get(seIndex(isStart)).get(0);
+        return mTiLinks[seIndex(isStart)].isEmpty() ? null : mTiLinks[seIndex(isStart)].get(0);
     }
 
     public void addLinkedPair(final SvLinkedPair link, boolean isStart)
     {
         // add in order from shortest to longest
-        List<SvLinkedPair> links = mTiLinks.get(seIndex(isStart));
+        final List<SvLinkedPair> links = mTiLinks[seIndex(isStart)];
 
         int index = 0;
         while(index < links.size())
@@ -444,7 +441,7 @@ public class SvVarData
 
     public final List<String> getTIAssemblies(boolean isStart)
     {
-        return mTIAssemblies.get(seIndex(isStart));
+        return mTIAssemblies[seIndex(isStart)];
     }
 
     public boolean isEquivBreakend()
@@ -452,12 +449,9 @@ public class SvVarData
         return getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV);
     }
 
-    public final List<GeneAnnotation> getGenesList(boolean isStart) { return mGenes.get(seIndex(isStart)); }
+    public final List<SglMapping> getSglMappings() { return mSglMappings; }
 
-    public void setGenesList(final List<GeneAnnotation> genesList, boolean isStart)
-    {
-        mGenes.get(seIndex(isStart)).addAll(genesList);
-    }
+    public final List<GeneAnnotation> getGenesList(boolean isStart) { return mGenes[seIndex(isStart)]; }
 
     private static final int PRE_TRANSCRIPT_DISTANCE = 10000;
 
@@ -480,20 +474,14 @@ public class SvVarData
 
     public boolean hasAssemblyLink(boolean isStart)
     {
-        return mTiLinks.get(seIndex(isStart)).stream().anyMatch(SvLinkedPair::isAssembled);
+        return mTiLinks[seIndex(isStart)].stream().anyMatch(SvLinkedPair::isAssembled);
     }
 
     private void setAssemblyData(boolean useExisting)
     {
-        if(mTIAssemblies.isEmpty())
-        {
-            mTIAssemblies.add(Lists.newArrayList());
-            mTIAssemblies.add(Lists.newArrayList());
-        }
-
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            List<String> tiAssemblies = mTIAssemblies.get(se);
+            List<String> tiAssemblies = mTIAssemblies[se];
 
             if(!useExisting)
             {

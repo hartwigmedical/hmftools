@@ -51,6 +51,7 @@ import com.hartwig.hmftools.linx.cn.JcnCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.ResolvedType;
+import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -238,18 +239,25 @@ public class SvSampleAnalyser {
         if (selectiveLoading)
         {
             // only load transcript info for the genes covered
-            List<String> restrictedGeneIds = Lists.newArrayList();
+            final List<String> restrictedGeneIds = Lists.newArrayList();
 
             for (final SvVarData var : svList)
             {
                 for (int be = SE_START; be <= SE_END; ++be)
                 {
                     if (be == SE_END && var.isSglBreakend())
-                        continue;
-
-                    boolean isStart = isStart(be);
-
-                    ensemblDataCache.populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
+                    {
+                        // special case of looking for mappings to locations containing genes so hotspot fusions can be found
+                        for(final SglMapping mapping : var.getSglMappings())
+                        {
+                            ensemblDataCache.populateGeneIdList(restrictedGeneIds, mapping.Chromosome, mapping.Position, upstreamDistance);
+                        }
+                    }
+                    else
+                    {
+                        boolean isStart = isStart(be);
+                        ensemblDataCache.populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
+                    }
                 }
             }
 
@@ -261,23 +269,35 @@ public class SvSampleAnalyser {
         {
             for (int be = SE_START; be <= SE_END; ++be)
             {
-                if (be == SE_END && var.isSglBreakend())
-                    continue;
-
                 boolean isStart = isStart(be);
+                final List<GeneAnnotation> genesList = var.getGenesList(isStart);
 
-                List<GeneAnnotation> genesList = ensemblDataCache.findGeneAnnotationsBySv(
-                        var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
-
-                if (genesList.isEmpty())
-                    continue;
-
-                for (GeneAnnotation gene : genesList)
+                if (be == SE_END && var.isSglBreakend())
                 {
-                    gene.setSvData(var.getSvData());
-                }
+                    // special case of looking for mappings to locations containing genes so hotspot fusions can be found
+                    for(final SglMapping mapping : var.getSglMappings())
+                    {
+                        final List<GeneAnnotation> mappingGenes = ensemblDataCache.findGeneAnnotationsBySv(
+                                var.id(), isStart, mapping.Chromosome, mapping.Position, mapping.Orientation, upstreamDistance);
 
-                var.setGenesList(genesList, isStart);
+
+
+                        mappingGenes.forEach(x -> x.setPositionalData(mapping.Chromosome, mapping.Position, mapping.Orientation));
+                        mappingGenes.forEach(x -> x.setType(var.type()));
+
+                        genesList.addAll(mappingGenes);
+                    }
+                }
+                else
+                {
+                    genesList.addAll(ensemblDataCache.findGeneAnnotationsBySv(
+                            var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance));
+
+                    for (GeneAnnotation gene : genesList)
+                    {
+                        gene.setSvData(var.getSvData());
+                    }
+                }
             }
         }
     }
