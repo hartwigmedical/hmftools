@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.gripss.link
 
 import com.hartwig.hmftools.gripss.VariantContextTestFactory
+import com.hartwig.hmftools.gripss.VariantContextTestFactory.createImpreciseVariant
+import com.hartwig.hmftools.gripss.VariantContextTestFactory.createVariant
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.toSv
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.VariantStore
@@ -29,6 +31,24 @@ class TransitiveLinkTest {
         assertTrue(victim.transitiveLink(v3).isNotEmpty())
         assertTrue(victim.transitiveLink(v4).isNotEmpty())
 
+    }
+
+    @Test
+    fun transitiveLinksShouldNotBreakAssemblies() {
+
+        val v1start = createImpreciseVariant("1", 1000, "id1s", "A", "A[1:2000[", 1000, "id1e").toSv()
+        val v1end = createImpreciseVariant("1", 2000, "id1e", "A", "]1:1000]A", 1000, "id1s").toSv()
+
+        val v2start = createVariant("1", 1000, "id2s", "A", "A[1:1400[", 1000, "id2e").toSv()
+        val v2end = createVariant("1", 1400, "id2e", "A", "]1:1000]A", 1000, "id2s").toSv()
+        val v3start = createVariant("1", 1600, "id3s", "A", "A[1:2000[", 1000, "id3e").toSv()
+        val v3end = createVariant("1", 2000, "id3e", "A", "]1:1600]A", 1000, "id3s").toSv()
+        val variantStore = VariantStore(listOf(v1start, v1end, v2start, v2end, v3start, v3end))
+
+        assertTrue(TransitiveLink(LinkStore(listOf()), variantStore).transitiveLink(v1start).isNotEmpty())
+
+        val v3link = Link("assemblyLink", "id3s", "randomOther", 0, 0)
+        assertTrue(TransitiveLink(LinkStore(listOf(v3link)), variantStore).transitiveLink(v1start).isEmpty())
     }
 
 }

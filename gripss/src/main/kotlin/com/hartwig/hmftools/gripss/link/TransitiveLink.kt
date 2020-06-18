@@ -72,7 +72,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         }
 
         if (maxTransitiveJumps > 0) {
-            val transitiveLinkedVariants = variantStore.selectTransitive(mate).filter { x -> !x.imprecise && !x.isSingle }
+            val transitiveLinkedVariants = variantStore.selectTransitive(mate).filter { x -> !x.imprecise && !x.isSingle && assemblyLinkStore.linkedVariants(x.vcfId).isEmpty() }
             for (linkedVariant in transitiveLinkedVariants) {
                 val nextJump = Link("$transLinkPrefix${MAX_TRANSITIVE_JUMPS - maxTransitiveJumps}", Pair(mate, linkedVariant))
                 val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxAssemblyJumps, maxTransitiveJumps - 1, newPath + nextJump)
@@ -113,7 +113,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
         val isMatchingPositionAndOrientation = { other: StructuralVariantContext -> isAlternative(variant, other) }
         val alternativeFilter = { other: StructuralVariantContext -> !other.imprecise && !other.isSingle }
-        return selectOthersNearby(variant, MAX_ALTERNATIVES_ADDITIONAL_DISTANCE, MAX_ALTERNATIVES_SEEK_DISTANCE) {other -> isMatchingPositionAndOrientation(other) && alternativeFilter(other) }
+        return selectOthersNearby(variant, MAX_ALTERNATIVES_ADDITIONAL_DISTANCE, MAX_ALTERNATIVES_SEEK_DISTANCE) { other -> isMatchingPositionAndOrientation(other) && alternativeFilter(other) }
     }
 
     private fun VariantStore.selectTransitive(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
