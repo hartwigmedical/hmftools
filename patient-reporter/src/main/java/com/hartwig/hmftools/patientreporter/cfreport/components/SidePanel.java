@@ -3,9 +3,10 @@ package com.hartwig.hmftools.patientreporter.cfreport.components;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.cfreport.ExtractForNumbers;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.ForNumber;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailType;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -54,22 +55,12 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
         }
-        String formNumber = Strings.EMPTY;
-        if (!isQCFail) {
-            if (purity < 0.20 || !hasRealiablePurity) {
-                formNumber = "XXX";
-            } else {
-                formNumber = "080";
-
-            }
-        } else {
-            formNumber = reason.usingForNumber();
-        }
+        String formNumber = ExtractForNumbers.extractAllForNumbers(isQCFail, purity, hasRealiablePurity, reason);
 
         if (page.getDocument().getNumberOfPages() == 1) {
-            cv.add(new Paragraph("FOR-" + formNumber + "v" + (PatientReporterApplication.VERSION != null
+            cv.add(new Paragraph("HMF-FOR-" + formNumber + " v" + (PatientReporterApplication.VERSION != null
                     ? PatientReporterApplication.VERSION
-                    : "X.X")).setFixedPosition(pageSize.getWidth() - RECTANGLE_WIDTH + 4, 40, 40)
+                    : "X.X")).setFixedPosition(pageSize.getWidth() - RECTANGLE_WIDTH + 4, 40, 60)
                     .setRotationAngle(Math.PI / 2)
                     .setFontColor(ReportResources.PALETTE_LIGHT_GREY)
                     .setFontSize(6));
