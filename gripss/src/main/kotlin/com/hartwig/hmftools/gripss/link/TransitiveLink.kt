@@ -25,7 +25,6 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     }
 
     fun transitiveLink(variant: StructuralVariantContext, maxAssemblyJumps: Int = MAX_ASSEMBLY_JUMPS, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
-
         if (!variant.isSingle) {
             val target = variantStore.select(variant.mateId!!)
             val alternativeStart = variantStore.selectAlternatives(variant)
@@ -61,15 +60,16 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         }
 
         // Always try assembled links first!
+        val unfilteredAssemblyLinks = assemblyLinkStore.linkedVariants(current.mateId)
         if (maxAssemblyJumps > 0) {
-            val assemblyLinks = assemblyLinkStore.linkedVariants(current.mateId).filter { x -> !path.contains(x) }
-            val assemblyLinkedVariants = assemblyLinks
+            val assemblyLinkedVariants = unfilteredAssemblyLinks
+                    .filter { x -> !path.contains(x) }
                     .map { x -> Pair(x, variantStore.select(x.otherVcfId)) }
                     .sortedByDescending { x -> x.second.qual }
 
             for (linkPair in assemblyLinkedVariants) {
                 val link = linkPair.first
-                val linkedVariant  = linkPair.second
+                val linkedVariant = linkPair.second
 
                 if (!linkedVariant.isSingle && !linkedVariant.imprecise) {
                     val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxAssemblyJumps - 1, maxTransitiveJumps, newPath + link)
@@ -80,7 +80,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
             }
         }
 
-        if (maxTransitiveJumps > 0) {
+        if (unfilteredAssemblyLinks.isEmpty() && maxTransitiveJumps > 0) {
             val unlinkedFilter: SvFilter = { assemblyLinkStore.linkedVariants(it.vcfId).isEmpty() }
             val transitiveLinkedVariants = variantStore.selectTransitive(mate).filter { x -> unlinkedFilter(x) }
             for (linkedVariant in transitiveLinkedVariants) {
@@ -94,7 +94,6 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
 
         return Collections.emptyList()
     }
-
 
     private fun insertSequenceAdditionalDistance(variant: StructuralVariantContext): Pair<Int, Int> {
         return if (variant.orientation == 1.toByte()) {
@@ -153,7 +152,6 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     fun Collection<StructuralVariantContext>.sortByQualDesc(): List<StructuralVariantContext> {
         return this.sortedByDescending { x -> x.qual }
     }
-
 }
 
 
