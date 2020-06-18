@@ -13,6 +13,22 @@ import org.junit.Test
 class TransitiveLinkTest {
 
     @Test
+    fun sortByQual() {
+        val v1start = VariantContextTestFactory.decode("1\t1000\tid1s\tA\tA[1:2000[\t100\tPASS\tIMPRECISE;CIPOS=-10,10;MATEID=id1e\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1").toSv()
+        val v2start = createVariant("1", 1001, "id2s", "A", "A[1:1400[", 1, "id2e").toSv()
+        val v3start = createVariant("1", 1002, "id3s", "A", "A[1:2000[", 1000, "id3e").toSv()
+
+        val v1end = VariantContextTestFactory.decode("1\t2000\tid1e\tA\t]1:1000]A\t100\tPASS\tIMPRECISE;CIPOS=-10,10;MATEID=id1s\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1").toSv()
+        val v2end = createVariant("1", 2001, "id2e", "A", "]1:1001]A", 1000, "id2s").toSv()
+        val v3end = createVariant("1", 2002, "id3e", "A", "]1:1002]A", 1000, "id3s").toSv()
+
+        val variantStore = VariantStore(listOf(v1start, v2start, v3start, v1end, v2end, v3end))
+        val links = TransitiveLink(LinkStore(listOf()), variantStore).transitiveLink(v1start)
+        assertTrue(links.isNotEmpty())
+        assertEquals("id3s<PAIR>id3e", links[0].toString())
+    }
+
+    @Test
     fun testDUPvsINScase() {
         val v1 = VariantContextTestFactory.decode("4\t7873818\tgridss23_17823o\tA\tAAGAGGAAGAGTATTATTAGACCCAGTGATTTGC[4:7873819[\t4572.04\tPASS\tAS=1;ASQ=2268.61;ASRP=1;ASSR=176;BA=0;BANRP=0;BANRPQ=0.00;BANSR=0;BANSRQ=0.00;BAQ=0.00;BASRP=0;BASSR=0;BEALN=4:7873819|+|33M|60;BEID=asm23-312191,asm23-82937;BEIDH=0,0;BEIDL=0,0;BQ=0.00;BSC=0;BSCQ=0.00;BUM=0;BUMQ=0.00;BVF=0;CAS=0;CASQ=0.00;CQ=4572.04;EVENT=gridss23_17823;IC=11;IHOMPOS=0,0;IQ=586.76;LOCAL_LINKED_BY=dsb671;PARID=gridss23_17823h;RAS=1;RASQ=1716.68;REF=206;REFPAIR=123;REMOTE_LINKED_BY;RP=0;RPQ=0.00;SB=0.5205479;SC=114M1X;SR=0;SRQ=0.00;SVTYPE=BND;TAF=0.353;VF=104\tGT:ASQ:ASRP:ASSR:BANRP:BANRPQ:BANSR:BANSRQ:BAQ:BASRP:BASSR:BQ:BSC:BSCQ:BUM:BUMQ:BVF:CASQ:IC:IQ:QUAL:RASQ:REF:REFPAIR:RP:RPQ:SR:SRQ:VF\t.:33.56:0:2:0:0.00:0:0.00:0.00:0:0:0.00:0:0.00:0:0.00:0:0.00:0:0.00:33.56:0.00:19:25:0:0.00:0:0.00:2\t.:2235.05:1:174:0:0.00:0:0.00:0.00:0:0:0.00:0:0.00:0:0.00:0:0.00:11:586.76:4538.48:1716.68:187:98:0:0.00:0:0.00:102").toSv()
         val v2 = VariantContextTestFactory.decode("4\t7873819\tgridss23_17823h\tA\t]4:7873818]AGAGGAAGAGTATTATTAGACCCAGTGATTTGCA\t4504.37\tPASS\tAS=1;ASQ=1682.84;ASRP=1;ASSR=172;BA=0;BANRP=0;BANRPQ=0.00;BANSR=0;BANSRQ=0.00;BAQ=0.00;BASRP=0;BASSR=0;BEALN=4:7873819|+|33M|60;BEID=asm23-312191,asm23-82937;BEIDH=0,0;BEIDL=0,0;BQ=375.97;BSC=23;BSCQ=347.56;BUM=1;BUMQ=28.41;BVF=20;CAS=0;CASQ=0.00;CQ=4572.04;EVENT=gridss23_17823;IC=11;IHOMPOS=0,0;IQ=586.76;LOCAL_LINKED_BY;PARID=gridss23_17823o;RAS=1;RASQ=2234.77;REF=206;REFPAIR=123;REMOTE_LINKED_BY=dsb671;RP=0;RPQ=0.00;SB=0.5082645;SC=1X142M;SR=0;SRQ=0.00;SVTYPE=BND;TAF=0.348;VF=102\tGT:ASQ:ASRP:ASSR:BANRP:BANRPQ:BANSR:BANSRQ:BAQ:BASRP:BASSR:BQ:BSC:BSCQ:BUM:BUMQ:BVF:CASQ:IC:IQ:QUAL:RASQ:REF:REFPAIR:RP:RPQ:SR:SRQ:VF\t.:0.00:0:2:0:0.00:0:0.00:0.00:0:0:16.93:1:16.93:0:0.00:1:0.00:0:0.00:33.56:33.56:19:25:0:0.00:0:0.00:2\t.:1682.84:1:170:0:0.00:0:0.00:0.00:0:0:359.04:22:330.63:1:28.41:19:0.00:11:586.76:4470.81:2201.21:187:98:0:0.00:0:0.00:100").toSv()
@@ -30,7 +46,6 @@ class TransitiveLinkTest {
         assertTrue(victim.transitiveLink(v2).isNotEmpty())
         assertTrue(victim.transitiveLink(v3).isNotEmpty())
         assertTrue(victim.transitiveLink(v4).isNotEmpty())
-
     }
 
     @Test
