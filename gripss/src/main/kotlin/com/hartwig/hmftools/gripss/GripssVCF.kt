@@ -8,7 +8,6 @@ import htsjdk.variant.vcf.*
 
 
 const val PON = "PON"
-const val PON_FILTERED = "PON_FILTERED"
 const val IMPRECISE = "imprecise";
 const val SHORT_SR_NORMAL = "shortSRNormalSupport"
 const val SHORT_SR_SUPPORT = "shortSRTumorSupport"
@@ -64,7 +63,6 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_DEL_INS_ARTIFACT, "Filter any short DEL where the insert sequence length + 1 = deletion length. This is a known GRIDSS artefact."))
 
         header.addMetaDataLine(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Description"))
-        header.addMetaDataLine(VCFInfoHeaderLine(PON_FILTERED, 1, VCFHeaderLineType.Flag, "Variant is PON filtered only (no apply filters apply)"))
         header.addMetaDataLine(VCFInfoHeaderLine(ALT_PATH, 1, VCFHeaderLineType.String, "Alternate path"))
         header.addMetaDataLine(VCFInfoHeaderLine(LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Breakend linking information"))
         header.addMetaDataLine(VCFInfoHeaderLine(REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend linking information"))
