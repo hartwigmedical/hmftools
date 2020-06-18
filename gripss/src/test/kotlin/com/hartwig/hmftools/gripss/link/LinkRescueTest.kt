@@ -23,7 +23,7 @@ class LinkRescueTest {
 
         val softFilterStore = SoftFilterStore(listOf(Pair("1start", fail), Pair("1end", fail), Pair("2start", fail), Pair("2end", fail), Pair("3start", fail), Pair("3end", fail)).toMap())
 
-        val victim = LinkRescue(0, linkStore, softFilterStore, variantStore, true)
+        val victim = LinkRescue(linkStore, softFilterStore, variantStore, true)
         assertTrue(victim.rescues.contains("1start"))
         assertTrue(victim.rescues.contains("1end"))
         assertTrue(victim.rescues.contains("2start"))
@@ -44,7 +44,7 @@ class LinkRescueTest {
 
         val softFilterStore = SoftFilterStore(listOf(Pair("1start", fail), Pair("1end", fail), Pair("2start", fail), Pair("2end", fail), Pair("3start", fail), Pair("3end", fail)).toMap())
 
-        val victim = LinkRescue(0, linkStore, softFilterStore, variantStore, true)
+        val victim = LinkRescue(linkStore, softFilterStore, variantStore, true)
         assertTrue(victim.rescues.contains("1start"))
         assertTrue(victim.rescues.contains("1end"))
         assertTrue(victim.rescues.contains("2start"))
