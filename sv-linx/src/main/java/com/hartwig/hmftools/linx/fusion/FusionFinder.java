@@ -153,7 +153,7 @@ public class FusionFinder
 
                 for(final Transcript upstreamTrans : upGene.transcripts())
                 {
-                    if(!isValidUpstreamTranscript(upstreamTrans, true, params.RequireUpstreamBiotypes))
+                    if(!isValidUpstreamTranscript(upstreamTrans, !knownPair, params.RequireUpstreamBiotypes))
                     {
                         logInvalidReasonInfo(upstreamTrans, null, INVALID_REASON_CODING_TYPE, "invalid up trans");
                         continue;
