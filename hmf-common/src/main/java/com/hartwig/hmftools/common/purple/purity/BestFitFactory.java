@@ -22,7 +22,7 @@ public class BestFitFactory {
     private final double minSomaticUnadjustedVaf;
     private final double highlyDiploidPercentage;
     private final int minVariants;
-    private double minSomaticPurity;
+    private final double minSomaticPurity;
 
     @NotNull
     private final BestFit bestFit;

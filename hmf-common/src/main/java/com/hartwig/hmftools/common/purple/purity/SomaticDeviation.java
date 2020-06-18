@@ -39,7 +39,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
     public double deviationFromMax(@NotNull final PurityAdjuster purityAdjuster, @NotNull final FittedRegion region,
             @NotNull final SomaticVariant variant) {
         int normalCopyNumber = purityAdjuster.typicalCopyNumber(region.chromosome());
-        double constrainedMajorAllelePloidy = Math.max(0, region.majorAllelePloidy());
+        double constrainedMajorAllelePloidy = Math.max(0, region.majorAlleleCopyNumber());
         double constrainedTumorCopyNumber = Math.max(0, region.tumorCopyNumber());
 
         return deviationFromMax(purityAdjuster, normalCopyNumber, variant, constrainedTumorCopyNumber, constrainedMajorAllelePloidy);

@@ -11,20 +11,20 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class FittedRegion implements ObservedRegion {
 
-    private static final double MAX_DIPLOID_PLOIDY = 1.2;
-    private static final double MIN_DIPLOID_PLOIDY = 0.8;
+    private static final double MAX_DIPLOID_COPY_NUMBER = 1.2;
+    private static final double MIN_DIPLOID_COPY_NUMBER = 0.8;
 
-    public double minorAllelePloidy() {
-        return tumorCopyNumber() - majorAllelePloidy();
+    public double minorAlleleCopyNumber() {
+        return tumorCopyNumber() - majorAlleleCopyNumber();
     }
 
-    public double majorAllelePloidy() {
+    public double majorAlleleCopyNumber() {
         return tumorBAF() * tumorCopyNumber();
     }
 
-    public abstract double minorAllelePloidyDeviation();
+    public abstract double minorAlleleCopyNumberDeviation();
 
-    public abstract double majorAllelePloidyDeviation();
+    public abstract double majorAlleleCopyNumberDeviation();
 
     public abstract double deviationPenalty();
 
@@ -41,10 +41,9 @@ public abstract class FittedRegion implements ObservedRegion {
     public abstract double fittedBAF();
 
     public boolean isDiploid() {
-        return Doubles.greaterOrEqual(majorAllelePloidy(), MIN_DIPLOID_PLOIDY) && Doubles.lessOrEqual(majorAllelePloidy(),
-                MAX_DIPLOID_PLOIDY) && Doubles.greaterOrEqual(minorAllelePloidy(), MIN_DIPLOID_PLOIDY) && Doubles.lessOrEqual(
-                minorAllelePloidy(),
-                MAX_DIPLOID_PLOIDY);
+        return Doubles.greaterOrEqual(majorAlleleCopyNumber(), MIN_DIPLOID_COPY_NUMBER) && Doubles.lessOrEqual(majorAlleleCopyNumber(),
+                MAX_DIPLOID_COPY_NUMBER) && Doubles.greaterOrEqual(minorAlleleCopyNumber(), MIN_DIPLOID_COPY_NUMBER) && Doubles.lessOrEqual(
+                minorAlleleCopyNumber(), MAX_DIPLOID_COPY_NUMBER);
     }
 
 }
