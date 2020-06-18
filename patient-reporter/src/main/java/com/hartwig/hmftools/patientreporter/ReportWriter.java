@@ -10,5 +10,5 @@ public interface ReportWriter {
 
     void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException;
 
-    void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException;
+    void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath, boolean isQCFail) throws IOException;
 }

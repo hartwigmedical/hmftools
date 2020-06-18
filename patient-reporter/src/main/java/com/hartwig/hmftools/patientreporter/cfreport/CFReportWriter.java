@@ -31,7 +31,6 @@ import com.itextpdf.layout.property.AreaBreakType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,21 +65,21 @@ public class CFReportWriter implements ReportWriter {
                     new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter() };
         }
 
-        writeReport(report, chapters, outputFilePath, null, report.impliedPurity(), report.hasReliablePurity());
+        writeReport(report, chapters, outputFilePath, null, report.impliedPurity(), report.hasReliablePurity(), false);
     }
 
     @Override
-    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
-        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath, report.reason(), 0, false);
+    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath, boolean isQCFail) throws IOException {
+        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath, report.reason(), 0, false, isQCFail);
     }
 
     private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath, @Nullable
-            QCFailReason reason, double purity, boolean hasReliablePurity)
+            QCFailReason reason, double purity, boolean hasReliablePurity, boolean isQCFail)
             throws IOException {
         Document doc = initializeReport(outputFilePath, writeToFile);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
-        PageEventHandler pageEventHandler = new PageEventHandler(patientReport, reason, purity, hasReliablePurity);
+        PageEventHandler pageEventHandler = new PageEventHandler(patientReport, reason, purity, hasReliablePurity, isQCFail);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for (int i = 0; i < chapters.length; i++) {

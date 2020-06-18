@@ -28,7 +28,7 @@ public final class SidePanel {
     }
 
     public static void renderSidePanel(@NotNull PdfPage page, @NotNull SampleReport sampleReport, boolean fullHeight, boolean fullContent,
-            @Nullable QCFailReason reason, double purity, boolean hasRealiablePurity) {
+            @Nullable QCFailReason reason, double purity, boolean hasRealiablePurity, boolean isQCFail) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
@@ -54,26 +54,16 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
         }
-
         String formNumber = Strings.EMPTY;
-        if (QCFailReason.INSUFFICIENT_DNA == reason) {
-            formNumber = "102";
-        } else if (QCFailReason.TECHNICAL_FAILURE == reason) {
-            formNumber = "082";
-        } else if (QCFailReason.SUFFICIENT_TCP_QC_FAILURE == reason) {
-            formNumber = "083";
-        } else if (QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS == reason) {
-            formNumber = "100";
-        } else if (QCFailReason.INSUFFICIENT_TCP_DEEP_WGS == reason) {
-            formNumber = "100";
-        } else {
+        if (!isQCFail) {
             if (purity < 0.20 || !hasRealiablePurity) {
-                formNumber = "080";
-            } else {
                 formNumber = "XXX";
+            } else {
+                formNumber = "080";
 
             }
-
+        } else {
+            formNumber = reason.usingForNumber();
         }
 
         if (page.getDocument().getNumberOfPages() == 1) {

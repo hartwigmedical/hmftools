@@ -8,23 +8,27 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum QCFailReason {
-    TECHNICAL_FAILURE("technical_failure", QCFailType.TECHNICAL_FAILURE, false),
-    SUFFICIENT_TCP_QC_FAILURE("sufficient_tcp_qc_failure", QCFailType.LOW_QUALITY_BIOPSY, true),
-    INSUFFICIENT_TCP_SHALLOW_WGS("insufficient_tcp_shallow_wgs", QCFailType.LOW_QUALITY_BIOPSY, false),
-    INSUFFICIENT_TCP_DEEP_WGS("insufficient_tcp_deep_wgs", QCFailType.LOW_QUALITY_BIOPSY, true),
-    INSUFFICIENT_DNA("insufficient_dna", QCFailType.LOW_QUALITY_BIOPSY, false),
-    UNDEFINED(Strings.EMPTY, QCFailType.UNDEFINED, false);
+    TECHNICAL_FAILURE("technical_failure", QCFailType.TECHNICAL_FAILURE, false, "082"),
+    SUFFICIENT_TCP_QC_FAILURE("sufficient_tcp_qc_failure", QCFailType.LOW_QUALITY_BIOPSY, true, "083"),
+    INSUFFICIENT_TCP_SHALLOW_WGS("insufficient_tcp_shallow_wgs", QCFailType.LOW_QUALITY_BIOPSY, false, "100"),
+    INSUFFICIENT_TCP_DEEP_WGS("insufficient_tcp_deep_wgs", QCFailType.LOW_QUALITY_BIOPSY, true, "100"),
+    INSUFFICIENT_DNA("insufficient_dna", QCFailType.LOW_QUALITY_BIOPSY, false, "102"),
+    UNDEFINED(Strings.EMPTY, QCFailType.UNDEFINED, false, "Undefined");
 
     @NotNull
     private final String identifier;
     @NotNull
     private final QCFailType type;
     private final boolean deepWGSDataAvailable;
+    @NotNull
+    private final String forNumber;
 
-    QCFailReason(@NotNull final String identifier, @NotNull final QCFailType type, final boolean deepWGSDataAvailable) {
+    QCFailReason(@NotNull final String identifier, @NotNull final QCFailType type, final boolean deepWGSDataAvailable,
+            @NotNull String forNumber) {
         this.identifier = identifier;
         this.type = type;
         this.deepWGSDataAvailable = deepWGSDataAvailable;
+        this.forNumber = forNumber;
     }
 
     @NotNull
@@ -39,6 +43,11 @@ public enum QCFailReason {
 
     public boolean isDeepWGSDataAvailable() {
         return deepWGSDataAvailable;
+    }
+
+    @NotNull
+    public String usingForNumber() {
+        return forNumber;
     }
 
     @NotNull
