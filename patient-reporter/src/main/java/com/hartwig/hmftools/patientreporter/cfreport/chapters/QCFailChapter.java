@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.patientreporter.cfreport.ExtractForNumbers;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
@@ -64,14 +65,14 @@ public class QCFailChapter implements ReportChapter {
 
         switch (study) {
             case WIDE:
-                reportDocument.add(createWIDEContentBody());
+                reportDocument.add(createWIDEContentBody(failReport.reason()));
                 break;
             case CORE:
-                reportDocument.add(createCOREContentBody());
+                reportDocument.add(createCOREContentBody(failReport.reason()));
                 break;
             case DRUP:
             case CPCT:
-                reportDocument.add(createCPCTDRUPContentBody());
+                reportDocument.add(createCPCTDRUPContentBody(failReport.reason()));
                 break;
         }
 
@@ -134,12 +135,12 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Table createWIDEContentBody() {
+    private Table createWIDEContentBody(@NotNull QCFailReason reason) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createWIDESampleDetailsColumn()));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createWIDEDisclaimerColumn()));
+        table.addCell(TableUtil.createLayoutCell().add(createWIDEDisclaimerColumn(reason)));
         return table;
     }
 
@@ -161,12 +162,12 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Div createWIDEDisclaimerColumn() {
+    private Div createWIDEDisclaimerColumn(@NotNull QCFailReason reason) {
         Div div = createDisclaimerDiv();
         div.add(reportIsBasedOnBloodAndTumorSamples());
         div.add(testsArePerformedByAccreditedLab());
         div.add(reportIsVerifiedByAndAddressedTo());
-        div.add(reportIsGeneratedByPatientReporterVersion());
+        div.add(reportIsGeneratedByPatientReporterVersion(reason));
         failReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
         div.add(resubmitSample());
         div.add(forQuestionsPleaseContactHMF());
@@ -174,12 +175,12 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Table createCOREContentBody() {
+    private Table createCOREContentBody(@NotNull QCFailReason reason) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createCORESampleDetailsColumn()));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createCOREDisclaimerColumn()));
+        table.addCell(TableUtil.createLayoutCell().add(createCOREDisclaimerColumn(reason)));
         return table;
     }
 
@@ -199,12 +200,12 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Div createCOREDisclaimerColumn() {
+    private Div createCOREDisclaimerColumn(@NotNull QCFailReason reason) {
         Div divColumn = createDisclaimerDiv();
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(testsArePerformedByAccreditedLab());
         divColumn.add(reportIsVerifiedByAndAddressedTo());
-        divColumn.add(reportIsGeneratedByPatientReporterVersion());
+        divColumn.add(reportIsGeneratedByPatientReporterVersion(reason));
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         divColumn.add(resubmitSample());
         divColumn.add(forQuestionsPleaseContactHMF());
@@ -212,12 +213,12 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Table createCPCTDRUPContentBody() {
+    private Table createCPCTDRUPContentBody(@NotNull QCFailReason reason) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPSampleDetailsColumn()));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPDisclaimerColumn()));
+        table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPDisclaimerColumn(reason)));
         return table;
     }
 
@@ -236,12 +237,12 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Div createCPCTDRUPDisclaimerColumn() {
+    private Div createCPCTDRUPDisclaimerColumn(@NotNull QCFailReason reason) {
         Div divColumn = createDisclaimerDiv();
         divColumn.add(reportIsBasedOnBloodAndTumorSamples());
         divColumn.add(testsArePerformedByAccreditedLab());
         divColumn.add(reportIsVerifiedByAndAddressedTo());
-        divColumn.add(reportIsGeneratedByPatientReporterVersion());
+        divColumn.add(reportIsGeneratedByPatientReporterVersion(reason));
         failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         divColumn.add(resubmitSample());
         divColumn.add(forQuestionsPleaseContactHMF());
@@ -310,8 +311,12 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph reportIsGeneratedByPatientReporterVersion() {
-        return createContentParagraph("This report is generated by patient reporter ", ReportResources.VERSION_REPORT);
+    private Paragraph reportIsGeneratedByPatientReporterVersion(@NotNull QCFailReason reason) {
+        String forNumber = "HMF-FOR-" + ExtractForNumbers.extractQCFailForNumbers(reason);
+        return createContentParagraphTwiceWithOneBold("This report is generated by patient reporter ",
+                ReportResources.VERSION_REPORT,
+                " based on ",
+                forNumber);
     }
 
     @NotNull
@@ -377,6 +382,15 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraphTwice(@NotNull String regularPart, @NotNull String boldPart,
+            @NotNull String regularPart2, @NotNull String boldPart2) {
+        return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(regularPart2)
+                .add(new Text(boldPart2).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
+
+    @NotNull
+    private static Paragraph createContentParagraphTwiceWithOneBold(@NotNull String regularPart, @NotNull String boldPart,
             @NotNull String regularPart2, @NotNull String boldPart2) {
         return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(regularPart2)

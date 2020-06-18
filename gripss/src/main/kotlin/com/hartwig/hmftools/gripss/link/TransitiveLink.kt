@@ -6,6 +6,8 @@ import com.hartwig.hmftools.gripss.store.VariantStore
 import org.apache.logging.log4j.LogManager
 import java.util.*
 
+private typealias SvFilter = (StructuralVariantContext) -> Boolean
+
 class TransitiveLink(private val assemblyLinkStore: LinkStore, private val variantStore: VariantStore) {
 
     companion object {
@@ -17,6 +19,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         private const val MAX_TRANSITIVE_JUMPS = 2
         private const val MAX_TRANSITIVE_SEEK_DISTANCE = 2000
         private const val MAX_TRANSITIVE_ADDITIONAL_DISTANCE = 1000
+        private const val MIN_TRANSITIVE_DISTANCE = 30
 
         private val logger = LogManager.getLogger(this::class.java)
     }
@@ -72,7 +75,8 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         }
 
         if (maxTransitiveJumps > 0) {
-            val transitiveLinkedVariants = variantStore.selectTransitive(mate).filter { x -> !x.imprecise && !x.isSingle }
+            val unlinkedFilter: SvFilter = { assemblyLinkStore.linkedVariants(it.vcfId).isEmpty() }
+            val transitiveLinkedVariants = variantStore.selectTransitive(mate).filter { x -> unlinkedFilter(x)}
             for (linkedVariant in transitiveLinkedVariants) {
                 val nextJump = Link("$transLinkPrefix${MAX_TRANSITIVE_JUMPS - maxTransitiveJumps}", Pair(mate, linkedVariant))
                 val newAssemblyLinks = findLinks(transLinkPrefix, linkedVariant, target, maxAssemblyJumps, maxTransitiveJumps - 1, newPath + nextJump)
@@ -106,29 +110,29 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         return Pair(minDistance, maxDistance)
     }
 
-    private fun isAlternative(target: StructuralVariantContext, other: StructuralVariantContext): Boolean {
-        return target.orientation == other.orientation && isMatchingPosition(target, other)
-    }
-
     private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
-        val isMatchingPositionAndOrientation = { other: StructuralVariantContext -> isAlternative(variant, other) }
-        val alternativeFilter = { other: StructuralVariantContext -> !other.imprecise && !other.isSingle }
-        return selectOthersNearby(variant, MAX_ALTERNATIVES_ADDITIONAL_DISTANCE, MAX_ALTERNATIVES_SEEK_DISTANCE) {other -> isMatchingPositionAndOrientation(other) && alternativeFilter(other) }
+        val isMatchingPositionAndOrientation: SvFilter  = { other -> isAlternative(variant, other) }
+        val alternativeFilter: SvFilter  = { other -> !other.imprecise && !other.isSingle }
+        return selectOthersNearby(variant, MAX_ALTERNATIVES_ADDITIONAL_DISTANCE, MAX_ALTERNATIVES_SEEK_DISTANCE) { other -> isMatchingPositionAndOrientation(other) && alternativeFilter(other) }
     }
 
     private fun VariantStore.selectTransitive(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
-        val leftFilter = { other: StructuralVariantContext -> other.minStart <= variant.maxStart }
-        val rightFilter = { other: StructuralVariantContext -> other.maxStart >= variant.minStart }
-        val directionFilter = if (variant.orientation == 1.toByte()) leftFilter else rightFilter
-        val transitiveFilter = { other: StructuralVariantContext -> other.orientation != variant.orientation && !other.imprecise && !other.isSingle }
+        val leftFilter: SvFilter = { other -> other.maxStart <= variant.minStart - MIN_TRANSITIVE_DISTANCE }
+        val rightFilter: SvFilter  = { other -> other.minStart >= variant.maxStart + MIN_TRANSITIVE_DISTANCE }
+        val directionFilter: SvFilter  = if (variant.orientation == 1.toByte()) leftFilter else rightFilter
+        val transitiveFilter: SvFilter  = { other -> other.orientation != variant.orientation && !other.imprecise && !other.isSingle }
 
-        return selectOthersNearby(variant, MAX_TRANSITIVE_ADDITIONAL_DISTANCE, MAX_TRANSITIVE_SEEK_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x) }
+        return selectOthersNearby(variant, MAX_TRANSITIVE_ADDITIONAL_DISTANCE, MAX_TRANSITIVE_SEEK_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x)}
     }
 
-    private fun isMatchingPosition(target: StructuralVariantContext, other: StructuralVariantContext): Boolean {
+    private fun isAlternative(target: StructuralVariantContext, other: StructuralVariantContext, additionalAllowance: Int = 1): Boolean {
+        if (target.orientation != other.orientation) {
+            return false
+        }
+
         val targetInsDistance = insertSequenceAdditionalDistance(target)
-        val minStart = target.minStart - targetInsDistance.first
-        val maxStart = target.maxStart + targetInsDistance.second
+        val minStart = target.minStart - targetInsDistance.first - additionalAllowance
+        val maxStart = target.maxStart + targetInsDistance.second + additionalAllowance
 
         val otherInsDistance = insertSequenceAdditionalDistance(other);
         val otherMinStart = other.minStart - otherInsDistance.first

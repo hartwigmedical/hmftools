@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.structural;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Sets;
 
@@ -26,11 +27,30 @@ public class StructuralVariantFactoryTest {
 
     @Test
     public void testSGL() {
-        final String vcfEntry =
-                "2\t192614842\tgridss14_291648b\tT\tTCTCTACACAAG.\t2076.59\tPASS\tSVTYPE=BND\tGT\t./.";
+        final String vcfEntry = "2\t192614842\tgridss14_291648b\tT\tTCTCTACACAAG.\t2076.59\tPASS\tSVTYPE=BND\tGT\t./.";
 
         final StructuralVariant variant = StructuralVariantFactory.createSingleBreakend(codec.decode(vcfEntry));
         assertEquals(StructuralVariantType.SGL, variant.type());
+    }
+
+    @Test
+    public void testUseAFValueOfLeg() {
+        final String line1 = "2\t321681\tbnd_W\tG\tG]17:198982]\t6\tPASS\tSVTYPE=BND;BPI_AF=1.1,1.2\tGT\t./.";
+        final String line2 = "17\t198982\tbnd_W\tG\tG]2:321681]\t6\tPASS\tSVTYPE=BND\tGT\t./.";
+
+        final StructuralVariant variant = StructuralVariantFactory.create(codec.decode(line1), codec.decode(line2));
+        assertEquals(1.1, variant.start().alleleFrequency(), 0.01);
+        assertNull( variant.end().alleleFrequency());
+    }
+
+    @Test
+    public void testFavourTAFOverBPI_AF() {
+        final String line1 = "2\t321681\tbnd_W\tG\tG]17:198982]\t6\tPASS\tSVTYPE=BND;BPI_AF=1.1,1.2;TAF=2.1,2.2\tGT\t./.";
+        final String line2 = "17\t198982\tbnd_W\tG\tG]2:321681]\t6\tPASS\tSVTYPE=BND;BPI_AF=1.2,1.1;TAF=2.3,2.4\tGT\t./.";
+
+        final StructuralVariant variant = StructuralVariantFactory.create(codec.decode(line1), codec.decode(line2));
+        assertEquals(2.1, variant.start().alleleFrequency(), 0.01);
+        assertEquals(2.3, variant.end().alleleFrequency(), 0.01);
     }
 
     @Test

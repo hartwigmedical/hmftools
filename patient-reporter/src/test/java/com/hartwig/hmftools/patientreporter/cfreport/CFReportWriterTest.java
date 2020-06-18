@@ -189,7 +189,7 @@ public class CFReportWriterTest {
         String filename = testReportFilePath(patientReport);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
-        writer.writeQCFailReport(patientReport, filename);
+        writer.writeQCFailReport(patientReport, filename, true);
     }
 
     @NotNull

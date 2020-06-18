@@ -58,21 +58,21 @@ purity_ploidy_range_plot <- function(bestFit, range) {
 fitted_segments_plot <- function(fittedSegments) {
     fittedSegments = fittedSegments %>%
         filter(germlineStatus == "DIPLOID", bafCount > 0) %>%
-        arrange(majorAllelePloidy) %>%
+        arrange(majorAlleleCopyNumber) %>%
         mutate(
         Score = deviationPenalty * eventPenalty,
         Weight = bafCount,
-        WeightedMajorAllelePloidyCumSum = cumsum(Weight * majorAllelePloidy),
+        WeightedMajorAllelePloidyCumSum = cumsum(Weight * majorAlleleCopyNumber),
         WeightedMajorAllelePloidyCumSumProportion = WeightedMajorAllelePloidyCumSum / max(WeightedMajorAllelePloidyCumSum))
 
-    maxData = fittedSegments %>% filter(WeightedMajorAllelePloidyCumSumProportion <= 0.9) %>% select(majorAllelePloidy, Score)
+    maxData = fittedSegments %>% filter(WeightedMajorAllelePloidyCumSumProportion <= 0.9) %>% select(majorAlleleCopyNumber, Score)
     maxScore = ceiling(max(maxData$Score))
     minScore = floor(min(maxData$Score))
-    minMajorAllelePloidy = min(0, floor(min(maxData$majorAllelePloidy)))
-    maxMajorAllelePloidy = ceiling(max(maxData$majorAllelePloidy))
+    minMajorAllelePloidy = min(0, floor(min(maxData$majorAlleleCopyNumber)))
+    maxMajorAllelePloidy = ceiling(max(maxData$majorAlleleCopyNumber))
     maxMinorAllelePloidy = maxMajorAllelePloidy - 1
     
-    p = ggplot(fittedSegments, aes(x=majorAllelePloidy,y=minorAllelePloidy)) +
+    p = ggplot(fittedSegments, aes(x=majorAlleleCopyNumber,y=minorAlleleCopyNumber)) +
         geom_point(aes(size = Weight, color = Score), alpha = 0.7) +
         xlab("Major Allele") + ylab("Minor Allele") + ggtitle("Segment Scores") +
         scale_x_continuous(breaks = c(-200:200), limits = c(minMajorAllelePloidy, maxMajorAllelePloidy)) +
@@ -99,7 +99,7 @@ minor_allele_ploidy_pdf <- function(copyNumberRegions) {
         weight = bafCount/totalBafCount )
     
     maxAllelePloidy = copyNumberRegions %>%
-        mutate(bucket = ceiling(minorAllelePloidy)) %>%
+        mutate(bucket = ceiling(minorAlleleCopyNumber)) %>%
         group_by(bucket) %>%
         summarise(n = sum(bafCount)) %>%
         mutate(cumn = cumsum(n), proportion =  cumn / max(cumn)) %>%
@@ -108,7 +108,7 @@ minor_allele_ploidy_pdf <- function(copyNumberRegions) {
         filter(row_number() == 1) %>%
         pull(bucket)
 
-    ggplot(copyNumberRegions, aes(x = minorAllelePloidy)) +
+    ggplot(copyNumberRegions, aes(x = minorAlleleCopyNumber)) +
         geom_histogram(aes(weight = bafCount, fill = cn), alpha =1, binwidth = 0.1, color = "black",  position = "stack") +
         scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxAllelePloidy + 0.1)) +
         scale_fill_manual(values = cnColours) +
@@ -126,7 +126,7 @@ copynumber_pdf <- function(copyNumberRegions) {
     copyNumberRegions = copyNumberRegions %>%
       filter(!chromosome %in% c('X','Y'), bafCount > 0) %>%
       mutate(
-        map = round(minorAllelePloidy),
+        map = round(minorAlleleCopyNumber),
         map = ifelse(map>=5, "MAP5+", paste0("MAP", map)),
         chromosome = factor(chromosome, levels= c(1:22), ordered = T),
         weight = bafCount/totalBafCount )

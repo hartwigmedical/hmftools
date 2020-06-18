@@ -3,9 +3,10 @@ package com.hartwig.hmftools.patientreporter.cfreport.components;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.cfreport.ExtractForNumbers;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.ForNumber;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailType;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -28,7 +29,7 @@ public final class SidePanel {
     }
 
     public static void renderSidePanel(@NotNull PdfPage page, @NotNull SampleReport sampleReport, boolean fullHeight, boolean fullContent,
-            @Nullable QCFailReason reason, double purity, boolean hasRealiablePurity) {
+            @Nullable QCFailReason reason, double purity, boolean hasRealiablePurity, boolean isQCFail) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
@@ -54,32 +55,12 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
         }
-
-        String formNumber = Strings.EMPTY;
-        if (QCFailReason.INSUFFICIENT_DNA == reason) {
-            formNumber = "102";
-        } else if (QCFailReason.TECHNICAL_FAILURE == reason) {
-            formNumber = "082";
-        } else if (QCFailReason.SUFFICIENT_TCP_QC_FAILURE == reason) {
-            formNumber = "083";
-        } else if (QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS == reason) {
-            formNumber = "100";
-        } else if (QCFailReason.INSUFFICIENT_TCP_DEEP_WGS == reason) {
-            formNumber = "100";
-        } else {
-            if (purity < 0.20 || !hasRealiablePurity) {
-                formNumber = "080";
-            } else {
-                formNumber = "XXX";
-
-            }
-
-        }
+        String formNumber = ExtractForNumbers.extractAllForNumbers(isQCFail, purity, hasRealiablePurity, reason);
 
         if (page.getDocument().getNumberOfPages() == 1) {
-            cv.add(new Paragraph("FOR-" + formNumber + "v" + (PatientReporterApplication.VERSION != null
+            cv.add(new Paragraph("HMF-FOR-" + formNumber + " v" + (PatientReporterApplication.VERSION != null
                     ? PatientReporterApplication.VERSION
-                    : "X.X")).setFixedPosition(pageSize.getWidth() - RECTANGLE_WIDTH + 4, 40, 40)
+                    : "X.X")).setFixedPosition(pageSize.getWidth() - RECTANGLE_WIDTH + 4, 40, 60)
                     .setRotationAngle(Math.PI / 2)
                     .setFontColor(ReportResources.PALETTE_LIGHT_GREY)
                     .setFontSize(6));

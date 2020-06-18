@@ -25,8 +25,8 @@ vcf_data_frame<- function(vcf) {
     ref = as.character(ref(vcf)), 
     alt = as.character(vcf.alt),  
     filter = as.character(vcf.rowRanges$FILTER), 
-    minorAllelePloidy = vcf.info$PURPLE_MAP, 
-    ploidy = vcf.info$PURPLE_PLOIDY, 
+    minorAllelePloidy = vcf.info$PURPLE_MACN,
+    ploidy = vcf.info$PURPLE_VCN,
     copyNumber = vcf.info$PURPLE_CN,
     kataegis = vcf.info$KT, stringsAsFactors = F)
   

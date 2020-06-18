@@ -25,6 +25,7 @@ class PageEventHandler implements IEventHandler {
     private final QCFailReason qcFailReason;
     private final double purity;
     private final boolean hasReliablePurity;
+    private final boolean isQCFail;
     @NotNull
     private final Footer footer;
     @NotNull
@@ -38,11 +39,13 @@ class PageEventHandler implements IEventHandler {
 
     private PdfOutline outline = null;
 
-    PageEventHandler(@NotNull final PatientReport patientReport, @Nullable final QCFailReason reason, double purity, boolean hasReliablePurity) {
+    PageEventHandler(@NotNull final PatientReport patientReport, @Nullable final QCFailReason reason, double purity,
+            boolean hasReliablePurity, boolean isQCFail) {
         this.sampleReport = patientReport.sampleReport();
         this.qcFailReason = reason;
         this.purity = purity;
         this.hasReliablePurity = hasReliablePurity;
+        this.isQCFail = isQCFail;
         this.header = new Header(patientReport.logoCompanyPath());
         this.footer = new Footer();
     }
@@ -60,7 +63,14 @@ class PageEventHandler implements IEventHandler {
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
             }
 
-            SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent, qcFailReason, purity, hasReliablePurity);
+            SidePanel.renderSidePanel(page,
+                    sampleReport,
+                    fullSidebar,
+                    fullSidebarContent,
+                    qcFailReason,
+                    purity,
+                    hasReliablePurity,
+                    isQCFail);
             footer.renderFooter(page, !fullSidebar);
         }
     }

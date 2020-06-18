@@ -32,6 +32,11 @@ object VariantContextTestFactory {
         return decode(line)
     }
 
+    fun createImpreciseVariant(contig: String, pos: Int, id: String, ref: String, alt: String, qual: Int, mateId: String): VariantContext {
+        val line = "$contig\t${pos}\t$id\t${ref}\t${alt}\t${qual}\t.\tIMPRECISE;MATEID=$mateId\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
+        return decode(line)
+    }
+
     fun VariantContext.toSv(): StructuralVariantContext = StructuralVariantContext(this)
 
     fun VariantContext.cipos(cipos: Pair<Int, Int>, cirpos: Pair<Int, Int>): VariantContext {

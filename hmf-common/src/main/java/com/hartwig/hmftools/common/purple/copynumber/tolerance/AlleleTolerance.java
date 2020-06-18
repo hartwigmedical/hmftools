@@ -32,7 +32,7 @@ public class AlleleTolerance implements CopyNumberTolerance {
             double maxCopyNumber = Math.max(first.tumorCopyNumber(), second.tumorCopyNumber());
             double maxMinorAllelePloidyDeviation =
                     purityAdjustment * tolerance(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 0.5 * maxCopyNumber, minBafCount);
-            double minorAllelePloidyDeviation = Math.abs(first.minorAllelePloidy() - second.minorAllelePloidy());
+            double minorAllelePloidyDeviation = Math.abs(first.minorAlleleCopyNumber() - second.minorAlleleCopyNumber());
             if (Doubles.greaterThan(minorAllelePloidyDeviation, maxMinorAllelePloidyDeviation) && Doubles.greaterThan(observedBafDeviation,
                     MIN_OBSERVED_BAF_CHANGE)) {
                 return false;

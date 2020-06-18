@@ -79,10 +79,10 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr4 = create(2001, 3000, SegmentSupport.NONE, 100, 0.666, 3);
 
         List<CombinedRegion> result = new ExtendDiploidBAF(Collections.emptyList()).extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
-        assertEquals(0, result.get(1).region().minorAllelePloidy(), EPSILON);
+        assertEquals(0, result.get(1).region().minorAlleleCopyNumber(), EPSILON);
 
         result = new ExtendDiploidBAF(Collections.emptyList()).extendBAF(Lists.newArrayList(cr1, cr2a, cr3a, cr4));
-        assertEquals(0.3, result.get(1).region().minorAllelePloidy(), EPSILON);
+        assertEquals(0.3, result.get(1).region().minorAlleleCopyNumber(), EPSILON);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr4 = create(101_001_001, 104_000_000, SegmentSupport.NONE, 1000, 1, 2.0);
 
         List<CombinedRegion> result = new ExtendDiploidBAF(Collections.emptyList()).extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
-        assertEquals(0, result.get(2).region().minorAllelePloidy(), EPSILON);
+        assertEquals(0, result.get(2).region().minorAlleleCopyNumber(), EPSILON);
     }
 
     @Test
@@ -104,7 +104,7 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr4 = create(102_001_001, 104_000_000, SegmentSupport.NONE, 1000, 0.66, 3);
 
         List<CombinedRegion> result = new ExtendDiploidBAF(Collections.emptyList()).extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
-        assertEquals(0, result.get(1).region().minorAllelePloidy(), EPSILON);
+        assertEquals(0, result.get(1).region().minorAlleleCopyNumber(), EPSILON);
     }
 
     @Test
