@@ -79,6 +79,8 @@ public class GeneAnnotation {
         mUpstream = isUpstream(this);
     }
 
+    public void setType(StructuralVariantType type) { mSvType = type; }
+
     public int id() { return mVarId; }
     public byte orientation() { return mOrientation; }
     public int position() { return mPosition; }

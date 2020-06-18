@@ -131,7 +131,7 @@ public class EnsemblDataLoader
     private static int TE_CODING_END = 14;
 
     public static boolean loadTranscriptData(final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
-            List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly)
+            final List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly)
     {
         String filename = dataPath;
 

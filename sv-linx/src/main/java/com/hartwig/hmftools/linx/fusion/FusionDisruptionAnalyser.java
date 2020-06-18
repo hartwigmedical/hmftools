@@ -380,18 +380,8 @@ public class FusionDisruptionAnalyser
         mFusions.clear();
         mInvalidFusions.clear();
 
-        boolean checkSoloSVs = true;
-        boolean checkClusters = true;
-
-        if(checkSoloSVs)
-        {
-            finalSingleSVFusions(svList);
-        }
-
-        if(checkClusters)
-        {
-            findChainedFusions(clusters);
-        }
+        finalSingleSVFusions(svList);
+        findChainedFusions(clusters);
     }
 
     private void finalSingleSVFusions(final List<SvVarData> svList)
@@ -399,18 +389,15 @@ public class FusionDisruptionAnalyser
         // always report SVs by themselves
         for (final SvVarData var : svList)
         {
-            if (var.isSglBreakend())
+            if (var.isSglBreakend() && var.getSglMappings().isEmpty())
                 continue;
 
             // skip SVs which have been chained
             if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
                 continue;
 
-            List<GeneAnnotation> genesListStart = Lists.newArrayList(var.getGenesList(true));
-            List<GeneAnnotation> genesListEnd = Lists.newArrayList(var.getGenesList(false));
-
-            applyGeneRestrictions(genesListStart);
-            applyGeneRestrictions(genesListEnd);
+            final List<GeneAnnotation> genesListStart = getBreakendGeneList(var, true);
+            final List<GeneAnnotation> genesListEnd =  getBreakendGeneList(var, false);
 
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
@@ -544,11 +531,10 @@ public class FusionDisruptionAnalyser
                 lowerBreakend = prevPair.secondBreakend();
             }
 
-            if (lowerSV.isSglBreakend())
+            if (lowerSV.isSglBreakend() && lowerSV.getSglMappings().isEmpty())
                 continue;
 
-            List<GeneAnnotation> genesListLower = Lists.newArrayList(lowerSV.getGenesList(lowerBreakend.usesStart()));
-            applyGeneRestrictions(genesListLower);
+            final List<GeneAnnotation> genesListLower = getBreakendGeneList(lowerSV, lowerBreakend.usesStart());
 
             if (genesListLower.isEmpty())
                 continue;
@@ -579,8 +565,7 @@ public class FusionDisruptionAnalyser
                     upperSV = upperBreakend.getSV();
                 }
 
-                List<GeneAnnotation> genesListUpper = Lists.newArrayList(upperSV.getGenesList(upperBreakend.usesStart()));
-                applyGeneRestrictions(genesListUpper);
+                final List<GeneAnnotation> genesListUpper = getBreakendGeneList(upperSV, upperBreakend.usesStart());
 
                 // if a new linked pair has been traversed to reach this upper breakend, record its length
                 // and test whether it traverses any genic region, and if so invalidate the fusion
@@ -595,15 +580,6 @@ public class FusionDisruptionAnalyser
                     // skip past this link and breakend to the next one, keeping the possibility of a fusion with the lower breakend open
                     continue;
                 }
-
-                /*
-                if(lpIndex2 > lpIndex1)
-                {
-                    LNX_LOGGER.debug("cluster({}) chain({}) testing chained fusion: be1({} {}) & be2({} {}) link indices({} -> {})",
-                            cluster.id(), chain.id(), lowerBreakend.toString(), genesListLower.get(0).GeneName,
-                            upperBreakend.toString(), genesListUpper.get(0).GeneName, lpIndex1, lpIndex2);
-                }
-                */
 
                 // test the fusion between these 2 breakends
                 List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, mFusionParams, false);
@@ -796,21 +772,19 @@ public class FusionDisruptionAnalyser
         return false;
     }
 
-    private void applyGeneRestrictions(List<GeneAnnotation> genesList)
+    private final List<GeneAnnotation> getBreakendGeneList(final SvVarData var, boolean isStart)
     {
-        if(mRestrictedGenes.isEmpty())
-            return;
-
-        int index = 0;
-        while(index < genesList.size())
+        if(var.isSglBreakend() && !isStart)
         {
-            GeneAnnotation gene = genesList.get(index);
-
-            if(mRestrictedGenes.contains(gene.GeneName))
-                ++index;
-            else
-                genesList.remove(index);
+            // limit to known fusion genes
+            final List<GeneAnnotation> genesList = var.getGenesList(false);
+            return genesList.stream().filter(x -> mFusionFinder.getKnownFusionCache().matchesKnownFusionGene(x)).collect(Collectors.toList());
         }
+
+        if(mRestrictedGenes.isEmpty())
+            return var.getGenesList(isStart);
+
+        return var.getGenesList(isStart).stream().filter(x -> mRestrictedGenes.contains(x.GeneName)).collect(Collectors.toList());
     }
 
     private boolean checkTranscriptDisruptionInfo(

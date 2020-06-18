@@ -61,6 +61,13 @@ public class KnownFusionCache
         return mDataByType.get(KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
     }
 
+    public boolean matchesKnownFusionGene(final GeneAnnotation gene)
+    {
+        return mDataByType.get(KNOWN_PAIR).stream()
+                .anyMatch(x -> (gene.isUpstream() && x.FiveGene.equals(gene.GeneName))
+                        || (!gene.isUpstream() && x.ThreeGene.equals(gene.GeneName)));
+    }
+
     public boolean hasPromiscuousFiveGene(final String gene)
     {
         return mDataByType.get(PROMISCUOUS_5).stream().anyMatch(x -> x.FiveGene.equals(gene));
