@@ -75,7 +75,7 @@ The candidate transitive breakends must be linkable in a continuous chain as one
  
 If the deduplicated spanning variant is PRECISE, then the length of the insert sequence of the spanning variant must match the entire chain length of the transitive variants (again allowing for CIPOS bounds and insert sequence length of precise variants).  
 
-Any single breakend which matches the position and orientation of another breakend (within CIPOS bounds) is also filtered as DEDUP.  If a single breakend duplicates a break junction the break junction is kept, if it duplicates another single breakend then the passing variant is prioritised first then the highest quality.   
+Any single breakend which matches the position and orientation of another breakend or breakjunction (within CIPOS bounds) is also filtered as DEDUP.   GRIPPS prioritises retaining breakends / breakjunctions linked by assembly or transitive link, then breakends that are passing and finally by highest qual score. 
 
 ### C. Linkage by double stranded break
 
