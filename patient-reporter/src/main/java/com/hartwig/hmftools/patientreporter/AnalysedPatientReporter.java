@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
@@ -157,7 +158,7 @@ class AnalysedPatientReporter {
     @NotNull
     @VisibleForTesting
     static String determineForNumber(@NotNull PurpleAnalysis purpleAnalysis) {
-        return purpleAnalysis.hasReliablePurity() && purpleAnalysis.purity() > 0.195
+        return purpleAnalysis.hasReliablePurity() && purpleAnalysis.purity() > ReportResources.PURITY_CUTOFF
                 ? QsFormNumber.FOR_080.display()
                 : QsFormNumber.FOR_209.display();
     }
