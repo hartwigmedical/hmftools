@@ -111,15 +111,15 @@ Expected GC distribution for sample is calculated as the sum of the estimated di
 
 ##### B. Fragment Length Bias
 
-<TO DO>
+<TO DO - Add>
 
 #### C. Sequence Start Specific Bias
 
-<TO DO> 
+<TO DO - Add>
 
-#### D. 5' CAP bias
+#### D. 5' Cap bias
 
-<TO DO>
+<TO DO - Add>
 
 #### E. Adjust expected rates for biases and re-estimate abundances per transcript
 
