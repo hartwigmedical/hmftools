@@ -159,7 +159,7 @@ class AnalysedPatientReporter {
     static String determineForNumber(@NotNull PurpleAnalysis purpleAnalysis) {
         return purpleAnalysis.hasReliablePurity() && purpleAnalysis.purity() > 0.195
                 ? QsFormNumber.FOR_080.display()
-                : QsFormNumber.FOR_XXX.display();
+                : QsFormNumber.FOR_209.display();
     }
 
     @NotNull

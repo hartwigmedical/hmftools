@@ -108,6 +108,6 @@ public class AnalysedPatientReporterTest {
                 .evidenceItems(Lists.newArrayList())
                 .build();
 
-        assertEquals(QsFormNumber.FOR_XXX.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisNotCorrect));
+        assertEquals(QsFormNumber.FOR_209.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisNotCorrect));
     }
 }

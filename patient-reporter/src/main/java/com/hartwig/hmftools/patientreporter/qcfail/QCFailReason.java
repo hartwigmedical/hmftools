@@ -10,11 +10,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum QCFailReason {
-    TECHNICAL_FAILURE("technical_failure", QCFailType.TECHNICAL_FAILURE, false, QsFormNumber.FOR_082),
+    TECHNICAL_FAILURE("technical_failure", QCFailType.TECHNICAL_FAILURE, false, QsFormNumber.FOR_102),
     SUFFICIENT_TCP_QC_FAILURE("sufficient_tcp_qc_failure", QCFailType.LOW_QUALITY_BIOPSY, true, QsFormNumber.FOR_083),
     INSUFFICIENT_TCP_SHALLOW_WGS("insufficient_tcp_shallow_wgs", QCFailType.LOW_QUALITY_BIOPSY, false, QsFormNumber.FOR_100),
     INSUFFICIENT_TCP_DEEP_WGS("insufficient_tcp_deep_wgs", QCFailType.LOW_QUALITY_BIOPSY, true, QsFormNumber.FOR_100),
-    INSUFFICIENT_DNA("insufficient_dna", QCFailType.LOW_QUALITY_BIOPSY, false, QsFormNumber.FOR_102),
+    INSUFFICIENT_DNA("insufficient_dna", QCFailType.LOW_QUALITY_BIOPSY, false, QsFormNumber.FOR_082),
     UNDEFINED(Strings.EMPTY, QCFailType.UNDEFINED, false, QsFormNumber.FOR_UNDEFINED);
 
     @NotNull
