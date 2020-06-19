@@ -53,7 +53,7 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
         }
-        String formNumber = ExtractForNumbers.extractAllForNumbers(isQCFail, purity, hasReliablePurity, reason);
+        String formNumber = ExtractForNumbers.extractForNumber(isQCFail, purity, hasReliablePurity, reason);
 
         if (page.getDocument().getNumberOfPages() == 1) {
             cv.add(new Paragraph("HMF-FOR-" + formNumber + " v" + (PatientReporterApplication.VERSION != null

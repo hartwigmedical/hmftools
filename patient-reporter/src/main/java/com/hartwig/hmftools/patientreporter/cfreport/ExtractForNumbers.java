@@ -11,7 +11,7 @@ public final class ExtractForNumbers {
     }
 
     @NotNull
-    public static String extractAllForNumbers(boolean isQCFail, double purity, boolean hasReliablePurity, @Nullable QCFailReason reason) {
+    public static String extractForNumber(boolean isQCFail, double purity, boolean hasReliablePurity, @Nullable QCFailReason reason) {
         return isQCFail ? reason.forNumber() : successForNumber(purity, hasReliablePurity);
     }
 
