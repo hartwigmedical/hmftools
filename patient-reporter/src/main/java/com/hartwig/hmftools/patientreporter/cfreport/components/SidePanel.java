@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.cfreport.ExtractForNumbers;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -53,7 +54,8 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
         }
-        String formNumber = ExtractForNumbers.determineForNumber(patientReport);
+
+        String formNumber = determineForNumber(patientReport);
 
         if (page.getDocument().getNumberOfPages() == 1) {
             cv.add(new Paragraph("HMF-FOR-" + formNumber + " v" + (PatientReporterApplication.VERSION != null
@@ -97,5 +99,15 @@ public final class SidePanel {
                 .setFixedLeading(valueFontSize));
 
         return div;
+    }
+
+    @NotNull
+    public static String determineForNumber(@NotNull PatientReport patientReport) {
+        if (patientReport instanceof QCFailReport) {
+            return ((QCFailReport) patientReport).forNumber();
+        } else {
+            assert patientReport instanceof AnalysedPatientReport;
+            return ((AnalysedPatientReport) patientReport).forNumber();
+        }
     }
 }

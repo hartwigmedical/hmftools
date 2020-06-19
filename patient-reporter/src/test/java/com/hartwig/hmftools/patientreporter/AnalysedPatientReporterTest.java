@@ -2,11 +2,23 @@ package com.hartwig.hmftools.patientreporter;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testAnalysedReportData;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.patientreporter.cfreport.ForNumber;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalLoad;
+import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleSignatures;
+import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -55,5 +67,53 @@ public class AnalysedPatientReporterTest {
                 null,
                 false,
                 false));
+    }
+
+    @Test
+    public void canDetermineForNumber() {
+
+        double purityCorrect = 0.40;
+        boolean hasReliablePurityCorrect = true;
+
+        PurpleAnalysis purpleAnalysisCorrect = ImmutablePurpleAnalysis.builder()
+                .purity(purityCorrect)
+                .hasReliablePurity(hasReliablePurityCorrect)
+                .hasReliableQuality(true)
+                .ploidy(1.00)
+                .exomeGeneCopyNumbers(Lists.newArrayList())
+                .reportableGainsAndLosses(Lists.newArrayList())
+                .purpleSignatures(ImmutablePurpleSignatures.builder()
+                        .microsatelliteIndelsPerMb(0.00)
+                        .microsatelliteStatus(MicrosatelliteStatus.MSS)
+                        .tumorMutationalBurdenPerMb(4.00)
+                        .tumorMutationalLoad(100)
+                        .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
+                        .build())
+                .evidenceItems(Lists.newArrayList())
+                .build();
+
+        assertEquals(ForNumber.FOR_080.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisCorrect));
+
+        double purityNotCorrect = 0.10;
+        boolean hasReliablePurityNotCorrect = false;
+
+        PurpleAnalysis purpleAnalysisNotCorrect = ImmutablePurpleAnalysis.builder()
+                .purity(purityNotCorrect)
+                .hasReliablePurity(hasReliablePurityNotCorrect)
+                .hasReliableQuality(true)
+                .ploidy(1.00)
+                .exomeGeneCopyNumbers(Lists.newArrayList())
+                .reportableGainsAndLosses(Lists.newArrayList())
+                .purpleSignatures(ImmutablePurpleSignatures.builder()
+                        .microsatelliteIndelsPerMb(0.00)
+                        .microsatelliteStatus(MicrosatelliteStatus.MSS)
+                        .tumorMutationalBurdenPerMb(4.00)
+                        .tumorMutationalLoad(100)
+                        .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
+                        .build())
+                .evidenceItems(Lists.newArrayList())
+                .build();
+
+        assertEquals(ForNumber.FOR_103.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisNotCorrect));
     }
 }

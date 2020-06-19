@@ -31,10 +31,12 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
+import com.hartwig.hmftools.patientreporter.cfreport.ForNumber;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalyzer;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;
@@ -115,6 +117,7 @@ class AnalysedPatientReporter {
         List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItemFactory.filterBlacklistedEvidence(allEvidenceItems);
 
         List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItemsFiltered);
+
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .impliedPurity(purpleAnalysis.purity())
@@ -122,6 +125,7 @@ class AnalysedPatientReporter {
                 .hasReliableQuality(purpleAnalysis.hasReliableQuality())
                 .averageTumorPloidy(purpleAnalysis.ploidy())
                 .clinicalSummary(clinicalSummary)
+                .forNumber(determineForNumber(purpleAnalysis))
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
                 .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItemsFiltered))
                 .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
@@ -150,6 +154,13 @@ class AnalysedPatientReporter {
         printReportState(report);
 
         return report;
+    }
+
+    @NotNull
+    public static String determineForNumber(@NotNull PurpleAnalysis purpleAnalysis) {
+        return purpleAnalysis.hasReliablePurity() && purpleAnalysis.purity() > 0.195
+                ? ForNumber.FOR_080.display()
+                : ForNumber.FOR_103.display();
     }
 
     @NotNull

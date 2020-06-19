@@ -40,6 +40,9 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract String clinicalSummary();
 
     @NotNull
+    public abstract String forNumber();
+
+    @NotNull
     public abstract List<EvidenceItem> tumorSpecificEvidence();
 
     @NotNull

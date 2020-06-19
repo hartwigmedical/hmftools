@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.cfreport.ExtractForNumbers;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
@@ -104,7 +103,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     private static Div createDisclaimerDiv(@NotNull AnalysedPatientReport patientReport) {
         Div div = new Div();
 
-        String forNumber = "HMF-FOR-" + ExtractForNumbers.determineForNumber(patientReport);
+        String forNumber = "HMF-FOR-" + patientReport.forNumber();
         div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
 
         div.add(createContentParagraph("The results stated in this report are based on the tested tumor and blood sample."));

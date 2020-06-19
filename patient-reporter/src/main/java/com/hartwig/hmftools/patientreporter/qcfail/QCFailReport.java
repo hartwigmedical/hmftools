@@ -21,6 +21,9 @@ public abstract class QCFailReport implements PatientReport {
     @NotNull
     public abstract QCFailReason reason();
 
+    @NotNull
+    public abstract String forNumber();
+
     @Nullable
     public abstract String wgsPurityString();
 
