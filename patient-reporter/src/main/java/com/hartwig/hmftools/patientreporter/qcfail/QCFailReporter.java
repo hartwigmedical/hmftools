@@ -53,8 +53,8 @@ public class QCFailReporter {
 
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber(reason.qcFormNumber())
                 .reason(reason)
-                .forNumber(reason.forNumber())
                 .wgsPurityString(wgsPurityString)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)

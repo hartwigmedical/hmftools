@@ -28,6 +28,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract SampleReport sampleReport();
 
+    @NotNull
+    @Override
+    public abstract String qsFormNumber();
+
     public abstract double impliedPurity();
 
     public abstract boolean hasReliablePurity();
@@ -38,10 +42,6 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     public abstract String clinicalSummary();
-
-    @NotNull
-    @Override
-    public abstract String forNumber();
 
     @NotNull
     public abstract List<EvidenceItem> tumorSpecificEvidence();

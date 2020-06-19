@@ -22,7 +22,7 @@ public interface PatientReport {
     }
 
     @NotNull
-    String forNumber();
+    String qsFormNumber();
 
     @NotNull
     Optional<String> comments();

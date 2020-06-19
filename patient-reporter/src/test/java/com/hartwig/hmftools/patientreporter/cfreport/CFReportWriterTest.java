@@ -177,6 +177,7 @@ public class CFReportWriterTest {
 
         QCFailReport patientReport = ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber(reason.qcFormNumber())
                 .reason(reason)
                 .wgsPurityString(wgsPurityString)
                 .comments(comments)

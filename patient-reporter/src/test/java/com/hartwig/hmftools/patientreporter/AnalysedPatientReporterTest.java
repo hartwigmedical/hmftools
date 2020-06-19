@@ -86,7 +86,7 @@ public class AnalysedPatientReporterTest {
                 .evidenceItems(Lists.newArrayList())
                 .build();
 
-        assertEquals(ForNumber.FOR_080.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisCorrect));
+        assertEquals(QsFormNumber.FOR_080.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisCorrect));
 
         double purityNotCorrect = 0.10;
         boolean hasReliablePurityNotCorrect = false;
@@ -108,6 +108,6 @@ public class AnalysedPatientReporterTest {
                 .evidenceItems(Lists.newArrayList())
                 .build();
 
-        assertEquals(ForNumber.FOR_103.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisNotCorrect));
+        assertEquals(QsFormNumber.FOR_XXX.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisNotCorrect));
     }
 }

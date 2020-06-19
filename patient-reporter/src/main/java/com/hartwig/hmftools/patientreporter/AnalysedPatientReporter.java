@@ -118,12 +118,12 @@ class AnalysedPatientReporter {
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber(determineForNumber(purpleAnalysis))
                 .impliedPurity(purpleAnalysis.purity())
                 .hasReliablePurity(purpleAnalysis.hasReliablePurity())
                 .hasReliableQuality(purpleAnalysis.hasReliableQuality())
                 .averageTumorPloidy(purpleAnalysis.ploidy())
                 .clinicalSummary(clinicalSummary)
-                .forNumber(determineForNumber(purpleAnalysis))
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
                 .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItemsFiltered))
                 .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
@@ -158,8 +158,8 @@ class AnalysedPatientReporter {
     @VisibleForTesting
     static String determineForNumber(@NotNull PurpleAnalysis purpleAnalysis) {
         return purpleAnalysis.hasReliablePurity() && purpleAnalysis.purity() > 0.195
-                ? ForNumber.FOR_080.display()
-                : ForNumber.FOR_103.display();
+                ? QsFormNumber.FOR_080.display()
+                : QsFormNumber.FOR_XXX.display();
     }
 
     @NotNull

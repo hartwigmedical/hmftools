@@ -91,6 +91,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber("HMF-FOR-TEST")
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -149,6 +150,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber("HMF-FOR-TEST")
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -207,6 +209,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber("HMF-FOR-TEST")
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
