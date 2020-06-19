@@ -59,7 +59,7 @@ public final class ReportingDb {
                 if (hasReliablePurity && report.impliedPurity() >= 0.20) {
                     reportType = "dna_analysis_report";
                 } else {
-                    reportType = "dna_analysis_report_insufficient_tcp_detection";
+                    reportType = "dna_analysis_report_insufficient_tcp";
                 }
             }
 
