@@ -48,7 +48,7 @@ public enum QCFailReason {
     }
 
     @NotNull
-    public String usingForNumber() {
+    public String forNumber() {
         return forNumber.display();
     }
 

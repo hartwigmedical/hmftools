@@ -2,47 +2,26 @@ package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class ExtractForNumbers {
+public final class ExtractForNumbers {
 
     private ExtractForNumbers() {
-
     }
 
     @NotNull
-    public static String extractAllForNumbers(boolean isQCFail, double purity, boolean hasRealiablePurity, QCFailReason reason) {
-        String formNumber = Strings.EMPTY;
-        if (!isQCFail) {
-            formNumber = succesForNumber(purity, hasRealiablePurity);
-        } else {
-            formNumber = extractQCFailForNumbers(reason);
-        }
-        return formNumber;
+    public static String extractAllForNumbers(boolean isQCFail, double purity, boolean hasReliablePurity, @Nullable QCFailReason reason) {
+        return isQCFail ? reason.forNumber() : successForNumber(purity, hasReliablePurity);
     }
 
     @NotNull
-    private static String succesForNumber(double purity, boolean hasRealiablePurity) {
-        String formNumber = Strings.EMPTY;
-
-        if (purity < 0.20 || !hasRealiablePurity) {
-            formNumber = ForNumber.FOR_103.display();
-        } else {
-            formNumber = ForNumber.FOR_080.display();
-
-        }
-        return formNumber;
+    public static String extractSuccessfulForNumbers(double purity, boolean hasReliablePurity) {
+        return successForNumber(purity, hasReliablePurity);
     }
 
     @NotNull
-    public static String extractSuccesfullForNumbers(double purity, boolean hasRealiablePurity) {
-        return succesForNumber(purity, hasRealiablePurity);
+    private static String successForNumber(double purity, boolean hasReliablePurity) {
+        return (hasReliablePurity && purity > 0.195) ? ForNumber.FOR_080.display() : ForNumber.FOR_103.display();
     }
-
-    @NotNull
-    public static String extractQCFailForNumbers(QCFailReason reason) {
-        return reason.usingForNumber();
-    }
-
 }

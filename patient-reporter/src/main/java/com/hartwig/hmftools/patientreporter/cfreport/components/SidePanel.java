@@ -5,7 +5,6 @@ import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ExtractForNumbers;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.ForNumber;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
@@ -14,7 +13,6 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +27,7 @@ public final class SidePanel {
     }
 
     public static void renderSidePanel(@NotNull PdfPage page, @NotNull SampleReport sampleReport, boolean fullHeight, boolean fullContent,
-            @Nullable QCFailReason reason, double purity, boolean hasRealiablePurity, boolean isQCFail) {
+            @Nullable QCFailReason reason, double purity, boolean hasReliablePurity, boolean isQCFail) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
@@ -55,7 +53,7 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
         }
-        String formNumber = ExtractForNumbers.extractAllForNumbers(isQCFail, purity, hasRealiablePurity, reason);
+        String formNumber = ExtractForNumbers.extractAllForNumbers(isQCFail, purity, hasReliablePurity, reason);
 
         if (page.getDocument().getNumberOfPages() == 1) {
             cv.add(new Paragraph("HMF-FOR-" + formNumber + " v" + (PatientReporterApplication.VERSION != null
