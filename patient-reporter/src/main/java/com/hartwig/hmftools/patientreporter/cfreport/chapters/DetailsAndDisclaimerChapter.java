@@ -104,7 +104,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     private static Div createDisclaimerDiv(@NotNull AnalysedPatientReport patientReport) {
         Div div = new Div();
 
-        String forNumber = "HMF-FOR-" + ExtractForNumbers.successForNumber(patientReport.impliedPurity(), patientReport.hasReliablePurity());
+        String forNumber = "HMF-FOR-" + ExtractForNumbers.determineForNumber(patientReport);
         div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
 
         div.add(createContentParagraph("The results stated in this report are based on the tested tumor and blood sample."));

@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ExtractForNumbers;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -14,7 +14,6 @@ import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class SidePanel {
 
@@ -26,8 +25,9 @@ public final class SidePanel {
     private SidePanel() {
     }
 
-    public static void renderSidePanel(@NotNull PdfPage page, @NotNull SampleReport sampleReport, boolean fullHeight, boolean fullContent,
-            @Nullable QCFailReason reason, double purity, boolean hasReliablePurity, boolean isQCFail) {
+    public static void renderSidePanel(@NotNull PdfPage page, @NotNull PatientReport patientReport, boolean fullHeight,
+            boolean fullContent) {
+        SampleReport sampleReport = patientReport.sampleReport();
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
@@ -53,7 +53,7 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
         }
-        String formNumber = ExtractForNumbers.extractForNumber(isQCFail, purity, hasReliablePurity, reason);
+        String formNumber = ExtractForNumbers.determineForNumber(patientReport);
 
         if (page.getDocument().getNumberOfPages() == 1) {
             cv.add(new Paragraph("HMF-FOR-" + formNumber + " v" + (PatientReporterApplication.VERSION != null

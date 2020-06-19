@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ExtractForNumbers {
 
@@ -11,12 +12,16 @@ public final class ExtractForNumbers {
     }
 
     @NotNull
-    public static String extractForNumber(boolean isQCFail, double purity, boolean hasReliablePurity, @Nullable QCFailReason reason) {
-        return isQCFail ? reason.forNumber() : successForNumber(purity, hasReliablePurity);
-    }
+    public static String determineForNumber(@NotNull PatientReport patientReport) {
+        if (patientReport instanceof QCFailReport) {
+            return ((QCFailReport) patientReport).reason().forNumber();
+        } else {
+            assert patientReport instanceof AnalysedPatientReport;
 
-    @NotNull
-    public static String successForNumber(double purity, boolean hasReliablePurity) {
-        return (hasReliablePurity && purity > 0.195) ? ForNumber.FOR_080.display() : ForNumber.FOR_103.display();
+            AnalysedPatientReport analysedPatientReport = (AnalysedPatientReport) patientReport;
+            return (analysedPatientReport.hasReliablePurity() && analysedPatientReport.impliedPurity() > 0.195)
+                    ? ForNumber.FOR_080.display()
+                    : ForNumber.FOR_103.display();
+        }
     }
 }
