@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 
 private typealias SvFilter = (StructuralVariantContext) -> Boolean
+private typealias Chain = List<Link>
 
 class TransitiveLink(private val assemblyLinkStore: LinkStore, private val variantStore: VariantStore) {
 
@@ -44,18 +45,27 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         return Collections.emptyList()
     }
 
+    private fun matchesTarget(end: StructuralVariantContext, target: StructuralVariantContext, entirePath: Chain): Boolean {
+        if (isAlternative(target, end)) {
+            if (!target.imprecise) {
+                val targetDistance = target.insertSequenceLength + target.duplicationLength
+                val (minTotalDistance, maxTotalDistance) = entirePath.totalDistance()
+                if (targetDistance < minTotalDistance || targetDistance > maxTotalDistance) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        return false
+    }
+
+
     private fun findLinks(transLinkPrefix: String, current: StructuralVariantContext, target: StructuralVariantContext, maxAssemblyJumps: Int, maxTransitiveJumps: Int, path: List<Link>)
             : List<Link> {
         val mate = variantStore.select(current.mateId!!)
         val newPath: List<Link> = path + Link(current)
-        if (isAlternative(target, mate)) {
-            if (!target.imprecise) {
-                val targetDistance = target.insertSequenceLength + target.duplicationLength
-                val (minTotalDistance, maxTotalDistance) = newPath.totalDistance()
-                if (targetDistance < minTotalDistance || targetDistance > maxTotalDistance) {
-                    return Collections.emptyList()
-                }
-            }
+        if (matchesTarget(mate, target, newPath)) {
             return newPath
         }
 
@@ -152,6 +162,11 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     fun Collection<StructuralVariantContext>.sortByQualDesc(): List<StructuralVariantContext> {
         return this.sortedByDescending { x -> x.qual }
     }
+
+    fun List<Link>.containsTransitiveLink(): Boolean {
+        return this.any { x -> x.link.contains("trs") }
+    }
+
 }
 
 
