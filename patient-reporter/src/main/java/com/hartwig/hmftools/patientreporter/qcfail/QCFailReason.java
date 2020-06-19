@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter.qcfail;
 
 import java.util.List;
 
-import com.hartwig.hmftools.patientreporter.cfreport.ForNumber;
+import com.hartwig.hmftools.patientreporter.ForNumber;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;

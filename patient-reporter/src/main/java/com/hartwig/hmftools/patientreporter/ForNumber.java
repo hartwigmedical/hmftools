@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.cfreport;
+package com.hartwig.hmftools.patientreporter;
 
 import org.jetbrains.annotations.NotNull;
 

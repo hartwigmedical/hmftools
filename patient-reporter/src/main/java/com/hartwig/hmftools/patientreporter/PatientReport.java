@@ -22,6 +22,9 @@ public interface PatientReport {
     }
 
     @NotNull
+    String forNumber();
+
+    @NotNull
     Optional<String> comments();
 
     boolean isCorrectedReport();

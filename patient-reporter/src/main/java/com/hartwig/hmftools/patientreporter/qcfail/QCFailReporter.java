@@ -11,12 +11,9 @@ import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
-import com.hartwig.hmftools.patientreporter.cfreport.ForNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +54,7 @@ public class QCFailReporter {
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
-                .forNumber(determineForNumber(reason))
+                .forNumber(reason.forNumber())
                 .wgsPurityString(wgsPurityString)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
@@ -65,10 +62,5 @@ public class QCFailReporter {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .build();
-    }
-
-    @NotNull
-    public static String determineForNumber(@NotNull QCFailReason reason) {
-        return reason.forNumber();
     }
 }
