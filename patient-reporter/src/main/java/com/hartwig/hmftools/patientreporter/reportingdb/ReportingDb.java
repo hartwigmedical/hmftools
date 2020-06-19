@@ -50,13 +50,13 @@ public final class ReportingDb {
 
             String reportType = Strings.EMPTY;
             if (report.isCorrectedReport()) {
-                if (hasReliablePurity && Integer.valueOf(purity) >= 0.20) {
+                if (hasReliablePurity && report.impliedPurity() >= 0.20) {
                     reportType = "dna_analysis_report_corrected";
                 } else {
                     reportType = "dna_analysis_report_below_detection_corrected";
                 }
             } else {
-                if (hasReliablePurity && Integer.valueOf(purity) >= 0.20) {
+                if (hasReliablePurity && report.impliedPurity() >= 0.20) {
                     reportType = "dna_analysis_report";
                 } else {
                     reportType = "dna_analysis_report_below_detection";
