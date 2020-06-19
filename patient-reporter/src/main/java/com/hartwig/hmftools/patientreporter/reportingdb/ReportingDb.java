@@ -18,7 +18,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportingDb {
@@ -48,7 +47,7 @@ public final class ReportingDb {
             boolean hasReliableQuality = report.hasReliableQuality();
             boolean hasReliablePurity = report.hasReliablePurity();
 
-            String reportType = Strings.EMPTY;
+            String reportType;
             if (report.isCorrectedReport()) {
                 if (hasReliablePurity && report.impliedPurity() > ReportResources.PURITY_CUTOFF) {
                     reportType = "dna_analysis_report_corrected";
