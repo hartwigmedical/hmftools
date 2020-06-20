@@ -153,9 +153,7 @@ public class FusionTest
     public void testFusionPrioritisation()
     {
         // create a set of valid fusions and successively invalidate the top one to test prioritisation logic
-
         String chromosome = "1";
-        byte strand = 1;
 
         String geneId1 = "ENSG0001";
 
@@ -385,12 +383,6 @@ public class FusionTest
         // intronic del which then runs out remainder of transcript
         var4 = createDup(3, chromosome, 10900, 56500);
 
-
-        // var1.setAssemblyData(false, "asmb12");
-        // var2.setAssemblyData(true, "asmb12");
-        // var3.setAssemblyData(false, "asmb34");
-        //var4.setAssemblyData(false, "asmb34");
-
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
         tester.AllVariants.add(var3);
@@ -459,7 +451,6 @@ public class FusionTest
 
         assertTrue(validateFusionAnnotations(fusion, false, true));
 
-
         // test 5: test a chained fusion which has invalid traversal since it goes through another gene's splice acceptor
         transDataList = Lists.newArrayList();
 
@@ -526,248 +517,6 @@ public class FusionTest
         assertEquals(var5.id(), fusion.downstreamTrans().gene().id());
 
         assertFalse(validateFusionAnnotations(fusion, false, false));
-    }
-
-    @Test
-    public void testSameGeneFusions()
-    {
-        LinxTester tester = new LinxTester();
-
-        EnsemblDataCache geneTransCache = createGeneDataCache();
-
-        tester.initialiseFusions(geneTransCache);
-
-        String geneName = "GENE1";
-        String geneId1 = "ENSG0001";
-        String chromosome = "1";
-        byte strand = 1;
-
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
-        geneList.add(createEnsemblGeneData(geneId1, geneName, chromosome, strand, 100, 1500));
-
-        addGeneData(geneTransCache, chromosome, geneList);
-
-        List<TranscriptData> transDataList = Lists.newArrayList();
-
-        int transId = 1;
-
-        int[] exonStarts = new int[]{100, 300, 500, 700, 900, 1100, 1300};
-        int[] exonPhases = new int[]{-1, 1, 1, 1, 1, 1, -1};
-
-        TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
-        transDataList.add(transData);
-
-        addTransExonData(geneTransCache, geneId1, transDataList);
-
-        // mark as 3' promiscuous
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
-                .addData(new KnownFusionData(PROMISCUOUS_3, "", geneName, "", "", ""));
-
-        // first test a DUP around a single exon, remaining in phase
-        List<GeneAnnotation> upGenes = Lists.newArrayList();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 650, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(chromosome, 650, POS_ORIENT);
-
-        // add downstream breakends
-        List<GeneAnnotation> downGenes = Lists.newArrayList();
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome, 450, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(chromosome, 450, NEG_ORIENT);
-
-        FusionParameters params = new FusionParameters();
-        params.RequirePhaseMatch = true;
-        params.AllowExonSkipping = true;
-
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true);
-
-        assertEquals(1, fusions.size());
-        final GeneFusion fusion = fusions.get(0);
-
-        // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(650, fusion.upstreamTrans().gene().position());
-        assertEquals(450, fusion.downstreamTrans().gene().position());
-        assertEquals(0, fusion.getExonsSkipped(true));
-        assertEquals(0, fusion.getExonsSkipped(false));
-        assertTrue(!fusion.reportable());
-    }
-
-    @Test
-    public void testExonDelDupFusion()
-    {
-        LinxTester tester = new LinxTester();
-
-        EnsemblDataCache geneTransCache = createGeneDataCache();
-
-        tester.initialiseFusions(geneTransCache);
-
-        String geneName = "GENE1";
-        String geneId1 = "ENSG0001";
-        String chromosome = "1";
-        byte strand = POS_STRAND;
-
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
-        geneList.add(createEnsemblGeneData(geneId1, geneName, chromosome, strand, 100, 1500));
-
-        addGeneData(geneTransCache, chromosome, geneList);
-
-        List<TranscriptData> transDataList = Lists.newArrayList();
-
-        int transId = 1;
-
-        int[] exonStarts = new int[]{100, 300, 500, 700, 900, 1100, 1300};
-        int[] exonPhases = new int[]{-1, 1, 1, 1, 1, 1, -1};
-
-        TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
-        transDataList.add(transData);
-
-        addTransExonData(geneTransCache, geneId1, transDataList);
-
-        final String knownDelRegion = String.format("%s;%d;%d;%d;%d", transData.TransName, 2, 2, 5, 5);
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
-                new KnownFusionData(EXON_DEL_DUP, geneName, geneName, "", "", knownDelRegion));
-
-        FusionParameters params = new FusionParameters();
-        params.RequirePhaseMatch = true;
-        params.AllowExonSkipping = true;
-
-        // first DEL doesn't delete a known region
-        List<GeneAnnotation> upGenes = Lists.newArrayList();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome, 450, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(chromosome, 450, POS_ORIENT);
-
-        // add downstream breakends
-        List<GeneAnnotation> downGenes = Lists.newArrayList();
-
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(chromosome, 650, NEG_ORIENT);
-
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true);
-
-        // second one does
-        upGenes.clear();
-        downGenes.clear();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, chromosome, 450, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(chromosome, 450, POS_ORIENT);
-
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, chromosome, 850, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(chromosome, 850, NEG_ORIENT);
-
-        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true));
-
-        assertEquals(2, fusions.size());
-        final GeneFusion fusion = fusions.stream().filter(x -> x.knownType() == EXON_DEL_DUP).findFirst().orElse(null);
-        assertTrue(fusion != null);
-
-        // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(450, fusion.upstreamTrans().gene().position());
-        assertEquals(850, fusion.downstreamTrans().gene().position());
-        assertEquals(0, fusion.getExonsSkipped(false));
-        assertEquals(0, fusion.getExonsSkipped(false));
-        assertTrue(fusion.reportable());
-    }
-
-    @Test
-    public void testIgRegionFusion()
-    {
-        LinxTester tester = new LinxTester();
-
-        EnsemblDataCache geneTransCache = createGeneDataCache();
-
-        tester.initialiseFusions(geneTransCache);
-
-        String geneName = "IGH";
-        String geneId1 = "ENSG0001";
-        String chromosome = "1";
-
-        String geneName2 = "GENE2";
-        String geneId2 = "ENSG0002";
-
-        String geneName3 = "GENE3";
-        String geneId3 = "ENSG0003";
-
-        byte strand = POS_STRAND;
-
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
-        geneList.add(createEnsemblGeneData(geneId1, geneName, chromosome, strand, 100, 1500));
-        geneList.add(createEnsemblGeneData(geneId2, geneName2, chromosome, strand, 10000, 11500));
-        geneList.add(createEnsemblGeneData(geneId3, geneName3, chromosome, strand, 20000, 21500));
-
-        addGeneData(geneTransCache, chromosome, geneList);
-
-        List<TranscriptData> transDataList = Lists.newArrayList();
-
-        int transId = 1;
-
-        int[] exonStarts = generateExonStarts(100, 7, 100, 100);
-        int[] exonPhases = new int[]{-1, -1, 1, 1, 1, 1, -1};
-
-        TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
-        transDataList.add(transData);
-
-        addTransExonData(geneTransCache, geneId1, transDataList);
-
-        exonStarts = generateExonStarts(10000, exonPhases.length, 100, 100);
-        transData = createTransExons(geneId2, transId++, strand, exonStarts, exonPhases, 100, true);
-        transDataList = Lists.newArrayList(transData);
-
-        addTransExonData(geneTransCache, geneId2, transDataList);
-
-        exonStarts = generateExonStarts(20000, exonPhases.length, 100, 100);
-        transData = createTransExons(geneId3, transId++, strand, exonStarts, exonPhases, 100, true);
-        transDataList = Lists.newArrayList(transData);
-
-        addTransExonData(geneTransCache, geneId3, transDataList);
-
-        final String igRegion = String.format("%d;%s;%d;%d;%d", NEG_STRAND, chromosome, 50, 2000, 0);
-
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
-                new KnownFusionData(IG_KNOWN_PAIR, geneName, geneName2, "", "", igRegion));
-
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
-                new KnownFusionData(IG_PROMISCUOUS, geneName, "", "", "", igRegion));
-
-        FusionParameters params = new FusionParameters();
-        params.RequirePhaseMatch = true;
-        params.AllowExonSkipping = true;
-
-        // a DEL linking the 2 regions
-        List<GeneAnnotation> upGenes = Lists.newArrayList();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome, 200, NEG_ORIENT, 1000));
-        upGenes.get(0).setPositionalData(chromosome, 200, NEG_ORIENT);
-
-        // add downstream breakends
-        List<GeneAnnotation> downGenes = Lists.newArrayList();
-
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 9500, NEG_ORIENT, 1000));
-        downGenes.get(0).setPositionalData(chromosome, 9500, NEG_ORIENT);
-
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true);
-
-        upGenes.clear();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, chromosome, 200, NEG_ORIENT, 1000));
-        upGenes.get(0).setPositionalData(chromosome, 500, NEG_ORIENT);
-
-        downGenes.clear();
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, chromosome, 19500, NEG_ORIENT, 1000));
-        downGenes.get(0).setPositionalData(chromosome, 20100, NEG_ORIENT);
-
-        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true));
-
-        assertEquals(2, fusions.size());
-        GeneFusion fusion = fusions.stream().filter(x -> x.knownType() == IG_KNOWN_PAIR).findFirst().orElse(null);
-        assertTrue(fusion != null);
-
-        // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(200, fusion.upstreamTrans().gene().position());
-        assertEquals(9500, fusion.downstreamTrans().gene().position());
-        assertTrue(fusion.reportable());
-
-        fusion = fusions.stream().filter(x -> x.knownType() == IG_PROMISCUOUS).findFirst().orElse(null);
-        assertTrue(fusion != null);
-
-        // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(500, fusion.upstreamTrans().gene().position());
-        assertEquals(20100, fusion.downstreamTrans().gene().position());
-        assertTrue(fusion.reportable());
     }
 
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)

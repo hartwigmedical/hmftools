@@ -57,6 +57,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -534,13 +535,24 @@ public class FusionDisruptionAnalyser
             if (lowerSV.isSglBreakend() && lowerSV.getSglMappings().isEmpty())
                 continue;
 
-            if(lowerBreakend == null)
-            {
-                // to-do - decide how to represent the mappings from a SGL
-                continue;
-            }
+            // handle breakends from a SGL's mapping to known pair genes
+            int lowerBreakendPos;
+            List<GeneAnnotation> genesListLower;
 
-            final List<GeneAnnotation> genesListLower = getBreakendGeneList(lowerSV, lowerBreakend.usesStart());
+            if(lowerBreakend != null)
+            {
+                lowerBreakendPos = lowerBreakend.position();
+                genesListLower = getBreakendGeneList(lowerSV, lowerBreakend.usesStart());
+            }
+            else
+            {
+                genesListLower = getBreakendGeneList(lowerSV, false);
+
+                if (genesListLower.isEmpty())
+                    continue;
+
+                lowerBreakendPos = genesListLower.get(0).position();
+            }
 
             if (genesListLower.isEmpty())
                 continue;
@@ -564,14 +576,27 @@ public class FusionDisruptionAnalyser
                 {
                     // at the last link, take the open breakend of the chain
                     upperBreakend = chain.getOpenBreakend(false);
-
-                    if(upperBreakend == null) // can be null for SGLs at end of chain
-                        break;
-
-                    upperSV = upperBreakend.getSV();
+                    upperSV = chain.getChainEndSV(false);
                 }
 
-                final List<GeneAnnotation> genesListUpper = getBreakendGeneList(upperSV, upperBreakend.usesStart());
+                int upperBreakendPos;
+
+                List<GeneAnnotation> genesListUpper;
+
+                if(upperBreakend != null)
+                {
+                    upperBreakendPos = upperBreakend.position();
+                    genesListUpper = getBreakendGeneList(upperSV, upperBreakend.usesStart());
+                }
+                else
+                {
+                    genesListUpper = getBreakendGeneList(upperSV, false);
+
+                    if(genesListUpper.isEmpty())
+                        continue;
+
+                    upperBreakendPos = genesListUpper.get(0).position();
+                }
 
                 // if a new linked pair has been traversed to reach this upper breakend, record its length
                 // and test whether it traverses any genic region, and if so invalidate the fusion
@@ -618,7 +643,7 @@ public class FusionDisruptionAnalyser
                     // whenever it goes through a subsequent linked pair by joining to the first (lower) breakend in the pair
                     int upGeneStrand = fusion.upstreamTrans().gene().Strand;
                     boolean isPrecodingUpstream = fusion.upstreamTrans().preCoding();
-                    boolean fusionLowerToUpper = fusion.upstreamTrans().gene().position() == lowerBreakend.position();
+                    boolean fusionLowerToUpper = fusion.upstreamTrans().gene().position() == lowerBreakendPos;
 
                     // check any traversed genes
                     long totalLinkLength = 0;
@@ -672,10 +697,8 @@ public class FusionDisruptionAnalyser
                         Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
                         GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
 
-                        SvBreakend breakend = lowerBreakend.position() == gene.position() ? lowerBreakend : upperBreakend;
-
-                        boolean isChainEnd = (breakend == lowerBreakend && lpIndex1 == 0)
-                                || (breakend == upperBreakend && lpIndex2 == linkedPairs.size());
+                        boolean isChainEnd = (lowerBreakendPos == gene.position() && lpIndex1 == 0)
+                                || (upperBreakendPos == gene.position() && lpIndex2 == linkedPairs.size());
 
                         if (isChainEnd)
                         {
@@ -683,9 +706,18 @@ public class FusionDisruptionAnalyser
                         }
                         else
                         {
-                            // looks from this link outwards past the end of the transcript for any invalidation of the transcript
-                            int linkIndex = breakend == lowerBreakend ? lpIndex1 - 1 : lpIndex2;
-                            transTerminated[se] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
+                            SvBreakend breakend = lowerBreakendPos == gene.position() ? lowerBreakend : upperBreakend;
+
+                            if(breakend == null)
+                            {
+                                transTerminated[se] = false;
+                            }
+                            else
+                            {
+                                // looks from this link outwards past the end of the transcript for any invalidation of the transcript
+                                int linkIndex = breakend == lowerBreakend ? lpIndex1 - 1 : lpIndex2;
+                                transTerminated[se] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
+                            }
                         }
                     }
 
