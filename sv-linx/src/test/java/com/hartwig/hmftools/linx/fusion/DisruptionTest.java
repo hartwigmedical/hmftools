@@ -5,6 +5,10 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExo
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -38,8 +42,8 @@ public class DisruptionTest
         EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
-        String chromosome = "1";
-        String geneId = "GENE001";
+        String chromosome = CHR_1;
+        String geneId = GENE_ID_1;
         addTestGeneData(geneTransCache, chromosome, geneId);
 
         // non-disruptive simple SVs
@@ -137,11 +141,11 @@ public class DisruptionTest
         EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
-        String chromosome = "1";
-        String geneId = "GENE001";
+        String chromosome = CHR_1;
+        String geneId = GENE_ID_1;
 
-        String chromosome2 = "2";
-        String geneId2 = "GENE002";
+        String chromosome2 = CHR_2;
+        String geneId2 = GENE_ID_2;
 
         addTestGeneData(geneTransCache, chromosome, geneId);
         addTestGeneData(geneTransCache, chromosome2, geneId2);
@@ -275,13 +279,13 @@ public class DisruptionTest
         EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
-        String chromosome = "1";
-        String geneId = "GENE001";
+        String chromosome = CHR_1;
+        String geneId = GENE_ID_1;
 
         addTestGeneData(geneTransCache, chromosome, geneId);
 
-        String chromosome2 = "2";
-        String geneId2 = "GENE002";
+        String chromosome2 = CHR_2;
+        String geneId2 = GENE_ID_2;
 
         addTestGeneData(geneTransCache, chromosome2, geneId2);
 

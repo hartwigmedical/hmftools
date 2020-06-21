@@ -82,8 +82,8 @@ public class GeneTestUtils
         // exons will be gene start + 0-100, 200-300, 400-500
 
         TranscriptData transData = createTransExons(
-                GENE_ID_1, TRANS_1, POS_STRAND, generateExonStarts(GENE_START_1, 5, EXON_LENGTH, 100),
-                EXON_LENGTH, GENE_START_1 + 250, GENE_START_1 + 850, canonical, BIOTYPE_PROTEIN_CODING);
+                GENE_ID_1, TRANS_1, POS_STRAND, generateExonStarts(GENE_START_1, 7, EXON_LENGTH, 100),
+                EXON_LENGTH, GENE_START_1 + 250, GENE_START_1 + 1450, canonical, BIOTYPE_PROTEIN_CODING);
 
         transDataList.add(transData);
 
