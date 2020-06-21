@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDriver;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -21,10 +24,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -46,9 +51,9 @@ public class AmpDriversTest
 
         driverAnnotator.setSamplePurityData(2, false);
 
-        String geneName = "GENE1";
-        String geneId = "ENSG0001";
-        String chromosome = "1";
+        String geneName = GENE_NAME_1;
+        String geneId = GENE_ID_1;
+        String chromosome = CHR_1;
         byte strand = 1;
 
         int transStart = 100000;
@@ -68,11 +73,12 @@ public class AmpDriversTest
         addTransExonData(geneTransCache, geneId, transDataList);
         addGeneData(geneTransCache, chromosome, geneList);
 
-        double geneCopyNumber = 12;
+        double geneMinCopyNumber = 12;
 
-        driverAnnotator.addDriverGene(
-                createDriver(geneName, chromosome, AMP, DriverCategory.ONCO, false, geneCopyNumber),
-                createGeneCopyNumber(geneName, chromosome, geneCopyNumber, transStart, transEnd));
+        final DriverCatalog driver = createDriver(geneName, chromosome, AMP, DriverCategory.ONCO, false, geneMinCopyNumber);
+        final GeneCopyNumber geneCopyNumber = createGeneCopyNumber(geneName, chromosome, geneMinCopyNumber, transStart, transEnd);
+
+        driverAnnotator.addDriverGene(driver, geneCopyNumber);
 
         // preceding DEL to set arm copy number
         SvVarData var1 = createDel(tester.nextVarId(), chromosome, 500, 600);
@@ -87,6 +93,7 @@ public class AmpDriversTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
+        driverAnnotator.clearResults();
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var2));
@@ -121,6 +128,7 @@ public class AmpDriversTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
+        driverAnnotator.clearResults();
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, driverAnnotator.getDriverGeneDataList().size());
@@ -158,6 +166,7 @@ public class AmpDriversTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
+        driverAnnotator.clearResults();
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, driverAnnotator.getDriverGeneDataList().size());

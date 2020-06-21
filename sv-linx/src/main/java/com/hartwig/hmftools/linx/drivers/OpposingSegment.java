@@ -10,7 +10,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 public class OpposingSegment
 {
     public final SvCluster Cluster;
-    public List<SvBreakend> Breakends;
+    public final List<SvBreakend> Breakends;
     public final double NetCNChange;
 
     private double mRemainingCNChange;
