@@ -86,12 +86,12 @@ public class LinxClusterFile
         int index = 0;
 
         return ImmutableLinxCluster.builder()
-                .clusterId(Integer.valueOf(values[index++]))
+                .clusterId(Integer.parseInt(values[index++]))
                 .resolvedType(values[index++])
-                .synthetic(Boolean.valueOf(values[index++]))
-                .subClonal(Boolean.valueOf(values[index++]))
+                .synthetic(Boolean.parseBoolean(values[index++]))
+                .subClonal(Boolean.parseBoolean(values[index++]))
                 .subType(values[index++])
-                .clusterCount(Integer.valueOf(values[index++]))
+                .clusterCount(Integer.parseInt(values[index++]))
                 .clusterDesc(values[index++])
                 .build();
     }

@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class SnpEffSummarySerialiser {
+public final class SnpEffSummarySerialiser {
 
     @NotNull
     public static SnpEffSummary fromDetails(@NotNull final List<String> worst, @NotNull final List<String> canonical) {

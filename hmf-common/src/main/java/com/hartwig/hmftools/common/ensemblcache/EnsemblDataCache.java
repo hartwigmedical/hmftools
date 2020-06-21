@@ -20,9 +20,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class EnsemblDataCache
 {
@@ -101,7 +101,7 @@ public class EnsemblDataCache
         return getGeneData(geneId, false);
     }
 
-    private final EnsemblGeneData getGeneData(final String gene, boolean byName)
+    private EnsemblGeneData getGeneData(final String gene, boolean byName)
     {
         for(Map.Entry<String, List<EnsemblGeneData>> entry : mChrGeneDataMap.entrySet())
         {
@@ -279,9 +279,9 @@ public class EnsemblDataCache
         if(precedingGeneSAPos >= 0)
         {
             // if the breakend is after (higher for +ve strand) the nearest preceding splice acceptor, then the distance will be positive
-            // and mean that the transcript isn't interupted when used in a downstream fusion
+            // and mean that the transcript isn't interrupted when used in a downstream fusion
             int preDistance = transcript.gene().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
-            transcript.setSpliceAcceptorDistance(true, (int)preDistance);
+            transcript.setSpliceAcceptorDistance(true, preDistance);
         }
     }
 
@@ -333,7 +333,7 @@ public class EnsemblDataCache
         return genesList;
     }
 
-    private final List<EnsemblGeneData> findGeneRegions(final String chromosome, int position, int upstreamDistance)
+    private List<EnsemblGeneData> findGeneRegions(final String chromosome, int position, int upstreamDistance)
     {
         final List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
 
@@ -409,7 +409,7 @@ public class EnsemblDataCache
         // for reverse-strand transcripts the current exon is upstream, the previous is downstream
         // and the end-phase is taken from the upstream (current) exon, the phase from the downstream (previous) exon
 
-        // for each exon, the 'phase' is always the phase at the start of the exon in the direction of transcrition
+        // for each exon, the 'phase' is always the phase at the start of the exon in the direction of transcription
         // regardless of strand direction, and 'end_phase' is the phase at the end of the exon
 
         if(position < firstExon.ExonStart)
@@ -504,7 +504,7 @@ public class EnsemblDataCache
 
                     if(isForwardStrand)
                     {
-                        // the current exon is downstream, the prevous one is upstream
+                        // the current exon is downstream, the previous one is upstream
                         upExonRank = prevExonData.ExonRank;
                         upExonPhase = prevExonData.ExonPhaseEnd;
                         downExonRank = exonData.ExonRank;
@@ -518,7 +518,7 @@ public class EnsemblDataCache
                     else
                     {
                         // the current exon is earlier in rank
-                        // the previous exon in the list has the higher rank and is dowstream
+                        // the previous exon in the list has the higher rank and is downstream
                         // the start of the next exon (ie previous here) uses 'phase' for the downstream as normal
                         upExonRank = exonData.ExonRank;
                         upExonPhase = exonData.ExonPhaseEnd;
@@ -560,8 +560,8 @@ public class EnsemblDataCache
         transcript.setBioType(transData.BioType);
 
         // if not set, leave the previous exon null and it will be taken from the closest upstream gene
-        transcript.setSpliceAcceptorDistance(true, nextUpDistance >= 0 ? (int)nextUpDistance : null);
-        transcript.setSpliceAcceptorDistance(false, nextDownDistance >= 0 ? (int)nextDownDistance : null);
+        transcript.setSpliceAcceptorDistance(true, nextUpDistance >= 0 ? nextUpDistance : null);
+        transcript.setSpliceAcceptorDistance(false, nextDownDistance >= 0 ? nextDownDistance : null);
 
         if(isCodingTypeOverride)
             transcript.setCodingType(CODING);
@@ -684,9 +684,8 @@ public class EnsemblDataCache
         int transPhase = isUpstream ? transcript.ExonUpstreamPhase : transcript.ExonDownstreamPhase;
         int transRank = isUpstream ? transcript.ExonUpstream : transcript.ExonDownstream;
 
-        for(int i = 0; i < exonDataList.size(); ++i)
+        for (ExonData exonData : exonDataList)
         {
-            final ExonData exonData = exonDataList.get(i);
 
             if(isUpstream == forwardStrand)
             {
@@ -704,7 +703,7 @@ public class EnsemblDataCache
             }
 
             int exonPhase = isUpstream ? exonData.ExonPhaseEnd : exonData.ExonPhase;
-            int exonsSkipped = 0;
+            int exonsSkipped;
 
             if(isUpstream)
             {

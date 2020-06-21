@@ -12,9 +12,6 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class DataUtils {
 
     public static double[] convertList(final List<Double> dataSet)
@@ -60,9 +57,9 @@ public class DataUtils {
     public static double sumVector(double[] vec)
     {
         double total = 0;
-        for(int i = 0; i < vec.length; ++i)
+        for (double v : vec)
         {
-            total += vec[i];
+            total += v;
         }
 
         return total;

@@ -1,11 +1,5 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import com.google.common.collect.Lists;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

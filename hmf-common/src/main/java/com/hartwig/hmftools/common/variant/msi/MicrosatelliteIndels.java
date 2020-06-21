@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant.msi;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 

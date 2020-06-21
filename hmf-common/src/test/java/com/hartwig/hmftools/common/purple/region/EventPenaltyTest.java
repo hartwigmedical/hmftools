@@ -22,7 +22,6 @@ public class EventPenaltyTest {
         assertNew(4.0, "AAABBB");
     }
 
-
     private static void assertNew(double expectedResult, @NotNull final String descriptiveBAF) {
         int major = (int) descriptiveBAF.chars().filter(x -> x == 'A').count();
         int minor = (int) descriptiveBAF.chars().filter(x -> x == 'B').count();

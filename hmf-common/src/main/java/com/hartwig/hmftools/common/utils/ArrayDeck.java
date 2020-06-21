@@ -25,9 +25,7 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
 
-        @SuppressWarnings("unchecked")
-        E result = (E) this.elements[(this.head + index) & this.elements.length - 1];
-        return result;
+        return (E) this.elements[(this.head + index) & this.elements.length - 1];
     }
 
     /**
@@ -227,9 +225,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
         return true;
     }
 
-    /**
-     * @throws NoSuchElementException {@inheritDoc}
-     */
     public E removeFirst() {
         E x = pollFirst();
         if (x == null) {
@@ -238,9 +233,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
         return x;
     }
 
-    /**
-     * @throws NoSuchElementException {@inheritDoc}
-     */
     public E removeLast() {
         E x = pollLast();
         if (x == null) {
@@ -251,7 +243,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
 
     public E pollFirst() {
         int h = head;
-        @SuppressWarnings("unchecked")
         E result = (E) elements[h];
         // Element is null if deque empty
         if (result == null) {
@@ -264,7 +255,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
 
     public E pollLast() {
         int t = (tail - 1) & (elements.length - 1);
-        @SuppressWarnings("unchecked")
         E result = (E) elements[t];
         if (result == null) {
             return null;
@@ -274,11 +264,7 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
         return result;
     }
 
-    /**
-     * @throws NoSuchElementException {@inheritDoc}
-     */
     public E getFirst() {
-        @SuppressWarnings("unchecked")
         E result = (E) elements[head];
         if (result == null) {
             throw new NoSuchElementException();
@@ -286,11 +272,7 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
         return result;
     }
 
-    /**
-     * @throws NoSuchElementException {@inheritDoc}
-     */
     public E getLast() {
-        @SuppressWarnings("unchecked")
         E result = (E) elements[(tail - 1) & (elements.length - 1)];
         if (result == null) {
             throw new NoSuchElementException();
@@ -298,13 +280,11 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     public E peekFirst() {
         // elements[head] is null if deque empty
         return (E) elements[head];
     }
 
-    @SuppressWarnings("unchecked")
     public E peekLast() {
         return (E) elements[(tail - 1) & (elements.length - 1)];
     }
@@ -405,7 +385,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
      * <p>This method is equivalent to {@link #removeFirst}.
      *
      * @return the head of the queue represented by this deque
-     * @throws NoSuchElementException {@inheritDoc}
      */
     public E remove() {
         return removeFirst();
@@ -433,7 +412,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
      * <p>This method is equivalent to {@link #getFirst}.
      *
      * @return the head of the queue represented by this deque
-     * @throws NoSuchElementException {@inheritDoc}
      */
     public E element() {
         return getFirst();
@@ -475,7 +453,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
      *
      * @return the element at the front of this deque (which is the top
      * of the stack represented by this deque)
-     * @throws NoSuchElementException {@inheritDoc}
      */
     public E pop() {
         return removeFirst();
@@ -791,7 +768,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
      *                              this deque
      * @throws NullPointerException if the specified array is null
      */
-    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
         int size = size();
         if (a.length < size) {
@@ -878,7 +854,7 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
      * @since 1.8
      */
     public Spliterator<E> spliterator() {
-        return new ArrayDeck.DeqSpliterator<E>(this, -1, -1);
+        return new ArrayDeck.DeqSpliterator<>(this, -1, -1);
     }
 
     static final class DeqSpliterator<E> implements Spliterator<E> {
@@ -924,7 +900,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
             int m = a.length - 1, f = getFence(), i = index;
             index = f;
             while (i != f) {
-                @SuppressWarnings("unchecked")
                 E e = (E) a[i];
                 i = (i + 1) & m;
                 if (e == null) {
@@ -941,7 +916,6 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
             Object[] a = deq.elements;
             int m = a.length - 1, f = getFence(), i = index;
             if (i != fence) {
-                @SuppressWarnings("unchecked")
                 E e = (E) a[i];
                 index = (i + 1) & m;
                 if (e == null) {
@@ -958,7 +932,7 @@ public class ArrayDeck<E> extends AbstractCollection<E> implements Deque<E>, Clo
             if (n < 0) {
                 n += deq.elements.length;
             }
-            return (long) n;
+            return n;
         }
 
         @Override

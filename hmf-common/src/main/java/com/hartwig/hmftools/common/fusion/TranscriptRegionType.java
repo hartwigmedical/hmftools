@@ -7,5 +7,5 @@ public enum TranscriptRegionType
     EXONIC,
     INTRONIC,
     IG,
-    DOWNSTREAM;
+    DOWNSTREAM
 }
