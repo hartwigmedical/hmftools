@@ -44,14 +44,13 @@ public class SampleReportFactoryTest {
         LimsStudy typeCORE = LimsStudy.CORE;
         LimsStudy typeWIDE = LimsStudy.WIDE;
 
-        String hositalIdNA = Lims.NOT_AVAILABLE_STRING;
-        String hospitalIDempty = Strings.EMPTY;
+        String hospitalIdNA = Lims.NOT_AVAILABLE_STRING;
+        String hospitalIDEmpty = Strings.EMPTY;
         String hospitalId = "1234";
 
-        assertEquals(hositalIdNA, SampleReportFactory.checkHospitalPatientId(hositalIdNA, typeCORE, coreSampleId));
-        assertEquals(hospitalIDempty, SampleReportFactory.checkHospitalPatientId(hospitalIDempty, typeCORE, coreSampleId));
+        assertEquals(hospitalIdNA, SampleReportFactory.checkHospitalPatientId(hospitalIdNA, typeCORE, coreSampleId));
+        assertEquals(hospitalIDEmpty, SampleReportFactory.checkHospitalPatientId(hospitalIDEmpty, typeCORE, coreSampleId));
         assertEquals(hospitalId, SampleReportFactory.checkHospitalPatientId(hospitalId, typeCORE, coreSampleId));
-        assertEquals(hositalIdNA, SampleReportFactory.checkHospitalPatientId(hositalIdNA, typeWIDE, wideSampleId));
-
+        assertEquals(hospitalIdNA, SampleReportFactory.checkHospitalPatientId(hospitalIdNA, typeWIDE, wideSampleId));
     }
 }

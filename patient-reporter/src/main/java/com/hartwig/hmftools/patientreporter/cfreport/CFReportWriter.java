@@ -67,7 +67,7 @@ public class CFReportWriter implements ReportWriter {
     }
 
     @Override
-    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath, boolean isQCFail) throws IOException {
+    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
         writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
     }
 
