@@ -22,5 +22,4 @@ public class QualityRecalibrationMap {
 
         return Optional.ofNullable(map.get(key)).map(QualityRecalibrationRecord::recalibratedQual).orElse(qual * 1d);
     }
-
 }

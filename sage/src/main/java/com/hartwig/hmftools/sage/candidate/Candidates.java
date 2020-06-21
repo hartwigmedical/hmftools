@@ -29,7 +29,6 @@ public class Candidates {
     }
 
     public void add(@NotNull final Collection<AltContext> altContexts) {
-
         if (candidateList != null) {
             throw new IllegalStateException("Cannot add more alt contexts");
         }
@@ -50,5 +49,4 @@ public class Candidates {
 
         return candidateList;
     }
-
 }

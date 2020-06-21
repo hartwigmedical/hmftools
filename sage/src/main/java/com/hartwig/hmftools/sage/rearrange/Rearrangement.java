@@ -13,7 +13,6 @@ public class Rearrangement {
 
     private static final int MAX_MNV_LENGTH = 2;
 
-
     public static List<VariantHotspot> rearrangeInsert(int position, int indelLength, int readIndex, byte[] readBases, int refIndex,
             byte[] refBases) {
         final List<VariantHotspot> left = moveLeft(false, position, indelLength, readIndex, readBases, refIndex, refBases);
@@ -35,7 +34,6 @@ public class Rearrangement {
     @NotNull
     public static List<VariantHotspot> moveLeft(boolean delete, int position, int indelLength, int readIndex, byte[] readBases,
             int refIndex, byte[] refBases) {
-
         int absIndelLength = Math.abs(indelLength);
         int minReadIndex = Math.max(0, readIndex - absIndelLength);
         int maxRefIndex = Math.max(0, refIndex - absIndelLength);
@@ -99,7 +97,6 @@ public class Rearrangement {
     @NotNull
     public static List<VariantHotspot> moveRight(boolean delete, int position, int indelLength, int readIndex, byte[] readBases,
             int refIndex, byte[] refBases) {
-
         int absIndelLength = Math.abs(indelLength);
         int maxReadIndex = Math.min(readBases.length - 1, readIndex + 2 * absIndelLength + 1);
         int maxRefIndex = Math.min(refBases.length - 1, refIndex + 2 * absIndelLength + 1);
@@ -157,5 +154,4 @@ public class Rearrangement {
 
         return result;
     }
-
 }

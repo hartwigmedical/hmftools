@@ -47,9 +47,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     @Override
     public void accept(@NotNull final SAMRecord record) {
-
         if (inBounds(record) && !reachedDepthLimit(record)) {
-
             final List<AltRead> altReads = Lists.newArrayList();
             final IndexedBases refBases = refGenome.alignment();
 
@@ -113,7 +111,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             altReads.forEach(AltRead::updateRefContext);
         }
-
     }
 
     @Nullable
@@ -163,13 +160,11 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     @NotNull
     private List<AltRead> processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart,
             int alignmentLength, final IndexedBases refBases, int numberOfEvents) {
-
         final List<AltRead> result = Lists.newArrayList();
 
         int refIndex = refBases.index(refPositionStart);
 
         for (int i = 0; i < alignmentLength; i++) {
-
             int refPosition = refPositionStart + i;
             int readBaseIndex = readBasesStartIndex + i;
             int refBaseIndex = refIndex + i;
@@ -233,7 +228,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     @VisibleForTesting
     static int mnvLength(int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
-
         final Function<Integer, Boolean> isDifferent =
                 i -> refIndex + i < refBases.length && readIndex + i < readBases.length && refBases[refIndex + i] != readBases[readIndex
                         + i];
@@ -271,5 +265,4 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
         return startRefContext.reachedLimit() && endRefContext.reachedLimit();
     }
-
 }

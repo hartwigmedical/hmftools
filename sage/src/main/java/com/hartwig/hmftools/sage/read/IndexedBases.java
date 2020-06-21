@@ -25,7 +25,6 @@ public class IndexedBases {
         return new IndexedBases(position, index, recordLeftFlankLength, rightCentreIndex, flankSize, bases);
     }
 
-
     private final int position;
     private final int index;
     private final int flankSize;
@@ -85,7 +84,6 @@ public class IndexedBases {
     }
 
     public boolean isCentreCovered(int otherReadIndex, byte[] otherBases) {
-
         int otherLeftCentreIndex = otherLeftCentreIndex(otherReadIndex);
         if (otherLeftCentreIndex < 0) {
             return false;
@@ -107,7 +105,6 @@ public class IndexedBases {
 
     @NotNull
     public ReadContextMatch matchAtPosition(int otherReadIndex, int otherLength, byte[] otherBases) {
-
         if (otherReadIndex < 0) {
             return NONE;
         }
@@ -138,7 +135,6 @@ public class IndexedBases {
     }
 
     boolean coreMatch(final int otherRefIndex, final byte[] otherBases) {
-
         int otherLeftCentreIndex = otherLeftCentreIndex(otherRefIndex);
         if (otherLeftCentreIndex < 0) {
             return false;

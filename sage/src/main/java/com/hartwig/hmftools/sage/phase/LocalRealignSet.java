@@ -44,6 +44,4 @@ class LocalRealignSet extends BufferedPostProcessor {
             }
         }
     }
-
-
 }

@@ -48,7 +48,6 @@ public class CandidateEvidence {
     @NotNull
     public List<AltContext> get(@NotNull final String sample, @NotNull final String bamFile, @NotNull final RefSequence refSequence,
             @NotNull final GenomeRegion bounds) {
-
         LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
         final RefContextFactory candidates = new RefContextFactory(config, sample, hotspots, panel);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(config, bounds, refSequence, candidates);
@@ -59,7 +58,6 @@ public class CandidateEvidence {
     private List<AltContext> get(@NotNull final String bamFile, @NotNull final GenomeRegion bounds,
             @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextFactory candidates) {
         final List<AltContext> altContexts = Lists.newArrayList();
-
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
@@ -77,5 +75,4 @@ public class CandidateEvidence {
 
         return altContexts;
     }
-
 }

@@ -62,7 +62,5 @@ public class ReadContextTest {
                 flankSize,
                 (leftFlank + core + rightFlank).getBytes(),
                 Strings.EMPTY);
-
     }
-
 }

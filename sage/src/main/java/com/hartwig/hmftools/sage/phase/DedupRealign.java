@@ -45,7 +45,6 @@ public class DedupRealign extends BufferedPostProcessor {
                 .collect(Collectors.toList());
 
         if (localRealigned.size() > 1) {
-
             SageVariant keeper = localRealigned.get(0);
             for (SageVariant sageVariant : localRealigned) {
                 if (sageVariant.totalQuality() > keeper.totalQuality()) {
@@ -62,5 +61,4 @@ public class DedupRealign extends BufferedPostProcessor {
             }
         }
     }
-
 }

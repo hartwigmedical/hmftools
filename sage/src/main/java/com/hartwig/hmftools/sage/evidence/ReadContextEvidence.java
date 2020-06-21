@@ -18,8 +18,6 @@ import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.samtools.NumberEvents;
 import com.hartwig.hmftools.sage.select.SamRecordSelector;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReader;
@@ -28,8 +26,6 @@ import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class ReadContextEvidence {
-
-    private static final Logger LOGGER = LogManager.getLogger(ReadContextEvidence.class);
 
     private final int typicalReadLength;
     private final SageConfig sageConfig;
@@ -49,7 +45,6 @@ public class ReadContextEvidence {
     @NotNull
     public List<ReadContextCounter> get(@NotNull final List<Candidate> candidates, @NotNull final String sample,
             @NotNull final String bam) {
-
         final List<ReadContextCounter> counters = factory.create(sample, candidates);
         if (candidates.isEmpty()) {
             return counters;
@@ -80,5 +75,4 @@ public class ReadContextEvidence {
 
         return counters;
     }
-
 }

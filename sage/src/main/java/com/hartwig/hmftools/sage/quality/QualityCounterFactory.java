@@ -53,5 +53,4 @@ class QualityCounterFactory {
 
         return counter.counts();
     }
-
 }

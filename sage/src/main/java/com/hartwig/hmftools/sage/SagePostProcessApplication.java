@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
@@ -33,7 +32,7 @@ public class SagePostProcessApplication implements AutoCloseable {
     private static final String OUT_VCF = "out";
     private static final String ASSEMBLY = "assembly";
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) throws ParseException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String inputFilePath = cmd.getOptionValue(IN_VCF);

@@ -102,7 +102,6 @@ public class SageVCF implements AutoCloseable {
 
     @NotNull
     private static VCFHeader header(@NotNull final String version, @NotNull final List<String> allSamples) {
-
         VCFHeader header = SageMetaData.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
         header.addMetaDataLine(new VCFHeaderLine("sageVersion", version));

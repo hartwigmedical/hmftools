@@ -129,7 +129,6 @@ public class RearrangementTest {
     }
 
     private List<VariantHotspot> assertRearrangement(String ref, String read, int indelLength, int indelIndexLeft, int indelIndexRight) {
-
         List<VariantHotspot> result = Lists.newArrayList();
         int refPosition = 1000;
 
@@ -208,10 +207,9 @@ public class RearrangementTest {
         return builder.toString();
     }
 
-    private void assertVariant(long position, String ref, String alt, VariantHotspot victim) {
+    private static void assertVariant(long position, String ref, String alt, VariantHotspot victim) {
         assertEquals(position, victim.position());
         assertEquals(ref, victim.ref());
         assertEquals(alt, victim.alt());
     }
-
 }

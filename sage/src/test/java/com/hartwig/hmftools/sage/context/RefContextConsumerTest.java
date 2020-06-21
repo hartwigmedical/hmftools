@@ -23,6 +23,5 @@ public class RefContextConsumerTest {
         assertEquals(3, RefContextConsumer.mnvLength(1, 0, "AAAA".getBytes(), "CCCC".getBytes()));
         assertEquals(2, RefContextConsumer.mnvLength(2, 0, "AAAA".getBytes(), "CCCC".getBytes()));
         assertEquals(1, RefContextConsumer.mnvLength(3, 0, "AAAA".getBytes(), "CCCC".getBytes()));
-
     }
 }

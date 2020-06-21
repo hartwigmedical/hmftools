@@ -18,6 +18,7 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements VariantHotspot {
+
     private static final Logger LOGGER = LogManager.getLogger(ReadContextCounter.class);
 
     private final String sample;
@@ -320,7 +321,6 @@ public class ReadContextCounter implements VariantHotspot {
     }
 
     private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig, int numberOfEvents) {
-
         final double baseQuality = baseQuality(readBaseIndex, record);
         final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
@@ -392,5 +392,4 @@ public class ReadContextCounter implements VariantHotspot {
 
         return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
     }
-
 }

@@ -87,5 +87,4 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant> {
     protected void preFlush(@NotNull final Collection<SageVariant> variants) {
 
     }
-
 }

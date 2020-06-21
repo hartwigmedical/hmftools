@@ -24,8 +24,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("11M", readSequence);
-        ReadContext victium = victim.createSNVContext(1005, 5, record, refBases);
-        assertEquals("CACCT", victium.centerBases());
+        ReadContext victim = this.victim.createSNVContext(1005, 5, record, refBases);
+        assertEquals("CACCT", victim.centerBases());
     }
 
     @Test
@@ -35,8 +35,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("2M3I9M", readSequence);
-        ReadContext victium = victim.createInsertContext("AGGC", 1000, 1, record, refBases);
-        assertEquals("GAGGCT", victium.centerBases());
+        ReadContext victim = this.victim.createInsertContext("AGGC", 1000, 1, record, refBases);
+        assertEquals("GAGGCT", victim.centerBases());
     }
 
     @Test
@@ -46,8 +46,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("2M1I11M", readSequence);
-        ReadContext victium = victim.createInsertContext("GA", 1000, 1, record, refBases);
-        assertEquals("TGAAAAAAAAAT", victium.centerBases());
+        ReadContext victim = this.victim.createInsertContext("GA", 1000, 1, record, refBases);
+        assertEquals("TGAAAAAAAAAT", victim.centerBases());
     }
 
     @Test
@@ -57,8 +57,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M3I8M", readSequence);
-        ReadContext victium = victim.createInsertContext("ATCA", 1000, 1, record, refBases);
-        assertEquals("GATCATCATCT", victium.centerBases());
+        ReadContext victim = this.victim.createInsertContext("ATCA", 1000, 1, record, refBases);
+        assertEquals("GATCATCATCT", victim.centerBases());
     }
 
     @Test
@@ -68,8 +68,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M3I10M", readSequence);
-        ReadContext victium = victim.createInsertContext("ATCA", 1000, 1, record, refBases);
-        assertEquals("GATCATCATCATCT", victium.centerBases());
+        ReadContext victim = this.victim.createInsertContext("ATCA", 1000, 1, record, refBases);
+        assertEquals("GATCATCATCATCT", victim.centerBases());
     }
 
     @Test
@@ -79,8 +79,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("5M4I7M", readSequence);
-        ReadContext victium = victim.createInsertContext("GATCA", 1000, 4, record, refBases);
-        assertEquals("GCGATCAA", victium.centerBases());
+        ReadContext victim = this.victim.createInsertContext("GATCA", 1000, 4, record, refBases);
+        assertEquals("GCGATCAA", victim.centerBases());
     }
 
     @Test
@@ -90,8 +90,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M5D7M", readSequence);
-        ReadContext victium = victim.createDelContext("GATCGG", 1000, 0, record, refBases);
-        assertEquals("GATCGC", victium.centerBases());
+        ReadContext victim = this.victim.createDelContext("GATCGG", 1000, 0, record, refBases);
+        assertEquals("GATCGC", victim.centerBases());
     }
 
     @Test
@@ -101,8 +101,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M3D8M", readSequence);
-        ReadContext victium = victim.createDelContext("ATCA", 1000, 1, record, refBases);
-        assertEquals("GATCATCT", victium.centerBases());
+        ReadContext victim = this.victim.createDelContext("ATCA", 1000, 1, record, refBases);
+        assertEquals("GATCATCT", victim.centerBases());
     }
 
     @Test
@@ -112,8 +112,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M3D8M", readSequence);
-        ReadContext victium = victim.createDelContext("ATCA", 1000, 1, record, refBases);
-        assertEquals("GATCATCTG", victium.centerBases());
+        ReadContext victim = this.victim.createDelContext("ATCA", 1000, 1, record, refBases);
+        assertEquals("GATCATCTG", victim.centerBases());
     }
 
     @Test
@@ -123,8 +123,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M1D9M", readSequence);
-        ReadContext victium = victim.createDelContext("GA", 1000, 0, record, refBases);
-        assertEquals("GTC", victium.centerBases());
+        ReadContext victim = this.victim.createDelContext("GA", 1000, 0, record, refBases);
+        assertEquals("GTC", victim.centerBases());
     }
 
     @Test
@@ -134,8 +134,8 @@ public class ReadContextFactoryTest {
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M2D8M", readSequence);
-        ReadContext victium = victim.createDelContext("GAT", 1000, 0, record, refBases);
-        assertEquals("GCA", victium.centerBases());
+        ReadContext victim = this.victim.createDelContext("GAT", 1000, 0, record, refBases);
+        assertEquals("GCA", victim.centerBases());
     }
 
     @NotNull
@@ -161,5 +161,4 @@ public class ReadContextFactoryTest {
         record.setReadUnmappedFlag(false);
         return record;
     }
-
 }

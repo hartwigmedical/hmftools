@@ -46,7 +46,6 @@ class QualityCounterCigarHandler implements CigarHandler {
 
     @NotNull
     public Collection<QualityCounter> counts() {
-
         final Set<QualityCounterKey> altsToRemove = groupByAlt(qualityMap.values()).stream()
                 .filter(x -> x.ref() != x.alt())
                 .filter(x -> x.count() > maxAltCount)
@@ -137,5 +136,4 @@ class QualityCounterCigarHandler implements CigarHandler {
     public static QualityCounterKey altKey(@NotNull final QualityCounter count) {
         return ImmutableQualityCounterKey.builder().from(count).qual((byte) 0).trinucleotideContext().build();
     }
-
 }

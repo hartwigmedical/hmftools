@@ -31,7 +31,6 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
 
     @Override
     public void accept(final SageVariant variant) {
-
         if (!realign(variant)) {
             Iterator<SageVariant> realignedIterator = rightAlignedList.iterator();
             while (realignedIterator.hasNext()) {
@@ -112,5 +111,4 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
         rightAlignedList.forEach(consumer);
         rightAlignedList.clear();
     }
-
 }

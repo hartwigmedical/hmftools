@@ -12,7 +12,7 @@ import htsjdk.samtools.reference.ReferenceSequence;
 
 public class RefSequenceTest {
 
-    private static ReferenceSequence REF_SEQ = new ReferenceSequence("1", 999, new byte[] { 'G', 'A', 'T', 'A', 'C', 'A' });
+    private static final ReferenceSequence REF_SEQ = new ReferenceSequence("1", 999, new byte[] { 'G', 'A', 'T', 'A', 'C', 'A' });
 
     @Test
     public void testRNA() {

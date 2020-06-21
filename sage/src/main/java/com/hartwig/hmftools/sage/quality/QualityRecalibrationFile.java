@@ -34,7 +34,6 @@ public class QualityRecalibrationFile {
     private static String toString(@NotNull final QualityRecalibrationRecord baf) {
         return (char) baf.key().alt() + DELIMITER + (char) baf.key().ref() + DELIMITER + new String(baf.key().trinucleotideContext())
                 + DELIMITER + baf.count() + DELIMITER + baf.key().qual() + DELIMITER + FORMAT.format(baf.recalibratedQual());
-
     }
 
     @NotNull
@@ -47,5 +46,4 @@ public class QualityRecalibrationFile {
                 .add("recalibratedQual")
                 .toString();
     }
-
 }

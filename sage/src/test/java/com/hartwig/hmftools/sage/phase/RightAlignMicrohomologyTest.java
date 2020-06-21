@@ -22,7 +22,6 @@ public class RightAlignMicrohomologyTest {
 
     @Test
     public void testRightAlignDel() {
-
         final String microhomology = "AG";
         final VariantHotspot leftAligned = BufferedPostProcessorTest.create(100, "CAGAAACCCATGTATGAAGTACAGTGGA", "C");
         final VariantHotspot rightAligned = RightAlignMicrohomology.rightAlignDel(leftAligned, microhomology);
@@ -37,7 +36,7 @@ public class RightAlignMicrohomologyTest {
         final List<HmfTranscriptRegion> transcriptRegions =
                 HmfGenePanelSupplier.allGeneList37().stream().filter(x -> x.chromosome().equals("4")).collect(Collectors.toList());
 
-        final  List<SageVariant> collector = Lists.newArrayList();
+        final List<SageVariant> collector = Lists.newArrayList();
         final RightAlignMicrohomology victim = new RightAlignMicrohomology(collector::add, transcriptRegions);
 
         final VariantHotspot leftAligned = ImmutableVariantHotspotImpl.builder()
@@ -53,5 +52,4 @@ public class RightAlignMicrohomologyTest {
 
         assertTrue(victim.realign(variant));
     }
-
 }

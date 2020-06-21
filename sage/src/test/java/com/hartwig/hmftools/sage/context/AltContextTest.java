@@ -42,7 +42,6 @@ public class AltContextTest {
 
     @Test
     public void testFullMatch() {
-
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
         final AltContext victim = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
@@ -62,7 +61,6 @@ public class AltContextTest {
 
     @Test
     public void testCoreMatchAfterFullMatch() {
-
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
         final AltContext victim = new AltContext(refContext, "C", "T");
 
@@ -91,7 +89,6 @@ public class AltContextTest {
 
     @Test
     public void testPartialMatchAfterFullMatch() {
-
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
         final AltContext victim = new AltContext(refContext, "C", "T");
 
@@ -123,5 +120,4 @@ public class AltContextTest {
         assert (core.length() == 5);
         return ReadContextTest.simpleSnv(POS, leftFlank, core, rightFlank);
     }
-
 }

@@ -29,7 +29,7 @@ public interface QualityConfig {
     String MAP_QUAL_FIXED_PENALTY = "map_qual_fixed_penalty";
     String MAP_QUAL_IMPROPER_PAIR_PENALTY = "map_qual_improper_pair_penalty";
     String MAP_QUAL_READ_EVENTS_PENALTY = "map_qual_read_events_penalty";
-    String HIGHLY_POLYMORHIC_GENES = "highly_polymorphic_genes";
+    String HIGHLY_POLYMORPHIC_GENES = "highly_polymorphic_genes";
 
     double DEFAULT_JITTER_PENALTY = 0.25;
     int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -38,8 +38,8 @@ public interface QualityConfig {
     int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 8;
-    String DEFAULT_HIGHLY_POLYMORHIC_GENES = "HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DRB1";
-    int MAX_HIGHLY_POLYMORHIC_GENES_QUALITY = 10;
+    String DEFAULT_HIGHLY_POLYMORPHIC_GENES = "HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DRB1";
+    int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
     double jitterPenalty();
 
@@ -56,7 +56,6 @@ public interface QualityConfig {
     @NotNull
     List<HmfTranscriptRegion> highlyPolymorphicGenes();
 
-
     int mapQualityImproperPairPenalty();
 
     default boolean isHighlyPolymorphic(@NotNull final GenomePosition position) {
@@ -71,7 +70,7 @@ public interface QualityConfig {
 
     default int modifiedMapQuality(@NotNull final GenomePosition position, int mapQuality, int readEvents, boolean properPairFlag) {
         if (isHighlyPolymorphic(position)) {
-            return Math.min(MAX_HIGHLY_POLYMORHIC_GENES_QUALITY, mapQuality - mapQualityFixedPenalty());
+            return Math.min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - mapQualityFixedPenalty());
         }
 
         int improperPairPenalty = mapQualityImproperPairPenalty() * (properPairFlag ? 0 : 1);
@@ -90,9 +89,9 @@ public interface QualityConfig {
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
-        options.addOption(HIGHLY_POLYMORHIC_GENES,
+        options.addOption(HIGHLY_POLYMORPHIC_GENES,
                 true,
-                "Genes to exclude event distance penalty [" + DEFAULT_HIGHLY_POLYMORHIC_GENES + "]");
+                "Genes to exclude event distance penalty [" + DEFAULT_HIGHLY_POLYMORPHIC_GENES + "]");
 
         options.addOption(JITTER_PENALTY,
                 true,
@@ -121,7 +120,7 @@ public interface QualityConfig {
     @NotNull
     static QualityConfig createConfig(@NotNull final CommandLine cmd, @NotNull final List<HmfTranscriptRegion> allTranscripts) {
         final Set<String> highlyPolymorphicGeneNames =
-                Arrays.stream(defaultStringValue(cmd, HIGHLY_POLYMORHIC_GENES, DEFAULT_HIGHLY_POLYMORHIC_GENES).split(","))
+                Arrays.stream(defaultStringValue(cmd, HIGHLY_POLYMORPHIC_GENES, DEFAULT_HIGHLY_POLYMORPHIC_GENES).split(","))
                         .collect(Collectors.toSet());
 
         final List<HmfTranscriptRegion> highlyPolymorphicGeneTranscripts =
@@ -137,7 +136,5 @@ public interface QualityConfig {
                 .mapQualityReadEventsPenalty(defaultIntValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY, DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY))
                 .mapQualityImproperPairPenalty(defaultIntValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY))
                 .build();
-
     }
-
 }

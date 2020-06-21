@@ -42,7 +42,6 @@ public class SageHotspotBedBuilder {
     private static final String SEPARATOR = "\t";
 
     public static void main(String[] args) throws IOException, ParseException {
-
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String outputFilePath = cmd.getOptionValue(OUT_PATH);

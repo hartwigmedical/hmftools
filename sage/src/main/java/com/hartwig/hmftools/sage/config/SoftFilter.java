@@ -16,8 +16,8 @@ public enum SoftFilter {
     MAX_GERMLINE_REL_RAW_BASE_QUAL("max_germline_rel_raw_base_qual", false, true),
     MAX_GERMLINE_ALT_SUPPORT("max_germline_alt_support", false, true);
 
-    private static Set<String> TUMOR_FILTERS = Sets.newHashSet();
-    private static Set<String> GERMLINE_FILTERS = Sets.newHashSet();
+    private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();
+    private static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();
 
     static {
         for (SoftFilter softFilter : SoftFilter.values()) {

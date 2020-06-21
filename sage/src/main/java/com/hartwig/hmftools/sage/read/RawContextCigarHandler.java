@@ -24,7 +24,6 @@ public class RawContextCigarHandler implements CigarHandler {
         this.isDelete = variant.ref().length() > variant.alt().length();
         this.isSNV = variant.ref().length() == variant.alt().length();
         this.maxSkippedReferenceRegions = maxSkippedReferenceRegions;
-
     }
 
     public RawContext result() {
@@ -33,7 +32,6 @@ public class RawContextCigarHandler implements CigarHandler {
 
     @Override
     public void handleLeftSoftClip(@NotNull final SAMRecord record, @NotNull final CigarElement element) {
-
         if (variant.position() < record.getAlignmentStart()) {
             int readIndex = record.getReadPositionAtReferencePosition(record.getAlignmentStart()) - 1 - record.getAlignmentStart()
                     + (int) variant.position() - variant.alt().length() + variant.ref().length();
@@ -58,7 +56,6 @@ public class RawContextCigarHandler implements CigarHandler {
             int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + (int) variant.position();
             result = RawContext.inSoftClip(actualIndex);
         }
-
     }
 
     @Override
@@ -109,7 +106,6 @@ public class RawContextCigarHandler implements CigarHandler {
         } else if (refPositionEnd >= variant.position()) {
             result = RawContext.inDelete(readIndex);
         }
-
     }
 
     @Override

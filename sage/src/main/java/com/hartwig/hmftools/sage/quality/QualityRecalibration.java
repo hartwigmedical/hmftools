@@ -35,7 +35,6 @@ public class QualityRecalibration {
 
     @NotNull
     public CompletableFuture<List<QualityRecalibrationRecord>> qualityRecalibrationRecords(@NotNull final String bamFile) {
-
         final Map<QualityCounterKey, QualityCounter> map = new ConcurrentHashMap<>(Maps.newHashMap());
         final List<CompletableFuture<Void>> doneList = Lists.newArrayList();
 
@@ -62,7 +61,6 @@ public class QualityRecalibration {
             Collections.sort(sortedList);
             return QualityRecalibrationFactory.create(sortedList);
         });
-
     }
 
     public CompletableFuture<Collection<QualityCounter>> addRegion(String bam, String contig, int start, int end) {
@@ -73,7 +71,6 @@ public class QualityRecalibration {
 
     public List<CompletableFuture<Collection<QualityCounter>>> submitAllRegions(@NotNull final String bam, @NotNull final String contig,
             int minPosition, int maxPosition) {
-
         final List<CompletableFuture<Collection<QualityCounter>>> result = Lists.newArrayList();
 
         final int regionSliceSize = 100_000;
@@ -99,5 +96,4 @@ public class QualityRecalibration {
     private static QualityCounterKey withoutPosition(@NotNull final QualityCounter count) {
         return ImmutableQualityCounterKey.builder().from(count).position(0).build();
     }
-
 }

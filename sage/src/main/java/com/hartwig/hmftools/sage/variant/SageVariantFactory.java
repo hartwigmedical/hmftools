@@ -120,5 +120,4 @@ public class SageVariantFactory {
         return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.altSupport() >= config.hotspotMinTumorAltSupportToSkipQualCheck()
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), config.hotspotMinTumorVafToSkipQualCheck());
     }
-
 }

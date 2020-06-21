@@ -45,7 +45,6 @@ public class RealignedTest {
         assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex + 2, sequence.getBytes(), 2));
     }
 
-
     @Test
     public void testPolyA() {
         String shorter = "GATCAAAAAAAAAGATC";
@@ -73,7 +72,6 @@ public class RealignedTest {
         assertRealigned(SHORTENED, 4, realigned(startIndex, endIndex, ref.getBytes(), startIndex, shorter.getBytes(), 10));
         assertRealigned(LENGTHENED, 6, realigned(startIndex, endIndex, ref.getBytes(), startIndex, longer.getBytes(), 10));
     }
-
 
     private static void assertRealigned(RealignedType expectedType, int expectedCount, RealignedContext context) {
         assertEquals(expectedCount, context.repeatCount());

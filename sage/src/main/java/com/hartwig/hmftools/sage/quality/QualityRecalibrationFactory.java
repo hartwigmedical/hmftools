@@ -10,11 +10,10 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-class QualityRecalibrationFactory {
+final class QualityRecalibrationFactory {
 
     @NotNull
     public static List<QualityRecalibrationRecord> create(@NotNull final Collection<QualityCounter> records) {
-
         final List<QualityRecalibrationRecord> result = Lists.newArrayList();
 
         final Map<QualityRecalibrationKey, Integer> refCountMap = records.stream()
@@ -35,7 +34,6 @@ class QualityRecalibrationFactory {
                         .count(cleanedRecord.count())
                         .recalibratedQual(recalibratedQual)
                         .build());
-
             }
         }
 
@@ -57,5 +55,4 @@ class QualityRecalibrationFactory {
                 .trinucleotideContext(record.trinucleotideContext())
                 .build();
     }
-
 }

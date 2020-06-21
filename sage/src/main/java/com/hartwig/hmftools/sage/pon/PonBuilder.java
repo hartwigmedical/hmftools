@@ -31,7 +31,7 @@ public class PonBuilder {
         final Genotype genotype = context.getGenotype(0);
         if (!hotspot.ref().contains("N") && genotype.hasExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH)) {
             String rawDepth = (String) genotype.getExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH);
-            int allelicDepth = Integer.valueOf(rawDepth.split(",")[1]);
+            int allelicDepth = Integer.parseInt(rawDepth.split(",")[1]);
             if (allelicDepth >= MIN_INPUT_ALLELIC_DEPTH) {
                 counter.increment(allelicDepth);
             }
@@ -94,5 +94,4 @@ public class PonBuilder {
             max.set(Integer.max(max.get(), depth));
         }
     }
-
 }

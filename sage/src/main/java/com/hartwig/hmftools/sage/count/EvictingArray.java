@@ -91,5 +91,4 @@ public class EvictingArray<T> {
         }
         return initialCapacity;
     }
-
 }

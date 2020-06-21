@@ -43,7 +43,6 @@ public class SageConfigTest {
         assertEquals("./SAMPLE.sage.bqr.tsv", config.baseQualityRecalibrationFile("SAMPLE"));
     }
 
-
     @NotNull
     public static SageConfig testConfig() {
         return ImmutableSageConfig.builder()
@@ -71,7 +70,6 @@ public class SageConfigTest {
                 .readContextFlankSize(SageConfig.DEFAULT_READ_CONTEXT_FLANK_SIZE)
                 .baseQualityRecalibrationConfig(defaultQualityRecalibrationConfig())
                 .build();
-
     }
 
     public static QualityConfig defaultQualityConfig() {
@@ -110,5 +108,4 @@ public class SageConfigTest {
                 .minMapQuality(DEFAULT_BQR_MIN_MAP_QUAL)
                 .build();
     }
-
 }

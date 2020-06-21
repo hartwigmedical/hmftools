@@ -170,7 +170,6 @@ public class SageApplication implements AutoCloseable {
     @NotNull
     private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(@NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots)
             throws IOException {
-
         final ListMultimap<Chromosome, GenomeRegion> initialPanel = readPanel(config.panelBed());
         final ListMultimap<Chromosome, GenomeRegion> result = ArrayListMultimap.create();
 
@@ -206,7 +205,7 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private Map<String, QualityRecalibrationMap> qualityRecalibration() throws IOException {
+    private Map<String, QualityRecalibrationMap> qualityRecalibration() {
         final BaseQualityRecalibrationConfig bqrConfig = config.baseQualityRecalibrationConfig();
 
         if (!bqrConfig.enabled()) {

@@ -60,7 +60,6 @@ public class SageHotspotApplication implements AutoCloseable {
     private final SageHotspotApplicationConfig config;
 
     private SageHotspotApplication(final Options options, final String... args) throws ParseException {
-
         final CommandLine cmd = createCommandLine(args, options);
         config = SageHotspotApplicationConfig.createConfig(cmd);
 
@@ -121,7 +120,6 @@ public class SageHotspotApplication implements AutoCloseable {
                 config.minIndelVAF(),
                 config.minSnvQuality(),
                 config.minIndelQuality()).write(outputVCF, evidence);
-
     }
 
     @NotNull

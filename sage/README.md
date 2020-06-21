@@ -221,7 +221,7 @@ The recalibration is unique per sample.
 The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.   This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
 Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
 
-Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT errror given a trinulceotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
+Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT error given a trinucleotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
 
 For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality. 
 SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.
@@ -449,7 +449,7 @@ REF: AAATGATTT...
 ALT: AAAT A<b>A</b>T...
 </pre>
 
-We can detect local realigned variants using a similiar process to phasing but without adjusting the relative position by the INDEL insert/delete sequence.
+We can detect local realigned variants using a similar process to phasing but without adjusting the relative position by the INDEL insert/delete sequence.
 
 Any variants that are can be locally realigned are given a shared `LRS` (local realigned set) identifier.
 
