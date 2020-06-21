@@ -48,7 +48,7 @@ panel_bed | Path to panel bed
 high_confidence_bed | Path to high confidence bed
 assembly | One of `hg19` or `hg38`
 
-The cardinality of `tumor` must match `tumor_bams`. At least one tumor must be supplied.
+The cardinality of `tumor` must match `tumor_bam`. At least one tumor must be supplied.
 
 ## Optional Arguments
 Argument | Default | Description 
@@ -57,12 +57,12 @@ threads | 2 | Number of threads to use
 reference | NA | Comma separated names of the reference sample
 reference_bam | NA | Comma separated paths to indexed reference BAM file
 chr | NA | Limit sage to comma separated list of chromosomes
-max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this at ignored.  
-max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this at ignored.  
+max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
+max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
 max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
 
-The cardinality of `reference` must match `reference_bams`.
+The cardinality of `reference` must match `reference_bam`.
 
 ## Optional Base Quality Recalibration Arguments
 
