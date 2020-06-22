@@ -250,7 +250,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph resubmitSample() {
-        return createContentParagraph("If available new tumor/blood material can be provided for a new assessment, please contact ",
+        return createContentParagraph("If available new biomaterial(s) can be provided for a new assessment, please contact ",
                 "info@hartwigmedicalfoundation.nl");
     }
 
