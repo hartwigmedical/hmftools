@@ -48,18 +48,14 @@ public final class ReportingDb {
             boolean hasReliablePurity = report.hasReliablePurity();
 
             String reportType;
-            if (report.isCorrectedReport()) {
-                if (hasReliablePurity && report.impliedPurity() > ReportResources.PURITY_CUTOFF) {
-                    reportType = "dna_analysis_report_corrected";
-                } else {
-                    reportType = "dna_analysis_report_insufficient_tcp_corrected";
-                }
+            if (hasReliablePurity && report.impliedPurity() > ReportResources.PURITY_CUTOFF) {
+                reportType = "dna_analysis_report";
             } else {
-                if (hasReliablePurity && report.impliedPurity() > ReportResources.PURITY_CUTOFF) {
-                    reportType = "dna_analysis_report";
-                } else {
-                    reportType = "dna_analysis_report_insufficient_tcp";
-                }
+                reportType = "dna_analysis_report_insufficient_tcp";
+            }
+
+            if (report.isCorrectedReport()) {
+                reportType = reportType + "_corrected";
             }
 
             addToReportingDb(reportingDbTsv,
