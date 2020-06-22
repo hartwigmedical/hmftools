@@ -18,7 +18,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -34,16 +33,9 @@ public class AmplificationDrivers
 
     public void annotateAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList)
     {
-        if(dgData.GeneCN == null)
-        {
-            LNX_LOGGER.warn("sample({}) gene({}) min copy number data not found for DEL driver",
-                    mDataCache.sampleId(), dgData.GeneData.GeneName);
-            return;
-        }
-
         LNX_LOGGER.debug("gene({}) chromosome({}) position({} -> {}) minCN({})",
                 dgData.GeneData.GeneName, dgData.GeneData.Chromosome, dgData.TransData.TransStart, dgData.TransData.TransEnd,
-                formatJcn(dgData.GeneCN.minCopyNumber()));
+                formatJcn(dgData.CopyNumberRegion.MinCopyNumber));
 
         checkChromosomeAmplification(dgData);
         checkClusterAmplification(dgData, breakendList);
@@ -266,7 +258,7 @@ public class AmplificationDrivers
             }
         }
 
-        double geneMinCopyNumber = dgData.GeneCN.minCopyNumber();
+        double geneMinCopyNumber = dgData.CopyNumberRegion.MinCopyNumber;
 
         double clusterCNChange = netClusterCNChange;
 

@@ -58,16 +58,9 @@ public class DeletionDrivers
 
     public void annotateDeleteEvent(final DriverGeneData dgData)
     {
-        if (dgData.GeneCN == null)
-        {
-            LNX_LOGGER.warn("sample({}) gene({}) min copy number data not found for DEL driver",
-                    mDataCache.sampleId(), dgData.GeneData.GeneName);
-            return;
-        }
-
         // find the LOH and hom-loss events which caused this DEL
-        int minRegionStart = (int)dgData.GeneCN.minRegionStart();
-        int minRegionEnd = (int)dgData.GeneCN.minRegionEnd();
+        int minRegionStart = dgData.CopyNumberRegion.RegionStart;
+        int minRegionEnd = dgData.CopyNumberRegion.RegionEnd;
 
         if(expectSingleChromosome(mDataCache.isMale(), dgData.GeneData.Chromosome))
         {
@@ -331,5 +324,4 @@ public class DeletionDrivers
 
         return disDelDrivers;
     }
-
 }

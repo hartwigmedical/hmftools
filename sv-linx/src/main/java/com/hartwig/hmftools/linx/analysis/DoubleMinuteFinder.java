@@ -275,7 +275,7 @@ public class DoubleMinuteFinder
         {
             if(clusterMaxJcn < maxArmEndCopyNumber * ADJACENT_JCN_RATIO)
             {
-                LNX_LOGGER.debug("cluster({}}) possible DM: not amplified vs max armEndCopyNumber({}}) centro({}})",
+                LNX_LOGGER.debug("cluster({}) possible DM: not amplified vs max armEndCopyNumber({})",
                         cluster.id(), formatJcn(maxArmEndCopyNumber));
                 return;
             }
@@ -311,8 +311,8 @@ public class DoubleMinuteFinder
             cluster.addChain(dmChain, false);
         }
 
-        LNX_LOGGER.debug(String.format("cluster(%s) identified DM: maxPloidy(%.1f) dmSvCount(%d) fullyChained(%s)",
-                cluster.id(), clusterMaxJcn, candidateDMSVs.size(), fullyChained));
+        LNX_LOGGER.debug("cluster({}) identified DM: maxPloidy({}) dmSvCount({}) fullyChained({})",
+                cluster.id(), formatJcn(clusterMaxJcn), candidateDMSVs.size(), fullyChained);
     }
 
     private static double getAdjacentMajorAPRatio(final SvVarData var)
@@ -481,35 +481,35 @@ public class DoubleMinuteFinder
             svIds = appendStr(svIds, var.idStr(), ';');
         }
 
-        double sumFbPloidy = 0;
-        double maxFbPloidy = 0;
-        double sumSglPloidy = 0;
-        double maxSglPloidy = 0;
-        int nonDmSvsFullPloidy = 0;
-        int nonDmSvsHalfPloidy = 0;
+        double sumFbJcn = 0;
+        double maxFbJcn = 0;
+        double sumSglJcn = 0;
+        double maxSglJcn = 0;
+        int nonDmSvsFullJcn = 0;
+        int nonDmSvsHalfJcn = 0;
         double minAdjMAPRatio = 0;
 
         for(final SvVarData var : cluster.getSVs())
         {
             if(var.isFoldback())
             {
-                sumFbPloidy += var.isChainedFoldback() ? var.jcn() * 0.5 : var.jcn();
-                maxFbPloidy = max(var.jcn(), maxFbPloidy);
+                sumFbJcn += var.isChainedFoldback() ? var.jcn() * 0.5 : var.jcn();
+                maxFbJcn = max(var.jcn(), maxFbJcn);
             }
 
             if(var.isSglBreakend())
             {
-                sumSglPloidy += var.jcn();
-                maxSglPloidy = max(var.jcn(), maxSglPloidy);
+                sumSglJcn += var.jcn();
+                maxSglJcn = max(var.jcn(), maxSglJcn);
             }
 
             if(!dmData.SVs.contains(var))
             {
                 if(var.jcnMax() >= minDMPloidy)
-                    ++nonDmSvsFullPloidy;
+                    ++nonDmSvsFullJcn;
 
                 if(var.jcnMax() >= minDMPloidy * 0.5)
-                    ++nonDmSvsHalfPloidy;
+                    ++nonDmSvsHalfJcn;
 
                 if((var.jcn() >= dmData.MaxBFBJcn || var.jcn() > JCN_THRESHOLD)
                 && getAdjacentMajorAPRatio(var) >= ADJACENT_JCN_RATIO)
@@ -588,11 +588,11 @@ public class DoubleMinuteFinder
                 mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount");
                 mFileWriter.write(",SamplePurity,SamplePloidy,DMSvCount,DMSvTypes");
                 mFileWriter.write(",FullyChained,ChainLength,ChainCount,SvIds,Chromosomes");
-                mFileWriter.write(",MaxCopyNumber,MinPloidy,MaxPloidy,AmpGenes");
-                mFileWriter.write(",ChainMinCnPercent,ChainDiffPloidies,ChainNonDMSVs,ChainNonDMSvDBs,UnchainedDBs");
-                mFileWriter.write(",MaxBFBPloidy,FbCount,FbSumPloidy,FbMaxPloidy,SglCount,SglSumPloidy,SglMaxPloidy");
+                mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes");
+                mFileWriter.write(",ChainMinCnPercent,ChainDiffJCNs,ChainNonDMSVs,ChainNonDMSvDBs,UnchainedDBs");
+                mFileWriter.write(",MaxBFBJcn,FbCount,FbSumJcn,FbMaxJcn,SglCount,SglSumJcn,SglMaxJcn");
                 mFileWriter.write(",MinPosition,MaxPosition,MaxTeloCentroCn,CrossCentro,MinAdjMAPRatio");
-                mFileWriter.write(",PossibleSVs,NonDmSvsGtPloidy,NonDmSvsGtHalfPloidy");
+                mFileWriter.write(",PossibleSVs,NonDmSvsGtJcn,NonDmSvsGtHalfJcn");
 
                 for(Integer cbr : CN_SEGMENT_BUCKETS)
                 {
@@ -617,7 +617,7 @@ public class DoubleMinuteFinder
             if(chainData != null)
             {
                 mFileWriter.write(String.format(",%.2f,%.0f,%.0f,%.0f,%.0f",
-                        chainData[CHAIN_DATA_MIN_CN], chainData[CHAIN_DATA_DIFF_PLOIDIES],
+                        chainData[CHAIN_DATA_MIN_CN], chainData[CHAIN_DATA_DIFF_JCNS],
                         chainData[CHAIN_DATA_NON_DM_SVS], chainData[CHAIN_DATA_NON_DM_DBS], chainData[CHAIN_DATA_UNCHAINED_DBS]));
             }
             else
@@ -626,15 +626,15 @@ public class DoubleMinuteFinder
             }
 
             mFileWriter.write(String.format(",%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f",
-                    dmData.MaxBFBJcn, cluster.getFoldbacks().size(), sumFbPloidy, maxFbPloidy,
-                    cluster.getSglBreakendCount(), sumSglPloidy, maxSglPloidy));
+                    dmData.MaxBFBJcn, cluster.getFoldbacks().size(), sumFbJcn, maxFbJcn,
+                    cluster.getSglBreakendCount(), sumSglJcn, maxSglJcn));
 
             mFileWriter.write(String.format(",%d,%d,%.1f,%s,%.1f",
                     chromosomes.size() == 1 ? minPosition : 0, chromosomes.size() == 1 ? maxPosition : 0,
                     maxCentroTeloCopyNumber, chainsCentromere, minAdjMAPRatio));
 
             mFileWriter.write(String.format(",%s,%d,%d",
-                    possibleSvTypes, nonDmSvsFullPloidy, nonDmSvsHalfPloidy));
+                    possibleSvTypes, nonDmSvsFullJcn, nonDmSvsHalfJcn));
 
             mFileWriter.write(String.format("%s",getCopyNumberSegmentData(cluster, samplePloidy, minDMCopyNumber)));
 
@@ -648,20 +648,20 @@ public class DoubleMinuteFinder
 
     private static int CHAIN_DATA_MIN_CN = 0;
     private static int CHAIN_DATA_NON_DM_SVS = 1;
-    private static int CHAIN_DATA_DIFF_PLOIDIES = 2;
+    private static int CHAIN_DATA_DIFF_JCNS = 2;
     private static int CHAIN_DATA_NON_DM_DBS = 3;
     private static int CHAIN_DATA_UNCHAINED_DBS = 4;
 
-    private double[] getChainCharacteristics(final SvCluster cluster, final SvChain chain, double maxDMPloidy, final List<SvVarData> dmSVs)
+    private double[] getChainCharacteristics(final SvCluster cluster, final SvChain chain, double maxDMJcn, final List<SvVarData> dmSVs)
     {
         final double[] chainData = {1.0, 0, 0, 0, 0};
 
         if(cluster.getSvCount() == 1)
             return chainData;
 
-        double minCopyNumber = maxDMPloidy;
+        double minCopyNumber = maxDMJcn;
 
-        List<Double> diffPloidies = Lists.newArrayList();
+        List<Double> diffJCNs = Lists.newArrayList();
         List<SvVarData> nonDmSVs = Lists.newArrayList();
 
         for(SvLinkedPair pair : chain.getLinkedPairs())
@@ -681,8 +681,8 @@ public class DoubleMinuteFinder
                     if (!nonDmSVs.contains(var))
                         nonDmSVs.add(var);
 
-                    if (!diffPloidies.stream().anyMatch(x -> copyNumbersEqual(x, var.jcn())))
-                        diffPloidies.add(var.jcn());
+                    if (!diffJCNs.stream().anyMatch(x -> copyNumbersEqual(x, var.jcn())))
+                        diffJCNs.add(var.jcn());
                 }
 
                 // ignore simple consecutive DELs
@@ -701,8 +701,8 @@ public class DoubleMinuteFinder
             }
         }
 
-        chainData[CHAIN_DATA_MIN_CN] = minCopyNumber / maxDMPloidy;
-        chainData[CHAIN_DATA_DIFF_PLOIDIES] = diffPloidies.size();
+        chainData[CHAIN_DATA_MIN_CN] = minCopyNumber / maxDMJcn;
+        chainData[CHAIN_DATA_DIFF_JCNS] = diffJCNs.size();
         chainData[CHAIN_DATA_NON_DM_SVS] = nonDmSVs.size();
 
         // check for DBs between non-DM SVs in segments of the chain

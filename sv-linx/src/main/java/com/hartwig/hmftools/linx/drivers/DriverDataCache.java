@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.DEL;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.isMaleSample;
+import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -120,7 +121,6 @@ public class DriverDataCache
             }
 
             final List<String> driverGenes = mDriverCatalog.stream().map(x -> x.gene()).collect(Collectors.toList());
-
             mGeneCopyNumberData.addAll(mDbAccess.readGeneCopynumbers(mSampleId, driverGenes));
         }
     }
@@ -193,8 +193,14 @@ public class DriverDataCache
             return null;
 
         final TranscriptData canonicalTrans = GeneTransCache.getTranscriptData(geneData.GeneId, "");
+        GeneCopyNumberRegion copyNumberRegion;
 
-        DriverGeneData dgData = new DriverGeneData(driverRecord, geneData, canonicalTrans, gcnData);
+        if(gcnData != null)
+            copyNumberRegion = new GeneCopyNumberRegion(gcnData);
+        else
+            copyNumberRegion = calcGeneCopyNumberRegion(canonicalTrans, CopyNumberData.getChrCnDataMap().get(geneData.Chromosome));
+
+        DriverGeneData dgData = new DriverGeneData(driverRecord, geneData, canonicalTrans, copyNumberRegion);
         mDriverGeneDataList.add(dgData);
 
         return dgData;
@@ -209,88 +215,6 @@ public class DriverDataCache
         }
 
         return null;
-    }
-
-    private static int GENE_CN_DATA_FILE_ITEM_COUNT = 6;
-
-    public void loadGeneCopyNumberDataFile(final String gcnFileName)
-    {
-        if(gcnFileName.isEmpty() || !Files.exists(Paths.get(gcnFileName)))
-            return;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(gcnFileName));
-
-            // skip field names
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LNX_LOGGER.error("Empty gene copy number CSV file({})", gcnFileName);
-                return;
-            }
-
-            String currentSample = "";
-            List<GeneCopyNumber> gcnDataList = null;
-            int rowCount = 0;
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
-
-                if (items.length != GENE_CN_DATA_FILE_ITEM_COUNT)
-                {
-                    LNX_LOGGER.error("GCN file invalid item count({}) vs expected({})", items.length, GENE_CN_DATA_FILE_ITEM_COUNT);
-                    break;
-                }
-
-                String sampleId = items[0];
-
-                if(currentSample.isEmpty() || !currentSample.equals(sampleId))
-                {
-                    gcnDataList = Lists.newArrayList();
-                    currentSample = sampleId;
-                    mSampleGeneCopyNumberMap.put(currentSample, gcnDataList);
-                }
-
-                // sampleId,minCopyNumber,minRegionStart,minRegionEnd,minMinorAllelePloidy
-
-                int index = 1;
-
-                GeneCopyNumber gcnData = ImmutableGeneCopyNumber.builder()
-                        .gene(items[index++])
-                        .minCopyNumber(Double.parseDouble(items[index++]))
-                        .minRegionStart(Integer.parseInt(items[index++]))
-                        .minRegionEnd(Integer.parseInt(items[index++]))
-                        .minMinorAlleleCopyNumber(Double.parseDouble(items[index++]))
-                        .maxCopyNumber(0)
-                        .somaticRegions(0)
-                        .germlineHet2HomRegions(0)
-                        .germlineHomRegions(0)
-                        .minRegions(0)
-                        .minRegionStartSupport(UNKNOWN)
-                        .minRegionEndSupport(UNKNOWN)
-                        .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                        .transcriptID("")
-                        .transcriptVersion(0)
-                        .chromosomeBand("")
-                        .chromosome("")
-                        .start(0)
-                        .end(0)
-                        .build();
-
-                ++rowCount;
-
-                gcnDataList.add(gcnData);
-            }
-
-            LNX_LOGGER.info("loaded {} gene copy-number records from file", rowCount);
-        }
-        catch (IOException e)
-        {
-            LNX_LOGGER.error("Failed to read gene copy number CSV file({}): {}", gcnFileName, e.toString());
-        }
     }
 
 }

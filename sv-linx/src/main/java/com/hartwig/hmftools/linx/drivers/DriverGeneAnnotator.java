@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_DRIVER;
 
@@ -62,8 +63,6 @@ public class DriverGeneAnnotator
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private VisualiserWriter mVisWriter;
 
-    private static final String GCN_DATA_FILE = "gcn_data_file";
-
     public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTranscriptCollection,
             final LinxConfig config, final CnDataLoader cnDataLoader)
     {
@@ -87,17 +86,6 @@ public class DriverGeneAnnotator
         mPerfCounter = new PerformanceCounter("Drivers");
     }
 
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(GCN_DATA_FILE, true, "Cache of driver-matched gene copy number data");
-    }
-
-    public boolean loadConfig(final CommandLine cmd)
-    {
-        initialiseGeneData(cmd.getOptionValue(GCN_DATA_FILE,""));
-        return true;
-    }
-
     public void setSamplePurityData(double ploidy, boolean isMale)
     {
         mDataCache.setSamplePurityData(ploidy, isMale);
@@ -105,11 +93,6 @@ public class DriverGeneAnnotator
 
     public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
     public final List<DriverGeneData> getDriverGeneDataList() { return mDataCache.getDriverGeneDataList(); }
-
-    private void initialiseGeneData(final String geneCopyNumberFile)
-    {
-        mDataCache.loadGeneCopyNumberDataFile(geneCopyNumberFile);
-    }
 
     public void annotateSVs(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
@@ -149,8 +132,25 @@ public class DriverGeneAnnotator
             final TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
 
             GeneCopyNumber geneCN = mDataCache.findGeneCopyNumber(driverGene.gene());
+            GeneCopyNumberRegion geneMinCopyNumber;
 
-            DriverGeneData dgData = new DriverGeneData(driverGene, geneData, canonicalTrans, geneCN);
+            if(geneCN != null)
+            {
+                geneMinCopyNumber = new GeneCopyNumberRegion(geneCN);
+            }
+            else
+            {
+                geneMinCopyNumber = calcGeneCopyNumberRegion(canonicalTrans, mDataCache.CopyNumberData.getChrCnDataMap().get(geneData.Chromosome));
+
+                if (geneMinCopyNumber == null)
+                {
+                    LNX_LOGGER.warn("sample({}) gene({}) min copy number data not found for driver",
+                            mDataCache.sampleId(), driverGene.gene());
+                    continue;
+                }
+            }
+
+            DriverGeneData dgData = new DriverGeneData(driverGene, geneData, canonicalTrans, geneMinCopyNumber);
             mDataCache.getDriverGeneDataList().add(dgData);
 
             if(dgData.DriverData.category() == TSG)
@@ -304,7 +304,7 @@ public class DriverGeneAnnotator
                 // SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType
 
                 writer.write(String.format(",%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f",
-                        geneData.Chromosome, dgData.Arm, mDataCache.samplePloidy(), dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
+                        geneData.Chromosome, dgData.Arm, mDataCache.samplePloidy(), dgData.CopyNumberRegion.MinCopyNumber,
                         centromereCopyNumber, telomereCopyNumber, driverEvent.getCopyNumberGain()));
 
                 int posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;

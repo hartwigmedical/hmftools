@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
@@ -18,18 +17,18 @@ public class DriverGeneData
     public final DriverCatalog DriverData;
     public final EnsemblGeneData GeneData;
     public final TranscriptData TransData;
-    public final GeneCopyNumber GeneCN;
+    public final GeneCopyNumberRegion CopyNumberRegion;
     public final ChromosomeArm Arm;
 
     private final List<DriverGeneEvent> mEvents;
 
     public DriverGeneData(final DriverCatalog driverData, final EnsemblGeneData geneData,
-            final TranscriptData transData, final GeneCopyNumber geneCN)
+            final TranscriptData transData, final GeneCopyNumberRegion copyNumberRegion)
     {
         DriverData = driverData;
         GeneData = geneData;
         TransData = transData;
-        GeneCN = geneCN;
+        CopyNumberRegion = copyNumberRegion;
 
         Arm = getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
 

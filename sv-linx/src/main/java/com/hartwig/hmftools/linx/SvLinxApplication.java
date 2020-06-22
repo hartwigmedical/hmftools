@@ -174,7 +174,6 @@ public class SvLinxApplication
             if(checkDrivers)
             {
                 driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, cnDataLoader);
-                driverGeneAnnotator.loadConfig(cmd);
                 driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
             }
         }
@@ -345,7 +344,6 @@ public class SvLinxApplication
         // allow sub-components to add their specific config
         LinxConfig.addCmdLineArgs(options);
         FusionFinder.addCmdLineArgs(options);
-        DriverGeneAnnotator.addCmdLineArgs(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);
         ChainFinderCompare.addCmdLineArgs(options);
 
