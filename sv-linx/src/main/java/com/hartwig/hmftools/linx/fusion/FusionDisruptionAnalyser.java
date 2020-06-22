@@ -697,8 +697,9 @@ public class FusionDisruptionAnalyser
                         Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
                         GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
 
-                        boolean isChainEnd = (lowerBreakendPos == gene.position() && lpIndex1 == 0)
-                                || (upperBreakendPos == gene.position() && lpIndex2 == linkedPairs.size());
+                        boolean isLowerBreakend = lowerBreakendPos == gene.position();
+
+                        boolean isChainEnd = (isLowerBreakend && lpIndex1 == 0) || (!isLowerBreakend && lpIndex2 == linkedPairs.size());
 
                         if (isChainEnd)
                         {
@@ -706,7 +707,7 @@ public class FusionDisruptionAnalyser
                         }
                         else
                         {
-                            SvBreakend breakend = lowerBreakendPos == gene.position() ? lowerBreakend : upperBreakend;
+                            SvBreakend breakend = isLowerBreakend ? lowerBreakend : upperBreakend;
 
                             if(breakend == null)
                             {
@@ -715,7 +716,15 @@ public class FusionDisruptionAnalyser
                             else
                             {
                                 // looks from this link outwards past the end of the transcript for any invalidation of the transcript
-                                int linkIndex = breakend == lowerBreakend ? lpIndex1 - 1 : lpIndex2;
+                                int linkIndex = isLowerBreakend ? lpIndex1 - 1 : lpIndex2;
+
+                                if(linkIndex >= chain.getLinkedPairs().size())
+                                {
+                                    LNX_LOGGER.error("cluster({}) link index({}) exceeds chain link size({})",
+                                            cluster.id(), linkIndex, chain.getLinkedPairs().size());
+                                    break;
+                                }
+
                                 transTerminated[se] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
                             }
                         }

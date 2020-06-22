@@ -24,19 +24,28 @@ public class FusionReportability
 {
     public static boolean couldBeReportable(GeneFusion fusion)
     {
-        if(!fusion.phaseMatched() || fusion.neoEpitopeOnly())
+        if(fusion.neoEpitopeOnly())
             return false;
 
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         if (fusion.knownType() == NONE)
             return false;
 
+        final Transcript upTrans = fusion.upstreamTrans();
+        final Transcript downTrans = fusion.downstreamTrans();
+
+        if(!fusion.phaseMatched())
+        {
+            if(fusion.knownType() != KNOWN_PAIR)
+                return false;
+            else if(!upTrans.nonCoding() && !upTrans.preCoding())
+                return false;
+        }
+
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
         int maxUpstreamDistance = fusion.knownType() == KNOWN_PAIR ?
                 MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
 
-        final Transcript upTrans = fusion.upstreamTrans();
-        final Transcript downTrans = fusion.downstreamTrans();
 
         if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
             return false;

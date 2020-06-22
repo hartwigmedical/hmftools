@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.UPSTREAM_STR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOTH;
@@ -154,7 +155,7 @@ public class GeneFusion
 
     public boolean isViable()
     {
-        if(!validChainTraversal() || isTerminated())
+        if(!validChainTraversal() || (isTerminated() && mKnownFusionType != KNOWN_PAIR))
             return false;
 
         if(mTranscripts[FS_DOWNSTREAM].hasNegativePrevSpliceAcceptorDistance())

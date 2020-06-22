@@ -167,7 +167,7 @@ public class FusionFinder
                             continue;
                         }
 
-                        GeneFusion geneFusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, !knownPair);
+                        GeneFusion geneFusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair);
 
                         if(geneFusion == null)
                             continue;
@@ -248,11 +248,11 @@ public class FusionFinder
             return null;
         }
 
-        return transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, true);
+        return transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, false);
     }
 
     private static GeneFusion transcriptPairHasFusion(
-            final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params, boolean requireUpstreamDisruptive)
+            final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params, boolean isKnownPair)
     {
         // see SV Fusions document for permitted combinations
         boolean checkExactMatch = false;
@@ -264,7 +264,7 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "precoding exonic to non-exonic");
                 return null;
             }
-            else if(downstreamTrans.isCoding())
+            else if(downstreamTrans.isCoding() && !isKnownPair)
             {
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to coding");
                 return null;
@@ -309,7 +309,7 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up non-coding exonic to down non-exonic");
                 return null;
             }
-            else if(downstreamTrans.isCoding())
+            else if(downstreamTrans.isCoding() && !isKnownPair)
             {
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up non-coding to down-coding");
                 return null;
