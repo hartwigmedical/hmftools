@@ -38,7 +38,7 @@ minNormalCoverage | 8 | Variants with low coverage in germline may be germline v
 minTumorAF | 0.5 | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
 maxInexactHomLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
-discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mapability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
+discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
 PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
 maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (hg38: chr2:32,916,190-32,916,630; GRCH37: 2:33,141,260-33,141,700).
 
@@ -64,7 +64,7 @@ Variants located on a single assembly are given a unique 'asm' identifier.
 
 The GRIDSS output may contain structural variants which may be duplicated either by a single SV or by a chain of SVs with breakends proximate to each other which may or may not already be linked by assembly.   In the case where a variant is duplicated by a chain, we term this variant the spanning variant and these links to be transitive links.
 
-For a variant to be marked as a duplicate, we must find 2 candidate transitive breakends which match the orientation and position of the spanning variant, within CIPOS bounds and allowing for the insert sequence length.   The CIPOS bounds for imprecise variants are ignored for this purpose and the match must be exact (see realignmnent section above).    
+For a variant to be marked as a duplicate, we must find 2 candidate transitive breakends which match the orientation and position of the spanning variant, within CIPOS bounds and allowing for the insert sequence length.   The CIPOS bounds for imprecise variants are ignored for this purpose and the match must be exact (see realignment section above).    
 
 The candidate transitive breakends must be linkable in a continuous chain as one of the following cases:
 
@@ -75,7 +75,7 @@ The candidate transitive breakends must be linkable in a continuous chain as one
  
 If the deduplicated spanning variant is PRECISE, then the length of the insert sequence of the spanning variant must match the entire chain length of the transitive variants (again allowing for CIPOS bounds and insert sequence length of precise variants).  
 
-Any single breakend which matches the position and orientation of another breakend or breakjunction (within CIPOS bounds) is also filtered as DEDUP.   GRIPPS prioritises retaining breakends / breakjunctions linked by assembly or transitive link, then breakends that are passing and finally by highest qual score. 
+Any single breakend which matches the position and orientation of another breakend or breakjunction (within CIPOS bounds) is also filtered as DEDUP.   GRIPSS prioritises retaining breakends / breakjunctions linked by assembly or transitive link, then breakends that are passing and finally by highest qual score. 
 
 ### C. Linkage by double stranded break
 

@@ -19,7 +19,6 @@ class AssemblyLinkTest {
         assertEquals("asm1/325", localLink.get("id2"))
     }
 
-
     @Test
     fun testNonMatesAreWithDifferentLocationsAreNotLinked() {
         val variant1 = createVariant(1000, "id1", "T", "]2:1190]T", "mate1", "asm1", "325").toSv()
@@ -44,7 +43,7 @@ class AssemblyLinkTest {
         val variant1 = createVariant(1000, "id1", "T", "T[1:1010[", "id2", "asm1", "325").toSv()
         val variant2 = createVariant(1010, "id2", "T", "]1:1000]T", "id1", "asm1", "325").toSv()
         val rightOfDel = createVariant(1012, "id3", "T", "T[1:2010[T", "mate3", "asm1", "325").toSv()
-        val localLink:LinkStore = LinkStore(AssemblyLink().links(listOf(leftOfDel, variant1, variant2, rightOfDel)))
+        val localLink = LinkStore(AssemblyLink().links(listOf(leftOfDel, variant1, variant2, rightOfDel)))
         assertEquals("asm1/325-1", localLink.get("id0"))
         assertEquals("asm1/325-1", localLink.get("id1"))
         assertEquals("asm1/325-2", localLink.get("id2"))
@@ -53,7 +52,7 @@ class AssemblyLinkTest {
 
     fun createVariant(pos: Int, vcfId: String, ref: String, alt: String, mate: String, beid: String, beidl: String): VariantContext {
         val line = "1\t${pos}\t${vcfId}\t${ref}\t${alt}\t100\tPASS\tMATEID=${mate};BEID=${beid};BEIDL=${beidl};AS=10\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
-        return VariantContextTestFactory.decode(line);
+        return VariantContextTestFactory.decode(line)
     }
 
     private fun VariantContext.toSv(): StructuralVariantContext = StructuralVariantContext(this)

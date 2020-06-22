@@ -94,7 +94,7 @@ class DedupSingleTest {
     }
 
     @Test
-    fun testMutlipleSinglesAndPair() {
+    fun testMultipleSinglesAndPair() {
         val passingSingle1 = create("sgl1", 100, "A.", 1000)
         val passingSingle2 = create("sgl2", 102, "A.", 1000)
         val failingPair = create("pair", 103, "A[2:222[", 1)
@@ -173,5 +173,4 @@ class DedupSingleTest {
                 .cipos(Pair(-cipos, cipos), Pair(-cipos, cipos))
                 .toSv()
     }
-
 }

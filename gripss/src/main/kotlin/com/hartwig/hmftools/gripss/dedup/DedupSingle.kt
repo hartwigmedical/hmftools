@@ -45,5 +45,4 @@ class DedupSingle(val duplicates: Set<String>) {
             return original.qual > alternative.qual
         }
     }
-
 }

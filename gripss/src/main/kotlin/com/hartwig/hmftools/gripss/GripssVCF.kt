@@ -8,7 +8,7 @@ import htsjdk.variant.vcf.*
 
 
 const val PON = "PON"
-const val IMPRECISE = "imprecise";
+const val IMPRECISE = "imprecise"
 const val SHORT_SR_NORMAL = "shortSRNormalSupport"
 const val SHORT_SR_SUPPORT = "shortSRTumorSupport"
 const val SHORT_STRAND_BIAS = "shortStrandBias"
@@ -16,8 +16,8 @@ const val SHORT_DEL_INS_ARTIFACT = "smallDelInsertionArtifact"
 
 const val MAX_POLY_G_LENGTH = "maxPolyGLength"
 
-const val MAX_NORMAL_SUPPORT = "maxNormalSupport";
-const val MIN_NORMAL_COVERAGE = "minNormalCoverage";
+const val MAX_NORMAL_SUPPORT = "maxNormalSupport"
+const val MIN_NORMAL_COVERAGE = "minNormalCoverage"
 const val DISCORDANT_PAIR_SUPPORT = "discordantPairSupport"
 
 const val MAX_HOM_LENGTH_SHORT_INV = "maxHomLengthShortInv"
@@ -28,16 +28,15 @@ const val MATE = "mate"
 const val PASS = "PASS"
 const val MIN_LENGTH = "minLength"
 
-const val TAF = "TAF";
-const val ALT_PATH = "ALTP";
-const val HOTSPOT = "HOTSPOT";
-const val REALIGN = "REALIGN";
-const val LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
-const val REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
+const val TAF = "TAF"
+const val ALT_PATH = "ALTP"
+const val HOTSPOT = "HOTSPOT"
+const val REALIGN = "REALIGN"
+const val LOCAL_LINKED_BY = "LOCAL_LINKED_BY"
+const val REMOTE_LINKED_BY = "REMOTE_LINKED_BY"
 
 class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoCloseable {
     val writer = VariantContextWriterBuilder().setReferenceDictionary(dictionary).setOutputFile(outputVCF).build()
-
 
     fun writeHeader(version:String, header: VCFHeader) {
         header.addMetaDataLine(VCFHeaderLine("gripssVersion", version))
@@ -79,5 +78,4 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
     override fun close() {
         writer.close()
     }
-
 }

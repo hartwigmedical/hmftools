@@ -11,6 +11,7 @@ import htsjdk.variant.vcf.VCFHeaderVersion
 import kotlin.math.abs
 
 object VariantContextTestFactory {
+
     private val codec: VCFCodec by lazy {
         val codec = VCFCodec()
         val header = VCFHeader(setOf(), setOf("NORMAL", "TUMOR"))
@@ -19,7 +20,7 @@ object VariantContextTestFactory {
     }
 
     fun decode(line: String): VariantContext {
-        return codec.decode(line);
+        return codec.decode(line)
     }
 
     fun createVariant(contig: String, pos: Int, id: String, ref: String, alt: String, qual: Int, filter: Collection<String>): VariantContext {
@@ -43,13 +44,13 @@ object VariantContextTestFactory {
         val builder = VariantContextBuilder(this)
         builder.attribute(CIPOS, listOf(-abs(cipos.first), abs(cipos.second)))
         builder.attribute(CIRPOS, listOf(-abs(cirpos.first), abs(cirpos.second)))
-        return builder.make();
+        return builder.make()
     }
 
     fun VariantContext.setAttribute(attribute: String, value: Any): VariantContext {
         val builder = VariantContextBuilder(this)
         builder.attribute(attribute, value)
-        return builder.make();
+        return builder.make()
     }
 
     fun VariantContext.addGenotypeAttribute(attribute: String, normal: Int, tumor: Int): VariantContext {
@@ -61,16 +62,15 @@ object VariantContextTestFactory {
 
         val builder = VariantContextBuilder(this)
         builder.genotypes(listOf(normalBuilder.make(), tumorBuilder.make()))
-        return builder.make();
+        return builder.make()
     }
 
     fun VariantContext.splitReads(normal: Int, tumor: Int): VariantContext {
-        return addGenotypeAttribute("SR", normal, tumor);
+        return addGenotypeAttribute("SR", normal, tumor)
     }
 
     fun VariantContext.fragmentSupport(normal: Int, tumor: Int): VariantContext {
-        return addGenotypeAttribute("BVF", normal, tumor).addGenotypeAttribute("VF", normal, tumor);
+        return addGenotypeAttribute("BVF", normal, tumor).addGenotypeAttribute("VF", normal, tumor)
     }
-
 }
 

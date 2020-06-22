@@ -16,11 +16,11 @@ class StructuralVariantContextTest {
 
     @Test
     fun testBreakendAssemblyReadPair() {
-        val single = sgl();
+        val single = sgl()
         assertTrue(single.toSv().breakendAssemblyReadPairsFilter())
         assertFalse(single.setAttribute("BASRP", 1).toSv().breakendAssemblyReadPairsFilter())
 
-        val shortDel = shortDel();
+        val shortDel = shortDel()
         assertFalse(shortDel.toSv().breakendAssemblyReadPairsFilter())
         assertFalse(shortDel.setAttribute("BASRP", 1).toSv().breakendAssemblyReadPairsFilter())
     }
@@ -42,12 +42,12 @@ class StructuralVariantContextTest {
 
     @Test
     fun testQualFilter() {
-        val breakEnd = sgl().qual(200).toSv();
+        val breakEnd = sgl().qual(200).toSv()
         assertTrue(breakEnd.qualFilter(201, 1000))
         assertFalse(breakEnd.qualFilter(200, 1000))
         assertFalse(breakEnd.qualFilter(199, 1000))
 
-        val breakPoint = createBreakPoint().qual(200).toSv();
+        val breakPoint = createBreakPoint().qual(200).toSv()
         assertTrue(breakPoint.qualFilter(1000, 201))
         assertFalse(breakPoint.qualFilter(1000, 200))
         assertFalse(breakPoint.qualFilter(1000, 199))
@@ -148,7 +148,6 @@ class StructuralVariantContextTest {
         assertTrue(shortDel().splitReads(1, 1).toSv().shortSplitReadNormalFilter())
     }
 
-
     @Test
     fun testVariantCreationFunctions() {
         val shortDup = shortDup().toSv()
@@ -197,7 +196,7 @@ class StructuralVariantContextTest {
 
     private fun createVariant(pos: Int, ref: String, alt: String): VariantContext {
         val line = "1\t${pos}\tid1\t${ref}\t${alt}\t100\tPASS\tinfo\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
-        return VariantContextTestFactory.decode(line);
+        return VariantContextTestFactory.decode(line)
     }
 
     private fun VariantContext.qual(qual: Int): VariantContext {
@@ -205,6 +204,4 @@ class StructuralVariantContextTest {
         builder.log10PError(qual.toDouble() / -10.0)
         return builder.make()
     }
-
-
 }

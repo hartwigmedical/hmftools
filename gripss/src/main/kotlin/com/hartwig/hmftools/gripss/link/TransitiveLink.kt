@@ -139,7 +139,7 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         val minStart = target.minStart - targetInsDistance.first - additionalAllowance
         val maxStart = target.maxStart + targetInsDistance.second + additionalAllowance
 
-        val otherInsDistance = insertSequenceAdditionalDistance(other);
+        val otherInsDistance = insertSequenceAdditionalDistance(other)
         val otherMinStart = other.minStart - otherInsDistance.first
         val otherMaxStart = other.maxStart + otherInsDistance.second
 

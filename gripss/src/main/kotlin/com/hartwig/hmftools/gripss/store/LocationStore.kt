@@ -67,7 +67,7 @@ class LocationStore private constructor(private val compare: ContigComparator, p
 
     fun contains(variant: StructuralVariantContext, checkInPotentialLocations: Boolean): Boolean {
         return if (variant.isSingle) {
-            val potentialLocations = variant.potentialAlignementLocations
+            val potentialLocations = variant.potentialAlignmentLocations
             contains(variant.startBreakend) || (checkInPotentialLocations && potentialLocations.any { x -> contains(Breakpoint(variant.startBreakend, x)) })
         } else {
             contains(variant.breakpoint!!)
@@ -76,7 +76,7 @@ class LocationStore private constructor(private val compare: ContigComparator, p
 
     fun contains(start: Breakend): Boolean {
         val keys = start.locationKey()
-        return keys.any() { singlesMap[it]?.any { x -> x.overlaps(start) } == true }
+        return keys.any { singlesMap[it]?.any { x -> x.overlaps(start) } == true }
     }
 
     fun contains(breakpoint: Breakpoint): Boolean {
@@ -85,7 +85,7 @@ class LocationStore private constructor(private val compare: ContigComparator, p
         }
 
         val keys = breakpoint.locationKey()
-        return keys.any() { pairedMap[it]?.any { x -> x.startBreakend.overlaps(breakpoint.startBreakend) && x.endBreakend.overlaps(breakpoint.endBreakend) } == true }
+        return keys.any { pairedMap[it]?.any { x -> x.startBreakend.overlaps(breakpoint.startBreakend) && x.endBreakend.overlaps(breakpoint.endBreakend) } == true }
     }
 
     private fun ContigComparator.compare(breakend1: Breakend, breakend2: Breakend): Int {

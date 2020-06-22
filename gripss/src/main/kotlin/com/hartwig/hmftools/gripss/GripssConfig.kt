@@ -83,9 +83,7 @@ data class GripssConfig(
             result.isRequired = true
             return result
         }
-
     }
-
 }
 
 private const val MAX_NORMAL_SUPPORT_PROPORTION_OPTION = "max_normal_support_proportion"
@@ -177,5 +175,4 @@ data class GripssFilterConfig(
                     linc00486Definition37)
         }
     }
-
 }

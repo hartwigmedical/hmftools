@@ -54,7 +54,6 @@ class LinkRescueTest {
     }
 
     private fun createVariants(): VariantStore {
-
         val var1 = createVariant("1", 1000, "1start", "A", "A[1:2000[", 100, "1end").toSv()
         val var3 =  createVariant("1", 2000, "1end", "A", "]1:1000]A", 100, "1start").toSv()
         val var2 = createVariant("1", 1000, "2start", "A", "A[2:2000[", 100, "2end").toSv()

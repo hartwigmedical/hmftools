@@ -5,8 +5,6 @@ import org.junit.Test
 
 class VariantTypeTest {
 
-
-
     @Test
     fun testBnd() {
         val start = VariantType.create("1", 100, "A", "AAT[2:110[")
@@ -57,6 +55,4 @@ class VariantTypeTest {
         val variant = VariantType.create("1", 100, "A", expected)
         assertEquals(expected, variant.toString())
     }
-
-
 }

@@ -60,7 +60,6 @@ class LocationStoreTest {
 
     @Test
     fun testSingleHotspot() {
-
         val contigComparator = ContigComparator(null)
         val entry1 = Breakpoint.fromBedpe("18\t23596577\t23681181\tX\t48104751\t48126879\tSS18-SSX1\t0\t-\t-\t18\tX", contigComparator)
         val entry2 = Breakpoint.fromBedpe("18\t23596577\t23681181\tX\t52725945\t52746239\tSS18-SSX2\t0\t-\t+\t18\tX", contigComparator)
@@ -90,5 +89,4 @@ class LocationStoreTest {
             assertTrue(ponStore.contains(breakpoint))
         }
     }
-
 }

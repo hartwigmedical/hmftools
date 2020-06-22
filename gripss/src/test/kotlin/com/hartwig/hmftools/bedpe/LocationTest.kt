@@ -38,12 +38,11 @@ class LocationTest {
     }
 
     @Test
-    fun testReSortOnDiffernthromosome() {
+    fun testReSortOnDifferentChromosome() {
         val correctEntry = "1\t9997\t9999\t3\t9998\t10008\t.\t9\t-\t+"
         val reverseEntry = "3\t9998\t10008\t1\t9997\t9999\t.\t9\t+\t-"
         val contigComparator = ContigComparator(null)
 
         assertEquals(Breakpoint.fromBedpe(correctEntry, contigComparator), Breakpoint.fromBedpe(reverseEntry, contigComparator))
     }
-
 }

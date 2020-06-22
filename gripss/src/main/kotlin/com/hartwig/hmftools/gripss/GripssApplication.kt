@@ -54,7 +54,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val version = VersionInfo("gripss.version")
     }
 
-    private val startTime = System.currentTimeMillis();
+    private val startTime = System.currentTimeMillis()
     private val fileReader = VCFFileReader(File(config.inputVcf), false)
     private val dictionary = fileReader.fileHeader.sequenceDictionary
     private val fileWriter = GripssVCF(config.outputVcf, dictionary)
@@ -73,7 +73,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val hotspots = variantStore.selectAll().filter(hotspotFilter).map { x -> x.vcfId}.toSet()
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
-        val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll());
+        val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll())
 
         logger.info("Applying initial soft filters")
         val initialFilters = SoftFilterStore(config.filterConfig, variantStore.selectAll(), ponFiltered, hotspots)
