@@ -94,7 +94,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                     sampleReport.submissionId()));
         }
 
-        patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
+        patientReport.comments().ifPresent(comments -> div.add(createContentParagraphRed("Comments: " + comments)));
 
         return div;
     }
@@ -138,6 +138,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         } else {
             return createContentParagraph("The HMF sample ID is: ", sampleReport.tumorSampleId());
         }
+    }
+
+    @NotNull
+    private static Paragraph createContentParagraphRed(@NotNull String text) {
+        return new Paragraph(text).addStyle(ReportResources.smallBodyTextStyleRed()).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull
