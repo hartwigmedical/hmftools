@@ -87,7 +87,7 @@ public class SummaryChapter implements ReportChapter {
                         + "by a low tumor percentage in the received tumor material or due to genomic very stable/normal tumor type. "
                         + "As a consequence no reliable tumor purity assessment is possible and no information regarding "
                         + "mutation ploidy and tVAF can be provided.";
-            } else if (report.hasReliablePurity() && report.impliedPurity() < ReportResources.PURITY_CUTOFF) {
+            } else if (report.impliedPurity() < ReportResources.PURITY_CUTOFF) {
                 double impliedPurityPercentage =
                         MathUtil.mapPercentage(report.impliedPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
                 text = "Due to the lower tumor purity (" + DataUtil.formatPercentage(impliedPurityPercentage) + ") "
