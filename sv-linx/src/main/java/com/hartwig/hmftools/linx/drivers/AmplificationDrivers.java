@@ -34,8 +34,12 @@ public class AmplificationDrivers
 
     public void annotateAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList)
     {
-        if(mDataCache.samplePloidy() == 0)
+        if(dgData.GeneCN == null)
+        {
+            LNX_LOGGER.warn("sample({}) gene({}) min copy number data not found for DEL driver",
+                    mDataCache.sampleId(), dgData.GeneData.GeneName);
             return;
+        }
 
         LNX_LOGGER.debug("gene({}) chromosome({}) position({} -> {}) minCN({})",
                 dgData.GeneData.GeneName, dgData.GeneData.Chromosome, dgData.TransData.TransStart, dgData.TransData.TransEnd,

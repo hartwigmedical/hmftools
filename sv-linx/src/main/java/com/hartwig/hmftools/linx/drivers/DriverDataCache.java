@@ -89,8 +89,13 @@ public class DriverDataCache
 
         final PurityContext purityContext = mDbAccess.readPurityContext(mSampleId);
 
-        if(purityContext != null)
-            setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
+        if(purityContext == null)
+        {
+            LNX_LOGGER.error("sample({}) purity record not found", mSampleId);
+            return;
+        }
+
+        setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
         // add records but filter out any previously added by Linx
         mDriverCatalog.addAll(
