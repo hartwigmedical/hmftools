@@ -57,7 +57,7 @@ public class PatientReporterApplication {
                     config.comments(),
                     config.correctedReport());
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
-            reportWriter.writeQCFailReport(report, outputFilePath, config.qcFail());
+            reportWriter.writeQCFailReport(report, outputFilePath);
 
             ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
         } else {
