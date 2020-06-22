@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -88,7 +88,16 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForBelowDetectionSample() throws IOException {
         AnalysedPatientReport patientReport =
-                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample("CPCT01_NO_TUMOR");
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample("CPCT01_NO_TUMOR", false, 1D);
+
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+    }
+
+    @Test
+    public void canGeneratePatientReportForInsufficientTCPSample() throws IOException {
+        AnalysedPatientReport patientReport =
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample("CPCT01_INSUFFICIENT_TUMOR", true, 0.19);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
