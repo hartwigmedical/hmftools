@@ -38,7 +38,6 @@ public class ReadContext {
     ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
             final int leftCentreIndex, final int rightCentreIndex, final int flankSize, @NotNull final IndexedBases refSequence,
             @NotNull final SAMRecord record) {
-
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
         int adjRightCentreIndex = Math.min(rightCentreIndex, record.getReadBases().length - 1);
 
@@ -84,7 +83,6 @@ public class ReadContext {
                 readContext.refBases.bases());
 
         this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
-
     }
 
     private ReadContext(@NotNull final ReadContext clone) {
@@ -109,7 +107,6 @@ public class ReadContext {
                 clone.readBases.flankSize(),
                 BONUS_FLANK,
                 clone.readBases.bases());
-
     }
 
     @NotNull
@@ -248,5 +245,4 @@ public class ReadContext {
     public int coreLength() {
         return readBasesRightCentreIndex() - readBasesLeftCentreIndex() + 1;
     }
-
 }

@@ -30,14 +30,12 @@ public class RefContextFactory {
         this.config = config;
         this.panelSelector = new PanelSelector<>(panel);
         final Predicate<AltContext> altContextPredicate = config.filter().altContextFilter(new HotspotSelector(hotspots));
-        final Consumer<RefContext> evictionHandler = (refContext) -> {
-            refContext.alts()
-                    .stream()
-                    .filter(AltContext::finaliseAndValidate)
-                    .filter(this::refPredicate)
-                    .filter(altContextPredicate)
-                    .forEach(savedCandidates::add);
-        };
+        final Consumer<RefContext> evictionHandler = (refContext) -> refContext.alts()
+                .stream()
+                .filter(AltContext::finaliseAndValidate)
+                .filter(this::refPredicate)
+                .filter(altContextPredicate)
+                .forEach(savedCandidates::add);
 
         this.rollingCandidates = new EvictingArray<>(256, evictionHandler);
     }

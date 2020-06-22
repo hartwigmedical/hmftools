@@ -13,5 +13,4 @@ public class QualityRecalibrationFactoryTest {
         assertEquals(20, QualityRecalibrationFactory.recalibratedQual(9900, 100), 0.1);
         assertEquals(10, QualityRecalibrationFactory.recalibratedQual(9000, 1000), 0.1);
     }
-
 }

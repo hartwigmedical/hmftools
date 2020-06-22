@@ -48,7 +48,7 @@ panel_bed | Path to panel bed
 high_confidence_bed | Path to high confidence bed
 assembly | One of `hg19` or `hg38`
 
-The cardinality of `tumor` must match `tumor_bams`. At least one tumor must be supplied.
+The cardinality of `tumor` must match `tumor_bam`. At least one tumor must be supplied.
 
 ## Optional Arguments
 Argument | Default | Description 
@@ -57,12 +57,12 @@ threads | 2 | Number of threads to use
 reference | NA | Comma separated names of the reference sample
 reference_bam | NA | Comma separated paths to indexed reference BAM file
 chr | NA | Limit sage to comma separated list of chromosomes
-max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this at ignored.  
-max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this at ignored.  
+max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
+max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
 max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
 
-The cardinality of `reference` must match `reference_bams`.
+The cardinality of `reference` must match `reference_bam`.
 
 ## Optional Base Quality Recalibration Arguments
 
@@ -221,7 +221,7 @@ The recalibration is unique per sample.
 The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.   This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
 Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
 
-Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT errror given a trinulceotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
+Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT error given a trinucleotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
 
 For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality. 
 SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.
@@ -371,7 +371,7 @@ Given evidence of the variants in the tumor and normal we apply somatic filters.
 The key principles behind the filters are ensuring sufficient support for the variant (minimum VAF and score) in the tumor sample and validating that the variant is highly unlikely to be present in the normal sample.
 
 The filters are tiered to maximise sensitivity in regions of high prior likelihood for variants. 
-A hotspot panel of 10,000 specific variants are set to the highest sensitivity (TIER=`HOTSPOT`) followed by medium sensitivity for a panel of cancer related gene exons and splice regions (TIER =`PANEL`) and more aggressive filtering genome wide in both high confidence (TIER=`HIGH_CONFIDENCE`) and low confidence (TIER=`LOW_CONFIDENCE`) regions to ensure a low false positive rate genome wide.
+A hotspot panel of 10,000 specific variants are set to the highest sensitivity (TIER=`HOTSPOT`) followed by medium sensitivity for exonic and splice regions for the canonical transcripts of a panel of cancer related genes (TIER =`PANEL`) and more aggressive filtering genome wide in both high confidence (TIER=`HIGH_CONFIDENCE`) and low confidence (TIER=`LOW_CONFIDENCE`) regions to ensure a low false positive rate genome wide.   These tiers can be customised by providing alternative bed files as configuration
 
 The specific filters and default settings for each tier are:
 
@@ -449,7 +449,7 @@ REF: AAATGATTT...
 ALT: AAAT A<b>A</b>T...
 </pre>
 
-We can detect local realigned variants using a similiar process to phasing but without adjusting the relative position by the INDEL insert/delete sequence.
+We can detect local realigned variants using a similar process to phasing but without adjusting the relative position by the INDEL insert/delete sequence.
 
 Any variants that are can be locally realigned are given a shared `LRS` (local realigned set) identifier.
 

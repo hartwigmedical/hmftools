@@ -26,5 +26,4 @@ public class HotspotSelector {
 
         return hotspotMatch.get();
     }
-
 }

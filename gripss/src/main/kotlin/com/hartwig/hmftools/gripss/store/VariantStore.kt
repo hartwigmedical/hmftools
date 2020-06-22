@@ -63,5 +63,4 @@ class VariantStore(private val variants: List<StructuralVariantContext>, private
 
         return result
     }
-
 }

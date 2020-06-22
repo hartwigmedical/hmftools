@@ -10,7 +10,6 @@ import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class SageVariant implements GenomePosition {
 
     private final Set<String> filters;

@@ -88,7 +88,16 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForBelowDetectionSample() throws IOException {
         AnalysedPatientReport patientReport =
-                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample("CPCT01_NO_TUMOR");
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample("CPCT01_NO_TUMOR", false, 1D);
+
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+    }
+
+    @Test
+    public void canGeneratePatientReportForInsufficientTCPSample() throws IOException {
+        AnalysedPatientReport patientReport =
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample("CPCT01_INSUFFICIENT_TUMOR", true, 0.19);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -177,6 +186,7 @@ public class CFReportWriterTest {
 
         QCFailReport patientReport = ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber(reason.qcFormNumber())
                 .reason(reason)
                 .wgsPurityString(wgsPurityString)
                 .comments(comments)
@@ -189,7 +199,7 @@ public class CFReportWriterTest {
         String filename = testReportFilePath(patientReport);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
-        writer.writeQCFailReport(patientReport, filename, true);
+        writer.writeQCFailReport(patientReport, filename);
     }
 
     @NotNull

@@ -5,8 +5,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
 
 class QualityCounter implements QualityCounterKey, Comparable<QualityCounter> {
+
     private final QualityCounterKey key;
-    private AtomicInteger count = new AtomicInteger();
+    private final AtomicInteger count = new AtomicInteger();
 
     public QualityCounter(final QualityCounterKey key) {
         this.key = key;

@@ -12,7 +12,6 @@ import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -133,7 +132,7 @@ public interface FilterConfig {
     }
 
     @NotNull
-    static FilterConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
+    static FilterConfig createConfig(@NotNull final CommandLine cmd) {
         return ImmutableFilterConfig.builder()
                 .softFilter(defaultBooleanValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED))
                 .hardFilter(defaultBooleanValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED))
@@ -143,9 +142,8 @@ public interface FilterConfig {
                 .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
                 .softPanelFilter(SoftFilterConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
                 .softHighConfidenceFilter(SoftFilterConfig.createConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER))
-                .softLowConfidenceFilter(SoftFilterConfig.createConfig(cmd, "llow_confidence", DEFAULT_LOW_CONFIDENCE_FILTER))
+                .softLowConfidenceFilter(SoftFilterConfig.createConfig(cmd, "low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER))
                 .build();
-
     }
 
     @NotNull
@@ -184,5 +182,4 @@ public interface FilterConfig {
                     && readContextCounter.tumorQuality() >= hardMinTumorQual();
         };
     }
-
 }

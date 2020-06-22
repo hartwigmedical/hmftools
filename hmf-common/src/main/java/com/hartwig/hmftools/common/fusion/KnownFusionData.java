@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.Map;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-
 public class KnownFusionData
 {
     public final KnownFusionType Type;

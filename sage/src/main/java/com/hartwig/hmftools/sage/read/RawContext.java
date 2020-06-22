@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.read;
 import org.jetbrains.annotations.NotNull;
 
 public class RawContext {
+
     private final int readIndex;
     private final boolean readIndexInSoftClip;
     private final boolean readIndexInDelete;

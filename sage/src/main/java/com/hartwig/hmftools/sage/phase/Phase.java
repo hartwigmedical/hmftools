@@ -25,7 +25,6 @@ public class Phase implements Consumer<SageVariant> {
     private final RightAlignMicrohomology rightAlignMicrohomology;
 
     public Phase(@NotNull final SageConfig config, @NotNull final String chromosome, @NotNull final Consumer<SageVariant> consumer) {
-
         final List<HmfTranscriptRegion> transcripts =
                 config.transcriptRegions().stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
 

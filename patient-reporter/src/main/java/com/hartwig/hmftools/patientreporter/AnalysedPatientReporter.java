@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
@@ -31,6 +32,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
@@ -76,8 +78,7 @@ class AnalysedPatientReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
-        SampleReport sampleReport =
-                SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
 
         PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation);
         SomaticVariantAnalysis somaticVariantAnalysis =
@@ -115,8 +116,10 @@ class AnalysedPatientReporter {
         List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItemFactory.filterBlacklistedEvidence(allEvidenceItems);
 
         List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItemsFiltered);
+
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber(determineForNumber(purpleAnalysis))
                 .impliedPurity(purpleAnalysis.purity())
                 .hasReliablePurity(purpleAnalysis.hasReliablePurity())
                 .hasReliableQuality(purpleAnalysis.hasReliableQuality())
@@ -150,6 +153,14 @@ class AnalysedPatientReporter {
         printReportState(report);
 
         return report;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String determineForNumber(@NotNull PurpleAnalysis purpleAnalysis) {
+        return purpleAnalysis.hasReliablePurity() && purpleAnalysis.purity() > ReportResources.PURITY_CUTOFF
+                ? QsFormNumber.FOR_080.display()
+                : QsFormNumber.FOR_209.display();
     }
 
     @NotNull

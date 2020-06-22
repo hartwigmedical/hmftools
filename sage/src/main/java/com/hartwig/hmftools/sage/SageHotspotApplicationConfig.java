@@ -167,7 +167,7 @@ public interface SageHotspotApplicationConfig {
 
     static double defaultDoubleValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
         if (cmd.hasOption(opt)) {
-            final double result = Double.valueOf(cmd.getOptionValue(opt));
+            final double result = Double.parseDouble(cmd.getOptionValue(opt));
             if (!Doubles.equal(result, defaultValue)) {
                 LOGGER.info("Using non default value {} for parameter {}", result, opt);
             }
@@ -179,7 +179,7 @@ public interface SageHotspotApplicationConfig {
 
     static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
         if (cmd.hasOption(opt)) {
-            final int result = Integer.valueOf(cmd.getOptionValue(opt));
+            final int result = Integer.parseInt(cmd.getOptionValue(opt));
             if (result != defaultValue) {
                 LOGGER.info("Using non default value {} for parameter {}", result, opt);
             }
@@ -198,5 +198,4 @@ public interface SageHotspotApplicationConfig {
         }
         return value;
     }
-
 }

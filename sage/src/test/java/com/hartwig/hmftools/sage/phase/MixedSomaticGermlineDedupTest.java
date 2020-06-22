@@ -35,5 +35,4 @@ public class MixedSomaticGermlineDedupTest {
         assertEquals(2, codonDifferences(codon, create(100, "AAA", "TAT")));
         assertEquals(3, codonDifferences(codon, create(100, "AAA", "TTT")));
     }
-
 }

@@ -43,5 +43,4 @@ public class ReadContextCounterFactory {
                 ? config.maxReadDepthPanel()
                 : config.maxReadDepth();
     }
-
 }

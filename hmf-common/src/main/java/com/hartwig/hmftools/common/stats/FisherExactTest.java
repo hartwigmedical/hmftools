@@ -50,7 +50,7 @@ public class FisherExactTest
         double p = 0;
         p += getP(a, b, c, d);
 
-        int min = (c < b) ? c : b;
+        int min = Math.min(c, b);
         for (int i = 0; i < min; i++)
         {
             p += getP(++a, --b, --c, ++d);

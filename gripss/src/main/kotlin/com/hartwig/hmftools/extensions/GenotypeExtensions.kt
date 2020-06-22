@@ -7,18 +7,18 @@ fun Genotype.allelicFrequency(isSingleBreakEnd: Boolean, isShort: Boolean): Doub
     val readPairSupport = if (isSingleBreakEnd || !isShort) this.refSupportReadPair() else 0
     val totalSupport = fragmentSupport + this.refSupportRead() + readPairSupport
 
-    return fragmentSupport.toDouble() / totalSupport.toDouble();
+    return fragmentSupport.toDouble() / totalSupport.toDouble()
 }
 
-fun Genotype.assemblyReadPairs(): Int = attributeAsInt("ASRP", 0);
+fun Genotype.assemblyReadPairs(): Int = attributeAsInt("ASRP", 0)
 
-fun Genotype.readPairs(): Int = attributeAsInt("RP", 0);
+fun Genotype.readPairs(): Int = attributeAsInt("RP", 0)
 
-fun Genotype.splitRead(): Int = requireAttributeAsInt("SR");
+fun Genotype.splitRead(): Int = requireAttributeAsInt("SR")
 
-fun Genotype.refSupportRead(): Int = requireAttributeAsInt("REF");
+fun Genotype.refSupportRead(): Int = requireAttributeAsInt("REF")
 
-fun Genotype.refSupportReadPair(): Int = requireAttributeAsInt("REFPAIR");
+fun Genotype.refSupportReadPair(): Int = requireAttributeAsInt("REFPAIR")
 
 fun Genotype.fragmentSupport(isSingleBreakEnd: Boolean): Int {
     val attribute = when (isSingleBreakEnd) {
@@ -30,7 +30,7 @@ fun Genotype.fragmentSupport(isSingleBreakEnd: Boolean): Int {
 
 fun Genotype.requireAttributeAsInt(attribute: String): Int {
     this.checkAttribute(attribute)
-    return attributeAsInt(attribute, 0);
+    return attributeAsInt(attribute, 0)
 }
 
 fun Genotype.attributeAsInt(attribute: String, defaultValue: Int): Int {
@@ -41,7 +41,7 @@ fun Genotype.attributeAsInt(attribute: String, defaultValue: Int): Int {
         is String -> return value.toInt()
     }
 
-    throw IllegalStateException("Unable to interpret ${value} as Int")
+    throw IllegalStateException("Unable to interpret $value as Int")
 }
 
 private fun Genotype.checkAttribute(attribute: String) {

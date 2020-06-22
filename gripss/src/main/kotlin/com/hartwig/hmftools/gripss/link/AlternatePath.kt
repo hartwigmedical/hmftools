@@ -42,7 +42,6 @@ data class AlternatePath(val vcfId: String, val mateId: String, val path: List<L
         return path.map { x -> x.vcfId } + path[path.size - 1].otherVcfId
     }
 
-
     fun transitiveLinks(): List<Link> {
         return path.filter { x -> x.link.startsWith("trs") }
     }
@@ -67,5 +66,4 @@ data class AlternatePath(val vcfId: String, val mateId: String, val path: List<L
 
         return stringJoiner.toString()
     }
-
 }

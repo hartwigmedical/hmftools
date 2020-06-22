@@ -45,7 +45,6 @@ public class SamSlicer {
     }
 
     public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
-
         final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
 
         try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals)) {
@@ -74,5 +73,4 @@ public class SamSlicer {
         return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
                 .isSecondaryOrSupplementary();
     }
-
 }

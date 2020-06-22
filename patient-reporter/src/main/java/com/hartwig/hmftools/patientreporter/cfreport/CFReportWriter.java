@@ -19,7 +19,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.SummaryChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOffLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOnLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
@@ -32,7 +31,6 @@ import com.itextpdf.layout.property.AreaBreakType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class CFReportWriter implements ReportWriter {
 
@@ -65,21 +63,20 @@ public class CFReportWriter implements ReportWriter {
                     new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter() };
         }
 
-        writeReport(report, chapters, outputFilePath, null, report.impliedPurity(), report.hasReliablePurity(), false);
+        writeReport(report, chapters, outputFilePath);
     }
 
     @Override
-    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath, boolean isQCFail) throws IOException {
-        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath, report.reason(), 0, false, isQCFail);
+    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
+        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
     }
 
-    private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath, @Nullable
-            QCFailReason reason, double purity, boolean hasReliablePurity, boolean isQCFail)
+    private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
             throws IOException {
         Document doc = initializeReport(outputFilePath, writeToFile);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
-        PageEventHandler pageEventHandler = new PageEventHandler(patientReport, reason, purity, hasReliablePurity, isQCFail);
+        PageEventHandler pageEventHandler = new PageEventHandler(patientReport);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for (int i = 0; i < chapters.length; i++) {

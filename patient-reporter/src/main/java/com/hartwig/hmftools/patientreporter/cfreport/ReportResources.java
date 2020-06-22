@@ -28,6 +28,8 @@ public final class ReportResources {
     public static final String SIGNATURE_TITLE = "Director " + HARTWIG_NAME;
     public static final String VERSION_REPORT = "version " + PatientReporterApplication.VERSION;
 
+    public static final double PURITY_CUTOFF = 0.195;
+
     static final String METADATA_TITLE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
     static final String METADATA_AUTHOR = HARTWIG_NAME;
     public static final String REPORT_DATE = DataUtil.formatDate(LocalDate.now());

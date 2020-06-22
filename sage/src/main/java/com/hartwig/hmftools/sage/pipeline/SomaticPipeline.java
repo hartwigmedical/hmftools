@@ -59,7 +59,6 @@ public class SomaticPipeline implements SageVariantPipeline {
 
     @NotNull
     public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
-
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, refGenome), executor);
 
         final CompletableFuture<List<Candidate>> initialCandidates = bamCandidates(region, refSequenceFuture);

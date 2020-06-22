@@ -29,7 +29,6 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
             return SoftFilterStore(filters)
         }
-
     }
 
     operator fun get(vcfId: String): Set<String> {
@@ -72,8 +71,6 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
             result.computeIfAbsent(vcfId) { mutableSetOf() }.add(DEDUP)
         }
 
-
         return SoftFilterStore(result)
     }
-
 }

@@ -18,6 +18,10 @@ public abstract class QCFailReport implements PatientReport {
     @NotNull
     public abstract SampleReport sampleReport();
 
+    @Override
+    @NotNull
+    public abstract String qsFormNumber();
+
     @NotNull
     public abstract QCFailReason reason();
 

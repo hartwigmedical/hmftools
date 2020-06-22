@@ -43,7 +43,6 @@ public class SageVariantContextFactory {
 
     @NotNull
     public static VariantContext create(@NotNull final SageVariant entry) {
-
         final List<Genotype> genotypes = Lists.newArrayList();
         for (int i = 0; i < entry.normalAltContexts().size(); i++) {
             ReadContextCounter normalContext = entry.normalAltContexts().get(i);
@@ -145,5 +144,4 @@ public class SageVariantContextFactory {
 
         return Lists.newArrayList(ref, alt);
     }
-
 }

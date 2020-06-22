@@ -99,5 +99,4 @@ public class RefContext implements GenomePosition {
         final String refAltKey = ref + "|" + alt;
         return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
     }
-
 }

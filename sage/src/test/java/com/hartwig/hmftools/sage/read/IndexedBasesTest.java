@@ -10,8 +10,7 @@ import org.junit.Test;
 
 public class IndexedBasesTest {
 
-    private IndexedBases victim = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
-
+    private final IndexedBases victim = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
     @Test
     public void testRightFlankMatchingBases() {
@@ -26,7 +25,6 @@ public class IndexedBasesTest {
 
     @Test
     public void testLeftFlankMatchingBases() {
-
         assertEquals(-1, victim.leftFlankMatchingBases(5, "TTCTCCTCA".getBytes()));
 
         assertEquals(3, victim.leftFlankMatchingBases(5, "GATCTCCTCA".getBytes()));
@@ -38,7 +36,6 @@ public class IndexedBasesTest {
 
     @Test
     public void testCoreMatch() {
-
         assertTrue(victim.coreMatch(5, "GATCTCCTCA".getBytes()));
         assertTrue(victim.coreMatch(1, "TCC".getBytes()));
 
@@ -48,11 +45,9 @@ public class IndexedBasesTest {
         assertFalse(victim.coreMatch(1, "TC".getBytes()));
         assertFalse(victim.coreMatch(0, "CC".getBytes()));
     }
-
-
+    
     @Test
     public void testPartialMatchMustHaveAtLeastOneFullSide() {
-
         ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes(), Strings.EMPTY);
         Assert.assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
 
@@ -108,5 +103,4 @@ public class IndexedBasesTest {
         assertFalse(victim1.phased(-5, victim2));
         assertFalse(victim2.phased(5, victim1));
     }
-
 }

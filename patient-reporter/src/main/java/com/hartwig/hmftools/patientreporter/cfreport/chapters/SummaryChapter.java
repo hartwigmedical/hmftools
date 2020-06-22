@@ -82,13 +82,14 @@ public class SummaryChapter implements ReportChapter {
     private void renderSummaryText(@NotNull Document reportDocument, @NotNull AnalysedPatientReport report) {
         String text = report.clinicalSummary();
         if (text.isEmpty()) {
-            double impliedPurityPercentage = MathUtil.mapPercentage(report.impliedPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
             if (!report.hasReliablePurity()) {
                 text = "Of note, WGS analysis indicated a very low abundance of genomic aberrations, which can be caused "
                         + "by a low tumor percentage in the received tumor material or due to genomic very stable/normal tumor type. "
                         + "As a consequence no reliable tumor purity assessment is possible and no information regarding "
                         + "mutation ploidy and tVAF can be provided.";
-            } else if (impliedPurityPercentage < 0.195) {
+            } else if (report.impliedPurity() < ReportResources.PURITY_CUTOFF) {
+                double impliedPurityPercentage =
+                        MathUtil.mapPercentage(report.impliedPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
                 text = "Due to the lower tumor purity (" + DataUtil.formatPercentage(impliedPurityPercentage) + ") "
                         + "potential (subclonal) DNA aberrations might not have been detected using this test. " + ""
                         + "This result should therefore be considered with caution.";

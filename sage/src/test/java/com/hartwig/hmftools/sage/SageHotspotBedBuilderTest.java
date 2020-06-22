@@ -35,5 +35,4 @@ public class SageHotspotBedBuilderTest {
         Assert.assertEquals(expectedStart, region.start());
         Assert.assertEquals(expectedEnd, region.end());
     }
-
 }

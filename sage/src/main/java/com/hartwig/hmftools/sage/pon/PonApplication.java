@@ -133,7 +133,7 @@ public class PonApplication implements AutoCloseable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         executorService.shutdown();
         vcf.close();
         LOGGER.info("PON complete");

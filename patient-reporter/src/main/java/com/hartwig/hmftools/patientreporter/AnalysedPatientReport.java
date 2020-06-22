@@ -6,8 +6,8 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
@@ -27,6 +27,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @Override
     @NotNull
     public abstract SampleReport sampleReport();
+
+    @NotNull
+    @Override
+    public abstract String qsFormNumber();
 
     public abstract double impliedPurity();
 

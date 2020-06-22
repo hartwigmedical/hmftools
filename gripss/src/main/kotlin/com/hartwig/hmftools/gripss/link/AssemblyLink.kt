@@ -41,7 +41,7 @@ class AssemblyLink {
         }
 
         if (variants.size == 2) {
-            return createLinks(assembly, Pair(variants[0], variants[1]));
+            return createLinks(assembly, Pair(variants[0], variants[1]))
         }
 
         var extraIdentifier = 1
@@ -53,7 +53,7 @@ class AssemblyLink {
 
             val links = createLinks("${assembly}-${extraIdentifier}", Pair(current, next))
             if (links.isNotEmpty()) {
-                extraIdentifier++;
+                extraIdentifier++
                 result.addAll(links)
             }
         }

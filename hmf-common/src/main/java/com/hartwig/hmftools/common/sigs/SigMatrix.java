@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.sigs;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;

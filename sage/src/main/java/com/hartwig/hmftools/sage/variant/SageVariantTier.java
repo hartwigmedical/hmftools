@@ -4,5 +4,5 @@ public enum SageVariantTier {
     HOTSPOT,
     PANEL,
     HIGH_CONFIDENCE,
-    LOW_CONFIDENCE;
+    LOW_CONFIDENCE
 }

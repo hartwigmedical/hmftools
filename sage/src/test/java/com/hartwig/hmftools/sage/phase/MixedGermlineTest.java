@@ -54,7 +54,6 @@ public class MixedGermlineTest {
         assertFalse(germlineSnv.isPassing());
         assertFalse( somaticSnv.isPassing());
         assertTrue( mixedMnv.isPassing());
-
     }
 
     private void testMixed(int germlinePosition, boolean mvnPass) {
@@ -110,5 +109,4 @@ public class MixedGermlineTest {
                 SageVariantTier.PANEL,
                 1000, 0, false);
     }
-
 }

@@ -56,5 +56,4 @@ public interface BaseQualityRecalibrationConfig {
                 .minMapQuality(defaultIntValue(cmd, BQR_MIN_MAP_QUAL, DEFAULT_BQR_MIN_MAP_QUAL))
                 .build();
     }
-
 }

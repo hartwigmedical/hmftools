@@ -210,5 +210,4 @@ public class AltContext implements VariantHotspot {
             return -Integer.compare(coreMatch, o.coreMatch);
         }
     }
-
 }

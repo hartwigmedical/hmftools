@@ -17,8 +17,8 @@ public class Realigned {
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
 
     @NotNull
-    public static RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize) {
-
+    public static RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex,
+            final byte[] otherBases, int maxSize) {
         int baseStartIndex = readContext.readBasesLeftFlankIndex();
         int baseEndIndex = readContext.readBasesRightFlankIndex();
 
@@ -29,8 +29,8 @@ public class Realigned {
     }
 
     @NotNull
-    static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases,  final int otherBaseIndex, final byte[] otherBases, int maxDistance) {
-
+    static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, final int otherBaseIndex,
+            final byte[] otherBases, int maxDistance) {
         if (otherBaseIndex >= 0) {
             final RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndex, otherBases);
             if (context.type() != RealignedType.NONE) {
@@ -57,7 +57,7 @@ public class Realigned {
     }
 
     @NotNull
-     static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases) {
+    static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases) {
         int exactLength = baseEndIndex - baseStartIndex + 1;
 
         int matchingBases = matchingBasesFromLeft(baseStartIndex, baseEndIndex, bases, otherIndex, otherBases);
@@ -128,5 +128,4 @@ public class Realigned {
             this.repeatCount = repeatCount;
         }
     }
-
 }

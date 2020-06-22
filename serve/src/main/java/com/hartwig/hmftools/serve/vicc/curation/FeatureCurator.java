@@ -58,6 +58,8 @@ public class FeatureCurator {
     @NotNull
     private static Set<CurationKey> blacklistForSource(@NotNull ViccSource source) {
         switch (source) {
+            case CGI:
+                return CurationFactory.CGI_FEATURE_BLACKLIST;
             case CIVIC:
                 return CurationFactory.CIVIC_FEATURE_BLACKLIST;
             case JAX:
@@ -72,6 +74,8 @@ public class FeatureCurator {
     @NotNull
     private static Map<CurationKey, String> mappingsForSource(@NotNull ViccSource source) {
         switch (source) {
+            case CGI:
+                return CurationFactory.CGI_FEATURE_NAME_MAPPINGS;
             case CIVIC:
                 return CurationFactory.CIVIC_FEATURE_NAME_MAPPINGS;
             case JAX:

@@ -91,7 +91,6 @@ public class ChromosomePipeline implements AutoCloseable {
         regions.add(regionFuture);
     }
 
-
     @NotNull
     private CompletableFuture<ChromosomePipeline> submit() {
         // Even if regions were executed out of order, they must be phased in order
@@ -118,7 +117,6 @@ public class ChromosomePipeline implements AutoCloseable {
             LOGGER.info("Processing chromosome {} complete", chromosome);
             return ChromosomePipeline.this;
         });
-
     }
 
     private void write(@NotNull final SageVariant entry) {
@@ -128,7 +126,6 @@ public class ChromosomePipeline implements AutoCloseable {
     }
 
     private boolean include(@NotNull final SageVariant entry) {
-
         if (config.panelOnly() && !PANEL_ONLY_TIERS.contains(entry.tier())) {
             return false;
         }
@@ -158,7 +155,6 @@ public class ChromosomePipeline implements AutoCloseable {
         }
 
         return true;
-
     }
 
     @Override
@@ -184,5 +180,4 @@ public class ChromosomePipeline implements AutoCloseable {
             return region;
         }
     }
-
 }

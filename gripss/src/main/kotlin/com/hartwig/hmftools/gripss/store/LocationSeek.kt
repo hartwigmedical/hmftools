@@ -21,7 +21,7 @@ class LocationSeek<T : Location> private constructor(private val elements: List<
             if (filter(elements[loopIndex])) {
                 return true
             }
-            loopIndex++;
+            loopIndex++
         }
 
         return false

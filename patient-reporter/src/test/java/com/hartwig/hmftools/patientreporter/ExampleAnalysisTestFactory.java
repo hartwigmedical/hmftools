@@ -91,6 +91,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber("HMF-FOR-TEST")
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -149,6 +150,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber("HMF-FOR-TEST")
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -181,9 +183,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSample(@NotNull String sampleId) {
-        boolean hasReliablePurity = false;
-        double impliedTumorPurity = 1D;
+    public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSample(@NotNull String sampleId,
+            boolean hasReliablePurity, double impliedTumorPurity) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 182;
         double tumorMutationalBurden = 13.6;
@@ -207,6 +208,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
+                .qsFormNumber("HMF-FOR-TEST")
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -254,7 +256,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static HospitalContactData createTestHospitalContactData(){
+    private static HospitalContactData createTestHospitalContactData() {
         return ImmutableHospitalContactData.builder()
                 .hospitalPI("PI")
                 .requesterName("Paul")

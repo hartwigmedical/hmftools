@@ -34,7 +34,6 @@ public class PonVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine(PON_MAX, 1, VCFHeaderLineType.Integer, "max depth"));
         header.addMetaDataLine(new VCFHeaderLine("PonInputSampleCount", String.valueOf(sampleSize)));
         writer.writeHeader(header);
-
     }
 
     public void write(@NotNull final List<VariantContext> contexts) {

@@ -22,5 +22,4 @@ public class SamRecordSelector<P extends GenomePosition> extends PositionSelecto
 
         super.select(startWithSoftClip, endWithSoftClip, handler);
     }
-
 }

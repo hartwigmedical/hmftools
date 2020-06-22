@@ -43,7 +43,6 @@ data class Breakend(override val contig: String, override val start: Int, overri
     fun expand(distance: Int): Breakend {
         return this.copy(start = start - distance, end = end + distance)
     }
-
 }
 
 data class Breakpoint(val startBreakend: Breakend, val endBreakend: Breakend) : Location {
@@ -65,7 +64,7 @@ data class Breakpoint(val startBreakend: Breakend, val endBreakend: Breakend) : 
             if (contigComparator.compare(end.contig, start.contig) < 0 || start.contig == end.contig && start.start > end.start) {
                 return Breakpoint(end, start)
             }
-            return Breakpoint(start, end);
+            return Breakpoint(start, end)
         }
     }
 
@@ -78,7 +77,6 @@ data class Breakpoint(val startBreakend: Breakend, val endBreakend: Breakend) : 
         return Breakpoint(startBreakend.expand(distance), endBreakend.expand(distance))
     }
 }
-
 
 private fun String.toOrientation(): Byte = if (this == "+") 1 else -1
 

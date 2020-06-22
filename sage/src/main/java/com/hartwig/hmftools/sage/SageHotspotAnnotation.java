@@ -212,7 +212,6 @@ public class SageHotspotAnnotation {
 
             return firstAlleles.compareTo(secondAlleles);
         }
-
     }
 
     @NotNull
@@ -220,5 +219,4 @@ public class SageHotspotAnnotation {
         return "[" + context.getContig() + ":" + context.getStart() + " Type:" + context.getType() + " Alleles:" + ParsingUtils.sortList(
                 context.getAlleles()) + "]";
     }
-
 }

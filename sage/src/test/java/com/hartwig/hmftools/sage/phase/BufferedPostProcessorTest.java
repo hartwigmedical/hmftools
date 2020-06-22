@@ -29,5 +29,4 @@ public class BufferedPostProcessorTest {
     static VariantHotspot create(long position, String ref, String alt) {
         return ImmutableVariantHotspotImpl.builder().chromosome("1").position(position).ref(ref).alt(alt).build();
     }
-
 }

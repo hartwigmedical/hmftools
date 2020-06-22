@@ -21,7 +21,6 @@ class LocalPhaseSet extends BufferedPostProcessor {
 
     @Override
     protected void processSageVariant(@NotNull final SageVariant newEntry, @NotNull final Collection<SageVariant> buffer) {
-
         final ReadContext newReadContext = newEntry.readContext();
         for (final SageVariant oldEntry : buffer) {
             final ReadContext oldReadContext = oldEntry.readContext();
@@ -49,7 +48,6 @@ class LocalPhaseSet extends BufferedPostProcessor {
     }
 
     static int adjustedOffset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
-
         long positionOffset = positionOffset(left, right);
         if (positionOffset == 0) {
             return 0;
@@ -67,6 +65,4 @@ class LocalPhaseSet extends BufferedPostProcessor {
 
         return false;
     }
-
-
 }

@@ -54,7 +54,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val version = VersionInfo("gripss.version")
     }
 
-    private val startTime = System.currentTimeMillis();
+    private val startTime = System.currentTimeMillis()
     private val fileReader = VCFFileReader(File(config.inputVcf), false)
     private val dictionary = fileReader.fileHeader.sequenceDictionary
     private val fileWriter = GripssVCF(config.outputVcf, dictionary)
@@ -73,7 +73,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val hotspots = variantStore.selectAll().filter(hotspotFilter).map { x -> x.vcfId}.toSet()
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
-        val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll());
+        val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll())
 
         logger.info("Applying initial soft filters")
         val initialFilters = SoftFilterStore(config.filterConfig, variantStore.selectAll(), ponFiltered, hotspots)
@@ -85,26 +85,27 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val alternatePaths: Collection<AlternatePath> = AlternatePath(assemblyLinks, variantStore)
         val alternatePathsStringsByVcfId = alternatePaths.associate { x -> Pair(x.vcfId, x.pathString()) }
         val transitiveLinks = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
+        val combinedTransitiveAssemblyLinks = LinkStore(assemblyLinks, transitiveLinks)
 
         logger.info("Paired break end de-duplication")
         val dedupPair = DedupPair(initialFilters, alternatePaths, variantStore)
         val softFiltersAfterPairedDedup = initialFilters.update(dedupPair.duplicates, dedupPair.rescue)
 
         logger.info("Single break end de-duplication")
-        val dedupSingle = DedupSingle(variantStore, softFiltersAfterPairedDedup)
+        val dedupSingle = DedupSingle(variantStore, softFiltersAfterPairedDedup, combinedTransitiveAssemblyLinks)
         val softFiltersAfterSingleDedup = softFiltersAfterPairedDedup.update(dedupSingle.duplicates, setOf())
 
         logger.info("Finding double stranded break links")
         val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates())
 
         logger.info("Rescuing linked variants")
-        val dsbRescues = LinkRescue(MIN_RESCUE_QUAL, dsbLinks, softFiltersAfterSingleDedup, variantStore, false).rescues
-        val assemblyRescues = LinkRescue(MIN_RESCUE_QUAL, assemblyLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
-        val transitiveRescues = LinkRescue(MIN_RESCUE_QUAL, transitiveLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
+        val dsbRescues = LinkRescue(dsbLinks, softFiltersAfterSingleDedup, variantStore, false).rescues
+        val assemblyRescues = LinkRescue(assemblyLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
+        val transitiveRescues = LinkRescue(transitiveLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
         val allRescues = dsbRescues + assemblyRescues + transitiveRescues
 
         logger.info("Writing file: ${config.outputVcf}")
-        val combinedLinks = LinkStore(assemblyLinks, transitiveLinks, dsbLinks)
+        val combinedLinks = LinkStore(combinedTransitiveAssemblyLinks, dsbLinks)
         val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), allRescues)
         fileWriter.writeHeader(version.version(), fileReader.fileHeader)
         for (variant in variantStore.selectAll()) {

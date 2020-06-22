@@ -18,8 +18,8 @@ typealias Cipos = Pair<Int, Int>
 
 class StructuralVariantContext(val context: VariantContext, private val normalOrdinal: Int = 0, private val tumorOrdinal: Int = 1) {
     private companion object {
-        private val polyG = "G".repeat(16);
-        private val polyC = "C".repeat(16);
+        private val polyG = "G".repeat(16)
+        private val polyC = "C".repeat(16)
     }
 
     val contig = context.contig!!
@@ -43,15 +43,15 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
     val breakpoint: Breakpoint? = endBreakend?.let { Breakpoint(startBreakend, it) }
     val minStart = startBreakend.start
-    val potentialAlignementLocations = context.potentialAlignmentLocations()
+    val potentialAlignmentLocations = context.potentialAlignmentLocations()
 
     val maxStart = startBreakend.end
     val insertSequenceLength = variantType.insertSequence.length
     val duplicationLength = (variantType as? Duplication)?.let { it.length + 1 } ?: 0
     val qual = context.phredScaledQual
 
-    private val normalGenotype = context.getGenotype(normalOrdinal);
-    private val tumorGenotype = context.getGenotype(tumorOrdinal);
+    private val normalGenotype = context.getGenotype(normalOrdinal)
+    private val tumorGenotype = context.getGenotype(tumorOrdinal)
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 
     fun realign(refGenome: IndexedFastaSequenceFile, comparator: ContigComparator): StructuralVariantContext {
@@ -78,7 +78,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             }
         }
 
-        return this;
+        return this
     }
 
     private fun sideAlignPaired(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
@@ -150,7 +150,6 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         }
     }
 
-
     fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
@@ -158,7 +157,6 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
                 .attribute(LOCAL_LINKED_BY, localLink)
                 .attribute(REMOTE_LINKED_BY, remoteLink)
                 .attribute(HOTSPOT, isHotspot)
-                .attribute(PON_FILTERED, filters.size == 1 && filters.contains(PON))
 
         altPath?.let { x -> builder.attribute(ALT_PATH, x) }
         filters.forEach { x -> builder.filter(x) }
@@ -169,7 +167,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return builder.make()
     }
 
-    fun assemblies(): List<String> = context.assemblies();
+    fun assemblies(): List<String> = context.assemblies()
 
     fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupportProportion)
 
@@ -254,7 +252,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun inexactHomologyLengthShortDelFilter(maxInexactHomLength: Int, minDelLength: Int = 100, maxDelLength: Int = 800): Boolean {
-        return variantType is Deletion && variantType.length >= minDelLength && variantType.length <= maxDelLength && context.inexactHomologyLength() > maxInexactHomLength;
+        return variantType is Deletion && variantType.length >= minDelLength && variantType.length <= maxDelLength && context.inexactHomologyLength() > maxInexactHomLength
     }
 
     fun breakendAssemblyReadPairsFilter(): Boolean {
@@ -291,7 +289,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun impreciseFilter(): Boolean {
-        return context.imprecise();
+        return context.imprecise()
     }
 
     fun strandBiasFilter(maxShortStrandBias: Double): Boolean {
@@ -307,11 +305,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             val deletion = variantType as Deletion
             return deletion.length - 1 == deletion.insertSequence.length
         }
-        return false;
+        return false
     }
 
     fun normalCoverageFilter(minNormalCoverage: Int): Boolean {
-
         val supportingFragments = normalGenotype.fragmentSupport(isSingle)
         val ref = normalGenotype.refSupportRead()
         val refPair = normalGenotype.refSupportReadPair()
@@ -323,7 +320,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         val normalSupport = normalGenotype.fragmentSupport(isSingle)
         val tumorSupport = tumorGenotype.fragmentSupport(isSingle)
 
-        return normalSupport > maxNormalSupport * tumorSupport;
+        return normalSupport > maxNormalSupport * tumorSupport
     }
 
     override fun toString(): String {
@@ -333,5 +330,4 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     private fun Cipos.invert(): Cipos {
         return Pair(-this.second, -this.first)
     }
-
 }

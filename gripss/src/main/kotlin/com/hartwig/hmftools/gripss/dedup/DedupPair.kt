@@ -51,5 +51,4 @@ data class DedupPair(val duplicates: Set<String>, val rescue: Set<String>) {
             return original.qual > other.qual
         }
     }
-
 }

@@ -166,5 +166,4 @@ public class ReadContextCounterTest {
         record.setReadPairedFlag(true);
         return record;
     }
-
 }

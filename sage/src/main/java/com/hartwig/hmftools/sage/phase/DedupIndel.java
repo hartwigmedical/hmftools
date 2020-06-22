@@ -76,5 +76,4 @@ public class DedupIndel extends BufferedPostProcessor {
     private boolean isPassingPhasedIndel(@NotNull final SageVariant newEntry) {
         return newEntry.isPassing() && newEntry.localPhaseSet() > 0 && newEntry.isIndel();
     }
-
 }

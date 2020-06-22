@@ -59,5 +59,4 @@ class SoftFilterStoreTest {
         assertTrue(victim.filters("id3", "id4").isEmpty())
         assertTrue(victim.filters("id3", "id1").isNotEmpty())
     }
-
 }

@@ -31,5 +31,4 @@ public class SamSlicerFactory {
     private SamSlicer panelOnly(@NotNull final GenomeRegion slice) {
         return new SamSlicer(0, slice, panel);
     }
-
 }

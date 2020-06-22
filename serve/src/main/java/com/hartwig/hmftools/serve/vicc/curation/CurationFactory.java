@@ -8,18 +8,28 @@ import com.google.common.collect.Sets;
 
 final class CurationFactory {
 
+    static final Map<CurationKey, String> CGI_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
     static final Map<CurationKey, String> CIVIC_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
     static final Map<CurationKey, String> JAX_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
     static final Map<CurationKey, String> ONCOKB_FEATURE_NAME_MAPPINGS = Maps.newHashMap();
 
+    static final Set<CurationKey> CGI_FEATURE_BLACKLIST = Sets.newHashSet();
     static final Set<CurationKey> CIVIC_FEATURE_BLACKLIST = Sets.newHashSet();
     static final Set<CurationKey> JAX_FEATURE_BLACKLIST = Sets.newHashSet();
     static final Set<CurationKey> ONCOKB_FEATURE_BLACKLIST = Sets.newHashSet();
 
     static {
+        populateCGICuration();
         populateCIViCCuration();
         populateJaxCuration();
         populateOncoKBCuration();
+    }
+
+    private static void populateCGICuration() {
+        // Below is not wrong but leads to inconsistencies in CGI
+        CGI_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3R1", null, "PIK3R1 p.E439delE"), "PIK3R1 p.E439del");
+        CGI_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3R1", null, "PIK3R1 p.D560_S565delDKRMNS"), "PIK3R1 p.D560_S565del");
+        CGI_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3R1", null, "PIK3R1 p.T576delT"), "PIK3R1 p.T576del");
     }
 
     private static void populateCIViCCuration() {

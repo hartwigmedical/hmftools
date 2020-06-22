@@ -109,5 +109,4 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor {
         }
         return difference;
     }
-
 }

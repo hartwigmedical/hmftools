@@ -37,7 +37,6 @@ public class SageHotspotAnnotationTest {
         SageHotspotAnnotation.VCComparator comparator = new SageHotspotAnnotation.VCComparator(samSequenceDictionary);
         assertEquals(0, comparator.compare(codec.decode(line1), codec.decode(line1)));
         assertNotEquals(0, comparator.compare(codec.decode(line1), codec.decode(line2)));
-
     }
 
     @NotNull
@@ -47,5 +46,4 @@ public class SageHotspotAnnotationTest {
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
         return codec;
     }
-
 }

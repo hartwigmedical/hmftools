@@ -66,5 +66,4 @@ public class PositionSelector<P extends GenomePosition> {
     private P current() {
         return positions.get(index);
     }
-
 }

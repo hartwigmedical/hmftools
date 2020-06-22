@@ -113,7 +113,6 @@ public class ReadContextFactory {
     @NotNull
     public ReadContext createMNVContext(int refPosition, int readIndex, int length, @NotNull final SAMRecord record,
             final IndexedBases refBases) {
-
         int refIndex = refBases.index(refPosition);
         int startIndex = readIndex - MIN_CORE_DISTANCE;
         int endIndex = readIndex + length - 1 + MIN_CORE_DISTANCE;
@@ -154,5 +153,4 @@ public class ReadContextFactory {
                 refBases,
                 record);
     }
-
 }
