@@ -36,8 +36,8 @@ public class CFReportWriterTest {
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
-    private static final String COLO_COMMENT_STRING = "This is a test report and is based off COLO829";
-    private static final String COLO_COMMENT_STRING_CORRECTED = "This is a corrected test report and is based off COLO829";
+    private static final String COLO_COMMENT_STRING = "This is a test report and is based on COLO829";
+    private static final String COLO_COMMENT_STRING_CORRECTED = "This is a corrected test report and is based on COLO829";
     private static final String FULL_TABLES_COMMENT_STRING = "This is a test report with all tables filled in";
 
     private static final String COMMENT_STRING_QC_FAIL = "This is a test QC fail report";
