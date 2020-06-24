@@ -229,6 +229,7 @@ public class SvVarData
     }
 
     public final String getClusterReason() { return mClusterReason; }
+    public void clearClusterReason() { mClusterReason = ""; }
     public boolean hasClusterReason(ClusteringReason reason) { return mClusterReason.contains(reason.toString()); }
 
     public double jcn() { return mJcn; }

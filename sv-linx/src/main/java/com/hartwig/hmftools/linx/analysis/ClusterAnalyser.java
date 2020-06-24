@@ -403,6 +403,9 @@ public class ClusterAnalyser {
             for(SvVarData var : discardSVs)
             {
                 SvCluster newCluster = new SvCluster(mState.getNextClusterId());
+                var.clearClusterReason();
+                var.getLinkedPairs(true).clear();
+                var.getLinkedPairs(false).clear();
                 newCluster.addVariant(var);
 
                 mDmFinder.analyseCluster(newCluster);
