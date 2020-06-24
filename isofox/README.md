@@ -27,7 +27,11 @@ We use STAR as our aligner.    ISOFOX expects BAM output with chimeric reads in 
 The full list of non default pararmeters we use internally is:
 
 ```
---outSAMtype BAM Unsorted --outSAMunmapped Within --outBAMcompression 0 --outSAMattributes All --outFilterMultimapNmax 10 --outFilterMismatchNmax 3 limitOutSJcollapsed 3000000 -chimSegmentMin 10 --chimOutType WithinBAM SoftClip --chimJunctionOverhangMin 10 --chimSegmentReadGapMax 3 --chimScoreMin 1 --chimScoreDropMax 30 --chimScoreJunctionNonGTAG 0 --chimScoreSeparation 1 --outFilterScoreMinOverLread 0.33 --outFilterMatchNminOverLread 0.33 --outFilterMatchNmin 35 --alignSplicedMateMapLminOverLmate 0.33 --alignSplicedMateMapLmin 35 --alignSJstitchMismatchNmax 5 -1 5 5
+--outSAMtype BAM Unsorted --outSAMunmapped Within --outBAMcompression 0 --outSAMattributes All --outFilterMultimapNmax 10 
+--outFilterMismatchNmax 3 limitOutSJcollapsed 3000000 -chimSegmentMin 10 --chimOutType WithinBAM SoftClip 
+--chimJunctionOverhangMin 10 --chimSegmentReadGapMax 3 --chimScoreMin 1 --chimScoreDropMax 30 --chimScoreJunctionNonGTAG 0 
+--chimScoreSeparation 1 --outFilterScoreMinOverLread 0.33 --outFilterMatchNminOverLread 0.33 --outFilterMatchNmin 35 
+--alignSplicedMateMapLminOverLmate 0.33 --alignSplicedMateMapLmin 35 --alignSJstitchMismatchNmax 5 -1 5 5
 ```
 
 ## Install
