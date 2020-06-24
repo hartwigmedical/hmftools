@@ -229,7 +229,6 @@ public class SvVarData
     }
 
     public final String getClusterReason() { return mClusterReason; }
-    public void clearClusterReason() { mClusterReason = ""; }
     public boolean hasClusterReason(ClusteringReason reason) { return mClusterReason.contains(reason.toString()); }
 
     public double jcn() { return mJcn; }
@@ -333,6 +332,13 @@ public class SvVarData
         }
 
         links.add(index, link);
+    }
+
+    public void clearClusteringData()
+    {
+        mClusterReason = "";
+        mTiLinks[SE_START].clear();
+        mTiLinks[SE_END].clear();
     }
 
     public final SvLinkedPair getDBLink(boolean isStart) { return mDbLink[seIndex(isStart)]; }

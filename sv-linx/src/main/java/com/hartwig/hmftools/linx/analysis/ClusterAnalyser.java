@@ -206,8 +206,8 @@ public class ClusterAnalyser {
         mPcClustering.stop();
 
         mPcChaining.resume();
-        findLinksAndChains();
         dissolveSimpleGroups();
+        findLinksAndChains();
         mPcChaining.stop();
 
         if(mRunValidationChecks)
@@ -325,7 +325,7 @@ public class ClusterAnalyser {
         for(SvCluster cluster : simpleGroups)
         {
             final List<LohEvent> lohEvents = cluster.getLohEvents().stream()
-                    .filter(x -> x.doubleSvEvent())
+                    .filter(x -> x.doubleSvEvent() && x.isValid())
                     .filter(x -> x.StartSV != x.EndSV)
                     .collect(Collectors.toList());
 
@@ -382,7 +382,7 @@ public class ClusterAnalyser {
                 continue;
             }
 
-            if(discardSVs.size() == cluster.getSvCount())
+            if(discardSVs.size() >= cluster.getSvCount() - 1) // cannot just leave a single SV in a cluster
             {
                 LNX_LOGGER.debug("cluster({}: {}) de-merging {} simple SVs", cluster.id(), cluster.getDesc(), discardSVs.size());
                 mClusters.remove(cluster);
@@ -403,9 +403,7 @@ public class ClusterAnalyser {
             for(SvVarData var : discardSVs)
             {
                 SvCluster newCluster = new SvCluster(mState.getNextClusterId());
-                var.clearClusterReason();
-                var.getLinkedPairs(true).clear();
-                var.getLinkedPairs(false).clear();
+                var.clearClusteringData();
                 newCluster.addVariant(var);
 
                 mDmFinder.analyseCluster(newCluster);
