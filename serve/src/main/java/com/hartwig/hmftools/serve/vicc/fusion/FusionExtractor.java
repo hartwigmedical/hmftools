@@ -56,7 +56,7 @@ public class FusionExtractor {
     @NotNull
     private String extractKeyFusion(@NotNull String featureName){
         //TODO: fix combi events
-        if (featureName.contains("-")) {
+        if (featureName.contains("-") && !featureName.equals("Microsatellite Instability-High")) {
             featureName = "fusions";
         }
         if (featureName.toLowerCase().contains("fusions")) {
