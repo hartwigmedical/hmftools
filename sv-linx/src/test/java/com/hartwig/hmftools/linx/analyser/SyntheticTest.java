@@ -64,15 +64,15 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RECIP_INV);
+        assertTrue(cluster.getResolvedType() == DEL); // since TI is short
 
         assertEquals(1, cluster.getArmClusters().size());
         assertEquals(ARM_CL_DSB, cluster.getArmClusters().get(0).getType());
         assertEquals(1, cluster.getArmClusters().get(0).getTICount());
 
         // test 2 DSBs but with an overlapping end less than permitted TI length
-        var1 = createInv(tester.nextVarId(), "1", 100, 400, 1);
-        var2 = createInv(tester.nextVarId(), "1", 90, 1000, -1);
+        var1 = createInv(tester.nextVarId(), "1", 100, 2400, 1);
+        var2 = createInv(tester.nextVarId(), "1", 90, 3000, -1);
 
         tester.addAndCluster(var1, var2);
 
@@ -103,8 +103,8 @@ public class SyntheticTest
         assertEquals(ARM_CL_TI_ONLY, cluster.getArmClusters().get(1).getType());
 
         // test 2 overlapping breakends but where a pair of breakend form an overlapping DB
-        var1 = createInv(tester.nextVarId(), "1", 500, 1000, 1);
-        var2 = createInv(tester.nextVarId(), "1", 480, 2000, -1);
+        var1 = createInv(tester.nextVarId(), "1", 500, 4000, 1);
+        var2 = createInv(tester.nextVarId(), "1", 480, 5000, -1);
 
         tester.addAndCluster(var1, var2);
 
@@ -133,7 +133,7 @@ public class SyntheticTest
         assertEquals(ARM_CL_TI_ONLY, cluster.getArmClusters().get(1).getType());
 
         // 4 overlapping breakends - also forming 2 facing foldbacks
-        var1 = createInv(tester.nextVarId(), "1", 300, 400, 1);
+        var1 = createInv(tester.nextVarId(), "1", 2300, 2400, 1);
         var2 = createInv(tester.nextVarId(), "1", 100, 250, -1);
 
         tester.addAndCluster(var1, var2);
@@ -232,8 +232,8 @@ public class SyntheticTest
         assertEquals(getSyntheticTiLength(cluster), var2.position(true) - var1.position(true));
 
         // 2 DUPs next to each other - since the short TI ovelaps the chain ends, it's not considered a synthetic
-        var1 = createDup(tester.nextVarId(), "1", 100, 200);
-        var2 = createDup(tester.nextVarId(), "1", 300, 400);
+        var1 = createDup(tester.nextVarId(), "1", 100, 2200);
+        var2 = createDup(tester.nextVarId(), "1", 300, 2400);
 
         var1.getTIAssemblies(true).add("asmb1");
         var2.getTIAssemblies(false).add("asmb1");
@@ -259,7 +259,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == SIMPLE_GRP);
+        assertTrue(cluster.getResolvedType() == DUP);
     }
 
     @Test

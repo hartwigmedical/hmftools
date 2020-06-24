@@ -104,7 +104,7 @@ public class MergeRuleTest
 
         // another group remains a cluster due to assembly linking the variants
         SvVarData var1 = createDel(tester.nextVarId(), "1", 20000, 25000);
-        SvVarData var2 = createDel(tester.nextVarId(), "1", 25500, 50000);
+        SvVarData var2 = createDel(tester.nextVarId(), "1", 26500, 50000);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);

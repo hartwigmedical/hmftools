@@ -114,55 +114,12 @@ public class PairResolution
 
         boolean isSingleChain = cluster.isFullyChained(false) && clusterChains.size() == 1;
 
-        // first look for a single chain with only short external TIs - this can be classified as a synthetic DEL or DUP
+        // first look for a single chain with only short TIs - this can be classified as a synthetic DEL or DUP
         if(isSingleChain && longTiLink == null)
         {
-            final SvChain chain = cluster.getChains().get(0);
-            final SvBreakend chainStart = chain.getOpenBreakend(true);
-            final SvBreakend chainEnd = chain.getOpenBreakend(false);
-            boolean hasInternalTIs = false;
-
-            if(chain.isConsistent() && chainStart.getChrArm().equals(chainEnd.getChrArm()))
-            {
-                final SvBreakend chainLowerBe = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
-                final SvBreakend chainUpperBe = chainStart == chainLowerBe ? chainEnd : chainStart;
-
-                for(final SvLinkedPair pair : chain.getLinkedPairs())
-                {
-                    if(!pair.chromosome().equals(chainStart.chromosome()))
-                        continue;
-
-                    final SvBreakend pairLowerBe = pair.getBreakend(true);
-                    final SvBreakend pairUpperBe = pair.getBreakend(false);
-                    int lowerBuffer = getMinTemplatedInsertionLength(pairLowerBe, chainLowerBe);
-                    int upperBuffer = getMinTemplatedInsertionLength(pairUpperBe, chainUpperBe);
-
-                    if (pairUpperBe.position() < chainLowerBe.position() - lowerBuffer
-                    || pairLowerBe.position() > chainUpperBe.position() + upperBuffer)
-                    {
-                        // pair doesn't overlap with the chain ends segment at all
-                        continue;
-                    }
-                    else if(hasInternalTIs)
-                    {
-                        // already found an internal or overlapping TI, so can't classify as any pair type
-                        return;
-                    }
-                    else
-                    {
-                        hasInternalTIs = true;
-                        longTiLink = pair;
-                        break;
-                    }
-                }
-            }
-
-            if(!hasInternalTIs)
-            {
-                //  a single consistent chain with only short external TIs may be resovled as a synthetic DEL or DUP or something else,
-                classifySyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
-                return;
-            }
+            //  a single consistent chain with only short TIs may be resolved as a synthetic DEL or DUP or something else,
+            classifySyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
+            return;
         }
 
         // otherwise test whether a single chain be split at the long TI to make 2 chains and a balance translocation
