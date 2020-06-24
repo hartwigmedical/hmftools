@@ -24,32 +24,6 @@ import org.junit.Test;
 public class ReplicationRepairTest
 {
     @Test
-    public void testReplicationRepairOneBreakSimpleGroup()
-    {
-        // a single section if replicated and connected back in correct orientations, looking like DEL-DUP-DEL
-        LinxTester tester = new LinxTester();
-
-        final SvVarData var1 = createDel(  1, "1", 1000, 1100);
-        final SvVarData var2 = createDup(2, "1", 1500, 10000);
-        final SvVarData var3 = createDel(  3, "1", 9500, 10100);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        final SvCluster cluster = tester.Analyser.getClusters().get(0);
-
-        tester.Analyser.annotateClusters();
-
-        assertEquals(1, cluster.getChains().size());
-        assertTrue(cluster.hasAnnotation(CLUSTER_ANNOT_REP_REPAIR));
-    }
-
-    @Test
     public void testReplicationRepairOneBreakDupInversions()
     {
         // a single section if replicated and connected back in incorrect orientations, looking like INV - FB INV - DEL

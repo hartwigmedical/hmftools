@@ -88,9 +88,9 @@ public class MergeRuleTest
     @Test
     public void testSimpleSVsDemerge()
     {
+        // simple clustered SVs are split out in the final routine except for the SVs joined by assembly
         LinxTester tester = new LinxTester();
 
-        // simple clustered SVs are split out in the final routine
         tester.clearClustersAndSVs();
 
         SvVarData del1 = createDel(tester.nextVarId(), "2", 1000, 3000);

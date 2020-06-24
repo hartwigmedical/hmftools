@@ -318,13 +318,12 @@ public class ClusterAnalyser {
     private void dissolveSimpleGroups()
     {
         // break apart any clusters of simple SVs which aren't likely or required to be chained
+        // based on the presence of assmebled links and linking LOH events
         List<SvCluster> simpleGroups = mClusters.stream().filter(x -> x.getResolvedType() == SIMPLE_GRP).collect(Collectors.toList());
 
         // if all links are assembled or joined in an LOH or have a short DB then keep the group
         for(SvCluster cluster : simpleGroups)
         {
-            boolean allSVsLinked = true;
-
             final List<LohEvent> lohEvents = cluster.getLohEvents().stream()
                     .filter(x -> x.doubleSvEvent())
                     .filter(x -> x.StartSV != x.EndSV)
@@ -333,6 +332,8 @@ public class ClusterAnalyser {
             int assemblyLinks = 0;
             int lohLinks = 0;
             int dbLinks = 0;
+
+            final List<SvVarData> discardSVs = Lists.newArrayList();
 
             for(SvVarData var : cluster.getSVs())
             {
@@ -371,36 +372,35 @@ public class ClusterAnalyser {
                     continue;
                 }
 
-                allSVsLinked = false;
-                break;
+                discardSVs.add(var);
             }
 
-            if(allSVsLinked)
+            if(discardSVs.isEmpty())
             {
                 LNX_LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({}) shortDB({})",
                         cluster.id(), cluster.getDesc(), assemblyLinks, lohLinks, dbLinks);
                 continue;
             }
 
-            // check for replication before repair and if found, keep the group
-            if(cluster.isFullyChained(true))
+            if(discardSVs.size() == cluster.getSvCount())
             {
-                annotateTemplatedInsertions(cluster, mState.getChrBreakendMap());
-                annotateReplicationBeforeRepair(cluster);
+                LNX_LOGGER.debug("cluster({}: {}) de-merging {} simple SVs", cluster.id(), cluster.getDesc(), discardSVs.size());
+                mClusters.remove(cluster);
+            }
+            else
+            {
+                LNX_LOGGER.debug("cluster({}: {}) de-merging {} simple SVs from total({})",
+                        cluster.id(), cluster.getDesc(), discardSVs.size(), cluster.getSvCount());
 
-                if (cluster.hasAnnotation(CLUSTER_ANNOT_REP_REPAIR))
+                for(SvVarData var : discardSVs)
                 {
-                    LNX_LOGGER.debug("cluster({}: {}) simple group kept with rep-repair",
-                            cluster.id(), cluster.getDesc());
-                    continue;
+                    cluster.removeVariant(var);
                 }
+
+                cluster.logDetails();
             }
 
-            mClusters.remove(cluster);
-
-            LNX_LOGGER.debug("cluster({}: {}) de-merged into simple SVs", cluster.id(), cluster.getDesc());
-
-            for(SvVarData var : cluster.getSVs())
+            for(SvVarData var : discardSVs)
             {
                 SvCluster newCluster = new SvCluster(mState.getNextClusterId());
                 newCluster.addVariant(var);
