@@ -91,7 +91,6 @@ public final class ExampleAnalysisTestFactory {
             clinicalSummary = Strings.EMPTY;
         }
 
-
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(qcForNumber)
