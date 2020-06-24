@@ -78,14 +78,19 @@ public final class ExampleAnalysisTestFactory {
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        String clinicalSummary;
+        if (sampleId.equals("PNT00012345T")) {
+            clinicalSummary = "Melanoma sample showing:\n"
+                    + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
+                    + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors\n"
+                    + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
+                    + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
+                    + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
+                    + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
+        } else {
+            clinicalSummary = Strings.EMPTY;
+        }
 
-        String clinicalSummary = "Melanoma sample showing:\n"
-                + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
-                + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors\n"
-                + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
-                + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
-                + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
-                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
