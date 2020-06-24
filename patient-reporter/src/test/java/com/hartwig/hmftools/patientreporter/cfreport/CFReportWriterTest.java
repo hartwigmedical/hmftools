@@ -18,6 +18,7 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.OutputFileUtil;
 import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
@@ -45,8 +46,12 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        AnalysedPatientReport colo829Report =
-                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING, "HMF-FOR-080", true, 1D);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T",
+                false,
+                COLO_COMMENT_STRING,
+                QsFormNumber.FOR_080.display(),
+                true,
+                1D);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -54,8 +59,12 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-        AnalysedPatientReport colo829Report =
-                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED, "HMF-FOR-080", true, 1D);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T",
+                true,
+                COLO_COMMENT_STRING_CORRECTED,
+                QsFormNumber.FOR_080.display(),
+                true,
+                1D);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -63,8 +72,12 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829BelowDetectionThreshold() throws IOException {
-        AnalysedPatientReport colo829Report =
-                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T_NO_TUMOR", false, COLO_COMMENT_STRING, "HMF-FOR-209", false, 0.23);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T_NO_TUMOR",
+                false,
+                COLO_COMMENT_STRING,
+                QsFormNumber.FOR_209.display(),
+                false,
+                0.23);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -75,7 +88,7 @@ public class CFReportWriterTest {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T_INSUFFICIENT_TUMOR",
                 false,
                 COLO_COMMENT_STRING,
-                "HMF-FOR-209",
+                QsFormNumber.FOR_209.display(),
                 true,
                 0.19);
 
