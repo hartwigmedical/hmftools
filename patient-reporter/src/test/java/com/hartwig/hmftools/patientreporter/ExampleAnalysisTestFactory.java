@@ -78,6 +78,7 @@ public final class ExampleAnalysisTestFactory {
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+
         String clinicalSummary;
         if (sampleId.equals("PNT00012345T")) {
             clinicalSummary = "Melanoma sample showing:\n"
