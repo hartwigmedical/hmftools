@@ -57,9 +57,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829(boolean correctionReport, @Nullable String comments) {
-        boolean hasReliablePurity = true;
-        double impliedTumorPurity = 1D;
+    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
+            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 180;
         double tumorMutationalBurden = 13.6;
@@ -78,7 +77,6 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
-        String sampleId = "PNT00012345T";
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
         String clinicalSummary = "Melanoma sample showing:\n"
@@ -91,7 +89,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber("HMF-FOR-TEST")
+                .qsFormNumber(qcForNumber)
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -150,7 +148,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber("HMF-FOR-TEST")
+                .qsFormNumber("HMF-FOR-080")
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -208,7 +206,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber("HMF-FOR-TEST")
+                .qsFormNumber("HMF-FOR-209")
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)

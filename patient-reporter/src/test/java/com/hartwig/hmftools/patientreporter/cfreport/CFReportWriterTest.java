@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -45,7 +45,8 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829(false, COLO_COMMENT_STRING);
+        AnalysedPatientReport colo829Report =
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING, "HMF-FOR-080", true, 1D);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -53,7 +54,30 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829(true, COLO_COMMENT_STRING_CORRECTED);
+        AnalysedPatientReport colo829Report =
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED, "HMF-FOR-080", true, 1D);
+
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829BelowDetectionThreshold() throws IOException {
+        AnalysedPatientReport colo829Report =
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T_NO_TUMOR", false, COLO_COMMENT_STRING, "HMF-FOR-209", false, 0.23);
+
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829InsufficientTCP() throws IOException {
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T_INSUFFICIENT_TUMOR",
+                false,
+                COLO_COMMENT_STRING,
+                "HMF-FOR-209",
+                true,
+                0.19);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
