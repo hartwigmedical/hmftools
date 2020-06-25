@@ -1,66 +1,175 @@
 # <ISOFOX>
 
 ## Overview
-ISOFOX is a tool for counting fragment support for identifying and counting gene and transcript features using genome aligned RNASeq data in tumor samples.   In particular, ISOFOX:
+Isofox is a tool for counting fragment support for identifying and counting gene and transcript features using genome aligned RNASeq data in tumor samples. In particular, Isofox:
 * estimates transcript abundance (including unspliced transcripts) 
-* detects novel splice junctions (including circularised RNA) and retained introns within genes    
+* detects novel splice junctions (including circularised RNA) and retained introns within genes  
 * detects intergenic fusion events
 
-For transcript abundance, ISOFOX uses a similar methodology to several previous transcript abundance estimation tools, but may offer several advantages by using a genome based mapping:
+For transcript abundance, Isofox uses a similar methodology to several previous transcript abundance estimation tools, but may offer several advantages by using a genome based mapping:
 * Explicit estimates of the abundance of unspliced transcripts in each gene
 * Avoids overfitting of 'retained intron' transcripts which may simply be intronic reads 
-* Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly.  Does not overfit variability of coverage within exons
+* Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly. Does not overfit variability of coverage within exons
 
-The input for ISOFOX is mapped paired end reads (we use STAR for our aligner).
+The input for Isofox is mapped paired end reads (we use STAR for our aligner).
 
 
 ### A note on duplicates, highly expressed genes, raw and adjusted TPM
 
-We recommend to mark duplicates in your pipeline.  They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.   
+We recommend to mark duplicates in your pipeline. They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.  
 
-We find that 6 genes in particular (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and  are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts.    ISOFOX excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.   For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.   We suggest to use the adjusted TPM for expression analysis.
+We find that 6 genes in particular (RN7SL2,RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. Isofox excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.  For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.  We suggest to use the adjusted TPM for expression analysis.
 
-## Install
+## Configuration
 
-## Running
+The 3 core functions of Isofox are controlled by the 'functions' argument:
+- TRANSCRIPT_COUNTS: calculate gene and transcript expression
+- NOVEL_LOCATIONS: annotate alternate splice junctions and retained introns
+- FUSIONS: identify fusions
 
-### Usage
+These can be run concurrently or independently depending on the values set for this argument.
 
-```
-java TODO
-```
 
-### Mandatory Arguments
-
-Argument | Description 
+### Mandatory
+Argument | Description
 ---|---
-TO DO | 
+sample | Name of sample, used to name output files
+output_dir | Directory for Isofox output files
+bam_file | Input BAM file, requires corresponding index file
+ref_genome | Reference genome fasta file
+gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
+functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS'. Other values: FUSIONS, EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS.
 
-### Optional Arguments
+For instructions on how to generate the Ensembl data cache, refer to the Linx documentation on github:
+https://github.com/hartwigmedical/hmftools/tree/master/linx
 
-Argument | Default | Description 
----|---|---
-TO DO | |
+### Optional
+Argument | Description
+---|---
+gene_id_file | Restrict analysis to genes in file, format EnsemblGeneId,GeneName
+excluded_gene_id_file | Exclude genes in file, format EnsemblGeneId,GeneName
+enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes information below
+drop_dups | Default is false. By default duplicate fragments will be counted towards transcript expression.
+
+### Transcript Expression
+The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%. To generate this file, using the function EXPECTED_TRANS_COUNTS passing in the same fragment length values used for normal transcript expression.
+
+java -jar ~/rna/isofox.jar -output_dir ./logs/ -functions EXPECTED_TRANS_COUNTS -gene_transcripts_dir /data/common/dbs/ensembl_data_cache -read_length 76 -long_frag_limit 550 -exp_rate_frag_lengths "50-1;75-1;100-1;125-1;150-1;200-1;250-1;300-1;550-1" -threads 8
+
+The output file is approximately 376MB.
+
+Generate Expected GC Ratio Counts
+
+Likewise if GC bias adjustments are to be applied (config: apply_gc_bias_adjust), a pre-computed file of GC ratios per transcript can be generated once and loaded for subsequent sample runs.
+
+java -jar ~/rna/isofox.jar -output_dir ./logs/ -functions EXPECTED_GC_COUNTS -ref_genome /data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta -gene_transcripts_dir /data/common/dbs/ensembl_data_cache -read_length 76 -threads 8
+
+The output file is approximately 113MB.
+
+Argument | Description
+---|---
+apply_calc_frag_lengths | Use the actual fragment length distribution to adjust  
+frag_length_min_count | Minimum number of fragments to observe for length distributon calcs, default = 1M 
+exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;550-0' 
+apply_exp_rates 
+exp_counts_file | Pre-computed expected counts per transcript and gene
+apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio distribution
+exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
+read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
+long_frag_limit | Default 550 bases, fragments longer than this are not considered to support a gene for the purposes of expression
+enriched_gene_ids | Recommended 'ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735'
+gc_ratio_bucket | Default 0.01 ie percentiles. Ratio unit for GC distribution.
+
+### Optional output files:
+By default the following files are not generated.
+
+Argument | Description
+---|---
+write_gc_data | Generates file 'sample_id.isf.gc_ratio_data.csv' with distribution of fragments per GC ratio percentile
+write_frag_lengths | Generates file 'sample_id.isf.frag_length.csv' with distribution of fragment lengths
+frag_length_by_gene | Generates file 'sample_id.isf.frag_length_by_gene.csv' with distribution of fragment lengths per gene
+write_trans_combo_data | Generates file 'sample.isf.category_counts.csv' with fragment counts per transcript & gene grouping
+write_exp_rates | Generates file 'sample_id.isf.exp_rates.csv' with expected counts per transcript and gene
+
+### Logging and Debug
+Argument | Description
+---|---
+specific_chr | Restricted List of chromosomes to process separated by ';'
+gene_read_limit | Default 0, not applied. Per-gene cap on number of reads processed.
+threads | Default 0, single-threaded.
+log_debug | Log verbose
+log_level | Override logging with ERROR, WARN, INFO, DEBUG or TRACE
+write_read_data | Write data on each BAM read, only recommended with restricted genes file
+write_exon_data | Write data on transcript exon covered by a supporting fragment, only recommended with restricted genes file
+
+### Memory Usage and Threading
+
+
+### Example Usage
+
+Example command for transcript expression and novel splice junctions:
+
+```
+java -jar isofox.jar 
+    -sample SAMPLE_ID 
+    -output_dir /path_to_output_data/ 
+    -bam_file /path_to_bam/sample.bam 
+    -ref_genome /path_to_ref_files/ef-genome.fasta 
+    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -apply_calc_frag_lengths 
+    -apply_exp_rates 
+    -exp_counts_file /path_to_ref_files/read_76_exp_counts.csv 
+    -apply_gc_bias_adjust 
+    -exp_gc_ratios_file /path_to_ref_files/read_100_exp_gc_ratios.csv 
+    -read_length 76 
+    -long_frag_limit 550 
+    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;550-0" 
+    -enriched_gene_ids "ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735" 
+    -write_gc_data 
+    -write_frag_lengths     
+    -threads 10 
+    -functions "TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS"
+    -log_debug
+```
+
+### Generating cached Ensembl data files
+To annotate SVs with gene information and to support fusion detection, LINX uses gene, transcript, exon and protein domain information from the Ensembl database. 
+To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time LINX runs.
+
+To generate these 4 data files, first run LINX with these command line options:
+
+```
+java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
+    -ensembl_db [see below] -ensembl_user "anonymous" -ensembl_pass "" 
+    -output_dir /path_to_write_data_files/ -ref_genome_version [37 or 38]
+```
+
+Ensembl database URLs for 37 & 38 are:
+- mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
+- mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_98_38
+
+By default LINX will use HG37, but this can be overridden using the ref_genome_version config described above.
+
  
 ## Algorithm
 
 ### 1. Modelling and grouping of spliced and unspliced transcripts
 
-For determining transcript abundance, we consider all transcripts in Ensembl, grouped by gene.    Each gene may have 1 to N transcripts.   Since we use ribosomal depletion to collect RNA we need to  explicitly consider that each gene will have unspliced reads.   Hence, we consider an additional ‘unspliced transcript’ per gene which includes all exonic and intronic segments.   Any fragment that overlaps a region which is intronic on all transcripts is assumed to be unspliced.
+For determining transcript abundance, we consider all transcripts in Ensembl, grouped by gene. Each gene may have 1 to N transcripts. Since we use ribosomal depletion to collect RNA we need to  explicitly consider that each gene will have unspliced reads. Hence, we consider an additional ‘unspliced transcript’ per gene which includes all exonic and intronic segments. Any fragment that overlaps a region which is intronic on all transcripts is assumed to be unspliced.
 
-Genes that overlap each other on the same chromosome (either sense, anti-sense or shared exons) are considered together as a group so that each fragment which could potentially relate to one of multiple genes is only counted once.     
+Genes that overlap each other on the same chromosome (either sense, anti-sense or shared exons) are considered together as a group so that each fragment which could potentially relate to one of multiple genes is only counted once.   
 
 ### 2. Modelling sample specific fragment distribution
 
-The fragment length distribution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
+The fragment length distribution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments. Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution. 
 
 ### 3. Expected rates per 'category' and expected GC distribution per transcript
 
 #### A. Expected rates per category
 
-For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX, but generally referred to as an equivalence class in other tools such as Salmon).   For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
+For each transcript in a group of overlapping genes, Isofox measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in Isofox, but generally referred to as an equivalence class in other tools such as Salmon). For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
 
-The proportion is calculated by determining which category or set of transcripts that fragments of length {50, 100, 150,200,250,300,350,400,450,500,550} bases starting at each possible base in the transcript in question could be a part of.    This is then weighted by the empirically observed fragment length distribution.
+The proportion is calculated by determining which category or set of transcripts that fragments of length {50, 100, 150,200,250,300,350,400,450,500,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
 
 For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following expected rates:
 
@@ -75,7 +184,7 @@ Both A & B & UNSPLICED|0.3|0.6|0.15
 UNSPLICED|0|0|0.8
 TOTAL|1.0|1.0|1.0
 
-In this example, 50% of all fragments from transcript A are expected to be uniquely mapped to the A transcript, 30% may be mapped to A,B or UNSPLICED (likely fragments matching a long exon), 10% are expected to be mapped to either A or B but with splicing and the final 10% are expected to be mapped to a region which is either exonic in A or unspliced.     These rates are compared to the observed abundance of each category in subsequent steps to estimate the actual abundance of each transcript.
+In this example, 50% of all fragments from transcript A are expected to be uniquely mapped to the A transcript, 30% may be mapped to A,B or UNSPLICED (likely fragments matching a long exon), 10% are expected to be mapped to either A or B but with splicing and the final 10% are expected to be mapped to a region which is either exonic in A or unspliced.   These rates are compared to the observed abundance of each category in subsequent steps to estimate the actual abundance of each transcript.
 
 #### B. Expected GC distribution
 
@@ -83,20 +192,20 @@ For each of the sampled fragments in each transcript (including unspliced transc
 
 ### 4. Counting abundance per unique group of shared transcripts
 
-Similarly to the estimated rate calculation above we also use the same grouping of transcripts together across all genes which overlap each other to determine actual counts.   We assume that any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
+Similarly to the estimated rate calculation above we also use the same grouping of transcripts together across all genes which overlap each other to determine actual counts. We assume that any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
 
-Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to.   We allow a fragment may belong to a transcript if:
+Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to. We allow a fragment may belong to a transcript if:
 * Every base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
 * Every splice junction called exists in that transcript AND
 * the distance between the paired reads in that transcript is not > maximum insert size distribution 
 
 Any fragment which does not contain a splice junction, is wholly contained within the bounds of a gene, and with fragment size <= maximum insert size distribution is also allowed to map to an ‘UNSPLICED’ transcript of that gene.
 
-Note that reads which marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters   If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If it cannot be uniquely mapped or matches neither of those locations exactly, it is truncated at the exon boundary.
+Note that reads which marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If it cannot be uniquely mapped or matches neither of those locations exactly, it is truncated at the exon boundary.
 
 ### 5. Fit abundance estimate per transcript
 
-For each group of transcripts considered together we aim to fit the relative abundance.   Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximisation algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
+For each group of transcripts considered together we aim to fit the relative abundance. Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximisation algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
 
 <TO DO: Add a step which improves on this by removing or limiting allocation to transcripts where fitted fragments >> observed fragments for private allocations >
 
@@ -104,7 +213,7 @@ For each group of transcripts considered together we aim to fit the relative abu
 
 #### A. GC Bias estimate
 
-Expected GC distribution for sample is calculated as the sum of the estimated distribution for each transcript (as calculated above) multiplied by the proportion of fragments in the sample which have been estimated (nb - this is similar to the methodology implemented in Salmon).  We also count the actual distribution across all genes per 1% GC content bucket.   The GC bias for each percentile is the ratio of the actual to the estimated.
+Expected GC distribution for sample is calculated as the sum of the estimated distribution for each transcript (as calculated above) multiplied by the proportion of fragments in the sample which have been estimated (nb - this is similar to the methodology implemented in Salmon).  We also count the actual distribution across all genes per 1% GC content bucket. The GC bias for each percentile is the ratio of the actual to the estimated.
 
 <TO DO - decide on min max GC range and also max ratio change for GC Bias>
 
@@ -128,9 +237,9 @@ The calculated biases are applied as a weighting to each raw fragment based on i
 
 ### 7. Counting and characterisation of novel splice junctions
 
-A novel splice junction in ISOFOX is considered to be a novel splicing event which is not part of any annotated gene in ensembl.   To be treated as a novel splicing event in a particular gene, at least 1 of the splicing ends must fall within the gene, the other splice end must be within 500k bases upstream or downstream of the gene and the splicing must not link 2 annotated splice sites that are not both present in a single ensembl gene.  Circular RNAs (typically formed by backsplicing) are also treated as novel splice junctions when they fall wholly within a gene and are marked as orientation "CIRCULAR".  Inversion oriented events are not considered to be novel splice junctions and are instead treated as chimeric.
+A novel splice junction in Isofox is considered to be a novel splicing event which is not part of any annotated gene in ensembl. To be treated as a novel splicing event in a particular gene, at least 1 of the splicing ends must fall within the gene, the other splice end must be within 500k bases upstream or downstream of the gene and the splicing must not link 2 annotated splice sites that are not both present in a single ensembl gene.  Circular RNAs (typically formed by backsplicing) are also treated as novel splice junctions when they fall wholly within a gene and are marked as orientation "CIRCULAR".  Inversion oriented events are not considered to be novel splice junctions and are instead treated as chimeric.
 
-For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.    Each novel splice junction is classified as one of the following types of events
+For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.  Each novel splice junction is classified as one of the following types of events
 
 * SKIPPED_EXON - both splice sites are splice sites on a single existing transcript but the interim exon(s) are skipped.
 * MIXED_TRANSCRIPT - both splice sites are splice sites on different existing transcripts but not the same one
@@ -151,7 +260,7 @@ For each novel splice junction, we also record the distance to the nearest splic
 
 ### 8. Counting and characterisation of retained introns
 
-We also search explicitly for evidence of retained introns, ie where reads overlap exon boundaries.   We may find many such reads as any unspliced transcripts can have such fragments.    To reduce false positives, we only consider exon boundaries which do not have exons on other transcripts overlapping them, and we hard filter any evidence where we don't see at least 3 reads overlapping the exon boundary or at least 1 read from a fragment that contains another splice junction.
+We also search explicitly for evidence of retained introns, ie where reads overlap exon boundaries. We may find many such reads as any unspliced transcripts can have such fragments.  To reduce false positives, we only consider exon boundaries which do not have exons on other transcripts overlapping them, and we hard filter any evidence where we don't see at least 3 reads overlapping the exon boundary or at least 1 read from a fragment that contains another splice junction.
 
 <TO DO - Add filtering that the read count must signiificantly exceed the unspliced coverage of all gene overlapping that base>
 
@@ -161,22 +270,22 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 #### A. Identify candidate chimeric junctions
 
-Any junction supported by at least one read with either a supplementary alignment or a spliced alignment which either links 2 known splice sites in different genes OR extends beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, ISOFOX also searches for candidate locations without split alignments  supported only by discordant read pairs.
+Any junction supported by at least one read with either a supplementary alignment or a spliced alignment which either links 2 known splice sites in different genes OR extends beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, Isofox also searches for candidate locations without split alignments  supported only by discordant read pairs.
 
-The chimeric junction is oriented by the splice site type of the 2 breakends:  a location matching a donor splice site is set to be the 'up' breakend and a location matching the acceptor site is set to be the down breakend.   If no splice site exists at either breakend, then the direction is infered by looking for canonical donor and acceptor sequences.
+The chimeric junction is oriented by the splice site type of the 2 breakends:  a location matching a donor splice site is set to be the 'up' breakend and a location matching the acceptor site is set to be the down breakend. If no splice site exists at either breakend, then the direction is infered by looking for canonical donor and acceptor sequences.
 
 #### B. Count support
 
-ISOFOX counts 3 categories all fragments supporting the break junction broken into 3 categories:
+Isofox counts 3 categories all fragments supporting the break junction broken into 3 categories:
 * Split - any fragment with a supplementary alignment or splice juction at the exact break junction
 * Realigned - any fragment that has both reads mapped on one end of the chimeric junction, without a supplementary but exactly matches the reference at the other side of the candidate junction and overlaps the breakpoint by at least 3 bases.  If the overlapping bases are consistent with multiple candidate junctions they may be double counted.						
-* Discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript.   If the discordant pairs are consistent with multiple junctions they may be double counted	
+* Discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript. If the discordant pairs are consistent with multiple junctions they may be double counted	
 
 Isofox also determines the coverage at both breakends and the max anchor length on either side of the break junction (ie. the maximum number of distinct matched bases by any 1 junction supporting fragment on that side of the chimeric junction).  An allelic frequency at each breakend is calculated as (split + realigned) / coverage.
 
 #### C. Filtering
 
-4 filters are applied in ISOFOX to remove likely artefacts from our chimeric junctions output.    The filters are tiered such that we achieve maximum senstivity for fusions with highest prior likelihood whilst still containing.   Known pathogenic fusion partners are given the highest sensitivity followed by known splice site to known splice site, follow by canonical splice pairings (GT-AG) and lastly any other non-canoncial splice pairing.
+4 filters are applied in Isofox to remove likely artefacts from our chimeric junctions output.  The filters are tiered such that we achieve maximum senstivity for fusions with highest prior likelihood whilst still containing. Known pathogenic fusion partners are given the highest sensitivity followed by known splice site to known splice site, follow by canonical splice pairings (GT-AG) and lastly any other non-canoncial splice pairing.
 
 The filters and thresholds per tier are as follows:
 
@@ -193,7 +302,7 @@ max_cohort_frequency** | count of observations in cohort | NA if known;  5 if ei
 
 ### 10. Cohort frequency <TO DO>
 
-We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 1700 samples.  The purpose of this is created to estimate population level frequencies of each of the 'novel' features.   
+We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 1700 samples.  The purpose of this is created to estimate population level frequencies of each of the 'novel' features. 
 
 For each chimeric junction and novel splice junction  we count
 * Number of unique samples with 2 or more supporting fragments at that novel splice junction
@@ -210,10 +319,12 @@ Each chimeric junction, novel splice junction and retained intron for each sampl
 
 ### Summary
 
+Generated file: sample_id.isf.summary.csv
+
 Field | Description 
 ---|---
 Version | Version number
-TotalFragments | Count of total fragments (currently ISOFOX only counts genic fragments)
+TotalFragments | Count of total fragments (currently Isofox only counts genic fragments)
 DuplicateFragments | Count of fragments marked as duplicates
 SplicedFragmentPerc | % of total fragments supporting 1 or more known transcripts
 UnsplicedFragmentPerc | % of total fragments not containing a splice junction and not supporting any known transcript 
@@ -227,14 +338,9 @@ FragLength95th | 95th percentile of genic intronic fragment lengths (from 1M fra
 EnrichedGenePercent | % of fragments supporting one of the following 6 genes: (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK)
 MedianGCRatio | Median GC ratio excluding the 6 highly enriched genes
 
-### Fragment length distribution
+### Gene Level Data
 
-Field | Description 
----|---
-FragmentLength | Fragment length
-Count | Count of fragments with specified fragment length
-
-### Gene level data
+Generated file: sample_id.isf.gene_data.csv
 
 Field | Description 
 ---|---
@@ -249,7 +355,9 @@ SplicedFragments | Count of fitted fragments assigned to spliced transcripts in 
 UnsplicedFragments | Count of fitted fragments assigned to the 'unspliced' gene transcript
 TPM | TPM for gene excluding unspliced fragments
 
-### Transcript level data
+### Transcript Level Data
+
+Generated file: sample_id.isf.trans_data.csv
 
 Field | Description 
 ---|---
@@ -271,7 +379,18 @@ UniqueSJSupported | Count of unique splice junctions in transcript with at least
 UniqueSJFragments | Count of fragments supporting a splice junction unique to the transcript
 UniqueNonSJFragments | Count of fragments uniquely supporting transcript but without a unique splice junction
 
-### Novel splice junctions
+### Fragment length distribution
+
+Generated file: sample_id.isf.frag_length.csv
+
+Field | Description 
+---|---
+FragmentLength | Fragment length
+Count | Count of fragments with specified fragment length
+
+### Alternate Splice Junctions
+
+Generated file: sample_id.isf.alt_splice_junc.csv
 
 Field | Description 
 ---|---
@@ -296,7 +415,9 @@ SJEndTranscripts | Transcript ids which contain a splice junction which includes
 SJOrientation | "NORMAL" or "CIRCULAR"
 OverlappingGenes | List of all genes which overlap the novel splice junction
 
-### Novel retained introns
+### Retained Introns
+
+Generated file: sample_id.isf.retained_intron.csv
 
 Field | Description 
 ---|---
@@ -311,9 +432,9 @@ SplicedFragmentCount | Count of fragments which overlap splice site boundary whi
 TotalDepth | Depth at splice boundary
 TranscriptInfo | Transcript id and exon rank of all transcripts that match splice site boundary
 
-### Chimeric junctions
+### Fusions
 
-ISOFOX outputs 2 chimeric junctions output files - one for passing fusions and one for all fusions
+Isofox generates 2 fusion output files - one for passing fusions and one for all fusions
 
 Field | Description 
 ---|---
