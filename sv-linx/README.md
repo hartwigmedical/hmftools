@@ -90,13 +90,14 @@ write_vis_data | write output to for generation of Circos clustering and chainin
 log_debug | logs in debug mode
 
 ### Example Usage
-
 Example command and arguments:
 
 ```
 java -jar sv-linx.jar 
     -sample SAMPLE_ID 
     -db_url [db_url] -db_user [username] -db_pass [password] 
+    -sv_vcf /path_to_purple_vcf/
+    -purple_dir /path_to_purple_data_files/
     -output_dir /path_to_sample_data/ 
     -fragile_site_file fragile_sites.csv 
     -line_element_file line_elements.csv 

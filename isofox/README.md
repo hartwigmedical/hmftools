@@ -68,7 +68,16 @@ drop_dups | Default is false. By default duplicate fragments will be counted tow
 ### Transcript Expression
 The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%. To generate this file, using the function EXPECTED_TRANS_COUNTS passing in the same fragment length values used for normal transcript expression.
 
-java -jar ~/rna/isofox.jar -output_dir ./logs/ -functions EXPECTED_TRANS_COUNTS -gene_transcripts_dir /data/common/dbs/ensembl_data_cache -read_length 76 -long_frag_limit 550 -exp_rate_frag_lengths "50-1;75-1;100-1;125-1;150-1;200-1;250-1;300-1;550-1" -threads 8
+```
+java -jar isofox.jar 
+    -functions EXPECTED_TRANS_COUNTS
+    -output_dir /path_to_output_data/ 
+    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -read_length 76 
+    -long_frag_limit 550 
+    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;550-0" 
+    -threads 10 
+```
 
 The output file is approximately 376MB.
 
@@ -76,7 +85,15 @@ Generate Expected GC Ratio Counts
 
 Likewise if GC bias adjustments are to be applied (config: apply_gc_bias_adjust), a pre-computed file of GC ratios per transcript can be generated once and loaded for subsequent sample runs.
 
-java -jar ~/rna/isofox.jar -output_dir ./logs/ -functions EXPECTED_GC_COUNTS -ref_genome /data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta -gene_transcripts_dir /data/common/dbs/ensembl_data_cache -read_length 76 -threads 8
+```
+java -jar isofox.jar 
+    -functions EXPECTED_GC_COUNTS
+    -output_dir /path_to_output_data/ 
+    -ref_genome /path_to_ref_files/ef-genome.fasta 
+    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -read_length 76 
+    -threads 10 
+```
 
 The output file is approximately 113MB.
 
@@ -120,7 +137,6 @@ write_exon_data | Write data on transcript exon covered by a supporting fragment
 
 
 ### Example Usage
-
 Example command for transcript expression and novel splice junctions:
 
 ```
