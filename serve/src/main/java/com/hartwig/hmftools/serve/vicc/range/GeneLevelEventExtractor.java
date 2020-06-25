@@ -16,25 +16,23 @@ import org.jetbrains.annotations.NotNull;
 public class GeneLevelEventExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
-    private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations", " act mut");
+    private static final Set<String> GENE = Sets.newHashSet("mut", "mutant");
 
-    private static final Set<String> GENE_INACTIVATION = Sets.newHashSet("Truncating Mutations", " inact mut");
+    private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations", "act mut");
+
+    private static final Set<String> GENE_INACTIVATION = Sets.newHashSet("Truncating Mutations", "inact mut", "loss");
 
     @NotNull
     public Map<Feature, String> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> geneLevelEventsPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            String event = feature.name();
-            if (viccEntry.source() == ViccSource.JAX) {
-                String [] extractEvent = event.split(" ", 2);
-                if (extractEvent.length == 2) {
-                    event = extractEvent[1];
-                }
-            }
-            if (GENE_ACTIVATION.contains(event)) {
+
+            if (GENE_ACTIVATION.contains(feature.name()) || GENE_ACTIVATION.contains(feature.biomarkerType())) {
                 geneLevelEventsPerFeature.put(feature, "gain of " + feature.geneSymbol());
-            } else if (GENE_INACTIVATION.contains(event)) {
+            } else if (GENE_INACTIVATION.contains(feature.name()) || GENE_INACTIVATION.contains(feature.biomarkerType())) {
                 geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
+            } else if (GENE.contains(feature.biomarkerType())) { //TODO: determine gain of loss function
+                geneLevelEventsPerFeature.put(feature, " " + feature.geneSymbol());
             }
         }
 
