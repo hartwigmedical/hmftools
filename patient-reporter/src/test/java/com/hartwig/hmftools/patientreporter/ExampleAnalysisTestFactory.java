@@ -57,13 +57,14 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments) {
-        return buildWithCOLO829Data(sampleId, correctionReport, comments, QsFormNumber.FOR_080.display(), true, 1D, true);
+    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
+            boolean reportGermline) {
+        return buildWithCOLO829Data(sampleId, correctionReport, comments, QsFormNumber.FOR_080.display(), true, 1D, true, reportGermline);
     }
 
     @NotNull
     public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
-            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary) {
+            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary, boolean reportGermline) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 180;
         double tumorMutationalBurden = 13.6;
@@ -75,7 +76,7 @@ public final class ExampleAnalysisTestFactory {
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
+        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(reportGermline);
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
@@ -133,8 +134,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId,
-            @Nullable String comments, boolean hasReliablePurity, double impliedTumorPurity) {
+    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId, @Nullable String comments,
+            boolean hasReliablePurity, double impliedTumorPurity) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 182;
         double tumorMutationalBurden = 13.6;
@@ -481,7 +482,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableVariant> createCOLO829SomaticVariants() {
+    private static List<ReportableVariant> createCOLO829SomaticVariants(boolean reportGermlineVariant) {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
                 .position(140453136)
@@ -513,7 +514,7 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .canonicalHgvsCodingImpact("c.203_204delCG")
                 .canonicalHgvsProteinImpact("p.Ala68fs")
-                .notifyClinicalGeneticist(false)
+                .notifyClinicalGeneticist(reportGermlineVariant)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
                 .alleleReadCount(95)
