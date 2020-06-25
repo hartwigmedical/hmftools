@@ -57,9 +57,13 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829(boolean correctionReport, @Nullable String comments) {
-        boolean hasReliablePurity = true;
-        double impliedTumorPurity = 1D;
+    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments) {
+        return buildWithCOLO829Data(sampleId, correctionReport, comments, QsFormNumber.FOR_080.display(), true, 1D, true);
+    }
+
+    @NotNull
+    public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
+            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 180;
         double tumorMutationalBurden = 13.6;
@@ -78,20 +82,19 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
-        String sampleId = "PNT00012345T";
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        String clinicalSummary = "Melanoma sample showing:\n"
+        String clinicalSummary = includeSummary ? "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
                 + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors\n"
                 + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
                 + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
                 + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
-                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
+                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy" : Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber("HMF-FOR-TEST")
+                .qsFormNumber(qcForNumber)
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -124,9 +127,14 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId, @Nullable String comments) {
-        boolean hasReliablePurity = true;
-        double impliedTumorPurity = 1D;
+    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledInAndReliablePurity(@NotNull String sampleId,
+            @Nullable String comments) {
+        return buildAnalysisWithAllTablesFilledIn(sampleId, comments, true, 1D);
+    }
+
+    @NotNull
+    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId,
+            @Nullable String comments, boolean hasReliablePurity, double impliedTumorPurity) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 182;
         double tumorMutationalBurden = 13.6;
@@ -142,7 +150,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = createTestFusions();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<ViralInsertion> viralInsertions = createTestViralInsertions();
+        List<ViralInsertion> viralInsertions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -150,7 +158,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber("HMF-FOR-TEST")
+                .qsFormNumber(QsFormNumber.FOR_209.display())
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
@@ -183,63 +191,6 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSample(@NotNull String sampleId,
-            boolean hasReliablePurity, double impliedTumorPurity) {
-        double averageTumorPloidy = 3.1;
-        int tumorMutationalLoad = 182;
-        double tumorMutationalBurden = 13.6;
-        double microsatelliteIndelsPerMb = 0.1089;
-        double chordHrdValue = 0.8;
-
-        ReportData reportData = testReportData();
-
-        List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
-        List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
-        List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
-        List<ReportableGeneFusion> fusions = createTestFusions();
-        List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
-
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
-        String clinicalSummary = Strings.EMPTY;
-
-        return ImmutableAnalysedPatientReport.builder()
-                .sampleReport(sampleReport)
-                .qsFormNumber("HMF-FOR-TEST")
-                .impliedPurity(impliedTumorPurity)
-                .hasReliablePurity(hasReliablePurity)
-                .hasReliableQuality(true)
-                .averageTumorPloidy(averageTumorPloidy)
-                .clinicalSummary(clinicalSummary)
-                .tumorSpecificEvidence(tumorLocationSpecificEvidence)
-                .clinicalTrials(clinicalTrials)
-                .offLabelEvidence(offLabelEvidence)
-                .reportableVariants(reportableVariants)
-                .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
-                .microsatelliteStatus(MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb))
-                .tumorMutationalLoad(tumorMutationalLoad)
-                .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
-                .tumorMutationalBurden(tumorMutationalBurden)
-                .chordHrdValue(chordHrdValue)
-                .chordHrdStatus(ChordStatus.fromHRD(chordHrdValue))
-                .gainsAndLosses(gainsAndLosses)
-                .geneFusions(fusions)
-                .geneDisruptions(disruptions)
-                .homozygousDisruptions(homozygousDisruptions)
-                .viralInsertions(viralInsertions)
-                .circosPath(CIRCOS_PATH)
-                .comments(Optional.of("This is a test report and does not relate to any real patient"))
-                .isCorrectedReport(false)
-                .isUnofficialReport(false)
-                .signaturePath(reportData.signaturePath())
-                .logoRVAPath(reportData.logoRVAPath())
-                .logoCompanyPath(reportData.logoCompanyPath())
-                .build();
-    }
-
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 

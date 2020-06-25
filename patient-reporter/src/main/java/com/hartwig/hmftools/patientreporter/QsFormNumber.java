@@ -12,7 +12,7 @@ public enum QsFormNumber {
     FOR_UNDEFINED("N/A");
 
     @NotNull
-    public final String display;
+    private final String display;
 
     QsFormNumber(@NotNull final String display) {
         this.display = display;

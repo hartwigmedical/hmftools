@@ -79,7 +79,7 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
-        List<ViccSource> sources = Lists.newArrayList(ViccSource.CGI);
+        List<ViccSource> sources = Lists.newArrayList(ViccSource.JAX);
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sources).maxEntriesToInclude(MAX_ENTRIES).build();
         List<ViccEntry> viccEntries = readAndCurate(viccJsonPath, querySelection);

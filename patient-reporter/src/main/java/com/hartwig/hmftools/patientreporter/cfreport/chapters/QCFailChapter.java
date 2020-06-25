@@ -167,7 +167,7 @@ public class QCFailChapter implements ReportChapter {
         div.add(testsArePerformedByAccreditedLab());
         div.add(reportIsVerifiedByAndAddressedTo());
         div.add(reportIsGeneratedByPatientReporterVersion());
-        failReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
+        failReport.comments().ifPresent(comments -> div.add(createContentParagraphRed("Comments: " + comments)));
         div.add(resubmitSample());
         div.add(forQuestionsPleaseContactHMF());
         return div;
@@ -205,7 +205,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(testsArePerformedByAccreditedLab());
         divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
-        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
+        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraphRed("Comments: " + comments)));
         divColumn.add(resubmitSample());
         divColumn.add(forQuestionsPleaseContactHMF());
         return divColumn;
@@ -242,7 +242,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(testsArePerformedByAccreditedLab());
         divColumn.add(reportIsVerifiedByAndAddressedTo());
         divColumn.add(reportIsGeneratedByPatientReporterVersion());
-        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
+        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraphRed("Comments: " + comments)));
         divColumn.add(resubmitSample());
         divColumn.add(forQuestionsPleaseContactHMF());
         return divColumn;
@@ -250,7 +250,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph resubmitSample() {
-        return createContentParagraph("If available new tumor/blood material can be provided for a new assessment, please contact ",
+        return createContentParagraph("If available new biomaterial(s) can be provided for a new assessment, please contact ",
                 "info@hartwigmedicalfoundation.nl");
     }
 
@@ -365,6 +365,12 @@ public class QCFailChapter implements ReportChapter {
         Div div = new Div();
         div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
         return div;
+    }
+
+
+    @NotNull
+    private static Paragraph createContentParagraphRed(@NotNull String text) {
+        return new Paragraph(text).addStyle(ReportResources.smallBodyTextStyleRed()).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull
