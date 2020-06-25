@@ -111,7 +111,10 @@ public class Isofox
             return true;
         }
 
-        ISF_LOGGER.info("sample({}) running RNA analysis", mConfig.SampleId);
+        if(mConfig.SampleId != null)
+            ISF_LOGGER.info("sample({}) running RNA analysis", mConfig.SampleId);
+        else
+            ISF_LOGGER.info("running Isofox cache generation", mConfig.SampleId);
 
         // allocate work at the chromosome level
         List<ChromosomeGeneTask> chrTasks = Lists.newArrayList();
@@ -274,17 +277,14 @@ public class Isofox
     {
         ISF_LOGGER.info("applying GC adjustments and transcript re-fit");
 
-        if(mConfig.GcAdjustmentsFile == null)
-        {
-            // not thread safe at the moment
-            chrTasks.forEach(x -> x.applyGcAdjustment());
+        // not thread safe at the moment
+        chrTasks.forEach(x -> x.applyGcAdjustment());
 
-            ISF_LOGGER.debug("total({}) transcript expected GC counts from fit", String.format("%.0f",
-                    mGcTranscriptCalcs.getTranscriptFitGcCounts().getCountsTotal()));
+        ISF_LOGGER.debug("total({}) transcript expected GC counts from fit", String.format("%.0f",
+                mGcTranscriptCalcs.getTranscriptFitGcCounts().getCountsTotal()));
 
-            // gather up global expected counts
-            mGcTranscriptCalcs.calcGcRatioAdjustments(actualGcCounts);
-        }
+        // gather up global expected counts
+        mGcTranscriptCalcs.calcGcRatioAdjustments(actualGcCounts);
 
         // now re-fit all transcripts
         boolean validExecution = executeChromosomeTask(chrTasks, APPLY_GC_ADJUSTMENT);

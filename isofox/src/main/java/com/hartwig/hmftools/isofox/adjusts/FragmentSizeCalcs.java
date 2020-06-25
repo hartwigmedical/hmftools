@@ -83,7 +83,9 @@ public class FragmentSizeCalcs
         mConfig = config;
         mGeneTransCache = geneTransCache;
 
-        mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
+        mSamReader = mConfig.BamFile != null ?
+                SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
+
         mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
 
         mCurrentGenes = "";

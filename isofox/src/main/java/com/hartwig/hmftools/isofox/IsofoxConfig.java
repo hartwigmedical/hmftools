@@ -64,7 +64,6 @@ public class IsofoxConfig
 
     private static final String WRITE_GC_DATA = "write_gc_data";
     private static final String GC_RATIO_BUCKET_SIZE = "gc_ratio_bucket";
-    private static final String GC_ADJUSTS_FILE = "gc_adjusts_file";
 
     // expected expression config
     private static final String EXP_COUNTS_FILE = "exp_counts_file";
@@ -74,7 +73,6 @@ public class IsofoxConfig
     private static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
     private static final String APPLY_FRAG_LENGTH_ADJUSTMENT = "apply_calc_frag_lengths";
     private static final String APPLY_GC_BIAS_ADJUSTMENT = "apply_gc_bias_adjust";
-    private static final String UNSPLICED_WEIGHT = "unspliced_weight";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
     private static final String SPECIFIC_TRANS_IDS = "specific_trans";
@@ -114,7 +112,6 @@ public class IsofoxConfig
     public final boolean ApplyGcBiasAdjust;
     public int ReadLength;
     public final List<int[]> FragmentLengthData;
-    public final double UnsplicedWeight;
     public final boolean WriteExpectedRates;
 
     public final boolean WriteFragmentLengths;
@@ -122,7 +119,6 @@ public class IsofoxConfig
     public final boolean WriteFragmentLengthsByGene;
 
     public final boolean WriteGcData;
-    public final String GcAdjustmentsFile;
     public static double GC_RATIO_BUCKET = DEFAULT_GC_RATIO_BUCKET;
 
     public final List<String> EnrichedGeneIds;
@@ -188,7 +184,6 @@ public class IsofoxConfig
         OutputIdentifier = cmd.getOptionValue(OUTPUT_ID);
 
         BamFile = cmd.getOptionValue(BAM_FILE);
-        GcAdjustmentsFile = cmd.getOptionValue(GC_ADJUSTS_FILE);
 
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenomeFile = refGenomeFilename != null ? new File(refGenomeFilename) : null;
@@ -247,7 +242,6 @@ public class IsofoxConfig
         ApplyGcBiasAdjust = cmd.hasOption(APPLY_GC_BIAS_ADJUSTMENT);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
         FragmentLengthData = Lists.newArrayList();
-        UnsplicedWeight = 1; // Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
 
         if(cmd.hasOption(ER_FRAGMENT_LENGTHS))
         {
@@ -354,7 +348,7 @@ public class IsofoxConfig
     public static boolean validConfigPaths(final CommandLine cmd)
     {
         return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, GENE_TRANSCRIPTS_DIR)
-                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE) && configPathValid(cmd, GC_ADJUSTS_FILE)
+                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
                 && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE);
     }
 
@@ -417,7 +411,6 @@ public class IsofoxConfig
         RefGenome = new MockRefGenome();
         CanonicalTranscriptOnly = false;
         GeneReadLimit = 0;
-        GcAdjustmentsFile = "";
         MaxFragmentLength = DEFAULT_MAX_FRAGMENT_SIZE;
         DropDuplicates = false;
         MarkDuplicates = false;
@@ -425,7 +418,6 @@ public class IsofoxConfig
         ApplyExpectedRates = false;
         ReadLength = 0;
         FragmentLengthData = Lists.newArrayList();
-        UnsplicedWeight = 1;
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
 
@@ -478,14 +470,12 @@ public class IsofoxConfig
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
 
         options.addOption(WRITE_GC_DATA, false, "Write GC ratio counts from all genic reads");
-        options.addOption(GC_ADJUSTS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
         options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
-        options.addOption(UNSPLICED_WEIGHT, true, "Weighting for unspliced expected fragments");
         options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");
         options.addOption(APPLY_GC_BIAS_ADJUSTMENT, false, "Use GC Bias adjustments in expected rate calcs");
 

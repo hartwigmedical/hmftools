@@ -676,7 +676,7 @@ public class ClusterAnnotations
             return;
 
         // criteria:
-        // - uniform ploidy within a chain
+        // - uniform JCN within a chain
         // - at least one overlapping TI
         // - copy number gain between the chain ends, not explained by another chain or SV
 

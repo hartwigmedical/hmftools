@@ -201,7 +201,7 @@ public class ResultsWriter
 
     private void initialiseGeneCollectionWriter()
     {
-        if(mConfig.OutputDir == null)
+        if(mConfig.OutputDir == null || mConfig.SampleId == null)
             return;
 
         try
