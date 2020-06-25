@@ -1,7 +1,7 @@
 # Ensemble query is designed to query:
 # 1. All protein coding genes.
-# 2. All non-protein coding genes that have an extrez id.
-# 3. A longer non-canonical transcript of CDKN2A p14arf - a known tumor supressor.
+# 2. All non-protein coding genes that have an entrez id.
+# 3. A longer non-canonical transcript of CDKN2A p14arf - a known tumor suppressor.
 # 4. C11orf95 - A known fusion candidate in children's ependymoma - added at the request of GARVAN
 
 (select
