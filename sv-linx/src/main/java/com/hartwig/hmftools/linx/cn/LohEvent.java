@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
@@ -85,8 +84,10 @@ public class LohEvent
 
     public void addHomLossEvents(final List<HomLossEvent> events)
     {
-        mHomLossEvents.addAll(events);
+        if(events == null)
+            return;
 
+        mHomLossEvents.addAll(events);
         mIsValid = !hasIncompleteHomLossEvents();
     }
 

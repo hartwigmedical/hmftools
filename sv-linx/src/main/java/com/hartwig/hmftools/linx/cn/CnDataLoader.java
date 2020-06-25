@@ -290,13 +290,11 @@ public class CnDataLoader
         int lohSVsMatchedCount = 0;
         boolean lohOnStartTelomere = false;
         boolean totalLoss = false;
-        List<HomLossEvent> lohHomLossEvents = Lists.newArrayList();
+        final List<HomLossEvent> lohHomLossEvents = Lists.newArrayList();
 
         for(Map.Entry<String,List<SvCNData>> entry : mChrCnDataMap.entrySet())
         {
             final String chromosome = entry.getKey();
-
-            boolean expectSingleChromosomeCN = expectSingleChromosome(chromosome);
 
             final List<SvCNData> cnDataList = entry.getValue();
 
@@ -496,7 +494,7 @@ public class CnDataLoader
     }
 
     private int processLOHData(final String chromosome, SvCNData startData, SvCNData endData,
-            int segCount, boolean incomplete, List<HomLossEvent> lohHomLossEvents)
+            int segCount, boolean incomplete, final List<HomLossEvent> lohHomLossEvents)
     {
         if(expectSingleChromosome(chromosome))
             return 0;
@@ -504,24 +502,20 @@ public class CnDataLoader
         StructuralVariantData startSvData = findSvData(startData, 1);
 
         StructuralVariantData endSvData = null;
-        int lohLength = 0;
 
         if(incomplete)
         {
             // ended at the telomere
-            lohLength = endData.EndPos - startData.StartPos;
             endSvData = null;
         }
-        else if(endData.Chromosome.equals(chromosome) && !startData.matchesSegment(TELOMERE, false))
+        else if(!startData.matchesSegment(TELOMERE, false))
         {
-            lohLength = endData.StartPos - startData.StartPos;
             endSvData = findSvData(endData, -1);
         }
         else
         {
             // segment has either started and/or finished on the telomere segment
             endData = startData;
-            lohLength = startData.EndPos - startData.StartPos + 1;
         }
 
         // exclude an LOH if one boundary is a simple non-overlapping SV and the other is another variant
@@ -556,11 +550,6 @@ public class CnDataLoader
 
         if(LNX_LOGGER.isDebugEnabled())
         {
-            if (lohLength <= 0)
-            {
-                LNX_LOGGER.warn("negative length({})", lohLength);
-            }
-
             if (startSvData != null && endSvData != null)
             {
                 if (startSvData.id() == endSvData.id())
@@ -576,25 +565,17 @@ public class CnDataLoader
             }
             else
             {
-                if (!incomplete && lohHomLossEvents == null)
+                if (startSvData == null && startData.matchesSV(true))
                 {
-                    if (startSvData == null && startData.matchesSV(true))
-                    {
-                        boolean incorrectOrientation = (startData.getStructuralVariantData() != null);
-
-                        LNX_LOGGER.debug("LOH start seg({}) no SV match: orient({})", startData, incorrectOrientation ? "wrong" : "ok");
-                    }
-
-                    if (!incomplete && endSvData == null && endData.matchesSV(true))
-                    {
-                        boolean incorrectOrientation = (endData.getStructuralVariantData() != null);
-
-                        LNX_LOGGER.debug("LOH end segment({}) no SV match: orient({})", endData, incorrectOrientation ? "wrong" : "ok");
-                    }
+                    boolean incorrectOrientation = (startData.getStructuralVariantData() != null);
+                    LNX_LOGGER.debug("LOH start seg({}) no SV match: orient({})", startData, incorrectOrientation ? "wrong" : "ok");
                 }
 
-                LNX_LOGGER.debug("segs start({}) and end({}) not fully matched pairSV({} -> {})",
-                        startData, endData, startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
+                if (endSvData == null && endData.matchesSV(false))
+                {
+                    boolean incorrectOrientation = (endData.getStructuralVariantData() != null);
+                    LNX_LOGGER.debug("LOH end segment({}) no SV match: orient({})", endData, incorrectOrientation ? "wrong" : "ok");
+                }
             }
         }
 
@@ -604,8 +585,7 @@ public class CnDataLoader
                 startData.SegStart, incomplete ? endData.SegEnd : endData.SegStart, segCount,
                 startSvData != null ? startSvData.id() : CN_DATA_NO_SV, endSvData != null ? endSvData.id() : CN_DATA_NO_SV);
 
-        if(lohHomLossEvents != null)
-            lohData.addHomLossEvents(lohHomLossEvents);
+        lohData.addHomLossEvents(lohHomLossEvents);
 
         lohData.setCnData(startData, endData);
         mLohEventData.add(lohData);
