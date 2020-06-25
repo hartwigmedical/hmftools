@@ -46,16 +46,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING, false);
-
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
-        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-    }
-
-    @Test
-    public void canGeneratePatientReportForCOLO829WithGermline() throws IOException {
-        AnalysedPatientReport colo829Report =
-                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T_germline", false, COLO_COMMENT_STRING, true);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -64,7 +55,22 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
         AnalysedPatientReport colo829Report =
-                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED, false);
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
+
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829WithGermline() throws IOException {
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_GERMLINE",
+                false,
+                COLO_COMMENT_STRING,
+                QsFormNumber.FOR_080.display(),
+                true,
+                1D,
+                true,
+                true);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
