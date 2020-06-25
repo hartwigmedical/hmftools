@@ -85,13 +85,31 @@ public final class ExampleAnalysisTestFactory {
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        String clinicalSummary = includeSummary ? "Melanoma sample showing:\n"
+        String summaryWithoutGermline = "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
                 + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors\n"
                 + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
                 + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
                 + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
-                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy" : Strings.EMPTY;
+                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
+
+        String summaryWithGermline = "Melanoma sample showing:\n"
+                + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
+                + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors. The observed CDKN2A mutation is "
+                + "also present in the germline of the patient. Referral to a genetic specialist should be considered.\n"
+                + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
+                + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
+                + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
+                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
+
+        String clinicalSummary;
+        if (includeSummary && !reportGermline) {
+            clinicalSummary = summaryWithoutGermline;
+        } else if (includeSummary && reportGermline) {
+            clinicalSummary = summaryWithGermline;
+        } else {
+            clinicalSummary = Strings.EMPTY;
+        }
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
