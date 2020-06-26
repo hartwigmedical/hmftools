@@ -12,6 +12,8 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -24,6 +26,8 @@ public class ChainingComplexTest
     {
         // vanilla BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 2 - 1 - 4 - 1 - 2 - 1 - 3 - 1 - 2 - 1 - R - telomere, where R is the resolving SV
         LinxTester tester = new LinxTester();
+
+        // Configurator.setRootLevel(Level.DEBUG);
 
         final SvVarData var1 = createTestSv(1, "1", "1", 1000,2000, -1, -1, INV,  8);
         final SvVarData var2 = createTestSv(2, "1", "1", 9000,10000, 1, 1, INV,  4);

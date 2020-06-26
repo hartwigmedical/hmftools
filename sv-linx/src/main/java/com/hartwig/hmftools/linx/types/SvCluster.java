@@ -568,6 +568,13 @@ public class SvCluster
         mDoubleMinuteChain = chain;
     }
 
+    public void clearDoubleMinuteData()
+    {
+        mDoubleMinuteSVs.clear();
+        mDoubleMinuteChain = null;
+        mAnnotationList.remove(CLUSTER_ANNOT_DM);
+    }
+
     public void markAsLine()
     {
         mHasLinkingLineElements = true;

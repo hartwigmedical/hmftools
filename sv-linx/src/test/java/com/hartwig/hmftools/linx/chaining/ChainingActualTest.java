@@ -21,6 +21,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -285,6 +287,8 @@ public class ChainingActualTest
         // based on an EGFR AMP
 
         LinxTester tester = new LinxTester();
+
+        // Configurator.setRootLevel(Level.DEBUG);
 
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 

@@ -170,6 +170,22 @@ public class SvUtilities {
         return clusterTypeStr;
     }
 
+    public static boolean positionsOverlap(int posStart1, int posEnd1, int posStart2, int posEnd2)
+    {
+        return !(posStart1 > posEnd2 || posEnd1 < posStart2);
+    }
+
+    public static boolean positionWithin(int position, int otherPosStart, int otherPosEnd)
+    {
+        return (position >= otherPosStart && position <= otherPosEnd);
+    }
+
+    public static boolean positionsWithin(int innerStart, int innerEnd, int outerStart, int outerEnd)
+    {
+        return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
+    }
+
+
     public static boolean isWithin(final SvVarData variant, final String chromosome, final int position)
     {
         if(!variant.chromosome(true).equals(chromosome) || !variant.chromosome(false).equals(chromosome))

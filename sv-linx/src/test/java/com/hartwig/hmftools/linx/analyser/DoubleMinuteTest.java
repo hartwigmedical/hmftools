@@ -19,6 +19,8 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -142,10 +144,13 @@ public class DoubleMinuteTest
     }
 
     @Test
+    @Ignore
     public void testInvalidDM()
     {
-        // first a cluster which grows in ploidy evenly
+        // first a cluster which grows in JCN evenly
         LinxTester tester = new LinxTester();
+
+        // Configurator.setRootLevel(Level.DEBUG);
 
         // a cluster with a set of 3 foldbacks which control the ploidies
         SvVarData var1 = createTestSv(1,"1","1",400,500,-1,-1, INV,1);

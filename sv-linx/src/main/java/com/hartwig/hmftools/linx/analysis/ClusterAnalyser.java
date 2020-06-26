@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingle
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.DELETED_TOTAL;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.RANGE_TOTAL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
@@ -55,6 +56,7 @@ public class ClusterAnalyser {
 
     private CnDataLoader mCnDataLoader;
     private final DoubleMinuteFinder mDmFinder;
+    private final BfbFinder mBfbFinder;
     private LineElementAnnotator mLineElementAnnotator;
 
     private String mSampleId;
@@ -87,6 +89,7 @@ public class ClusterAnalyser {
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
         mDmFinder = new DoubleMinuteFinder();
+        mBfbFinder = new BfbFinder();
 
         if(mConfig.hasMultipleSamples())
         {
@@ -118,6 +121,7 @@ public class ClusterAnalyser {
         mState.setSampleCnEventData(mCnDataLoader.getLohData(), mCnDataLoader.getHomLossData());
 
         mDmFinder.setCopyNumberAnalyser(cnDataLoader);
+        mBfbFinder.setCopyNumberAnalyser(cnDataLoader);
         mComplexClustering.setCopyNumberAnalyser(cnDataLoader);
     }
 
@@ -129,7 +133,6 @@ public class ClusterAnalyser {
     // access for unit testing
     public final ChainFinder getChainFinder() { return mChainFinder; }
     public final LinkFinder getLinkFinder() { return mLinkFinder; }
-    public final DoubleMinuteFinder getDmFinder() { return mDmFinder; }
 
     public void setRunValidationChecks(boolean toggle) { mRunValidationChecks = toggle; }
 
@@ -226,10 +229,11 @@ public class ClusterAnalyser {
 
         for(SvCluster cluster : mClusters)
         {
-            if(!cluster.getDoubleMinuteSVs().isEmpty() && !cluster.getFoldbacks().isEmpty())
-            {
+            if(!cluster.getDoubleMinuteSVs().isEmpty())
                 mDmFinder.analyseCluster(cluster, true);
-            }
+
+            if(cluster.getResolvedType() != DOUBLE_MINUTE && !cluster.isResolved())
+                mBfbFinder.analyseCluster(cluster);
 
             if(!cluster.isResolved() && cluster.getResolvedType() != NONE)
             {
