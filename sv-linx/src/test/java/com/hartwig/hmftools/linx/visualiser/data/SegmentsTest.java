@@ -38,6 +38,7 @@ public class SegmentsTest
                 .startTerminal(SegmentTerminal.NONE)
                 .endTerminal(SegmentTerminal.NONE)
                 .ploidy(0)
+                .inDoubleMinute(false)
                 .frame(0)
                 .build();
     }

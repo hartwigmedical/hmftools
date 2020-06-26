@@ -72,9 +72,9 @@ public class SvCluster
     // cached lists of identified special cases
     private final List<SvVarData> mLongDelDups;
     private final List<SvVarData> mFoldbacks;
-    private final List<SvVarData> mDoubleMinuteSVs;
     private final List<SvVarData> mInversions;
-    private SvChain mDoubleMinuteChain;
+    private final List<SvVarData> mDoubleMinuteSVs;
+    private final List<SvChain> mDoubleMinuteChains;
     private boolean mHasLinkingLineElements;
     private boolean mIsSubclonal;
     private boolean mRequiresRecalc;
@@ -127,7 +127,7 @@ public class SvCluster
         mLongDelDups = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
         mDoubleMinuteSVs = Lists.newArrayList();
-        mDoubleMinuteChain = null;
+        mDoubleMinuteChains = Lists.newArrayList();
         mHasLinkingLineElements = false;
         mInversions = Lists.newArrayList();
         mShortTIRemoteSVs = Lists.newArrayList();
@@ -170,7 +170,7 @@ public class SvCluster
 
         mAnnotationList.clear();
         mDoubleMinuteSVs.clear();
-        mDoubleMinuteChain = null;
+        mDoubleMinuteChains.clear();
 
         var.setCluster(this);
 
@@ -534,8 +534,6 @@ public class SvCluster
     public final List<SvVarData> getLongDelDups() { return mLongDelDups; }
     public final List<SvVarData> getFoldbacks() { return mFoldbacks; }
     public final List<SvVarData> getInversions() { return mInversions; }
-    public final List<SvVarData> getDoubleMinuteSVs() { return mDoubleMinuteSVs; }
-    public final SvChain getDoubleMinuteChain() { return mDoubleMinuteChain; }
 
     public void registerFoldback(final SvVarData var)
     {
@@ -561,17 +559,21 @@ public class SvCluster
             mLongDelDups.add(var);
     }
 
-    public void setDoubleMinuteData(final List<SvVarData> svList, final SvChain chain)
+    public final List<SvVarData> getDoubleMinuteSVs() { return mDoubleMinuteSVs; }
+    public final List<SvChain> getDoubleMinuteChains() { return mDoubleMinuteChains; }
+
+    public void setDoubleMinuteData(final List<SvVarData> svList, final List<SvChain> chains)
     {
         mDoubleMinuteSVs.clear();
         mDoubleMinuteSVs.addAll(svList);
-        mDoubleMinuteChain = chain;
+        mDoubleMinuteChains.clear();
+        mDoubleMinuteChains.addAll(chains);
     }
 
     public void clearDoubleMinuteData()
     {
         mDoubleMinuteSVs.clear();
-        mDoubleMinuteChain = null;
+        mDoubleMinuteChains.clear();
         mAnnotationList.remove(CLUSTER_ANNOT_DM);
     }
 

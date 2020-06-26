@@ -21,8 +21,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -37,6 +35,8 @@ public class ChainingActualTest
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
 
         LinxTester tester = new LinxTester();
+
+        // Configurator.setRootLevel(Level.DEBUG);
 
         final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("COLO829T");
 
@@ -362,8 +362,9 @@ public class ChainingActualTest
 
         assertTrue(cluster.getUnlinkedSVs().isEmpty());
 
-        final SvChain dmChain = cluster.getDoubleMinuteChain();
-        assertTrue(dmChain != null);
+        final List<SvChain> dmChains = cluster.getDoubleMinuteChains();
+        assertEquals(1, dmChains.size());
+        final SvChain dmChain = dmChains.get(0);
 
         assertTrue(cluster.getChains().stream().anyMatch(x -> x.identicalChain(dmChain, false, true)));
    }

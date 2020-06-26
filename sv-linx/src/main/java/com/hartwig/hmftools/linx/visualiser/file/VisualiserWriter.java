@@ -174,7 +174,8 @@ public class VisualiserWriter
 
             for(int i = 0; i < chainCount; ++i)
             {
-                int chainId = chains.isEmpty() ? unchainedChainId : chains.get(i).id();
+                final SvChain chain = !chains.isEmpty() ? chains.get(i) : null;
+                int chainId = chain == null ? unchainedChainId : chain.id();
 
                 final SvBreakend beStart = var.getBreakend(true);
                 final SvBreakend beEnd = var.getBreakend(false);
@@ -186,7 +187,7 @@ public class VisualiserWriter
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
                         beStart.getSV().getFoldbackBreakend(beStart.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
                         beEnd!= null ? (beEnd.getSV().getFoldbackBreakend(beEnd.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
-                        var.jcn()));
+                        var.jcn(), chain != null && chain.isDoubleMinute()));
             }
         }
 
@@ -260,7 +261,7 @@ public class VisualiserWriter
                     if (breakend != null)
                     {
                         segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
-                                getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy));
+                                getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy, false));
                     }
                 }
 
@@ -292,7 +293,7 @@ public class VisualiserWriter
                     final SvBreakend beEnd = pair.getBreakend(false);
 
                     segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), beStart.chromosome(),
-                            Long.toString(beStart.position()), Long.toString(beEnd.position()), linkPloidy));
+                            Long.toString(beStart.position()), Long.toString(beEnd.position()), linkPloidy, chain.isDoubleMinute()));
                 }
 
                 if(!chain.isClosedLoop())
@@ -303,7 +304,7 @@ public class VisualiserWriter
                     if (breakend != null && !startsOnEnd)
                     {
                         segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
-                                getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy));
+                                getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy, false));
                     }
                 }
             }
@@ -321,7 +322,7 @@ public class VisualiserWriter
                         continue;
 
                     segments.add(new VisSegmentFile(mSampleId, cluster.id(), chainId, breakend.chromosome(),
-                            getPositionValue(breakend, true), getPositionValue(breakend, false), var.jcn()));
+                            getPositionValue(breakend, true), getPositionValue(breakend, false), var.jcn(), false));
                 }
             }
         }

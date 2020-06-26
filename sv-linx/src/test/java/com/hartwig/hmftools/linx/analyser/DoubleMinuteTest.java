@@ -144,6 +144,51 @@ public class DoubleMinuteTest
     }
 
     @Test
+    public void testMultipleDMsInCluster()
+    {
+        LinxTester tester = new LinxTester();
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        final SvVarData var1 = createTestSv(1,"1","1",1000,10000,-1,1, DUP,8);
+        final SvVarData var2 = createTestSv(2,"1","1",2000,3000,1,-1, DEL,1);
+        var1.setAssemblyData(true, "asmb12");
+        var2.setAssemblyData(true, "asmb12");
+
+        final SvVarData var3 = createTestSv(3,"1","1",12000,12500,-1,-1, INV,8);
+        final SvVarData var4 = createTestSv(4,"1","1",20000,20500,1,1, INV,8);
+        final SvVarData var5 = createTestSv(5,"1","1",13000,14000,1,-1, DEL,1);
+        final SvVarData var6 = createTestSv(6,"1","2",15000,100,1,-1, BND,1);
+        final SvVarData var7 = createTestSv(7,"1","2",16000,200,-1,1, BND,1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster != null);
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNOT_DM));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var3));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var4));
+
+        assertEquals(2, cluster.getChains().stream().filter(x -> x.isDoubleMinute()).count());
+
+//        SvChain chain = cluster.getChains().get(0);
+//        assertEquals(18, chain.getLinkCount());
+//        assertEquals(6, chain.getSvCount());
+    }
+
+    @Test
     @Ignore
     public void testInvalidDM()
     {

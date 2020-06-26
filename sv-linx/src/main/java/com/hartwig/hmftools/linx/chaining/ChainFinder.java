@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowJcnThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.CLUSTER_ALLELE_JCN_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatchForSplits;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.JCN_MISMATCH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
@@ -736,49 +735,54 @@ public class ChainFinder
         // at the moment this logic is problematic and can divide chains repeatedly
         // reconcileChains(mChains, true, mLinkAllocator.getNextChainId(), true);
 
-        // search for a chain which can be closed if it contains all the DM SVs
-
-        SvChain dmChain = mDoubleMinuteSVs.get(0).getCluster().getDoubleMinuteChain();
-        boolean dmChainMatched = false;
+        // search for a chain which can be closed if it contains all the DM SVs from one of the closed DM chains (found by DM Finder)
+        final List<SvChain> dmChains = mDoubleMinuteSVs.get(0).getCluster().getDoubleMinuteChains();
+        final List<SvChain> unmatchedDmChains = Lists.newArrayList(dmChains);
 
         for(SvChain chain : mChains)
         {
-            int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x)).count();
-
-            if(chainedDmSVs != mDoubleMinuteSVs.size())
-                continue;
-
-            SvBreakend chainStart = chain.getOpenBreakend(true);
-            SvBreakend chainEnd = chain.getOpenBreakend(false);
-
-            if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
+            // matches DM chain
+            boolean matchesDmChain = false;
+            for(SvChain dmChain : dmChains)
             {
+                if(chain.hasMatchingSVs(dmChain))
+                {
+                    matchesDmChain = true;
+                    break;
+                }
+            }
+
+            if(matchesDmChain && chain.couldCloseChain())
+            {
+                SvBreakend chainStart = chain.getOpenBreakend(true);
+                SvBreakend chainEnd = chain.getOpenBreakend(false);
+
                 if(chainEnd.getSV() == chainStart.getSV())
                 {
                     chain.closeChain();
                 }
-                else if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
+                else
                 {
-                    SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd);
+                    chain.closeChain(LR_METHOD_DM_CLOSE, mLinkAllocator.getLinkIndex());
+                    LNX_LOGGER.debug("cluster({}) closed DM chain({})", mClusterId, chain.id());
+                }
 
-                    if (chain.linkWouldCloseChain(pair))
+                for(SvChain dmChain : dmChains)
+                {
+                    if(chain.identicalChain(dmChain, false, true))
                     {
-                        chain.closeChain(LR_METHOD_DM_CLOSE, mLinkAllocator.getLinkIndex());
-                        LNX_LOGGER.debug("cluster({}) closed DM chain({})", mClusterId, chain.id());
+                        chain.setDoubleMinute(true);
+                        unmatchedDmChains.remove(dmChain);
+                        break;
                     }
                 }
             }
-
-            if(!dmChainMatched && dmChain != null && chain.identicalChain(dmChain, false, true))
-            {
-                dmChainMatched = true;
-            }
         }
 
-        if(!dmChainMatched && dmChain != null)
+        if(!unmatchedDmChains.isEmpty())
         {
             LNX_LOGGER.debug("cluster({}) added pre-formed DM chain", mClusterId);
-            mChains.add(dmChain);
+            unmatchedDmChains.forEach(x -> mChains.add(x));
         }
     }
 

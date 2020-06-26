@@ -13,9 +13,10 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.positionWithin;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -25,6 +26,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -92,8 +94,6 @@ public class DoubleMinuteFinder
 
     public void analyseCluster(SvCluster cluster, boolean reassess)
     {
-        // look for DMs and alternatively consider annotating the cluster as BFB
-
         // don't re-analyse and cluster unless it has changed constituent SVs
         if(mProcessedClusters.contains(cluster.id()))
         {
@@ -123,42 +123,53 @@ public class DoubleMinuteFinder
         if(candidateDMSVs.isEmpty())
             return;
 
-        final List<SvChain> dmChains = createDMChains(cluster, candidateDMSVs);
+        final List<SvChain> dmChains = createDMChains(cluster, candidateDMSVs, false);
 
         // every SV must be in a chain even if they're not complete, and every chain must either be closed or have a SGL or INF on the end
 
-        // the single DUP scenario
-        final List<SvVarData> unchainedSVs = Lists.newArrayList();
-
-        for(SvVarData var : candidateDMSVs)
+        if(candidateDMSVs.size() > 2 && cluster.requiresReplication())
         {
-            if(!dmChains.stream().anyMatch(x -> x.getSvList().contains(var)))
-            {
-                // DUPs can be in their own 'chain'
-                if(var.type() == DUP)
-                {
-                    // special case creating a chain out of a DUP
-                    SvChain chain = new SvChain(0);
-                    SvLinkedPair pair = new SvLinkedPair(var, var, LINK_TYPE_TI, true, false);
-                    chain.addLink(pair, true);
-                    chain.setJcnData(var.jcn(), var.jcnUncertainty());
-                    dmChains.add(chain);
+            final List<SvChain> variedJcnChains = createDMChains(cluster, candidateDMSVs, true);
 
-                    if(!cluster.getChains().stream().anyMatch(x -> x.getSvList().size() == 1 && x.getSvList().contains(var)))
-                    {
-                        cluster.addChain(chain, false);
-                    }
-                }
-                else
+            // take the more effective of the 2 approaches
+            int uniformChainedCount = countChainedSVs(candidateDMSVs, dmChains);
+            int uniformClosedCount = countCloseableChains(dmChains);
+
+            int variedChainedCount = countChainedSVs(candidateDMSVs, variedJcnChains);
+            int variedClosedCount = countCloseableChains(variedJcnChains);
+
+            if(variedClosedCount == variedJcnChains.size() && uniformClosedCount < dmChains.size()
+            && variedChainedCount >= uniformChainedCount)
+            {
+                LNX_LOGGER.debug("cluster({}) varied JCN chains({} closed={} chained={}) better than uniform({} closed={} chained={}",
+                        cluster.id(), variedJcnChains.size(), variedClosedCount, variedChainedCount,
+                        dmChains.size(), uniformClosedCount, uniformChainedCount);
+
+                dmChains.clear();
+                dmChains.addAll(variedJcnChains);
+            }
+        }
+
+        int chainedCount = countChainedSVs(candidateDMSVs, dmChains);
+        int unchainedCount = candidateDMSVs.size() - chainedCount;
+
+        // single DUPs are closed in a loop, as is any other chain involving all the DM SVs
+        if(unchainedCount == 0)
+        {
+            for(SvChain dmChain : dmChains)
+            {
+                if(!dmChain.isClosedLoop() && dmChain.couldCloseChain())
                 {
-                    unchainedSVs.add(var);
+                    int maxIndex = dmChain.getLinkedPairs().stream().mapToInt(x -> x.getLinkIndex()).max().orElse(0);
+                    dmChain.closeChain(LR_METHOD_DM_CLOSE, maxIndex + 1);
+                    dmChain.setDoubleMinute(true);
                 }
             }
         }
 
         boolean fullyChained = !dmChains.isEmpty();
 
-        if(!unchainedSVs.isEmpty())
+        if(unchainedCount > 0)
         {
             fullyChained = false;
         }
@@ -167,10 +178,7 @@ public class DoubleMinuteFinder
             for(SvChain chain : dmChains)
             {
                 if(chain.isClosedLoop())
-                {
-                    chain.logLinks();
                     continue;
-                }
 
                 if(!chain.getChainEndSV(true).isSglBreakend() && !chain.getChainEndSV(false).isSglBreakend())
                 {
@@ -181,7 +189,7 @@ public class DoubleMinuteFinder
         }
 
         LNX_LOGGER.debug("cluster({}) dmSVs({}) chains({}) unchainedSVs({}) {}",
-                cluster.id(), candidateDMSVs.size(), dmChains.size(), unchainedSVs.size(),
+                cluster.id(), candidateDMSVs.size(), dmChains.size(), unchainedCount,
                 fullyChained ? "fully chained" : "invalid chain");
 
         DoubleMinuteData dmData = new DoubleMinuteData(cluster, candidateDMSVs);
@@ -189,29 +197,31 @@ public class DoubleMinuteFinder
         dmData.Chains.addAll(dmChains);
         dmData.FullyChained = fullyChained;
 
-        // collect up other possible DM SVs for logging only for now
-
         mDoubleMinutes.put(cluster.id(), dmData);
 
-        cluster.setDoubleMinuteData(candidateDMSVs, fullyChained ? dmChains.get(0) : null); // only the one for now
+        final List<SvChain> closedChains = dmChains.stream().filter(x -> x.isClosedLoop()).collect(Collectors.toList());
+        cluster.setDoubleMinuteData(candidateDMSVs, closedChains); // only the one for now
 
         cluster.addAnnotation(CLUSTER_ANNOT_DM);
+
+        // cache DUP chains now since the cluster may not go through the chaining routine
+        for(SvChain dmChain : dmChains)
+        {
+            if(dmChain.getSvCount() == 1 && dmChain.getSvList().get(0).type() == DUP)
+            {
+                final SvVarData dup = dmChain.getSvList().get(0);
+                if(!cluster.getChains().stream().anyMatch(x -> x.getSvList().size() == 1 && x.getSvList().contains(dup)))
+                {
+                    cluster.addChain(dmChain, false);
+                }
+            }
+        }
+
 
         if(candidateDMSVs.size() == cluster.getSvCount())
         {
             cluster.setResolved(false, DOUBLE_MINUTE);
         }
-
-        /*
-        if(candidateDMSVs.size() == 1 && fullyChained)
-        {
-            // single DUPs won't go through the chaining routine so cache this chain here
-            final SvVarData var = candidateDMSVs.get(0);
-            dmChains.get(0).setJcnData(var.jcn(), var.jcnUncertainty());
-            cluster.getChains().clear();
-            cluster.addChain(dmChains.get(0), false);
-        }
-        */
     }
 
     private static double getAdjacentMajorAPRatio(final SvVarData var)
@@ -240,14 +250,55 @@ public class DoubleMinuteFinder
         return maxRatio;
     }
 
-    private final List<SvChain> createDMChains(SvCluster cluster, List<SvVarData> dmSVList)
+    private final List<SvChain> createDMChains(final SvCluster cluster, final List<SvVarData> dmSvList, boolean applyReplication)
     {
-        mChainFinder.initialise(cluster, dmSVList, false);
+        // first extract stand-alone DUPs to avoid them chaining in just because they can
+        final List<SvChain> dmChains = Lists.newArrayList();
+
+        final List<SvVarData> chainSvList = Lists.newArrayList();
+
+        for(SvVarData var : dmSvList)
+        {
+            if(var.type() != DUP)
+            {
+                chainSvList.add(var);
+            }
+            else
+            {
+                if(dmSvList.stream().filter(x -> x != var).anyMatch(x -> isOverlapping(x, var)))
+                {
+                    chainSvList.add(var);
+                }
+                else
+                {
+                    // special case creating a chain out of a DUP
+                    SvChain chain = new SvChain(0);
+                    SvLinkedPair pair = new SvLinkedPair(var, var, LINK_TYPE_TI, true, false);
+                    chain.addLink(pair, true);
+                    chain.setJcnData(var.jcn(), var.jcnUncertainty());
+                    chain.closeChain();
+                    chain.setDoubleMinute(true);
+                    dmChains.add(chain);
+                }
+            }
+        }
+
+        mChainFinder.initialise(cluster, chainSvList, applyReplication);
         mChainFinder.formChains(false);
 
-        List<SvChain> dmChains = Lists.newArrayList(mChainFinder.getUniqueChains());
+        dmChains.addAll(mChainFinder.getUniqueChains());
         mChainFinder.clear();
         return dmChains;
+    }
+
+    private static int countChainedSVs(final List<SvVarData> svList, final List<SvChain> chains)
+    {
+        return (int)svList.stream().filter(x -> chains.stream().anyMatch(y -> y.getSvList().contains(x))).count();
+    }
+
+    private static int countCloseableChains(final List<SvChain> chains)
+    {
+        return (int)chains.stream().filter(x -> x.couldCloseChain()).count();
     }
 
     public void reportCluster(final String sampleId, final SvCluster cluster)
@@ -403,10 +454,8 @@ public class DoubleMinuteFinder
                     chromosomes.add(chromosome);
             }
 
-            svIds = appendStr(svIds, var.idStr(), ';');
+            svIds = appendStr(svIds, var.idStr(), SUBSET_DELIM);
         }
-
-        double minAdjMAPRatio = 0;
 
         final String dmTypesStr = getSvTypesStr(typeCounts);
 
@@ -423,7 +472,7 @@ public class DoubleMinuteFinder
                 amplifiedGenesStr = appendStr(amplifiedGenesStr, amplifiedGenes, SUBSET_DELIM);
         }
 
-        final String chromosomeStr = appendStrList(chromosomes, ';');
+        final String chromosomeStr = appendStrList(chromosomes, SUBSET_DELIM);
 
         try
         {
@@ -436,29 +485,30 @@ public class DoubleMinuteFinder
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
                 mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount");
-                mFileWriter.write(",SamplePurity,SamplePloidy,DMSvCount,DMSvTypes");
-                mFileWriter.write(",Chains,FullyChained,ClosedSegLength,ChainedSVs,SvIds,Chromosomes");
+                mFileWriter.write(",SamplePurity,SamplePloidy,DMSvCount,DMSvTypes,SvIds,Chromosomes");
+                mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
                 mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
                 mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn");
-                mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAPRatio");
+                mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
                 mFileWriter.newLine();
             }
 
             mFileWriter.write(String.format("%s,%d,%s,%s,%d",
                     sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
 
-            mFileWriter.write(String.format(",%.1f,%.1f,%d,%s",
-                    samplePurity, samplePloidy, dmData.SVs.size(), dmTypesStr));
+            mFileWriter.write(String.format(",%.1f,%.1f,%d,%s,%s,%s",
+                    samplePurity, samplePloidy, dmData.SVs.size(), dmTypesStr, svIds, chromosomeStr));
 
-            mFileWriter.write(String.format(",%d,%s,%d,%d,%s,%s",
-                    dmData.Chains.size(), dmData.FullyChained, closedSegmentLength,
-                    dmData.SVs.size() - unchainedSVs.size(), svIds, chromosomeStr));
+            mFileWriter.write(String.format(",%d,%s,%d,%d,%d,%s",
+                    dmData.Chains.size(), dmData.FullyChained, dmData.Chains.stream().filter(x -> x.isClosedLoop()).count(),
+                    closedSegmentLength, dmData.SVs.size() - unchainedSVs.size(),
+                    dmData.Chains.stream().anyMatch(x -> x.hasRepeatedSV())));
 
             mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f",
                     closedBreakends, closedJcnTotal, openBreakends, openJcnTotal, openJcnMax, intExtCount, intExtJcnTotal, intExtMaxJcn));
 
             mFileWriter.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f",
-                    maxDMCopyNumber, minDMJcn, maxDMJcn, amplifiedGenesStr, chainsCentromere, minAdjMAPRatio));
+                    maxDMCopyNumber, minDMJcn, maxDMJcn, amplifiedGenesStr, chainsCentromere, minAdjMAJcnRatio));
 
             mFileWriter.newLine();
         }

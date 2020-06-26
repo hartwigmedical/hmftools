@@ -52,13 +52,6 @@ public class Links
         return Optional.empty();
     }
 
-    public static double linkPloidy(@NotNull final GenomePosition position, @NotNull final List<Link> links)
-    {
-        return Links.findStartLink(position, links).map(Link::ploidy).orElse((double) 0) + Links.findEndLink(position, links)
-                .map(Link::ploidy)
-                .orElse((double) 0);
-    }
-
     @NotNull
     public static List<Link> clean(@NotNull final List<Link> links)
     {
@@ -92,7 +85,8 @@ public class Links
                 .endPosition(file.PosEnd)
                 .endOrientation(file.OrientEnd)
                 .endInfo(file.InfoEnd)
-                .ploidy(file.Ploidy)
+                .ploidy(file.JCN)
+                .inDoubleMinute(file.InDoubleMinute)
                 .frame(0)
                 .build();
     }

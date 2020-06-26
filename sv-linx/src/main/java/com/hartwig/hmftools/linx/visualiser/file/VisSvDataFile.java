@@ -32,7 +32,8 @@ public class VisSvDataFile
     public final int PosEnd;
     public final byte OrientStart;
     public final byte OrientEnd;
-    public final double Ploidy;
+    public final double JCN;
+    public final boolean InDoubleMinute;
 
     public static final String INFO_TYPE_NORMAL = "NORMAL";
     public static final String INFO_TYPE_FOLDBACK = "FOLDBACK";
@@ -40,7 +41,7 @@ public class VisSvDataFile
     public VisSvDataFile(final String sampleId, int clusterId, int chainId, int svId,
             StructuralVariantType type, final com.hartwig.hmftools.linx.types.ResolvedType resolvedType, boolean isSynthetic,
             final String chrStart, final String chrEnd, int posStart, int posEnd,
-            byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, double ploidy)
+            byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, double jcn, boolean inDM)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -57,7 +58,8 @@ public class VisSvDataFile
         OrientEnd = orientEnd;
         InfoStart = infoStart;
         InfoEnd = infoEnd;
-        Ploidy = ploidy;
+        JCN = jcn;
+        InDoubleMinute = inDM;
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_sv_data.tsv";
@@ -113,7 +115,8 @@ public class VisSvDataFile
                 .add("OrientEnd")
                 .add("InfoStart")
                 .add("InfoEnd")
-                .add("Ploidy")
+                .add("JunctionCopyNumber")
+                .add("InDoubleMinute")
                 .toString();
     }
 
@@ -136,7 +139,8 @@ public class VisSvDataFile
                 .add(String.valueOf(svData.OrientEnd))
                 .add(String.valueOf(svData.InfoStart))
                 .add(String.valueOf(svData.InfoEnd))
-                .add(String.format("%.4f",svData.Ploidy))
+                .add(String.format("%.4f",svData.JCN))
+                .add(String.valueOf(svData.InDoubleMinute))
                 .toString();
     }
 
@@ -163,7 +167,8 @@ public class VisSvDataFile
                 Byte.valueOf(values[index++]),
                 values[index++],
                 values[index++],
-                Double.valueOf(values[index++]));
+                Double.valueOf(values[index++]),
+                index < values.length ? Boolean.valueOf(values[index++]) : false);
     }
 
 }

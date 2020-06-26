@@ -185,16 +185,12 @@ public class SvUtilities {
         return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
 
-
     public static boolean isWithin(final SvVarData variant, final String chromosome, final int position)
     {
         if(!variant.chromosome(true).equals(chromosome) || !variant.chromosome(false).equals(chromosome))
             return false;
 
-        if(variant.position(true) > position || variant.position(false) < position)
-            return false;
-
-        return true;
+        return positionWithin(position, variant.position(true), variant.position(false));
     }
 
     public static boolean isOverlapping(final SvVarData v1, final SvVarData v2)

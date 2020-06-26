@@ -11,8 +11,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.visualiser.SvVisualiser;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ColorPicker
@@ -74,13 +77,14 @@ public class ColorPicker
     private static final Color COLOR4 = new Color(255, 127, 0);
     private static final Color COLOR5 = new Color(212, 193, 23);
     private static final Color COLOR6 = new Color(31, 120, 180);
-    private static final Color COLOR7 = new Color(227, 26, 28);
-    private static final Color COLOR8 = new Color(51, 160, 44);
+    private static final Color COLOR7 = new Color(51, 160, 44);
+    private static final Color COLOR8 = new Color(152, 51, 160);
 
     private static final Color DEL = new Color(251, 154, 153);
     private static final Color DUP = new Color(178, 223, 138);
     private static final Color INS = new Color(255, 255, 153);
     private static final Color LINE = new Color(97, 171, 227);
+    private static final Color DOUBLE_MINUTE = new Color(227, 26, 28);
 
     private static final Color[] COLOURS = new Color[] { COLOR1, COLOR2, COLOR3, COLOR4, COLOR5, COLOR6, COLOR7, COLOR8 };
 
@@ -202,26 +206,36 @@ public class ColorPicker
         if (!links.isEmpty())
         {
             final Link firstLink = links.get(0);
-            if (firstLink.isSimpleSV())
+
+            if(firstLink.isSimpleSV() && !firstLink.inDoubleMinute())
             {
                 final String color = simpleSvColor(firstLink.type());
                 links.forEach(x -> result.put(x.chainId(), color));
             }
-            else if (firstLink.isLineElement())
+            else if(firstLink.isLineElement())
             {
                 links.forEach(x -> result.put(x.chainId(), toString(LINE)));
             }
             else
             {
+                final List<Integer> dmChainIds = links.stream().filter(x -> x.inDoubleMinute()).map(Link::chainId)
+                        .distinct().collect(Collectors.toList());
+
                 final List<Integer> chainIds = links.stream().map(Link::chainId).distinct().collect(Collectors.toList());
-                for (int i = 0; i < chainIds.size(); i++)
+
+                for(int i = 0; i < chainIds.size(); i++)
                 {
-                    final String color = i < COLOURS.length ? toString(COLOURS[i]) : toString(BLACK);
-                    result.put(chainIds.get(i), color);
+                    if(dmChainIds.contains(i))
+                    {
+                        result.put(chainIds.get(i), toString(DOUBLE_MINUTE));
+                    }
+                    else
+                    {
+                        final String color = i < COLOURS.length ? toString(COLOURS[i]) : toString(BLACK);
+                        result.put(chainIds.get(i), color);
+                    }
                 }
-
             }
-
         }
 
         return result;

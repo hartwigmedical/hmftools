@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
@@ -40,6 +41,7 @@ public class SvChain {
     private double mJcnUncertainty;
 
     private boolean mIsClosedLoop;
+    private boolean mDoubleMinute; // the forming one, not subclonal
     private int mLinkSum; // simple comparison check
 
     public SvChain(int chainId)
@@ -50,6 +52,7 @@ public class SvChain {
         mJcn = 0;
         mJcnUncertainty = 0;
         mIsClosedLoop = false;
+        mDoubleMinute = false;
         mLinkSum = 0;
         mOpenBreakends = new SvBreakend[SE_PAIR];
     }
@@ -127,22 +130,17 @@ public class SvChain {
     public SvVarData getFirstSV() { return getChainEndSV(true); }
     public SvVarData getLastSV() { return getChainEndSV(false); }
 
-    public SvLinkedPair getLinkedPair(boolean isStart)
-    {
-        if(mLinkedPairs.isEmpty())
-            return null;
-
-        if(isStart)
-            return mLinkedPairs.get(0);
-        else
-            return mLinkedPairs.get(mLinkedPairs.size()-1);
-    }
-
     public boolean firstLinkOpenOnStart()
     {
         return !mLinkedPairs.isEmpty() ? mLinkedPairs.get(0).firstUnlinkedOnStart() : false;
     }
     public boolean lastLinkOpenOnStart() { return !mLinkedPairs.isEmpty() ? !mLinkedPairs.get(mLinkedPairs.size()-1).secondLinkOnStart() : false; }
+
+    public String toString()
+    {
+        return String.format("%d: svs(%d) links(%d) jcn(%.1f) %s",
+                mId, mSvList.size(), mLinkedPairs.size(), mJcn, mIsClosedLoop ? "closed" : "");
+    }
 
     private void updateBreakends()
     {
@@ -154,47 +152,6 @@ public class SvChain {
     public final SvBreakend getOpenBreakend(boolean isStart)
     {
         return getOpenBreakend(seIndex(isStart));
-    }
-
-    public boolean isConsistent() { return isConsistent(false); }
-
-    public boolean isConsistent(boolean checkCentromere)
-    {
-        if(getFirstSV().isSglBreakend() || getLastSV().isSglBreakend())
-            return false;
-
-        if(checkCentromere)
-        {
-            // criteria for consistency - either starts and ends on same arm with consistent breakends OR
-            // if ends on a different arm it needs to go through a centromere once and have 2 telomeres
-            boolean traversesCentromere = false;
-
-            for (final SvLinkedPair pair : mLinkedPairs)
-            {
-                if (pair.firstBreakend().arm() != pair.secondBreakend().arm())
-                {
-                    if (traversesCentromere)
-                        return false;
-
-                    traversesCentromere = true;
-                }
-            }
-
-            if (traversesCentromere) // orientations don't matter if exactly one centromere is included
-                return true;
-
-            // must start and end on same arm with consistent breakends
-            if (!mOpenBreakends[SE_START].getChrArm().equals(mOpenBreakends[SE_END].getChrArm()))
-                return false;
-
-            return mOpenBreakends[SE_START].orientation() != mOpenBreakends[SE_END].orientation();
-        }
-        else
-        {
-            return calcConsistency(mOpenBreakends[SE_START]) + calcConsistency(mOpenBreakends[SE_END]) == 0;
-        }
-
-
     }
 
     public boolean canAddLinkedPairToStart(final SvLinkedPair pair)
@@ -240,10 +197,36 @@ public class SvChain {
             return false;
     }
 
+    public boolean couldCloseChain()
+    {
+        if(mSvList.size() == 1 && mSvList.get(0).type() == DUP)
+            return true;
+
+        final SvBreakend chainStart = getOpenBreakend(true);
+        final SvBreakend chainEnd = getOpenBreakend(false);
+
+        if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
+        {
+            if(chainEnd.getSV() == chainStart.getSV())
+            {
+                return true;
+            }
+            else if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public boolean isClosedLoop()
     {
         return mIsClosedLoop || (mSvList.size() == 1 && mSvList.get(0).type() == DUP);
     }
+
+    public boolean isDoubleMinute() { return mDoubleMinute; }
+    public void setDoubleMinute(boolean toggle) { mDoubleMinute = toggle; }
 
     public void closeChain(final String reason, int linkIndex)
     {
@@ -267,6 +250,45 @@ public class SvChain {
     }
 
     public void closeChain() { mIsClosedLoop = true; }
+
+    public boolean isConsistent() { return isConsistent(false); }
+
+    public boolean isConsistent(boolean checkCentromere)
+    {
+        if(getFirstSV().isSglBreakend() || getLastSV().isSglBreakend())
+            return false;
+
+        if(checkCentromere)
+        {
+            // criteria for consistency - either starts and ends on same arm with consistent breakends OR
+            // if ends on a different arm it needs to go through a centromere once and have 2 telomeres
+            boolean traversesCentromere = false;
+
+            for (final SvLinkedPair pair : mLinkedPairs)
+            {
+                if (pair.firstBreakend().arm() != pair.secondBreakend().arm())
+                {
+                    if (traversesCentromere)
+                        return false;
+
+                    traversesCentromere = true;
+                }
+            }
+
+            if (traversesCentromere) // orientations don't matter if exactly one centromere is included
+                return true;
+
+            // must start and end on same arm with consistent breakends
+            if (!mOpenBreakends[SE_START].getChrArm().equals(mOpenBreakends[SE_END].getChrArm()))
+                return false;
+
+            return mOpenBreakends[SE_START].orientation() != mOpenBreakends[SE_END].orientation();
+        }
+        else
+        {
+            return calcConsistency(mOpenBreakends[SE_START]) + calcConsistency(mOpenBreakends[SE_END]) == 0;
+        }
+    }
 
     public void foldbackChainOnLink(final SvLinkedPair pair1, final SvLinkedPair pair2)
     {
@@ -880,6 +902,18 @@ public class SvChain {
     public boolean identicalChain(final SvChain other, boolean allowSubsets)
     {
         return identicalChain(other, allowSubsets, false);
+    }
+
+    public boolean hasMatchingSVs(final SvChain other)
+    {
+        // return true if the 'other' chain's SVs are all in this chain (and it can have more)
+        for(final SvVarData var : other.getSvList())
+        {
+            if(!mSvList.stream().anyMatch(x -> x == var))
+                return false;
+        }
+
+        return true;
     }
 
     public boolean sameLinks(final SvChain other)

@@ -46,6 +46,8 @@ public abstract class Link
 
     public abstract double ploidy();
 
+    public abstract boolean inDoubleMinute();
+
     public boolean connectorsOnly(boolean showSimpleSvSegments)
     {
         return (!showSimpleSvSegments && isSimpleSV()) || isLineElement();

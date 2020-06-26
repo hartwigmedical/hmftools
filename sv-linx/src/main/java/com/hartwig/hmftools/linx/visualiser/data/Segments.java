@@ -54,6 +54,7 @@ public class Segments
                 .startTerminal(SegmentTerminal.TELOMERE)
                 .endTerminal(SegmentTerminal.TELOMERE)
                 .ploidy(0)
+                .inDoubleMinute(false)
                 .frame(0)
                 .build();
     }
@@ -73,6 +74,7 @@ public class Segments
                 .startTerminal(SegmentTerminal.CENTROMERE)
                 .endTerminal(SegmentTerminal.CENTROMERE)
                 .ploidy(0)
+                .inDoubleMinute(false)
                 .frame(0)
                 .build();
     }
@@ -181,6 +183,7 @@ public class Segments
                 .startTerminal(SegmentTerminal.fromString(file.PosStart))
                 .endTerminal(SegmentTerminal.fromString(file.PosEnd))
                 .ploidy(file.LinkPloidy)
+                .inDoubleMinute(file.InDoubleMinute)
                 .build();
     }
 

@@ -23,10 +23,11 @@ public class VisSegmentFile
     public final String PosStart;
     public final String PosEnd;
     public final double LinkPloidy;
+    public final boolean InDoubleMinute;
 
 
     public VisSegmentFile(final String sampleId, int clusterId, int chainId, final String chromosome,
-            final String posStart, final String posEnd, double linkPloidy)
+            final String posStart, final String posEnd, double linkPloidy, boolean inDM)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -35,6 +36,7 @@ public class VisSegmentFile
         PosStart = posStart;
         PosEnd = posEnd;
         LinkPloidy = linkPloidy;
+        InDoubleMinute = inDM;
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_segments.tsv";
@@ -82,6 +84,7 @@ public class VisSegmentFile
                 .add("PosStart")
                 .add("PosEnd")
                 .add("LinkPloidy")
+                .add("InDoubleMinute")
                 .toString();
     }
 
@@ -96,6 +99,7 @@ public class VisSegmentFile
                 .add(String.valueOf(segment.PosStart))
                 .add(String.valueOf(segment.PosEnd))
                 .add(String.format("%.4f",segment.LinkPloidy))
+                .add(String.valueOf(segment.InDoubleMinute))
                 .toString();
     }
 
@@ -113,7 +117,8 @@ public class VisSegmentFile
                 values[index++],
                 values[index++],
                 values[index++],
-                Double.valueOf(values[index++]));
+                Double.valueOf(values[index++]),
+                index < values.length ? Boolean.valueOf(values[index++]) : false);
     }
 
 }

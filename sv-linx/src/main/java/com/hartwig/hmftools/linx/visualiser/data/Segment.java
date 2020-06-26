@@ -31,4 +31,6 @@ public abstract class Segment implements GenomeRegion
     public abstract SegmentTerminal startTerminal();
 
     public abstract SegmentTerminal endTerminal();
+
+    public abstract boolean inDoubleMinute();
 }

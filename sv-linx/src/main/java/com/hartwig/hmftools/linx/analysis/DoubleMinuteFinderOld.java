@@ -294,7 +294,7 @@ public class DoubleMinuteFinderOld
 
         mDoubleMinutes.put(cluster.id(), dmData);
 
-        cluster.setDoubleMinuteData(candidateDMSVs, fullyChained ? dmChain : null);
+        cluster.setDoubleMinuteData(candidateDMSVs, fullyChained ? Lists.newArrayList(dmChain) : Lists.newArrayList());
 
         cluster.addAnnotation(CLUSTER_ANNOT_DM);
 
