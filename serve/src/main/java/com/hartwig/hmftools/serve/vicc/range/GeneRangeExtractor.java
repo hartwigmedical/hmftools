@@ -11,6 +11,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneRangeExtractor {
@@ -23,8 +24,12 @@ public class GeneRangeExtractor {
     public Map<Feature, String> extractGeneRanges(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
+            String event = Strings.EMPTY;
+            if (feature.name().toLowerCase().contains("exon")) {
+                event = "exon";
+            }
 
-            if (GENE_EXON.contains(feature.name().toLowerCase())) {
+            if (GENE_EXON.contains(feature.name().toLowerCase()) || GENE_EXON.contains(event)) {
                 geneRangesPerFeature.put(feature, feature.name());
             } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
                     .substring(feature.proteinAnnotation().length() - 1)
