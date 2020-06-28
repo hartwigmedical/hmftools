@@ -79,7 +79,7 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
-        List<ViccSource> sources = Lists.newArrayList(ViccSource.JAX);
+        List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC);
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sources).maxEntriesToInclude(MAX_ENTRIES).build();
         List<ViccEntry> viccEntries = readAndCurate(viccJsonPath, querySelection);
@@ -215,6 +215,7 @@ public class ViccExtractorTestApplication {
         LOGGER.info("No genomic events derived for {} features", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+//            LOGGER.info(feature);
         }
     }
 

@@ -24,7 +24,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [3. Sample Purity and Ploidy](#3-sample-purity-and-ploidy)
   + [4. Copy Number Smoothing](#4-copy-number-smoothing)
   + [5. Inferring copy number for regions without read depth information](#5-inferring-copy-number-for-regions-without-read-depth-information)
-  + [6. Allele specific ploidy inferring](#6-allele-specific-ploidy-inferring)
+  + [6. Allele specific copy number inferring](#6-allele-specific-copy-number-inferring)
   + [7. Structural Variant Recovery](#7-structural-variant-recovery)
   + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
@@ -230,7 +230,7 @@ Alternatively a lightweight version of GRIDSS can be used to re-analyse a set of
 ### Somatic Variant Input VCF (optional)
 An high quality set of somatic SNV and INDEL calls can also improve the accuracy and utility of PURPLE. 
 If provided, passing (or unfiltered) variants enhance the purity and ploidy fit in 2 ways. 
-Firstly, each solution receives a penalty for the proportion of somatic variants which have implied ploidies that are inconsistent with the minor and major allele copy number. 
+Firstly, each solution receives a penalty for the proportion of somatic variants which have implied variant copy numbers that are inconsistent with the minor and major allele copy number. 
 Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
 For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Allelic Depth) field in the vcf.
@@ -326,7 +326,7 @@ To estimate purity and sample ploidy, we use a model which considers a matrix of
 possible combination on a segment by segment basis, based on a set of principles which aim to choose the most parsimonious solution for the fit.      
 
 The specific scoring principles applied are the following:
-1. **Penalise sub-clonality**:   The major and minor allele of each segment should be close to an integer ploidy for clonal solutions. Due to sampling noise, small deviations from integer ploidies will be observed even, but larger deviations require subclonal features and are penalised.
+1. **Penalise sub-clonality**:   The major and minor allele of each segment should be close to an integer ploidy for clonal solutions. Due to sampling noise, small deviations from integer copy numbers will be observed even, but larger deviations require subclonal features and are penalised.
 2. **Penalise solutions which deviate from diploid heterozygous copy number**:  Loss of heterozygosity or loss of gain of chromosomal segments requires assumptions additional biological complexity, with the complexity increasing for larger deviations from diploid.  PURPLE uses an event penalty to explicitly penalise deviations from diploid heterozygous copy number
 3. **Penalise solutions with implausible somatic SNV copy numbers**: SNVs in principle occur on only one chromatid and should not be found on both alleles.   Therefore we penalise solutions where SNV copy numbers exceed the major allele copy number.   
 4. **Weigh segments by count of BAF observations**: Segments are weighted by the count of BAF observations which is treated as a proxy for confidence of BAF and read depth ratio inputs.
@@ -344,7 +344,7 @@ Each of the 3 penalty terms is described in detail in the following sections.
 #### Deviation Penalty
 The deviation penalty aims to penalise [ploidy|purity] combinations which require extensive sub-clonality to explain the observed copy number pattern.
 
-For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied ploidies.   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
+For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers.   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
 - For major allele copy number > 1 and minor allele copy number > 0 a deviation penalty applies to penalise solutions which imply subclonality:
   - the penalty depends only on the distance to the nearest integer copy number and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
   - small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to the maximum penalty reflecting the increasing probability that the observed deviation requires an implied non-integer (subclonal) copy number.
@@ -362,7 +362,7 @@ The total deviation penalty is calculated by adding the minor and major allele d
 
 #### Event Penalty
 
-An event penalty is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele ploidies.  In particular, this model penalises higher ploidy solutions that can be highly degenerate and lead to low deviation penalties, but are unlikely to be the most parsimonious or biologically plausible solution.  
+An event penalty is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele copy number.  In particular, this model penalises higher ploidy solutions that can be highly degenerate and lead to low deviation penalties, but are unlikely to be the most parsimonious or biologically plausible solution.  
 
 The event penalty multiplier is given by:
 
@@ -384,7 +384,7 @@ The following chart shows the combined shape of the deviation and event penalty:
 
 #### Somatic Penalty
 
-If somatic variants are provided, an additional somatic penalty is added to fits which lead to somatic variants with ploidies higher than the major allele copy number, since these are biologically implausible. This feature was introduced primarily to deal with a degeneracy where in certain situations a lower purity, lower ploidy solutions may provide a plausible minor and major allele copy number fit to the copy number data, but imply that many SNVs exceed the major allele copy number 
+If somatic variants are provided, an additional somatic penalty is added to fits which lead to somatic variants with variant copy number higher than the major allele copy number, since these are biologically implausible. This feature was introduced primarily to deal with a degeneracy where in certain situations a lower purity, lower ploidy solutions may provide a plausible minor and major allele copy number fit to the copy number data, but imply that many SNVs exceed the major allele copy number 
 which is biologically implausible.
 
 The somatic penalty is determined for each [sample ploidy,purity] combination by sampling 1000 somatic SNV per tumor and comparing the observed major allele copy number with an upper bound expectation of the variant’s copy number from the 99.9% percentile of a binomial distribution given the major allele at the SNV location. The penalty applied to a single SNV is the max(0,implied SNV copy number - 99.9% expected bound given the major allele). The somatic penalty is averaged across the 1000 variants and multiplied by a somaticPenaltyWeight [0.3] constant and added to the ploidy penalty.
@@ -437,8 +437,7 @@ Consecutive non-diploid regions un-interrupted by a structural variant will be m
 
 ### 5. Inferring copy number for regions without read depth information
 
-Where clusters of SVs exist which are closer together than our read depth ratio window resolution of 1,000 bases, the segments in between will not have any copy number information associated with them. 
-We use the ploidies of the structural variants to resolve this.
+Where clusters of SVs exist which are closer together than our read depth ratio window resolution of 1,000 bases, the segments in between will not have any copy number information associated with them.  We use the junction copy number of the structural variants to resolve this.
 
 The outermost segment of any SV cluster will be associated with a structural variant whose junction copy number can be determined from the adjacent copy number region and the VAF of the SV. Note that if we are inferring from a lower copy number region into a higher one and the VAF is > 0.75 then we use the read depth rather than the VAF to infer a junction copy number.  We use the average copy number and read depth of the sample to do this.
 
@@ -450,9 +449,9 @@ When the entire short arm of a chromosome is lacking copy number information (ge
 
 ### 6. Allele specific copy number inferring
 
-Once copy number region smoothing and inference is complete, it is possible there will be regions without BAF points which will result in a unknown allele specific ploidies, since BAF coverage of the genome is limited and many copy number regions can be very small.
+Once copy number region smoothing and inference is complete, it is possible there will be regions without BAF points which will result in a unknown allele specific copy number, since BAF coverage of the genome is limited and many copy number regions can be very small.
 
-For these regions, we infer a BAF and allele specific ploidies of one or more consecutive regions with unknown BAF by first examining neighbouring regions with known allele specific ploidies and inferring based on the observed copy number changes to the unknown regions. Where possible, we assume that only one allele changes copy number in a set of consecutive regions of unknown allele specific copy number. The other allele is held constant.
+For these regions, we infer a BAF and allele specific copy number of one or more consecutive regions with unknown BAF by first examining neighbouring regions with known allele specific copy number and inferring based on the observed copy number changes to the unknown regions. Where possible, we assume that only one allele changes copy number in a set of consecutive regions of unknown allele specific copy number. The other allele is held constant.
 
 Which allele copy number to hold remain constant from the neighbouring region depends on a number of rules including on whether the allele specific copy number is known on both sides of the unknown region or only one one side.
 
@@ -538,7 +537,7 @@ For example, if the local copy number is 2 than any somatic variant with estimat
 
 For each variant we also determine a probability that it is subclonal. This is achieved via a two-step process. 
 
-First, we fit the somatic ploidies for each sample into a set of clonal and subclonal peaks. 
+First, we fit the somatic variant copy numbers for each sample into a set of clonal and subclonal peaks. 
 
 We apply an iterative algorithm to find peaks in the variant copy number distribution:
   - Determine the peak by finding the highest density of variants within +/- 0.1 of every 0.01 copy number bucket.
@@ -566,7 +565,7 @@ Version | 2.25 | Version of PURPLE
 Purity  | 0.98 | Purity of tumor in the sample
 NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number implies higher ploidy
 Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity
-SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies that are inconsistent with the minor and major allele copy number 
+SomaticDeviation | 0.00 | Penalty from somatic variants with implied variant copy numnbers that are inconsistent with the minor and major allele copy number 
 Score | 0.68 | Score of fit (lower is better)
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
@@ -1074,7 +1073,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
     All passing and recovered structural variants are now written as a VCF to the purple output directory.
 - 2.15
   - New ploidy penalty model adopted using minor and major allele copy number deviation instead of baf and copy number deviation.
-  - A somatic deviation penalty has been added to penalise fits which lead to somatic variants with higher ploidies than the major allele copy number. 
+  - A somatic deviation penalty has been added to penalise fits which lead to somatic variants with higher variant copy numbers than the major allele copy number. 
     The 99.9% upper cutoff for binomial distribution from the major allele copy number is used as a cutoff to mark variants as inconsistent. 
     1000 somatic variants are sampled per tumor, with the somatic penalty equal to the sum of the deviations over the 99.9% cutoff divided by the number of somatic variants sampled.
   - Cutoff to be classified as highly diploid tightened (minor and major allele copy number must both be between 0.8 and 1.2).

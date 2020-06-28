@@ -54,7 +54,23 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
+        AnalysedPatientReport colo829Report =
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
+
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829WithGermline() throws IOException {
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_GERMLINE",
+                false,
+                COLO_COMMENT_STRING,
+                QsFormNumber.FOR_080.display(),
+                true,
+                1D,
+                true,
+                true);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -68,6 +84,7 @@ public class CFReportWriterTest {
                 QsFormNumber.FOR_209.display(),
                 false,
                 0.23,
+                false,
                 false);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
@@ -82,6 +99,7 @@ public class CFReportWriterTest {
                 QsFormNumber.FOR_209.display(),
                 true,
                 0.19,
+                false,
                 false);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);

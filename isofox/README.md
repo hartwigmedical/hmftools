@@ -54,8 +54,7 @@ ref_genome | Reference genome fasta file
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS'. Other values: FUSIONS, EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS.
 
-For instructions on how to generate the Ensembl data cache, refer to the Linx documentation on github:
-https://github.com/hartwigmedical/hmftools/tree/master/linx
+For instructions on how to generate the Ensembl data cache, see subsection below.
 
 ### Optional
 Argument | Description
@@ -163,10 +162,10 @@ java -jar isofox.jar
 ```
 
 ### Generating cached Ensembl data files
-To annotate SVs with gene information and to support fusion detection, LINX uses gene, transcript, exon and protein domain information from the Ensembl database. 
-To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time LINX runs.
+To annotate SVs with gene information and to support fusion detection, ISOFOX uses gene, transcript, exon and protein domain information from the Ensembl database. 
+To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time ISOFOX runs.
 
-To generate these 4 data files, first run LINX with these command line options:
+To generate these 4 data files, first run ISOFOX with these command line options:
 
 ```
 java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
@@ -178,7 +177,7 @@ Ensembl database URLs for 37 & 38 are:
 - mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
 - mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_98_38
 
-By default LINX will use HG37, but this can be overridden using the ref_genome_version config described above.
+By default ISOFOX will use HG37, but this can be overridden using the ref_genome_version config described above.
 
  
 ## Algorithm
