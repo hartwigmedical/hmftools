@@ -54,8 +54,7 @@ ref_genome | Reference genome fasta file
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS'. Other values: FUSIONS, EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS.
 
-For instructions on how to generate the Ensembl data cache, refer to the Linx documentation on github:
-https://github.com/hartwigmedical/hmftools/tree/master/linx
+For instructions on how to generate the Ensembl data cache, see subsection below.
 
 ### Optional
 Argument | Description
