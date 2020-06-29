@@ -20,7 +20,6 @@ public class GeneLevelEventExtractor {
             "expression",
             "gene_only",
             "EXPRESSION",
-            "Missense Variant",
             "Protein Altering Variant",
             "Frameshift Truncation",
             "Gene Variant",
@@ -32,7 +31,7 @@ public class GeneLevelEventExtractor {
             "Coding Transcript Intron Variant",
             "Nonsynonymous Variant",
             "Inframe Variant",
-            "Inframe Indel", "MUTATION", "Loss Of Heterozygosity", "Frameshift Elongation", "Disruptive Inframe Deletion");
+            "Inframe Indel", "MUTATION", "Frameshift Elongation", "Disruptive Inframe Deletion");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
@@ -43,7 +42,7 @@ public class GeneLevelEventExtractor {
             "amp over exp",
             "OVEREXPRESSION",
             "Gain Of Function Variant",
-            "Stop Lost");
+            "Stop Lost", "Missense Variant");
 
     private static final Set<String> GENE_INACTIVATION = Sets.newHashSet("Truncating Mutations",
             "inact mut",
@@ -55,7 +54,7 @@ public class GeneLevelEventExtractor {
             "is_deletion",
             "UNDEREXPRESSION",
             "Loss Of Function Variant",
-            "Start Lost");
+            "Start Lost", "Loss Of Heterozygosity");
 
     @NotNull
     public Map<Feature, String> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {
