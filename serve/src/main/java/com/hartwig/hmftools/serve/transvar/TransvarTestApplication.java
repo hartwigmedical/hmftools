@@ -25,8 +25,8 @@ public class TransvarTestApplication {
 
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
-        extractAndPrintHotspots(transvar, "VHL", null, "V155C");
-        extractAndPrintHotspots(transvar, "VHL", null, "R161R");
+        extractAndPrintHotspots(transvar, "EGFR", null, "I744_K745insKIPVAI");
+        extractAndPrintHotspots(transvar, "EGFR", null, "I740_K745dup");
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,
