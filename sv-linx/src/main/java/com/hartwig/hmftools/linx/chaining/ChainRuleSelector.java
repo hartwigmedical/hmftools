@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatchForSplit
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ADJACENT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ADJACENT_MATCH;
-import static com.hartwig.hmftools.linx.chaining.ChainingRule.AP_SUPPORT;
+import static com.hartwig.hmftools.linx.chaining.ChainingRule.CA_JCN_SUPPORT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.COMP_DUP_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
@@ -866,7 +866,7 @@ public class ChainRuleSelector
         // find pairs of matching ploidy breakends, taking the shortest where multiple exist
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
 
-        boolean hasPloidySupportLinks = anyLinksHavePloidySupport(proposedLinks);
+        boolean hasPloidySupportLinks = anyLinksHaveJcnSupport(proposedLinks);
 
         if(!proposedLinks.isEmpty())
         {
@@ -968,7 +968,7 @@ public class ChainRuleSelector
         checkClusterJcnSupport(newProposedLinks);
 
         // if a new link has ploidy support it will top anything found already (see earlier exit condition for proposed links)
-        if(proposedLinks.isEmpty() || anyLinksHavePloidySupport(newProposedLinks))
+        if(proposedLinks.isEmpty() || anyLinksHaveJcnSupport(newProposedLinks))
             return newProposedLinks;
         else
             return proposedLinks;
@@ -1029,7 +1029,7 @@ public class ChainRuleSelector
         if(mAdjacentPairs.isEmpty())
             return proposedLinks;
 
-        boolean hasPloidySupportLinks = anyLinksHavePloidySupport(proposedLinks);
+        boolean hasPloidySupportLinks = anyLinksHaveJcnSupport(proposedLinks);
 
         if(!proposedLinks.isEmpty())
         {
@@ -1067,7 +1067,7 @@ public class ChainRuleSelector
         checkClusterJcnSupport(newProposedLinks);
 
         // if a new link has ploidy support it will top anything found already (see earlier exit condition for proposed links)
-        if(proposedLinks.isEmpty() || anyLinksHavePloidySupport(newProposedLinks))
+        if(proposedLinks.isEmpty() || anyLinksHaveJcnSupport(newProposedLinks))
             return newProposedLinks;
         else
             return proposedLinks;
@@ -1079,7 +1079,7 @@ public class ChainRuleSelector
     {
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
 
-        boolean hasPloidySupportLinks = anyLinksHavePloidySupport(proposedLinks);
+        boolean hasPloidySupportLinks = anyLinksHaveJcnSupport(proposedLinks);
 
         if(!proposedLinks.isEmpty())
         {
@@ -1157,7 +1157,7 @@ public class ChainRuleSelector
         checkClusterJcnSupport(newProposedLinks);
 
         // if a new link has ploidy support it will top anything found already (see earlier exit condition for proposed links)
-        if(proposedLinks.isEmpty() || anyLinksHavePloidySupport(newProposedLinks))
+        if(proposedLinks.isEmpty() || anyLinksHaveJcnSupport(newProposedLinks))
             return newProposedLinks;
         else
             return proposedLinks;
@@ -1268,30 +1268,30 @@ public class ChainRuleSelector
         return shortestLinks;
     }
 
-    private boolean anyLinksHavePloidySupport(final List<ProposedLinks> proposedLinks)
+    private boolean anyLinksHaveJcnSupport(final List<ProposedLinks> proposedLinks)
     {
-        return proposedLinks.stream().anyMatch(x -> x.hasRule(AP_SUPPORT));
+        return proposedLinks.stream().anyMatch(x -> x.hasRule(CA_JCN_SUPPORT));
     }
 
     private boolean checkClusterJcnSupport(final List<ProposedLinks> proposedLinks)
     {
-        boolean anyLinksHasClusterPloidySupport = false;
+        boolean anyLinksHasClusterJcnSupport = false;
         for(ProposedLinks proposedLink : proposedLinks)
         {
-            if(proposedLink.hasRule(AP_SUPPORT))
+            if(proposedLink.hasRule(CA_JCN_SUPPORT))
             {
-                anyLinksHasClusterPloidySupport = true;
+                anyLinksHasClusterJcnSupport = true;
                 continue;
             }
 
             if(proposedLink.Links.stream().anyMatch(x -> !mJcnLimits.linkHasJcnSupport(x, proposedLink.jcn())))
                 continue;
 
-            proposedLink.addRule(AP_SUPPORT);
-            anyLinksHasClusterPloidySupport = true;
+            proposedLink.addRule(CA_JCN_SUPPORT);
+            anyLinksHasClusterJcnSupport = true;
         }
 
-        return anyLinksHasClusterPloidySupport;
+        return anyLinksHasClusterJcnSupport;
     }
 
     private static List<ProposedLinks> restrictProposedLinks(

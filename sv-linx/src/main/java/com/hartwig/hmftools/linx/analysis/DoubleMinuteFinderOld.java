@@ -20,10 +20,10 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -388,7 +388,7 @@ public class DoubleMinuteFinderOld
             if(var.type() != DUP)
                 return null;
 
-            SvLinkedPair pair = new SvLinkedPair(var, var, LINK_TYPE_TI, true, false);
+            SvLinkedPair pair = new SvLinkedPair(var, var, TEMPLATED_INSERTION, true, false);
             chain.addLink(pair, true);
             chain.setJcnData(var.jcn(), var.jcnUncertainty());
             return chain;

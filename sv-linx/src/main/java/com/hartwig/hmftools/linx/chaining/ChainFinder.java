@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
@@ -12,10 +13,10 @@ import static com.hartwig.hmftools.linx.chaining.ChainUtils.reconcileChains;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.JCN_MISMATCH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 
 import static org.apache.logging.log4j.Level.TRACE;
 
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.types.LinkType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -83,7 +85,7 @@ public class ChainFinder
     // a cache of cluster ploidy boundaries which links cannot cross
     private final ChainJcnLimits mClusterJcnLimits;
 
-    // determined up-front - the set of all possible links from a specific breakend to other breakends
+    // determined up-front - the set of all possible links from a specific breakend to other breakends, ordered shortest first
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
 
     private List<SvVarData> mReplicatedSVs;
@@ -496,6 +498,8 @@ public class ChainFinder
         // do not chain past a zero cluster allele JCN
         // identify potential complex DUP candidates along the way
 
+        final List<SvLinkedPair> sameBaseInferredLinks = Lists.newArrayList();
+
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
@@ -555,27 +559,32 @@ public class ChainFinder
                     int minTiLength = getMinTemplatedInsertionLength(lowerBreakend, upperBreakend);
 
                     if(distance < minTiLength)
-                    {
                         continue;
-                    }
 
                     // record the possible link
                     final SvVarData upperSV = upperBreakend.getSV();
 
-                    SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI,
+                    boolean sameBaseInfPair = (lowerSV.type() == INF || upperSV.type() == INF) && distance <= 1;
+
+                    SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, TEMPLATED_INSERTION,
                             lowerBreakend.usesStart(), upperBreakend.usesStart());
 
-                    // make note of any pairs formed from adjacent facing breakends, factoring in DBs in between
-                    boolean areAdjacent = false;
+                    if(sameBaseInfPair)
+                    {
+                        sameBaseInferredLinks.add(newPair);
+                        continue;
+                    }
 
+                    // make note of adjacent facing breakends since these are prioritised in the adjacent pairs rule
+                    boolean areAdjacent = false;
                     if(j == i + 1)
                     {
-                        // the breakends cannot form a DB with each other
                         if(lowerBreakend.getDBLink() == null || lowerBreakend.getDBLink() != upperBreakend.getDBLink())
                             areAdjacent = true;
                     }
                     else if(j == i + 2)
                     {
+                        // factor in DBs in between
                         SvBreakend middleBreakend = breakendList.get(i + 1);
 
                         if((lowerBreakend.getDBLink() != null && lowerBreakend.getDBLink() == middleBreakend.getDBLink())
@@ -587,7 +596,7 @@ public class ChainFinder
                     {
                         mAdjacentPairs.add(newPair);
 
-                        if (copyNumbersEqual(lowerJcn, mLinkAllocator.getUnlinkedBreakendCount(upperBreakend)))
+                        if(copyNumbersEqual(lowerJcn, mLinkAllocator.getUnlinkedBreakendCount(upperBreakend)))
                             mAdjacentMatchingPairs.add(newPair);
                     }
 
@@ -623,8 +632,7 @@ public class ChainFinder
                         }
                     }
 
-                    if(lowerValidAP && mClusterJcnLimits.hasValidAlleleJcnData(
-                            getClusterChrBreakendIndex(upperBreakend), alleleJCNs))
+                    if(lowerValidAP && mClusterJcnLimits.hasValidAlleleJcnData(getClusterChrBreakendIndex(upperBreakend), alleleJCNs))
                     {
                         int breakendIndex = getClusterChrBreakendIndex(upperBreakend);
                         double clusterAP = alleleJCNs.get(breakendIndex).clusterJcn();
@@ -639,6 +647,21 @@ public class ChainFinder
                         }
                     }
                 }
+            }
+        }
+
+        for(SvLinkedPair pair : sameBaseInferredLinks)
+        {
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                SvBreakend breakend = pair.getBreakend(se);
+
+                List<SvLinkedPair> breakendPairs = mSvBreakendPossibleLinks.get(breakend);
+
+                if(breakendPairs == null)
+                    mSvBreakendPossibleLinks.put(breakend, Lists.newArrayList(pair));
+                else
+                    breakendPairs.add(pair);
             }
         }
     }

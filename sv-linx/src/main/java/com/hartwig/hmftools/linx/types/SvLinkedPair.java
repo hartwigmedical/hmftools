@@ -6,8 +6,13 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.types.LinkType.DELETION_BRIDGE;
+import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
+import static com.hartwig.hmftools.linx.types.LinkType.linkTypeStr;
 
 import java.util.List;
+
+import com.hartwig.hmftools.linx.visualiser.data.Link;
 
 public class SvLinkedPair {
 
@@ -15,7 +20,7 @@ public class SvLinkedPair {
     private SvVarData mSecond;
     private boolean mFirstLinkOnStart;
     private boolean mSecondLinkOnStart;
-    private String mLinkType;
+    private LinkType mLinkType;
     private int mLinkLength;
     private boolean mIsInferred;
 
@@ -32,15 +37,12 @@ public class SvLinkedPair {
 
     private String mExonMatchData;
 
-    public static final String LINK_TYPE_TI = "TI";
-    public static final String LINK_TYPE_DB = "DB";
-
     public static String LOCATION_TYPE_UNCLEAR = "Unclear";
     public static String LOCATION_TYPE_REMOTE = "Remote"; // TI is not on arm with any chain end
     public static String LOCATION_TYPE_EXTERNAL = "External"; // TI is on arm with a chain end but outside its bounds
     public static String LOCATION_TYPE_INTERNAL = "Internal";
 
-    public SvLinkedPair(SvVarData first, SvVarData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
+    public SvLinkedPair(SvVarData first, SvVarData second, final LinkType linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
         mFirst = first;
         mSecond = second;
@@ -65,23 +67,23 @@ public class SvLinkedPair {
 
         int minTILength = getMinTemplatedInsertionLength(first.getBreakend(firstLinkOnStart), second.getBreakend(secondLinkOnStart));
 
-        if (mLinkType == LINK_TYPE_TI && mLinkLength < minTILength)
+        if (mLinkType == TEMPLATED_INSERTION && mLinkLength < minTILength)
         {
             // re-label this as a deletion bridge and give it a negative length to show the overlap
-            mLinkType = LINK_TYPE_DB;
+            mLinkType = DELETION_BRIDGE;
             mLinkLength = -mLinkLength;
 
             // if the link is marked as assembled later on, this is reversed
         }
 
         // adjust the length of DBs to reflect the position convention for opposite breakend orientations
-        if(mLinkType == LINK_TYPE_DB)
+        if(mLinkType == DELETION_BRIDGE)
             --mLinkLength;
     }
 
     public static SvLinkedPair from(final SvBreakend first, final SvBreakend second)
     {
-        return new SvLinkedPair(first.getSV(), second.getSV(), LINK_TYPE_TI, first.usesStart(), second.usesStart());
+        return new SvLinkedPair(first.getSV(), second.getSV(), TEMPLATED_INSERTION, first.usesStart(), second.usesStart());
     }
 
     public static SvLinkedPair copy(final SvLinkedPair other)
@@ -112,7 +114,7 @@ public class SvLinkedPair {
         final SvBreakend beSecond = mSecond.isSglBreakend() ? mSecond.getBreakend(true) : mSecond.getBreakend(secondLinkOnStart());
 
         if(isStart)
-            return beFirst.position() < beSecond.position() ? beFirst : beSecond;
+            return beFirst.position() <= beSecond.position() ? beFirst : beSecond;
         else
             return beFirst.position() > beSecond.position() ? beFirst : beSecond;
     }
@@ -122,7 +124,7 @@ public class SvLinkedPair {
 
     public final String chromosome() { return mFirst.chromosome(mFirstLinkOnStart); }
 
-    public final String linkType() { return mLinkType; }
+    public final LinkType linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
 
     public void setIsAssembled()
@@ -131,7 +133,7 @@ public class SvLinkedPair {
 
         if(mLinkLength < 0)
         {
-            mLinkType = LINK_TYPE_TI;
+            mLinkType = TEMPLATED_INSERTION;
             mLinkLength = -mLinkLength;
         }
     }
@@ -205,25 +207,20 @@ public class SvLinkedPair {
 
     public final String toString()
     {
-        return svToString(mFirst, mFirstLinkOnStart) + " & " + svToString(mSecond, mSecondLinkOnStart);
+        return String.format("%s & %s", svToString(mFirst, mFirstLinkOnStart), svToString(mSecond, mSecondLinkOnStart));
     }
 
     private static final String svToString(final SvVarData var, boolean linkedOnStart)
     {
-        if(var.type() != SGL)
+        if(!var.isSglBreakend())
         {
             return String.format("%s %s:%d:%s",
-                    var.id(), var.chrShort(linkedOnStart), var.position(linkedOnStart), linkedOnStart ? "start" : "end");
-        }
-
-        if(linkedOnStart)
-        {
-            return String.format("%s %s:%d SGL-on-known",
-                    var.id(), var.chrShort(true), var.position(true));
+                    var.id(), var.chrShort(linkedOnStart), var.position(linkedOnStart),
+                    linkedOnStart ? "start" : "end");
         }
         else
         {
-            return String.format("%s %s:%d SGL-on-null",
+            return String.format("%s %s:%d SGL",
                     var.id(), var.chrShort(true), var.position(true));
         }
     }

@@ -525,12 +525,6 @@ public class SvVarData
         }
     }
 
-    public int getMinTemplatedLength(boolean isStart)
-    {
-        int assembleLength = isStart ? mSVData.startAnchoringSupportDistance() : mSVData.endAnchoringSupportDistance();
-        return max(assembleLength - MIN_TEMPLATED_INSERTION_LENGTH, MIN_TEMPLATED_INSERTION_LENGTH);
-    }
-
     public double getReplicationOrigin(boolean isStart) { return mReplicationOrigin[seIndex(isStart)]; }
     public void setReplicationOrigin(boolean isStart, double value)
     {

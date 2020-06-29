@@ -6,13 +6,14 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.types.LinkType.DELETION_BRIDGE;
+import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_DB;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.util.List;
 import java.util.Map;
@@ -95,16 +96,15 @@ public class LinkFinder
                     }
 
                     // form a new TI from these 2 BEs
-                    SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, v1Start, v2Start);
+                    SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, TEMPLATED_INSERTION, v1Start, v2Start);
                     newPair.setIsAssembled();
                     lowerSV.addLinkedPair(newPair, v1Start);
                     upperSV.addLinkedPair(newPair, v2Start);
 
                     linkedPairs.add(newPair);
 
-                    // to avoid logging unlikely long TIs
-                    LNX_LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",
-                            cluster.id(), newPair.linkType(), newPair.toString(), newPair.length());
+                    LNX_LOGGER.debug("cluster({}) adding assembly linked pair({}) length({})",
+                            cluster.id(), newPair.toString(), newPair.length());
                 }
             }
         }
@@ -239,6 +239,12 @@ public class LinkFinder
 
     public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)
     {
+        if(breakend1.getSV().type() == INF || breakend2.getSV().type() == INF)
+        {
+            if(abs(breakend1.position() - breakend2.position()) <= 1)
+                return 0;
+        }
+
         // return the minimum length from each breakend's anchor distances if present
         int homologyLengths = breakend1.homology().length() + breakend2.homology().length();
         int minAnchorDistance = min(breakend1.anchorDistance(), breakend2.anchorDistance());
@@ -273,7 +279,7 @@ public class LinkFinder
                 if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
                 {
                     // breakends face away as per a normal DB
-                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, breakend.usesStart(), nextBreakend.usesStart());
+                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, DELETION_BRIDGE, breakend.usesStart(), nextBreakend.usesStart());
                     markDeletionBridge(dbPair);
                 }
                 else if(distance < minTiLength)
@@ -285,7 +291,7 @@ public class LinkFinder
                         continue;
                     }
 
-                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, breakend.usesStart(), nextBreakend.usesStart());
+                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, TEMPLATED_INSERTION, breakend.usesStart(), nextBreakend.usesStart());
                     markDeletionBridge(dbPair);
                 }
             }
