@@ -3,11 +3,13 @@ package com.hartwig.hmftools.common.variant;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.utils.ArrayDeck;
+
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-final class NearPonFilteredIndel {
+public final class NearPonFilteredIndel {
 
     private static final int DISTANCE = 10;
     private static final String SOMATIC_FLAG = "SOMATIC_PON";
@@ -16,12 +18,16 @@ final class NearPonFilteredIndel {
     private NearPonFilteredIndel() {
     }
 
-    static boolean isPonFilteredIndel(@NotNull final VariantContext variant) {
+    public static boolean isPonFilteredIndel(@NotNull final VariantContext variant) {
         final Set<String> filters = variant.getFilters();
         return variant.isIndel() && (filters.contains(SOMATIC_FLAG) || filters.contains(GERMLINE_FLAG));
     }
 
-    static boolean isNearPonFilteredIndel(final int index, @NotNull final List<VariantContext> contexts) {
+    public static boolean isNearPonFilteredIndel(final int index, @NotNull final List<VariantContext> contexts) {
+        return isNearPonFilteredIndel(index, new ArrayDeck<>(contexts));
+    }
+
+    public static boolean isNearPonFilteredIndel(final int index, @NotNull final ArrayDeck<VariantContext> contexts) {
         final VariantContext subject = contexts.get(index);
         if (!subject.isIndel() || subject.isFiltered()) {
             return false;
