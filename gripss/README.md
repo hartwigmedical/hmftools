@@ -62,20 +62,27 @@ Variants located on a single assembly are given a unique 'asm' identifier.
 
 ### B. Deduplication and transitive linkage
 
-The GRIDSS output may contain structural variants which may be duplicated either by a single SV or by a chain of SVs with breakends proximate to each other which may or may not already be linked by assembly.   In the case where a variant is duplicated by a chain, we term this variant the spanning variant and these links to be transitive links.
+The GRIDSS output may contain structural variants which may be duplicated either by a single SV or by a chain of SVs with breakends proximate to each other which may or may not already be linked by assembly.
+In the case where a variant is duplicated by a chain, we term this variant the spanning variant and these links to be transitive links.
 
-For a variant to be marked as a duplicate, we must find 2 candidate transitive breakends which match the orientation and position of the spanning variant, within CIPOS bounds and allowing for the insert sequence length.   The CIPOS bounds for imprecise variants are ignored for this purpose and the match must be exact (see realignment section above).    
+For a variant to be marked as a duplicate, we must find 2 candidate transitive breakends which match the orientation and position of the spanning variant, within CIPOS bounds and allowing for the insert sequence length.
+The CIPOS bounds for imprecise variants are ignored for this purpose and the match must be exact (see realignment section above).    
 
 The candidate transitive breakends must be linkable in a continuous chain as one of the following cases:
 
-* same variant - opposite breakends of the same SV.   In this case precise break junctions are prioritised first, then passing variants, then highest quality
+* same variant - opposite breakends of the same SV
 * same assembly - the 2 transitive SVs are part of the same assembly and oriented away from each other
 * 1 transitive jump - the far breakend of the 2 transitive SVs / assemblies face each other and each link must be less than 1000 bases
 * 2 transitive jumps - the far breakend of the 2 transitive SVs / assemblies both face opposite ends of a 3rd SV or assembly and each link must be less than 1000 bases
+
+As a spanning variant may have multiple alternate paths, we first consider only assembly linked paths favouring those with the fewest jumps.  
+If an assembly-only solution is unavailable we include up to two transitive jumps, but this must result in a single alternate path. 
+If there are multiple alternate paths with transitive links, none will be selected.
  
 If the deduplicated spanning variant is PRECISE, then the length of the insert sequence of the spanning variant must match the entire chain length of the transitive variants (again allowing for CIPOS bounds and insert sequence length of precise variants).  
 
-Any single breakend which matches the position and orientation of another breakend or breakjunction (within CIPOS bounds) is also filtered as DEDUP.   GRIPSS prioritises retaining breakends / breakjunctions linked by assembly or transitive link, then breakends that are passing and finally by highest qual score. 
+Any single breakend which matches the position and orientation of another breakend or breakjunction (within CIPOS bounds) is also filtered as DEDUP.
+GRIPSS prioritises retaining breakends / breakjunctions linked by assembly or transitive link, then breakends that are passing and finally by highest qual score. 
 
 ### C. Linkage by double stranded break
 
