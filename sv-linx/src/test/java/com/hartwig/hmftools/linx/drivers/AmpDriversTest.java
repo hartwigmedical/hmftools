@@ -34,6 +34,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AmpDriversTest

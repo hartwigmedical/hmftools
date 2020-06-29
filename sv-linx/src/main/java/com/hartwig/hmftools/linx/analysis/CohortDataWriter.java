@@ -120,7 +120,7 @@ public class CohortDataWriter
             writer.write(",LocTopIdStart,LocTopTypeStart,LocTopTIStart,LocTopIdEnd,LocTopTypeEnd,LocTopTIEnd");
 
             // gene & replication info
-            writer.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd,VirusName");
+            writer.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd,VirusName,Annotations");
 
             if(mConfig.Output.WriteSvData)
             {
@@ -267,9 +267,9 @@ public class CohortDataWriter
                         virusName = viralInsertData[VH_NAME];
                 }
 
-                mSvFileWriter.write(String.format(",%s,%s,%.4f,%.4f,%s",
+                mSvFileWriter.write(String.format(",%s,%s,%.4f,%.4f,%s,%s",
                         var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
-                        var.getReplicationOrigin(true), var.getReplicationOrigin(false), virusName));
+                        var.getReplicationOrigin(true), var.getReplicationOrigin(false), virusName, var.getAnnotations()));
 
                 if(mConfig.Output.WriteSvData)
                 {

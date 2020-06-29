@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LONG_DEL_DUP_INV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.MAJOR_ALLELE_JCN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.MAJOR_ALLELE_JCN_LONG;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.PROXIMITY;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
@@ -22,6 +23,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
+import static com.hartwig.hmftools.linx.types.SvConstants.HIGH_JCN_NO_MERGE_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvConstants.LOW_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.types.SvConstants.MAX_MERGE_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
@@ -892,8 +894,8 @@ public class SimpleClustering
         // method:
         // walk through each cluster's chromosome breakend lists in turn in both directions
         // from each breakend walk forward and subtract any facing breakend's ploidy in the same cluster
-        // if an opposing unclustered breakend is encountered an the major AP in the segment after the unclustered breakend is less than
-        // the clustered net breakend ploidy, then merge in the unclustered breakend, subtract its ploidy and continue
+        // if an opposing unclustered breakend is encountered and the major AP in the segment after the unclustered breakend is less than
+        // the clustered net breakend JCN, then merge in the unclustered breakend, subtract its ploidy and continue
 
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
@@ -950,8 +952,13 @@ public class SimpleClustering
 
                             SvBreakend nextBreakend = fullBreakendList.get(chrIndex);
 
-                            if(abs(nextBreakend.position() - breakend.position()) > MAX_MERGE_DISTANCE)
-                                break;
+                            int distance = abs(nextBreakend.position() - breakend.position());
+
+                            if(breakend.jcn() < HIGH_JCN_NO_MERGE_DISTANCE || nextBreakend.jcn() < HIGH_JCN_NO_MERGE_DISTANCE)
+                            {
+                                if(distance > MAX_MERGE_DISTANCE)
+                                    break;
+                            }
 
                             if(nextBreakend.arm() != breakend.arm())
                                 break;
@@ -991,16 +998,25 @@ public class SimpleClustering
                                 SvBreakend opposingBreakend = opposingBreakends.stream()
                                         .filter(x -> copyNumbersEqual(x.jcn(), maxOpposingJcn)).findFirst().get();
 
+                                if(distance > MAX_MERGE_DISTANCE)
+                                {
+                                    breakend.getSV().addAnnotation(MAJOR_ALLELE_JCN_LONG.toString());
+                                    opposingBreakend.getSV().addAnnotation(MAJOR_ALLELE_JCN_LONG.toString());
+                                    continue;
+                                }
+
                                 SvCluster otherCluster = opposingBreakend.getCluster();
 
-                                LNX_LOGGER.debug("cluster({}) breakend({} netJCN={}) merges cluster({}) breakend({} ploidy={}) prior to MAP drop({})",
+                                LNX_LOGGER.debug("cluster({}) breakend({} netJCN={}) merges cluster({}) breakend({} ploidy={}) prior to MAP drop({}) distance({})",
                                         cluster.id(), breakend, formatJcn(breakendJcn), otherCluster.id(), opposingBreakend.toString(),
-                                        formatJcn(opposingBreakend.jcn()), formatJcn(followingMajorAP));
+                                        formatJcn(opposingBreakend.jcn()), formatJcn(followingMajorAP), distance);
 
-                                addClusterReasons(breakend.getSV(), opposingBreakend.getSV(), MAJOR_ALLELE_JCN);
+                                ClusteringReason reason = distance > MAX_MERGE_DISTANCE ? MAJOR_ALLELE_JCN_LONG : MAJOR_ALLELE_JCN;
 
-                                otherCluster.addClusterReason(MAJOR_ALLELE_JCN);
-                                cluster.addClusterReason(MAJOR_ALLELE_JCN);
+                                addClusterReasons(breakend.getSV(), opposingBreakend.getSV(), reason);
+
+                                otherCluster.addClusterReason(reason);
+                                cluster.addClusterReason(reason);
 
                                 cluster.mergeOtherCluster(otherCluster);
 

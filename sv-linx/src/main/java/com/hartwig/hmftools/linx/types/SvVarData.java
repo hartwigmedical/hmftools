@@ -78,6 +78,7 @@ public class SvVarData
     private SvCNData mCnDataPostEnd;
 
     private final List<SglMapping> mSglMappings;
+    private List<String> mAnnotationList;
 
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
     public static final String INF_SV_TYPE = "INF";
@@ -142,6 +143,8 @@ public class SvVarData
         {
             mSglMappings = null;
         }
+
+        mAnnotationList = null;
     }
 
     public final int id() { return mSVData.id(); }
@@ -609,6 +612,30 @@ public class SvVarData
             mCnDataPostEnd = postData;
         }
     }
+
+    public final List<String> getAnnotationList() { return mAnnotationList; }
+
+    public final void addAnnotation(final String annotation)
+    {
+        if(mAnnotationList == null)
+            mAnnotationList = Lists.newArrayList();
+
+        if(mAnnotationList.contains(annotation))
+            return;
+
+        mAnnotationList.add(annotation);
+    }
+
+    public boolean hasAnnotation(final String annotation) { return mAnnotationList != null && mAnnotationList.contains(annotation); }
+
+    public String getAnnotations()
+    {
+        if(mAnnotationList == null)
+            return "";
+
+        return mAnnotationList.stream().collect (Collectors.joining (SUBSET_SPLIT));
+    }
+
 
     public static boolean haveSameChrArms(final SvVarData var1, final SvVarData var2)
     {

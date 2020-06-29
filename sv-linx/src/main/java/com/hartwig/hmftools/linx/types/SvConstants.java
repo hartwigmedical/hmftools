@@ -12,6 +12,7 @@ public class SvConstants
     public static final int SHORT_DB_LENGTH = 100;
 
     public static final int MAX_MERGE_DISTANCE = 5000000;
+    public static final double HIGH_JCN_NO_MERGE_DISTANCE = 2.5;
 
     public static final int MAX_FOLDBACK_CHAIN_LENGTH = 5000;
 
