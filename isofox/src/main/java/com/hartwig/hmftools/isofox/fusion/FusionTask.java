@@ -363,7 +363,7 @@ public class FusionTask implements Callable
 
                     if(fusion1.matchWithinHomology(fusion2))
                     {
-                        ISF_LOGGER.info("fusion({}) homology merge with fusion({})", fusion1.id(), fusion2.id());
+                        ISF_LOGGER.debug("fusion({}) homology merge with fusion({})", fusion1.id(), fusion2.id());
 
                         ISF_LOGGER.debug("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                 fusion1.toString(), fusion1.junctionHomology()[SE_START], fusion1.junctionHomology()[SE_END],
