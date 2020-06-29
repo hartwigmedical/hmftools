@@ -184,7 +184,7 @@ public class ChainDiagnostics
                         svConn.Jcn, connectionCount, foldbackCons, compDupCons, assembledLinks);
 
                 logCsv("MULTI_CONN", svConn.SV,
-                        String.format("conns(%d) ploidy(%s-%s-%s) foldbacks(%d) compDups(%d) asmb(%d) otherSVs(%s)",
+                        String.format("conns(%d) jcn(%s-%s-%s) foldbacks(%d) compDups(%d) asmb(%d) otherSVs(%s)",
                                 connectionCount, formatJcn(svConn.MinJcn), formatJcn(svConn.Jcn), formatJcn(svConn.MaxJcn),
                                 foldbackCons, compDupCons, assembledLinks, otherSVs));
 
@@ -216,14 +216,14 @@ public class ChainDiagnostics
 
         if(mHasReplication)
         {
-            double unlinkedPloidyBreakends = mSvConnectionsMap.values().stream()
+            double unlinkedJcnBreakends = mSvConnectionsMap.values().stream()
                 .mapToDouble(x -> x.unlinked(true) + x.unlinked(false)).sum();
 
-            double unlinkedPloidySVs = mSvConnectionsMap.values().stream().mapToDouble(x -> x.unlinked()).sum();
+            double unlinkedJcnSVs = mSvConnectionsMap.values().stream().mapToDouble(x -> x.unlinked()).sum();
 
-            LNX_LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} ploidy={}) breakends({} ploidy={})",
+            LNX_LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} jcn={}) breakends({} jcn={})",
                     mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mClusterCount,
-                    mUnlinkedSvCount, formatJcn(unlinkedPloidySVs), mUnlinkedBreakendCount, formatJcn(unlinkedPloidyBreakends));
+                    mUnlinkedSvCount, formatJcn(unlinkedJcnSVs), mUnlinkedBreakendCount, formatJcn(unlinkedJcnBreakends));
         }
         else
         {
@@ -247,23 +247,23 @@ public class ChainDiagnostics
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,ClusterId,Replication,SvCount,PloidyTotal,Chains,RepeatedChains,SGLs,Warnings");
-                mFileWriter.write(",MaxPloidy,UnlinksSVs,UnlinkedBEs,InvalidBEs,Foldbacks,CompDups");
+                mFileWriter.write("SampleId,ClusterId,Replication,SvCount,JcnTotal,Chains,RepeatedChains,SGLs,Warnings");
+                mFileWriter.write(",MaxJcn,UnlinksSVs,UnlinkedBEs,InvalidBEs,Foldbacks,CompDups");
                 mFileWriter.newLine();
             }
 
             int sglCount = (int) svConnections.stream().filter(x -> x.SV.isSglBreakend()).count();
 
-            double ploidyTotal = svConnections.stream().mapToDouble(x -> x.Jcn).sum();
+            double jcnTotal = svConnections.stream().mapToDouble(x -> x.Jcn).sum();
 
-            double maxPloidy = mHasReplication ? svConnections.stream().mapToDouble(x -> x.Jcn).max().getAsDouble() : 1;
+            double maxJcn = mHasReplication ? svConnections.stream().mapToDouble(x -> x.Jcn).max().getAsDouble() : 1;
 
             mFileWriter.write(String.format("%s,%d,%s,%d,%.1f,%d,%d,%d,%d",
-                    mSampleId, mClusterId, mHasReplication, mClusterCount, ploidyTotal,
+                    mSampleId, mClusterId, mHasReplication, mClusterCount, jcnTotal,
                     mUniqueChains.size(), mChains.size() - mUniqueChains.size(), sglCount, mWarnings));
 
             mFileWriter.write(String.format(",%.1f,%d,%d,%d,%d,%d",
-                    maxPloidy, mUnlinkedSvCount, mUnlinkedBreakendCount, invalidBreakends,
+                    maxJcn, mUnlinkedSvCount, mUnlinkedBreakendCount, invalidBreakends,
                     mInitialFoldbacks.size(), mInitialComplexDup.size()));
 
             mFileWriter.newLine();

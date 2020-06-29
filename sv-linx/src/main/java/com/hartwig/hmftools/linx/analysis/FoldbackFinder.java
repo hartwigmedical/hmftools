@@ -6,10 +6,11 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_ASSEMBLY_LINK_COUNT;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LENGTH;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.breakendsAreChained;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
-import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
-import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 
 import java.util.List;
@@ -191,7 +192,7 @@ public class FoldbackFinder
 
             // check if a path can be walked between these 2 breakends along the chain
             // without going back through this foldback point
-            int[] chainData = chain1.breakendsAreChained(varEnd, !beEndUsesStart, varStart, !beStartUsesStart);
+            int[] chainData = breakendsAreChained(chain1, varEnd, !beEndUsesStart, varStart, !beStartUsesStart);
 
             if(chainData[CHAIN_LINK_COUNT] == 0 ) // || chainData[CHAIN_LINK_COUNT] != chainData[CHAIN_ASSEMBLY_LINK_COUNT]
                 return false;

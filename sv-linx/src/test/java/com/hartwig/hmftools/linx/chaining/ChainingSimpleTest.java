@@ -2,10 +2,8 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
-import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.linx.types.SvCluster;

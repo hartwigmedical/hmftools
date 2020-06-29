@@ -8,11 +8,14 @@ import static com.hartwig.hmftools.linx.chaining.ChainFinder.MIN_CHAINING_JCN_LE
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.UNCERTAINTY_SCALE_FACTOR;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.calcJcnUncertainty;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.duplicateChainOnLink;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.foldbackChainOnChain;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.foldbackChainOnLink;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.reconcileChains;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.CLOSING;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.JCN_MISMATCH;
-import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -737,17 +740,17 @@ public class ChainLinkAllocator
 
             if(foldbackChain != null)
             {
-                targetChain.foldbackChainOnChain(foldbackChain, proposedLinks.Links.get(0), proposedLinks.Links.get(1));
+                foldbackChainOnChain(targetChain, foldbackChain, proposedLinks.Links.get(0), proposedLinks.Links.get(1));
                 mChains.remove(foldbackChain);
             }
             else
             {
-                targetChain.foldbackChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
+                foldbackChainOnLink(targetChain, proposedLinks.Links.get(0), proposedLinks.Links.get(1));
             }
         }
         else
         {
-            targetChain.duplicateChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
+            duplicateChainOnLink(targetChain, proposedLinks.Links.get(0), proposedLinks.Links.get(1));
         }
 
         double newJcn = targetChain.jcn() * 0.5;

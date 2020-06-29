@@ -7,10 +7,11 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowJcnThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.CLUSTER_ALLELE_JCN_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatchForSplits;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.identicalChain;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.reconcileChains;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.JCN_MISMATCH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
-import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -311,7 +312,7 @@ public class ChainFinder
 
             for(final SvChain chain : mUniqueChains)
             {
-                if (chain.identicalChain(newChain, false))
+                if (identicalChain(chain, newChain, false))
                 {
                     LNX_LOGGER.debug("cluster({}) skipping duplicate chain({}) ploidy({}) vs origChain({}) ploidy({})",
                             mClusterId, newChain.id(), formatJcn(newChain.jcn()), chain.id(), formatJcn(chain.jcn()));
@@ -769,7 +770,7 @@ public class ChainFinder
 
                 for(SvChain dmChain : dmChains)
                 {
-                    if(chain.identicalChain(dmChain, false, true))
+                    if(identicalChain(chain, dmChain, false, true))
                     {
                         chain.setDoubleMinute(true);
                         unmatchedDmChains.remove(dmChain);

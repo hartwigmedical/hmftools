@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTi
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.reverseSectionOnBreakend;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
@@ -546,7 +547,7 @@ public class PairResolution
                         breakendToSwitch = longestTiPair.hasBreakend(lowerBe1) ? lowerBe1 : upperBe1;
                     }
 
-                    if(chain.reverseSectionOnBreakend(breakendToSwitch))
+                    if(reverseSectionOnBreakend(chain, breakendToSwitch))
                     {
                         LNX_LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
                         chain.logLinks();
@@ -579,7 +580,7 @@ public class PairResolution
                     breakendToSwitch = longestTiPair.hasBreakend(lowerBe2) ? lowerBe2 : longestTiPair.getOtherBreakend(lowerBe1);
                 }
 
-                if(chain.reverseSectionOnBreakend(breakendToSwitch))
+                if(reverseSectionOnBreakend(chain, breakendToSwitch))
                 {
                     LNX_LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
                     chain.logLinks();

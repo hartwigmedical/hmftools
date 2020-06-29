@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.identicalChain;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
@@ -366,6 +367,6 @@ public class ChainingActualTest
         assertEquals(1, dmChains.size());
         final SvChain dmChain = dmChains.get(0);
 
-        assertTrue(cluster.getChains().stream().anyMatch(x -> x.identicalChain(dmChain, false, true)));
+        assertTrue(cluster.getChains().stream().anyMatch(x -> identicalChain(x, dmChain, false, true)));
    }
 }

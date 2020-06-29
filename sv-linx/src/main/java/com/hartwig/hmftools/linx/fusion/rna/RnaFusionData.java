@@ -7,8 +7,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
-import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LENGTH;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.linx.chaining.ChainUtils.breakendsAreChained;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
 import java.util.List;
@@ -249,8 +250,9 @@ public class RnaFusionData
 
                 if (matchingChain != null)
                 {
-                    final int chainData[] =
-                            matchingChain.breakendsAreChained(varUp, !mBreakends[FS_UPSTREAM].usesStart(), varDown, !mBreakends[FS_DOWNSTREAM].usesStart());
+                    final int chainData[] = breakendsAreChained(
+                            matchingChain, varUp, !mBreakends[FS_UPSTREAM].usesStart(), varDown, !mBreakends[FS_DOWNSTREAM].usesStart());
+
                     mChainInfo = String.format("%d;%d", chainData[CHAIN_LINK_COUNT], chainData[CHAIN_LENGTH]);
                 }
             }

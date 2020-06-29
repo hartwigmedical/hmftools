@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingle
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
+import static com.hartwig.hmftools.linx.chaining.ChainMetrics.extractChainMetrics;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -937,7 +938,7 @@ public class SvCluster
     public ChainMetrics getLinkMetrics()
     {
         ChainMetrics chainMetrics = new ChainMetrics();
-        mChains.stream().forEach(x -> chainMetrics.add(x.extractChainMetrics()));
+        mChains.stream().forEach(x -> chainMetrics.add(extractChainMetrics(x)));
         return chainMetrics;
     }
 

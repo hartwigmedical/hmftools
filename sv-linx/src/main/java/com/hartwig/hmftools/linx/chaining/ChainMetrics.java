@@ -1,5 +1,14 @@
 package com.hartwig.hmftools.linx.chaining;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
+import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
+import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
+
+import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvLinkedPair;
+
 public class ChainMetrics
 {
     public int InternalTIs;
@@ -38,4 +47,65 @@ public class ChainMetrics
         ChainEndsFace += other.ChainEndsFace;
         ChainEndsAway += other.ChainEndsAway;
     }
+
+    public static ChainMetrics extractChainMetrics(final SvChain chain)
+    {
+        final SvBreakend chainStart = chain.getOpenBreakend(true);
+        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+        ChainMetrics metrics = new ChainMetrics();
+
+        if(chainStart == null || chainEnd == null)
+            return metrics;
+
+        final SvBreakend lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
+        final SvBreakend upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
+
+        boolean startEndSameArm = chainEnd.getChrArm().equals(chainStart.getChrArm());
+
+        if(startEndSameArm)
+        {
+            if (lowerBreakend.orientation() == 1 && upperBreakend.orientation() == -1)
+            {
+                ++metrics.ChainEndsAway;
+            }
+            else if (lowerBreakend.orientation() == -1 && upperBreakend.orientation() == 1)
+            {
+                ++metrics.ChainEndsFace;
+            }
+        }
+
+        for(final SvLinkedPair pair : chain.getLinkedPairs())
+        {
+            if(pair.first().type() == SGL || pair.second().type() == SGL)
+                continue;
+
+            if(pair.locationType() == LOCATION_TYPE_INTERNAL)
+            {
+                ++metrics.InternalTIs;
+
+                if(pair.length() <= SHORT_TI_LENGTH)
+                    ++metrics.InternalShortTIs;
+
+                if(pair.hasCopyNumberGain())
+                    ++metrics.InternalTICnGain;
+            }
+            else if(pair.locationType() == LOCATION_TYPE_REMOTE || pair.locationType() == LOCATION_TYPE_EXTERNAL)
+            {
+                ++metrics.ExternalTIs;
+
+                if(pair.length() <= SHORT_TI_LENGTH)
+                    ++metrics.ExternalShortTIs;
+
+                if(pair.hasCopyNumberGain())
+                    ++metrics.ExternalTICnGain;
+            }
+
+            if(pair.overlapCount() > 0)
+                ++metrics.OverlappingTIs;
+        }
+
+        return metrics;
+    }
+
 }

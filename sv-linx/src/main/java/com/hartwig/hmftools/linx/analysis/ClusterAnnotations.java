@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
+import static com.hartwig.hmftools.linx.chaining.ChainMetrics.extractChainMetrics;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -695,7 +696,7 @@ public class ClusterAnnotations
             if(chain.hasRepeatedSV())
                 continue;
 
-            final ChainMetrics chainMetrics = chain.extractChainMetrics();
+            final ChainMetrics chainMetrics = extractChainMetrics(chain);
 
             // require internal TIs with gain, which mandates chain ends are on the same arm
             if (chainMetrics.ChainEndsAway != 1 || chainMetrics.InternalTICnGain == 0 || chainMetrics.OverlappingTIs == 0)
