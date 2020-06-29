@@ -15,10 +15,29 @@ import org.jetbrains.annotations.NotNull;
 public class GeneLevelEventExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
-    private static final Set<String> GENE = Sets.newHashSet("mut", "mutant", "expression", "gene_only");
+    private static final Set<String> GENE = Sets.newHashSet("mut",
+            "mutant",
+            "expression",
+            "gene_only",
+            "EXPRESSION",
+            "Missense Variant",
+            "Protein Altering Variant",
+            "Frameshift Truncation",
+            "Gene Variant",
+            "Transcript Variant",
+            "Inframe Insertion",
+            "Wild Type",
+            "Transcription Variant",
+            "Frameshift Variant", "Coding Transcript Intron Variant", "Nonsynonymous Variant", "Inframe Variant", "Inframe Indel");
 
-    private static final Set<String> GENE_ACTIVATION =
-            Sets.newHashSet("Gain-of-function Mutations", "act mut", "overexpression", "over exp", "pos", "positive", "amp over exp");
+    private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
+            "act mut",
+            "overexpression",
+            "over exp",
+            "pos",
+            "positive",
+            "amp over exp",
+            "OVEREXPRESSION", "Gain Of Function Variant", "Stop Lost");
 
     private static final Set<String> GENE_INACTIVATION = Sets.newHashSet("Truncating Mutations",
             "inact mut",
@@ -27,7 +46,9 @@ public class GeneLevelEventExtractor {
             "undexpression",
             "dec exp",
             "negative",
-            "is_deletion");
+            "is_deletion",
+            "UNDEREXPRESSION",
+            "Loss Of Function Variant", "Start Lost");
 
     @NotNull
     public Map<Feature, String> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {

@@ -65,7 +65,7 @@ public class FusionExtractor {
                 return FUSION_PAIR;
             }
         }
-        if (featureName.toLowerCase().contains("fusions")) {
+        if (featureName.toLowerCase().contains("fusions") || featureName.equals("REARRANGEMENT")) {
             return FUSION_PAIR;
         } else if (featureName.toLowerCase().contains("fusion")) {
             return FUSION_PROMISCUOUS;
