@@ -88,7 +88,7 @@ public class ClusterAnalyser {
         mAllVariants = Lists.newArrayList();
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
-        mDmFinder = new DoubleMinuteFinder();
+        mDmFinder = new DoubleMinuteFinder(mState.getChrBreakendMap());
         mBfbFinder = new BfbFinder();
 
         if(mConfig.hasMultipleSamples())

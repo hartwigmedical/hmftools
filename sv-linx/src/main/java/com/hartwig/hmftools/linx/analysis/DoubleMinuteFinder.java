@@ -8,14 +8,15 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.positionWithin;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
+import static com.hartwig.hmftools.linx.types.DoubleMinuteData.INT_SEG_COUNT;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -48,6 +49,7 @@ public class DoubleMinuteFinder
 {
     private CnDataLoader mCnDataLoader;
     private EnsemblDataCache mGeneTransCache;
+    private final Map<String, List<SvBreakend>> mChrBreakendMap;
     private final ChainFinder mChainFinder;
 
     private final List<Integer> mProcessedClusters;
@@ -59,8 +61,9 @@ public class DoubleMinuteFinder
     private static final double JCN_THRESHOLD = 8;
     private static final double ADJACENT_JCN_RATIO = 2.3;
 
-    public DoubleMinuteFinder()
+    public DoubleMinuteFinder(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
+        mChrBreakendMap = chrBreakendMap;
         mChainFinder = new ChainFinder();
         mCnDataLoader = null;
         mGeneTransCache = null;
@@ -154,16 +157,13 @@ public class DoubleMinuteFinder
         int unchainedCount = candidateDMSVs.size() - chainedCount;
 
         // single DUPs are closed in a loop, as is any other chain involving all the DM SVs
-        if(unchainedCount == 0)
+        for(SvChain dmChain : dmChains)
         {
-            for(SvChain dmChain : dmChains)
+            if(!dmChain.isClosedLoop() && dmChain.couldCloseChain())
             {
-                if(!dmChain.isClosedLoop() && dmChain.couldCloseChain())
-                {
-                    int maxIndex = dmChain.getLinkedPairs().stream().mapToInt(x -> x.getLinkIndex()).max().orElse(0);
-                    dmChain.closeChain(LR_METHOD_DM_CLOSE, maxIndex + 1);
-                    dmChain.setDoubleMinute(true);
-                }
+                int maxIndex = dmChain.getLinkedPairs().stream().mapToInt(x -> x.getLinkIndex()).max().orElse(0);
+                dmChain.closeChain(LR_METHOD_DM_CLOSE, maxIndex + 1);
+                dmChain.setDoubleMinute(true);
             }
         }
 
@@ -173,18 +173,16 @@ public class DoubleMinuteFinder
         {
             fullyChained = false;
         }
-        else
-        {
-            for(SvChain chain : dmChains)
-            {
-                if(chain.isClosedLoop())
-                    continue;
 
-                if(!chain.getChainEndSV(true).isSglBreakend() && !chain.getChainEndSV(false).isSglBreakend())
-                {
-                    fullyChained = false;
-                    break;
-                }
+        for(SvChain chain : dmChains)
+        {
+            if(chain.isClosedLoop())
+                continue;
+
+            if(!chain.getChainEndSV(true).isSglBreakend() && !chain.getChainEndSV(false).isSglBreakend())
+            {
+                fullyChained = false;
+                break;
             }
         }
 
@@ -196,6 +194,8 @@ public class DoubleMinuteFinder
 
         dmData.Chains.addAll(dmChains);
         dmData.FullyChained = fullyChained;
+
+        dmData.setChainCharacteristics(mChrBreakendMap);
 
         mDoubleMinutes.put(cluster.id(), dmData);
 
@@ -244,7 +244,8 @@ public class DoubleMinuteFinder
 
             double adjacentMap = cnData.majorAlleleJcn();
 
-            maxRatio = adjacentMap > 0 ? max(var.jcn() / adjacentMap, maxRatio) : cnData.CopyNumber;
+            // if against 0, then just ensure it will pass
+            maxRatio = adjacentMap > 0 ? max(var.jcn() / adjacentMap, maxRatio) : ADJACENT_JCN_RATIO * 2;
         }
 
         return maxRatio;
@@ -315,14 +316,6 @@ public class DoubleMinuteFinder
             return;
 
         // a single DUP or a chain involving all high-JCN SVs which can be made into a loop
-        long closedSegmentLength = 0; // Sum of closed segment length
-        int closedBreakends = 0; // # of closed breakends
-        double closedJcnTotal = 0; // sum of JCN of closed breakends
-        int openBreakends = 0; // # of open breakends
-        double openJcnTotal = 0; // Sum of JCN of open breakends
-        double openJcnMax = 0; // max JCN of open breakends
-        boolean chainsCentromere = false;
-
         final List<SvVarData> unchainedSVs = Lists.newArrayList();
         final List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
@@ -333,50 +326,6 @@ public class DoubleMinuteFinder
             if(!dmData.Chains.stream().anyMatch(x -> x.getSvList().contains(var)))
             {
                 unchainedSVs.add(var);
-
-                openJcnMax = max(openJcnMax, var.jcn());
-
-                if(var.isSglBreakend())
-                {
-                    openJcnTotal += var.jcn();
-                    ++openBreakends;
-                }
-                else
-                {
-                    openJcnTotal += var.jcn() * 2;
-                    openBreakends += 2;
-                }
-            }
-        }
-
-        for(SvChain chain : dmData.Chains)
-        {
-            for(SvLinkedPair pair : chain.getLinkedPairs())
-            {
-                closedSegmentLength += pair.length();
-                closedBreakends += 2;
-                closedJcnTotal += pair.first().jcn();
-                closedJcnTotal += pair.second().jcn();
-
-                if(pair.firstBreakend().arm() != pair.secondBreakend().arm())
-                    chainsCentromere = true;
-            }
-
-            if(!chain.isClosedLoop())
-            {
-                if(!chain.getFirstSV().isSglBreakend())
-                {
-                    openJcnTotal += chain.getFirstSV().jcn();
-                    ++openBreakends;
-                    openJcnMax = max(openJcnMax, chain.getFirstSV().jcn());
-                }
-
-                if(!chain.getLastSV().isSglBreakend())
-                {
-                    openJcnTotal += chain.getLastSV().jcn();
-                    ++openBreakends;
-                    openJcnMax = max(openJcnMax, chain.getLastSV().jcn());
-                }
             }
         }
 
@@ -488,7 +437,8 @@ public class DoubleMinuteFinder
                 mFileWriter.write(",SamplePurity,SamplePloidy,DMSvCount,DMSvTypes,SvIds,Chromosomes");
                 mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
                 mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
-                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn");
+                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,TotalSegmentCnChange");
+                mFileWriter.write(",FbIntCount,FbIntJcnTotal,FbIntJcnMax,SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
                 mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
                 mFileWriter.newLine();
             }
@@ -501,14 +451,17 @@ public class DoubleMinuteFinder
 
             mFileWriter.write(String.format(",%d,%s,%d,%d,%d,%s",
                     dmData.Chains.size(), dmData.FullyChained, dmData.Chains.stream().filter(x -> x.isClosedLoop()).count(),
-                    closedSegmentLength, dmData.SVs.size() - unchainedSVs.size(),
+                    dmData.ClosedSegmentLength, dmData.SVs.size() - unchainedSVs.size(),
                     dmData.Chains.stream().anyMatch(x -> x.hasRepeatedSV())));
 
-            mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f",
-                    closedBreakends, closedJcnTotal, openBreakends, openJcnTotal, openJcnMax, intExtCount, intExtJcnTotal, intExtMaxJcn));
+            mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f,%.1f",
+                    dmData.ClosedBreakends, dmData.ClosedJcnTotal, dmData.OpenBreakends, dmData.OpenJcnTotal, dmData.OpenJcnMax,
+                    intExtCount, intExtJcnTotal, intExtMaxJcn, dmData.TotalSegmentCnChange));
+
+            mFileWriter.write(String.format(",%s", dmData.internalTypeCountsAsStr()));
 
             mFileWriter.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f",
-                    maxDMCopyNumber, minDMJcn, maxDMJcn, amplifiedGenesStr, chainsCentromere, minAdjMAJcnRatio));
+                    maxDMCopyNumber, minDMJcn, maxDMJcn, amplifiedGenesStr, dmData.ChainsCentromere, minAdjMAJcnRatio));
 
             mFileWriter.newLine();
         }

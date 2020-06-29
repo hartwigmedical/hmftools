@@ -207,7 +207,7 @@ public class SvChain {
 
         if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
         {
-            if(chainEnd.getSV() == chainStart.getSV())
+            if(chainEnd.getSV() == chainStart.getSV() && chainStart != chainEnd)
             {
                 return true;
             }

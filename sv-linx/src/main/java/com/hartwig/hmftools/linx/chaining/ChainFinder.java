@@ -757,7 +757,7 @@ public class ChainFinder
                 SvBreakend chainStart = chain.getOpenBreakend(true);
                 SvBreakend chainEnd = chain.getOpenBreakend(false);
 
-                if(chainEnd.getSV() == chainStart.getSV())
+                if(chainEnd.getSV() == chainStart.getSV() && chainStart != chainEnd)
                 {
                     chain.closeChain();
                 }
