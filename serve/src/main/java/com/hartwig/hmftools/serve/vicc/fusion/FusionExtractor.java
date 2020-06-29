@@ -60,7 +60,12 @@ public class FusionExtractor {
         if (featureName.contains("-") && !featureName.equals("Microsatellite Instability-High")) {
             featureName = "fusions";
         }
-        if (featureName.toLowerCase().contains("fusions") || feature.biomarkerType().equals("rearrange")) {
+        if (feature.biomarkerType() != null ) {
+            if (feature.biomarkerType().equals("rearrange")) {
+                return FUSION_PAIR;
+            }
+        }
+        if (featureName.toLowerCase().contains("fusions")) {
             return FUSION_PAIR;
         } else if (featureName.toLowerCase().contains("fusion")) {
             return FUSION_PROMISCUOUS;
