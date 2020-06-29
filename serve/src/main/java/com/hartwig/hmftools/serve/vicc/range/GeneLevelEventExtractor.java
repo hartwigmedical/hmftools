@@ -15,12 +15,19 @@ import org.jetbrains.annotations.NotNull;
 public class GeneLevelEventExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
-    private static final Set<String> GENE = Sets.newHashSet("mut", "mutant", "expression");
+    private static final Set<String> GENE = Sets.newHashSet("mut", "mutant", "expression", "gene_only");
 
-    private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations", "act mut", "overexpression");
+    private static final Set<String> GENE_ACTIVATION =
+            Sets.newHashSet("Gain-of-function Mutations", "act mut", "overexpression", "over exp", "pos", "positive", "amp over exp");
 
-    private static final Set<String> GENE_INACTIVATION =
-            Sets.newHashSet("Truncating Mutations", "inact mut", "loss", "biallelic inactivation", "undexpression");
+    private static final Set<String> GENE_INACTIVATION = Sets.newHashSet("Truncating Mutations",
+            "inact mut",
+            "loss",
+            "biallelic inactivation",
+            "undexpression",
+            "dec exp",
+            "negative",
+            "is_deletion");
 
     @NotNull
     public Map<Feature, String> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {
@@ -31,10 +38,11 @@ public class GeneLevelEventExtractor {
                     feature.proteinAnnotation())) {
                 geneLevelEventsPerFeature.put(feature, "gain of " + feature.geneSymbol());
             } else if (GENE_INACTIVATION.contains(feature.name()) || GENE_INACTIVATION.contains(feature.biomarkerType())
-                    || GENE_INACTIVATION.contains(feature.proteinAnnotation())) {
+                    || GENE_INACTIVATION.contains(feature.provenanceRule()) || GENE_INACTIVATION.contains(feature.proteinAnnotation())) {
                 geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
-            } else if (GENE.contains(feature.biomarkerType())
-                    || (GENE.contains(feature.proteinAnnotation())) && !feature.name().contains("+")) { //TODO: determine gain of loss function
+            } else if (GENE.contains(feature.biomarkerType()) || GENE.contains(feature.provenanceRule())
+                    || (GENE.contains(feature.proteinAnnotation())) && !feature.name()
+                    .contains("+")) { //TODO: determine gain of loss function
                 geneLevelEventsPerFeature.put(feature, "gain/loss of " + feature.geneSymbol());
             }
         }
