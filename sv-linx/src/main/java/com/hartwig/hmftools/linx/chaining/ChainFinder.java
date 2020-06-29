@@ -81,7 +81,7 @@ public class ChainFinder
     private ChainLinkAllocator mLinkAllocator;
 
     // a cache of cluster ploidy boundaries which links cannot cross
-    private final ChainJcnLimits mClusterPloidyLimits;
+    private final ChainJcnLimits mClusterJcnLimits;
 
     // determined up-front - the set of all possible links from a specific breakend to other breakends
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
@@ -95,7 +95,7 @@ public class ChainFinder
     private boolean mLogVerbose;
     private Level mLogLevel;
     private boolean mRunValidation;
-    private boolean mUseAllelePloidies;
+    private boolean mUseAlleleJCNs;
 
     public static final String LR_METHOD_DM_CLOSE = "DM_CLOSE";
 
@@ -111,7 +111,7 @@ public class ChainFinder
         mAssembledLinks = Lists.newArrayList();
         mChrBreakendMap = null;
 
-        mClusterPloidyLimits = new ChainJcnLimits();
+        mClusterJcnLimits = new ChainJcnLimits();
 
         mAdjacentMatchingPairs = Lists.newArrayList();
         mAdjacentPairs = Lists.newArrayList();
@@ -123,9 +123,9 @@ public class ChainFinder
         mReplicatedSVs = Lists.newArrayList();
         mReplicatedBreakends = Lists.newArrayList();
 
-        mLinkAllocator = new ChainLinkAllocator(mClusterPloidyLimits, mSvBreakendPossibleLinks, mChains, mDoubleMinuteSVs);
+        mLinkAllocator = new ChainLinkAllocator(mClusterJcnLimits, mSvBreakendPossibleLinks, mChains, mDoubleMinuteSVs);
 
-        mRuleSelector = new ChainRuleSelector(mLinkAllocator, mClusterPloidyLimits,
+        mRuleSelector = new ChainRuleSelector(mLinkAllocator, mClusterJcnLimits,
                 mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
                 mAdjacentMatchingPairs, mAdjacentPairs, mChains);
 
@@ -135,7 +135,7 @@ public class ChainFinder
         mRunValidation = false;
         mIsValid = true;
         mSampleId= "";
-        mUseAllelePloidies = false;
+        mUseAlleleJCNs = false;
 
         mDiagnostics = new ChainDiagnostics(
                 mLinkAllocator.getSvConnectionsMap(), mLinkAllocator.getSvCompletedConnections(), mChains, mUniqueChains,
@@ -252,14 +252,14 @@ public class ChainFinder
     }
 
     public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
-    public void setUseAllelePloidies(boolean toggle) { mUseAllelePloidies = toggle; }
+    public void setUseAllelePloidies(boolean toggle) { mUseAlleleJCNs = toggle; }
 
     public final List<SvChain> getUniqueChains()
     {
         return mUniqueChains;
     }
-    public double getValidAllelePloidySegmentPerc() { return mClusterPloidyLimits.getValidAllelePloidySegmentPerc(); }
-    public final long[] calcRangeData() { return mClusterPloidyLimits.calcRangeData(); }
+    public double getValidAllelePloidySegmentPerc() { return mClusterJcnLimits.getValidAlleleJcnSegmentPerc(); }
+    public final long[] calcRangeData() { return mClusterJcnLimits.calcRangeData(); }
     public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
 
     public void formChains(boolean assembledLinksOnly)
@@ -275,7 +275,7 @@ public class ChainFinder
 
         enableLogVerbose();
 
-        mClusterPloidyLimits.initialise(mClusterId, mChrBreakendMap);
+        mClusterJcnLimits.initialise(mClusterId, mChrBreakendMap);
 
         buildChains(assembledLinksOnly);
 
@@ -382,8 +382,8 @@ public class ChainFinder
         if(assembledLinksOnly)
             return;
 
-        if(mUseAllelePloidies && mHasReplication)
-            mClusterPloidyLimits.determineBreakendPloidies();
+        if(mUseAlleleJCNs && mHasReplication)
+            mClusterJcnLimits.determineBreakendJCNs();
 
         determinePossibleLinks();
 
@@ -493,14 +493,14 @@ public class ChainFinder
         // form a map of each breakend to its set of all other breakends which can form a valid TI
         // need to exclude breakends which are already assigned to an assembled TI unless replication permits additional instances of it
         // add possible links to a list ordered from shortest to longest length
-        // do not chain past a zero cluster allele ploidy
+        // do not chain past a zero cluster allele JCN
         // identify potential complex DUP candidates along the way
 
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
-            final List<SegmentJcn> allelePloidies = mClusterPloidyLimits.getChrAllelePloidies().get(chromosome);
+            final List<SegmentJcn> alleleJCNs = mClusterJcnLimits.getChrAlleleJCNs().get(chromosome);
 
             for (int i = 0; i < breakendList.size() -1; ++i)
             {
@@ -519,10 +519,10 @@ public class ChainFinder
 
                 final SvVarData lowerSV = lowerBreakend.getSV();
 
-                boolean lowerValidAP = mUseAllelePloidies && mClusterPloidyLimits.hasValidAlleleJcnData(
-                        getClusterChrBreakendIndex(lowerBreakend), allelePloidies);
+                boolean lowerValidAP = mUseAlleleJCNs && mClusterJcnLimits.hasValidAlleleJcnData(
+                        getClusterChrBreakendIndex(lowerBreakend), alleleJCNs);
 
-                double lowerPloidy = mLinkAllocator.getUnlinkedBreakendCount(lowerBreakend);
+                double lowerJcn = mLinkAllocator.getUnlinkedBreakendCount(lowerBreakend);
 
                 int skippedNonAssembledIndex = -1; // the first index of a non-assembled breakend after the current one
 
@@ -587,7 +587,7 @@ public class ChainFinder
                     {
                         mAdjacentPairs.add(newPair);
 
-                        if (copyNumbersEqual(lowerPloidy, mLinkAllocator.getUnlinkedBreakendCount(upperBreakend)))
+                        if (copyNumbersEqual(lowerJcn, mLinkAllocator.getUnlinkedBreakendCount(upperBreakend)))
                             mAdjacentMatchingPairs.add(newPair);
                     }
 
@@ -623,11 +623,11 @@ public class ChainFinder
                         }
                     }
 
-                    if(lowerValidAP && mClusterPloidyLimits.hasValidAlleleJcnData(
-                            getClusterChrBreakendIndex(upperBreakend), allelePloidies))
+                    if(lowerValidAP && mClusterJcnLimits.hasValidAlleleJcnData(
+                            getClusterChrBreakendIndex(upperBreakend), alleleJCNs))
                     {
                         int breakendIndex = getClusterChrBreakendIndex(upperBreakend);
-                        double clusterAP = allelePloidies.get(breakendIndex).clusterJcn();
+                        double clusterAP = alleleJCNs.get(breakendIndex).clusterJcn();
 
                         if(clusterAP < CLUSTER_ALLELE_JCN_MIN)
                         {

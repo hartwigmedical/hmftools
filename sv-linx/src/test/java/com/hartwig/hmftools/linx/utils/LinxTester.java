@@ -81,7 +81,6 @@ public class LinxTester
             Configurator.setRootLevel(Level.TRACE);
 
         Analyser.getChainFinder().setLogVerbose(toggle);
-        Analyser.getLinkFinder().setLogVerbose(toggle);
     }
 
     public void addAndCluster(SvVarData var1, SvVarData var2)

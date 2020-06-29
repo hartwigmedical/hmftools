@@ -40,8 +40,8 @@ public class ChainJcnLimits
         mChrBreakendMap = null;
     }
 
-    public final Map<String, List<SegmentJcn>> getChrAllelePloidies() { return mChrAlleleJCNs; }
-    public double getValidAllelePloidySegmentPerc() { return mValidAlleleJcnSegmentPerc; }
+    public final Map<String, List<SegmentJcn>> getChrAlleleJCNs() { return mChrAlleleJCNs; }
+    public double getValidAlleleJcnSegmentPerc() { return mValidAlleleJcnSegmentPerc; }
 
     public void initialise(int clusterId, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
@@ -76,7 +76,7 @@ public class ChainJcnLimits
         return rangeData;
     }
 
-    public void determineBreakendPloidies()
+    public void determineBreakendJCNs()
     {
         int totalSegCount = 0;
         int totalValidSegCount = 0;
@@ -88,9 +88,9 @@ public class ChainJcnLimits
             int breakendCount = breakendList.size();
 
             // a multi-dim array of breakend index for this arm to A allele JCN, B non-disrupted JCN, and cluster JCN
-            List<SegmentJcn> allelePloidies = Lists.newArrayListWithCapacity(breakendCount);
+            List<SegmentJcn> alleleJCNs = Lists.newArrayListWithCapacity(breakendCount);
 
-            mChrAlleleJCNs.put(chromosome, allelePloidies);
+            mChrAlleleJCNs.put(chromosome, alleleJCNs);
 
             boolean inSegment = false;
             SvBreakend segStartBreakend = null;
@@ -101,7 +101,7 @@ public class ChainJcnLimits
                 SvBreakend breakend = breakendList.get(i);
                 SvBreakend nextBreakend = i < breakendList.size() - 1 ? breakendList.get(i + 1) : null;
 
-                allelePloidies.add(
+                alleleJCNs.add(
                         new SegmentJcn(breakend.position(), nextBreakend != null ? nextBreakend.position() : breakend.position(),
                                 breakend.majorAlleleJcn(false), breakend.minorAlleleJcn(false)));
 
@@ -119,7 +119,7 @@ public class ChainJcnLimits
                         inSegment = false;
 
                         boolean validCalcs = calculateNoneClusterSegmentPloidies(
-                                allelePloidies, segStartIndex, i, segStartBreakend, breakend);
+                                alleleJCNs, segStartIndex, i, segStartBreakend, breakend);
                         ++totalSegCount;
 
                         if(validCalcs)
@@ -128,7 +128,7 @@ public class ChainJcnLimits
                 }
             }
 
-            calculateClusterSegmentPloidies(allelePloidies);
+            calculateClusterSegmentJCNs(alleleJCNs);
         }
 
         LNX_LOGGER.debug("cluster({}) chromosomes({}) AP totalSegments({} valid={})",
@@ -136,7 +136,7 @@ public class ChainJcnLimits
     }
 
     private boolean calculateNoneClusterSegmentPloidies(
-            List<SegmentJcn> allelePloidies, int startIndex, int endIndex, SvBreakend startBreakend, SvBreakend endBreakend)
+            final List<SegmentJcn> alleleJCNs, int startIndex, int endIndex, SvBreakend startBreakend, SvBreakend endBreakend)
     {
         double startMajorAP = startBreakend.majorAlleleJcn(true);
         double startMinorAP = startBreakend.minorAlleleJcn(true);
@@ -151,8 +151,8 @@ public class ChainJcnLimits
         int segCount = endIndex - startIndex + 1;
         for (int i = startIndex; i <= endIndex; ++i)
         {
-            int majorAP = (int)round(allelePloidies.get(i).MajorAP);
-            int minorAP = (int)round(allelePloidies.get(i).MinorAP);
+            int majorAP = (int)round(alleleJCNs.get(i).MajorAP);
+            int minorAP = (int)round(alleleJCNs.get(i).MinorAP);
             Integer repeatCount = jcnFrequency.get(majorAP);
             if(repeatCount == null)
                 jcnFrequency.put(majorAP, 1);
@@ -204,8 +204,8 @@ public class ChainJcnLimits
 
         for (int i = startIndex; i <= endIndex; ++i)
         {
-            int majorAP = (int) round(allelePloidies.get(i).MajorAP);
-            int minorAP = (int) round(allelePloidies.get(i).MinorAP);
+            int majorAP = (int) round(alleleJCNs.get(i).MajorAP);
+            int minorAP = (int) round(alleleJCNs.get(i).MinorAP);
 
             if(majorAP == aJcn)
             {
@@ -226,37 +226,37 @@ public class ChainJcnLimits
         // set these values int each segment
         for (int i = startIndex; i <= endIndex; ++i)
         {
-            allelePloidies.get(i).AFixedAP = aJcn;
-            allelePloidies.get(i).BUndisruptedAP = bJcnMin;
-            allelePloidies.get(i).setValid(true);
+            alleleJCNs.get(i).AFixedAP = aJcn;
+            alleleJCNs.get(i).BUndisruptedAP = bJcnMin;
+            alleleJCNs.get(i).setValid(true);
         }
 
         return true;
     }
 
-    private boolean calculateClusterSegmentPloidies(List<SegmentJcn> allelePloidies)
+    private boolean calculateClusterSegmentJCNs(List<SegmentJcn> alleleJCNs)
     {
         // first establish the non-disrupted B JCN across all segments
-        double bNonClusterJcnMin = allelePloidies.stream()
+        double bNonClusterJcnMin = alleleJCNs.stream()
                 .filter(x -> x.isValid())
                 .mapToDouble(x -> x.BUndisruptedAP).min().orElse(0);
 
         // finally set a cluster JCN using knowledge of the other 2 ploidies
         int validSegments = 0;
-        int segmentCount = allelePloidies.size();
+        int segmentCount = alleleJCNs.size();
 
         for(int i = 0; i < segmentCount; ++i)
         {
-            if(!allelePloidies.get(i).isValid())
+            if(!alleleJCNs.get(i).isValid())
                 continue;
 
             ++validSegments;
 
-            double majorAP = allelePloidies.get(i).MajorAP;
-            double minorAP = allelePloidies.get(i).MinorAP;
-            double aJcn = allelePloidies.get(i).AFixedAP;
+            double majorAP = alleleJCNs.get(i).MajorAP;
+            double minorAP = alleleJCNs.get(i).MinorAP;
+            double aJcn = alleleJCNs.get(i).AFixedAP;
 
-            allelePloidies.get(i).BUndisruptedAP = bNonClusterJcnMin;
+            alleleJCNs.get(i).BUndisruptedAP = bNonClusterJcnMin;
 
             double clusterJcn = 0;
             if(majorAP > aJcn + 0.5)
@@ -268,8 +268,8 @@ public class ChainJcnLimits
                 clusterJcn = minorAP - bNonClusterJcnMin;
             }
 
-            allelePloidies.get(i).setClusterJcn(max(clusterJcn, 0.0));
-            allelePloidies.get(i).setValid(true);
+            alleleJCNs.get(i).setClusterJcn(max(clusterJcn, 0.0));
+            alleleJCNs.get(i).setValid(true);
         }
 
         mValidAlleleJcnSegmentPerc = validSegments / (double)segmentCount;

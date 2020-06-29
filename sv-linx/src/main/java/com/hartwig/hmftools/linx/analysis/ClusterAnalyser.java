@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingle
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.DELETED_TOTAL;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.RANGE_TOTAL;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.createAssemblyLinkedPairs;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
@@ -63,7 +64,6 @@ public class ClusterAnalyser {
     private final List<SvCluster> mClusters;
     private final List<SvVarData> mAllVariants;
     private final ChainFinder mChainFinder;
-    private final LinkFinder mLinkFinder;
 
     private boolean mRunValidationChecks;
 
@@ -86,7 +86,6 @@ public class ClusterAnalyser {
         mLineElementAnnotator = null;
         mSampleId = "";
         mAllVariants = Lists.newArrayList();
-        mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
         mDmFinder = new DoubleMinuteFinder(mState.getChrBreakendMap());
         mBfbFinder = new BfbFinder();
@@ -100,7 +99,6 @@ public class ClusterAnalyser {
 
         mChainFinder.setUseAllelePloidies(true); // can probably remove and assume always in place
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
-        mLinkFinder.setLogVerbose(mConfig.LogVerbose);
 
         mRunValidationChecks = false; // emabled in unit tests and after changes to merging-rule flow
 
@@ -132,7 +130,6 @@ public class ClusterAnalyser {
 
     // access for unit testing
     public final ChainFinder getChainFinder() { return mChainFinder; }
-    public final LinkFinder getLinkFinder() { return mLinkFinder; }
 
     public void setRunValidationChecks(boolean toggle) { mRunValidationChecks = toggle; }
 
@@ -264,7 +261,7 @@ public class ClusterAnalyser {
             // more complicated clusters for now
             boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedJcn();
 
-            mLinkFinder.findAssembledLinks(cluster);
+            cluster.setAssemblyLinkedPairs(createAssemblyLinkedPairs(cluster));
             cluster.setJcnReplication(mConfig.ChainingSvLimit);
 
             if(isSimple)

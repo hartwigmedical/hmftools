@@ -324,7 +324,7 @@ public class ChainUtils
         reconcileChains(chains, false, 0, false);
     }
 
-    public static void reconcileChains(final List<SvChain> chains, boolean checkChainSplits, int nextChainId, boolean useChainEndPloidies)
+    public static void reconcileChains(final List<SvChain> chains, boolean checkChainSplits, int nextChainId, boolean useChainEndJCNs)
     {
         // join 2 chains into a single chain if they have the same SV's opposing breakends on their ends
         // if the chains differ in JCN then either skip merging them or split off (copy) the larger JCN chain before joining
@@ -373,7 +373,7 @@ public class ChainUtils
 
                 boolean jcnMatched = jcnMatch(chain1.jcn(), chain1.jcnUncertainty(), chain2.jcn(), chain2.jcnUncertainty());
 
-                if(!jcnMatched && !checkChainSplits && !useChainEndPloidies)
+                if(!jcnMatched && !checkChainSplits && !useChainEndJCNs)
                     continue;
 
                 for (int be1 = SE_START; be1 <= SE_END; ++be1)
@@ -399,7 +399,7 @@ public class ChainUtils
                         if(!couldJoinChains)
                             continue;
 
-                        if(useChainEndPloidies && !jcnMatched)
+                        if(useChainEndJCNs && !jcnMatched)
                         {
                             // even if the chains don't have a match, check the breakends themselves vs the chains
                             if(jcnMatch(chain1.jcn(), chain1.jcnUncertainty(), breakend1.jcn(), breakend1.jcnUncertainty())
