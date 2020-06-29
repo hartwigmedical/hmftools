@@ -27,16 +27,20 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
             val alternativeStarts = variantStore.selectAlternatives(variant)
             // Note: we really shouldn't expect to see that many variants within the CIPOS. If we do it is likely that it is a large
             // poly-G region or something equally messy.
-            if (alternativeStarts.size in 1..MAX_ALTERNATIVES) {
+             if (alternativeStarts.size in 1..MAX_ALTERNATIVES) {
                 logger.debug("Examining ${alternativeStarts.size} alternative(s) to variant $target")
                 val transLinkPrefix = "trs_${variant.vcfId}_"
+                val assemblyNodes = ArrayDeque<Node>()
+
                 for (alternative in alternativeStarts) {
                     val alternativeMate = variantStore.select(alternative.mateId!!)
                     val node = Node(transLinkPrefix, maxTransitiveJumps, maxAssemblyJumps, maxTransitiveJumps, alternative, alternativeMate, listOf(Link(alternative)))
-                    val assemblyLinks = findLinks(target, node)
-                    if (assemblyLinks.isNotEmpty()) {
-                        return assemblyLinks
-                    }
+                    assemblyNodes.add(node)
+                }
+
+                val assemblyLinks = findLinks(target, assemblyNodes, ArrayDeque(), ArrayDeque())
+                if (assemblyLinks.isNotEmpty()) {
+                    return assemblyLinks
                 }
             }
         }
@@ -44,30 +48,39 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         return Collections.emptyList()
     }
 
-
-    private fun findLinks(target: StructuralVariantContext, node: Node): List<Link> {
-
-        if (node.matchesTarget(target)) {
-            return node.links
+    private tailrec fun findLinks(target: StructuralVariantContext, assemblyNodes: ArrayDeque<Node>, transitiveNodes: ArrayDeque<Node>, matchedTransitive: ArrayDeque<Node>): List<Link> {
+        if (transitiveNodes.size > 1) {
+            // No result if we there is more than one transitive path (and no assembly path)
+            return Collections.emptyList()
         }
 
-        val assemblyNodes = node.assemblyNodes(assemblyLinkStore, variantStore)
-        for (assemblyNode in assemblyNodes) {
-            val result = findLinks(target, assemblyNode)
-            if (result.isNotEmpty()) {
-                return result
+        if (assemblyNodes.isEmpty() && transitiveNodes.isEmpty()) {
+            if (matchedTransitive.size == 1) {
+                return matchedTransitive.pop().links
             }
+
+            return Collections.emptyList()
         }
 
-        val transitiveNodes = node.transitiveNodes(assemblyLinkStore, variantStore)
-        for (transitiveNode in transitiveNodes) {
-            val result = findLinks(target, transitiveNode)
-            if (result.isNotEmpty()) {
-                return result
+        if (assemblyNodes.isNotEmpty()) {
+            val node = assemblyNodes.removeFirst()
+            if (node.matchesTarget(target)) {
+                // Return first (breath-wise) completely assembled link we see
+                return node.links
             }
+
+            node.assemblyNodes(assemblyLinkStore, variantStore).forEach { assemblyNodes.addLast(it) }
+            node.transitiveNodes(assemblyLinkStore, variantStore).forEach { transitiveNodes.addLast(it) }
+        } else {
+            val node = transitiveNodes.removeFirst()
+            if (node.matchesTarget(target)) {
+                matchedTransitive.add(node)
+            }
+            node.assemblyNodes(assemblyLinkStore, variantStore).forEach { transitiveNodes.addLast(it) }
+            node.transitiveNodes(assemblyLinkStore, variantStore).forEach { transitiveNodes.addLast(it) }
         }
 
-        return Collections.emptyList()
+        return findLinks(target, assemblyNodes, transitiveNodes, matchedTransitive)
     }
 
     private fun VariantStore.selectAlternatives(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
@@ -75,7 +88,6 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
         val alternativeFilter: SvFilter = { other -> !other.imprecise && !other.isSingle }
         return selectOthersNearby(variant, MAX_ALTERNATIVES_ADDITIONAL_DISTANCE, MAX_ALTERNATIVES_SEEK_DISTANCE) { other -> isMatchingPositionAndOrientation(other) && alternativeFilter(other) }.sortByQualDesc()
     }
-
 }
 
 private data class Node(val transLinkPrefix: String, val maxTransitiveJumps: Int, val remainingAssemblyJumps: Int, val remainingTransitiveJumps: Int, val start: StructuralVariantContext, val end: StructuralVariantContext, val links: List<Link>) {

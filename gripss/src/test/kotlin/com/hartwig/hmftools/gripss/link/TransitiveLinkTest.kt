@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss.link
 
+import com.hartwig.hmftools.gripss.ContigComparator
+import com.hartwig.hmftools.gripss.StructuralVariantContext
 import com.hartwig.hmftools.gripss.VariantContextTestFactory
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.createImpreciseVariant
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.createVariant
@@ -98,4 +100,72 @@ class TransitiveLinkTest {
         val links = LinkStore(AssemblyLink(variantStore.selectAll()))
         assertTrue(TransitiveLink(links, variantStore).transitiveLink(v1).isNotEmpty())
     }
+
+    @Test
+    fun testBreathFirstSearch() {
+        val v1start = createImpreciseVariant("1", 1000, "id1s", "A", "A[1:2000[", 1000, "id1e").toSv()
+        val v1end = createImpreciseVariant("1", 2000, "id1e", "A", "]1:1000]A", 1000, "id1s").toSv()
+
+        val lowQualMatchStart = createVariant("1", 1000, "lqs", "A", "A[1:2000[", 1, "lqe").toSv()
+        val lowQualMatchEnd = createVariant("1", 2000, "lqe", "A", "]1:1000]A", 1, "lqs").toSv()
+
+        val v2start = createVariant("1", 1000, "id2s", "A", "A[1:1400[", 1000, "id2e").toSv()
+        val v2end = createVariant("1", 1400, "id2e", "A", "]1:1000]A", 1000, "id2s").toSv()
+        val v3start = createVariant("1", 1600, "id3s", "A", "A[1:2000[", 1000, "id3e").toSv()
+        val v3end = createVariant("1", 2000, "id3e", "A", "]1:1600]A", 1000, "id3s").toSv()
+        val vSgl = createVariant("1", 1500, "idSgl", "A", "A.", 1000, listOf("PASS")).toSv()
+        val variantStore = VariantStore(listOf(v1start, v1end, v2start, v2end, vSgl, v3start, v3end, lowQualMatchStart, lowQualMatchEnd))
+
+        val result = TransitiveLink(LinkStore(listOf()), variantStore).transitiveLink(v1start)
+        assertEquals(1, result.size)
+    }
+
+    @Test
+    fun testHightestQualFirst() {
+        val v1start = createImpreciseVariant("1", 1000, "id1s", "A", "A[1:2000[", 1000, "id1e").toSv()
+        val v1end = createImpreciseVariant("1", 2000, "id1e", "A", "]1:1000]A", 1000, "id1s").toSv()
+
+        val lowQualMatchStart = createVariant("1", 1000, "lqs", "A", "A[1:2000[", 1, "lqe").toSv()
+        val lowQualMatchEnd = createVariant("1", 2000, "lqe", "A", "]1:1000]A", 1, "lqs").toSv()
+
+        val highQualMatchStart = createVariant("1", 1000, "hqs", "A", "A[1:2000[", 10, "hqe").toSv()
+        val highQualMatchEnd = createVariant("1", 2000, "hqe", "A", "]1:1000]A", 10, "hqs").toSv()
+        val variantStore = VariantStore(listOf(v1start, v1end, lowQualMatchStart, lowQualMatchEnd, highQualMatchStart, highQualMatchEnd))
+
+        val result = TransitiveLink(LinkStore(listOf()), variantStore).transitiveLink(v1start)
+        assertEquals("hqs<PAIR>hqe", result[0].toString())
+    }
+
+    @Test
+    fun testOneTransitiveLinkOnly() {
+        val v1start = createImpreciseVariant("1", 1000, "id1s", "A", "A[1:5000[", 1000, "id1e").toSv()
+        val v1end = createImpreciseVariant("1", 5000, "id1e", "A", "]1:1000]A", 1000, "id1s").toSv()
+
+        val v2start = createVariant("1", 1000, "id2s", "A", "A[1:2000[", 1000, "id2e").toSv()
+        val v2end = createVariant("1", 2000, "id2e", "A", "]1:1000]A", 1000, "id2s").toSv()
+        val v3start = createVariant("1", 4000, "id3s", "A", "A[1:5000[", 1000, "id3e").toSv()
+        val v3end = createVariant("1", 5000, "id3e", "A", "]1:4000]A", 1000, "id3s").toSv()
+
+        val v4start = createVariant("1", 2500, "id4s", "A", "A[1:3500[", 1000, "id4e").toSv()
+        val v4end = createVariant("1", 3500, "id4e", "A", "]1:2500]A", 1000, "id4s").toSv()
+
+        val v5start = createVariant("1", 2500, "id5s", "A", "A[1:3500[", 1000, "id5e").toSv()
+        val v5end = createVariant("1", 3500, "id5e", "A", "]1:2500]A", 1000, "id5s").toSv()
+
+        val variantStoreV4 = variantStore(v1start, v1end, v2start, v2end, v4start, v4end, v3start, v3end)
+        val variantStoreV5 = variantStore(v1start, v1end, v2start, v2end, v5start, v5end, v3start, v3end)
+        val variantStoreAll = variantStore(v1start, v1end, v2start, v2end, v4start, v5start, v4end, v5end, v3start, v3end)
+
+        assertTrue(TransitiveLink(LinkStore(listOf()), variantStoreV4).transitiveLink(v1start).isNotEmpty())
+        assertTrue(TransitiveLink(LinkStore(listOf()), variantStoreV5).transitiveLink(v1start).isNotEmpty())
+        assertTrue(TransitiveLink(LinkStore(listOf()), variantStoreAll).transitiveLink(v1start).isEmpty())
+    }
+
+    private fun variantStore(vararg elements: StructuralVariantContext): VariantStore {
+        val comparator = ContigComparator(null)
+        val result = mutableListOf<StructuralVariantContext>()
+        elements.forEach { result.add(it) }
+        return VariantStore(result.sortedWith(Comparator {x, y -> comparator.compare(x, y)} ))
+    }
+
 }
