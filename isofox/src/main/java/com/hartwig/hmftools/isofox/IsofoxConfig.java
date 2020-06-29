@@ -173,6 +173,7 @@ public class IsofoxConfig
         {
             Functions.add(TRANSCRIPT_COUNTS);
             Functions.add(NOVEL_LOCATIONS);
+            Functions.add(FUSIONS);
         }
 
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);

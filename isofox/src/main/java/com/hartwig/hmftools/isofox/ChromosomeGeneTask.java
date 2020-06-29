@@ -320,7 +320,7 @@ public class ChromosomeGeneTask implements Callable
             }
         }
 
-        if(nextLogCount > 100)
+        if(mConfig.runFunction(FUSIONS) && nextLogCount > 100)
         {
             ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
             ISF_LOGGER.info("chr({}) chimeric data: {} dups={}", mChromosome, mChimericStats, mChimericDuplicateReadIds.size());

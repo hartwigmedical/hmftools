@@ -43,7 +43,6 @@ The 3 core functions of Isofox are controlled by the 'functions' argument:
 
 These can be run concurrently or independently depending on the values set for this argument.
 
-
 ### Mandatory
 Argument | Description
 ---|---
@@ -52,7 +51,7 @@ output_dir | Directory for Isofox output files
 bam_file | Input BAM file, requires corresponding index file
 ref_genome | Reference genome fasta file
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
-functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS'. Other values: FUSIONS, EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS.
+functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS'. Other values: FUSIONS, EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS.
 
 For instructions on how to generate the Ensembl data cache, see subsection below.
 
