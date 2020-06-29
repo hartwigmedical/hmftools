@@ -35,7 +35,7 @@ public class GeneLevelEventExtractor {
                 geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
             } else if (GENE.contains(feature.biomarkerType())
                     || (GENE.contains(feature.proteinAnnotation())) && !feature.name().contains("+")) { //TODO: determine gain of loss function
-                geneLevelEventsPerFeature.put(feature, " " + feature.geneSymbol());
+                geneLevelEventsPerFeature.put(feature, "gain/loss of " + feature.geneSymbol());
             }
         }
 
