@@ -12,12 +12,11 @@ import static org.junit.Assert.assertTrue;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS_TI;
-import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.linx.cn.LohEvent;
-import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 

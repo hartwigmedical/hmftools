@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.linx.types.SvConstants.MAX_MERGE_DISTANCE;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_MERGE_DISTANCE;
 
 import java.util.List;
 import java.util.Map;

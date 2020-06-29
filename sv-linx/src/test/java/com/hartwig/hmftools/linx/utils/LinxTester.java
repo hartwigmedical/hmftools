@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.utils;
 import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvSampleAnalyser.setSvCopyNumberData;
-import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 
 import java.util.List;
 

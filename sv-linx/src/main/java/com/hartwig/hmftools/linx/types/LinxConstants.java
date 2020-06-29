@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.types;
 
-public class SvConstants
+public class LinxConstants
 {
     public static final int DEFAULT_PROXIMITY_DISTANCE = 5000;
 

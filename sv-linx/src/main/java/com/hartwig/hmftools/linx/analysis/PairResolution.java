@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.reverseSectionOnBreakend;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
@@ -26,8 +25,8 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS_TI;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
-import static com.hartwig.hmftools.linx.types.SvConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
-import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
+import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 

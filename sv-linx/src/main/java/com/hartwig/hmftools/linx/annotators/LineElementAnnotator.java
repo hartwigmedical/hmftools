@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
-import static com.hartwig.hmftools.linx.types.SvConstants.MIN_DEL_LENGTH;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

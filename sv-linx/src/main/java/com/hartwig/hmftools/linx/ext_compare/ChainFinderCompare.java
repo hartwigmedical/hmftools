@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfSvData.CF_DATA_DELIMITER;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
-import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
+import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.SvVarData.CR_DELIM;
 
 import java.io.BufferedWriter;

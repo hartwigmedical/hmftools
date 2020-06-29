@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.CF_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.DIFF;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.MATCH;
-import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
+import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 
 import java.util.List;
 

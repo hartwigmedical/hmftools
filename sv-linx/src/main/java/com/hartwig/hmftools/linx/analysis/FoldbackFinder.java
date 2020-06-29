@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.breakendsAreChained;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.types.SvConstants.MAX_FOLDBACK_CHAIN_LENGTH;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 
 import java.util.List;
 import java.util.Map;

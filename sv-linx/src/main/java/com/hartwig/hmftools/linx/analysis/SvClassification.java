@@ -32,8 +32,8 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_INS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
-import static com.hartwig.hmftools.linx.types.SvConstants.MIN_DEL_LENGTH;
-import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
+import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;

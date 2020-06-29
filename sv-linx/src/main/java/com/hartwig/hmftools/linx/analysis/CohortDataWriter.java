@@ -29,8 +29,8 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SAME_ORIENT;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SIMPLE_DUP;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
-import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
-import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
+import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

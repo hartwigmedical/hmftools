@@ -17,8 +17,8 @@ import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
-import static com.hartwig.hmftools.linx.types.SvConstants.MAX_SIMPLE_DUP_DEL_CUTOFF;
-import static com.hartwig.hmftools.linx.types.SvConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_SIMPLE_DUP_DEL_CUTOFF;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 
 import java.util.Collections;
 import java.util.List;
