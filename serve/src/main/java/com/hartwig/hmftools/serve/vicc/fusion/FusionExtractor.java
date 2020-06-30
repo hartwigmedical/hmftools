@@ -36,7 +36,7 @@ public class FusionExtractor {
     }
 
     private boolean isFusion(@NotNull Feature feature) {
-        String eventKeyFusion = extractKeyFusion(feature.name());
+        String eventKeyFusion = extractKeyFusion(feature);
         if (eventKeyFusion.equals(FUSION_PAIR)) {
             return true;
         } else {
@@ -45,7 +45,7 @@ public class FusionExtractor {
     }
 
     private boolean isFusionPromiscuous(@NotNull Feature feature) {
-        String eventKeyFusion = extractKeyFusion(feature.name());
+        String eventKeyFusion = extractKeyFusion(feature);
         if (eventKeyFusion.equals(FUSION_PROMISCUOUS)) {
             return true;
         } else {
@@ -54,12 +54,18 @@ public class FusionExtractor {
     }
 
     @NotNull
-    private String extractKeyFusion(@NotNull String featureName){
+    private String extractKeyFusion(@NotNull Feature feature){
         //TODO: fix combi events
+        String featureName = feature.name();
         if (featureName.contains("-") && !featureName.equals("Microsatellite Instability-High")) {
             featureName = "fusions";
         }
-        if (featureName.toLowerCase().contains("fusions")) {
+        if (feature.biomarkerType() != null ) {
+            if (feature.biomarkerType().equals("rearrange")) {
+                return FUSION_PAIR;
+            }
+        }
+        if (featureName.toLowerCase().contains("fusions") || featureName.equals("REARRANGEMENT")) {
             return FUSION_PAIR;
         } else if (featureName.toLowerCase().contains("fusion")) {
             return FUSION_PROMISCUOUS;

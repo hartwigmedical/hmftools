@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MI
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.HighConfidenceEnrichment.HIGH_CONFIDENCE_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
@@ -22,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -32,8 +32,6 @@ import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
@@ -62,7 +60,7 @@ public class SomaticVariantFactory {
         final VariantContextFilter filter = new AlwaysPassFilter();
         final SomaticEnrichment enrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, enrichment, VariantContextEnrichmentFactory.noEnrichment());
+        return new SomaticVariantFactory(filter, enrichment);
     }
 
     @NotNull
@@ -76,13 +74,13 @@ public class SomaticVariantFactory {
         filter.addAll(Arrays.asList(filters));
         final SomaticEnrichment noEnrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, noEnrichment, VariantContextEnrichmentFactory.noEnrichment());
+        return new SomaticVariantFactory(filter, noEnrichment);
     }
 
     @NotNull
     public static SomaticVariantFactory filteredInstanceWithEnrichment(@NotNull VariantContextFilter filter,
-            @NotNull SomaticEnrichment somaticEnrichment, @NotNull VariantContextEnrichmentFactory factory) {
-        return new SomaticVariantFactory(filter, somaticEnrichment, factory);
+            @NotNull SomaticEnrichment somaticEnrichment) {
+        return new SomaticVariantFactory(filter, somaticEnrichment);
     }
 
     private static final String DBSNP_IDENTIFIER = "rs";
@@ -92,7 +90,6 @@ public class SomaticVariantFactory {
     private static final String RECOVERED_FLAG = "RECOVERED";
 
     static final String PASS_FILTER = "PASS";
-    private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
 
     @NotNull
     private final CompoundFilter filter;
@@ -100,11 +97,8 @@ public class SomaticVariantFactory {
     private final SomaticEnrichment enrichment;
     @NotNull
     private final CanonicalAnnotation canonicalAnnotationFactory;
-    @NotNull
-    private final VariantContextEnrichmentFactory variantContextEnrichmentFactory;
 
-    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment,
-            @NotNull final VariantContextEnrichmentFactory variantContextEnrichmentFactory) {
+    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new NTFilter());
@@ -112,9 +106,9 @@ public class SomaticVariantFactory {
 
         this.enrichment = enrichment;
         this.canonicalAnnotationFactory = new CanonicalAnnotation();
-        this.variantContextEnrichmentFactory = variantContextEnrichmentFactory;
     }
 
+    @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException {
         return fromVCFFile(tumor, null, null, vcfFile);
     }
@@ -122,8 +116,19 @@ public class SomaticVariantFactory {
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
             @NotNull final String vcfFile) throws IOException {
+        final List<SomaticVariant> result = Lists.newArrayList();
+        fromVCFFile(tumor, reference, rna, vcfFile, result::add);
+        return result;
+    }
+
+    public void fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile, @NotNull final Consumer<SomaticVariant> consumer)
+            throws IOException {
+        fromVCFFile(tumor, null, null, vcfFile, consumer);
+    }
+
+    public void fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
+            @NotNull final String vcfFile, Consumer<SomaticVariant> consumer) throws IOException {
         final List<VariantContext> variants = Lists.newArrayList();
-        final VariantContextEnrichment enrichment = variantContextEnrichmentFactory.create(variants::add);
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -144,34 +149,14 @@ public class SomaticVariantFactory {
             }
 
             for (VariantContext variant : reader.iterator()) {
-                // Note we need pon filtered indels for near indel pon logic to work correctly
-                if (filter.test(variant) || NearPonFilteredIndel.isPonFilteredIndel(variant)) {
-                    enrichment.accept(variant);
+                if (filter.test(variant)) {
+                    createVariant(tumor, reference, rna, variant).ifPresent(consumer);
                 }
             }
-
-            enrichment.flush();
         }
-
-        return process(tumor, reference, rna, variants);
     }
 
-    @NotNull
-    private List<SomaticVariant> process(@NotNull final String sample, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final List<VariantContext> allVariantContexts) {
-        final List<SomaticVariant> variants = Lists.newArrayList();
 
-        for (int i = 0; i < allVariantContexts.size(); i++) {
-            final VariantContext context = allVariantContexts.get(i);
-            if (NearPonFilteredIndel.isNearPonFilteredIndel(i, allVariantContexts)) {
-                context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
-            }
-
-            createVariant(sample, reference, rna, context).ifPresent(variants::add);
-        }
-
-        return variants;
-    }
 
     @NotNull
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
@@ -247,7 +232,7 @@ public class SomaticVariantFactory {
                 // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
                 .biallelic(context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false))
-                .highConfidenceRegion(context.getAttributeAsBoolean(HIGH_CONFIDENCE_FLAG, false));
+                .highConfidenceRegion(false);
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
         attachSnpEffAnnotations(builder, context, snpEffSummaryFactory);
@@ -340,6 +325,6 @@ public class SomaticVariantFactory {
 
     @NotNull
     private static String alt(@NotNull final VariantContext context) {
-        return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
+        return context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
     }
 }

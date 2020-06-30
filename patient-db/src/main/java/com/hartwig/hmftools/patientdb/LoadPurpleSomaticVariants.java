@@ -2,11 +2,10 @@ package com.hartwig.hmftools.patientdb;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.SomaticVariantStreamWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -41,12 +40,11 @@ public class LoadPurpleSomaticVariants {
 
         String somaticVcf = cmd.getOptionValue(SOMATIC_VCF);
 
-        LOGGER.info("Reading data from {}", somaticVcf);
-        SomaticVariantFactory factory = SomaticVariantFactory.unfilteredInstance();
-        List<SomaticVariant> variants = factory.fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf);
-
-        LOGGER.info("Persisting to db");
-        dbAccess.writeSomaticVariants(tumorSample, variants);
+        LOGGER.info("Removing old data of sample {}", tumorSample);
+        try (SomaticVariantStreamWriter somaticWriter = dbAccess.somaticVariantWriter(tumorSample)) {
+            LOGGER.info("Streaming data from {} to db", somaticVcf);
+            SomaticVariantFactory.unfilteredInstance().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf, somaticWriter);
+        }
 
         LOGGER.info("Complete");
     }

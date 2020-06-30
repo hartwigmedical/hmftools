@@ -25,6 +25,10 @@ class ContigComparator private constructor(val contigs: Map<String, Int>) : Comp
         }
     }
 
+    fun compare(sv1: StructuralVariantContext, sv2: StructuralVariantContext): Int {
+        return compare(sv1.contig, sv1.start, sv2.contig, sv2.start)
+    }
+
     fun compare(contig1: String, position1: Int, contig2: String, position2: Int): Int {
         val contigCompare = compare(contig1, contig2)
         return if (contigCompare == 0) {

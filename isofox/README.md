@@ -33,8 +33,6 @@ The full list of non default pararmeters we use internally is:
 --alignSplicedMateMapLminOverLmate 0.33 --alignSplicedMateMapLmin 35 --alignSJstitchMismatchNmax 5 -1 5 5
 ```
 
-## Install
-
 ## Configuration
 The 3 core functions of Isofox are controlled by the 'functions' argument:
 - TRANSCRIPT_COUNTS: calculate gene and transcript expression

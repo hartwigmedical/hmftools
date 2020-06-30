@@ -206,6 +206,10 @@ public class DatabaseAccess implements AutoCloseable {
         amberDAO.write(sampleId, amber);
     }
 
+    public SomaticVariantStreamWriter somaticVariantWriter(@NotNull final String sampleId) {
+        return new SomaticVariantStreamWriter(somaticVariantDAO, sampleId);
+    }
+
     public void writeSomaticVariants(@NotNull String sampleId, @NotNull List<SomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
     }

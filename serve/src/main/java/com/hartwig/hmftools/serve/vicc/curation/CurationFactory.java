@@ -26,7 +26,7 @@ final class CurationFactory {
     }
 
     private static void populateCGICuration() {
-        // Below is not wrong but leads to inconsistencies in CGI
+        // Below is not wrong but leads to inconsistencies downstream
         CGI_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3R1", null, "PIK3R1 p.E439delE"), "PIK3R1 p.E439del");
         CGI_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3R1", null, "PIK3R1 p.D560_S565delDKRMNS"), "PIK3R1 p.D560_S565del");
         CGI_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3R1", null, "PIK3R1 p.T576delT"), "PIK3R1 p.T576del");
@@ -62,7 +62,7 @@ final class CurationFactory {
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("PIK3CA", null, "PIK3CA E545k "), "PIK3CA E545K ");
 
         // These mappings are to work around the missing transcripts in JAX.
-        // We map every mutation that appears on both the canonical + non-canonical form to its canonical form.
+        // We map every mutation that appears on both the canonical + non-canonical form to its canonical form in ensembl.
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641F "), "EZH2 Y646F ");
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641H "), "EZH2 Y646H ");
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EZH2", null, "EZH2 Y641N "), "EZH2 Y646N ");
@@ -74,14 +74,19 @@ final class CurationFactory {
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET Y1230H "), "MET Y1248H ");
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("MET", null, "MET M1250T "), "MET M1268T ");
 
-        // These mappings are identical but used concurrently
+        // These mappings are identical but used concurrently. Confirmed to be replaced by I740_K745dup
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("EGFR", null, "EGFR I744_K745insKIPVAI "), "EGFR K745_E746insIPVAIK ");
         JAX_FEATURE_NAME_MAPPINGS.put(new CurationKey("KIT", null, "KIT V559del "), "KIT V560del ");
 
-        // The below variants don't exist
+        // The below variants in FLT3 are from a paper where an additional R was added in the ref sequence, shifting all AAs by one position.
+        // This has been corrected in current live CKB.
         JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "FLT3 L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL "));
         JAX_FEATURE_BLACKLIST.add(new CurationKey("FLT3", null, "FLT3 E612_F613insGYVDFREYEYDLKWEFRPRENLEF "));
+
+        // The transcript that should have this mutation (ENST00000507379.1) is annotated as 3' truncated with only 1135 AAs in ensembl)
         JAX_FEATURE_BLACKLIST.add(new CurationKey("APC", null, "APC S1197* "));
+
+        // The below is pending investigation by JAX, possibly a mistake by the paper.
         JAX_FEATURE_BLACKLIST.add(new CurationKey("PIK3CA", null, "PIK3CA R425L "));
     }
 
