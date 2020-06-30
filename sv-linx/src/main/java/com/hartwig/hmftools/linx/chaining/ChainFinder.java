@@ -20,12 +20,13 @@ import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 
 import static org.apache.logging.log4j.Level.TRACE;
 
+import static jdk.nashorn.internal.objects.NativeMath.abs;
+
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.linx.types.LinkType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -666,15 +667,15 @@ public class ChainFinder
         }
     }
 
-    private void checkIsComplexDupSV(SvBreakend lowerPloidyBreakend, SvBreakend higherPloidyBreakend)
+    private void checkIsComplexDupSV(SvBreakend lowerJcnBreakend, SvBreakend higherJcnBreakend)
     {
-        // check if the lower ploidy SV connects to both ends of another SV to replicate it
-        final SvVarData var = lowerPloidyBreakend.getSV();
+        // check if the lower JCN SV connects to both ends of another SV to replicate it
+        final SvVarData var = lowerJcnBreakend.getSV();
 
-        if(var.jcn() < 1) // maintain a minimum to avoid ploidy comparison issues for lower values
+        if(var.jcn() < 1) // maintain a minimum to avoid JCN comparison issues for lower values
             return;
 
-        if(var.isSglBreakend() || var.type() == DEL || higherPloidyBreakend.getSV().isSglBreakend())
+        if(var.isSglBreakend() || var.type() == DEL || higherJcnBreakend.getSV().isSglBreakend())
             return;
 
         if(mComplexDupCandidates.keySet().contains(var))
@@ -683,7 +684,7 @@ public class ChainFinder
         if(mLinkAllocator.getSvConnectionsMap().get(var) == null)
             return;
 
-        final SvVarData otherSV = higherPloidyBreakend.getSV();
+        final SvVarData otherSV = higherJcnBreakend.getSV();
 
         if(var.jcn() > otherSV.jcn() || var.jcnMin() * 2 > otherSV.jcnMax())
             return;
@@ -692,7 +693,7 @@ public class ChainFinder
             return;
 
         // check whether the other breakend satisfies the same ploidy comparison criteria
-        SvBreakend otherBreakend = var.getBreakend(!lowerPloidyBreakend.usesStart());
+        SvBreakend otherBreakend = var.getBreakend(!lowerJcnBreakend.usesStart());
 
         final List<SvBreakend> breakendList = mChrBreakendMap.get(otherBreakend.chromosome());
 
@@ -708,7 +709,7 @@ public class ChainFinder
 
             final SvBreakend breakend = breakendList.get(index);
 
-            if(breakend == lowerPloidyBreakend)
+            if(breakend == lowerJcnBreakend)
                 break;
 
             if (breakend.isAssembledLink())
@@ -717,12 +718,15 @@ public class ChainFinder
             if (breakend.orientation() == otherBreakend.orientation())
                 break;
 
+            if(Math.abs(breakend.position() - otherBreakend.position()) < getMinTemplatedInsertionLength(breakend, otherBreakend))
+                continue;
+
             SvVarData otherSV2 = breakend.getSV();
 
             if(!jcnMatchForSplits(var.jcn(), var.jcnUncertainty(), otherSV2.jcn(), otherSV2.jcnUncertainty()))
                 return;
 
-            List<SvLinkedPair> links = Lists.newArrayList(SvLinkedPair.from(lowerPloidyBreakend, higherPloidyBreakend),
+            List<SvLinkedPair> links = Lists.newArrayList(SvLinkedPair.from(lowerJcnBreakend, higherJcnBreakend),
                     SvLinkedPair.from(otherBreakend, breakend));
 
             if(otherSV == otherSV2)

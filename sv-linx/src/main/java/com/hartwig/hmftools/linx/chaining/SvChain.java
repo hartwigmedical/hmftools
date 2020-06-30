@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 
 import java.util.List;
 
@@ -207,7 +208,9 @@ public class SvChain {
             }
             else if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
             {
-                return true;
+                //  check min TI length
+                int minTILength = getMinTemplatedInsertionLength(chainStart, chainEnd);
+                return abs(chainStart.position() - chainEnd.position()) >= minTILength;
             }
         }
 
