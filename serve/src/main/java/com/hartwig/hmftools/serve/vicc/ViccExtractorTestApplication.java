@@ -194,7 +194,7 @@ public class ViccExtractorTestApplication {
         LOGGER.info("No genomic events derived for {} features", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-            LOGGER.info(feature);
+            LOGGER.debug("  {}", feature);
         }
     }
 
