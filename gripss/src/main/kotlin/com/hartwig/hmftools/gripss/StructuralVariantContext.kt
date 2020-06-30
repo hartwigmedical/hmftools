@@ -60,11 +60,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         }
 
         if (precise && !isSingle) {
-            val mate = variantType as Paired
-            val invertStart = orientation == mate.endOrientation && comparator.compare(contig, start, mate.otherChromosome, mate.otherPosition) > 1
-            val invertEnd = orientation == mate.endOrientation && !invertStart
-            val centeredCipos = centreAlignConfidenceInterval(invertStart, confidenceInterval)
-            val centeredRemoteCipos = centreAlignConfidenceInterval(invertEnd, remoteConfidenceInterval)
+            val (centeredCipos, centeredRemoteCipos) = centreAlignConfidenceIntervals(comparator)
             if (centeredCipos != confidenceInterval || centeredRemoteCipos != remoteConfidenceInterval) {
                 return realignPaired(refGenome, centeredCipos, centeredRemoteCipos)
             }
@@ -79,6 +75,16 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         }
 
         return this
+    }
+
+     fun centreAlignConfidenceIntervals(comparator: ContigComparator): Pair<Cipos, Cipos> {
+        assert(!isSingle)
+        val mate = variantType as Paired
+        val invertStart = orientation == mate.endOrientation && comparator.compare(contig, start, mate.otherChromosome, mate.otherPosition) > 0
+        val invertEnd = orientation == mate.endOrientation && !invertStart
+        val centeredCipos = centreAlignConfidenceInterval(invertStart, confidenceInterval)
+        val centeredRemoteCipos = centreAlignConfidenceInterval(invertEnd, remoteConfidenceInterval)
+        return Pair(centeredCipos, centeredRemoteCipos)
     }
 
     private fun sideAlignPaired(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
@@ -130,6 +136,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     private fun updatedPosition(position: Int, oldCipos: Cipos, newCipos: Cipos): Int {
         return position + oldCipos.first - newCipos.first
     }
+
 
     private fun centreAlignConfidenceInterval(invert: Boolean, cipos: Cipos): Cipos {
         val totalRange = cipos.second - cipos.first
