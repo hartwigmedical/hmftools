@@ -15,7 +15,7 @@ SERVE supports the ingestion of the following knowledgebases:
  along with cancer types and molecular inclusion criteria for these trials.
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
  a database of approved compassionate use programs in the Netherlands
- - HMF Knowledgebase - a database of known driver mutations generated from our database or curated from literature by ourselves.
+ - HMF Knowledgebase - a database of known driver mutations generated from the Hartwig database or curated from literature by the Hartwig team.
   
 Do note that SERVE does not provide the actual data that is input to the algorithm, but only provides support for its ingestion.
 While SERVE itself is open-source, the sources that can be ingested have their own licensing and up to the users to make sure 
