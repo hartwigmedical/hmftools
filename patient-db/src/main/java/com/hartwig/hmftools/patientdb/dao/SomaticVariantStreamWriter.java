@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientdb.Config;
 
-public class SomaticVariantStreamWriter implements Consumer<SomaticVariant> {
+public class SomaticVariantStreamWriter implements Consumer<SomaticVariant>, AutoCloseable {
 
     private final String sample;
     private final Timestamp timestamp;
@@ -31,14 +31,15 @@ public class SomaticVariantStreamWriter implements Consumer<SomaticVariant> {
         }
     }
 
-    public void flush() {
-        if (!buffer.isEmpty()) {
-            writeBuffer();
-        }
-    }
-
     private void writeBuffer() {
         somaticVariantDAO.writeAll(timestamp, sample, buffer);
         buffer.clear();
+    }
+
+    @Override
+    public void close() {
+        if (!buffer.isEmpty()) {
+            writeBuffer();
+        }
     }
 }

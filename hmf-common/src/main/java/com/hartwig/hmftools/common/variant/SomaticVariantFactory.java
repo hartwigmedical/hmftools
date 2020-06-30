@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -89,7 +90,6 @@ public class SomaticVariantFactory {
     private static final String RECOVERED_FLAG = "RECOVERED";
 
     static final String PASS_FILTER = "PASS";
-    private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
 
     @NotNull
     private final CompoundFilter filter;
@@ -108,6 +108,7 @@ public class SomaticVariantFactory {
         this.canonicalAnnotationFactory = new CanonicalAnnotation();
     }
 
+    @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException {
         return fromVCFFile(tumor, null, null, vcfFile);
     }
@@ -115,6 +116,18 @@ public class SomaticVariantFactory {
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
             @NotNull final String vcfFile) throws IOException {
+        final List<SomaticVariant> result = Lists.newArrayList();
+        fromVCFFile(tumor, reference, rna, vcfFile, result::add);
+        return result;
+    }
+
+    public void fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile, @NotNull final Consumer<SomaticVariant> consumer)
+            throws IOException {
+        fromVCFFile(tumor, null, null, vcfFile, consumer);
+    }
+
+    public void fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
+            @NotNull final String vcfFile, Consumer<SomaticVariant> consumer) throws IOException {
         final List<VariantContext> variants = Lists.newArrayList();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
@@ -136,27 +149,14 @@ public class SomaticVariantFactory {
             }
 
             for (VariantContext variant : reader.iterator()) {
-                // Note we need pon filtered indels for near indel pon logic to work correctly
                 if (filter.test(variant)) {
-                    variants.add(variant);
+                    createVariant(tumor, reference, rna, variant).ifPresent(consumer);
                 }
             }
         }
-
-        return process(tumor, reference, rna, variants);
     }
 
-    @NotNull
-    private List<SomaticVariant> process(@NotNull final String sample, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final List<VariantContext> allVariantContexts) {
-        final List<SomaticVariant> variants = Lists.newArrayList();
 
-        for (final VariantContext context : allVariantContexts) {
-            createVariant(sample, reference, rna, context).ifPresent(variants::add);
-        }
-
-        return variants;
-    }
 
     @NotNull
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
@@ -325,6 +325,6 @@ public class SomaticVariantFactory {
 
     @NotNull
     private static String alt(@NotNull final VariantContext context) {
-        return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
+        return context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
     }
 }

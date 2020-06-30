@@ -2,14 +2,13 @@ package com.hartwig.hmftools.patientdb;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.SomaticVariantStreamWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -60,12 +59,11 @@ public class LoadSomaticVariants {
             compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(hotspotFile));
         }
 
-        LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
-        List<SomaticVariant> variants =
-                SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
-
-        LOGGER.info("Persisting variants to database");
-        dbAccess.writeSomaticVariants(sample, variants);
+        LOGGER.info("Removing old data of sample {}", sample);
+        try (SomaticVariantStreamWriter somaticWriter = dbAccess.somaticVariantWriter(sample)) {
+            LOGGER.info("Streaming data from {} to db", vcfFileLocation);
+            SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation, somaticWriter);
+        }
 
         LOGGER.info("Complete");
     }

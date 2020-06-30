@@ -23,7 +23,6 @@ public class SomaticVariantFactoryTest {
 
     private static final String SAMPLE = "sample";
     private static final String SOMATIC_VARIANT_FILE = Resources.getResource("variant/somatics.vcf").getPath();
-    private static final String NEAR_PON_FILTERED_INDEL_FILE = Resources.getResource("variant/nearPonFilteredIndel.vcf").getPath();
 
     private static final double EPSILON = 1.0e-10;
 
@@ -187,18 +186,6 @@ public class SomaticVariantFactoryTest {
                 .createVariant(sample, VariantContextFromString.decode(sample, noCanonicalCosmicID)));
 
         assertEquals("COSM33765", noCanonicalCosmicIDVariant.canonicalCosmicID());
-    }
-
-    @Test
-    public void testNearPonLogicAppliedEvenWhenFiltersApplied() throws IOException {
-        final List<SomaticVariant> unfiltered =
-                SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", NEAR_PON_FILTERED_INDEL_FILE);
-        assertEquals(2, unfiltered.size());
-        assertEquals("NEAR_INDEL_PON", unfiltered.get(0).filter());
-        assertEquals("GERMLINE_PON", unfiltered.get(1).filter());
-
-        final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", NEAR_PON_FILTERED_INDEL_FILE);
-        assertEquals(0, filtered.size());
     }
 
     @NotNull
