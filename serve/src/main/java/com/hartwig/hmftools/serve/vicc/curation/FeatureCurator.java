@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 public class FeatureCurator {
 
     private static final Logger LOGGER = LogManager.getLogger(FeatureCurator.class);
+    private static final Set<String> NON_ONCOGENIC_INDICATORS = Sets.newHashSet("Inconclusive", "Likely Neutral");
 
     @NotNull
     private final Set<CurationKey> evaluatedCurationKeys = Sets.newHashSet();
@@ -31,7 +32,7 @@ public class FeatureCurator {
         List<ViccEntry> curatedViccEntries = Lists.newArrayList();
 
         for (ViccEntry entry : entries) {
-            boolean includeEntry = true;
+            boolean includeEntry = potentiallyOncogenic(entry);
             List<Feature> curatedFeatures = Lists.newArrayList();
             for (Feature feature : entry.features()) {
                 Feature curatedFeature = curate(entry, feature);
@@ -46,6 +47,11 @@ public class FeatureCurator {
             }
         }
         return curatedViccEntries;
+    }
+
+    private static boolean potentiallyOncogenic(@NotNull ViccEntry entry) {
+        String oncogenic = entry.association().oncogenic();
+        return oncogenic == null || !NON_ONCOGENIC_INDICATORS.contains(oncogenic);
     }
 
     @VisibleForTesting
