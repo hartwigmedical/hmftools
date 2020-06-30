@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ProteinAnnotationExtractor {
 
-    private static final Set<String> CAPITALIZED_STRINGS_TO_UNCAPITALIZE = Sets.newHashSet("DELINS", "DEL", "INS", "FS");
+    private static final Set<String> CAPITALIZED_STRINGS_TO_UNCAPITALIZE = Sets.newHashSet("DELINS", "DEL", "INS", "DUP", "FS");
 
     private ProteinAnnotationExtractor() {
     }

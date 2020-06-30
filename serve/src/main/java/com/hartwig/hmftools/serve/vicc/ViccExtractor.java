@@ -93,7 +93,7 @@ public final class ViccExtractor {
         LOGGER.info("Finished hotspot extraction and could not resolve hotspots for {} features",
                 hotspotExtractor.unresolvedProteinAnnotations().size());
         for (String feature : hotspotExtractor.unresolvedProteinAnnotations()) {
-          //  LOGGER.debug(" {}", feature);
+            LOGGER.debug(" {}", feature);
         }
 
         return extractionResultsPerEntry;
