@@ -135,7 +135,7 @@ drug,type,mechanism,synonyms
 "Gefitinib",Targeted therapy,"Anti-EGFR","Gefinitib"
 "Gemcitabine",Chemotherapy,"Pyrimidine (ant)agonist","Gemicitabine"
 "Gimeracil",Chemotherapy,"Pyrimidine (ant)agonist",""
-"Goserelin",Androgen/estrogen deprivation therapy,"GnRH (ant)agonist","goserlrine,Zoladex,Gosareline,Zodalex,Goseriline, goselerin, Gosereline because of prostate carcinoma, Gosereline (bolla)"
+"Goserelin",Androgen/estrogen deprivation therapy,"GnRH (ant)agonist","goserlrine,Zoladex,Gosareline,Zodalex,Goseriline, goselerin,Gosereline because of prostate carcinoma,Gosereline (bolla),Gosereline (Zoladex),gosereline/zoladex"
 "Granulocyte-macrophage colony-stimulating factor (GM-CSF)",remove,"","GM CSF"
 "GSK3052230",Experimental therapy,"FGFR inhibitor",""
 "GSK3174998",Experimental therapy,"Experimental",""
