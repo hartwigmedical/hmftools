@@ -3,10 +3,10 @@
 **S**earch **E**xternal **R**esources for **V**ariant **E**vidence 
 
 SERVE harmonizes different sources of evidence into a single unified model that can be readily used in genomic analyses.  
-The model provides a mapping from genomic events to clinical evidence (responsiveness or resistance for specific drugs). In addition, SERVE
-provides lists of genomic events known to be able to drive cancer.  
+The model provides a mapping from genomic events to clinical evidence. 
+In addition, SERVE generates output containing all genomic events that are implied to be able to driver cancer.  
 
-### Inputs
+### Supported input knowledgebases
 
 The following inputs are supported in SERVE:
  - [CGI](https://www.cancergenomeinterpreter.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
@@ -20,7 +20,7 @@ The following inputs are supported in SERVE:
  - HMF Knowledgebase - a database of known driver mutations generated from our database or curated from literature by ourselves.
   
 Do note that SERVE does not provide the actual data that is input to the algorithm, but only provides support for its ingestion.
-Also, while SERVE itself is open-source, the sources that can be ingested come with their own licenses and up to the user to make sure 
+While SERVE itself is open-source, the sources that can be ingested have their own licensing and up to the users to make sure 
 they are compliant with the usage of the data itself. 
 
 ### Outputs
@@ -41,8 +41,17 @@ The following genomic events can be mapped to clinical evidence:
     - "any type of missense mutation in BRAF codon 600"
  - Specific missense mutations such as BRAF V600E
  
- Missense mutations and genic ranges come in gDNA format. 
- SERVE can be configured to generate its output for either HG19 or HG38 reference genome version
+ Missense mutations and genic ranges come in gDNA format and SERVE can be configured to generate its output for either HG19 or HG38 reference genome version.
+ 
+ In addition to generating a mapping from various genomic events to clinical evidence, 
+ SERVE also generates the following outputs describing genomic events implied to be able to driver cancer:
+  - Specific known fusion genes including individual genes that are believed to be able to drive cancer when fused with any other gene (in either 5' or 3' position)
+  - Known amplifications and deletions
+  - Known missense and nonsense mutations
+
+ ## Extraction of genomic events from data sources
+ 
+ TODO 
  
  
      
