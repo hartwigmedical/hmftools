@@ -112,7 +112,7 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Read {} entries. Starting curation", viccEntries.size());
 
         List<ViccEntry> curatedViccEntries = curator.curate(viccEntries);
-        LOGGER.info(" Finished curation. {} curated entries remaining. {} entries have been removed due to blacklisting.",
+        LOGGER.info(" Finished curation. {} curated entries remaining. {} entries have been removed.",
                 curatedViccEntries.size(),
                 viccEntries.size() - curatedViccEntries.size());
 
