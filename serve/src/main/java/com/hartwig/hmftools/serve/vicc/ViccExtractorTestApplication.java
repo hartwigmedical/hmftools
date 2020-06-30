@@ -59,7 +59,7 @@ public class ViccExtractorTestApplication {
         String viccJsonPath;
         String refGenomeFastaFile;
         boolean generateHotspots;
-        String hotspotVcf;
+        String hotspotVcf = null;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
@@ -70,7 +70,6 @@ public class ViccExtractorTestApplication {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
             generateHotspots = false;
-            hotspotVcf = System.getProperty("user.home") + "/hmf/tmp/hotspotsVicc.vcf";
         }
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
@@ -98,7 +97,7 @@ public class ViccExtractorTestApplication {
 
         analyzeExtractionResults(resultsPerEntry);
 
-        if (generateHotspots) {
+        if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, resultsPerEntry);
         }
     }
@@ -113,19 +112,14 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Read and curated {} entries", viccEntries.size());
 
         LOGGER.info("Analyzing usage of curation configuration keys");
-        int issueCount = 0;
-        for (Map.Entry<ViccSource, Set<CurationKey>> entry : curator.unusedCurationKeysPerSource().entrySet()) {
-            ViccSource source = entry.getKey();
-            Set<CurationKey> unusedKeys = entry.getValue();
-            if (!unusedKeys.isEmpty()) {
-                LOGGER.warn("Found {} unused curation configuration entries for {}", unusedKeys.size(), source);
-                for (CurationKey unusedKey : unusedKeys) {
-                    issueCount++;
-                    LOGGER.warn(" - {}", unusedKey);
-                }
+        Set<CurationKey> unusedCurationKeys = curator.unusedCurationKeys();
+        if (!unusedCurationKeys.isEmpty()) {
+            LOGGER.warn("Found {} unused curation configuration entries", unusedCurationKeys.size());
+            for (CurationKey unusedKey : unusedCurationKeys) {
+                LOGGER.warn(" - {}", unusedKey);
             }
         }
-        LOGGER.info("Finished analyzing usage of curation configuration keys. Found {} issues", issueCount);
+        LOGGER.info("Finished analyzing usage of curation configuration keys");
 
         return viccEntries;
     }
