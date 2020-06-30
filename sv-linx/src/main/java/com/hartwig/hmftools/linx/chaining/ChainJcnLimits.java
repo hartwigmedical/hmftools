@@ -17,6 +17,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.JcnCalcData;
+import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -405,5 +406,10 @@ public class ChainJcnLimits
         return true;
     }
 
+    public static boolean jcnExceedsMajorAlleleJcn(final SvBreakend breakend)
+    {
+        double adjacentMaJcn = breakend.majorAlleleJcn(breakend.orientation() == -1);
+        return breakend.jcn() > adjacentMaJcn && !copyNumbersEqual(breakend.jcn(), adjacentMaJcn);
+    }
 
 }

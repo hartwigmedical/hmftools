@@ -148,7 +148,7 @@ public class DoubleMinuteTest
     {
         LinxTester tester = new LinxTester();
 
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         final SvVarData var1 = createTestSv(1,"1","1",1000,10000,-1,1, DUP,8);
         final SvVarData var2 = createTestSv(2,"1","1",2000,3000,1,-1, DEL,1);

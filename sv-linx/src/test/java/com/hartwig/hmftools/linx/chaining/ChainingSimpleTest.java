@@ -1,14 +1,25 @@
 package com.hartwig.hmftools.linx.chaining;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvCluster;
+import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -169,5 +180,50 @@ public class ChainingSimpleTest
 
         assertEquals(4, chain.getLinkCount());
         assertEquals(5, chain.getSvCount());
+    }
+
+    @Test
+    public void testZeroBaseInferredChains()
+    {
+        LinxTester tester = new LinxTester();
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        final SvVarData var0 = createTestSv(1, "1", "1", 1000,2000, 1, -1, DEL,  1);
+
+        final SvVarData var1 = createTestSv(1, "1", "0", 21000,-1, 1, 0, INF,  1);
+        final SvVarData var2 = createTestSv(2, "1", "0", 21000,-1, -1, 0, SGL,  1);
+
+        final SvVarData var3 = createTestSv(3, "1", "2", 40000,100, 1, -1, BND, 4);
+        final SvVarData var4 = createTestSv(4, "1", "0", 40000,-1, -1, 1, INF, 4);
+        final SvVarData var5 = createTestSv(5, "1", "2", 44000,200, -1, 1, BND, 4);
+        final SvVarData var6 = createTestSv(6, "1", "0", 45000,-1, 1, 1, SGL, 4);
+
+        tester.AllVariants.add(var0);
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(3, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
+        assertTrue(cluster != null);
+
+        assertTrue(cluster.getChains().isEmpty());
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var3, var4, var5, var6));
+        assertTrue(cluster != null);
+
+        assertEquals(1, cluster.getChains().size());
+        assertEquals(3, cluster.getChains().get(0).getLinkCount());
+
+        final SvLinkedPair pair = var4.getLinkedPair(true);
+        assertTrue(pair != null);
+        assertTrue(pair.hasVariant(var3));
     }
 }

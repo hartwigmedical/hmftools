@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.linx.chaining;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnExceedsMajorAlleleJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowJcnThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.CLUSTER_ALLELE_JCN_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatchForSplits;
@@ -27,6 +30,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -499,8 +503,6 @@ public class ChainFinder
         // do not chain past a zero cluster allele JCN
         // identify potential complex DUP candidates along the way
 
-        final List<SvLinkedPair> sameBaseInferredLinks = Lists.newArrayList();
-
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
@@ -565,16 +567,14 @@ public class ChainFinder
                     // record the possible link
                     final SvVarData upperSV = upperBreakend.getSV();
 
-                    boolean sameBaseInfPair = (lowerSV.type() == INF || upperSV.type() == INF) && distance <= 1;
+                    if((lowerSV.type() == INF || upperSV.type() == INF) && distance <= 1)
+                    {
+                        if(!jcnExceedsMajorAlleleJcn(lowerBreakend) || !jcnExceedsMajorAlleleJcn(upperBreakend))
+                            continue;
+                    }
 
                     SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, TEMPLATED_INSERTION,
                             lowerBreakend.usesStart(), upperBreakend.usesStart());
-
-                    if(sameBaseInfPair)
-                    {
-                        sameBaseInferredLinks.add(newPair);
-                        continue;
-                    }
 
                     // make note of adjacent facing breakends since these are prioritised in the adjacent pairs rule
                     boolean areAdjacent = false;
@@ -648,21 +648,6 @@ public class ChainFinder
                         }
                     }
                 }
-            }
-        }
-
-        for(SvLinkedPair pair : sameBaseInferredLinks)
-        {
-            for(int se = SE_START; se <= SE_END; ++se)
-            {
-                SvBreakend breakend = pair.getBreakend(se);
-
-                List<SvLinkedPair> breakendPairs = mSvBreakendPossibleLinks.get(breakend);
-
-                if(breakendPairs == null)
-                    mSvBreakendPossibleLinks.put(breakend, Lists.newArrayList(pair));
-                else
-                    breakendPairs.add(pair);
             }
         }
     }

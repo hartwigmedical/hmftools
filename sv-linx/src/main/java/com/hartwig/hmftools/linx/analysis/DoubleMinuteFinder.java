@@ -236,16 +236,11 @@ public class DoubleMinuteFinder
 
             final SvBreakend breakend = var.getBreakend(se);
 
-            // gets the CN segment data on the lower side of the breakend (ie opposite to orientation)
-            final SvCNData cnData = breakend.getSV().getCopyNumberData(breakend.usesStart(), breakend.orientation() == -1);
-
-            if(cnData == null)
-                continue;
-
-            double adjacentMap = cnData.majorAlleleJcn();
+            // gets the major allele JCN on the lower side of the breakend (ie opposite to orientation)
+            double adjacentMaJcn = breakend.majorAlleleJcn(breakend.orientation() == -1);
 
             // if against 0, then just ensure it will pass
-            maxRatio = adjacentMap > 0 ? max(var.jcn() / adjacentMap, maxRatio) : ADJACENT_JCN_RATIO * 2;
+            maxRatio = max(var.jcn() / max(adjacentMaJcn, 0.01), maxRatio);
         }
 
         return maxRatio;
