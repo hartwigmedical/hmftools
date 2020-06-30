@@ -18,6 +18,7 @@ import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.curation.CurationKey;
 import com.hartwig.hmftools.serve.vicc.curation.FeatureCurator;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
+import com.hartwig.hmftools.serve.vicc.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
@@ -223,8 +224,9 @@ public class ViccExtractorTestApplication {
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
         writer.writeHeader(header);
 
-        for (Map.Entry<VariantHotspot, String> entry : convertAndSort(resultsPerEntry).entrySet()) {
+        for (Map.Entry<VariantHotspot, HotspotAnnotation> entry : convertAndSort(resultsPerEntry).entrySet()) {
             VariantHotspot hotspot = entry.getKey();
+            HotspotAnnotation annotation = entry.getValue();
             List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
             VariantContext variantContext = new VariantContextBuilder().noGenotypes()
@@ -233,7 +235,9 @@ public class ViccExtractorTestApplication {
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                    .attribute("feature", entry.getValue())
+                    .attribute("sources", annotation.sources())
+                    .attribute("feature",
+                            ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation()))
                     .make();
 
             LOGGER.debug("Writing {}", variantContext);
@@ -252,24 +256,40 @@ public class ViccExtractorTestApplication {
     }
 
     @NotNull
-    private static Map<VariantHotspot, String> convertAndSort(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        Map<VariantHotspot, String> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
+    private static Map<VariantHotspot, HotspotAnnotation> convertAndSort(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        Map<VariantHotspot, HotspotAnnotation> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
         for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
+            ViccEntry entry = entryResult.getKey();
             for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
-                String newFeatureAttribute = toAttribute(entryResult.getKey(), featureResult.getKey());
+                Feature feature = featureResult.getKey();
                 for (VariantHotspot hotspot : featureResult.getValue()) {
-                    String existingFeatureAttribute = convertedMap.get(hotspot);
-                    if (existingFeatureAttribute != null && !existingFeatureAttribute.equals(newFeatureAttribute)) {
-                        if (!existingFeatureAttribute.contains("null") && !newFeatureAttribute.contains("null")) {
-                            LOGGER.warn("Hotspot {} already recorded but for different feature! Existing feature={}, new feature={}",
-                                    hotspot,
-                                    existingFeatureAttribute,
-                                    newFeatureAttribute);
+                    HotspotAnnotation annotation = convertedMap.get(hotspot);
+                    if (annotation != null) {
+                        if (annotation.sources().contains(entry.source().display())) {
+                            checkForDuplicateHotspotOnDifferentProteinAnnotation(entry, annotation, feature);
+
+                            // We try to override transcript in case we got a non-null one.
+                            String bestTranscript = annotation.transcript() == null ? entry.transcriptId() : annotation.transcript();
+                            annotation = new HotspotAnnotation(annotation.sources(),
+                                    annotation.gene(),
+                                    bestTranscript,
+                                    annotation.proteinAnnotation());
+
+                        } else {
+                            Set<String> newSources = Sets.newHashSet(annotation.sources());
+                            newSources.add(entry.source().display());
+                            String bestTranscript = annotation.transcript() == null ? entry.transcriptId() : annotation.transcript();
+                            annotation =
+                                    new HotspotAnnotation(newSources, annotation.gene(), bestTranscript, annotation.proteinAnnotation());
                         }
-                    } else if (existingFeatureAttribute == null || existingFeatureAttribute.contains("null")) {
-                        // We favor feature attributes which are based on explicit transcript.
-                        convertedMap.put(hotspot, newFeatureAttribute);
+                    } else {
+                        annotation = new HotspotAnnotation(Sets.newHashSet(entry.source().display()),
+                                feature.geneSymbol(),
+                                entry.transcriptId(),
+                                feature.proteinAnnotation());
                     }
+
+                    convertedMap.put(hotspot, annotation);
                 }
             }
         }
@@ -277,8 +297,18 @@ public class ViccExtractorTestApplication {
         return convertedMap;
     }
 
-    @NotNull
-    private static String toAttribute(@NotNull ViccEntry viccEntry, @NotNull Feature feature) {
-        return ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), viccEntry.transcriptId(), feature.proteinAnnotation());
+    private static void checkForDuplicateHotspotOnDifferentProteinAnnotation(@NotNull ViccEntry entry,
+            @NotNull HotspotAnnotation annotation, @NotNull Feature feature) {
+        String transcript = entry.transcriptId();
+        if (annotation.gene().equals(feature.geneSymbol()) && transcript != null && transcript.equals(annotation.transcript())
+                && !feature.proteinAnnotation().equals(annotation.proteinAnnotation())) {
+            String existingKey =
+                    ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
+            String newKey = ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), transcript, feature.proteinAnnotation());
+            LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
+                    entry.source().display(),
+                    existingKey,
+                    newKey);
+        }
     }
 }

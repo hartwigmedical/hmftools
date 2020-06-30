@@ -9,7 +9,7 @@ public class ViccSourceTest {
     @Test
     public void canResolveSourcesFromDisplayString() {
         for (ViccSource source : ViccSource.values()) {
-            assertEquals(source, ViccSource.fromViccKnowledgebaseString(source.displayString()));
+            assertEquals(source, ViccSource.fromViccKnowledgebaseString(source.display()));
         }
     }
 

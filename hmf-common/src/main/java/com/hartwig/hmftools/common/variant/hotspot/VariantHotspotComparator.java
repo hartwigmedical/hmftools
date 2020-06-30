@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant.hotspot;
 import java.util.Comparator;
 
 public class VariantHotspotComparator implements Comparator<VariantHotspot> {
+
     @Override
     public int compare(final VariantHotspot o1, final VariantHotspot o2) {
         int standardCompare = o1.compareTo(o2);
