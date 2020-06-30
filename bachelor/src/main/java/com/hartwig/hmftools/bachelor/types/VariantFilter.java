@@ -19,14 +19,13 @@ public class VariantFilter
     public final String Alt;
     public final CodingEffect Effect;
     public final String HgvsProteinCodon;
-    public final String DBSnpId;
     public final int MinCodon;
     public final String ClinvarSignificance;
     public final String ClinvarSigInfo;
 
     public VariantFilter(final String gene, final String transcriptId,
             final String chromosome, long position, final String ref, final String alt, final CodingEffect effect,
-            final String hgvsProteinCodon, final String dbSnpId, final String clinvarSig, final String clinvarSigInfo, int minCodon)
+            final String hgvsProteinCodon, final String clinvarSig, final String clinvarSigInfo, int minCodon)
     {
         Gene = gene;
         TranscriptId = transcriptId;
@@ -36,7 +35,6 @@ public class VariantFilter
         Alt = alt;
         Effect = effect;
         HgvsProteinCodon = hgvsProteinCodon;
-        DBSnpId = dbSnpId;
         MinCodon = minCodon;
         ClinvarSignificance = clinvarSig;
         ClinvarSigInfo = clinvarSigInfo;

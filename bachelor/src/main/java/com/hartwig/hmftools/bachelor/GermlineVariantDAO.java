@@ -36,8 +36,6 @@ public class GermlineVariantDAO {
                 Tables.GERMLINEVARIANT.REF,
                 Tables.GERMLINEVARIANT.ALT,
                 Tables.GERMLINEVARIANT.GENE,
-                Tables.GERMLINEVARIANT.DBSNPID,
-                Tables.GERMLINEVARIANT.COSMICID,
                 Tables.GERMLINEVARIANT.EFFECT,
                 Tables.GERMLINEVARIANT.CODINGEFFECT,
                 Tables.GERMLINEVARIANT.TRANSCRIPT,
@@ -52,8 +50,9 @@ public class GermlineVariantDAO {
                 Tables.GERMLINEVARIANT.HGVSPROTEIN,
                 Tables.GERMLINEVARIANT.HGVSCODING,
                 Tables.GERMLINEVARIANT.BIALLELIC,
-                Tables.GERMLINEVARIANT.MINORALLELEPLOIDY,
+                Tables.GERMLINEVARIANT.MINORALLELEJUNCTIONCOPYNUMBER,
                 Tables.GERMLINEVARIANT.REFSTATUS,
+                Tables.GERMLINEVARIANT.CLINVARINFO,
                 Tables.GERMLINEVARIANT.MODIFIED);
 
         for (final GermlineVariant variant : germlineVariants)
@@ -66,8 +65,6 @@ public class GermlineVariantDAO {
                     variant.ref(),
                     variant.alts(),
                     variant.gene(),
-                    variant.dbsnpId(),
-                    variant.cosmicId(),
                     variant.effects(),
                     variant.codingEffect(),
                     variant.transcriptId(),
@@ -82,8 +79,9 @@ public class GermlineVariantDAO {
                     variant.hgvsProtein(),
                     variant.hgvsCoding(),
                     variant.biallelic(),
-                    DatabaseUtil.decimal(variant.minorAllelePloidy()),
+                    DatabaseUtil.decimal(variant.minorAlleleJcn()),
                     variant.isHomozygous() ? "HOM" : "HET",
+                    variant.clinvarSignificanceInfo(),
                     timestamp);
         }
 

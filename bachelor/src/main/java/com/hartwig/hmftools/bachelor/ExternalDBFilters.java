@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.bachelor.types.BachelorConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.loadXML;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
@@ -67,14 +68,14 @@ public class ExternalDBFilters
 
         if (!cmd.hasOption(CONFIG_XML))
         {
-            LOGGER.error("No " + CONFIG_XML + " provided to ExternalDBFilters!");
+            LOGGER.error("mising XML config file");
             return;
         }
 
         if (cmd.hasOption(LOG_DEBUG))
             Configurator.setRootLevel(Level.DEBUG);
 
-        LOGGER.info("Building ClinVar filter file");
+        LOGGER.info("generating ClinVar filter file");
 
         Map<String, Program> configMap = Maps.newHashMap();
         loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)), configMap);
@@ -87,7 +88,7 @@ public class ExternalDBFilters
         String outputDir = cmd.getOptionValue(OUTPUT_DIR, "");
         filterFileBuilder.createFilterFile(program, outputDir);
 
-        LOGGER.info("Filter file creation complete");
+        LOGGER.info("filter file creation complete");
     }
 
     private ExternalDBFilters(String filterInputFile)
@@ -113,7 +114,19 @@ public class ExternalDBFilters
         {
             BufferedReader file = new BufferedReader(new FileReader(filterFile));
 
-            file.readLine(); // skip header
+            final String headers = file.readLine();
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(headers, ",");
+
+            int geneIndex = fieldsIndexMap.get("Gene");
+            int transcriptIndex = fieldsIndexMap.get("TranscriptId");
+            int chromosomeIndex = fieldsIndexMap.get("Chromosome");
+            int positionIndex = fieldsIndexMap.get("Position");
+            int refIndex = fieldsIndexMap.get("Ref");
+            int altIndex = fieldsIndexMap.get("Alt");
+            int codingEffectIndex = fieldsIndexMap.get("CodingEffect");
+            int hgvsProteinIndex = fieldsIndexMap.get("HgvsProtein");
+            int clinvarSignificanceIndex = fieldsIndexMap.get("ClinvarSignificance");
+            int clinvarSigInfoIndex = fieldsIndexMap.get("ClinvarSigInfo");
 
             String line;
 
@@ -135,17 +148,16 @@ public class ExternalDBFilters
 
                 // Gene,TranscriptId,Chromosome,Position,Ref,Alt,CodingEffect,AllEffects,HgvsProtein,HgvsCoding,DBSnpId,ClinvarSignificance,ClinvarSigInfo
                 VariantFilter filter = new VariantFilter(
-                        items[0],
-                        items[1],
-                        items[2],
-                        Long.parseLong(items[3]),
-                        items[4],
-                        items[5],
-                        CodingEffect.valueOf(items[6]),
-                        items[8],
-                        items[10],
-                        items[11],
-                        items[12],
+                        items[geneIndex],
+                        items[transcriptIndex],
+                        items[chromosomeIndex],
+                        Long.parseLong(items[positionIndex]),
+                        items[refIndex],
+                        items[altIndex],
+                        CodingEffect.valueOf(items[codingEffectIndex]),
+                        items[hgvsProteinIndex],
+                        items[clinvarSignificanceIndex],
+                        items[clinvarSigInfoIndex],
                         -1);
 
                 filters.add(filter);
@@ -154,10 +166,10 @@ public class ExternalDBFilters
         }
         catch (IOException e)
         {
-            LOGGER.error("Failed to read bachelor input CSV file({}) index({}): {}", filterFile, lineIndex, e.toString());
+            LOGGER.error("failed to read bachelor input CSV file({}) index({}): {}", filterFile, lineIndex, e.toString());
         }
 
-        LOGGER.info("Loaded {} ClinVar filter records from {}", filters.size(), filterFile);
+        LOGGER.info("loaded {} ClinVar filter records from {}", filters.size(), filterFile);
 
         return filters;
     }
@@ -244,49 +256,10 @@ public class ExternalDBFilters
             if (!mPanelTranscripts.contains(stripTranscriptVersion(snpEff.transcript())))
                 continue;
 
-            String clinvarSignificance = stripArrayChars(variant.getCommonInfo().getAttributeAsString(CLINVAR_SIGNIFICANCE, ""));
-            String clinvarSigInfo = stripArrayChars(variant.getCommonInfo().getAttributeAsString(CLINVAR_SIG_INFO, ""));
-
-            boolean isPathogenic = isPathogenic(clinvarSignificance);
-
-            if (!isPathogenic && isConflicting(clinvarSignificance))
-            {
-                // look in the significance field for a clear likelihood
-                isPathogenic = isPathogenic(clinvarSigInfo) && !isBenign(clinvarSigInfo);
-            }
-
-            boolean matchesRequiredEffect = false;
-
-            for (String requiredEffect : mRequiredEffects)
-            {
-                if (snpEff.effects().contains(requiredEffect))
-                {
-                    matchesRequiredEffect = true;
-                    break;
-                }
-            }
-
-            if (!matchesRequiredEffect && !isPathogenic)
-                continue;
-
-            String gene = snpEff.gene();
-
-            CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
-
-            //noinspection StatementWithEmptyBody
-            if (codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE)
-            {
-                //checkExistingBlacklistConditions(gene, variant, snpEff);
-            }
-            else
-            {
-                //checkExistingWhitelistConditions(gene, variant, snpEff);
-
-                if (!isPathogenic)
-                    continue;
-
-                // will form part of the whitelist
-            }
+            final String clinvarSignificance = stripArrayChars(variant.getCommonInfo().getAttributeAsString(CLINVAR_SIGNIFICANCE, ""));
+            final String clinvarSigInfo = stripArrayChars(variant.getCommonInfo().getAttributeAsString(CLINVAR_SIG_INFO, ""));
+            final String gene = snpEff.gene();
+            final CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
 
             writeFilterRecord(variant, snpEff, gene, codingEffect, clinvarSignificance, clinvarSigInfo);
         }
@@ -313,9 +286,8 @@ public class ExternalDBFilters
         alt = alt.replaceAll("\\*", "");
 
         final String effects = snpEff.effects();
-        final String clinvarDisease = variant.getCommonInfo().getAttributeAsString(CLINVAR_DISEASE_NAME, "");
-        final String clinvarEffects = variant.getCommonInfo().getAttributeAsString(CLINVAR_MC, "");
-        final String rsDbSnpId = variant.getCommonInfo().getAttributeAsString(CLINVAR_RS_DB_SNP_ID, "");
+        final String clinvarDisease = variant.getCommonInfo().getAttributeAsString(CLINVAR_DISEASE_NAME, "").replaceAll(",", ";");
+        final String clinvarEffects = variant.getCommonInfo().getAttributeAsString(CLINVAR_MC, "").replaceAll(",", ";");
 
         final String hgvsp = snpEff.hgvsProtein();
         final String hgvsc = snpEff.hgvsCoding();
@@ -333,8 +305,7 @@ public class ExternalDBFilters
             mFilterWriter.write(String.format("%s,%s,%s,%d,%s,%s,%s,%s",
                     gene, snpEff.transcript(), chromosome, position, ref, alt, codingEffect, effects));
 
-            mFilterWriter.write(String.format(",%s,%s,%s",
-                    hgvsp, hgvsc, rsDbSnpId));
+            mFilterWriter.write(String.format(",%s,%s", hgvsp, hgvsc));
 
             mFilterWriter.write(String.format(",%s,%s,%s,%s",
                     clinvarSignificance, clinvarSigInfo, clinvarDisease, clinvarEffects));
@@ -361,8 +332,7 @@ public class ExternalDBFilters
             mFilterWriter = createBufferedWriter(filterFileName, false);
 
             mFilterWriter.write("Gene,TranscriptId,Chromosome,Position,Ref,Alt,CodingEffect,AllEffects");
-            mFilterWriter.write(",HgvsProtein,HgvsCoding,DBSnpId");
-            mFilterWriter.write(",ClinvarSignificance,ClinvarSigInfo,ClinvarDisease,ClinvarEffects");
+            mFilterWriter.write(",HgvsProtein,HgvsCoding,ClinvarSignificance,ClinvarSigInfo,ClinvarDisease,ClinvarEffects");
             mFilterWriter.newLine();
         }
         catch (IOException e)

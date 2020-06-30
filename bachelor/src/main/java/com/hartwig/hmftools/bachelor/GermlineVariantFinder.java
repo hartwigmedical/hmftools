@@ -199,7 +199,7 @@ public class GermlineVariantFinder
         final String gene = variantException.getGene().getName();
 
         return new VariantFilter(gene, "", chromosome, position,
-                ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", "", minCodon);
+                ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", minCodon);
     }
 
     void addExternalFilters(final List<VariantFilter> allFilters)

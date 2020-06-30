@@ -711,8 +711,6 @@ CREATE TABLE germlineVariant
     ref varchar(255) NOT NULL,
     alt varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
-    cosmicId varchar(255) NOT NULL,
-    dbsnpId varchar(255) NOT NULL,
     transcript varchar(255) NOT NULL,
     effect varchar(255) NOT NULL,
     codingEffect varchar(255) NOT NULL,
@@ -727,8 +725,9 @@ CREATE TABLE germlineVariant
     hgvsProtein varchar(255) NOT NULL,
     hgvsCoding varchar(255) NOT NULL,
     biallelic BOOLEAN NOT NULL,
-    minorAllelePloidy DOUBLE PRECISION NOT NULL,
+    minorAlleleJunctionCopyNumber DOUBLE PRECISION NOT NULL,
     refStatus varchar(20) NOT NULL,
+    clinvarInfo VARCHAR(255),
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

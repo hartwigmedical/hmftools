@@ -15,8 +15,6 @@ public abstract class GermlineVariant
     public abstract String ref();
     public abstract String alts();
     public abstract String gene();
-    public abstract String cosmicId();
-    public abstract String dbsnpId();
     public abstract String transcriptId();
     public abstract String effects();
     public abstract CodingEffect codingEffect();
@@ -31,7 +29,7 @@ public abstract class GermlineVariant
     public abstract String hgvsProtein();
     public abstract String hgvsCoding();
     public abstract boolean biallelic();
-    public abstract double minorAllelePloidy();
+    public abstract double minorAlleleJcn();
 
     // other fields
     public abstract String program();
