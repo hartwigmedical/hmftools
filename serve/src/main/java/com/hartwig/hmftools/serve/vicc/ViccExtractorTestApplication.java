@@ -138,12 +138,10 @@ public class ViccExtractorTestApplication {
         int featuresWithGeneLevelEventCount = 0;
         int featuresWithGeneRangeCount = 0;
         int featuresWithSignatureCount = 0;
-        ViccSource sourceKnowledgebase = ViccSource.UNKNOWN;
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             ViccEntry viccEntry = entry.getKey();
             ViccExtractionResult viccExtractionResult = entry.getValue();
-            sourceKnowledgebase = viccEntry.source();
             for (Feature feature : viccEntry.features()) {
                 List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
                 KnownAmplificationDeletion ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
@@ -193,10 +191,14 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} gene ranges", featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
 
-        LOGGER.info("No genomic events derived for {} features from source {}", featuresWithoutGenomicEvents.size(), sourceKnowledgebase);
+        LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
-            LOGGER.debug(" No genomic events derived from '{}' in '{}' from source '{}'", feature.name(), feature.geneSymbol(), sourceKnowledgebase);
-            LOGGER.debug("  {}", feature);
+            if (!FeatureIgnoreUtil.canIgnore(feature)) {
+                LOGGER.debug(" No genomic events derived from '{}' in '{}'",
+                        feature.name(),
+                        feature.geneSymbol());
+                LOGGER.debug("  {}", feature);
+            }
         }
     }
 
