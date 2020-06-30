@@ -24,7 +24,6 @@ import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
@@ -109,38 +108,23 @@ public class ViccExtractorTestApplication {
         FeatureCurator curator = new FeatureCurator();
 
         LOGGER.info("Reading VICC json from '{}' with sources '{}'", viccJsonPath, querySelection.sourcesToFilterOn());
-        List<ViccEntry> viccEntries = curate(ViccJsonReader.readSelection(viccJsonPath, querySelection), curator);
-        LOGGER.info(" Read and curated {} entries", viccEntries.size());
+        List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJsonPath, querySelection);
+        LOGGER.info(" Read {} entries. Starting curation", viccEntries.size());
+
+        List<ViccEntry> curatedViccEntries = curator.curate(viccEntries);
+        LOGGER.info(" Finished curation. {} curated entries remaining. {} entries have been removed due to blacklisting.",
+                curatedViccEntries.size(),
+                viccEntries.size() - curatedViccEntries.size());
 
         LOGGER.info("Analyzing usage of curation configuration keys");
         Set<CurationKey> unusedCurationKeys = curator.unusedCurationKeys();
-        if (!unusedCurationKeys.isEmpty()) {
-            for (CurationKey unusedKey : unusedCurationKeys) {
-                LOGGER.warn(" Unused key found: '{}'", unusedKey);
-            }
+        for (CurationKey unusedKey : unusedCurationKeys) {
+            LOGGER.warn(" Unused key found: '{}'", unusedKey);
         }
+
         LOGGER.info("Finished analyzing usage of curation configuration keys. Found {} unused configuration entries.",
                 unusedCurationKeys.size());
 
-        return viccEntries;
-    }
-
-    @NotNull
-    private static List<ViccEntry> curate(@NotNull List<ViccEntry> viccEntries, @NotNull FeatureCurator curator) {
-        // TODO: Move to a function inside the curator and remove entries which have a blacklisted feature.
-        List<ViccEntry> curatedViccEntries = Lists.newArrayList();
-
-        for (ViccEntry entry : viccEntries) {
-            ImmutableViccEntry.Builder builder = ImmutableViccEntry.builder().from(entry);
-            List<Feature> curatedFeatures = Lists.newArrayList();
-            for (Feature feature : entry.features()) {
-                Feature curatedFeature = curator.curate(entry, feature);
-                if (curatedFeature != null) {
-                    curatedFeatures.add(curator.curate(entry, feature));
-                }
-            }
-            curatedViccEntries.add(builder.features(curatedFeatures).build());
-        }
         return curatedViccEntries;
     }
 
