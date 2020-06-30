@@ -2,12 +2,14 @@ package com.hartwig.hmftools.linx.types;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.getAdjacentMajorAPRatio;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.positionWithin;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class DoubleMinuteData
 {
     public final SvCluster Cluster;
     public final List<SvVarData> SVs;
+    public final List<SvVarData> UnchainedSVs;
 
     public double MaxBFBJcn;
     public double MinAdjacentMARatio;
@@ -31,6 +34,12 @@ public class DoubleMinuteData
     public final List<SvVarData> CandidateSVs;
     public final List<SvChain> Chains;
     public boolean FullyChained;
+
+    public int IntExtCount = 0; // count of SV that connect a closed segment to a non closed segment
+    public double IntExtJcnTotal = 0; // Max JCN of SV that connect a closed segment to a non closed segment
+    public double IntExtMaxJcn = 0; // SUM JCN of SV that connect a closed segment to a non closed segment
+    public double MinAdjMAJcnRatio = 0;
+
 
     // annotations relating to chained segments
     public long ClosedSegmentLength; // Sum of closed segment length
@@ -49,6 +58,7 @@ public class DoubleMinuteData
     {
         Cluster = cluster;
         SVs = svList;
+        UnchainedSVs = Lists.newArrayList();
 
         MinAdjacentMARatio = 0;
         MaxBFBJcn = 0;
@@ -56,6 +66,11 @@ public class DoubleMinuteData
         Chains = Lists.newArrayList();
         CandidateSVs = Lists.newArrayList();
         FullyChained = false;
+
+        IntExtCount = 0;
+        IntExtJcnTotal = 0;
+        IntExtMaxJcn = 0;
+        MinAdjMAJcnRatio = 0;
 
         ClosedSegmentLength = 0;
         ClosedBreakends = 0;
@@ -72,9 +87,32 @@ public class DoubleMinuteData
         InternalTypeData.put(INF, new double[INT_SEG_SUM+1]);
     }
 
-    public void setChainCharacteristics(final Map<String,List<SvBreakend>> chrBreakendMap)
+    public void annotate(final Map<String,List<SvBreakend>> chrBreakendMap)
+    {
+        for(SvVarData var : SVs)
+        {
+            if(!Chains.stream().anyMatch(x -> x.getSvList().contains(var)))
+            {
+                UnchainedSVs.add(var);
+            }
+
+            if(MinAdjMAJcnRatio == 0)
+                MinAdjMAJcnRatio = getAdjacentMajorAPRatio(var);
+            else
+                MinAdjMAJcnRatio = min(getAdjacentMajorAPRatio(var), MinAdjMAJcnRatio);
+        }
+
+        final List<SvLinkedPair> allLinkedPairs = Lists.newArrayList();
+        Chains.forEach(x -> allLinkedPairs.addAll(x.getLinkedPairs()));
+
+        setChainCharacteristics(chrBreakendMap, allLinkedPairs);
+    }
+
+    private void setChainCharacteristics(final Map<String,List<SvBreakend>> chrBreakendMap, final List<SvLinkedPair> allLinkedPairs)
     {
         final Set<SvBreakend> observedBreakends = Sets.newHashSet();
+        final Set<SvVarData> observedSVs = Sets.newHashSet();
+
         for(SvChain chain : Chains)
         {
             for(SvLinkedPair pair : chain.getLinkedPairs())
@@ -87,10 +125,10 @@ public class DoubleMinuteData
                 if(pair.firstBreakend().arm() != pair.secondBreakend().arm())
                     ChainsCentromere = true;
 
-                setPairCharacteristics(pair, chrBreakendMap, observedBreakends);
+                setPairCharacteristics(pair, chrBreakendMap, allLinkedPairs, observedBreakends, observedSVs);
 
                 // only count towards total if link ends aren't contained within another link
-                TotalSegmentCnChange += getPairCnChange(pair);
+                // TotalSegmentCnChange += getPairCnChange(pair);
             }
 
             if(!chain.isClosedLoop())
@@ -112,6 +150,61 @@ public class DoubleMinuteData
         }
     }
 
+    public static final int INT_SEG_COUNT = 0;
+    public static final int INT_SEG_MAX = 1;
+    public static final int INT_SEG_SUM = 2;
+
+    private void setPairCharacteristics(
+            final SvLinkedPair pair, final Map<String,List<SvBreakend>> chrBreakendMap, final List<SvLinkedPair> allLinkedPairs,
+            final Set<SvBreakend> observedBreakends, final Set<SvVarData> observedSVs)
+    {
+        final List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
+
+        for(int index = pair.getBreakend(SE_START).getChrPosIndex() + 1; index < pair.getBreakend(SE_END).getChrPosIndex(); ++index)
+        {
+            final SvBreakend breakend = breakendList.get(index);
+
+            if(observedBreakends.contains(breakend))
+                continue;
+
+            observedBreakends.add(breakend);
+
+            if(!observedSVs.contains(breakend.getSV()) && !breakend.getSV().isSglBreakend())
+            {
+                observedSVs.add(breakend.getSV());
+
+                // look for breakends going from within a segment to outside all segments
+                final SvBreakend otherBreakend = breakend.getOtherBreakend();
+
+                boolean otherBreakendInSegment = allLinkedPairs.stream()
+                        .anyMatch(x -> x.chromosome().equals(breakend.chromosome())
+                                && positionWithin(
+                                otherBreakend.position(), x.getBreakend(SE_START).position(), x.getBreakend(SE_END).position()));
+
+                if(!otherBreakendInSegment)
+                {
+                    ++IntExtCount;
+                    IntExtJcnTotal += breakend.jcn();
+                    IntExtMaxJcn = max(IntExtMaxJcn, breakend.jcn());
+                }
+            }
+
+            StructuralVariantType svType = breakend.getSV().type();
+            if(svType != SGL && svType != INF)
+            {
+                if(breakend.isFoldback())
+                    svType = INV;
+                else
+                    continue;
+            }
+
+            double[] counts = InternalTypeData.get(svType);
+            counts[INT_SEG_COUNT] += 1;
+            counts[INT_SEG_SUM] += breakend.jcn();
+            counts[INT_SEG_MAX] = max(counts[INT_SEG_MAX], breakend.jcn());
+        }
+    }
+
     private double getPairCnChange(final SvLinkedPair pair)
     {
         // checks if the pair has neither end within another chain link
@@ -120,7 +213,6 @@ public class DoubleMinuteData
         {
             SvBreakend pairBE = pair.getBreakend(se);
             boolean isOuter = true;
-
 
             for(SvChain chain : Chains)
             {
@@ -147,39 +239,6 @@ public class DoubleMinuteData
         }
 
         return cnChange;
-    }
-
-    public static final int INT_SEG_COUNT = 0;
-    public static final int INT_SEG_MAX = 1;
-    public static final int INT_SEG_SUM = 2;
-
-    private void setPairCharacteristics(final SvLinkedPair pair, final Map<String,List<SvBreakend>> chrBreakendMap, final Set<SvBreakend> observedBreakends)
-    {
-        final List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
-
-        for(int index = pair.getBreakend(SE_START).getChrPosIndex() + 1; index < pair.getBreakend(SE_END).getChrPosIndex(); ++index)
-        {
-            final SvBreakend breakend = breakendList.get(index);
-
-            if(observedBreakends.contains(breakend))
-                continue;
-
-            observedBreakends.add(breakend);
-
-            StructuralVariantType svType = breakend.getSV().type();
-            if(svType != SGL && svType != INF)
-            {
-                if(breakend.isFoldback())
-                    svType = INV;
-                else
-                    continue;
-            }
-
-            double[] counts = InternalTypeData.get(svType);
-            counts[INT_SEG_COUNT] += 1;
-            counts[INT_SEG_SUM] += breakend.jcn();
-            counts[INT_SEG_MAX] = max(counts[INT_SEG_MAX], breakend.jcn());
-        }
     }
 
     public String internalTypeCountsAsStr()
