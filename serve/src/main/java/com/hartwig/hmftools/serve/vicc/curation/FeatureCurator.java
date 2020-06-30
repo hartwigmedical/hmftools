@@ -32,18 +32,17 @@ public class FeatureCurator {
 
         for (ViccEntry entry : entries) {
             boolean includeEntry = true;
-            ImmutableViccEntry.Builder builder = ImmutableViccEntry.builder().from(entry);
             List<Feature> curatedFeatures = Lists.newArrayList();
             for (Feature feature : entry.features()) {
                 Feature curatedFeature = curate(entry, feature);
                 if (curatedFeature != null) {
-                    curatedFeatures.add(curate(entry, feature));
+                    curatedFeatures.add(curatedFeature);
                 } else {
                     includeEntry = false;
                 }
             }
             if (includeEntry) {
-                curatedViccEntries.add(builder.features(curatedFeatures).build());
+                curatedViccEntries.add(ImmutableViccEntry.builder().from(entry).features(curatedFeatures).build());
             }
         }
         return curatedViccEntries;
