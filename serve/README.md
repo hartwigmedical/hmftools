@@ -1,6 +1,4 @@
-# SERVE
-
-**S**earch **E**xternal **R**esources for **V**ariant **E**vidence 
+# **S**earch **E**xternal **R**esources for **V**ariant **E**vidence (SERVE)
 
 SERVE harmonizes different sources of evidence into a single unified model that can be readily used in genomic analyses.  
 The model provides a mapping from genomic events to clinical evidence. 
