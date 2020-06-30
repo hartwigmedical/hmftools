@@ -4,14 +4,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentLoadSomatics;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -47,7 +43,6 @@ public class LoadSomaticVariants {
         Options options = createBasicOptions();
         CommandLine cmd = createCommandLine(args, options);
         String vcfFileLocation = cmd.getOptionValue(SOMATIC_VCF);
-        String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         String sample = cmd.getOptionValue(SAMPLE);
         DatabaseAccess dbAccess = databaseAccess(cmd);
         CompoundFilter filter = new CompoundFilter(true);
@@ -65,13 +60,9 @@ public class LoadSomaticVariants {
             compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(hotspotFile));
         }
 
-        LOGGER.info("Reading high confidence bed file: {}", highConfidenceBed);
-        Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
-
         LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
-        List<SomaticVariant> variants = SomaticVariantFactory.filteredInstanceWithEnrichment(filter,
-                compoundEnrichment,
-                VariantContextEnrichmentLoadSomatics.factory(highConfidenceRegions)).fromVCFFile(sample, vcfFileLocation);
+        List<SomaticVariant> variants =
+                SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Persisting variants to database");
         dbAccess.writeSomaticVariants(sample, variants);
