@@ -34,6 +34,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
@@ -138,10 +139,12 @@ public class ViccExtractorTestApplication {
         int featuresWithGeneLevelEventCount = 0;
         int featuresWithGeneRangeCount = 0;
         int featuresWithSignatureCount = 0;
+        ViccSource sourceKnowledgebase = ViccSource.UNKNOWN;
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             ViccEntry viccEntry = entry.getKey();
             ViccExtractionResult viccExtractionResult = entry.getValue();
+            sourceKnowledgebase = viccEntry.source();
             for (Feature feature : viccEntry.features()) {
                 List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
                 KnownAmplificationDeletion ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
@@ -191,9 +194,9 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} gene ranges", featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
 
-        LOGGER.info("No genomic events derived for {} features", featuresWithoutGenomicEvents.size());
+        LOGGER.info("No genomic events derived for {} features from source {}", featuresWithoutGenomicEvents.size(), sourceKnowledgebase);
         for (Feature feature : featuresWithoutGenomicEvents) {
-            LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+            LOGGER.debug(" No genomic events derived from '{}' in '{}' from source '{}'", feature.name(), feature.geneSymbol(), sourceKnowledgebase);
             LOGGER.debug("  {}", feature);
         }
     }
