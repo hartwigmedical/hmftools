@@ -140,7 +140,7 @@ public class GermlineVariantFile
         return ImmutableGermlineVariant.builder()
                 .chromosome(values[index++])
                 .position(Long.parseLong(values[index++]))
-                .filter(values[index++])
+                .filter(FilterType.valueOf(values[index++]))
                 .type(values[index++])
                 .ref(values[index++])
                 .alts(values[index++])

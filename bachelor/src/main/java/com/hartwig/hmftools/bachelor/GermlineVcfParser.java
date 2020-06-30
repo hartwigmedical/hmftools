@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,16 +12,12 @@ import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class GermlineVcfParser
 {
-    private static final Logger LOGGER = LogManager.getLogger(GermlineVcfParser.class);
-
     private final BachelorConfig mConfig;
     private final GermlineVariantFinder mProgram;
     private final boolean mSkipIndexFile;
@@ -28,7 +26,7 @@ public class GermlineVcfParser
     {
         mConfig = config;
 
-        mProgram = new GermlineVariantFinder();
+        mProgram = new GermlineVariantFinder(mConfig.IncludeVcfFiltered);
 
         mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
 
@@ -59,17 +57,17 @@ public class GermlineVcfParser
     {
         if (mConfig.ProgramConfigMap.isEmpty())
         {
-            LOGGER.error("No programs loaded, exiting");
+            BACH_LOGGER.error("No programs loaded, exiting");
             return false;
         }
 
         if(!Files.exists(Paths.get(vcfFile)))
         {
-            LOGGER.info("SampleId({}) germline VCF({}) not found", sampleId, vcfFile);
+            BACH_LOGGER.info("SampleId({}) germline VCF({}) not found", sampleId, vcfFile);
             return false;
         }
 
-        LOGGER.info("SampleId({}) reading germline VCF({})", sampleId, vcfFile);
+        BACH_LOGGER.info("SampleId({}) reading germline VCF({})", sampleId, vcfFile);
 
         final File germlineVcf = new File(vcfFile);
 
@@ -78,7 +76,7 @@ public class GermlineVcfParser
 
         if(mProgram.getVariants().isEmpty())
         {
-            LOGGER.debug("No valid variants found");
+            BACH_LOGGER.debug("No valid variants found");
         }
 
         return true;
@@ -89,7 +87,7 @@ public class GermlineVcfParser
         if(vcf == null)
             return false;
 
-        LOGGER.debug("Processing vcf: {}", vcf.getPath());
+        BACH_LOGGER.debug("Processing vcf: {}", vcf.getPath());
 
         try (final VCFFileReader reader = new VCFFileReader(vcf, !mSkipIndexFile))
         {
@@ -97,7 +95,7 @@ public class GermlineVcfParser
         }
         catch (final TribbleException e)
         {
-            LOGGER.error("Error with VCF file {}: {}", vcf.getPath(), e.getMessage());
+            BACH_LOGGER.error("Error with VCF file {}: {}", vcf.getPath(), e.getMessage());
             return false;
         }
 

@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BATCH_FILE;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_URL;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.REF_GENOME;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
+import static com.hartwig.hmftools.bachelor.types.FilterType.ARTEFACT;
+import static com.hartwig.hmftools.bachelor.types.FilterType.PASS;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
@@ -41,9 +44,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -63,8 +63,6 @@ class VariantEnricher
 
     private List<BachelorGermlineVariant> mBachRecords;
 
-    private static final Logger LOGGER = LogManager.getLogger(VariantEnricher.class);
-
     VariantEnricher(final BachelorConfig config, final CommandLine cmd)
     {
         mConfig = config;
@@ -81,7 +79,7 @@ class VariantEnricher
 
             try
             {
-                LOGGER.debug("Loading indexed fasta reference file");
+                BACH_LOGGER.debug("Loading indexed fasta reference file");
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
 
                 mBamCountReader = new BamCountReader();
@@ -89,7 +87,7 @@ class VariantEnricher
             }
             catch (IOException e)
             {
-                LOGGER.error("Reference file loading failed");
+                BACH_LOGGER.error("Reference file loading failed");
                 return;
             }
         }
@@ -152,7 +150,7 @@ class VariantEnricher
             final String specificSample = entry.getKey();
             sampleRecords = entry.getValue();
 
-            LOGGER.info("sample({}) processing {} germline reports", specificSample, sampleRecords.size());
+            BACH_LOGGER.info("sample({}) processing {} germline reports", specificSample, sampleRecords.size());
 
             // sort by chromosome and position
             Collections.sort(sampleRecords);
@@ -169,7 +167,7 @@ class VariantEnricher
 
             if (sampleRecords.isEmpty())
             {
-                LOGGER.info("sample({}) has no valid germline reports", specificSample);
+                BACH_LOGGER.info("sample({}) has no valid germline reports", specificSample);
                 writeToFile(specificSample, Lists.newArrayList());
                 continue;
             }
@@ -178,7 +176,7 @@ class VariantEnricher
 
             if (mDbAccess != null)
             {
-                LOGGER.info("sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
+                BACH_LOGGER.info("sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
                 writeToDatabase(specificSample, germlineVariants);
             }
 
@@ -227,7 +225,7 @@ class VariantEnricher
 
         if (!mConfig.PurpleDataDir.isEmpty())
         {
-            LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, mConfig.PurpleDataDir);
+            BACH_LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, mConfig.PurpleDataDir);
 
             try
             {
@@ -236,19 +234,19 @@ class VariantEnricher
             }
             catch (IOException e)
             {
-                LOGGER.error("Failed to read purple data from {}: {}", mConfig.PurpleDataDir, e.toString());
+                BACH_LOGGER.error("Failed to read purple data from {}: {}", mConfig.PurpleDataDir, e.toString());
                 return;
             }
         }
         else
         {
-            LOGGER.debug("sample({}) loading purple data from database", sampleId);
+            BACH_LOGGER.debug("sample({}) loading purple data from database", sampleId);
 
             purityContext = mDbAccess.readPurityContext(sampleId);
 
             if (purityContext == null)
             {
-                LOGGER.warn("Failed to read purity data");
+                BACH_LOGGER.warn("Failed to read purity data");
             }
 
             copyNumbers = mDbAccess.readCopynumbers(sampleId);
@@ -298,7 +296,7 @@ class VariantEnricher
             }
         }
 
-        LOGGER.debug("sample({}) enriching variants", sampleId);
+        BACH_LOGGER.debug("sample({}) enriching variants", sampleId);
 
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(mIndexedFastaSeqFile);
 
@@ -320,7 +318,7 @@ class VariantEnricher
 
             if (!matched)
             {
-                LOGGER.debug("sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
+                BACH_LOGGER.debug("sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
                         sampleId, bachRecord.VariantId, bachRecord.Gene, bachRecord.TranscriptId,
                         bachRecord.Chromosome, bachRecord.Position);
             }
@@ -351,7 +349,7 @@ class VariantEnricher
 
                 if(repeatCount > HIGH_INDEL_REPEAT_COUNT)
                 {
-                    LOGGER.debug("Filtered var({}) indel {} with high repeatCount({})",
+                    BACH_LOGGER.debug("Filtered var({}) indel {} with high repeatCount({})",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
                     bachRecords.remove(index);
                     continue;
@@ -379,7 +377,7 @@ class VariantEnricher
 
                 if(compareStr.equals(mergeStr1) || compareStr.equals(mergeStr2))
                 {
-                    LOGGER.debug("Filtered var({}) indel {} with ref, alt and microHom equal",
+                    BACH_LOGGER.debug("Filtered var({}) indel {} with ref, alt and microHom equal",
                             bachRecord.asString(), bachRecord.CodingEffect);
                     bachRecords.remove(index);
                     continue;
@@ -408,13 +406,10 @@ class VariantEnricher
             final SomaticVariant somaticVariant = bachRecord.getSomaticVariant();
             final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
 
-            final String cosmicId = somaticVariant.canonicalCosmicID();
-            final String dbsnpId = somaticVariant.dbsnpID();
-
             germlineVariants.add(ImmutableGermlineVariant.builder()
                     .chromosome(bachRecord.Chromosome)
                     .position(bachRecord.Position)
-                    .filter(bachRecord.isLowScore() ? "ARTEFACT" : "PASS")
+                    .filter(bachRecord.filterType())
                     .type(somaticVariant.type().toString())
                     .ref(somaticVariant.ref())
                     .alts(somaticVariant.alt())
@@ -439,7 +434,7 @@ class VariantEnricher
                     .annotations(bachRecord.Annotations)
                     .phredScore(bachRecord.PhredScore)
                     .isHomozygous(bachRecord.IsHomozygous)
-                    .matchType(bachRecord.MatchType)
+                    .matchType(bachRecord.getMatchType())
                     .codonInfo(bachRecord.CodonInfo)
                     .clinvarMatch(bachRecord.getClinvarMatch())
                     .clinvarSignificance(bachRecord.getClinvarSig())
@@ -476,7 +471,7 @@ class VariantEnricher
         }
         catch (final IOException e)
         {
-            LOGGER.error("Error writing to outputFile: {}", e.toString());
+            BACH_LOGGER.error("Error writing to outputFile: {}", e.toString());
         }
     }
 

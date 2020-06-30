@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
+
 import java.io.File;
 import java.util.List;
 import java.util.Set;
@@ -27,8 +29,6 @@ class BamCountReader
     private static final int DEFAULT_MIN_BASE_QUALITY = 13;
     private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
-    private static final Logger LOGGER = LogManager.getLogger(BamCountReader.class);
-
     BamCountReader()
     {
         mIndexedFastaSequenceFile = null;
@@ -45,7 +45,7 @@ class BamCountReader
 
     void readBamCounts(final String bamFile, List<BachelorGermlineVariant> bachRecords)
     {
-        LOGGER.debug("reading BAM file: {}", bamFile);
+        BACH_LOGGER.debug("reading BAM file: {}", bamFile);
 
         mTumorReader = SamReaderFactory.makeDefault().referenceSequence(mRefGenomeFile).open(new File(bamFile));
 
@@ -68,7 +68,7 @@ class BamCountReader
 
         if(tumorEvidence.size() != bachRecords.size())
         {
-            LOGGER.error("Incomplete BAM evidence read: evidenceCount({}) vs bachRecords({})", tumorEvidence.size(), bachRecords.size());
+            BACH_LOGGER.error("Incomplete BAM evidence read: evidenceCount({}) vs bachRecords({})", tumorEvidence.size(), bachRecords.size());
             return;
         }
 
@@ -81,7 +81,7 @@ class BamCountReader
                 {
                     variant.setTumorData(evidence.altSupport(), evidence.readDepth());
 
-                    LOGGER.debug("chr({}) position({}) matched, counts(ref={} alt={} depth={})",
+                    BACH_LOGGER.debug("chr({}) position({}) matched, counts(ref={} alt={} depth={})",
                             variant.Chromosome, variant.Position,
                             variant.getTumorRefCount(), variant.getTumorAltCount(), variant.getTumorReadDepth());
 

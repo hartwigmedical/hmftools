@@ -10,7 +10,7 @@ public abstract class GermlineVariant
     // database fields
     public abstract String chromosome();
     public abstract long position();
-    public abstract String filter();
+    public abstract FilterType filter();
     public abstract String type();
     public abstract String ref();
     public abstract String alts();

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bachelor.types;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
+
 import java.nio.file.Path;
 
 import javax.xml.XMLConstants;
@@ -12,14 +14,11 @@ import javax.xml.validation.SchemaFactory;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.bachelor.datamodel.Program;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.xml.sax.SAXException;
 
 public class ConfigSchema
 {
-    private static final Logger LOGGER = LogManager.getLogger(ConfigSchema.class);
     private final Schema schema;
 
     private ConfigSchema() throws SAXException {
@@ -33,7 +32,7 @@ public class ConfigSchema
     @Nullable
     public Program processXML(final Path path)
     {
-        LOGGER.info("Loading input file: {}", path);
+        BACH_LOGGER.info("Loading input file: {}", path);
 
         try
         {
@@ -43,8 +42,8 @@ public class ConfigSchema
             return (Program) unmarshaller.unmarshal(path.toFile());
         }
         catch (final JAXBException e) {
-            LOGGER.error("Failed to process: {}", path);
-            LOGGER.error(e);
+            BACH_LOGGER.error("Failed to process: {}", path);
+            BACH_LOGGER.error(e);
             return null;
         }
     }

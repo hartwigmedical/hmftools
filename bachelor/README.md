@@ -9,8 +9,7 @@ The steps in the routine are as follows:
 4. Write final set of germline variant data to DB (germlineVariant table) and a TSV output file.
 
 ### Whitelist
-
-Any missense inframe indel, synonymous or non-coding variant that is present in clinvar with a significance IN (‘PATHOGENIC’,’LIKELY PATHOGENIC’)  or which has conflicting evidence but none of them  ‘BENIGN’ or ‘LIKELY_BENIGN’. 
+Any missense inframe indel, synonymous or non-coding variant that is present in Clinvar with a significance IN (‘PATHOGENIC’,’LIKELY PATHOGENIC’) or which has conflicting evidence but none of them ‘BENIGN’ or ‘LIKELY_BENIGN’. 
 
 Any missense variant with a protein coding change that exactly matches the protein coding change of a variant with a significance in clinvar IN (‘PATHOGENIC’,’LIKELY PATHOGENIC’) or which has conflicting evidence but none of them ‘BENIGN’ or ‘LIKELY_BENIGN’. 
 
@@ -53,6 +52,8 @@ java -cp bachelor.jar com.hartwig.hmftools.bachelor.LoadGermlineVariants
 ```
 
 Optional config:
+- include_vcf_filtered - process non-passing variants from the VCF, mark as filter = VCF_FILTERED
+- skip_enrichment - 
 - log_debug - log in a verbose manner
 
 

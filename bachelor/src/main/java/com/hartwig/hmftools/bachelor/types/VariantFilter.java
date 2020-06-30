@@ -1,16 +1,12 @@
 package com.hartwig.hmftools.bachelor.types;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class VariantFilter
 {
-    private static final Logger LOGGER = LogManager.getLogger(VariantFilter.class);
-
     public final String Gene;
     public final String TranscriptId;
     public final String Chromosome;
@@ -46,7 +42,7 @@ public class VariantFilter
         {
             if (proteinPosition >=0 && MinCodon <= proteinPosition)
             {
-                LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on minCodon({})",
+                BACH_LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on minCodon({})",
                         gene, chromosome, position, ref, alt, proteinPosition);
 
                 return true;
@@ -55,7 +51,7 @@ public class VariantFilter
 
         if (Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt))
         {
-            LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
+            BACH_LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
                     gene, chromosome, position, ref, alt);
 
             return true;
@@ -71,7 +67,7 @@ public class VariantFilter
         {
             if (!HgvsProteinCodon.isEmpty() && HgvsProteinCodon.equals(hgvsProtein))
             {
-                LOGGER.debug("Gene({}) matches filter on hgvsProtein({})", gene, hgvsProtein);
+                BACH_LOGGER.debug("Gene({}) matches filter on hgvsProtein({})", gene, hgvsProtein);
 
                 return true;
             }
@@ -80,7 +76,7 @@ public class VariantFilter
         {
             if (Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt))
             {
-                LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
+                BACH_LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
                         gene, chromosome, position, ref, alt);
 
                 return true;

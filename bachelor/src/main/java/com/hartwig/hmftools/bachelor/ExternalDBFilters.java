@@ -46,7 +46,6 @@ import htsjdk.variant.vcf.VCFFileReader;
 public class ExternalDBFilters
 {
     private String mInputFilterFile;
-    private List<String> mRequiredEffects;
     private List<String> mPanelTranscripts;
 
     private BufferedWriter mFilterWriter;
@@ -94,7 +93,6 @@ public class ExternalDBFilters
     private ExternalDBFilters(String filterInputFile)
     {
         mInputFilterFile = filterInputFile;
-        mRequiredEffects = Lists.newArrayList();
         mPanelTranscripts = Lists.newArrayList();
         mFilterWriter = null;
     }
@@ -140,12 +138,6 @@ public class ExternalDBFilters
                 // parse CSV data. -1 as 2nd param makes sure we include trailing empty fields
                 String[] items = line.split(",", -1);
 
-                if (items.length < BACHELOR_FILTER_CSV_FIELD_COUNT)
-                {
-                    LOGGER.error("Invalid item count({}), lineIndex({})", items.length, lineIndex);
-                    continue;
-                }
-
                 // Gene,TranscriptId,Chromosome,Position,Ref,Alt,CodingEffect,AllEffects,HgvsProtein,HgvsCoding,DBSnpId,ClinvarSignificance,ClinvarSigInfo
                 VariantFilter filter = new VariantFilter(
                         items[geneIndex],
@@ -189,8 +181,6 @@ public class ExternalDBFilters
 
         List<GeneIdentifier> genesList = programConfig.getGene();
 
-        // take up a collection of the effects to search for
-        mRequiredEffects = programConfig.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
         mPanelTranscripts = genesList.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
 
         File vcfFile = new File(mInputFilterFile);
@@ -210,24 +200,20 @@ public class ExternalDBFilters
     private static final String CLINVAR_SIG_INFO = "CLNSIGCONF";
     private static final String CLINVAR_DISEASE_NAME = "CLNDN";
     private static final String CLINVAR_MC = "MC";
-    private static final String CLINVAR_RS_DB_SNP_ID = "RS";
     private static final String CLINVAR_PATHOGENIC = "Pathogenic";
     private static final String CLINVAR_LIKELY_PATHOGENIC = "Likely_pathogenic";
     private static final String CLINVAR_BENIGN = "Benign";
     private static final String CLINVAR_LIKELY_BENIGN = "Likely_benign";
     private static final String CLINVAR_CONFLICTING = "Conflicting";
 
-    private static boolean isPathogenic(final String clinvarSignificance)
+    public static boolean isPathogenic(final String clinvarSignificance)
     {
         return clinvarSignificance.contains(CLINVAR_PATHOGENIC) || clinvarSignificance.contains(CLINVAR_LIKELY_PATHOGENIC);
     }
 
-    static boolean isBenign(final String clinvarSignificance)
-    {
-        return clinvarSignificance.contains(CLINVAR_BENIGN) || clinvarSignificance.contains(CLINVAR_LIKELY_BENIGN);
-    }
-
-    private static boolean isConflicting(final String clinvarSignificance)
+    public static boolean isBenign(final String clinvarSignificance) { return clinvarSignificance.contains(CLINVAR_BENIGN); }
+    public static boolean isLikelyBenign(final String clinvarSignificance) { return clinvarSignificance.contains(CLINVAR_LIKELY_BENIGN); }
+    public static boolean isConflicting(final String clinvarSignificance)
     {
         return clinvarSignificance.contains(CLINVAR_CONFLICTING);
     }

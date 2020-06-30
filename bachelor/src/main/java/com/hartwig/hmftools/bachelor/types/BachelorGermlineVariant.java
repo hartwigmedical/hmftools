@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.bachelor.types;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import static com.hartwig.hmftools.bachelor.types.FilterType.NONE;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -29,8 +27,10 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public final boolean IsHomozygous;
     public final String HgvsProtein;
     public final String HgvsCoding;
-    public final String MatchType;
     public final String CodonInfo;
+
+    private FilterType mFilterType;
+    private String mMatchType;
 
     private boolean mClinvarMatch;
     private String mClinvarSig;
@@ -50,7 +50,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
     public static final String MATCH_TYPE_NONE = "None";
     public static final String MATCH_TYPE_REQUIRED_EFFECT = "RequiredEffect";
-    public static final String MATCH_TYPE_HOTSPOT = "HotSpot";
     public static final String MATCH_TYPE_WHITELIST = "WhiteList";
 
     public static final int PHRED_SCORE_CUTOFF = 150;
@@ -58,7 +57,7 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public BachelorGermlineVariant(String sampleId, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
             String ref, String alts, CodingEffect codingEffect, String effects, String annotations, String hgvsProtein,
-            boolean isHomozygous, int phredScore, String hgvsCoding, String matchType, String codonInfo)
+            boolean isHomozygous, int phredScore, String hgvsCoding, String codonInfo)
     {
         SampleId = sampleId;
         Program = program;
@@ -72,7 +71,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         IsHomozygous = isHomozygous;
         HgvsProtein = hgvsProtein;
         HgvsCoding = hgvsCoding;
-        MatchType = matchType;
         CodonInfo = codonInfo;
 
         Ref = ref.replaceAll("\\*", "");
@@ -80,6 +78,9 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
         CodingEffect = codingEffect;
         Effects = effects;
+
+        mFilterType = NONE;
+        mMatchType = MATCH_TYPE_NONE;
 
         mGermlineAltCount = 0;
         mTumorAltCount = 0;
@@ -96,6 +97,21 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mVariantContext = null;
         mEnrichedVariant = null;
     }
+
+    public FilterType filterType() { return mFilterType; }
+
+    public void overrideFilterType(final FilterType type) { mFilterType = type; }
+
+    public void setFilterType(final FilterType type)
+    {
+        if(mFilterType != NONE) // leave if already set
+            return;
+
+        mFilterType = type;
+    }
+
+    public void setMatchType(final String matchType) { mMatchType = matchType; }
+    public String getMatchType() { return mMatchType; }
 
     public void setClinvarData(String clinvarSig, String clinvarSigInfo)
     {
@@ -204,110 +220,4 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public void setSomaticVariant(final SomaticVariant var) { mSomaticVariant = var; }
     public void setVariantContext(final VariantContext var) { mVariantContext = var; }
     public void setEnrichedVariant(final EnrichedSomaticVariant var) { mEnrichedVariant = var; }
-
-    public String asCsv(boolean shortForm)
-    {
-        String output = "";
-
-        if(shortForm)
-        {
-            output = String.format("%s,%s,%s,%s,%s",
-                    SampleId, Program, VariantId, Gene, TranscriptId);
-
-            output += String.format(",%s,%d,%s,%s,%s,%s,%s",
-                    Chromosome, Position, Ref, Alts, CodingEffect, Effects, Annotations);
-
-            output += String.format(",%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%s",
-                    HgvsProtein, IsHomozygous, PhredScore, HgvsCoding, MatchType,
-                    mReadDataSet, mGermlineAltCount, mGermlineReadDepth, mTumorAltCount, mTumorReadDepth, CodonInfo);
-
-            output += String.format(",%s,%s,%s",
-                    mClinvarMatch, mClinvarSig, mClinvarSigInfo);
-
-        }
-
-        return output;
-    }
-
-    // SampleId,Program,Id,Gene,TranscriptId,Chromosome,Position,Ref,Alt
-    // CodingEffect,Effect,Annotations,HgvsProtein,IsHomozygous,PhredScore,HgvsCoding
-    // MatchType,HasDepthInfo,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth,CodonInfo
-    public static final int COL_INDEX_SAMPLE = 0;
-    private static final int COL_INDEX_PROGRAM = 1;
-    private static final int COL_INDEX_SV_ID = 2;
-    private static final int COL_INDEX_GENE = 3;
-    private static final int COL_INDEX_TRAN_ID = 4;
-    private static final int COL_INDEX_CHR = 5;
-    private static final int COL_INDEX_POS = 6;
-    private static final int COL_INDEX_REF = 7;
-    private static final int COL_INDEX_ALT = 8;
-
-    private static final int COL_INDEX_CODING_EFFECT = 9;
-    private static final int COL_INDEX_EFFECTS = 10;
-    public static final int COL_INDEX_ANNOTS = 11;
-    private static final int COL_INDEX_PROTEIN = 12;
-    private static final int COL_INDEX_HZ = 13;
-    private static final int COL_INDEX_PHRED = 14;
-    private static final int COL_INDEX_CODING = 15;
-    private static final int COL_INDEX_MATCH_TYPE = 16;
-    private static final int COL_INDEX_HAS_DEPTH = 17;
-    private static final int COL_INDEX_GL_ALT_COUNT = 18;
-    private static final int COL_INDEX_GL_READ_DEPTH = 19;
-    private static final int COL_INDEX_TUMOR_ALT_COUNT = 20;
-    private static final int COL_INDEX_TUMOR_READ_DEPTH = 21;
-    private static final int COL_INDEX_CODON_INFO = 22;
-    private static final int COL_INDEX_CLINVAR_MATCH = 23;
-    private static final int COL_INDEX_CLINVAR_SIG = 24;
-    public static final int COL_INDEX_CLINVAR_SIG_INFO = 25;
-
-    public static final int BACHELOR_CSV_FIELD_COUNT = COL_INDEX_CLINVAR_SIG_INFO + 1;
-
-    public static BachelorGermlineVariant fromCsv(final String[] items)
-    {
-        com.hartwig.hmftools.common.variant.CodingEffect codingEffect
-                = com.hartwig.hmftools.common.variant.CodingEffect.valueOf(items[COL_INDEX_CODING_EFFECT]);
-
-        BachelorGermlineVariant bachRecord = new BachelorGermlineVariant(
-                items[COL_INDEX_SAMPLE],
-                items[COL_INDEX_PROGRAM],
-                items[COL_INDEX_SV_ID],
-                items[COL_INDEX_GENE],
-                items[COL_INDEX_TRAN_ID],
-                items[COL_INDEX_CHR],
-                Long.parseLong(items[COL_INDEX_POS]),
-                items[COL_INDEX_REF],
-                items[COL_INDEX_ALT],
-                codingEffect,
-                items[COL_INDEX_EFFECTS],
-                items[COL_INDEX_ANNOTS],
-                items[COL_INDEX_PROTEIN],
-                Boolean.parseBoolean(items[COL_INDEX_HZ]),
-                Integer.parseInt(items[COL_INDEX_PHRED]),
-                items[COL_INDEX_CODING],
-                items[COL_INDEX_MATCH_TYPE],
-                items[COL_INDEX_CODON_INFO]);
-
-        boolean hasClinvarInfo = Boolean.parseBoolean(items[COL_INDEX_CLINVAR_MATCH]);
-
-        if(hasClinvarInfo)
-        {
-            bachRecord.setClinvarData(items[COL_INDEX_CLINVAR_SIG], items[COL_INDEX_CLINVAR_SIG_INFO]);
-        }
-
-        boolean hasDepthInfo = Boolean.parseBoolean(items[COL_INDEX_HAS_DEPTH]);
-
-        int glAltCount = Integer.parseInt(items[COL_INDEX_GL_ALT_COUNT]);
-        int glReadDepth = Integer.parseInt(items[COL_INDEX_GL_READ_DEPTH]);
-        bachRecord.setGermlineData(glAltCount, glReadDepth);
-
-        if (hasDepthInfo)
-        {
-            int tumorAltCount = Integer.parseInt(items[COL_INDEX_TUMOR_ALT_COUNT]);
-            int tumorReadDepth = Integer.parseInt(items[COL_INDEX_TUMOR_READ_DEPTH]);
-
-            bachRecord.setReadData(tumorAltCount, tumorReadDepth);
-        }
-
-        return bachRecord;
-    }
 }

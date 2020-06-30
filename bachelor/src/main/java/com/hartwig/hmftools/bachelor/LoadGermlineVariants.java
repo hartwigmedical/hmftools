@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_PASS;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_URL;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_USER;
@@ -25,8 +26,6 @@ public class LoadGermlineVariants
 {
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
 
-    private static final Logger LOGGER = LogManager.getLogger(LoadGermlineVariants.class);
-
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
@@ -36,7 +35,7 @@ public class LoadGermlineVariants
 
         if(dbAccess == null)
         {
-            LOGGER.error("failed to create DB connection");
+            BACH_LOGGER.error("failed to create DB connection");
             return;
         }
 
@@ -45,7 +44,7 @@ public class LoadGermlineVariants
 
         if(dataPath.isEmpty())
         {
-            LOGGER.error("no input data path specified");
+            BACH_LOGGER.error("no input data path specified");
             return;
         }
 
@@ -55,18 +54,18 @@ public class LoadGermlineVariants
 
             if(!germlineVariants.isEmpty())
             {
-                LOGGER.info("sample({}) loading {} germline records", sampleId, germlineVariants.size());
+                BACH_LOGGER.info("sample({}) loading {} germline records", sampleId, germlineVariants.size());
                 final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(dbAccess.context());
                 germlineDAO.write(sampleId, germlineVariants);
             }
         }
         catch(Exception e)
         {
-            LOGGER.error("error loading and writing germline variants: {}", e.toString());
+            BACH_LOGGER.error("error loading and writing germline variants: {}", e.toString());
             return;
         }
 
-        LOGGER.info("Complete");
+        BACH_LOGGER.info("Complete");
     }
 
 

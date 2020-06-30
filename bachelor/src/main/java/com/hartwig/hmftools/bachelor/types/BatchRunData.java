@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bachelor.types;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,8 +25,6 @@ public class BatchRunData
     private static final String VCF_FILES = "batch_vcf_files";
     private static final String BAM_FILES = "batch_bam_files";
 
-    private static final Logger LOGGER = LogManager.getLogger(BatchRunData.class);
-
     public BatchRunData(final CommandLine cmd)
     {
         mVcfFiles = Lists.newArrayList();
@@ -40,10 +40,10 @@ public class BatchRunData
             }
             catch (Exception e)
             {
-                LOGGER.error("failed find directories for batch run: {}", e.toString());
+                BACH_LOGGER.error("failed find directories for batch run: {}", e.toString());
             }
 
-            LOGGER.info("Found {} batch directories", mSampleDataDirectories.size());
+            BACH_LOGGER.info("Found {} batch directories", mSampleDataDirectories.size());
 
          */
 
@@ -70,7 +70,7 @@ public class BatchRunData
                 // check file exists before accept it
                 if(!Files.exists(Paths.get(filePath)))
                 {
-                    LOGGER.error("skipping file({}) not found", filePath);
+                    BACH_LOGGER.error("skipping file({}) not found", filePath);
                     return;
                 }
 
@@ -79,12 +79,12 @@ public class BatchRunData
                 filePath = fileReader.readLine();
             }
 
-            LOGGER.info("loaded {} files from {}", files.size(), filename);
+            BACH_LOGGER.info("loaded {} files from {}", files.size(), filename);
 
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to read sample list input CSV file({}): {}", filename, e.toString());
+            BACH_LOGGER.error("failed to read sample list input CSV file({}): {}", filename, e.toString());
         }
     }
 }

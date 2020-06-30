@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.createCommandLine;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.createOptions;
@@ -23,8 +24,6 @@ public class BachelorApplication {
 
     private final BachelorConfig mConfig;
 
-    private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
-
     private BachelorApplication(final CommandLine cmd)
     {
         mConfig = new BachelorConfig(cmd);
@@ -37,7 +36,7 @@ public class BachelorApplication {
     {
         if(!mConfig.isValid())
         {
-            LOGGER.error("exiting due to invalid config");
+            BACH_LOGGER.error("exiting due to invalid config");
             return;
         }
 
@@ -45,7 +44,7 @@ public class BachelorApplication {
         {
             if(!mGermlineVcfParser.run(mConfig.GermlineVcf, mConfig.SampleId, mConfig.OutputDir))
             {
-                LOGGER.error("germline VCF parse failed");
+                BACH_LOGGER.error("germline VCF parse failed");
                 return;
             }
 
@@ -60,7 +59,7 @@ public class BachelorApplication {
 
         mVariantEnricher.close();
 
-        LOGGER.info("bachelor run complete");
+        BACH_LOGGER.info("bachelor run complete");
     }
 
     public static void main(final String... args)
@@ -79,7 +78,7 @@ public class BachelorApplication {
         }
         catch (Exception e)
         {
-            LOGGER.error("config errors: {}", e.toString());
+            BACH_LOGGER.error("config errors: {}", e.toString());
             e.printStackTrace();
         }
     }

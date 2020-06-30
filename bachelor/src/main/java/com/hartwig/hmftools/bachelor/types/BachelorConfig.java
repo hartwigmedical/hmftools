@@ -34,6 +34,7 @@ public class BachelorConfig
     public final String RefGenomeFile;
     public final String PurpleDataDir;
     public final boolean SkipEnrichment;
+    public final boolean IncludeVcfFiltered;
 
     public final boolean IsBatchMode;
     public final BatchRunData BatchRun;
@@ -56,11 +57,12 @@ public class BachelorConfig
     private static final String OUTPUT_DIR = "output_dir";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // path to purple data directory
     private static final String SKIP_ENRICHMENT = "skip_enrichment";
+    private static final String INCLUDE_VCF_FILTERED = "include_vcf_filtered";
 
     public static final String LOG_DEBUG = "log_debug";
     public static final String BATCH_FILE = "BATCH";
 
-    private static final Logger LOGGER = LogManager.getLogger(BachelorConfig.class);
+    public static final Logger BACH_LOGGER = LogManager.getLogger(BachelorConfig.class);
 
     public BachelorConfig(final CommandLine cmd)
     {
@@ -78,7 +80,7 @@ public class BachelorConfig
 
         if (SampleId.isEmpty() || SampleId.equals("*"))
         {
-            LOGGER.info("Running in batch mode");
+            BACH_LOGGER.info("Running in batch mode");
             IsBatchMode = true;
             BatchRun = new BatchRunData(cmd);
         }
@@ -91,6 +93,7 @@ public class BachelorConfig
         GermlineVcf = cmd.getOptionValue(GERMLINE_VCF);
 
         SkipEnrichment = cmd.hasOption(SKIP_ENRICHMENT);
+        IncludeVcfFiltered = cmd.hasOption(INCLUDE_VCF_FILTERED);
         BamFile = cmd.getOptionValue(TUMOR_BAM_FILE);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
 
@@ -107,7 +110,7 @@ public class BachelorConfig
 
         if(GermlineVcf == null)
         {
-            LOGGER.error("missing germline VCF file");
+            BACH_LOGGER.error("missing germline VCF file");
             mIsValid = false;
         }
 
@@ -115,7 +118,7 @@ public class BachelorConfig
         {
             if (BamFile == null || RefGenomeFile == null || PurpleDataDir.isEmpty())
             {
-                LOGGER.error("missing input files: BAM({}) refGenome({}) purpleDataDir({})",
+                BACH_LOGGER.error("missing input files: BAM({}) refGenome({}) purpleDataDir({})",
                         BamFile == null || RefGenomeFile == null || PurpleDataDir.isEmpty());
 
                 mIsValid = false;
@@ -141,7 +144,7 @@ public class BachelorConfig
             {
                 if (configMap.containsKey(p.getName()))
                 {
-                    LOGGER.error("duplicate Programs detected: {}", p.getName());
+                    BACH_LOGGER.error("duplicate Programs detected: {}", p.getName());
                     return false;
                 }
                 else
@@ -152,7 +155,7 @@ public class BachelorConfig
         }
         catch (Exception e)
         {
-            LOGGER.error("Error loading XML: {}", e.toString());
+            BACH_LOGGER.error("Error loading XML: {}", e.toString());
             return false;
         }
 
@@ -172,6 +175,7 @@ public class BachelorConfig
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
         options.addOption(SKIP_ENRICHMENT, false, "Only search for variants but skip Purple enrichment");
+        options.addOption(INCLUDE_VCF_FILTERED, false, "Include variants filtered in the VCF");
 
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");
@@ -208,7 +212,7 @@ public class BachelorConfig
         }
         catch (SQLException e)
         {
-            LOGGER.error("DB connection failed: {}", e.toString());
+            BACH_LOGGER.error("DB connection failed: {}", e.toString());
             return null;
         }
     }
