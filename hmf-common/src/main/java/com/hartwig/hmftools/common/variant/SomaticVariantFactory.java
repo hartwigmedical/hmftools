@@ -137,7 +137,7 @@ public class SomaticVariantFactory {
 
             for (VariantContext variant : reader.iterator()) {
                 // Note we need pon filtered indels for near indel pon logic to work correctly
-                if (filter.test(variant) || NearPonFilteredIndel.isPonFilteredIndel(variant)) {
+                if (filter.test(variant)) {
                     variants.add(variant);
                 }
             }
@@ -151,12 +151,7 @@ public class SomaticVariantFactory {
             @NotNull final List<VariantContext> allVariantContexts) {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
-        for (int i = 0; i < allVariantContexts.size(); i++) {
-            final VariantContext context = allVariantContexts.get(i);
-            if (NearPonFilteredIndel.isNearPonFilteredIndel(i, allVariantContexts)) {
-                context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
-            }
-
+        for (final VariantContext context : allVariantContexts) {
             createVariant(sample, reference, rna, context).ifPresent(variants::add);
         }
 
