@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MI
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.HighConfidenceEnrichment.HIGH_CONFIDENCE_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
@@ -32,8 +31,6 @@ import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
@@ -62,7 +59,7 @@ public class SomaticVariantFactory {
         final VariantContextFilter filter = new AlwaysPassFilter();
         final SomaticEnrichment enrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, enrichment, VariantContextEnrichmentFactory.noEnrichment());
+        return new SomaticVariantFactory(filter, enrichment);
     }
 
     @NotNull
@@ -76,13 +73,13 @@ public class SomaticVariantFactory {
         filter.addAll(Arrays.asList(filters));
         final SomaticEnrichment noEnrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, noEnrichment, VariantContextEnrichmentFactory.noEnrichment());
+        return new SomaticVariantFactory(filter, noEnrichment);
     }
 
     @NotNull
     public static SomaticVariantFactory filteredInstanceWithEnrichment(@NotNull VariantContextFilter filter,
-            @NotNull SomaticEnrichment somaticEnrichment, @NotNull VariantContextEnrichmentFactory factory) {
-        return new SomaticVariantFactory(filter, somaticEnrichment, factory);
+            @NotNull SomaticEnrichment somaticEnrichment) {
+        return new SomaticVariantFactory(filter, somaticEnrichment);
     }
 
     private static final String DBSNP_IDENTIFIER = "rs";
@@ -100,11 +97,8 @@ public class SomaticVariantFactory {
     private final SomaticEnrichment enrichment;
     @NotNull
     private final CanonicalAnnotation canonicalAnnotationFactory;
-    @NotNull
-    private final VariantContextEnrichmentFactory variantContextEnrichmentFactory;
 
-    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment,
-            @NotNull final VariantContextEnrichmentFactory variantContextEnrichmentFactory) {
+    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new NTFilter());
@@ -112,7 +106,6 @@ public class SomaticVariantFactory {
 
         this.enrichment = enrichment;
         this.canonicalAnnotationFactory = new CanonicalAnnotation();
-        this.variantContextEnrichmentFactory = variantContextEnrichmentFactory;
     }
 
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException {
@@ -123,7 +116,6 @@ public class SomaticVariantFactory {
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
             @NotNull final String vcfFile) throws IOException {
         final List<VariantContext> variants = Lists.newArrayList();
-        final VariantContextEnrichment enrichment = variantContextEnrichmentFactory.create(variants::add);
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -146,11 +138,9 @@ public class SomaticVariantFactory {
             for (VariantContext variant : reader.iterator()) {
                 // Note we need pon filtered indels for near indel pon logic to work correctly
                 if (filter.test(variant) || NearPonFilteredIndel.isPonFilteredIndel(variant)) {
-                    enrichment.accept(variant);
+                    variants.add(variant);
                 }
             }
-
-            enrichment.flush();
         }
 
         return process(tumor, reference, rna, variants);
@@ -247,7 +237,7 @@ public class SomaticVariantFactory {
                 // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
                 .biallelic(context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false))
-                .highConfidenceRegion(context.getAttributeAsBoolean(HIGH_CONFIDENCE_FLAG, false));
+                .highConfidenceRegion(false);
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
         attachSnpEffAnnotations(builder, context, snpEffSummaryFactory);
