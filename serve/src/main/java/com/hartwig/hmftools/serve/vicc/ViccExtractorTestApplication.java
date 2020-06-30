@@ -115,12 +115,12 @@ public class ViccExtractorTestApplication {
         LOGGER.info("Analyzing usage of curation configuration keys");
         Set<CurationKey> unusedCurationKeys = curator.unusedCurationKeys();
         if (!unusedCurationKeys.isEmpty()) {
-            LOGGER.warn("Found {} unused curation configuration entries", unusedCurationKeys.size());
             for (CurationKey unusedKey : unusedCurationKeys) {
-                LOGGER.warn(" - {}", unusedKey);
+                LOGGER.warn(" Unused key found: '{}'", unusedKey);
             }
         }
-        LOGGER.info("Finished analyzing usage of curation configuration keys");
+        LOGGER.info("Finished analyzing usage of curation configuration keys. Found {} unused configuration entries.",
+                unusedCurationKeys.size());
 
         return viccEntries;
     }
