@@ -1,12 +1,12 @@
 # Bachelor
 
-Bachelor evaluates the pathogenicity of germline variants from an snpeff annotated germline vcf in a configured panel of genes.    Pathogenicity is determined based both on Clinvar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in Clinvar.
+Bachelor evaluates the pathogenicity of germline variants from an snpeff annotated germline vcf in a configured panel of genes.    Pathogenicity is determined based both on ClinVar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in ClinVar.
 
 The steps in the routine are as follows:
 1. Parse germline VCF to identify candidate variants. 
 2. If the tumor alt and read depth counts are not in the germline VCF, obtain them from the sample's tumor BAM file.
 3. Enrich variants with copy number data from purple
-4. Enrich variants with Clinvar pathogenicity information and configured whitelist / blacklist and determine reportability
+4. Enrich variants with ClinVar pathogenicity information and configured whitelist / blacklist and determine reportability
 5. Write final set of germline variant data to DB (germlineVariant table) and a TSV output file.
 
 ## Annotation
@@ -15,7 +15,7 @@ In addition to standard PURPLE annotations (https://github.com/hartwigmedical/hm
 
 ### Pathogenicity
 
-Pathogenicity is determined primarily from Clinvar, or may be set or overriden via a configured blacklist or whitelist.  
+Pathogenicity is determined primarily from ClinVar, or may be set or overriden via a configured blacklist or whitelist.  
 
 Permitted values are:
 
@@ -26,7 +26,7 @@ Permitted values are:
 * CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' intepretations
 * CLINVAR_LIKELY_BENIGN - No intepretation of 'BENIGN' and at least 1 intepretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
 * CLINVAR_BENIGN - At least 1 intepretation of 'BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
-* UNANNOTATED - Variant is not annotated in Clinvar
+* UNANNOTATED - Variant is not annotated in ClinVar
 
 Note that custom white and blacklists can be specified per gene in the XML config by either:
 - MinCodon OR
