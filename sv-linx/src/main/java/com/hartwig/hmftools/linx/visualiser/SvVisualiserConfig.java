@@ -32,6 +32,12 @@ import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.Segments;
+import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -61,6 +67,7 @@ public interface SvVisualiserConfig
     String CHROMOSOMES = "chromosome";
     String CNA = "cna";
     String EXON = "exon";
+    String VIS_FILE_DIRECTORY = "vis_file_dir";
 
     String THREADS = "threads";
     String INCLUDE_LINE_ELEMENTS = "include_line_elements";
@@ -121,6 +128,7 @@ public interface SvVisualiserConfig
         options.addOption(FUSION, true, "Path to fusion file - eg 'COLO829T.linx.fusions.tsv'");
         options.addOption(CNA, true, "Path to copy number alteration file - eg 'COLO829T.linx.vis_copy_number.tsv'");
         options.addOption(EXON, true, "Path to exon file - eg 'COLO829T.linx.vis_gene_exon.tsv'");
+        options.addOption(VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
         options.addOption(CIRCOS, true, "Path to circos binary");
 
         options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
@@ -139,16 +147,31 @@ public interface SvVisualiserConfig
     static SvVisualiserConfig createConfig(@NotNull final CommandLine cmd) throws ParseException, IOException
     {
         final StringJoiner missingJoiner = new StringJoiner(", ");
-        final String linkPath = parameter(cmd, LINK, missingJoiner);
-        final String trackPath = parameter(cmd, SEGMENT, missingJoiner);
-        final String cnaPath = parameter(cmd, CNA, missingJoiner);
+
         final String sample = parameter(cmd, SAMPLE, missingJoiner);
+        final String visFilesDirectory = cmd.getOptionValue(VIS_FILE_DIRECTORY);
+
+        final String linkPath = visFilesDirectory != null ?
+                VisSvDataFile.generateFilename(visFilesDirectory, sample) : parameter(cmd, LINK, missingJoiner);
+
+        final String trackPath = visFilesDirectory != null ?
+                VisSegmentFile.generateFilename(visFilesDirectory, sample) : parameter(cmd, SEGMENT, missingJoiner);
+
+        final String cnaPath = visFilesDirectory != null ?
+                VisCopyNumberFile.generateFilename(visFilesDirectory, sample) : parameter(cmd, CNA, missingJoiner);
+
+        final String exonPath = visFilesDirectory != null ?
+                VisGeneExonFile.generateFilename(visFilesDirectory, sample) : parameter(cmd, EXON, missingJoiner);
+
+        final String proteinDomainPath = visFilesDirectory != null ?
+                VisProteinDomainFile.generateFilename(visFilesDirectory, sample) : parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
+
+        final String fusionPath = visFilesDirectory != null ?
+                VisFusionFile.generateFilename(visFilesDirectory, sample) : parameter(cmd, FUSION, missingJoiner);
+
         final String plotOutputDir = parameter(cmd, PLOT_OUT, missingJoiner);
         final String dataOutputDir = parameter(cmd, DATA_OUT, missingJoiner);
         final String circos = parameter(cmd, CIRCOS, missingJoiner);
-        final String exonPath = parameter(cmd, EXON, missingJoiner);
-        final String proteinDomainPath = parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
-        final String fusionPath = parameter(cmd, FUSION, missingJoiner);
 
         final String missing = missingJoiner.toString();
         if (!missing.isEmpty())

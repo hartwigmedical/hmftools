@@ -85,7 +85,7 @@ public class Links
                 .endPosition(file.PosEnd)
                 .endOrientation(file.OrientEnd)
                 .endInfo(file.InfoEnd)
-                .ploidy(file.JCN)
+                .jcn(file.JCN)
                 .inDoubleMinute(file.InDoubleMinute)
                 .frame(0)
                 .build();

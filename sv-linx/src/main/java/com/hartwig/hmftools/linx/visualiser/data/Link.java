@@ -44,7 +44,7 @@ public abstract class Link
 
     public abstract String endInfo();
 
-    public abstract double ploidy();
+    public abstract double jcn();
 
     public abstract boolean inDoubleMinute();
 

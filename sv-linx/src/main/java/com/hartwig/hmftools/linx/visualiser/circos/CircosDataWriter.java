@@ -460,14 +460,13 @@ public class CircosDataWriter
         final List<String> result = Lists.newArrayList();
         for (final Link link : Links.clean(links))
         {
-
             final String linkString = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                     .add(String.valueOf(link.startPosition()))
                     .add(String.valueOf(link.startPosition()))
                     .add(circosContig(link.endChromosome()))
                     .add(String.valueOf(link.endPosition()))
                     .add(String.valueOf(link.endPosition()))
-                    .add(colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thicknessString(link.ploidy()) + ",frame="
+                    .add(colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thicknessString(link.jcn()) + ",frame="
                             + link.frame())
                     .toString();
             result.add(linkString);
@@ -526,10 +525,8 @@ public class CircosDataWriter
         final List<String> result = Lists.newArrayList();
         for (final Segment segment : segments)
         {
-
             if (segment.track() > 0)
             {
-
                 double thickness = thicknessPixels(segment.ploidy());
                 double r0 = configWriter.svTrackRelative(segment.track());
                 String r0String = "r0=" + RATIO_FORMAT.format(r0) + "r-" + thickness / 2d + "p";
@@ -543,7 +540,6 @@ public class CircosDataWriter
                                 + r1String + ",frame=" + segment.frame())
                         .toString();
                 result.add(entry);
-
             }
         }
 

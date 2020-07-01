@@ -34,8 +34,10 @@ public class Connectors
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
             final Optional<Link> optionalStartPositionLink = Links.findLink(startPosition, links);
-            if (optionalStartPositionLink.isPresent()) {
-                double startLinkPloidy = optionalStartPositionLink.get().ploidy();
+
+            if (optionalStartPositionLink.isPresent())
+            {
+                double startLinkPloidy = optionalStartPositionLink.get().jcn();
                 double startLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), startPosition, segments);
 
                 if (startLinkPloidy > 0)
@@ -49,8 +51,10 @@ public class Connectors
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
             final Optional<Link> optionalEndPositionLink = Links.findLink(endPosition, links);
-            if (optionalEndPositionLink.isPresent()) {
-                double endLinkPloidy = optionalEndPositionLink.get().ploidy();
+
+            if (optionalEndPositionLink.isPresent())
+            {
+                double endLinkPloidy = optionalEndPositionLink.get().jcn();
                 if (endLinkPloidy > 0)
                 {
                     double endLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), endPosition, segments);
@@ -78,7 +82,7 @@ public class Connectors
             final ImmutableConnector.Builder builder = ImmutableConnector.builder()
                     .clusterId(link.clusterId())
                     .chainId(link.chainId())
-                    .ploidy(link.ploidy())
+                    .ploidy(link.jcn())
                     .frame(0)
                     .track(0);
 

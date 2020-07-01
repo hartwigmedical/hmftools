@@ -159,8 +159,10 @@ public class DoubleMinuteFinder
             {
                 int maxIndex = dmChain.getLinkedPairs().stream().mapToInt(x -> x.getLinkIndex()).max().orElse(0);
                 dmChain.closeChain(LR_METHOD_DM_CLOSE, maxIndex + 1);
-                dmChain.setDoubleMinute(true);
             }
+
+            // all DMs, even if partial or not fully closed will be marked for the visualiser
+            dmChain.setDoubleMinute(true);
         }
 
         boolean fullyChained = !dmChains.isEmpty();
@@ -196,8 +198,7 @@ public class DoubleMinuteFinder
         mDoubleMinutes.put(cluster.id(), dmData);
 
         // cache DM data against the cluster since it used in the chaining routine amongst other things
-        final List<SvChain> closedChains = dmChains.stream().filter(x -> x.isClosedLoop()).collect(Collectors.toList());
-        cluster.setDoubleMinuteData(candidateDMSVs, closedChains); // only the one for now
+        cluster.setDoubleMinuteData(candidateDMSVs, dmChains);
 
         cluster.addAnnotation(CLUSTER_ANNOT_DM);
 

@@ -107,7 +107,7 @@ public class CircosData
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAlleleCopyNumber).max().orElse(0);
 
-        double maxLinkPloidy = links.stream().mapToDouble(Link::ploidy).max().orElse(0);
+        double maxLinkPloidy = links.stream().mapToDouble(Link::jcn).max().orElse(0);
         double maxSegmentsPloidy = segments.stream().mapToDouble(Segment::ploidy).max().orElse(0);
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);

@@ -201,7 +201,7 @@ public class ColorPicker
     @NotNull
     private static Map<Integer, String> colorsByChain(@NotNull final List<Link> links)
     {
-        final Map<Integer, String> result = Maps.newHashMap();
+        final Map<Integer,String> result = Maps.newHashMap();
 
         if (!links.isEmpty())
         {
@@ -225,14 +225,15 @@ public class ColorPicker
 
                 for(int i = 0; i < chainIds.size(); i++)
                 {
-                    if(dmChainIds.contains(i))
+                    int chainId = chainIds.get(i);
+                    if(dmChainIds.contains(chainId))
                     {
-                        result.put(chainIds.get(i), toString(DOUBLE_MINUTE));
+                        result.put(chainId, toString(DOUBLE_MINUTE));
                     }
                     else
                     {
                         final String color = i < COLOURS.length ? toString(COLOURS[i]) : toString(BLACK);
-                        result.put(chainIds.get(i), color);
+                        result.put(chainId, color);
                     }
                 }
             }
