@@ -93,6 +93,8 @@ public class HotspotExtractor {
                 return false;
             } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
                 return isValidRangeMutation(feature);
+            } else if (feature.contains(HGVS_DELETION + HGVS_INSERTION)) {
+                return isValidComplexDeletionInsertion(feature);
             } else {
                 return isValidSingleCodonMutation(feature);
             }
@@ -131,6 +133,12 @@ public class HotspotExtractor {
         } else {
             return false;
         }
+    }
+
+    private static boolean isValidComplexDeletionInsertion(@NotNull String feature) {
+        String[] featureParts = feature.split(HGVS_DELETION + HGVS_INSERTION);
+
+        return isInteger(featureParts[0].substring(1)) && (3 * featureParts[1].length()) <= MAX_INFRAME_BASE_LENGTH;
     }
 
     private static boolean isValidSingleCodonMutation(@NotNull String feature) {
@@ -174,5 +182,14 @@ public class HotspotExtractor {
         String newAminoAcid = feature.substring(firstNotDigit);
         // X is a wildcard that we don't support, and "/" indicates logical OR that we don't support.
         return !newAminoAcid.equals("X") && !newAminoAcid.contains("/");
+    }
+
+    private static boolean isInteger(@NotNull String value) {
+        try {
+            Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException exp) {
+            return false;
+        }
     }
 }

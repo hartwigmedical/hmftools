@@ -1,29 +1,49 @@
 # Bachelor
 
-Bachelor filters and annotates all nonsense, splice and frameshift germline variants which affect our included gene list but are not in the blacklist. It also picks up germline variants of other types which are specifically whitelisted.
+Bachelor evaluates the pathogenicity of germline variants from an snpeff annotated germline vcf in a configured panel of genes.    Pathogenicity is determined based both on Clinvar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in Clinvar.
 
 The steps in the routine are as follows:
-1. Parse germline VCF to identify candidate variants. Apply black and white lists to exclude or include variants.
+1. Parse germline VCF to identify candidate variants. 
 2. If the tumor alt and read depth counts are not in the germline VCF, obtain them from the sample's tumor BAM file.
-3. Enrich variants with copy number data
-4. Write final set of germline variant data to DB (germlineVariant table) and a TSV output file.
+3. Enrich variants with copy number data from purple
+4. Enrich variants with Clinvar pathogenicity information and configured whitelist / blacklist and determine reportability
+5. Write final set of germline variant data to DB (germlineVariant table) and a TSV output file.
 
-### Whitelist
-Any missense inframe indel, synonymous or non-coding variant that is present in Clinvar with a significance IN (‘PATHOGENIC’,’LIKELY PATHOGENIC’) or which has conflicting evidence but none of them ‘BENIGN’ or ‘LIKELY_BENIGN’. 
+## Annotation
 
-Any missense variant with a protein coding change that exactly matches the protein coding change of a variant with a significance in clinvar IN (‘PATHOGENIC’,’LIKELY PATHOGENIC’) or which has conflicting evidence but none of them ‘BENIGN’ or ‘LIKELY_BENIGN’. 
+In addition to standard PURPLE annotations (https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#10-somatic-enrichment), Bachelor also annotates the following information:
 
-### Blacklist
- - Any nonsense, splice or frameshift variant which is present in clinvar with a significance IN (‘BENIGN’,’LIKELY BENIGN’)
- - Gene = BRCA2 + Codon > 3326 
- - CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology)
- - Any frameshift variant which is offset by another frameshift variant to be net inframe in more than 50% of samples which it is found in our cohort.  These will appear as explicit variants in our blacklist configuration 
- - TSC2 16:2137924 T>TCCCTGCAGTGCAGGAAAGGTAGGGCCGGGTGGGG (rs137854222) - This is classified as a frameshift variant by snpeff but overlaps the splice region and has perfect microhomology and so has no net effect on coding or splicing.
+### Pathogenicity
 
-Custom white and blacklistings can be specified per gene in the XML config by either:
+Pathogenicity is determined primarily from Clinvar, or may be set or overriden via a configured blacklist or whitelist.  
+
+Permitted values are:
+
+* BLACK_LIST - Variant matches black list configuration of known benign variant.   INDELs in repeats or with microhomology in splice and intronic regions are also blacklisted (ie. CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology))
+* WHITE_LIST - Variant matches white list configuration of known benign variants
+* CLINVAR_PATHOGENIC - At least 1 intepretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
+* CLINVAR_LIKELY_PATHOGENIC - No intepretation of PATHOGENIC, but at least 1 intepretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
+* CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' intepretations
+* CLINVAR_LIKELY_BENIGN - No intepretation of 'BENIGN' and at least 1 intepretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
+* CLINVAR_BENIGN - At least 1 intepretation of 'BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
+* UNANNOTATED - Variant is not annotated in Clinvar
+
+Note that custom white and blacklists can be specified per gene in the XML config by either:
 - MinCodon OR
 - Ref, Alt,Chromosome & Position
 
+### Filter
+
+A filter field is populated. Permitted values are:
+* PASS
+* GERMLINE_FILTERED - Variant was soft filtered in input germline vcf file
+* ARTEFACT - <????>
+
+### Reported
+
+This is a summary boolean flag which implements the HMF logic for reportable germline variants.   A variant will be marked as reported if the filter = PASS and either one or both of the following criteria are met:
+* Pathogenicity in ('WHITE_LIST','CLINVAR_PATHOGENIC','CLINVAR_LIKELY_PATHOGENIC')
+* Pathogenicity = 'UNANNOTATED' and effect is configured as a known snpeffect
 
 ## Usage
 

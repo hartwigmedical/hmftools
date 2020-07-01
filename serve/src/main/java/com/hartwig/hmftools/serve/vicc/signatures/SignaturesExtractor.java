@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.vicc.ViccExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -33,6 +32,6 @@ public class SignaturesExtractor {
 
     @NotNull
     public static Signatures determineSignatures(@NotNull ViccSource source, @NotNull String typeEvent) {
-        return ImmutableSignatures.builder().eventType(typeEvent).source(source.displayString()).sourceLink(source.toString()).build();
+        return ImmutableSignatures.builder().eventType(typeEvent).source(source.display()).sourceLink(source.toString()).build();
     }
 }

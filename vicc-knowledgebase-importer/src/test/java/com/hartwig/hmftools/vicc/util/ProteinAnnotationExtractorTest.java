@@ -15,6 +15,7 @@ public class ProteinAnnotationExtractorTest {
         assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("EGFR p.E709K"));
         assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("E709K (c.2100A>c)"));
 
+        assertEquals("G778_P780dup", ProteinAnnotationExtractor.toProteinAnnotation("G778_P780DUP"));
         assertEquals("V560del", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560DEL"));
         assertEquals("V560fs", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560FS"));
         assertEquals("V560insAYVM", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560INSAYVM"));

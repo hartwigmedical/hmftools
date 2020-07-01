@@ -103,7 +103,7 @@ public class ViccDAO {
 
     public void writeViccEntry(@NotNull ViccEntry viccEntry) {
         int id = context.insertInto(VICCENTRY, VICCENTRY.SOURCE)
-                .values(viccEntry.source().displayString())
+                .values(viccEntry.source().display())
                 .returning(VICCENTRY.ID)
                 .fetchOne()
                 .getValue(VICCENTRY.ID);

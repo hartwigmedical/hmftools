@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.vicc.curation;
 import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,16 +11,26 @@ import org.jetbrains.annotations.Nullable;
 public class CurationKey {
 
     @NotNull
+    private final ViccSource source;
+    @NotNull
     private final String gene;
     @Nullable
     private final String transcript;
     @NotNull
     private final String featureName;
 
-    public CurationKey(@NotNull final String gene, @Nullable final String transcript, @NotNull final String featureName) {
+    public CurationKey(@NotNull final ViccSource source, @NotNull final String gene, @Nullable final String transcript,
+            @NotNull final String featureName) {
+        this.source = source;
         this.gene = gene;
         this.transcript = transcript;
         this.featureName = featureName;
+    }
+
+    @VisibleForTesting
+    @NotNull
+    ViccSource source() {
+        return source;
     }
 
     @VisibleForTesting
@@ -49,17 +60,18 @@ public class CurationKey {
             return false;
         }
         final CurationKey that = (CurationKey) o;
-        return gene.equals(that.gene) && Objects.equals(transcript, that.transcript) && featureName.equals(that.featureName);
+        return source == that.source && gene.equals(that.gene) && Objects.equals(transcript, that.transcript)
+                && featureName.equals(that.featureName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(gene, transcript, featureName);
+        return Objects.hash(source, gene, transcript, featureName);
     }
 
     @Override
     public String toString() {
-        return "CurationKey{" + "gene='" + gene + '\'' + ", transcript='" + transcript + '\'' + ", featureName='" + featureName + '\''
-                + '}';
+        return "CurationKey{" + "source=" + source + ", gene='" + gene + '\'' + ", transcript='" + transcript + '\'' + ", featureName='"
+                + featureName + '\'' + '}';
     }
 }

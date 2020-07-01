@@ -16,6 +16,7 @@ public class HotspotExtractorTest {
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("V5del"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("L755_T759del"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("L755_T756delinsPP"));
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("D770delinsGY"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("G10dup"));
 
         // Just plain wrong protein annotations

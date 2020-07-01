@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.vicc.copynumber;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -90,10 +89,10 @@ public class CopyNumberExtractor {
 
         for (Feature feature: viccEntry.features()) {
             if (isAmplification(feature)) {
-                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", viccEntry.source().displayString()));
+                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", viccEntry.source().display()));
                 uniqueAmps.add(feature.geneSymbol());
             } else if (isDeletion(feature)) {
-                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", viccEntry.source().displayString()));
+                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", viccEntry.source().display()));
                 uniqueDels.add(feature.geneSymbol());
             }
         }

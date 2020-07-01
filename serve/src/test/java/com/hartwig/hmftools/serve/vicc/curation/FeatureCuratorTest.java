@@ -10,14 +10,15 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class FeatureCuratorTest {
 
     @Test
     public void canCurateFeatures() {
-        CurationKey firstOncoKbKey = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.keySet().iterator().next();
-        String firstMappedFeature = CurationFactory.ONCOKB_FEATURE_NAME_MAPPINGS.get(firstOncoKbKey);
+        CurationKey firstOncoKbKey = firstOncoKbMappingKey();
+        String firstMappedFeature = CurationFactory.FEATURE_NAME_MAPPINGS.get(firstOncoKbKey);
 
         ViccEntry entry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
                 ViccTestFactory.testOncoKbWithTranscript(firstOncoKbKey.transcript()));
@@ -29,7 +30,7 @@ public class FeatureCuratorTest {
 
     @Test
     public void canBlacklistFeatures() {
-        CurationKey firstOncoKbKey = CurationFactory.ONCOKB_FEATURE_BLACKLIST.iterator().next();
+        CurationKey firstOncoKbKey = firstOncoKbBlacklistKey();
         ViccEntry entry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
                 ViccTestFactory.testOncoKbWithTranscript(firstOncoKbKey.transcript()));
 
@@ -45,16 +46,36 @@ public class FeatureCuratorTest {
         Feature feature = ImmutableFeature.builder().geneSymbol("any").name("any").build();
 
         assertNotNull(curator.curate(entry, feature));
-        int unusedCurationKeyCount = curator.unusedCurationKeysPerSource().get(ViccSource.ONCOKB).size();
+        int unusedCurationKeyCount = curator.unusedCurationKeys().size();
 
-        CurationKey blacklistKey = CurationFactory.ONCOKB_FEATURE_BLACKLIST.iterator().next();
+        CurationKey blacklistKey = firstOncoKbBlacklistKey();
         ViccEntry blacklistEntry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
                 ViccTestFactory.testOncoKbWithTranscript(blacklistKey.transcript()));
 
         Feature blacklistFeature = ImmutableFeature.builder().geneSymbol(blacklistKey.gene()).name(blacklistKey.featureName()).build();
 
         assertNull(curator.curate(blacklistEntry, blacklistFeature));
-        int newUnusedCurationKeyCount = curator.unusedCurationKeysPerSource().get(ViccSource.ONCOKB).size();
+        int newUnusedCurationKeyCount = curator.unusedCurationKeys().size();
         assertEquals(1, unusedCurationKeyCount - newUnusedCurationKeyCount);
+    }
+
+    @NotNull
+    private static CurationKey firstOncoKbMappingKey() {
+        for (CurationKey key : CurationFactory.FEATURE_NAME_MAPPINGS.keySet()) {
+            if (key.source() == ViccSource.ONCOKB) {
+                return key;
+            }
+        }
+        throw new IllegalStateException("No OncoKB mapping keys found!");
+    }
+
+    @NotNull
+    private static CurationKey firstOncoKbBlacklistKey() {
+        for (CurationKey key : CurationFactory.FEATURE_BLACKLIST) {
+            if (key.source() == ViccSource.ONCOKB) {
+                return key;
+            }
+        }
+        throw new IllegalStateException("No OncoKB blacklist keys found!");
     }
 }

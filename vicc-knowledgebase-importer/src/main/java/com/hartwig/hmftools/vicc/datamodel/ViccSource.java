@@ -20,21 +20,21 @@ public enum ViccSource {
     private static final Logger LOGGER = LogManager.getLogger(ViccSource.class);
 
     @NotNull
-    private final String displayString;
+    private final String display;
 
-    ViccSource(@NotNull final String displayString) {
-        this.displayString = displayString;
+    ViccSource(@NotNull final String display) {
+        this.display = display;
     }
 
     @NotNull
-    public String displayString() {
-        return displayString;
+    public String display() {
+        return display;
     }
 
     @NotNull
     public static ViccSource fromViccKnowledgebaseString(@NotNull String sourceString) {
         for (ViccSource source : ViccSource.values()) {
-            if (source.displayString().equals(sourceString)) {
+            if (source.display().equals(sourceString)) {
                 return source;
             }
         }
