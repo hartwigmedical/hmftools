@@ -186,6 +186,8 @@ class VariantEnricher
 
     private void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
     {
+        final SomaticVariantFactory variantFactory = SomaticVariantFactory.unfilteredInstance();
+
         for (final BachelorGermlineVariant bachRecord : bachRecords)
         {
             VariantContextBuilder builder = new VariantContextBuilder();
@@ -213,7 +215,7 @@ class VariantEnricher
 
             bachRecord.setVariantContext(variantContext);
 
-            SomaticVariant somVariant = SomaticVariantFactory.unfilteredInstance().createSomaticVariant(sampleId, variantContext);
+            SomaticVariant somVariant = variantFactory.createSomaticVariant(sampleId, variantContext);
             bachRecord.setSomaticVariant(somVariant);
         }
     }
@@ -410,6 +412,8 @@ class VariantEnricher
                     .chromosome(bachRecord.Chromosome)
                     .position(bachRecord.Position)
                     .filter(bachRecord.filterType())
+                    .reported(bachRecord.isReportable())
+                    .pathogenic(bachRecord.pathogenicType())
                     .type(somaticVariant.type().toString())
                     .ref(somaticVariant.ref())
                     .alts(somaticVariant.alt())
@@ -434,9 +438,7 @@ class VariantEnricher
                     .annotations(bachRecord.Annotations)
                     .phredScore(bachRecord.PhredScore)
                     .isHomozygous(bachRecord.IsHomozygous)
-                    .matchType(bachRecord.getMatchType())
                     .codonInfo(bachRecord.CodonInfo)
-                    .clinvarMatch(bachRecord.getClinvarMatch())
                     .clinvarSignificance(bachRecord.getClinvarSig())
                     .clinvarSignificanceInfo(bachRecord.getClinvarSigInfo())
                     .build());

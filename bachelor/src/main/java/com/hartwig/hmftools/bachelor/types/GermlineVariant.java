@@ -11,6 +11,8 @@ public abstract class GermlineVariant
     public abstract String chromosome();
     public abstract long position();
     public abstract FilterType filter();
+    public abstract boolean reported();
+    public abstract PathogenicType pathogenic();
     public abstract String type();
     public abstract String ref();
     public abstract String alts();
@@ -37,9 +39,7 @@ public abstract class GermlineVariant
     public abstract String annotations();
     public abstract int phredScore();
     public abstract boolean isHomozygous();
-    public abstract String matchType();
     public abstract String codonInfo();
-    public abstract boolean clinvarMatch();
     public abstract String clinvarSignificance();
     public abstract String clinvarSignificanceInfo();
 

@@ -1,19 +1,14 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.ExternalDBFilters.isBenign;
-import static com.hartwig.hmftools.bachelor.ExternalDBFilters.isLikelyBenign;
-import static com.hartwig.hmftools.bachelor.ExternalDBFilters.isPathogenic;
 import static com.hartwig.hmftools.bachelor.ExternalDBFilters.stripTranscriptVersion;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
-import static com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant.MATCH_TYPE_REQUIRED_EFFECT;
-import static com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant.MATCH_TYPE_WHITELIST;
 import static com.hartwig.hmftools.bachelor.types.FilterType.ARTEFACT;
-import static com.hartwig.hmftools.bachelor.types.FilterType.BLACKLIST;
-import static com.hartwig.hmftools.bachelor.types.FilterType.CLINVAR_BENIGN;
-import static com.hartwig.hmftools.bachelor.types.FilterType.CLINVAR_LIKELY_BENIGN;
-import static com.hartwig.hmftools.bachelor.types.FilterType.CLINVAR_UNANNOTATED;
+import static com.hartwig.hmftools.bachelor.types.FilterType.GERMLINE_FILTERED;
 import static com.hartwig.hmftools.bachelor.types.FilterType.PASS;
-import static com.hartwig.hmftools.bachelor.types.FilterType.VCF_FILTERED;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.BLACK_LIST;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.NONE;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.UNANNOTATED;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.WHITE_LIST;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 
 import java.util.Arrays;
@@ -206,7 +201,7 @@ public class GermlineVariantFinder
         final String gene = variantException.getGene().getName();
 
         return new VariantFilter(gene, "", chromosome, position,
-                ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", minCodon);
+                ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", minCodon, true);
     }
 
     public void addExternalFilters(final List<VariantFilter> allFilters)
@@ -281,7 +276,7 @@ public class GermlineVariantFinder
             if(!mIncludeFiltered)
                 return;
 
-            filterType = VCF_FILTERED;
+            filterType = GERMLINE_FILTERED;
         }
 
         // we will skip when an ALT is not present in the sample
@@ -349,12 +344,11 @@ public class GermlineVariantFinder
                 BACH_LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
                         gene, transcriptId, chromosome, position, ref, alt, effects);
 
-                germlineVariant.setMatchType(MATCH_TYPE_REQUIRED_EFFECT);
+                germlineVariant.setMatchRequiredEffect();
 
                 if(!mBlacklistFilters.isEmpty())
                 {
-                    // for variants matching the required effects, check whether they should be blacklisted
-                    // for Clinvar entries this is if the variant is Benign, for other filters any match will cause a blacklist
+                    // capture the Clinvar status for this variant
                     final List<Integer> proteinPositions = proteinPosition(snpEff);
                     int proteinPosition = !proteinPositions.isEmpty() ? proteinPositions.get(0) : -1;
 
@@ -362,27 +356,30 @@ public class GermlineVariantFinder
 
                     if(filters != null)
                     {
-                        for(final VariantFilter filter : filters)
+                        final VariantFilter filter = filters.stream()
+                                .filter(x -> x.blacklistMatch(gene, chromosome, position, ref, alt, proteinPosition))
+                                .findFirst().orElse(null);
+
+                        if(filter != null)
                         {
-                            if(filter.blacklistMatch(gene, chromosome, position, ref, alt, proteinPosition))
+                            BACH_LOGGER.debug("black-list filter match: gene({}) var({}:{}:{}) ref({}) alt({}) protein({})",
+                                    gene, varId, chromosome, position, ref, alt, hgvsProtein);
+
+                            if(filter.Configured)
                             {
-                                germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
-
-                                BACH_LOGGER.debug("Gene({}) var({}:{}:{}) ref({}) alt({}) protein({}) blacklisted",
-                                        gene, varId, chromosome, position, ref, alt, hgvsProtein);
-
-                                if(isBenign(filter.ClinvarSignificance))
-                                    germlineVariant.setFilterType(CLINVAR_BENIGN);
-                                else if(isLikelyBenign(filter.ClinvarSignificance))
-                                    germlineVariant.setFilterType(CLINVAR_LIKELY_BENIGN);
-                                else
-                                    germlineVariant.setFilterType(BLACKLIST);
+                                germlineVariant.setPathogenicType(BLACK_LIST);
+                            }
+                            else
+                            {
+                                if(!filter.ClinvarSignificance.isEmpty())
+                                {
+                                    germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
+                                    germlineVariant.setPathogenicType(filter.determinePathogenicType());
+                                }
                             }
                         }
                     }
                 }
-
-                germlineVariant.setFilterType(PASS);
             }
             else if(!mWhitelistFilters.isEmpty())
             {
@@ -390,29 +387,33 @@ public class GermlineVariantFinder
 
                 if(filters != null)
                 {
-                    for (final VariantFilter filter : filters)
+                    final VariantFilter filter = filters.stream()
+                            .filter(x -> x.whitelistMatch(gene, chromosome, position, ref, alt, codingEffect, hgvsProtein))
+                            .findFirst().orElse(null);
+
+                    if(filter != null)
                     {
-                        if(filter.whitelistMatch(gene, chromosome, position, ref, alt, codingEffect, hgvsProtein))
+                        BACH_LOGGER.debug("white-list match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({})",
+                                gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
+
+                        if(filter.Configured)
                         {
-                            BACH_LOGGER.debug("Match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({}) whitelisted",
-                                    gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
-
-                            germlineVariant.setMatchType(MATCH_TYPE_WHITELIST);
-                            germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
-
-                            if(isPathogenic(filter.ClinvarSignificance))
-                                germlineVariant.setFilterType(PASS);
-                            else if(isBenign(filter.ClinvarSignificance))
-                                germlineVariant.setFilterType(CLINVAR_BENIGN);
-                            else if(isLikelyBenign(filter.ClinvarSignificance))
-                                germlineVariant.setFilterType(CLINVAR_LIKELY_BENIGN);
-                            break;
+                            germlineVariant.setPathogenicType(WHITE_LIST);
+                        }
+                        else
+                        {
+                            if(!filter.ClinvarSignificance.isEmpty())
+                            {
+                                germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
+                                germlineVariant.setPathogenicType(filter.determinePathogenicType());
+                            }
                         }
                     }
                 }
-
-                germlineVariant.setFilterType(CLINVAR_UNANNOTATED);
             }
+
+            if(germlineVariant.pathogenicType() == NONE)
+                germlineVariant.setPathogenicType(UNANNOTATED);
 
             int alleleIndex = 1;
             for(; alleleIndex < variant.getAlleles().size(); ++alleleIndex)
@@ -443,10 +444,7 @@ public class GermlineVariantFinder
                 germlineVariant.setReadData(tumorAltCount, tumorReadDepth);
 
             if(germlineVariant.isLowScore() && germlineVariant.filterType() == PASS)
-                germlineVariant.overrideFilterType(ARTEFACT);
-
-            BACH_LOGGER.debug("adding germline variant({} {}:{}) to list of germline variants",
-                    germlineVariant.Gene, germlineVariant.Chromosome, germlineVariant.Position);
+                germlineVariant.setFilterType(ARTEFACT);
 
             mVariants.add(germlineVariant);
         }

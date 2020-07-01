@@ -66,11 +66,13 @@ class BamCountReader
         final VariantHotspotEvidenceFactory hotspotEvidenceFactory = new VariantHotspotEvidenceFactory(DEFAULT_MIN_MAPPING_QUALITY, DEFAULT_MIN_BASE_QUALITY, allHotspots);
         final List<VariantHotspotEvidence> tumorEvidence = hotspotEvidenceFactory.evidence(mIndexedFastaSequenceFile, mTumorReader);
 
+        /*
         if(tumorEvidence.size() != bachRecords.size())
         {
             BACH_LOGGER.error("Incomplete BAM evidence read: evidenceCount({}) vs bachRecords({})", tumorEvidence.size(), bachRecords.size());
             return;
         }
+        */
 
         for(BachelorGermlineVariant variant : bachRecords)
         {

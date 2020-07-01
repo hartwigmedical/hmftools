@@ -1,6 +1,6 @@
 # Bachelor
 
-Bachelor evaluates the pathogenicity of germline variants from an snpeff annotated germline vcf in a configured panel of genes.    Pathogenicity is determined based both on Clinvar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in Clinvar.
+Bachelor evaluates the pathogenicity of germline variants from an snpeff annotated germline vcf in a configured panel of genes. Pathogenicity is determined based both on Clinvar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in Clinvar.
 
 The steps in the routine are as follows:
 1. Parse germline VCF to identify candidate variants. 
@@ -10,22 +10,20 @@ The steps in the routine are as follows:
 5. Write final set of germline variant data to DB (germlineVariant table) and a TSV output file.
 
 ## Annotation
-
 In addition to standard PURPLE annotations (https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#10-somatic-enrichment), Bachelor also annotates the following information:
 
 ### Pathogenicity
-
-Pathogenicity is determined primarily from Clinvar, or may be set or overriden via a configured blacklist or whitelist.  
+Pathogenicity is determined primarily from Clinvar, or may be set or overridden via a configured blacklist or whitelist.  
 
 Permitted values are:
 
-* BLACK_LIST - Variant matches black list configuration of known benign variant.   INDELs in repeats or with microhomology in splice and intronic regions are also blacklisted (ie. CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology))
+* BLACK_LIST - Variant matches black list configuration of known benign variant. INDELs in repeats or with microhomology in splice and intronic regions are also blacklisted (ie. CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology))
 * WHITE_LIST - Variant matches white list configuration of known benign variants
-* CLINVAR_PATHOGENIC - At least 1 intepretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
-* CLINVAR_LIKELY_PATHOGENIC - No intepretation of PATHOGENIC, but at least 1 intepretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
+* CLINVAR_PATHOGENIC - At least 1 interpretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
+* CLINVAR_LIKELY_PATHOGENIC - No interpretation of PATHOGENIC, but at least 1 intepretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
 * CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' intepretations
-* CLINVAR_LIKELY_BENIGN - No intepretation of 'BENIGN' and at least 1 intepretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
-* CLINVAR_BENIGN - At least 1 intepretation of 'BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
+* CLINVAR_LIKELY_BENIGN - No interpretation of 'BENIGN' and at least 1 intepretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
+* CLINVAR_BENIGN - At least 1 interpretation of 'BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
 * UNANNOTATED - Variant is not annotated in Clinvar
 
 Note that custom white and blacklists can be specified per gene in the XML config by either:
@@ -33,15 +31,13 @@ Note that custom white and blacklists can be specified per gene in the XML confi
 - Ref, Alt,Chromosome & Position
 
 ### Filter
-
 A filter field is populated. Permitted values are:
 * PASS
 * GERMLINE_FILTERED - Variant was soft filtered in input germline vcf file
-* ARTEFACT - <????>
+* ARTEFACT - Phred Score < 150 and adjusted VAF < 0
 
 ### Reported
-
-This is a summary boolean flag which implements the HMF logic for reportable germline variants.   A variant will be marked as reported if the filter = PASS and either one or both of the following criteria are met:
+This is a summary boolean flag which implements the HMF logic for reportable germline variants. A variant will be marked as reported if the filter = PASS and either one or both of the following criteria are met:
 * Pathogenicity in ('WHITE_LIST','CLINVAR_PATHOGENIC','CLINVAR_LIKELY_PATHOGENIC')
 * Pathogenicity = 'UNANNOTATED' and effect is configured as a known snpeffect
 

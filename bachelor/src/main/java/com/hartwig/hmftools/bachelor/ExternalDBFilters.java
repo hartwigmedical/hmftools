@@ -97,8 +97,6 @@ public class ExternalDBFilters
         mFilterWriter = null;
     }
 
-    private static final int BACHELOR_FILTER_CSV_FIELD_COUNT = 13;
-
     static List<VariantFilter> loadExternalFilters(String filterFile)
     {
         List<VariantFilter> filters = Lists.newArrayList();
@@ -150,7 +148,8 @@ public class ExternalDBFilters
                         items[hgvsProteinIndex],
                         items[clinvarSignificanceIndex],
                         items[clinvarSigInfoIndex],
-                        -1);
+                        -1,
+                        false);
 
                 filters.add(filter);
             }
@@ -200,23 +199,6 @@ public class ExternalDBFilters
     private static final String CLINVAR_SIG_INFO = "CLNSIGCONF";
     private static final String CLINVAR_DISEASE_NAME = "CLNDN";
     private static final String CLINVAR_MC = "MC";
-    private static final String CLINVAR_PATHOGENIC = "Pathogenic";
-    private static final String CLINVAR_LIKELY_PATHOGENIC = "Likely_pathogenic";
-    private static final String CLINVAR_BENIGN = "Benign";
-    private static final String CLINVAR_LIKELY_BENIGN = "Likely_benign";
-    private static final String CLINVAR_CONFLICTING = "Conflicting";
-
-    public static boolean isPathogenic(final String clinvarSignificance)
-    {
-        return clinvarSignificance.contains(CLINVAR_PATHOGENIC) || clinvarSignificance.contains(CLINVAR_LIKELY_PATHOGENIC);
-    }
-
-    public static boolean isBenign(final String clinvarSignificance) { return clinvarSignificance.contains(CLINVAR_BENIGN); }
-    public static boolean isLikelyBenign(final String clinvarSignificance) { return clinvarSignificance.contains(CLINVAR_LIKELY_BENIGN); }
-    public static boolean isConflicting(final String clinvarSignificance)
-    {
-        return clinvarSignificance.contains(CLINVAR_CONFLICTING);
-    }
 
     static String stripTranscriptVersion(final String transcript)
     {

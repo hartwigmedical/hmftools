@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.bachelor.types;
 
-import static com.hartwig.hmftools.bachelor.types.FilterType.NONE;
+import static com.hartwig.hmftools.bachelor.types.FilterType.PASS;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_LIKELY_PATHOGENIC;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_PATHOGENIC;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.UNANNOTATED;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.WHITE_LIST;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -30,9 +34,9 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public final String CodonInfo;
 
     private FilterType mFilterType;
-    private String mMatchType;
+    private PathogenicType mPathogenicType;
+    private boolean mMatchesRequiredEffect;
 
-    private boolean mClinvarMatch;
     private String mClinvarSig;
     private String mClinvarSigInfo;
 
@@ -47,10 +51,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     private SomaticVariant mSomaticVariant;
     private VariantContext mVariantContext;
     private EnrichedSomaticVariant mEnrichedVariant;
-
-    public static final String MATCH_TYPE_NONE = "None";
-    public static final String MATCH_TYPE_REQUIRED_EFFECT = "RequiredEffect";
-    public static final String MATCH_TYPE_WHITELIST = "WhiteList";
 
     public static final int PHRED_SCORE_CUTOFF = 150;
 
@@ -79,8 +79,9 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         CodingEffect = codingEffect;
         Effects = effects;
 
-        mFilterType = NONE;
-        mMatchType = MATCH_TYPE_NONE;
+        mFilterType = FilterType.NONE;
+        mPathogenicType = PathogenicType.NONE;
+        mMatchesRequiredEffect = false;
 
         mGermlineAltCount = 0;
         mTumorAltCount = 0;
@@ -89,7 +90,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mReadDataSet = false;
         mAdjustedVaf = 0;
 
-        mClinvarMatch = false;
         mClinvarSig = "";
         mClinvarSigInfo = "";
 
@@ -99,28 +99,41 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     }
 
     public FilterType filterType() { return mFilterType; }
+    public void setFilterType(final FilterType type) { mFilterType = type; }
 
-    public void overrideFilterType(final FilterType type) { mFilterType = type; }
+    public PathogenicType pathogenicType() { return mPathogenicType; }
+    public void setPathogenicType(final PathogenicType type) { mPathogenicType = type; }
 
-    public void setFilterType(final FilterType type)
+    public void setMatchRequiredEffect() { mMatchesRequiredEffect = true; }
+    public boolean matchedRequiredEffect() { return mMatchesRequiredEffect; }
+
+    public boolean isReportable()
     {
-        if(mFilterType != NONE) // leave if already set
-            return;
+        // PASS and
+        // * Pathogenicity in ('WHITE_LIST','CLINVAR_PATHOGENIC','CLINVAR_LIKELY_PATHOGENIC')
+        //* Pathogenicity = 'UNANNOTATED' and effect is configured as a known snpeffect
+        if(mFilterType != PASS)
+            return false;
 
-        mFilterType = type;
+        if(mPathogenicType == CLINVAR_PATHOGENIC || mPathogenicType == CLINVAR_LIKELY_PATHOGENIC)
+            return true;
+
+        if(mMatchesRequiredEffect)
+        {
+            return (mPathogenicType == UNANNOTATED);
+        }
+        else
+        {
+            return (mPathogenicType == WHITE_LIST);
+        }
     }
-
-    public void setMatchType(final String matchType) { mMatchType = matchType; }
-    public String getMatchType() { return mMatchType; }
 
     public void setClinvarData(String clinvarSig, String clinvarSigInfo)
     {
-        mClinvarMatch = true;
         mClinvarSig = clinvarSig;
         mClinvarSigInfo = clinvarSigInfo;
     }
 
-    public boolean getClinvarMatch() { return mClinvarMatch; }
     public String getClinvarSig() { return mClinvarSig; }
     public String getClinvarSigInfo() { return mClinvarSigInfo; }
 
