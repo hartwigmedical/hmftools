@@ -164,6 +164,9 @@ public class DoubleMinuteData
         {
             final SvBreakend breakend = breakendList.get(index);
 
+            if(SVs.contains(breakend.getSV()))
+                continue;
+
             if(observedBreakends.contains(breakend))
                 continue;
 
