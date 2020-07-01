@@ -8,16 +8,14 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isOverlapping;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.positionWithin;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
-import static com.hartwig.hmftools.linx.types.DoubleMinuteData.INT_SEG_COUNT;
 import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
+import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -38,7 +36,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -59,7 +56,6 @@ public class DoubleMinuteFinder
     private BufferedWriter mFileWriter;
 
     private static final double JCN_THRESHOLD = 8;
-    private static final double ADJACENT_JCN_RATIO = 2.3;
 
     public DoubleMinuteFinder(final Map<String, List<SvBreakend>> chrBreakendMap)
     {

@@ -14,6 +14,6 @@ public enum ClusteringReason
     LONG_DEL_DUP_INV,
     SATELLITE_SGL,
     MAJOR_ALLELE_JCN,
-    MAJOR_ALLELE_JCN_LONG,
+    HIGH_JCN,
     TI_JCN_MATCH;
 }
