@@ -14,6 +14,13 @@ fun VariantContext.breakendAssemblyReadPairs(): Int {
     return this.getAttributeAsInt("BASRP", 0)
 }
 
+fun VariantContext.breakendAssemblyReadPairsIsInconsistent(): Boolean {
+    // This shouldn't occur but sometimes can because of redefined variants in backport
+    return this.getAttributeAsInt("BASRP", 0) == 0
+            && this.getAttributeAsInt("BASSR", 0) == 0
+            && this.getAttributeAsInt("BAQ", 0) > 0
+}
+
 fun VariantContext.strandBias(): Double {
     val strandBias = this.getAttributeAsDouble("SB", 0.5)
     return max(strandBias, 1 - strandBias)

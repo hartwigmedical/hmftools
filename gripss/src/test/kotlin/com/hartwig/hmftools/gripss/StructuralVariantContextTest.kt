@@ -18,7 +18,9 @@ class StructuralVariantContextTest {
     fun testBreakendAssemblyReadPair() {
         val single = sgl()
         assertTrue(single.toSv().breakendAssemblyReadPairsFilter())
+        assertTrue(single.setAttribute("BASSR", 1).setAttribute("BAQ", 1).toSv().breakendAssemblyReadPairsFilter())
         assertFalse(single.setAttribute("BASRP", 1).toSv().breakendAssemblyReadPairsFilter())
+        assertFalse(single.setAttribute("BAQ", 1).toSv().breakendAssemblyReadPairsFilter())
 
         val shortDel = shortDel()
         assertFalse(shortDel.toSv().breakendAssemblyReadPairsFilter())
