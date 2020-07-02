@@ -172,10 +172,13 @@ public class DoubleMinuteData
 
             observedBreakends.add(breakend);
 
-            if(!observedSVs.contains(breakend.getSV()) && !breakend.getSV().isSglBreakend())
-            {
-                observedSVs.add(breakend.getSV());
+            if(observedSVs.contains(breakend.getSV()))
+                continue;
 
+            observedSVs.add(breakend.getSV());
+
+            if(!breakend.getSV().isSglBreakend())
+            {
                 // look for breakends going from within a segment to outside all segments
                 final SvBreakend otherBreakend = breakend.getOtherBreakend();
 
@@ -195,7 +198,7 @@ public class DoubleMinuteData
             StructuralVariantType svType = breakend.getSV().type();
             if(svType != SGL && svType != INF)
             {
-                if(breakend.isFoldback())
+                if(breakend.isFoldback() && !breakend.getSV().isChainedFoldback())
                     svType = INV;
                 else
                     continue;

@@ -56,6 +56,9 @@ public class DoubleMinuteFinder
     private BufferedWriter mFileWriter;
 
     private static final double JCN_THRESHOLD = 8;
+    private static final double JCN_LOWER_THRESHOLD = 6;
+    private static final double LOWER_ADJACENT_JCN_RATIO = 2;
+    private static final double MIN_PERC_OF_MAX_JCN = 0.25;
 
     public DoubleMinuteFinder(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
@@ -106,35 +109,46 @@ public class DoubleMinuteFinder
             mProcessedClusters.add(cluster.id());
         }
 
+        boolean hasValidSv = false;
         final List<SvVarData> candidateDMSVs = Lists.newArrayList();
 
         for (SvVarData var : cluster.getSVs())
         {
-            if (var.jcnMax() < JCN_THRESHOLD)
+            if (var.jcn() < JCN_LOWER_THRESHOLD)
                 continue;
 
+            double jcn = var.jcn();
             double svAdjMAPRatio = getAdjacentMajorAPRatio(var);
 
-            if(svAdjMAPRatio >= ADJACENT_JCN_RATIO)
+            if(!hasValidSv && jcn >= JCN_THRESHOLD && svAdjMAPRatio >= ADJACENT_JCN_RATIO)
+                hasValidSv = true;
+
+            if(jcn >= JCN_LOWER_THRESHOLD && svAdjMAPRatio >= LOWER_ADJACENT_JCN_RATIO)
                 candidateDMSVs.add(var);
         }
 
-        if(candidateDMSVs.isEmpty())
+        if(!hasValidSv)
             return;
 
-        final List<SvChain> dmChains = createDMChains(cluster, candidateDMSVs, false);
+        // take any candidate which are at high enough JCN relative to the max for the group
+        final double maxDmJcn = candidateDMSVs.stream().mapToDouble(x -> x.jcn()).max().orElse(0);
+        final List<SvVarData> dmSVs = Lists.newArrayList();
+
+        candidateDMSVs.stream().filter(x -> x.jcn() >= MIN_PERC_OF_MAX_JCN * maxDmJcn).forEach(x -> dmSVs.add(x));
+
+        final List<SvChain> dmChains = createDMChains(cluster, dmSVs, false);
 
         // every SV must be in a chain even if they're not complete, and every chain must either be closed or have a SGL or INF on the end
 
-        if(candidateDMSVs.size() > 2 && cluster.requiresReplication())
+        if(dmSVs.size() > 2 && cluster.requiresReplication())
         {
-            final List<SvChain> variedJcnChains = createDMChains(cluster, candidateDMSVs, true);
+            final List<SvChain> variedJcnChains = createDMChains(cluster, dmSVs, true);
 
             // take the more effective of the 2 approaches
-            int uniformChainedCount = countChainedSVs(candidateDMSVs, dmChains);
+            int uniformChainedCount = countChainedSVs(dmSVs, dmChains);
             int uniformClosedCount = countCloseableChains(dmChains);
 
-            int variedChainedCount = countChainedSVs(candidateDMSVs, variedJcnChains);
+            int variedChainedCount = countChainedSVs(dmSVs, variedJcnChains);
             int variedClosedCount = countCloseableChains(variedJcnChains);
 
             if(variedClosedCount == variedJcnChains.size() && uniformClosedCount < dmChains.size()
@@ -149,8 +163,8 @@ public class DoubleMinuteFinder
             }
         }
 
-        int chainedCount = countChainedSVs(candidateDMSVs, dmChains);
-        int unchainedCount = candidateDMSVs.size() - chainedCount;
+        int chainedCount = countChainedSVs(dmSVs, dmChains);
+        int unchainedCount = dmSVs.size() - chainedCount;
 
         // single DUPs are closed in a loop, as is any other chain involving all the DM SVs
         for(SvChain dmChain : dmChains)
@@ -185,10 +199,10 @@ public class DoubleMinuteFinder
         }
 
         LNX_LOGGER.debug("cluster({}) dmSVs({}) chains({}) unchainedSVs({}) {}",
-                cluster.id(), candidateDMSVs.size(), dmChains.size(), unchainedCount,
+                cluster.id(), dmSVs.size(), dmChains.size(), unchainedCount,
                 fullyChained ? "fully chained" : "invalid chain");
 
-        DoubleMinuteData dmData = new DoubleMinuteData(cluster, candidateDMSVs);
+        DoubleMinuteData dmData = new DoubleMinuteData(cluster, dmSVs);
 
         dmData.Chains.addAll(dmChains);
         dmData.FullyChained = fullyChained;
@@ -198,7 +212,7 @@ public class DoubleMinuteFinder
         mDoubleMinutes.put(cluster.id(), dmData);
 
         // cache DM data against the cluster since it used in the chaining routine amongst other things
-        cluster.setDoubleMinuteData(candidateDMSVs, dmChains);
+        cluster.setDoubleMinuteData(dmSVs, dmChains);
 
         cluster.addAnnotation(CLUSTER_ANNOT_DM);
 
@@ -215,7 +229,7 @@ public class DoubleMinuteFinder
             }
         }
 
-        if(candidateDMSVs.size() == cluster.getSvCount())
+        if(dmSVs.size() == cluster.getSvCount())
         {
             cluster.setResolved(false, DOUBLE_MINUTE);
         }
@@ -320,7 +334,11 @@ public class DoubleMinuteFinder
         {
             ++typeCounts[typeAsInt(var.type())];
 
-            minDMJcn = max(var.jcnMin(), minDMJcn);
+            if(minDMJcn == 0)
+                minDMJcn = var.jcn();
+            else
+                minDMJcn = min(minDMJcn, var.jcn());
+
             maxDMJcn = max(var.jcn(), maxDMJcn);
 
             maxDMCopyNumber = max(maxDMCopyNumber, max(var.copyNumber(true), var.copyNumber(false)));
@@ -375,7 +393,7 @@ public class DoubleMinuteFinder
                 mFileWriter.write(",SamplePurity,SamplePloidy,DMSvCount,DMSvTypes,SvIds,Chromosomes");
                 mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
                 mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
-                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,");
+                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn");
                 mFileWriter.write(",FbIntCount,FbIntJcnTotal,FbIntJcnMax,SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
                 mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
                 mFileWriter.newLine();
