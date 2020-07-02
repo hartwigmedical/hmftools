@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.bachelor.types.FilterType.ARTEFACT;
 import static com.hartwig.hmftools.bachelor.types.FilterType.GERMLINE_FILTERED;
 import static com.hartwig.hmftools.bachelor.types.FilterType.PASS;
 import static com.hartwig.hmftools.bachelor.types.PathogenicType.BLACK_LIST;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_BENIGN;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_LIKELY_BENIGN;
 import static com.hartwig.hmftools.bachelor.types.PathogenicType.NONE;
 import static com.hartwig.hmftools.bachelor.types.PathogenicType.UNANNOTATED;
 import static com.hartwig.hmftools.bachelor.types.PathogenicType.WHITE_LIST;
@@ -25,6 +27,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.bachelor.datamodel.GeneIdentifier;
+import com.hartwig.hmftools.bachelor.datamodel.IgnoreEffect;
 import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.bachelor.datamodel.ProgramPanel;
 import com.hartwig.hmftools.bachelor.datamodel.SnpEffect;
@@ -49,6 +52,7 @@ public class GermlineVariantFinder
 
     private final boolean mIncludeFiltered;
     private List<String> mRequiredEffects;
+    private List<String> mIgnoreEffects;
     private List<String> mPanelTranscripts;
 
     private final Map<String,List<VariantFilter>> mWhitelistFilters;
@@ -66,6 +70,7 @@ public class GermlineVariantFinder
         mName = "";
         mIncludeFiltered = includeFiltered;
         mRequiredEffects = null;
+        mIgnoreEffects = null;
         mPanelTranscripts = null;
 
         mWhitelistFilters = Maps.newHashMap();
@@ -105,7 +110,9 @@ public class GermlineVariantFinder
         final List<GeneIdentifier> genes = panel.getGene();
 
         // take up a collection of the effects to search for
-        mRequiredEffects = panel.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
+        mRequiredEffects = panel.getSnpEffect().stream().map(x -> checkEffectTypes(x.value())).collect(Collectors.toList());
+        mIgnoreEffects = panel.getIgnoreEffect().stream().map(x -> checkEffectTypes(x.value())).collect(Collectors.toList());
+
         mPanelTranscripts = genes.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
 
         // update query targets
@@ -173,6 +180,16 @@ public class GermlineVariantFinder
         }
 
         return true;
+    }
+
+    private String checkEffectTypes(final String effect)
+    {
+        if(effect.equals("three_prime_UTR_variant"))
+            return "3_prime_UTR_variant";
+        else if(effect.equals("five_prime_UTR_variant"))
+            return "5_prime_UTR_variant";
+        else
+            return effect;
     }
 
     private VariantFilter loadVariantFilter(final VariantException variantException)
@@ -381,33 +398,47 @@ public class GermlineVariantFinder
                     }
                 }
             }
-            else if(!mWhitelistFilters.isEmpty())
+            else
             {
-                List<VariantFilter> filters = mWhitelistFilters.get(gene);
-
-                if(filters != null)
+                if(!mWhitelistFilters.isEmpty())
                 {
-                    final VariantFilter filter = filters.stream()
-                            .filter(x -> x.whitelistMatch(gene, chromosome, position, ref, alt, codingEffect, hgvsProtein))
-                            .findFirst().orElse(null);
+                    List<VariantFilter> filters = mWhitelistFilters.get(gene);
 
-                    if(filter != null)
+                    if(filters != null)
                     {
-                        BACH_LOGGER.debug("white-list match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({})",
-                                gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
+                        final VariantFilter filter = filters.stream()
+                                .filter(x -> x.whitelistMatch(gene, chromosome, position, ref, alt, codingEffect, hgvsProtein))
+                                .findFirst().orElse(null);
 
-                        if(filter.Configured)
+                        if(filter != null)
                         {
-                            germlineVariant.setPathogenicType(WHITE_LIST);
-                        }
-                        else
-                        {
-                            if(!filter.ClinvarSignificance.isEmpty())
+                            BACH_LOGGER.debug("white-list match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({})",
+                                    gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
+
+                            if(filter.Configured)
                             {
-                                germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
-                                germlineVariant.setPathogenicType(filter.determinePathogenicType());
+                                germlineVariant.setPathogenicType(WHITE_LIST);
+                            }
+                            else
+                            {
+                                if(!filter.ClinvarSignificance.isEmpty())
+                                {
+                                    germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
+                                    germlineVariant.setPathogenicType(filter.determinePathogenicType());
+                                }
                             }
                         }
+                    }
+                }
+
+                if(mIgnoreEffects.stream().anyMatch(x -> effects.contains(x)))
+                {
+                    if(germlineVariant.pathogenicType() == NONE || germlineVariant.pathogenicType() == CLINVAR_BENIGN
+                    || germlineVariant.pathogenicType() == CLINVAR_LIKELY_BENIGN)
+                    {
+                        BACH_LOGGER.debug("variant gene({} {}) var({}:{}:{}) ref({}) alt({})) in ignore list and benign/unannotated",
+                                gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
+                        return;
                     }
                 }
             }

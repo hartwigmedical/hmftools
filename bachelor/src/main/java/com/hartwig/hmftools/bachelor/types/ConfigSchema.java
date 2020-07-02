@@ -21,11 +21,13 @@ public class ConfigSchema
 {
     private final Schema schema;
 
-    private ConfigSchema() throws SAXException {
+    private ConfigSchema() throws SAXException
+    {
         schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(Resources.getResource("bachelor.xsd"));
     }
 
-    public static ConfigSchema make() throws SAXException {
+    public static ConfigSchema make() throws SAXException
+    {
         return new ConfigSchema();
     }
 
@@ -41,7 +43,8 @@ public class ConfigSchema
             unmarshaller.setSchema(schema);
             return (Program) unmarshaller.unmarshal(path.toFile());
         }
-        catch (final JAXBException e) {
+        catch (final JAXBException e)
+        {
             BACH_LOGGER.error("Failed to process: {}", path);
             BACH_LOGGER.error(e);
             return null;

@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.bachelor;
 
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BATCH_FILE;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_URL;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.REF_GENOME;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
-import static com.hartwig.hmftools.bachelor.types.FilterType.ARTEFACT;
-import static com.hartwig.hmftools.bachelor.types.FilterType.PASS;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.BLACK_LIST;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
@@ -31,6 +28,7 @@ import com.hartwig.hmftools.bachelor.types.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.bachelor.types.GermlineVariant;
 import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
 import com.hartwig.hmftools.bachelor.types.ImmutableGermlineVariant;
+import com.hartwig.hmftools.bachelor.types.PathogenicType;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -100,17 +98,13 @@ class VariantEnricher
         mBachRecords = bachRecords;
 
         processCurrentRecords(mBachRecords);
-
-        if(!mConfig.IsBatchMode)
-        {
-            closeBufferedWriter(mWriter);
-            mWriter = null;
-        }
+        closeBufferedWriter(mWriter);
+        mWriter = null;
     }
 
     private void processCurrentRecords(@Nullable List<BachelorGermlineVariant> bachRecords)
     {
-        if(bachRecords.isEmpty() && !mConfig.IsBatchMode)
+        if(bachRecords.isEmpty())
         {
             writeToFile(mConfig.SampleId, Lists.newArrayList());
             return;
@@ -332,17 +326,11 @@ class VariantEnricher
     private void filterRecords(final List<BachelorGermlineVariant> bachRecords)
     {
         // currently the only filter is on INDELs with either microhomology matching the gain or loss, or with high repeat count
-        int index = 0;
-        while(index < bachRecords.size())
+        final List<BachelorGermlineVariant> invalidRecords = bachRecords.stream().filter(x -> !x.isValid(false)).collect(Collectors.toList());
+        invalidRecords.forEach(x -> bachRecords.remove(x));
+
+        for(BachelorGermlineVariant bachRecord : bachRecords)
         {
-            BachelorGermlineVariant bachRecord = bachRecords.get(index);
-
-            if (!bachRecord.isValid(false))
-            {
-                bachRecords.remove(index);
-                continue;
-            }
-
             final SomaticVariant somaticVariant = bachRecord.getSomaticVariant();
 
             if(somaticVariant.type() == INDEL && (bachRecord.CodingEffect == SPLICE || bachRecord.CodingEffect == NONE))
@@ -351,9 +339,10 @@ class VariantEnricher
 
                 if(repeatCount > HIGH_INDEL_REPEAT_COUNT)
                 {
-                    BACH_LOGGER.debug("Filtered var({}) indel {} with high repeatCount({})",
+                    BACH_LOGGER.debug("var({}) indel {} with high repeatCount({}) black-listed",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
-                    bachRecords.remove(index);
+
+                    bachRecord.setPathogenicType(BLACK_LIST);
                     continue;
                 }
 
@@ -379,14 +368,11 @@ class VariantEnricher
 
                 if(compareStr.equals(mergeStr1) || compareStr.equals(mergeStr2))
                 {
-                    BACH_LOGGER.debug("Filtered var({}) indel {} with ref, alt and microHom equal",
+                    BACH_LOGGER.debug("var({}) indel {} with ref, alt and microHom equal black-listed",
                             bachRecord.asString(), bachRecord.CodingEffect);
-                    bachRecords.remove(index);
-                    continue;
+                    bachRecord.setPathogenicType(BLACK_LIST);
                 }
             }
-
-            ++index;
         }
     }
 
@@ -451,37 +437,12 @@ class VariantEnricher
     {
         try
         {
-            if(mConfig.IsBatchMode)
-            {
-                if (mWriter == null)
-                {
-                    final String filename = GermlineVariantFile.generateFilename(mConfig.OutputDir, BATCH_FILE);
-                    mWriter = createBufferedWriter(filename, false);
-                }
-
-                for(GermlineVariant variant : germlineVariants)
-                {
-                    mWriter.write(GermlineVariantFile.toString(variant));
-                    mWriter.newLine();
-                }
-            }
-            else
-            {
-                final String filename = GermlineVariantFile.generateFilename(mConfig.OutputDir, sampleId);
-                GermlineVariantFile.write(filename, germlineVariants);
-            }
+            final String filename = GermlineVariantFile.generateFilename(mConfig.OutputDir, sampleId);
+            GermlineVariantFile.write(filename, germlineVariants);
         }
         catch (final IOException e)
         {
             BACH_LOGGER.error("Error writing to outputFile: {}", e.toString());
-        }
-    }
-
-    void close()
-    {
-        if(mConfig.IsBatchMode)
-        {
-            closeBufferedWriter(mWriter);
         }
     }
 }

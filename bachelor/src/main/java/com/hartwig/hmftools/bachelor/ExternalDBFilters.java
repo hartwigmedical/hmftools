@@ -25,7 +25,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bachelor.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.bachelor.datamodel.ProgramPanel;
-import com.hartwig.hmftools.bachelor.datamodel.SnpEffect;
 import com.hartwig.hmftools.bachelor.types.VariantFilter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;

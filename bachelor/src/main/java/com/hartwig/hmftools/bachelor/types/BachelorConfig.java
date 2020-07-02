@@ -36,15 +36,16 @@ public class BachelorConfig
     public final boolean SkipEnrichment;
     public final boolean IncludeVcfFiltered;
 
-    public final boolean IsBatchMode;
-    public final BatchRunData BatchRun;
-
     public final Map<String, Program> ProgramConfigMap;
 
     private boolean mIsValid;
 
     // config options
     public static final String CONFIG_XML = "xml_config";
+
+    // XML config regeneration:
+    // xjc -d ./bachelor/target/generated-sources/xjc -p nl.hartwigmedicalfoundation.bachelor ./bachelor/src/main/resources/bachelor.xsd
+
     public static final String SAMPLE = "sample";
 
     public static final String DB_USER = "db_user";
@@ -60,7 +61,6 @@ public class BachelorConfig
     private static final String INCLUDE_VCF_FILTERED = "include_vcf_filtered";
 
     public static final String LOG_DEBUG = "log_debug";
-    public static final String BATCH_FILE = "BATCH";
 
     public static final Logger BACH_LOGGER = LogManager.getLogger(BachelorConfig.class);
 
@@ -78,16 +78,10 @@ public class BachelorConfig
 
         SampleId = cmd.getOptionValue(SAMPLE, "");
 
-        if (SampleId.isEmpty() || SampleId.equals("*"))
+        if (SampleId.isEmpty())
         {
-            BACH_LOGGER.info("Running in batch mode");
-            IsBatchMode = true;
-            BatchRun = new BatchRunData(cmd);
-        }
-        else
-        {
-            IsBatchMode = false;
-            BatchRun = null;
+            BACH_LOGGER.error("missing Sample config");
+            mIsValid = false;
         }
 
         GermlineVcf = cmd.getOptionValue(GERMLINE_VCF);
@@ -128,7 +122,7 @@ public class BachelorConfig
 
     public boolean isValid() { return mIsValid; }
 
-    public static boolean loadXML(final Path path, Map<String, Program> configMap)
+    public static boolean loadXML(final Path path, Map<String,Program> configMap)
     {
         try
         {
@@ -170,7 +164,8 @@ public class BachelorConfig
         // germline VCF parsing
         options.addOption(CONFIG_XML, true, "XML with genes, black and white lists");
         options.addOption(OUTPUT_DIR, true, "When in single-sample mode, all output written to this dir");
-        options.addOption(TUMOR_BAM_FILE, true, "Location of a specific BAM file");        options.addOption(GERMLINE_VCF, true, "Germline VCF file");
+        options.addOption(TUMOR_BAM_FILE, true, "Location of a specific BAM file");
+        options.addOption(GERMLINE_VCF, true, "Germline VCF file");
         options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");

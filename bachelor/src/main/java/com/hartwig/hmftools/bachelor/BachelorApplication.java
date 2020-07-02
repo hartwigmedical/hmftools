@@ -40,26 +40,16 @@ public class BachelorApplication {
             return;
         }
 
-        if(!mConfig.IsBatchMode)
+        if(!mGermlineVcfParser.run(mConfig.GermlineVcf, mConfig.SampleId, mConfig.OutputDir))
         {
-            if(!mGermlineVcfParser.run(mConfig.GermlineVcf, mConfig.SampleId, mConfig.OutputDir))
-            {
-                BACH_LOGGER.error("germline VCF parse failed");
-                return;
-            }
-
-            final List<BachelorGermlineVariant> bachelorRecords = mGermlineVcfParser.getBachelorRecords();
-            mVariantEnricher.run(bachelorRecords);
-        }
-        else
-        {
-            // to be completed
-
+            BACH_LOGGER.error("germline VCF parse failed");
+            return;
         }
 
-        mVariantEnricher.close();
+        final List<BachelorGermlineVariant> bachelorRecords = mGermlineVcfParser.getBachelorRecords();
+        mVariantEnricher.run(bachelorRecords);
 
-        BACH_LOGGER.info("bachelor run complete");
+        BACH_LOGGER.info("Bachelor run complete");
     }
 
     public static void main(final String... args)

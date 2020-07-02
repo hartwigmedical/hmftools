@@ -55,6 +55,9 @@
         <SnpEffect>start_lost</SnpEffect>
         <SnpEffect>stop_lost</SnpEffect>
 
+        <IgnoreEffect>intron_variant</IgnoreEffect>
+        <IgnoreEffect>three_prime_UTR_variant</IgnoreEffect>
+
     </Panel>
 
     <Blacklist>
