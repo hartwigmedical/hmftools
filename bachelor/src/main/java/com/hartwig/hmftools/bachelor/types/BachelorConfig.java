@@ -108,15 +108,18 @@ public class BachelorConfig
             mIsValid = false;
         }
 
-        if(!SkipEnrichment)
+        if(RefGenomeFile == null)
         {
-            if (BamFile == null || RefGenomeFile == null || PurpleDataDir.isEmpty())
-            {
-                BACH_LOGGER.error("missing input files: BAM({}) refGenome({}) purpleDataDir({})",
-                        BamFile == null || RefGenomeFile == null || PurpleDataDir.isEmpty());
+            BACH_LOGGER.error("missing ref genome input file");
+            mIsValid = false;
+        }
 
-                mIsValid = false;
-            }
+        if(!SkipEnrichment && (BamFile == null || PurpleDataDir.isEmpty()))
+        {
+            BACH_LOGGER.error("missing input files: BAM({}) purpleDataDir({})",
+                    BamFile == null || PurpleDataDir.isEmpty());
+
+            mIsValid = false;
         }
     }
 
@@ -169,7 +172,7 @@ public class BachelorConfig
         options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
-        options.addOption(SKIP_ENRICHMENT, false, "Only search for variants but skip Purple enrichment");
+        options.addOption(SKIP_ENRICHMENT, false, "Skip tumor BAM depth and Purple enrichment");
         options.addOption(INCLUDE_VCF_FILTERED, false, "Include variants filtered in the VCF");
 
         options.addOption(DB_USER, true, "Database user name");

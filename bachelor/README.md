@@ -1,19 +1,19 @@
 # Bachelor
 
-Bachelor evaluates the pathogenicity of germline variants from an snpeff annotated germline vcf in a configured panel of genes. Pathogenicity is determined based both on Clinvar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in Clinvar.
+Bachelor evaluates the pathogenicity of germline variants from an snpeff annotated germline vcf in a configured panel of genes. Pathogenicity is determined based both on ClinVar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in ClinVar.
 
 The steps in the routine are as follows:
 1. Parse germline VCF to identify candidate variants. 
 2. If the tumor alt and read depth counts are not in the germline VCF, obtain them from the sample's tumor BAM file.
 3. Enrich variants with copy number data from purple
-4. Enrich variants with Clinvar pathogenicity information and configured whitelist / blacklist and determine reportability
+4. Enrich variants with ClinVar pathogenicity information and configured whitelist / blacklist and determine reportability
 5. Write final set of germline variant data to DB (germlineVariant table) and a TSV output file.
 
 ## Annotation
 In addition to standard PURPLE annotations (https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#10-somatic-enrichment), Bachelor also annotates the following information:
 
 ### Pathogenicity
-Pathogenicity is determined primarily from Clinvar, or may be set or overridden via a configured blacklist or whitelist.  
+Pathogenicity is determined primarily from ClinVar, or may be set or overridden via a configured blacklist or whitelist.  
 
 Permitted values are:
 
@@ -68,7 +68,7 @@ java -cp bachelor.jar com.hartwig.hmftools.bachelor.LoadGermlineVariants
 ```
 
 Optional config:
-- include_vcf_filtered - process non-passing variants from the VCF, mark as filter = VCF_FILTERED
+- include_vcf_filtered - process non-passing variants from the VCF, mark as filter = GERMLINE_FILTERED
 - skip_enrichment - 
 - log_debug - log in a verbose manner
 

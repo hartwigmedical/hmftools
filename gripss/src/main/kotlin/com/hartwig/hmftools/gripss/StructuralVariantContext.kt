@@ -263,7 +263,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun breakendAssemblyReadPairsFilter(): Boolean {
-        return isSingle && context.breakendAssemblyReadPairs() == 0
+        return isSingle && context.breakendAssemblyReadPairs() == 0 && !context.breakendAssemblyReadPairsIsInconsistent()
     }
 
     fun minLengthFilter(minSize: Int): Boolean {
