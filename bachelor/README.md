@@ -42,7 +42,6 @@ This is a summary boolean flag which implements the HMF logic for reportable ger
 * Pathogenicity = 'UNANNOTATED' and effect is configured as a known snpeffect
 
 ## Usage
-
 1. Find candidate germline variants, write to file and optionally write to db.
 
 ```bash
@@ -69,19 +68,17 @@ java -cp bachelor.jar com.hartwig.hmftools.bachelor.LoadGermlineVariants
 
 Optional config:
 - include_vcf_filtered - process non-passing variants from the VCF, mark as filter = GERMLINE_FILTERED
-- skip_enrichment - 
-- log_debug - log in a verbose manner
+- skip_enrichment - runs without tumor BAM or purple data
+- log_debug - verbose logging
 
 
 ## Input Files
-
 Bachelor requires that VCF files have been annotated using SnpEff.
 
-## XML Configuration
-
+## Configuration
 Bachelor uses 2 config files:
-* an XML config file specifying the genes and effects to filter on, and blacklist entries for known exceptions.
-* optionally a file of ClinVar data to additionally black and white list variants
+* an XML config file specifying the genes and effects to filter on, and blacklist entries for known exceptions
+* optionally a file of ClinVar variant data to set pathgenic status
 
 This very basic example has a single criteria: missense variants in BRCA2.
 
@@ -97,7 +94,6 @@ This very basic example has a single criteria: missense variants in BRCA2.
 
 
 ## ClinVar Filter Creation
-
 Create a set of files from ClinVar variant classification with this command:
 
 ```bash
