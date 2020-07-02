@@ -28,7 +28,6 @@ import com.hartwig.hmftools.bachelor.types.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.bachelor.types.GermlineVariant;
 import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
 import com.hartwig.hmftools.bachelor.types.ImmutableGermlineVariant;
-import com.hartwig.hmftools.bachelor.types.PathogenicType;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -80,8 +79,11 @@ class VariantEnricher
                 BACH_LOGGER.debug("Loading indexed fasta reference file");
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
 
-                mBamCountReader = new BamCountReader();
-                mBamCountReader.initialise(config.RefGenomeFile, mIndexedFastaSeqFile);
+                if(!mConfig.SkipEnrichment)
+                {
+                    mBamCountReader = new BamCountReader();
+                    mBamCountReader.initialise(config.RefGenomeFile, mIndexedFastaSeqFile);
+                }
             }
             catch (IOException e)
             {
