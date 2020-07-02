@@ -84,6 +84,7 @@ public class SvVarData
     public static final String INF_SV_TYPE = "INF";
 
     public static String ASSEMBLY_TYPE_TI = "asm";
+    public static String TRANSITIVE_TYPE_TI = "trs";
     public static String ASSEMBLY_TYPE_EQV = "eqv";
 
     public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
@@ -518,7 +519,7 @@ public class SvVarData
 
                 for(int i = 0; i < assemblyList.length; ++i)
                 {
-                    if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
+                    if(assemblyList[i].contains(ASSEMBLY_TYPE_TI) || assemblyList[i].contains(TRANSITIVE_TYPE_TI))
                         tiAssemblies.add(assemblyList[i]);
                 }
             }
