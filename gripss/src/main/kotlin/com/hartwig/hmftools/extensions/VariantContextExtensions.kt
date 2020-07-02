@@ -18,7 +18,7 @@ fun VariantContext.breakendAssemblyReadPairsIsInconsistent(): Boolean {
     // This shouldn't occur but sometimes can because of redefined variants in backport
     return this.getAttributeAsInt("BASRP", 0) == 0
             && this.getAttributeAsInt("BASSR", 0) == 0
-            && this.getAttributeAsInt("BAQ", 0) > 0
+            && this.getAttributeAsDouble("BAQ", 0.00) > 0
 }
 
 fun VariantContext.strandBias(): Double {
