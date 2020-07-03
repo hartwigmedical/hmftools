@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
@@ -168,21 +169,6 @@ public class SvUtilities {
         }
 
         return clusterTypeStr;
-    }
-
-    public static boolean positionsOverlap(int posStart1, int posEnd1, int posStart2, int posEnd2)
-    {
-        return !(posStart1 > posEnd2 || posEnd1 < posStart2);
-    }
-
-    public static boolean positionWithin(int position, int otherPosStart, int otherPosEnd)
-    {
-        return (position >= otherPosStart && position <= otherPosEnd);
-    }
-
-    public static boolean positionsWithin(int innerStart, int innerEnd, int outerStart, int outerEnd)
-    {
-        return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
 
     public static boolean isWithin(final SvVarData variant, final String chromosome, final int position)
