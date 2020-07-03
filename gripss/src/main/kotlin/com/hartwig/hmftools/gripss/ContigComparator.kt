@@ -38,6 +38,10 @@ class ContigComparator private constructor(val contigs: Map<String, Int>) : Comp
         }
     }
 
+    fun isValidContig(contig: String): Boolean {
+        return this.contigs.containsKey(contig)
+    }
+
     override fun compare(contig1: String, contig2: String): Int {
         return (this.contigs[contig1] ?: error("contig $contig1 not defined")) - (this.contigs[contig2]
                 ?: error("contig $contig2 not defined"))
