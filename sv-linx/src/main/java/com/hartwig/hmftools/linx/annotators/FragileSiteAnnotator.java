@@ -5,8 +5,10 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -34,12 +36,11 @@ public class FragileSiteAnnotator
         if(filename.isEmpty())
             return;
 
-        try {
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
 
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line;
-            while ((line = fileReader.readLine()) != null)
+            for(final String line : fileContents)
             {
                 if(line.contains("Chromosome"))
                     continue;

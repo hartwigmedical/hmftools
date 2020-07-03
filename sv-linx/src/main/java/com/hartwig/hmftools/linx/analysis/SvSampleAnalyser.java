@@ -388,7 +388,8 @@ public class SvSampleAnalyser {
                 LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
                 LinxViralInsertFile.write(LinxViralInsertFile.generateFilename(mConfig.OutputDataPath, mSampleId), viralInserts);
 
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
                 LNX_LOGGER.error("failed to write sample SV data: {}", e.toString());
             }

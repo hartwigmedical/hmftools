@@ -13,8 +13,10 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredReso
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -61,13 +63,12 @@ public class LineElementAnnotator {
         if(filename.isEmpty())
             return;
 
-        try {
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
 
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line;
-            while ((line = fileReader.readLine()) != null) {
-
+            for(final String line : fileContents)
+            {
                 if(line.contains("Chromosome"))
                     continue;
 
@@ -83,9 +84,6 @@ public class LineElementAnnotator {
                         Long.parseLong(items[LE_COL_POS_END]));
 
                 mKnownLineElements.add(genomeRegion);
-
-//                LNX_LOGGER.debug("loaded line element: chr({}) pos({}-{})",
-//                        genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
             }
 
             LNX_LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);

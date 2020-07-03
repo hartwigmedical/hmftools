@@ -114,8 +114,9 @@ public class SvDataLoader
                 if (!viralInserts.isEmpty())
                 {
                     LOGGER.info("sample({}) loading {} SV viral inserts records", sampleId, viralInserts.size());
-                    dbAccess.writeSvViralInserts(sampleId, viralInserts);
                 }
+
+                dbAccess.writeSvViralInserts(sampleId, viralInserts);
             }
 
             final String fusionsFilename = LinxFusionFile.generateFilename(svDataOutputDir, sampleId);

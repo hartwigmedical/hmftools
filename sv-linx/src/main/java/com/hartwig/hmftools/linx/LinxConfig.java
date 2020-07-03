@@ -276,31 +276,22 @@ public class LinxConfig
 
     private static List<String> loadSampleListFile(final String filename)
     {
-        List<String> sampleIds = Lists.newArrayList();
-
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            final List<String> sampleIds = Files.readAllLines(new File(filename).toPath());
 
-            String line = fileReader.readLine(); // skip header
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
-
-                final String sampleId = items[0];
-                sampleIds.add(sampleId);
-            }
+            if (sampleIds.get(0).equals("SampleId"))
+                sampleIds.remove(0);
 
             LNX_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
 
+            return sampleIds;
         }
         catch (IOException exception)
         {
-            LNX_LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
+            LNX_LOGGER.error("failed to read sample list input CSV file({}): {}", filename, exception.toString());
+            return Lists.newArrayList();
         }
-
-        return sampleIds;
     }
 
 }

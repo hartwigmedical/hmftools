@@ -3,8 +3,11 @@ package com.hartwig.hmftools.linx.annotators;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -26,13 +29,12 @@ public class ViralInsertAnnotator
         if(filename.isEmpty())
             return;
 
-        try {
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+            fileContents.remove(0); // assume a header
 
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine(); // skip header
-
-            while ((line = fileReader.readLine()) != null)
+            for(final String line : fileContents)
             {
                 String[] items = line.split(",");
 
