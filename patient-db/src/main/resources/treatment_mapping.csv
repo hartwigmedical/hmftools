@@ -69,7 +69,7 @@ drug,type,mechanism,synonyms
 "Cetuximab",Targeted therapy,"Anti-EGFR","Cetuximab ( trial)"
 "chemo",remove,"",""
 "chemo/radiotherapy",remove,"",""
-"Chemoradiotherapy",Chemoradiotherapy,"Chemoradiotherapy",""
+"Chemoradiotherapy",Chemoradiotherapy,"Chemoradiotherapy","Chemoraradiatie"
 "Chlorambucil",Chemotherapy,"Alkylating","Chloorambucil"
 "Chloromethine",Chemotherapy,"Alkylating","mustargen, mechlorethamine"
 "Chloroquine",Other,"Other",""
