@@ -5,7 +5,9 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -221,7 +223,7 @@ public class ViccExtractorTestApplication {
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                    .attribute("sources", annotation.sources())
+                    .attribute("sources", buildSourcesString(annotation.sources()))
                     .attribute("feature",
                             ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation()))
                     .make();
@@ -239,6 +241,16 @@ public class ViccExtractorTestApplication {
         Allele alt = Allele.create(hotspot.alt(), false);
 
         return Lists.newArrayList(ref, alt);
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static String buildSourcesString(@NotNull Set<String> sources) {
+        StringJoiner sourceJoiner = new StringJoiner(",");
+        for (String source : sources) {
+            sourceJoiner.add(source);
+        }
+        return sourceJoiner.toString();
     }
 
     @NotNull
