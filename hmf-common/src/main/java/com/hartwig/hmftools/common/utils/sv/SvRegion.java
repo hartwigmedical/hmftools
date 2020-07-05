@@ -35,6 +35,15 @@ public class SvRegion
         return positionsOverlap(Positions[SE_START], Positions[SE_END], other.Positions[SE_START], other.Positions[SE_END]);
     }
 
+    public boolean containsPosition(int position) { return positionWithin(position, start(), end()); }
+
+    public boolean containsPosition(final String chromosome, int position)
+    {
+        return Chromosome.equals(chromosome) && positionWithin(position, start(), end());
+    }
+
+    public String toString() { return String.format("%s:%d-%d", Chromosome, Positions[SE_START], Positions[SE_END]); }
+
     // utility methods relating to position comparisons
     public static boolean positionsOverlap(int posStart1, int posEnd1, int posStart2, int posEnd2)
     {
