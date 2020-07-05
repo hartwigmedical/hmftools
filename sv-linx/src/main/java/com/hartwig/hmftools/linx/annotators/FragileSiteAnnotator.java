@@ -4,21 +4,18 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refG
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class FragileSiteAnnotator
 {
-    private List<GenomeRegion> mFragileSites;
+    private List<SvRegion> mFragileSites;
 
     private final static int CSV_REQUIRED_FIELDS = 3;
 
@@ -51,10 +48,10 @@ public class FragileSiteAnnotator
                 if(items.length < CSV_REQUIRED_FIELDS)
                     continue;
 
-                final GenomeRegion genomeRegion = GenomeRegions.create(
+                final SvRegion genomeRegion = new SvRegion(
                         refGenomeChromosome(items[FS_COL_CHR], RG_VERSION),
-                        Long.parseLong(items[FS_COL_POS_START]),
-                        Long.parseLong(items[FS_COL_POS_END]));
+                        Integer.parseInt(items[FS_COL_POS_START]),
+                        Integer.parseInt(items[FS_COL_POS_END]));
 
                 mFragileSites.add(genomeRegion);
             }
@@ -72,13 +69,11 @@ public class FragileSiteAnnotator
         if(mFragileSites.isEmpty())
             return false;
 
-        for(final GenomeRegion genomeRegion : mFragileSites)
+        for(final SvRegion fsRegion : mFragileSites)
         {
-            if(genomeRegion.chromosome().equals(svData.chromosome(useStart))
-            && genomeRegion.start() <= svData.position(useStart) && genomeRegion.end() >= svData.position(useStart))
+            if(fsRegion.containsPosition(svData.chromosome(useStart), svData.position(useStart)))
             {
-                LNX_LOGGER.debug("var({}) found in known fragile site",
-                        svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
+                LNX_LOGGER.debug("var({}) found in known fragile site({})", svData.posId(), fsRegion);
                 return true;
             }
         }

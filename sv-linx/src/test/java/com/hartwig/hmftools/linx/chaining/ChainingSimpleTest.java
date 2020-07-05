@@ -187,7 +187,7 @@ public class ChainingSimpleTest
     {
         LinxTester tester = new LinxTester();
 
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         final SvVarData var0 = createTestSv(1, "1", "1", 1000,2000, 1, -1, DEL,  1);
 
