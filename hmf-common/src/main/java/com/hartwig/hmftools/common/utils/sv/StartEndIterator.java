@@ -15,5 +15,4 @@ public class StartEndIterator
     public static int seIndex(boolean isStart) { return isStart ? SE_START : SE_END; }
 
     public static int switchIndex(int iter) { return iter == SE_START ? SE_END : SE_START; }
-
 }
