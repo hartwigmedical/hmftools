@@ -130,9 +130,9 @@ public class LineElementAnnotator {
            - has 2+ BND within 5K NOT forming a short DB bases at the suspected LINE source location
                 AND at least one SV also within 5kb having poly A/T INS sequence
                 AND either the 2 BNDs going to different chromosomes or forming a short DB at their non-line / insertion location
-           - OR at least 1 BND with a remote SGL forming a 30 base DB (ie on the remote arm)
+           - OR at least 1 BND with only 1 remote SGL forming a 30 base DB (ie on the remote arm)
                 AND EITHER at least one SV also within 5kb OR the remote SGL having poly A/T INS sequence
-           - OR there are 2+ breakends within 5kb which both have a polyA insertion sequence
+           - OR there are 2+ breakends within 5kb which both have a polyA insertion sequence with the same orientation
 
            Resolve the cluster as type = Line if:
             -  has a suspected line element
@@ -144,11 +144,8 @@ public class LineElementAnnotator {
 
         boolean hasSuspected = false;
         boolean hasPolyAorT = false;
-        long knownCount = cluster.getSVs().stream().filter(SvVarData::inLineElement).count();
 
-        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
-
-        for (Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
@@ -161,10 +158,14 @@ public class LineElementAnnotator {
                 if (var.getLineElement(breakend.usesStart()).contains(SUSPECTED_LINE_ELEMENT))
                     continue;
 
-                List<SvVarData> polyAtSVs = Lists.newArrayList();
+                final Set<SvVarData> polyAtSVs = Sets.newHashSet();
+                final Set<SvBreakend> polyAtBreakends = Sets.newHashSet();
 
                 if(hasPolyAorTMotif(var))
+                {
                     polyAtSVs.add(var);
+                    polyAtBreakends.add(breakend);
+                }
 
                 Set<String> uniqueBndChromosomes = Sets.newHashSet();
                 boolean hasRemoteShortBndDB = false;
@@ -190,9 +191,10 @@ public class LineElementAnnotator {
                         uniqueBndChromosomes.add(sgl.chromosome(true));
                         linkingBnds.add(sgl);
 
-                        if (hasPolyAorTMotif(sgl) && !polyAtSVs.contains(sgl))
+                        if (hasPolyAorTMotif(sgl))
                         {
                             polyAtSVs.add(sgl);
+                            polyAtBreakends.add(sgl.getBreakend(true));
                         }
                     }
                 }
@@ -216,11 +218,12 @@ public class LineElementAnnotator {
 
                         if(hasPolyAorTMotif(nextSV))
                         {
-                            if(!polyAtSVs.contains(nextSV))
-                                polyAtSVs.add(nextSV);
+                            polyAtSVs.add(nextSV);
+                            polyAtBreakends.add(nextBreakend);
                         }
 
-                        if(polyAtSVs.size() >= 2)
+                        if(polyAtBreakends.stream().filter(x -> x.orientation() == 1).count() >= 2
+                        || polyAtBreakends.stream().filter(x -> x.orientation() == -1).count() >= 2)
                         {
                             isSuspectGroup = true;
                             break;
@@ -322,6 +325,13 @@ public class LineElementAnnotator {
             }
         }
 
+        markLineCluster(cluster, hasSuspected, hasPolyAorT);
+    }
+
+    private void markLineCluster(SvCluster cluster, boolean hasSuspected, boolean hasPolyAorT)
+    {
+        long knownCount = cluster.getSVs().stream().filter(SvVarData::inLineElement).count();
+
         if(cluster.getSvCount() == knownCount && cluster.getTypeCount(BND) >= 1)
         {
             LNX_LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownCount);
@@ -337,7 +347,7 @@ public class LineElementAnnotator {
                 long polyAorT = cluster.getSVs().stream().filter(x -> hasPolyAorTMotif(x)).count();
                 long suspectLine = cluster.getSVs().stream()
                         .filter(x -> (x.getLineElement(true).contains(SUSPECTED_LINE_ELEMENT)
-                        || x.getLineElement(false).contains(SUSPECTED_LINE_ELEMENT))).count();
+                                || x.getLineElement(false).contains(SUSPECTED_LINE_ELEMENT))).count();
 
                 LNX_LOGGER.debug("cluster({}) anyLine({}) suspect({}) known({}) polyAT({})",
                         cluster.id(), svInLineCount, suspectLine, knownCount, polyAorT);
@@ -362,6 +372,7 @@ public class LineElementAnnotator {
                 cluster.markAsLine();
             }
         }
+
     }
 
 

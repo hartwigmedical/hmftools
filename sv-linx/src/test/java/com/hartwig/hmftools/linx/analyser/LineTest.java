@@ -192,25 +192,41 @@ public class LineTest
         assertEquals(bnd2.getLineElement(false), NO_LINE_ELEMENT);
         assertTrue(cluster.hasLinkingLineElements());
 
-        // 2 proximate breakends with poly A or T
+        // 2 proximate breakends with poly A or T - only mark the breakends as line if they have the same orientation
         tester.clearClustersAndSVs();
 
-        SvVarData dup = createSv(tester.nextVarId(), "1", "1", 1000, 100000,  -1, 1, DUP, POLY_A_MOTIF);
-        del = createSv(tester.nextVarId(), "1", "1", 2000, 200000,  1, -1, DEL, POLY_A_MOTIF);
+        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, POLY_A_MOTIF);
+        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "0", 1020, 0,  1, 0, SGL, POLY_A_MOTIF);
 
         cluster = new SvCluster(0);
-        cluster.addVariant(dup);
-        cluster.addVariant(del);
+        cluster.addVariant(sgl1);
+        cluster.addVariant(sgl2);
 
         tester.addClusterAndSVs(cluster);
         tester.preClusteringInit();
 
         leAnnotator.markLineCluster(cluster, proximity);
 
-        assertEquals(dup.getLineElement(true), SUSPECTED_LINE_ELEMENT);
-        assertEquals(del.getLineElement(true), SUSPECTED_LINE_ELEMENT);
-        assertEquals(dup.getLineElement(false), NO_LINE_ELEMENT);
-        assertEquals(del.getLineElement(false), NO_LINE_ELEMENT);
+        assertEquals(sgl1.getLineElement(true), NO_LINE_ELEMENT);
+        assertEquals(sgl2.getLineElement(true), NO_LINE_ELEMENT);
+        assertTrue(cluster.hasLinkingLineElements());
+
+        tester.clearClustersAndSVs();
+
+        sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, POLY_A_MOTIF);
+        sgl2 = createSv(tester.nextVarId(), "1", "0", 1100, 0,  -1, 0, SGL, POLY_A_MOTIF);
+
+        cluster = new SvCluster(0);
+        cluster.addVariant(sgl1);
+        cluster.addVariant(sgl2);
+
+        tester.addClusterAndSVs(cluster);
+        tester.preClusteringInit();
+
+        leAnnotator.markLineCluster(cluster, proximity);
+
+        assertEquals(sgl1.getLineElement(true), SUSPECTED_LINE_ELEMENT);
+        assertEquals(sgl2.getLineElement(true), SUSPECTED_LINE_ELEMENT);
         assertTrue(cluster.hasLinkingLineElements());
     }
 
