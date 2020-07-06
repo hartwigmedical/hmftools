@@ -205,15 +205,16 @@ public class DriverGeneAnnotator
         if(mConfig.hasMultipleSamples())
             return;
 
-        if(mDriverOutputList.isEmpty())
-            return;
+        // generate an empty Linx driver file even if no annotations were found
 
         if(mConfig.UploadToDB && mDbAccess != null)
         {
             mDbAccess.writeDriverCatalog(mSampleId, mDataCache.getDriverCatalog());
-
             mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
         }
+
+        if(mOutputDir.isEmpty())
+            return;
 
         try
         {
