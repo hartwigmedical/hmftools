@@ -147,7 +147,7 @@ public class ChainJcnLimits
         boolean startMinorAPIsInt = isJcnCloseToInteger(startMinorAP);
 
         // map each major and minor AP into a frequency
-        Map<Integer,Integer> jcnFrequency = new HashMap();
+        Map<Integer,Integer> jcnFrequency = Maps.newHashMap();
 
         int segCount = endIndex - startIndex + 1;
         for (int i = startIndex; i <= endIndex; ++i)
