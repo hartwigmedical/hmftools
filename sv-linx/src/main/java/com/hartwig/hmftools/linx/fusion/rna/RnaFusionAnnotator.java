@@ -100,15 +100,15 @@ public class RnaFusionAnnotator
 
     public static void checkRnaPhasedTranscripts(RnaFusionData rnaFusion)
     {
-        if(rnaFusion.getTransExonData()[FS_UPSTREAM].isEmpty() || rnaFusion.getTransExonData()[FS_DOWNSTREAM].isEmpty())
+        if(rnaFusion.getTransExonData(FS_UPSTREAM).isEmpty() || rnaFusion.getTransExonData(FS_DOWNSTREAM).isEmpty())
             return;
 
-        for (RnaExonMatchData exonDataUp : rnaFusion.getTransExonData()[FS_UPSTREAM])
+        for (RnaExonMatchData exonDataUp : rnaFusion.getTransExonData(FS_UPSTREAM))
         {
             if(rnaFusion.JunctionTypes[FS_UPSTREAM] == KNOWN && !exonDataUp.BoundaryMatch)
                 continue;
 
-            for(RnaExonMatchData exonDataDown : rnaFusion.getTransExonData()[FS_DOWNSTREAM])
+            for(RnaExonMatchData exonDataDown : rnaFusion.getTransExonData(FS_DOWNSTREAM))
             {
                 if(rnaFusion.JunctionTypes[FS_DOWNSTREAM] == KNOWN && !exonDataDown.BoundaryMatch)
                     continue;

@@ -574,7 +574,7 @@ public class RnaFusionMapper
 
                     if(exonMatchData.ExonFound)
                     {
-                        rnaFusion.getTransExonData()[fs].add(exonMatchData);
+                        rnaFusion.getTransExonData(fs).add(exonMatchData);
 
                         // override for external fusion source data which doesn't set this or set it correctly
                         if(exonMatchData.BoundaryMatch && rnaFusion.JunctionTypes[fs] == NOT_SET)
@@ -587,7 +587,7 @@ public class RnaFusionMapper
                 rnaFusion.JunctionTypes[fs] = UNKNOWN;
 
             LNX_LOGGER.debug("rnaFusion({}) juncType({}) {} position({}) matched {} transcript exons",
-                    rnaFusion.name(), rnaFusion.JunctionTypes[fs], streamStr(fs), rnaPosition, rnaFusion.getTransExonData()[fs].size());
+                    rnaFusion.name(), rnaFusion.JunctionTypes[fs], streamStr(fs), rnaPosition, rnaFusion.getTransExonData(fs).size());
         }
 
         checkRnaPhasedTranscripts(rnaFusion);

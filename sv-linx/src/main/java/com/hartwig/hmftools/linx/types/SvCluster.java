@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DI
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.analysis.ClusteringReason;
@@ -116,7 +117,7 @@ public class SvCluster
         mResolvedType = NONE;
         mRequiresRecalc = true;
         mAnnotationList = Lists.newArrayList();
-        mChrBreakendMap = new HashMap();
+        mChrBreakendMap = Maps.newHashMap();
 
         // chain data
         mLinkedPairs = Lists.newArrayList();
@@ -644,7 +645,7 @@ public class SvCluster
         mMaxJcn = 0;
 
         int svCalcJcnCount = 0;
-        Map<Integer,Integer> jcnFrequency = new HashMap();
+        Map<Integer,Integer> jcnFrequency = Maps.newHashMap();
 
         double tightestMinJcn = 0;
         double tightestMaxJcn = -1;

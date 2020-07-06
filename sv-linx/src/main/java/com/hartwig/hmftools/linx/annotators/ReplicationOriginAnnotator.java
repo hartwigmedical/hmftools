@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.ReplicationOriginRegion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
@@ -26,7 +27,7 @@ public class ReplicationOriginAnnotator
 
     public ReplicationOriginAnnotator()
     {
-        mReplicationOrigins = new HashMap();
+        mReplicationOrigins = Maps.newHashMap();
     }
 
     public void loadReplicationOrigins(final String filename)

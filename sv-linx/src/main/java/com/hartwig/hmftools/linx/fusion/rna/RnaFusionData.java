@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -53,7 +54,8 @@ public class RnaFusionData
     // transcripts matching SV breakends
     private final Transcript[] mMatchedTranscripts;
 
-    private final List<RnaExonMatchData>[] mTransExonData;
+    //private final List<RnaExonMatchData>[] mTransExonData;
+    private final StartEndPair<List<RnaExonMatchData>> mTransExonData;
 
     // transcripts matching RNA positions if in a phased fusion
     private final RnaExonMatchData[] mRnaPhasedTranscriptExons;
@@ -100,7 +102,8 @@ public class RnaFusionData
         mIsValid = true;
         mRnaPhasedTranscriptExons = new RnaExonMatchData[] {null, null};
 
-        mTransExonData = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        //mTransExonData = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        mTransExonData = new StartEndPair<List<RnaExonMatchData>>( Lists.newArrayList(), Lists.newArrayList() );
 
         mMatchedTranscripts = new Transcript[] { null, null};
         mBreakends = new SvBreakend[] { null, null};
@@ -144,11 +147,11 @@ public class RnaFusionData
 
     public boolean matchesKnownSpliceSites() { return JunctionTypes[FS_UPSTREAM] == KNOWN && JunctionTypes[FS_DOWNSTREAM] == KNOWN; }
 
-    public List<RnaExonMatchData>[] getTransExonData() { return mTransExonData; }
+    public List<RnaExonMatchData> getTransExonData(int seIndex) { return mTransExonData.get(seIndex); }
 
     public final List<String> getExactMatchTransIds(int fs)
     {
-        return mTransExonData[fs].stream().filter(x -> x.BoundaryMatch).map(x -> x.TransName).collect(Collectors.toList());
+        return mTransExonData.get(fs).stream().filter(x -> x.BoundaryMatch).map(x -> x.TransName).collect(Collectors.toList());
     }
 
     public RnaExonMatchData getBestExonMatch(int fs)
@@ -156,13 +159,13 @@ public class RnaFusionData
         if(mRnaPhasedTranscriptExons[fs] != null)
             return mRnaPhasedTranscriptExons[fs];
 
-        for(RnaExonMatchData exonData : mTransExonData[fs])
+        for(RnaExonMatchData exonData : mTransExonData.get(fs))
         {
             if(exonData.BoundaryMatch)
                 return exonData;
         }
 
-        return mTransExonData[fs].isEmpty() ? null : mTransExonData[fs].get(0);
+        return mTransExonData.get(fs).isEmpty() ? null : mTransExonData.get(fs).get(0);
     }
 
     public void setRnaPhasedFusionData(final RnaExonMatchData up, final RnaExonMatchData down)

@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -60,7 +61,7 @@ public class DriverDataCache
         mDbAccess = dbAccess;
         mDriverCatalog = Lists.newArrayList();
         mDriverGeneDataList = Lists.newArrayList();
-        mSampleGeneCopyNumberMap = new HashMap();
+        mSampleGeneCopyNumberMap = Maps.newHashMap();
         mGeneCopyNumberData = Lists.newArrayList();
 
         mSampleId = "";

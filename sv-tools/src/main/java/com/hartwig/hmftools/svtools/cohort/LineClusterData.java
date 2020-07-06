@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.svtools.cohort.LineElementType.KNOWN;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.KNOWN_SUSPECT;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.NONE;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.SUSPECT;
-import static com.hartwig.hmftools.svtools.cohort.LineElementType.moreKnown;
 
 import java.util.List;
 import java.util.stream.Collectors;

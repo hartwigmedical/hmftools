@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -25,7 +26,7 @@ public class ClusteringState
 
     public ClusteringState()
     {
-        mChrBreakendMap = new HashMap();
+        mChrBreakendMap = Maps.newHashMap();
         mLohEventList = null;
         mHomLossList = null;
 
