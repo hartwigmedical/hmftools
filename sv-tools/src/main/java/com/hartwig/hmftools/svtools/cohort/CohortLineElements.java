@@ -244,8 +244,9 @@ public class CohortLineElements
 
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("LineId,Type,Chromosome,PosStart,PosEnd,SampleCount,TotalInserts,MaxBreakends,SourceLocations");
-            writer.write(",SampleId,ClusterId,SampleInserts,PcawgSampleCount");
+            writer.write("LineId,Type,Chromosome,PosStart,PosEnd");
+            writer.write(",SampleCount,TotalInserts,PcawgSampleCount");
+            writer.write(",SampleId,ClusterId,SamplePosStart,SamplePosEnd,SampleSourceLocations,SourceBreakends,SampleInserts");
 
             writer.newLine();
 
@@ -253,22 +254,23 @@ public class CohortLineElements
             for(final LineClusterData lineData : combinedLineData)
             {
                 final LineRegion primarySource = lineData.primaryRegion();
+                final SvRegion combinedRegion = lineData.getCombinedPrimarySourceRegion();
 
                 int extRegionCount = getExternalLineSampleCount(primarySource.Region);
 
-                final String lineDefn = String.format("%d,%s,%s,%d,%d,%d,%d,%d,%d",
-                        lineId, primarySource.LineType, primarySource.Region.Chromosome, primarySource.Region.start(), primarySource.Region.end(),
-                        lineData.sampleCount(), lineData.insertRegionsCount(), primarySource.BreakendCount, lineData.LineRegions.size());
+                final String lineDefn = String.format("%d,%s,%s,%d,%d,%d,%d,%d",
+                        lineId, primarySource.LineType, combinedRegion.Chromosome, combinedRegion.start(), combinedRegion.end(),
+                        lineData.sampleCount(), lineData.insertRegionsCount(), extRegionCount);
 
                 writer.write(lineDefn);
-                writer.write(String.format(",%s,%d", lineData.sampleClusterData(), extRegionCount));
+                writer.write(String.format(",%s", lineData.sampleClusterData()));
                 writer.newLine();
 
                 for(int i = 0; i < lineData.MatchedClusters.size(); ++i)
                 {
                     final LineClusterData clusterData = lineData.MatchedClusters.get(i);
                     writer.write(lineDefn);
-                    writer.write(String.format(",%s,%d", clusterData.sampleClusterData(), extRegionCount));
+                    writer.write(String.format(",%s", clusterData.sampleClusterData()));
                     writer.newLine();
                 }
 
