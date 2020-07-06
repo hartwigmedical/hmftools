@@ -506,7 +506,7 @@ public class SvSampleAnalyser {
                     .junctionCopyNumberMin(var.jcnMin())
                     .junctionCopyNumberMax(var.jcnMax())
                     .geneStart(var.getGeneInBreakend(true, false))
-                    .geneEnd(var.getGeneInBreakend(true, false))
+                    .geneEnd(var.getGeneInBreakend(false, false))
                     .replicationTimingStart(var.getReplicationOrigin(true))
                     .replicationTimingEnd(var.getReplicationOrigin(false))
                     .localTopologyIdStart(armClusterStart.id())
