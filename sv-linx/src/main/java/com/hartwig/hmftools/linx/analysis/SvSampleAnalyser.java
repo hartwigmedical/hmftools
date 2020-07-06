@@ -104,7 +104,7 @@ public class SvSampleAnalyser {
         mFragileSiteAnnotator = new FragileSiteAnnotator();
         mFragileSiteAnnotator.loadFragileSitesFile(mConfig.FragileSiteFile);
 
-        mLineElementAnnotator = new LineElementAnnotator();
+        mLineElementAnnotator = new LineElementAnnotator(mConfig.ProximityDistance);
         mLineElementAnnotator.loadLineElementsFile(mConfig.LineElementFile);
         mAnalyser.setLineAnnotator(mLineElementAnnotator);
 

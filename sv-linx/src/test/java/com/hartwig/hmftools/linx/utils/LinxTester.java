@@ -48,7 +48,7 @@ public class LinxTester
         CnDataLoader = new CnDataLoader( "", null);
         Analyser.setCnDataLoader(CnDataLoader);
 
-        LineAnnotator = new LineElementAnnotator();
+        LineAnnotator = new LineElementAnnotator(Config.ProximityDistance);
         Analyser.setLineAnnotator(LineAnnotator);
 
         Analyser.setRunValidationChecks(true);

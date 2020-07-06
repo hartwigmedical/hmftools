@@ -19,7 +19,6 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -33,6 +32,7 @@ public class LineElementAnnotator {
 
     private final List<SvRegion> mKnownLineElements;
     private PseudoGeneFinder mPseudoGeneFinder;
+    private final int mProximityDistance;
 
     public static final String KNOWN_LINE_ELEMENT = "Known";
     public static final String NO_LINE_ELEMENT = "None";
@@ -47,8 +47,9 @@ public class LineElementAnnotator {
     private static final int LE_COL_POS_START = 1;
     private static final int LE_COL_POS_END = 2;
 
-    public LineElementAnnotator()
+    public LineElementAnnotator(int proximityDistance)
     {
+        mProximityDistance = proximityDistance;
         mPseudoGeneFinder = null;
         mKnownLineElements = Lists.newArrayList();
     }
@@ -124,7 +125,7 @@ public class LineElementAnnotator {
         return var.getSvData().insertSequence().contains(POLY_A_MOTIF) || var.getSvData().insertSequence().contains(POLY_T_MOTIF);
     }
 
-    public void markLineCluster(final SvCluster cluster, int proximityLength)
+    public void markLineCluster(final SvCluster cluster)
     {
         /* Identify a suspected LINE element if:
            - has 2+ BND within 5K NOT forming a short DB bases at the suspected LINE source location
@@ -169,7 +170,6 @@ public class LineElementAnnotator {
 
                 Set<String> uniqueBndChromosomes = Sets.newHashSet();
                 boolean hasRemoteShortBndDB = false;
-                List<SvVarData> linkingBnds = Lists.newArrayList();
 
                 boolean isSuspectGroup = false;
 
@@ -178,23 +178,18 @@ public class LineElementAnnotator {
                     uniqueBndChromosomes.add(breakend.chromosome());
                     uniqueBndChromosomes.add(var.chromosome(!breakend.usesStart()));
 
-                    linkingBnds.add(var);
-
-                    // test for a remote SGL in a DB
+                    // test for a remote SGL in a short DB
                     final SvLinkedPair dbPair = var.getDBLink(!breakend.usesStart());
 
-                    if (dbPair != null && dbPair.length() <= MIN_DEL_LENGTH && dbPair.getOtherSV(var).type() == SGL
+                    if (isRemoteInsertionDeletionBridge(dbPair) && dbPair.getOtherSV(var).type() == SGL
                     && dbPair.getOtherSV(var).getCluster() == cluster)
                     {
                         hasRemoteShortBndDB = true;
                         final SvVarData sgl = dbPair.getOtherSV(var);
-                        uniqueBndChromosomes.add(sgl.chromosome(true));
-                        linkingBnds.add(sgl);
 
                         if (hasPolyAorTMotif(sgl))
                         {
                             polyAtSVs.add(sgl);
-                            polyAtBreakends.add(sgl.getBreakend(true));
                         }
                     }
                 }
@@ -211,7 +206,7 @@ public class LineElementAnnotator {
                         final SvBreakend prevBreakend = breakendList.get(j - 1);
                         final SvBreakend nextBreakend = breakendList.get(j);
 
-                        if (nextBreakend.position() - breakend.position() > proximityLength)
+                        if (nextBreakend.position() - breakend.position() > mProximityDistance)
                             break;
 
                         final SvVarData nextSV = nextBreakend.getSV();
@@ -231,8 +226,8 @@ public class LineElementAnnotator {
 
                         if (nextSV.type() == BND)
                         {
-                            final SvLinkedPair dbPair = nextSV.getDBLink(nextBreakend.usesStart());
-                            final SvLinkedPair nextDbPair = prevBreakend.getSV().getDBLink(prevBreakend.usesStart());
+                            final SvLinkedPair dbPair = nextBreakend.getDBLink();
+                            final SvLinkedPair nextDbPair = prevBreakend.getDBLink();
 
                             if (dbPair == null || dbPair != nextDbPair || dbPair.length() > MIN_DEL_LENGTH)
                             {
@@ -241,17 +236,14 @@ public class LineElementAnnotator {
 
                                 if(!uniqueBndChromosomes.contains(otherChr))
                                 {
-                                    linkingBnds.add(nextSV);
                                     uniqueBndChromosomes.add(otherChr);
                                 }
                                 else
                                 {
                                     final SvLinkedPair remoteDbPair = nextSV.getDBLink(!nextBreakend.usesStart());
 
-                                    if(remoteDbPair != null && remoteDbPair.length() <= MIN_DEL_LENGTH
-                                    && remoteDbPair.getOtherSV(nextSV) == prevBreakend.getSV())
+                                    if(isRemoteInsertionDeletionBridge(remoteDbPair) && remoteDbPair.getOtherSV(nextSV) == prevBreakend.getSV())
                                     {
-                                        linkingBnds.add(nextSV);
                                         hasRemoteShortBndDB = true;
                                     }
                                 }
@@ -279,7 +271,7 @@ public class LineElementAnnotator {
                 {
                     final SvBreakend nextBreakend = breakendList.get(j);
 
-                    if (abs(nextBreakend.position() - breakend.position()) > proximityLength)
+                    if (abs(nextBreakend.position() - breakend.position()) > mProximityDistance)
                         break;
 
                     proximateBreakends.add(nextBreakend);
@@ -290,7 +282,7 @@ public class LineElementAnnotator {
                 {
                     final SvBreakend prevBreakend = breakendList.get(j);
 
-                    if (abs(breakend.position() - prevBreakend.position()) > proximityLength)
+                    if (abs(breakend.position() - prevBreakend.position()) > mProximityDistance)
                         break;
 
                     proximateBreakends.add(prevBreakend);
@@ -299,33 +291,59 @@ public class LineElementAnnotator {
                 // check for a proximate DEL matching exon positions which would invalidate this as a LINE cluster
                 if(mPseudoGeneFinder != null)
                 {
-                    final SvBreakend pseduoDel = proximateBreakends.stream()
+                    final SvBreakend pseudoDel = proximateBreakends.stream()
                             .filter(x -> x.getSV().type() == DEL)
                             .filter(x -> mPseudoGeneFinder.variantMatchesPseudogeneExons(x.getSV()))
                             .findFirst().orElse(null);
 
-                    if(pseduoDel != null)
+                    if(pseudoDel != null)
                     {
                         LNX_LOGGER.debug("cluster({}) proximate DEL({}) matches pseudogene exon boundaries",
-                                cluster.id(), pseduoDel.getSV().posId());
+                                cluster.id(), pseudoDel.getSV().posId());
                         continue;
                     }
                 }
 
-                final String linkingIdsStr = linkingBnds.stream().map(x -> x.id()).collect(Collectors.toList()).toString();
-
-                LNX_LOGGER.debug("cluster({}) lineChr({}) uniqueChr({}) linkingSVs({}) remoteShortDB({}) proxPolyATCount({})",
-                        cluster.id(), breakend.chromosome(), uniqueBndChromosomes.toString(), linkingIdsStr,
-                        hasRemoteShortBndDB, polyAtSVs.size());
+                LNX_LOGGER.debug("cluster({}) lineChr({}) uniqueChr({}) remoteShortDB({}) proxPolyATCount({})",
+                        cluster.id(), breakend.chromosome(), uniqueBndChromosomes.toString(),hasRemoteShortBndDB, polyAtSVs.size());
 
                 hasSuspected = true;
 
-                // otherwise mark every breakend in this proximity as suspect line
+                // mark every breakend in this proximity as suspect line
                 proximateBreakends.forEach(x -> x.getSV().setLineElement(SUSPECTED_LINE_ELEMENT, x.usesStart()));
             }
         }
 
         markLineCluster(cluster, hasSuspected, hasPolyAorT);
+    }
+
+    private boolean isRemoteInsertionDeletionBridge(final SvLinkedPair dbPair)
+    {
+        if(dbPair == null || dbPair.length() > MIN_DEL_LENGTH)
+            return false;
+
+        // no other breakends can be within the proximity cut off
+        final List<SvBreakend> breakendList = dbPair.first().getCluster().getChrBreakendMap().get(dbPair.chromosome());
+
+        final SvBreakend lowerBreakend = dbPair.getBreakend(true);
+        int startIndex = lowerBreakend.getClusterChrPosIndex();
+
+        if(startIndex > 0)
+        {
+            if(lowerBreakend.position() - breakendList.get(startIndex - 1).position() < mProximityDistance)
+                return false;
+        }
+
+        final SvBreakend upperBreakend = dbPair.getBreakend(false);
+        int endIndex = upperBreakend.getClusterChrPosIndex();
+
+        if(endIndex < breakendList.size() - 1)
+        {
+            if(breakendList.get(endIndex + 1).position() - upperBreakend.position() < mProximityDistance)
+                return false;
+        }
+
+        return true;
     }
 
     private void markLineCluster(SvCluster cluster, boolean hasSuspected, boolean hasPolyAorT)

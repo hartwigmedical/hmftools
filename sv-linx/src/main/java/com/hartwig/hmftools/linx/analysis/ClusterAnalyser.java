@@ -166,10 +166,11 @@ public class ClusterAnalyser {
         mPcClustering.start();
         mFilters.clusterExcludedVariants(mClusters);
         mSimpleClustering.clusterByProximity(mClusters);
+        mClusters.stream().filter(x -> x.getSvCount() > 1).forEach(x -> x.updateClusterDetails());
         mPcClustering.pause();
 
         // mark line clusters since these are excluded from most subsequent logic
-        mClusters.forEach(x -> mLineElementAnnotator.markLineCluster(x, mConfig.ProximityDistance));
+        mClusters.forEach(x -> mLineElementAnnotator.markLineCluster(x));
 
         associateBreakendCnEvents(mSampleId, mState);
 

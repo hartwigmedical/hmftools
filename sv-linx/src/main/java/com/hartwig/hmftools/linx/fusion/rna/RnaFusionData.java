@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.breakendsAreChained;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,7 +53,7 @@ public class RnaFusionData
     // transcripts matching SV breakends
     private final Transcript[] mMatchedTranscripts;
 
-    private List<RnaExonMatchData>[] mTransExonData;
+    private final List<RnaExonMatchData>[] mTransExonData;
 
     // transcripts matching RNA positions if in a phased fusion
     private final RnaExonMatchData[] mRnaPhasedTranscriptExons;

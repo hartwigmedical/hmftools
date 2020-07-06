@@ -441,7 +441,7 @@ public class SvCluster
         return SvClassification.isSyntheticType(this);
     }
 
-    private void updateClusterDetails()
+    public void updateClusterDetails()
     {
         if(!mRequiresRecalc)
             return;
