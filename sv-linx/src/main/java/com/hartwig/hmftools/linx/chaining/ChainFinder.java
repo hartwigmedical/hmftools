@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
+import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 
 import static org.apache.logging.log4j.Level.TRACE;
 
@@ -64,6 +65,7 @@ public class ChainFinder
     private int mClusterId;
     public String mSampleId;
     private boolean mHasReplication;
+    private boolean mIsLineCluster;
 
     // input state
     private final List<SvVarData> mSvList;
@@ -84,8 +86,9 @@ public class ChainFinder
     private final List<SvChain> mChains;
     private final List<SvChain> mUniqueChains;
 
-    private ChainRuleSelector mRuleSelector;
-    private ChainLinkAllocator mLinkAllocator;
+    private final ChainRuleSelector mRuleSelector;
+    private final ChainLinkAllocator mLinkAllocator;
+    private final LineChainer mLineChainer;
 
     // a cache of cluster ploidy boundaries which links cannot cross
     private final ChainJcnLimits mClusterJcnLimits;
@@ -136,6 +139,8 @@ public class ChainFinder
                 mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
                 mAdjacentMatchingPairs, mAdjacentPairs, mChains);
 
+        mLineChainer = new LineChainer();
+
         mHasReplication = false;
         mLogVerbose = false;
         mLogLevel = LNX_LOGGER.getLevel();
@@ -152,6 +157,7 @@ public class ChainFinder
     public void clear()
     {
         mClusterId = -1;
+        mIsLineCluster = false;
         mSvList.clear();
         mFoldbacks.clear();
         mDoubleMinuteSVs.clear();
@@ -172,6 +178,7 @@ public class ChainFinder
         mIsValid = true;
 
         mDiagnostics.clear();
+        mLineChainer.clear();
     }
 
     public void setSampleId(final String sampleId)
@@ -188,6 +195,11 @@ public class ChainFinder
         clear();
 
         mClusterId = cluster.id();
+        mIsLineCluster = cluster.getResolvedType() == LINE;
+
+        if(mIsLineCluster)
+            mLineChainer.initialise(cluster);
+
         mSvList.addAll(cluster.getSVs());
         mFoldbacks.addAll(cluster.getFoldbacks());
         mDoubleMinuteSVs.addAll(cluster.getDoubleMinuteSVs());
@@ -206,6 +218,7 @@ public class ChainFinder
 
         mIsClusterSubset = true;
         mClusterId = cluster.id();
+        mIsLineCluster = false;
 
         mChrBreakendMap = Maps.newHashMap();
 
@@ -274,7 +287,13 @@ public class ChainFinder
         if(mSvList.size() < 2)
             return;
 
-        if (mSvList.size() >= 4)
+        if(mIsLineCluster)
+        {
+            formLineChains();
+            return;
+        }
+
+        if(mSvList.size() >= 4)
         {
             LNX_LOGGER.debug("cluster({}) starting chaining with assemblyLinks({}) svCount({}) replication({})",
                     mClusterId, mAssembledLinks.size(), mSvList.size(), mHasReplication);
@@ -298,6 +317,12 @@ public class ChainFinder
             LNX_LOGGER.warn("cluster({}) chain finding failed", mClusterId);
             return;
         }
+    }
+
+    private void formLineChains()
+    {
+        mLineChainer.formChains();
+        mUniqueChains.addAll(mLineChainer.getChains());
     }
 
     private boolean isValid()
@@ -373,9 +398,6 @@ public class ChainFinder
 
         cluster.addChain(newChain, false);
     }
-
-    protected static int SPEC_LINK_INDEX = -1;
-    // protected static int SPEC_LINK_INDEX = 135;
 
     private void buildChains(boolean assembledLinksOnly)
     {

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.KNOWN_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
@@ -11,13 +12,17 @@ import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_M
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.SUSPECTED_LINE_ELEMENT;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
+import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -167,6 +172,68 @@ public class LineTest
         assertEquals(sgl1.getLineElement(true), SUSPECTED_LINE_ELEMENT);
         assertEquals(sgl2.getLineElement(true), SUSPECTED_LINE_ELEMENT);
         assertTrue(cluster.hasLinkingLineElements());
+    }
+
+    @Test
+    public void testLineChaining()
+    {
+        LinxTester tester = new LinxTester();
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        // scenario 1: simple line chain with assembled breakends
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 100, -1, "2", 100, 1);
+        SvVarData var2 = createBnd(tester.nextVarId(), "1", 200, 1, "2", 200, -1);
+        SvVarData var3 = createBnd(tester.nextVarId(), "1", 1100, -1, "3", 100, 1);
+        SvVarData var4 = createBnd(tester.nextVarId(), "1", 1200, 1, "3", 200, -1);
+
+        var1.setLineElement(KNOWN_LINE_ELEMENT, true);
+        var2.setLineElement(KNOWN_LINE_ELEMENT, true);
+        var3.setLineElement(KNOWN_LINE_ELEMENT, true);
+        var4.setLineElement(KNOWN_LINE_ELEMENT, true);
+        var1.setAssemblyData(true, "asmb12");
+        var2.setAssemblyData(true, "asmb12");
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4));
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(2, cluster.getChains().size());
+
+        tester.clearClustersAndSVs();
+
+        // more complicated scenario involving multiple source locations and breakends at each location
+
+        var1 = createBnd(tester.nextVarId(), "1", 100, -1, "3", 100, 1);
+        var2 = createBnd(tester.nextVarId(), "1", 200, 1, "3", 200, -1);
+
+        var3 = createBnd(tester.nextVarId(), "1", 300, -1, "2", 100, 1);
+        var4 = createInv(tester.nextVarId(), "1", 400, 600, 1);
+        SvVarData var5 = createBnd(tester.nextVarId(), "1", 500, -1, "2", 200, -1);
+
+        // another independent source element
+        SvVarData var6 = createBnd(tester.nextVarId(), "3", 1000, -1, "4", 100, 1);
+        SvVarData var7 = createBnd(tester.nextVarId(), "3", 1100, 1, "4", 200, -1);
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4,  var5, var6, var7));
+
+        tester.AllVariants.forEach(x -> x.setLineElement(KNOWN_LINE_ELEMENT, true));
+
+        // var1.setAssemblyData(true, "asmb12");
+        // var2.setAssemblyData(true, "asmb12");
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(3, cluster.getChains().size());
+        // SvChain chain = cluster.getChains().get(0);
     }
 
 }
