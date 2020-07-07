@@ -136,7 +136,7 @@ public class Transcript {
             ExonUpstreamPhase = exonUpstreamPhase;
         }
 
-        if(isDownstream(mGene) && mRegionType == UPSTREAM)
+        if(mRegionType == UPSTREAM || mRegionType == DOWNSTREAM)
             mIsDisruptive = false;
         else
             mIsDisruptive = true;
