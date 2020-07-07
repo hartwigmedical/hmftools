@@ -1,6 +1,6 @@
 # Bachelor
 
-Bachelor evaluates the pathogenicity of germline variants from an snpeff annotated germline vcf in a configured panel of genes. Pathogenicity is determined based both on ClinVar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in ClinVar.
+Bachelor evaluates the pathogenicity of germline variants from a snpeff annotated germline vcf in a configured panel of genes. Pathogenicity is determined based both on ClinVar and a list of configured snpeff effects that are deemed to be likely pathogenic even if unannotated in ClinVar.
 
 The steps in the routine are as follows:
 1. Parse germline VCF to identify candidate variants. 
