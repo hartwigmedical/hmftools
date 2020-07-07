@@ -36,6 +36,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.linx.fusion.GeneFusion;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
@@ -90,7 +91,6 @@ public class RnaFusionMapper
     }
 
     public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
-    public final List<RnaFusionData> getSampleRnaData(final String sampleId) { return mSampleRnaData.get(sampleId); }
 
     public void assessRnaFusions(final String sampleId, Map<String, List<SvBreakend>> chrBreakendMap)
     {
@@ -147,12 +147,12 @@ public class RnaFusionMapper
         */
 
         // viable breakends and their matching transcript
-        final List<SvBreakend>[] viableBreakendPair = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-        final List<Transcript>[] viableTranscriptPair = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        final StartEndPair<List<SvBreakend>> viableBreakendPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
+        final StartEndPair<List<Transcript>> viableTranscriptPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
 
         // transcripts on the correct side and orientation of the RNA boundary
-        final List<Transcript>[] nearTranscriptPair = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-        final List<SvBreakend>[] nearBreakendPair = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        final StartEndPair<List<Transcript>> nearTranscriptPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
+        final StartEndPair<List<SvBreakend>> nearBreakendPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
 
         boolean requireExactMatch = rnaFusion.JunctionTypes[FS_UPSTREAM] == UNKNOWN || rnaFusion.JunctionTypes[FS_DOWNSTREAM] == UNKNOWN;
 
@@ -232,14 +232,14 @@ public class RnaFusionMapper
                         if(isKnownJunction && !rnaFusion.getExactMatchTransIds(fs).contains(trans.StableId))
                             continue;
 
-                        nearBreakendPair[fs].add(breakend);
-                        nearTranscriptPair[fs].add(trans);
+                        nearBreakendPair.get(fs).add(breakend);
+                        nearTranscriptPair.get(fs).add(trans);
 
                         if(mAnnotator.isTranscriptBreakendViableForRnaBoundary(
                                 trans, isUpstream, breakend.position(), rnaPosition, isKnownJunction))
                         {
-                            viableBreakendPair[fs].add(breakend);
-                            viableTranscriptPair[fs].add(trans);
+                            viableBreakendPair.get(fs).add(breakend);
+                            viableTranscriptPair.get(fs).add(trans);
                         }
                     }
                 }
@@ -247,29 +247,29 @@ public class RnaFusionMapper
         }
 
         LNX_LOGGER.debug("rna fusion({}) breakend matches: upstream(viable={} near={}) downstream(viable={} near={})",
-                rnaFusion.name(), viableBreakendPair[FS_UPSTREAM].size(), nearBreakendPair[FS_UPSTREAM].size(),
-                viableBreakendPair[FS_DOWNSTREAM].size(), nearBreakendPair[FS_DOWNSTREAM].size());
+                rnaFusion.name(), viableBreakendPair.get(FS_UPSTREAM).size(), nearBreakendPair.get(FS_UPSTREAM).size(),
+                viableBreakendPair.get(FS_DOWNSTREAM).size(), nearBreakendPair.get(FS_DOWNSTREAM).size());
 
         // run them through fusion logic (ie a pair of breakend lists), but don't require phase matching
-        if(!viableBreakendPair[FS_UPSTREAM].isEmpty() && !viableBreakendPair[FS_DOWNSTREAM].isEmpty())
+        if(!viableBreakendPair.get(FS_UPSTREAM).isEmpty() && !viableBreakendPair.get(FS_DOWNSTREAM).isEmpty())
         {
             GeneFusion topCandidateFusion = null;
             SvBreakend topUpBreakend = null;
             SvBreakend topDownBreakend = null;
             boolean topCandidateFusionViable = false;
 
-            for (int i = 0; i < viableBreakendPair[FS_UPSTREAM].size(); ++i)
+            for (int i = 0; i < viableBreakendPair.get(FS_UPSTREAM).size(); ++i)
             {
-                final SvBreakend upBreakend = viableBreakendPair[FS_UPSTREAM].get(i);
-                final Transcript upTrans = viableTranscriptPair[FS_UPSTREAM].get(i);
+                final SvBreakend upBreakend = viableBreakendPair.get(FS_UPSTREAM).get(i);
+                final Transcript upTrans = viableTranscriptPair.get(FS_UPSTREAM).get(i);
 
                 if(upBreakend.getSV().isSglBreakend())
                     continue;
 
-                for (int j = 0; j < viableBreakendPair[FS_DOWNSTREAM].size(); ++j)
+                for (int j = 0; j < viableBreakendPair.get(FS_DOWNSTREAM).size(); ++j)
                 {
-                    final SvBreakend downBreakend = viableBreakendPair[FS_DOWNSTREAM].get(j);
-                    final Transcript downTrans = viableTranscriptPair[FS_DOWNSTREAM].get(j);
+                    final SvBreakend downBreakend = viableBreakendPair.get(FS_DOWNSTREAM).get(j);
+                    final Transcript downTrans = viableTranscriptPair.get(FS_DOWNSTREAM).get(j);
 
                     if(downBreakend.getSV().isSglBreakend())
                         continue;
@@ -324,24 +324,24 @@ public class RnaFusionMapper
                 boolean correctLocation = false;
 
                 // use the viable transcripts if present, otherwise the nearest
-                if(!viableTranscriptPair[fs].isEmpty())
+                if(!viableTranscriptPair.get(fs).isEmpty())
                 {
                     isViable = true;
                     correctLocation = true;
-                    transcriptList = viableTranscriptPair[fs];
-                    breakendList = viableBreakendPair[fs];
+                    transcriptList = viableTranscriptPair.get(fs);
+                    breakendList = viableBreakendPair.get(fs);
                 }
-                else if(!nearTranscriptPair[fs].isEmpty())
+                else if(!nearTranscriptPair.get(fs).isEmpty())
                 {
                     correctLocation = true;
-                    transcriptList = nearTranscriptPair[fs];
-                    breakendList = nearBreakendPair[fs];
+                    transcriptList = nearTranscriptPair.get(fs);
+                    breakendList = nearBreakendPair.get(fs);
                 }
                 else
                 {
                     continue;
-                    // transcriptList = genicTranscriptPair[fs];
-                    // breakendList = genicBreakendPair[fs];
+                    // transcriptList = genicTranscriptPair.get(fs);
+                    // breakendList = genicBreakendPair.get(fs);
                 }
 
                 Transcript closestTrans = null;

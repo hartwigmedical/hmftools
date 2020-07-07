@@ -74,8 +74,8 @@ public class CfChain
 
     private boolean hasAdjacentBreakends(final CfSvData var1, final CfSvData var2, final int se1, final int se2)
     {
-        return var1.AdjacentBreakendIds[se1].stream().anyMatch(x -> x == var2.BreakpointIds[se2])
-                && var2.AdjacentBreakendIds[se2].stream().anyMatch(x -> x == var1.BreakpointIds[se1]);
+        return var1.AdjacentBreakendIds.get(se1).stream().anyMatch(x -> x == var2.BreakpointIds[se2])
+                && var2.AdjacentBreakendIds.get(se2).stream().anyMatch(x -> x == var1.BreakpointIds[se1]);
     }
 
     private boolean breakendsFace(final CfSvData var1, final CfSvData var2, final int se1, final int se2)

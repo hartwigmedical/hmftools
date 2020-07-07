@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -26,7 +27,7 @@ public class CfSvData
     public final int[] Positions;
     public final byte[] Orientations;
     public final int[] DbBreakendIds;
-    public final List<Integer>[] AdjacentBreakendIds;
+    public final StartEndPair<List<Integer>> AdjacentBreakendIds;
 
     private SvVarData mSvData;
     private final SvVarData[] mDbSvData;
@@ -53,7 +54,7 @@ public class CfSvData
         Positions = new int[] { breakends[startIndex].Position, breakends[endIndex].Position};
         Orientations = new byte[] { breakends[startIndex].Orientation, breakends[endIndex].Orientation};
         DbBreakendIds = new int[] { breakends[startIndex].DbBreakendId, breakends[endIndex].DbBreakendId };
-        AdjacentBreakendIds = new List[] { breakends[startIndex].AdjacentBreakendIds, breakends[endIndex].AdjacentBreakendIds };
+        AdjacentBreakendIds = new StartEndPair<>(breakends[startIndex].AdjacentBreakendIds, breakends[endIndex].AdjacentBreakendIds);
 
         mSvData = null;
         mDbSvData = new SvVarData[] { null, null };

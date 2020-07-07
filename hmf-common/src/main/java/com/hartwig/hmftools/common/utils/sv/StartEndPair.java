@@ -16,6 +16,9 @@ public class StartEndPair<A>
     }
 
     public A get(int seIndex) { return seIndex == SE_START ? Start : End; }
+    public A get(boolean isStart) { return isStart ? Start : End; }
+    public A start() { return Start; }
+    public A end() { return End; }
 
     public String toString()
     {

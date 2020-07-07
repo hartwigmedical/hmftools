@@ -54,7 +54,6 @@ public class RnaFusionData
     // transcripts matching SV breakends
     private final Transcript[] mMatchedTranscripts;
 
-    //private final List<RnaExonMatchData>[] mTransExonData;
     private final StartEndPair<List<RnaExonMatchData>> mTransExonData;
 
     // transcripts matching RNA positions if in a phased fusion
@@ -102,7 +101,6 @@ public class RnaFusionData
         mIsValid = true;
         mRnaPhasedTranscriptExons = new RnaExonMatchData[] {null, null};
 
-        //mTransExonData = new List[] { Lists.newArrayList(), Lists.newArrayList() };
         mTransExonData = new StartEndPair<List<RnaExonMatchData>>( Lists.newArrayList(), Lists.newArrayList() );
 
         mMatchedTranscripts = new Transcript[] { null, null};
