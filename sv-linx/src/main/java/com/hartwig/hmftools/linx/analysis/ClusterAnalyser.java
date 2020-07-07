@@ -387,6 +387,11 @@ public class ClusterAnalyser {
             {
                 LNX_LOGGER.debug("cluster({}: {}) de-merging {} simple SVs", cluster.id(), cluster.getDesc(), discardSVs.size());
                 mClusters.remove(cluster);
+
+                if(discardSVs.size() < cluster.getSvCount())
+                {
+                    cluster.getSVs().stream().filter(x -> !discardSVs.contains(x)).forEach(x -> discardSVs.add(x));
+                }
             }
             else
             {
