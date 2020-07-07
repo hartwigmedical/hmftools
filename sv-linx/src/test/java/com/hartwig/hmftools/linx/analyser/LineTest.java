@@ -179,7 +179,7 @@ public class LineTest
     {
         LinxTester tester = new LinxTester();
 
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         // scenario 1: simple line chain with assembled breakends
         SvVarData var1 = createBnd(tester.nextVarId(), "1", 100, -1, "2", 100, 1);

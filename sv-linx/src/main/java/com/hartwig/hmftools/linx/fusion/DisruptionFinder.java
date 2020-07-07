@@ -45,7 +45,7 @@ import org.apache.commons.cli.CommandLine;
 public class DisruptionFinder
 {
     private final EnsemblDataCache mGeneTransCache;
-    private Set<String> mDisruptionGeneIds;
+    private final Set<String> mDisruptionGeneIds;
 
     private final List<Transcript> mDisruptions;
     private final Map<Transcript,String> mRemovedDisruptions; // cached for diagnostic purposes
@@ -58,7 +58,7 @@ public class DisruptionFinder
     public DisruptionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache, final String outputDir)
     {
         mGeneTransCache = geneTransCache;
-        mDisruptionGeneIds = null;
+        mDisruptionGeneIds = Sets.newHashSet();
 
         initialiseTsgDriverGenes();
 
@@ -71,8 +71,6 @@ public class DisruptionFinder
 
     private void initialiseTsgDriverGenes()
     {
-        mDisruptionGeneIds = Sets.newHashSet();
-
         for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
         {
             final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(gene);
@@ -93,8 +91,7 @@ public class DisruptionFinder
 
     public void addDisruptionGene(final String geneId)
     {
-        if(!mDisruptionGeneIds.contains(geneId))
-            mDisruptionGeneIds.add(geneId);
+        mDisruptionGeneIds.add(geneId);
     }
 
     public void markTranscriptsDisruptive(final List<SvVarData> svList)
@@ -127,7 +124,7 @@ public class DisruptionFinder
         /* test the breakend to see if:
             - it isn't chained - revert to simple disrupted definitions
             - it is chained
-                - the chain returns to the same intro
+                - the chain returns to the same intron
                 - the chain traverses a splice acceptor in any direction
         */
 
@@ -512,8 +509,6 @@ public class DisruptionFinder
 
                 if(tsgGenesList.isEmpty())
                     continue;
-
-                final SvBreakend breakend = var.getBreakend(be);
 
                 for(GeneAnnotation gene : tsgGenesList)
                 {

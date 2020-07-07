@@ -280,8 +280,6 @@ public class SvSampleAnalyser {
                         final List<GeneAnnotation> mappingGenes = ensemblDataCache.findGeneAnnotationsBySv(
                                 var.id(), isStart, mapping.Chromosome, mapping.Position, mapping.Orientation, upstreamDistance);
 
-
-
                         mappingGenes.forEach(x -> x.setPositionalData(mapping.Chromosome, mapping.Position, mapping.Orientation));
                         mappingGenes.forEach(x -> x.setType(var.type()));
 
@@ -487,11 +485,18 @@ public class SvSampleAnalyser {
 
             if(cluster == null)
             {
-                LNX_LOGGER.error("SV({}) not assigned to any cluster", var.posId());
+                LNX_LOGGER.error("SV({}) not assigned to a cluster", var.posId());
                 continue;
             }
 
             final SvArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
+
+            if(armClusterStart == null)
+            {
+                LNX_LOGGER.error("start breakend({}) not assigned to arm cluster", var.getBreakend(true));
+                continue;
+            }
+
             final SvArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
             linxSvData.add(ImmutableLinxSvData.builder()
