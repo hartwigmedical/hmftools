@@ -52,7 +52,7 @@ public class BachelorConfig {
     private static final String GERMLINE_VCF = "germline_vcf";
     private static final String TUMOR_BAM_FILE = "tumor_bam_file";
     private static final String OUTPUT_DIR = "output_dir";
-    private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // path to purple data directory
+    private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir";
     private static final String SKIP_ENRICHMENT = "skip_enrichment";
     private static final String INCLUDE_VCF_FILTERED = "include_vcf_filtered";
 
