@@ -46,7 +46,11 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
     @VisibleForTesting
     static boolean isFittableRegion(@NotNull final Gender gender, @NotNull final GenomeRegion region) {
-        return gender != Gender.FEMALE || !region.chromosome().equals("Y");
+        if (!HumanChromosome.contains(region.chromosome())) {
+            return false;
+        }
+
+        return gender != Gender.FEMALE || HumanChromosome.fromString(region.chromosome()) != HumanChromosome._Y;
     }
 
     @Override
