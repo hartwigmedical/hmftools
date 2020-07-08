@@ -11,8 +11,9 @@ import org.jetbrains.annotations.NotNull;
 
 final class ExtendLongArm {
 
-    private static final Set<HumanChromosome> ELIGIBLE_CHROMOSOMES = EnumSet.of(
-            HumanChromosome._13,
+    private static final Set<HumanChromosome> FORCE_CHROMOSOMES = EnumSet.of(HumanChromosome._21);
+
+    private static final Set<HumanChromosome> ELIGIBLE_CHROMOSOMES = EnumSet.of(HumanChromosome._13,
             HumanChromosome._14,
             HumanChromosome._15,
             HumanChromosome._21,
@@ -46,12 +47,24 @@ final class ExtendLongArm {
         return -1;
     }
 
+    private static boolean isProcessed(CombinedRegion region) {
+        if (FORCE_CHROMOSOMES.contains(HumanChromosome.fromString(region.chromosome()))) {
+            return false;
+        }
+
+        return region.isProcessed();
+    }
+
     private static void extendLeft(double copyNumber, int targetIndex, @NotNull final List<CombinedRegion> regions) {
-        if (targetIndex < 0 || regions.get(targetIndex).isProcessed()) {
+        if (targetIndex < 0) {
             return;
         }
 
         final CombinedRegion target = regions.get(targetIndex);
+        if (isProcessed(target)) {
+            return;
+        }
+
         target.setTumorCopyNumber(CopyNumberMethod.LONG_ARM, copyNumber);
         if (target.region().support() != SegmentSupport.NONE) {
             extendLeft(copyNumber, targetIndex - 1, regions);
@@ -61,7 +74,7 @@ final class ExtendLongArm {
         targetIndex--;
         while (targetIndex >= 0) {
             final CombinedRegion neighbour = regions.get(targetIndex);
-            if (neighbour.isProcessed()) {
+            if (isProcessed(neighbour)) {
                 return;
             }
 
@@ -74,6 +87,5 @@ final class ExtendLongArm {
                 return;
             }
         }
-
     }
 }

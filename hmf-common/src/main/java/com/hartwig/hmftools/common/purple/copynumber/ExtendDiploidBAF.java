@@ -312,8 +312,8 @@ class ExtendDiploidBAF {
 
     private static boolean isSingleTinyRegionWithGreaterCopyNumber(@NotNull final InferRegion inferRegion,
             @NotNull final List<CombinedRegion> regions, @NotNull final FittedRegion source) {
-        return isSingleSmallRegion(TINY_REGION_SIZE, inferRegion, regions) && Doubles.greaterThan(regions.get(inferRegion.leftTargetIndex)
-                .tumorCopyNumber(), source.tumorCopyNumber());
+        return isSingleUnknownRegion(inferRegion) && isSmallRegion(TINY_REGION_SIZE, inferRegion, regions)
+                && Doubles.greaterThan(regions.get(inferRegion.leftTargetIndex).tumorCopyNumber(), source.tumorCopyNumber());
     }
 
     private static boolean isSingleSmallRegionFlankedByLargeLOH(@NotNull final FittedRegion nearestSource,
@@ -321,12 +321,12 @@ class ExtendDiploidBAF {
         long distance = nearestSource.start() > regions.get(inferRegion.leftTargetIndex).end() ? nearestSource.start() - regions.get(
                 inferRegion.leftTargetIndex).end() : regions.get(inferRegion.leftTargetIndex).start() - nearestSource.end();
 
-        return isSingleSmallRegionFlankedByLOH(inferRegion, regions) && distance > LOH_MAX_NEAREST_DISTANCE;
+        return isSmallRegionFlankedByLOH(inferRegion, regions) && distance > LOH_MAX_NEAREST_DISTANCE;
     }
 
-    private static boolean isSingleSmallRegionFlankedByLOH(@NotNull final InferRegion inferRegion,
+    private static boolean isSmallRegionFlankedByLOH(@NotNull final InferRegion inferRegion,
             @NotNull final List<CombinedRegion> regions) {
-        return isSingleSmallRegion(LOH_SMALL_REGION_SIZE, inferRegion, regions) && isFlankedByLOH(inferRegion, regions);
+        return isSmallRegion(LOH_SMALL_REGION_SIZE, inferRegion, regions) && isFlankedByLOH(inferRegion, regions);
     }
 
     private static boolean isFlankedByLOH(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
@@ -337,9 +337,13 @@ class ExtendDiploidBAF {
         return Doubles.lessOrEqual(region.region().minorAlleleCopyNumber(), LOH_COPY_NUMBER);
     }
 
-    private static boolean isSingleSmallRegion(long maxSize, @NotNull final InferRegion inferRegion,
+    private static boolean isSmallRegion(long maxSize, @NotNull final InferRegion inferRegion,
             @NotNull final List<CombinedRegion> regions) {
-        return inferRegion.leftTargetIndex == inferRegion.rightTargetIndex && regions.get(inferRegion.leftTargetIndex).bases() <= maxSize;
+        return regions.get(inferRegion.rightTargetIndex).end() - regions.get(inferRegion.leftTargetIndex).start() + 1 <= maxSize;
+    }
+
+    private static boolean isSingleUnknownRegion(@NotNull final InferRegion inferRegion) {
+        return inferRegion.leftTargetIndex == inferRegion.rightTargetIndex;
     }
 
     private static boolean minCopyNumberLessThanSourceMajorAllelePloidies(@NotNull InferRegion inferRegion,

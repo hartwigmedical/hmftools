@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.bachelor.types.BachelorConfig.loadXML;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
-import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -44,13 +42,13 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class ExternalDBFilters
 {
-    private String mInputFilterFile;
+    private final String mInputFilterFile;
     private List<String> mPanelTranscripts;
 
     private BufferedWriter mFilterWriter;
 
-    private static final String OUTPUT_DIR = "output_dir";
-    private static final String CREATE_FILTER_FILE = "create_filter_file";
+    private static final String OUTPUT_FILTER_FILE = "output_filter_file";
+    private static final String CLINVAR_DB_FILTER_FILE = "clinvar_db_filter_file";
 
     private static final Logger LOGGER = LogManager.getLogger(ExternalDBFilters.class);
 
@@ -58,35 +56,35 @@ public class ExternalDBFilters
     {
         final Options options = new Options();
         options.addOption(CONFIG_XML, true, "XML with genes, black and white lists");
-        options.addOption(OUTPUT_DIR, true, "Optional, directory to where the output ClinVar filter file will be written to.");
-        options.addOption(CREATE_FILTER_FILE, true, "Input file to create the ClinVar db filters");
+        options.addOption(OUTPUT_FILTER_FILE, true, "File path where the output ClinVar filter file will be written to.");
+        options.addOption(CLINVAR_DB_FILTER_FILE, true, "Input file to create the ClinVar db filters");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         final CommandLine cmd = new DefaultParser().parse(options, args);
 
         if (!cmd.hasOption(CONFIG_XML))
         {
-            LOGGER.error("mising XML config file");
+            LOGGER.error("Missing XML config file");
             return;
         }
 
         if (cmd.hasOption(LOG_DEBUG))
             Configurator.setRootLevel(Level.DEBUG);
 
-        LOGGER.info("generating ClinVar filter file");
+        LOGGER.info("Generating ClinVar filter file");
 
         Map<String, Program> configMap = Maps.newHashMap();
         loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)), configMap);
 
         Program program = configMap.values().iterator().next();
 
-        String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
+        String filterInputFile = cmd.getOptionValue(CLINVAR_DB_FILTER_FILE);
         ExternalDBFilters filterFileBuilder = new ExternalDBFilters(filterInputFile);
 
-        String outputDir = cmd.getOptionValue(OUTPUT_DIR, "");
-        filterFileBuilder.createFilterFile(program, outputDir);
+        String outputFilterFile = cmd.getOptionValue(OUTPUT_FILTER_FILE);
+        filterFileBuilder.createFilterFile(program, outputFilterFile);
 
-        LOGGER.info("filter file creation complete");
+        LOGGER.info("Filter file creation complete");
     }
 
     private ExternalDBFilters(String filterInputFile)
@@ -156,15 +154,15 @@ public class ExternalDBFilters
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to read bachelor input CSV file({}) index({}): {}", filterFile, lineIndex, e.toString());
+            LOGGER.error("Failed to read ClinVar input CSV file({}) index({}): {}", filterFile, lineIndex, e.toString());
         }
 
-        LOGGER.info("loaded {} ClinVar filter records from {}", filters.size(), filterFile);
+        LOGGER.info("Loaded {} ClinVar filter records from {}", filters.size(), filterFile);
 
         return filters;
     }
 
-    private void createFilterFile(final Program program, final String outputDir)
+    private void createFilterFile(final Program program, final String outputFilterFile)
     {
         if (!Files.exists(Paths.get(mInputFilterFile)))
         {
@@ -172,7 +170,7 @@ public class ExternalDBFilters
             return;
         }
 
-        if(!initialiseFilterWriter(outputDir))
+        if(!initialiseFilterWriter(outputFilterFile))
             return;
 
         ProgramPanel programConfig = program.getPanel().get(0);
@@ -256,13 +254,13 @@ public class ExternalDBFilters
         final String clinvarDisease = variant.getCommonInfo().getAttributeAsString(CLINVAR_DISEASE_NAME, "").replaceAll(",", ";");
         final String clinvarEffects = variant.getCommonInfo().getAttributeAsString(CLINVAR_MC, "").replaceAll(",", ";");
 
-        final String hgvsp = snpEff.hgvsProtein();
-        final String hgvsc = snpEff.hgvsCoding();
+        final String hgvsP = snpEff.hgvsProtein();
+        final String hgvsC = snpEff.hgvsCoding();
 
         if(LOGGER.isDebugEnabled())
         {
             // now extract other required Clinvar info
-            LOGGER.debug("var({}:{}) ref({}) alt({}) effect({}) gene({} trans={}) clinvar({}, {}, {})",
+            LOGGER.debug("Var({}:{}) ref({}) alt({}) effect({}) gene({} trans={}) clinvar({}, {}, {})",
                     variant.getContig(), position, ref, alt, snpEff.effects(), gene, transcriptId,
                     clinvarSignificance,  clinvarDisease, clinvarEffects);
         }
@@ -272,7 +270,7 @@ public class ExternalDBFilters
             mFilterWriter.write(String.format("%s,%s,%s,%d,%s,%s,%s,%s",
                     gene, snpEff.transcript(), chromosome, position, ref, alt, codingEffect, effects));
 
-            mFilterWriter.write(String.format(",%s,%s", hgvsp, hgvsc));
+            mFilterWriter.write(String.format(",%s,%s", hgvsP, hgvsC));
 
             mFilterWriter.write(String.format(",%s,%s,%s,%s",
                     clinvarSignificance, clinvarSigInfo, clinvarDisease, clinvarEffects));
@@ -285,18 +283,11 @@ public class ExternalDBFilters
         }
     }
 
-    private boolean initialiseFilterWriter(final String outputDir)
+    private boolean initialiseFilterWriter(final String outputFilterFile)
     {
         try
         {
-            String filterFileName = outputDir;
-
-            if (!filterFileName.endsWith(File.separator))
-                filterFileName += File.separator;
-
-            filterFileName += "bachelor_clinvar_filters.csv";
-
-            mFilterWriter = createBufferedWriter(filterFileName, false);
+            mFilterWriter = createBufferedWriter(outputFilterFile, false);
 
             mFilterWriter.write("Gene,TranscriptId,Chromosome,Position,Ref,Alt,CodingEffect,AllEffects");
             mFilterWriter.write(",HgvsProtein,HgvsCoding,ClinvarSignificance,ClinvarSigInfo,ClinvarDisease,ClinvarEffects");

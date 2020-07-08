@@ -13,9 +13,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotEvidenceFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -45,7 +42,7 @@ class BamCountReader
 
     void readBamCounts(final String bamFile, List<BachelorGermlineVariant> bachRecords)
     {
-        BACH_LOGGER.debug("reading BAM file: {}", bamFile);
+        BACH_LOGGER.debug("Reading BAM file: {}", bamFile);
 
         mTumorReader = SamReaderFactory.makeDefault().referenceSequence(mRefGenomeFile).open(new File(bamFile));
 
@@ -83,7 +80,7 @@ class BamCountReader
                 {
                     variant.setTumorData(evidence.altSupport(), evidence.readDepth());
 
-                    BACH_LOGGER.debug("chr({}) position({}) matched, counts(ref={} alt={} depth={})",
+                    BACH_LOGGER.debug("Chr({}) position({}) matched, counts(ref={} alt={} depth={})",
                             variant.Chromosome, variant.Position,
                             variant.getTumorRefCount(), variant.getTumorAltCount(), variant.getTumorReadDepth());
 

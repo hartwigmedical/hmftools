@@ -14,12 +14,9 @@ import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadGermlineVariants
@@ -29,13 +26,13 @@ public class LoadGermlineVariants
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+        final CommandLine cmd = new DefaultParser().parse(options, args);
 
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         if(dbAccess == null)
         {
-            BACH_LOGGER.error("failed to create DB connection");
+            BACH_LOGGER.error("Failed to create DB connection");
             return;
         }
 
@@ -44,7 +41,7 @@ public class LoadGermlineVariants
 
         if(dataPath.isEmpty())
         {
-            BACH_LOGGER.error("no input data path specified");
+            BACH_LOGGER.error("No input data path specified");
             return;
         }
 
@@ -54,14 +51,14 @@ public class LoadGermlineVariants
 
             if(!germlineVariants.isEmpty())
             {
-                BACH_LOGGER.info("sample({}) loading {} germline records", sampleId, germlineVariants.size());
+                BACH_LOGGER.info("Sample({}) loading {} germline records", sampleId, germlineVariants.size());
                 final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(dbAccess.context());
                 germlineDAO.write(sampleId, germlineVariants);
             }
         }
         catch(Exception e)
         {
-            BACH_LOGGER.error("error loading and writing germline variants: {}", e.toString());
+            BACH_LOGGER.error("Error loading and writing germline variants: {}", e.toString());
             return;
         }
 
@@ -81,12 +78,4 @@ public class LoadGermlineVariants
 
         return options;
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

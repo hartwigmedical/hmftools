@@ -10,6 +10,5 @@ public enum PathogenicType
     CLINVAR_CONFLICTING,
     CLINVAR_BENIGN,
     CLINVAR_LIKELY_BENIGN,
-    UNANNOTATED;
-
+    UNANNOTATED
 }

@@ -115,11 +115,11 @@ public class VariantFilter
             return UNANNOTATED;
 
         /*
-         * CLINVAR_PATHOGENIC - At least 1 intepretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
-         * CLINVAR_LIKELY_PATHOGENIC - No intepretation of PATHOGENIC, but at least 1 intepretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
-         * CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' intepretations
-         * CLINVAR_LIKELY_BENIGN - No intepretation of 'BENIGN' and at least 1 intepretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
-         * CLINVAR_BENIGN - At least 1 intepretation of 'BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
+         * CLINVAR_PATHOGENIC - At least 1 interpretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
+         * CLINVAR_LIKELY_PATHOGENIC - No interpretation of PATHOGENIC, but at least 1 interpretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
+         * CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' interpretations
+         * CLINVAR_LIKELY_BENIGN - No interpretation of 'BENIGN' and at least 1 interpretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
+         * CLINVAR_BENIGN - At least 1 interpretation of 'BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
          */
 
         if(hasPathogenic(ClinvarSignificance))

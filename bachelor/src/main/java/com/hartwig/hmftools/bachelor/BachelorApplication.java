@@ -2,7 +2,6 @@ package com.hartwig.hmftools.bachelor;
 
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.createCommandLine;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.createOptions;
 
 import java.util.List;
@@ -11,10 +10,9 @@ import com.hartwig.hmftools.bachelor.types.BachelorConfig;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 public class BachelorApplication {
@@ -36,13 +34,13 @@ public class BachelorApplication {
     {
         if(!mConfig.isValid())
         {
-            BACH_LOGGER.error("exiting due to invalid config");
+            BACH_LOGGER.error("Exiting due to invalid config");
             return;
         }
 
-        if(!mGermlineVcfParser.run(mConfig.GermlineVcf, mConfig.SampleId, mConfig.OutputDir))
+        if(!mGermlineVcfParser.run(mConfig.GermlineVcf, mConfig.SampleId))
         {
-            BACH_LOGGER.error("germline VCF parse failed");
+            BACH_LOGGER.error("Germline VCF parse failed");
             return;
         }
 
@@ -58,7 +56,7 @@ public class BachelorApplication {
 
         try
         {
-            final CommandLine cmd = createCommandLine(options, args);
+            final CommandLine cmd = new DefaultParser().parse(options, args);
 
             if (cmd.hasOption(LOG_DEBUG))
                 Configurator.setRootLevel(Level.DEBUG);
@@ -68,7 +66,7 @@ public class BachelorApplication {
         }
         catch (Exception e)
         {
-            BACH_LOGGER.error("config errors: {}", e.toString());
+            BACH_LOGGER.error("Config errors: {}", e.toString());
             e.printStackTrace();
         }
     }
