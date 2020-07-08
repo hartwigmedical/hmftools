@@ -374,7 +374,7 @@ public class GermlineVariantFinder
 
                         if(filter != null)
                         {
-                            BACH_LOGGER.debug("Black-list filter match: gene({}) var({}:{}) ref({}) alt({}) protein({})",
+                            BACH_LOGGER.debug("black-list filter match: gene({}) var({}:{}) ref({}) alt({}) protein({})",
                                     gene, chromosome, position, ref, alt, hgvsProtein);
 
                             if(filter.Configured)
@@ -407,7 +407,7 @@ public class GermlineVariantFinder
 
                         if(filter != null)
                         {
-                            BACH_LOGGER.debug("White-list match found: gene({} {}) var({}:{}) ref({}) alt({}) hgvsProtein({})",
+                            BACH_LOGGER.debug("white-list match found: gene({} {}) var({}:{}) ref({}) alt({}) hgvsProtein({})",
                                     gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
 
                             if(filter.Configured)
@@ -431,7 +431,7 @@ public class GermlineVariantFinder
                     if(germlineVariant.pathogenicType() == NONE || germlineVariant.pathogenicType() == CLINVAR_BENIGN
                     || germlineVariant.pathogenicType() == CLINVAR_LIKELY_BENIGN)
                     {
-                        BACH_LOGGER.debug("Variant gene({} {}) var({}:{}) ref({}) alt({})) in ignore list and benign/unannotated",
+                        BACH_LOGGER.debug("variant gene({} {}) var({}:{}) ref({}) alt({})) in ignore list and benign/unannotated",
                                 gene, transcriptId, chromosome, position, ref, alt);
                         return;
                     }

@@ -157,7 +157,7 @@ public class ExternalDBFilters
             LOGGER.error("Failed to read ClinVar input CSV file({}) index({}): {}", filterFile, lineIndex, e.toString());
         }
 
-        LOGGER.info("Loaded {} ClinVar filter records from {}", filters.size(), filterFile);
+        LOGGER.info("loaded {} ClinVar filter records from {}", filters.size(), filterFile);
 
         return filters;
     }
@@ -260,7 +260,7 @@ public class ExternalDBFilters
         if(LOGGER.isDebugEnabled())
         {
             // now extract other required Clinvar info
-            LOGGER.debug("Var({}:{}) ref({}) alt({}) effect({}) gene({} trans={}) clinvar({}, {}, {})",
+            LOGGER.debug("var({}:{}) ref({}) alt({}) effect({}) gene({} trans={}) clinvar({}, {}, {})",
                     variant.getContig(), position, ref, alt, snpEff.effects(), gene, transcriptId,
                     clinvarSignificance,  clinvarDisease, clinvarEffects);
         }
