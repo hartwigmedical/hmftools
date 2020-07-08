@@ -57,9 +57,9 @@ public class FusionFinder
     private final KnownFusionCache mKnownFusionCache;
     private boolean mHasValidConfigData;
 
-    private EnsemblDataCache mGeneTransCache;
-    private List<String> mProteinsRequiredKept;
-    private List<String> mProteinsRequiredLost;
+    private final EnsemblDataCache mGeneTransCache;
+    private final List<String> mProteinsRequiredKept;
+    private final List<String> mProteinsRequiredLost;
 
     private static boolean mLogInvalidReasons;
 
