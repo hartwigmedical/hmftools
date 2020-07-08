@@ -112,6 +112,20 @@ public class ExtendLongArmTest {
         assertCombinedRegion(10001, 20000, 2, CopyNumberMethod.UNKNOWN, result.get(2));
     }
 
+    @Test
+    public void extendsThroughProcessedOnChromosome21() {
+        final CombinedRegion first = createCombinedRegion("21", 1, 5000, 3, 0.3, SegmentSupport.NONE);
+        final CombinedRegion second = createCombinedRegion("21", 5001, 10000, 3, 0.3, SegmentSupport.NONE);
+        final CombinedRegion centromere = createCombinedRegion("21", 10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
+        first.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, 3);
+
+        final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(first, second, centromere));
+        assertEquals(2, result.size());
+
+        assertCombinedRegion(1, 10000, 2, CopyNumberMethod.LONG_ARM, result.get(0));
+        assertCombinedRegion(10001, 20000, 2, CopyNumberMethod.UNKNOWN, result.get(1));
+    }
+
     static void assertCombinedRegion(long start, long end, double expectedCopyNumber, CopyNumberMethod expectedMethod,
             CombinedRegion victim) {
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);

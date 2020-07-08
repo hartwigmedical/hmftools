@@ -961,6 +961,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History and Download Links
 - Upcoming
   - Small change to LOH BAF inferring
+  - Always use LONG-ARM inferring for 21p copy number
   - Rename structural variant VCF field PURPLE_PLOIDY to PURPLE_JCN
   - Rename somatic VCF fields PURPLE_MAP & PURPLE_PLOIDY to PURPLE_MACN & PURPLE_VCN respectively
   - Fix bug where driver likelihood of having multiple variants can be less than having single variant
