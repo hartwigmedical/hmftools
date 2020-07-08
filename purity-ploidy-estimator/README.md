@@ -439,12 +439,12 @@ Consecutive non-diploid regions un-interrupted by a structural variant will be m
 
 Where clusters of SVs exist which are closer together than our read depth ratio window resolution of 1,000 bases, the segments in between will not have any copy number information associated with them.  We use the junction copy number of the structural variants to resolve this.
 
-The outermost segment of any SV cluster will be associated with a structural variant whose junction copy number can be determined from the adjacent copy number region and the VAF of the SV. Note that if we are inferring from a lower copy number region into a higher one and the VAF is > 0.75 then we use the read depth rather than the VAF to infer a junction copy number.  We use the average copy number and read depth of the sample to do this.
+The outermost segment of any SV cluster will be associated with a structural variant whose junction copy number can be determined from the adjacent copy number region and the VAF of the SV. Note that if we are inferring from a lower copy number region into a higher one and the VAF is > 0.75 then we use the read depth rather than the VAF to infer a junction copy number.  We use the average copy number and read depth of the sample to do estimate junction copy number
 
 Given a SV junction copy number, we use orientation of the structural variant to calculate the change in copy number across the SV and hence the copy number of the outermost unknown segment. 
 We repeat this process iteratively and infer the copy number of all regions within a cluster.
 
-When the entire short arm of a chromosome is lacking copy number information (generally on chromosome 13,14,15,21, or 22), the copy number of the long arm is extended to the short arm.
+When the entire short arm of a chromosome is lacking copy number information (and always on chromosome 13,14,15,21, or 22), the copy number of the long arm is extended to the short arm.
 
 
 ### 6. Allele specific copy number inferring
