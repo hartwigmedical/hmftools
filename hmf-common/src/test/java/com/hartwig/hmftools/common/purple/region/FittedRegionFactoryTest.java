@@ -20,6 +20,14 @@ public class FittedRegionFactoryTest {
     }
 
     @Test
+    public void testFitChrYChromosome() {
+        final GenomeRegion region = GenomeRegions.create("chrY", 1, 100);
+        assertTrue(FittedRegionFactoryV2.isFittableRegion(Gender.MALE, region));
+        assertTrue(FittedRegionFactoryV2.isFittableRegion(Gender.MALE_KLINEFELTER, region));
+        assertFalse(FittedRegionFactoryV2.isFittableRegion(Gender.FEMALE, region));
+    }
+
+    @Test
     public void testFitXChromosome() {
         final GenomeRegion region = GenomeRegions.create("X", 1, 100);
         assertTrue(FittedRegionFactoryV2.isFittableRegion(Gender.MALE, region));

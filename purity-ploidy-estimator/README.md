@@ -960,6 +960,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History and Download Links
 - Upcoming
+  - Do not include chrY in female output in HG38
   - Small change to LOH BAF inferring
   - Always use LONG-ARM inferring for 21p copy number
   - Rename structural variant VCF field PURPLE_PLOIDY to PURPLE_JCN
