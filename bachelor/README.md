@@ -18,7 +18,7 @@ Pathogenicity is determined primarily from ClinVar, or may be set or overridden 
 Permitted values are:
 
 * BLACK_LIST - Variant matches black list configuration of known benign variant. INDELs in repeats or with microhomology in splice and intronic regions are also blacklisted (ie. CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology))
-* WHITE_LIST - Variant matches white list configuration of known benign variants
+* WHITE_LIST - Variant matches white list configuration of known pathogenic variants
 * CLINVAR_PATHOGENIC - At least 1 interpretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
 * CLINVAR_LIKELY_PATHOGENIC - No interpretation of PATHOGENIC, but at least 1 interpretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
 * CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' interpretations
