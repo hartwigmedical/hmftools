@@ -13,8 +13,6 @@ import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 
 import org.apache.commons.math3.util.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -170,7 +168,7 @@ public class RefGenomeEnrichedSomaticVariantFactory {
         }
         else
         {
-            BACH_LOGGER.warn("variant({}) position beyond ref genome", variant);
+            BACH_LOGGER.warn("Variant({}) position beyond ref genome", variant);
         }
     }
 }

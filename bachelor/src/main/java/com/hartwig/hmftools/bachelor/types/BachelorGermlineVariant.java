@@ -40,7 +40,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     private String mClinvarSig;
     private String mClinvarSigInfo;
 
-    private int mGermlineAltCount;
     private int mGermlineReadDepth;
     private int mTumorAltCount;
     private int mTumorReadDepth;
@@ -83,7 +82,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mPathogenicType = PathogenicType.NONE;
         mMatchesRequiredEffect = false;
 
-        mGermlineAltCount = 0;
         mTumorAltCount = 0;
         mGermlineReadDepth = 0;
         mTumorReadDepth = 0;
@@ -105,7 +103,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public void setPathogenicType(final PathogenicType type) { mPathogenicType = type; }
 
     public void setMatchRequiredEffect() { mMatchesRequiredEffect = true; }
-    public boolean matchedRequiredEffect() { return mMatchesRequiredEffect; }
 
     public boolean isReportable()
     {
@@ -177,15 +174,13 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         }
     }
 
-    public int getGermlineAltCount() { return mGermlineAltCount; }
     public int getGermlineReadDepth() { return mGermlineReadDepth; }
     public int getTumorAltCount() { return mTumorAltCount; }
     public int getTumorRefCount() { return mTumorReadDepth - mTumorAltCount; }
     public int getTumorReadDepth() { return mTumorReadDepth; }
 
-    public void setGermlineData(int altCount, int readDepth)
+    public void setGermlineData(int readDepth)
     {
-        mGermlineAltCount = altCount;
         mGermlineReadDepth = readDepth;
     }
 

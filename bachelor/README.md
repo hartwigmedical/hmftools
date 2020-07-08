@@ -20,9 +20,9 @@ Permitted values are:
 * BLACK_LIST - Variant matches black list configuration of known benign variant. INDELs in repeats or with microhomology in splice and intronic regions are also blacklisted (ie. CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology))
 * WHITE_LIST - Variant matches white list configuration of known benign variants
 * CLINVAR_PATHOGENIC - At least 1 interpretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
-* CLINVAR_LIKELY_PATHOGENIC - No interpretation of PATHOGENIC, but at least 1 intepretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
-* CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' intepretations
-* CLINVAR_LIKELY_BENIGN - No interpretation of 'BENIGN' and at least 1 intepretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
+* CLINVAR_LIKELY_PATHOGENIC - No interpretation of PATHOGENIC, but at least 1 interpretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
+* CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' interpretations
+* CLINVAR_LIKELY_BENIGN - No interpretation of 'BENIGN' and at least 1 interpretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
 * CLINVAR_BENIGN - At least 1 interpretation of 'BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
 * UNANNOTATED - Variant is not annotated in Clinvar
 
@@ -78,7 +78,7 @@ Bachelor requires that VCF files have been annotated using SnpEff.
 ## Configuration
 Bachelor uses 2 config files:
 * an XML config file specifying the genes and effects to filter on, and blacklist entries for known exceptions
-* optionally a file of ClinVar variant data to set pathgenic status
+* optionally a file of ClinVar variant data to set pathogenic status
 
 This very basic example has a single criteria: missense variants in BRCA2.
 

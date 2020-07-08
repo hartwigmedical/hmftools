@@ -146,7 +146,7 @@ class VariantEnricher
             final String specificSample = entry.getKey();
             sampleRecords = entry.getValue();
 
-            BACH_LOGGER.info("sample({}) processing {} germline reports", specificSample, sampleRecords.size());
+            BACH_LOGGER.info("Sample({}) processing {} germline reports", specificSample, sampleRecords.size());
 
             // sort by chromosome and position
             Collections.sort(sampleRecords);
@@ -163,7 +163,7 @@ class VariantEnricher
 
             if (sampleRecords.isEmpty())
             {
-                BACH_LOGGER.info("sample({}) has no valid germline reports", specificSample);
+                BACH_LOGGER.info("Sample({}) has no valid germline reports", specificSample);
                 writeToFile(specificSample, Lists.newArrayList());
                 continue;
             }
@@ -172,7 +172,7 @@ class VariantEnricher
 
             if (mDbAccess != null)
             {
-                BACH_LOGGER.info("sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
+                BACH_LOGGER.info("Sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
                 writeToDatabase(specificSample, germlineVariants);
             }
 
@@ -223,7 +223,7 @@ class VariantEnricher
 
         if (!mConfig.PurpleDataDir.isEmpty())
         {
-            BACH_LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, mConfig.PurpleDataDir);
+            BACH_LOGGER.debug("Sample({}) loading purple data from file using path {}", sampleId, mConfig.PurpleDataDir);
 
             try
             {
@@ -238,7 +238,7 @@ class VariantEnricher
         }
         else
         {
-            BACH_LOGGER.debug("sample({}) loading purple data from database", sampleId);
+            BACH_LOGGER.debug("Sample({}) loading purple data from database", sampleId);
 
             purityContext = mDbAccess.readPurityContext(sampleId);
 
@@ -294,7 +294,7 @@ class VariantEnricher
             }
         }
 
-        BACH_LOGGER.debug("sample({}) enriching variants", sampleId);
+        BACH_LOGGER.debug("Sample({}) enriching variants", sampleId);
 
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(mIndexedFastaSeqFile);
 
@@ -316,7 +316,7 @@ class VariantEnricher
 
             if (!matched)
             {
-                BACH_LOGGER.debug("sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
+                BACH_LOGGER.debug("Sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
                         sampleId, bachRecord.VariantId, bachRecord.Gene, bachRecord.TranscriptId,
                         bachRecord.Chromosome, bachRecord.Position);
             }
@@ -341,7 +341,7 @@ class VariantEnricher
 
                 if(repeatCount > HIGH_INDEL_REPEAT_COUNT)
                 {
-                    BACH_LOGGER.debug("var({}) indel {} with high repeatCount({}) black-listed",
+                    BACH_LOGGER.debug("Var({}) indel {} with high repeatCount({}) black-listed",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
 
                     bachRecord.setPathogenicType(BLACK_LIST);
@@ -370,7 +370,7 @@ class VariantEnricher
 
                 if(compareStr.equals(mergeStr1) || compareStr.equals(mergeStr2))
                 {
-                    BACH_LOGGER.debug("var({}) indel {} with ref, alt and microHom equal black-listed",
+                    BACH_LOGGER.debug("Var({}) indel {} with ref, alt and microHom equal black-listed",
                             bachRecord.asString(), bachRecord.CodingEffect);
                     bachRecord.setPathogenicType(BLACK_LIST);
                 }

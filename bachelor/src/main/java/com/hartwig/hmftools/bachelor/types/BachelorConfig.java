@@ -16,17 +16,13 @@ import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BachelorConfig
-{
+public class BachelorConfig {
     public final String SampleId;
     public final String OutputDir;
     public final String GermlineVcf;
@@ -64,23 +60,21 @@ public class BachelorConfig
 
     public static final Logger BACH_LOGGER = LogManager.getLogger(BachelorConfig.class);
 
-    public BachelorConfig(final CommandLine cmd)
-    {
+    public BachelorConfig(final CommandLine cmd) {
         mIsValid = true;
 
         ProgramConfigMap = Maps.newHashMap();
 
-        if (cmd.hasOption(CONFIG_XML))
-        {
-            if(!loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)), ProgramConfigMap))
+        if (cmd.hasOption(CONFIG_XML)) {
+            if (!loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)), ProgramConfigMap)) {
                 mIsValid = false;
+            }
         }
 
         SampleId = cmd.getOptionValue(SAMPLE, "");
 
-        if (SampleId.isEmpty())
-        {
-            BACH_LOGGER.error("missing Sample config");
+        if (SampleId.isEmpty()) {
+            BACH_LOGGER.error("Missing Sample config");
             mIsValid = false;
         }
 
@@ -93,8 +87,7 @@ public class BachelorConfig
 
         String sampleOutputDir = cmd.getOptionValue(OUTPUT_DIR);
 
-        if (!sampleOutputDir.endsWith(File.separator))
-        {
+        if (!sampleOutputDir.endsWith(File.separator)) {
             sampleOutputDir += File.separator;
         }
 
@@ -102,33 +95,29 @@ public class BachelorConfig
 
         PurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIRECTORY, "");
 
-        if(GermlineVcf == null)
-        {
-            BACH_LOGGER.error("missing germline VCF file");
+        if (GermlineVcf == null) {
+            BACH_LOGGER.error("Missing germline VCF file");
             mIsValid = false;
         }
 
-        if(RefGenomeFile == null)
-        {
-            BACH_LOGGER.error("missing ref genome input file");
+        if (RefGenomeFile == null) {
+            BACH_LOGGER.error("Missing ref genome input file");
             mIsValid = false;
         }
 
-        if(!SkipEnrichment && (BamFile == null || PurpleDataDir.isEmpty()))
-        {
-            BACH_LOGGER.error("missing input files: BAM({}) purpleDataDir({})",
-                    BamFile == null || PurpleDataDir.isEmpty());
+        if (!SkipEnrichment && (BamFile == null || PurpleDataDir.isEmpty())) {
+            BACH_LOGGER.error("missing input files: BAM({}) purpleDataDir({})", BamFile, PurpleDataDir);
 
             mIsValid = false;
         }
     }
 
-    public boolean isValid() { return mIsValid; }
+    public boolean isValid() {
+        return mIsValid;
+    }
 
-    public static boolean loadXML(final Path path, Map<String,Program> configMap)
-    {
-        try
-        {
+    public static boolean loadXML(final Path path, Map<String, Program> configMap) {
+        try {
             final ConfigSchema schema = ConfigSchema.make();
 
             final List<Program> programs = Files.walk(path)
@@ -137,21 +126,15 @@ public class BachelorConfig
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-            for (final Program p : programs)
-            {
-                if (configMap.containsKey(p.getName()))
-                {
-                    BACH_LOGGER.error("duplicate Programs detected: {}", p.getName());
+            for (final Program p : programs) {
+                if (configMap.containsKey(p.getName())) {
+                    BACH_LOGGER.error("Duplicate Programs detected: {}", p.getName());
                     return false;
-                }
-                else
-                {
+                } else {
                     configMap.put(p.getName(), p);
                 }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             BACH_LOGGER.error("Error loading XML: {}", e.toString());
             return false;
         }
@@ -160,8 +143,7 @@ public class BachelorConfig
     }
 
     @NotNull
-    public static Options createOptions()
-    {
+    public static Options createOptions() {
         final Options options = new Options();
 
         // germline VCF parsing
@@ -186,30 +168,20 @@ public class BachelorConfig
 
         return options;
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
+    
     @Nullable
-    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd)
-    {
-        if(!cmd.hasOption(DB_URL))
+    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) {
+        if (!cmd.hasOption(DB_URL)) {
             return null;
+        }
 
-        try
-        {
+        try {
             final String userName = cmd.getOptionValue(DB_USER);
             final String password = cmd.getOptionValue(DB_PASS);
             final String databaseUrl = cmd.getOptionValue(DB_URL);
             final String jdbcUrl = "jdbc:" + databaseUrl;
             return new DatabaseAccess(userName, password, jdbcUrl);
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             BACH_LOGGER.error("DB connection failed: {}", e.toString());
             return null;
         }

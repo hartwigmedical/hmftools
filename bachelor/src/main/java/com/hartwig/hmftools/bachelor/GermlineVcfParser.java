@@ -53,7 +53,7 @@ public class GermlineVcfParser
 
     List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
 
-    boolean run(final String vcfFile, String sampleId, String singleSampleOutputDir)
+    boolean run(final String vcfFile, String sampleId)
     {
         if (mConfig.ProgramConfigMap.isEmpty())
         {

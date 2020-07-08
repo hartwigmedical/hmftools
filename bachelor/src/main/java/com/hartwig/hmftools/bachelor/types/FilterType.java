@@ -5,5 +5,5 @@ public enum FilterType
     NONE,
     PASS,
     GERMLINE_FILTERED,
-    ARTEFACT;
+    ARTEFACT
 }

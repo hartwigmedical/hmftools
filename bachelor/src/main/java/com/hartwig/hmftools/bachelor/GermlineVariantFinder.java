@@ -27,10 +27,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.bachelor.datamodel.GeneIdentifier;
-import com.hartwig.hmftools.bachelor.datamodel.IgnoreEffect;
 import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.bachelor.datamodel.ProgramPanel;
-import com.hartwig.hmftools.bachelor.datamodel.SnpEffect;
 import com.hartwig.hmftools.bachelor.datamodel.VariantException;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.FilterType;
@@ -253,8 +251,6 @@ public class GermlineVariantFinder
         }
     }
 
-    public String name() { return mName; }
-
     public void processVcfFile(final String sampleId, final VCFFileReader reader, boolean usesIndex)
     {
         mVariants.clear();
@@ -333,7 +329,6 @@ public class GermlineVariantFinder
             final String gene = snpEff.gene();
             CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
 
-            final String varId = variant.getID();
             final String chromosome = variant.getContig();
             final long position = variant.getStart();
             final String ref = variant.getReference().toString().replaceAll("\\*", "");
@@ -379,8 +374,8 @@ public class GermlineVariantFinder
 
                         if(filter != null)
                         {
-                            BACH_LOGGER.debug("black-list filter match: gene({}) var({}:{}:{}) ref({}) alt({}) protein({})",
-                                    gene, varId, chromosome, position, ref, alt, hgvsProtein);
+                            BACH_LOGGER.debug("Black-list filter match: gene({}) var({}:{}) ref({}) alt({}) protein({})",
+                                    gene, chromosome, position, ref, alt, hgvsProtein);
 
                             if(filter.Configured)
                             {
@@ -412,8 +407,8 @@ public class GermlineVariantFinder
 
                         if(filter != null)
                         {
-                            BACH_LOGGER.debug("white-list match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({})",
-                                    gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
+                            BACH_LOGGER.debug("White-list match found: gene({} {}) var({}:{}) ref({}) alt({}) hgvsProtein({})",
+                                    gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
 
                             if(filter.Configured)
                             {
@@ -436,8 +431,8 @@ public class GermlineVariantFinder
                     if(germlineVariant.pathogenicType() == NONE || germlineVariant.pathogenicType() == CLINVAR_BENIGN
                     || germlineVariant.pathogenicType() == CLINVAR_LIKELY_BENIGN)
                     {
-                        BACH_LOGGER.debug("variant gene({} {}) var({}:{}:{}) ref({}) alt({})) in ignore list and benign/unannotated",
-                                gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
+                        BACH_LOGGER.debug("Variant gene({} {}) var({}:{}) ref({}) alt({})) in ignore list and benign/unannotated",
+                                gene, transcriptId, chromosome, position, ref, alt);
                         return;
                     }
                 }
@@ -453,7 +448,6 @@ public class GermlineVariantFinder
                     break;
             }
 
-            int germlineAltCount = alleleIndex < refGenotype.getAD().length ? refGenotype.getAD()[alleleIndex] : 0;
             int germlineReadDepth = refGenotype.getDP();
 
             int tumorAltCount = 0;
@@ -469,7 +463,7 @@ public class GermlineVariantFinder
                 tumorReadDepth = tumorGenotype.getDP();
             }
 
-            germlineVariant.setGermlineData(germlineAltCount, germlineReadDepth);
+            germlineVariant.setGermlineData(germlineReadDepth);
 
             if(hasDepthInfo)
                 germlineVariant.setReadData(tumorAltCount, tumorReadDepth);
