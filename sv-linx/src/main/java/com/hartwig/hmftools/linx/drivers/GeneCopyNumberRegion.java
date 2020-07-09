@@ -15,6 +15,7 @@ public class GeneCopyNumberRegion
     public final int RegionStart;
     public final int RegionEnd;
     public final double MinCopyNumber;
+    public final boolean IsGermline;
 
     public GeneCopyNumberRegion(final GeneCopyNumber geneCN)
     {
@@ -23,6 +24,7 @@ public class GeneCopyNumberRegion
         RegionStart = (int)geneCN.minRegionStart();
         RegionEnd = (int)geneCN.minRegionEnd();
         MinCopyNumber = geneCN.minCopyNumber();
+        IsGermline = geneCN.germlineHet2HomRegions() > 0 || geneCN.germlineHomRegions() > 0;
     }
 
     public GeneCopyNumberRegion(final String geneName, final String transName, int regionStart, int regionEnd, double minCopyNumber)
@@ -32,8 +34,8 @@ public class GeneCopyNumberRegion
         RegionStart = regionStart;
         RegionEnd = regionEnd;
         MinCopyNumber = minCopyNumber;
+        IsGermline = false;
     }
-
 
     public static GeneCopyNumberRegion calcGeneCopyNumberRegion(final TranscriptData transData, final List<SvCNData> copyNumberData)
     {

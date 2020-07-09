@@ -58,6 +58,10 @@ public class DeletionDrivers
 
     public void annotateDeleteEvent(final DriverGeneData dgData)
     {
+        // skip if a germline event causes this DEL or the calculated min CN doesn't support it
+        if(dgData.CopyNumberRegion.IsGermline || dgData.CopyNumberRegion.MinCopyNumber >= 0.51)
+            return;
+
         // find the LOH and hom-loss events which caused this DEL
         int minRegionStart = dgData.CopyNumberRegion.RegionStart;
         int minRegionEnd = dgData.CopyNumberRegion.RegionEnd;
