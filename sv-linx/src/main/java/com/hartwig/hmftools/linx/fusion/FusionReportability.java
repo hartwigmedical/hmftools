@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.SHORT_UNPHASED_DISTANCE_KNOWN;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class FusionReportability
             return false;
 
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-        if (fusion.knownType() == NONE)
+        if (fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
             return false;
 
         final Transcript upTrans = fusion.upstreamTrans();
@@ -38,14 +39,16 @@ public class FusionReportability
         {
             if(fusion.knownType() != KNOWN_PAIR)
                 return false;
-            else if(!upTrans.nonCoding() && !upTrans.preCoding())
+
+            if(!upTrans.nonCoding() && !upTrans.preCoding())
+                return false;
+
+            if(fusion.sameChromosome() && fusion.distance() <= SHORT_UNPHASED_DISTANCE_KNOWN)
                 return false;
         }
 
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-        int maxUpstreamDistance = fusion.knownType() == KNOWN_PAIR ?
-                MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
-
+        int maxUpstreamDistance = fusion.knownType() == KNOWN_PAIR ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
 
         if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
             return false;
@@ -171,7 +174,7 @@ public class FusionReportability
 
     public static boolean checkProteinDomains(final KnownFusionType type)
     {
-        return (type == PROMISCUOUS_5 || type == PROMISCUOUS_3);
+        return (type == PROMISCUOUS_5 || type == PROMISCUOUS_3 || type == KNOWN_PAIR);
     }
 
     public static boolean allowExonSkipping(final KnownFusionType type)

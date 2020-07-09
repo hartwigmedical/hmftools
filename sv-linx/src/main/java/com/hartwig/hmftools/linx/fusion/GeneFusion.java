@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -101,6 +102,19 @@ public class GeneFusion
     {
         mExonsSkipped[FS_UPSTREAM] = exonsUp;
         mExonsSkipped[FS_DOWNSTREAM] = exonsDown;
+    }
+
+    public boolean sameChromosome()
+    {
+        return mTranscripts[FS_UPSTREAM].gene().chromosome().equals(mTranscripts[FS_DOWNSTREAM].gene().chromosome());
+    }
+
+    public int distance()
+    {
+        if(!sameChromosome())
+            return 0;
+
+        return abs(mTranscripts[FS_UPSTREAM].gene().position() - mTranscripts[FS_DOWNSTREAM].gene().position());
     }
 
     public int getExonsSkipped(boolean isUpstream) { return mExonsSkipped[fsIndex(isUpstream)]; }

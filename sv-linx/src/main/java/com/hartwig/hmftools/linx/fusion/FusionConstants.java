@@ -21,6 +21,8 @@ public class FusionConstants
     public static final int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
     public static final int MAX_UPSTREAM_DISTANCE_OTHER = 10000;
 
+    public static final int SHORT_UNPHASED_DISTANCE_KNOWN = 1000000;
+
     public static final List<String> REQUIRED_BIOTYPES = Lists.newArrayList(
             BIOTYPE_PROCESSED_TRANS, BIOTYPE_PROTEIN_CODING, BIOTYPE_NONSENSE_MED_DECAY, BIOTYPE_RETAINED_INTRON, BIOTYPE_LINC_RNA);
 

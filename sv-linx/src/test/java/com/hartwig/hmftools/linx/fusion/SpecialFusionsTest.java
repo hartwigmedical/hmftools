@@ -256,7 +256,7 @@ public class SpecialFusionsTest
         // the selected fusion is the longest for coding bases and without any exon skipping
         assertEquals(500, fusion.upstreamTrans().gene().position());
         assertEquals(20100, fusion.downstreamTrans().gene().position());
-        assertTrue(fusion.reportable());
+        assertTrue(!fusion.reportable());
     }
 
     @Test
