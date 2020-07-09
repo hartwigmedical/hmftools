@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
@@ -135,6 +136,8 @@ public class LineChainer
 
     private void addSourceBreakends()
     {
+        // put any remaining breakends into chains by making inferred TIs, but only if either the new linked pair has the other
+        // breakends going to insertion sites, or the new linked pair joins 2 chains with their other ends going similarly
         while(true)
         {
             final List<SvLinkedPair> possiblePairs = Lists.newArrayList();
@@ -199,7 +202,7 @@ public class LineChainer
         }
     }
 
-    private static SvLinkedPair tryFormLinkedPair(final SvBreakend breakend1, final SvBreakend breakend2)
+    private SvLinkedPair tryFormLinkedPair(final SvBreakend breakend1, final SvBreakend breakend2)
     {
         if(breakend1 == null || breakend2 == null)
             return null;
@@ -211,8 +214,35 @@ public class LineChainer
         if(abs(breakend2.position() - breakend1.position()) < minTILength)
             return null;
 
+        // the other ends of these breakends must either go to the same insertion location or be part of chains which do the same
+        final SvBreakend otherBreakend1 = getOtherBreakend(breakend1);
+        final SvBreakend otherBreakend2 = getOtherBreakend(breakend2);
+
+        if(otherBreakend1 == null || otherBreakend2 == null)
+            return null;
+
+        if(otherBreakend1.getDBLink() == null || otherBreakend1.getDBLink() != otherBreakend2.getDBLink())
+            return null;
+
         return new SvLinkedPair(
                 breakend1.getSV(), breakend2.getSV(), TEMPLATED_INSERTION, breakend1.usesStart(), breakend2.usesStart());
+    }
+
+    private SvBreakend getOtherBreakend(final SvBreakend breakend)
+    {
+        for(SvChain chain : mChains)
+        {
+            // only add links on source chromosomes, not at insertion sites
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                SvBreakend chainBreakend = chain.getOpenBreakend(se);
+
+                if(chainBreakend == breakend)
+                    return chain.getOpenBreakend(switchIndex(se));
+            }
+        }
+
+        return breakend.getOtherBreakend();
     }
 
 }

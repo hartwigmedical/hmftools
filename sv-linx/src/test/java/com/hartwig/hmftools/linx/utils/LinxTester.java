@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
+import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -166,6 +167,31 @@ public class LinxTester
 
             if(hasAll)
                 return cluster;
+        }
+
+        return null;
+    }
+
+    public final SvChain findChainWithSVs(final SvCluster cluster, final List<SvVarData> svList)
+    {
+        for(final SvChain chain : cluster.getChains())
+        {
+            if(chain.getSvList().size() != svList.size())
+                continue;
+
+            boolean hasAll = true;
+
+            for(final SvVarData var : svList)
+            {
+                if(!chain.getSvList().contains(var))
+                {
+                    hasAll = false;
+                    break;
+                }
+            }
+
+            if(hasAll)
+                return chain;
         }
 
         return null;

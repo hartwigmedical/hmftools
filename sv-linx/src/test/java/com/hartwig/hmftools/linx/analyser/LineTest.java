@@ -215,16 +215,20 @@ public class LineTest
         var4 = createInv(tester.nextVarId(), "1", 400, 600, 1);
         SvVarData var5 = createBnd(tester.nextVarId(), "1", 500, -1, "2", 200, -1);
 
+        var3.setAssemblyData(true, "asmb12");
+        var4.setAssemblyData(true, "asmb12");
+
         // another independent source element
         SvVarData var6 = createBnd(tester.nextVarId(), "3", 1000, -1, "4", 100, 1);
         SvVarData var7 = createBnd(tester.nextVarId(), "3", 1100, 1, "4", 200, -1);
 
-        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4,  var5, var6, var7));
+        // and another but with breakends going to different insert locations, which is invalid
+        SvVarData var8 = createBnd(tester.nextVarId(), "1", 2000, -1, "5", 100, 1);
+        SvVarData var9 = createBnd(tester.nextVarId(), "1", 2100, 1, "6", 200, -1);
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4,  var5, var6, var7, var8, var9));
 
         tester.AllVariants.forEach(x -> x.setLineElement(KNOWN_LINE_ELEMENT, true));
-
-        // var1.setAssemblyData(true, "asmb12");
-        // var2.setAssemblyData(true, "asmb12");
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
@@ -233,7 +237,9 @@ public class LineTest
         cluster = tester.Analyser.getClusters().get(0);
 
         assertEquals(3, cluster.getChains().size());
-        // SvChain chain = cluster.getChains().get(0);
+        assertTrue(tester.findChainWithSVs(cluster, Lists.newArrayList(var1, var2)) != null);
+        assertTrue(tester.findChainWithSVs(cluster, Lists.newArrayList(var3, var4, var5)) != null);
+        assertTrue(tester.findChainWithSVs(cluster, Lists.newArrayList(var6, var7)) != null);
     }
 
 }
