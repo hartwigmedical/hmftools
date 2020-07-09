@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -162,13 +163,17 @@ public class KnownFusionCache
             }
         }
 
+        StringJoiner refDataStr = new StringJoiner(", ");
+
         for(Map.Entry<KnownFusionType,List<KnownFusionData>> entry : mDataByType.entrySet())
         {
             if(!entry.getValue().isEmpty())
             {
-                LOGGER.info("loaded {} {} known-fusion records", entry.getValue().size(), entry.getKey());
+                refDataStr.add(String.format("%s(%d)", entry.getKey(), entry.getValue().size()));
             }
         }
+
+        LOGGER.info("loaded known fusion data: {}", refDataStr.toString());
 
         return true;
     }
