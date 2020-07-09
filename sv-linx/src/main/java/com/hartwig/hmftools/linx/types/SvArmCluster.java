@@ -5,8 +5,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -109,6 +111,88 @@ public class SvArmCluster
     public int getType() { return mType; }
     public String getTypeStr() { return typeToString(mType); }
     public int getTICount() { return mTICount; }
+
+    public static SvArmCluster findArmCluster(final SvCluster cluster, final SvBreakend breakend)
+    {
+        for(final SvArmCluster armCluster : cluster.getArmClusters())
+        {
+            if(armCluster.getBreakends().contains(breakend))
+                return armCluster;
+        }
+
+        return null;
+    }
+
+    public static void buildArmClusters(final SvCluster cluster)
+    {
+        final List<SvArmCluster> armClusters = cluster.getArmClusters();
+
+        for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            SvArmCluster prevArmCluster = null;
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                SvVarData var = breakend.getSV();
+
+                // ensure that a pair of foldback breakends are put into the same arm cluster
+                if(var.isFoldback() && var.getFoldbackBreakend(breakend.usesStart()) != null)
+                {
+                    SvBreakend otherFoldbackBreakend = var.getFoldbackBreakend(breakend.usesStart());
+                    SvArmCluster existingAC = findArmCluster(cluster, otherFoldbackBreakend);
+
+                    if(existingAC != null)
+                    {
+                        existingAC.addBreakend(breakend);
+                        continue;
+                    }
+                }
+
+                // first test the previous arm cluster
+                if(prevArmCluster != null)
+                {
+                    if(breakend.arm() == prevArmCluster.arm() && breakend.position() - prevArmCluster.posEnd() <= DEFAULT_PROXIMITY_DISTANCE)
+                    {
+                        prevArmCluster.addBreakend(breakend);
+                        continue;
+                    }
+
+                    // prevArmCluster = null;
+                }
+
+                boolean groupFound = false;
+
+                for(final SvArmCluster armCluster : armClusters)
+                {
+                    if(!breakend.chromosome().equals(armCluster.chromosome()) || breakend.arm() != armCluster.arm())
+                        continue;
+
+                    // test whether position is within range
+                    if(breakend.position() >= armCluster.posStart() - DEFAULT_PROXIMITY_DISTANCE
+                            && breakend.position() <= armCluster.posEnd() + DEFAULT_PROXIMITY_DISTANCE)
+                    {
+                        armCluster.addBreakend(breakend);
+                        groupFound = true;
+                        prevArmCluster = armCluster;
+                        break;
+                    }
+                }
+
+                if(!groupFound)
+                {
+                    SvArmCluster armCluster = new SvArmCluster(armClusters.size(), cluster, breakend.chromosome(), breakend.arm());
+                    armCluster.addBreakend(breakend);
+                    armClusters.add(armCluster);
+                    prevArmCluster = armCluster;
+                }
+            }
+        }
+
+        armClusters.forEach(x -> x.setFeatures());
+    }
 
     public void setFeatures()
     {

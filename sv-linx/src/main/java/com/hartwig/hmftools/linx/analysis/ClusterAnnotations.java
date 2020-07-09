@@ -622,7 +622,11 @@ public class ClusterAnnotations
 
         int complexArms = (int)armClusterCounts.values().stream().filter(x -> x > 1).count();
 
-        cluster.setArmData(originArms.size(), fragmentArms.size(), consistentArmCount, complexArms);
+        ClusterMetrics metrics = cluster.getMetrics();
+        metrics.OriginArms = originArms.size();
+        metrics.FragmentArms = fragmentArms.size();
+        metrics.ConsistentArms = consistentArmCount;
+        metrics.ComplexArms = complexArms;
 
         if(cluster.getSvCount() > 2)
         {

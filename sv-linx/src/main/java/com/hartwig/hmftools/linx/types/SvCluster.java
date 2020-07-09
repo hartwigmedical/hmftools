@@ -89,17 +89,12 @@ public class SvCluster
     private double mMinJcn;
     private double mMaxJcn;
 
-    private int mOriginArms;
-    private int mFragmentArms;
-    private int mConsistentArms;
-    private int mComplexArms;
     private ClusterMetrics mMetrics;
 
     public static String CLUSTER_ANNOT_DM = "DM";
     public static String CLUSTER_ANNOT_BFB = "BFB";
     public static String CLUSTER_ANNOT_REP_REPAIR = "REP_REPAIR";
     public static String CLUSTER_ANNOT_SHATTERING = "CHROMO_THRIP";
-    public static String CLUSTER_ANNOT_CHROMOPLEXY = "CHROMO_PLEX";
 
     public SvCluster(final int clusterId)
     {
@@ -143,10 +138,6 @@ public class SvCluster
         mMaxJcn = 0;
         mClusteringReasons = "";
 
-        mOriginArms = 0;
-        mFragmentArms = 0;
-        mConsistentArms = 0;
-        mComplexArms= 0;
         mMetrics = new ClusterMetrics();
     }
 
@@ -841,98 +832,7 @@ public class SvCluster
     }
 
     public final List<SvArmCluster> getArmClusters() { return mArmClusters; }
-
-    public void buildArmClusters()
-    {
-        for (Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            SvArmCluster prevArmCluster = null;
-
-            for (int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                SvVarData var = breakend.getSV();
-
-                // ensure that a pair of foldback breakends are put into the same arm cluster
-                if(var.isFoldback() && var.getFoldbackBreakend(breakend.usesStart()) != null)
-                {
-                    SvBreakend otherFoldbackBreakend = var.getFoldbackBreakend(breakend.usesStart());
-                    SvArmCluster existingAC = findArmCluster(otherFoldbackBreakend);
-
-                    if(existingAC != null)
-                    {
-                        existingAC.addBreakend(breakend);
-                        continue;
-                    }
-                }
-
-                // first test the previous arm cluster
-                if(prevArmCluster != null)
-                {
-                    if(breakend.arm() == prevArmCluster.arm() && breakend.position() - prevArmCluster.posEnd() <= DEFAULT_PROXIMITY_DISTANCE)
-                    {
-                        prevArmCluster.addBreakend(breakend);
-                        continue;
-                    }
-
-                    // prevArmCluster = null;
-                }
-
-                boolean groupFound = false;
-
-                for(final SvArmCluster armCluster : mArmClusters)
-                {
-                    if(!breakend.chromosome().equals(armCluster.chromosome()) || breakend.arm() != armCluster.arm())
-                        continue;
-
-                    // test whether position is within range
-                    if(breakend.position() >= armCluster.posStart() - DEFAULT_PROXIMITY_DISTANCE
-                    && breakend.position() <= armCluster.posEnd() + DEFAULT_PROXIMITY_DISTANCE)
-                    {
-                        armCluster.addBreakend(breakend);
-                        groupFound = true;
-                        prevArmCluster = armCluster;
-                        break;
-                    }
-                }
-
-                if(!groupFound)
-                {
-                    SvArmCluster armCluster = new SvArmCluster(mArmClusters.size(), this, breakend.chromosome(), breakend.arm());
-                    armCluster.addBreakend(breakend);
-                    mArmClusters.add(armCluster);
-                    prevArmCluster = armCluster;
-                }
-            }
-        }
-
-        mArmClusters.forEach(x -> x.setFeatures());
-    }
-
-    public SvArmCluster findArmCluster(final SvBreakend breakend)
-    {
-        for(final SvArmCluster armCluster : mArmClusters)
-        {
-            if(armCluster.getBreakends().contains(breakend))
-                return armCluster;
-        }
-
-        return null;
-    }
-
-    public void setArmData(int origins, int fragments, int consistentArms, int complexArms)
-    {
-        mOriginArms = origins;
-        mFragmentArms = fragments;
-        mConsistentArms = consistentArms;
-        mComplexArms = complexArms;
-    }
-    public int getOriginArms() { return mOriginArms; }
-    public int getFragmentArms() { return mFragmentArms; }
-    public int getConsistentArms() { return mConsistentArms; }
-    public int getComplexArms() { return mComplexArms; }
+    public SvArmCluster findArmCluster(final SvBreakend breakend) { return SvArmCluster.findArmCluster(this, breakend); }
 
     public ClusterMetrics getMetrics() { return mMetrics; }
 
@@ -957,43 +857,20 @@ public class SvCluster
 
     public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (SUBSET_SPLIT)); }
 
-    public void setJcnReplication(int chainingSvLimit)
+    public void determineRequiresReplication()
     {
         if(!hasVariedJcn() && !requiresReplication())
             return;
 
-        // use the relative copy number change to replicate some SVs within a cluster
+        // look for varying JCN amongst the SVs in this cluster as indication of replicated breakends to guide chaining
         double clusterMinJcn = getMinJcn();
-        double clusterMaxJcn = getMaxJcn();
 
         if(clusterMinJcn <= 0)
         {
-            LNX_LOGGER.debug("cluster({}) warning: invalid JCN variation(min={} max={})",
-                    mId, clusterMinJcn, clusterMaxJcn);
+            LNX_LOGGER.debug("cluster({}) warning: invalid JCN variation(min={} max={})", mId, clusterMinJcn, mMaxJcn);
             return;
         }
 
-        // check for samples with a broad range of ploidies, not just concentrated in a few SVs
-        int totalReplicationCount = 0;
-        double replicationFactor = 1;
-
-        for(SvVarData var : mSVs)
-        {
-            int svJcn = var.getImpliedJcn();
-            int svMultiple = (int)max(round(svJcn / clusterMinJcn),1);
-            totalReplicationCount += svMultiple;
-        }
-
-        int replicationCap = chainingSvLimit > 0 ? min(chainingSvLimit, DEFAULT_CHAINING_SV_LIMIT) : DEFAULT_CHAINING_SV_LIMIT;
-        if(totalReplicationCount > replicationCap)
-        {
-            LNX_LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled vs limit({})",
-                    mId, totalReplicationCount, getSvCount(), clusterMinJcn, clusterMaxJcn, replicationCap);
-
-            replicationFactor = replicationCap / (double)totalReplicationCount;
-        }
-
-        // replicate the SVs which have a higher copy number than their peers
         for(SvVarData var : mSVs)
         {
             int svJcn = var.getImpliedJcn();
@@ -1004,12 +881,10 @@ public class SvCluster
             if(maxAssemblyBreakends > 1)
                 svMultiple = max(svMultiple, maxAssemblyBreakends);
 
-            svMultiple = max((int)round(svMultiple * replicationFactor), 1);
-
             if(svMultiple <= 1)
                 continue;
 
-            LNX_LOGGER.debug("cluster({}) SV({}) ploidy multiple({}, ploidy({} vs min={})",
+            LNX_LOGGER.debug("cluster({}) SV({}) JCN multiple({}, ploidy({} vs min={})",
                     mId, var.posId(), svMultiple, svJcn, clusterMinJcn);
 
             if(!requiresReplication())

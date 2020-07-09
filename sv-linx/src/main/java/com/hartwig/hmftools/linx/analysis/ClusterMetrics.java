@@ -18,6 +18,11 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ClusterMetrics
 {
+    public int OriginArms;
+    public int FragmentArms;
+    public int ConsistentArms;
+    public int ComplexArms;
+
     public int DBCount;
     public int ShortDBCount;
 
@@ -45,6 +50,10 @@ public class ClusterMetrics
 
     public ClusterMetrics()
     {
+        OriginArms = 0;
+        FragmentArms = 0;
+        ConsistentArms = 0;
+        ComplexArms = 0;
         DBCount = 0;
         ShortDBCount = 0;
         TotalDBLength = 0;

@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.linx.types.SvArmCluster.buildArmClusters;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -240,7 +241,7 @@ public class ClusterAnalyser {
             }
 
             cluster.cacheLinkedPairs();
-            cluster.buildArmClusters();
+            buildArmClusters(cluster);
         }
 
         return true;
@@ -262,7 +263,7 @@ public class ClusterAnalyser {
             boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedJcn();
 
             cluster.setAssemblyLinkedPairs(createAssemblyLinkedPairs(cluster));
-            cluster.setJcnReplication(mConfig.ChainingSvLimit);
+            cluster.determineRequiresReplication();
 
             if(isSimple)
                 mDmFinder.analyseCluster(cluster);
@@ -304,7 +305,7 @@ public class ClusterAnalyser {
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
             mDmFinder.analyseCluster(cluster, true);
 
-            cluster.setJcnReplication(mConfig.ChainingSvLimit);
+            cluster.determineRequiresReplication();
 
             // no need to re-find assembled TIs
 

@@ -386,8 +386,8 @@ public class CohortDataWriter
                 final ClusterMetrics metrics = cluster.getMetrics();
 
                 mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%.2f",
-                        cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(), cluster.getConsistentArms(),
-                        cluster.getComplexArms(), cluster.getAnnotations(), metrics.ValidAlleleJcnSegmentPerc));
+                        cluster.getArmCount(), metrics.OriginArms, metrics.FragmentArms, metrics.ConsistentArms,
+                        metrics.ComplexArms, cluster.getAnnotations(), metrics.ValidAlleleJcnSegmentPerc));
 
                 long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.length() <= SHORT_TI_LENGTH).count();
 
