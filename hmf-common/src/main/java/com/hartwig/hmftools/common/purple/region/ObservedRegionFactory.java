@@ -66,6 +66,7 @@ public class ObservedRegionFactory {
                     .setObservedBAF(baf.medianBaf())
                     .setObservedTumorRatio(tumorRatio)
                     .setObservedNormalRatio(normalRatio)
+                    .setUnnormalisedObservedNormalRatio(cobalt.unnormalisedReferenceMeanRatio())
                     .setRatioSupport(region.ratioSupport())
                     .setSupport(region.support())
                     .setDepthWindowCount(cobalt.tumorCount())
@@ -135,6 +136,7 @@ public class ObservedRegionFactory {
         private final GenomeRegion region;
 
         private final RatioAccumulator referenceAccumulator = new RatioAccumulator();
+        private final RatioAccumulator unnormalisedReferenceAccumulator = new RatioAccumulator();
         private final RatioAccumulator tumorAccumulator = new RatioAccumulator();
 
         CobaltAccumulator(final int windowSize, final GenomeRegion region) {
@@ -144,6 +146,10 @@ public class ObservedRegionFactory {
 
         double referenceMeanRatio() {
             return referenceAccumulator.meanRatio();
+        }
+
+        double unnormalisedReferenceMeanRatio() {
+            return unnormalisedReferenceAccumulator.meanRatio();
         }
 
         double tumorMeanRatio() {
@@ -158,6 +164,7 @@ public class ObservedRegionFactory {
         public void accept(final CobaltRatio ratio) {
             if (window.end(ratio.position()) <= region.end()) {
                 referenceAccumulator.accept(ratio.referenceGCDiploidRatio());
+                unnormalisedReferenceAccumulator.accept(ratio.referenceGCRatio());
                 tumorAccumulator.accept(ratio.tumorGCRatio());
             }
         }
