@@ -1,6 +1,6 @@
 # Somatic Driver Catalog
 
-A detailed description of our gene discovery and driver catalog is available in the [supplementary information](https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-019-1689-y/MediaObjects/41586_2019_1689_MOESM1_ESM.pdf) of our ["Pan-cancer whole genome analyses of metastatic solid tumors"]((https://www.nature.com/articles/s41586-019-1689-y)) paper.
+A detailed description of our gene discovery and driver catalog is available in the [supplementary information](https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-019-1689-y/MediaObjects/41586_2019_1689_MOESM1_ESM.pdf) of our ["Pan-cancer whole genome analyses of metastatic solid tumors"](https://www.nature.com/articles/s41586-019-1689-y) paper.
 
 Since publication we have have made a number of significant improvements including:
 - Dnds and significant amps and dels updated to run on larger cohort of 3524 samples
