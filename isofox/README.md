@@ -39,7 +39,9 @@ The 3 core functions of Isofox are controlled by the 'functions' argument:
 - NOVEL_LOCATIONS: annotate alternate splice junctions and retained introns
 - FUSIONS: identify fusions
 
-These can be run concurrently or independently depending on the values set for this argument.
+These can be run concurrently or independently depending on the values set for this argument. By default they are all run.
+
+ISOFOX currently only supports HG37, but support for HG38 is planned for the  ext release. 
 
 ### Mandatory
 Argument | Description
@@ -130,10 +132,10 @@ write_read_data | Write data on each BAM read, only recommended with restricted 
 write_exon_data | Write data on transcript exon covered by a supporting fragment, only recommended with restricted genes file
 
 ### Memory Usage and Threading
-
+ISOFOX takes ~10 mins to process a 7GB BAM with 120M reads / 60M fragments using 10 cores, with maximum memory usage of 10GB, and ~30 mins to process a 35GB BAM with 440M reads / 200M fragments using 10 cores, with maximum memory usage of 12GB. 
 
 ### Example Usage
-Example command for transcript expression and novel splice junctions:
+Example command:
 
 ```
 java -jar isofox.jar 
@@ -162,20 +164,7 @@ java -jar isofox.jar
 To annotate SVs with gene information and to support fusion detection, ISOFOX uses gene, transcript, exon and protein domain information from the Ensembl database. 
 To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time ISOFOX runs.
 
-To generate these 4 data files, first run ISOFOX with these command line options:
-
-```
-java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
-    -ensembl_db [see below] -ensembl_user "anonymous" -ensembl_pass "" 
-    -output_dir /path_to_write_data_files/ -ref_genome_version [37 or 38]
-```
-
-Ensembl database URLs for 37 & 38 are:
-- mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
-- mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_98_38
-
-By default ISOFOX will use HG37, but this can be overridden using the ref_genome_version config described above.
-
+These files can be downloaded from the Hartwig resources page, or generated using the Hartwig LINX application (see https://github.com/hartwigmedical/hmftools/blob/master/sv-linx/README.md for instructions).
  
 ## Algorithm
 
