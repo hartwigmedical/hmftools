@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svtools.cohort;
 
-import static java.lang.Math.min;
-
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -11,7 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
+import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.fromString;
 import static com.hartwig.hmftools.svtools.germline.GermlineVcfConfig.LOG_DEBUG;
@@ -45,22 +44,26 @@ public class CohortLineElements
     private final Map<String,Map<Integer,LineClusterData>> mSampleClusterLineData;
     private final Map<SvRegion,Integer> mExtLineSampleCounts;
     private final Map<String,List<LineRepeatMaskerData>> mChrRepeatMaskerData;
+    private final List<SvRegion> mKnownLineElements;
 
     private final String mOutputDir;
     private final String mSvDataFile;
     private final String mExtDataFile;
     private final String mRepeatMaskerDataFile;
+    private final String mKnownLineElementsFile;
 
     public CohortLineElements(final CommandLine cmd)
     {
         mSampleClusterLineData = Maps.newHashMap();
         mExtLineSampleCounts = Maps.newHashMap();
         mChrRepeatMaskerData = Maps.newHashMap();
+        mKnownLineElements = Lists.newArrayList();
 
         mOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
         mSvDataFile = cmd.getOptionValue(SV_DATA_FILE);
         mExtDataFile = cmd.getOptionValue(EXT_DATA_FILE);
         mRepeatMaskerDataFile = cmd.getOptionValue(REPEAT_MASKER_DATA_FILE);
+        mKnownLineElementsFile = cmd.getOptionValue(KNOWN_DATA_FILE);
     }
 
     public void run()
@@ -71,6 +74,8 @@ public class CohortLineElements
         loadLineElementsFile(mSvDataFile);
         loadExternalLineDataFile(mExtDataFile);
         loadRepeatMaskerLineDataFile(mRepeatMaskerDataFile);
+        loadKnownLineElements(mKnownLineElementsFile);
+
         produceResults();
     }
 
@@ -110,6 +115,40 @@ public class CohortLineElements
             }
 
             LNX_LOGGER.info("loaded {} known line elements from file: {}", lineSvCount, filename);
+        }
+        catch(IOException exception)
+        {
+            LNX_LOGGER.error("Failed to read line element CSV file({})", filename);
+        }
+    }
+
+    public void loadKnownLineElements(final String filename)
+    {
+        if(filename.isEmpty())
+            return;
+
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+            final String header = fileContents.get(0);
+            fileContents.remove(0);
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+
+            for(final String line : fileContents)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                final SvRegion lineRegion = new SvRegion(
+                        refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
+                        Integer.parseInt(items[fieldsIndexMap.get("PosStart")]),
+                        Integer.parseInt(items[fieldsIndexMap.get("PosEnd")]));
+
+                mKnownLineElements.add(lineRegion);
+            }
+
+            LNX_LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);
         }
         catch(IOException exception)
         {
@@ -314,7 +353,7 @@ public class CohortLineElements
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             writer.write("LineId,Type,Chromosome,PosStart,PosEnd");
-            writer.write(",SampleCount,TotalInserts,PcawgSampleCount,LowerRmId,UpperRmId");
+            writer.write(",SampleCount,TotalInserts,PcawgSampleCount,KnownPosStart,KnownPosEnd,LowerRmId,UpperRmId");
             writer.write(",SampleId,ClusterId,SamplePosStart,SamplePosEnd,SampleSourceLocations,SourceBreakends,SampleInserts");
 
             writer.newLine();
@@ -327,11 +366,14 @@ public class CohortLineElements
 
                 int extRegionCount = getExternalLineSampleCount(primarySource.Region);
 
-                int[] repeatMaskerIds = findRepeatMaskerIds(primarySource.Region);
+                final SvRegion knownLineRegion = findKnownLineRegion(primarySource.Region);
 
-                final String lineDefn = String.format("%d,%s,%s,%d,%d,%d,%d,%d,%d,%d",
+                int[] repeatMaskerIds = findRepeatMaskerIds(primarySource.Region, knownLineRegion);
+
+                final String lineDefn = String.format("%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d",
                         lineId, primarySource.LineType, combinedRegion.Chromosome, combinedRegion.start(), combinedRegion.end(),
                         lineData.sampleCount(), lineData.insertRegionsCount(), extRegionCount,
+                        knownLineRegion != null ? knownLineRegion.start() : -1, knownLineRegion != null ? knownLineRegion.end() : -1,
                         repeatMaskerIds[SE_START], repeatMaskerIds[SE_END]);
 
                 writer.write(lineDefn);
@@ -357,7 +399,12 @@ public class CohortLineElements
         }
     }
 
-    private int[] findRepeatMaskerIds(final SvRegion lineRegion)
+    private SvRegion findKnownLineRegion(final SvRegion lineRegion)
+    {
+        return mKnownLineElements.stream().filter(x -> x.overlaps(lineRegion)).findFirst().orElse(null);
+    }
+
+    private int[] findRepeatMaskerIds(final SvRegion lineRegion, final SvRegion knownLineRegion)
     {
         int[] repeatMaskerIds = {-1, -1};
 
@@ -369,6 +416,13 @@ public class CohortLineElements
         LineRepeatMaskerData prevData = null;
         for(LineRepeatMaskerData rmData : rmDataList)
         {
+            if(knownLineRegion != null && knownLineRegion.overlaps(rmData.Region))
+            {
+                repeatMaskerIds[SE_START] = rmData.RmId;
+                repeatMaskerIds[SE_END] = rmData.RmId;
+                return repeatMaskerIds;
+            }
+
             if(rmData.Region.start() >= lineRegion.end())
             {
                 repeatMaskerIds[SE_END] = rmData.RmId;
@@ -400,6 +454,7 @@ public class CohortLineElements
 
     private static final String SV_DATA_FILE = "sv_data_file";
     private static final String EXT_DATA_FILE = "ext_data_file";
+    private static final String KNOWN_DATA_FILE = "known_line_elements_file";
     private static final String REPEAT_MASKER_DATA_FILE = "repeat_masker_data_file";
 
     public static void main(@NotNull final String[] args) throws ParseException
@@ -408,6 +463,7 @@ public class CohortLineElements
 
         options.addOption(SV_DATA_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(EXT_DATA_FILE, true, "External LINE data sample counts");
+        options.addOption(KNOWN_DATA_FILE, true, "Known LINE elements file");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to write results");
         options.addOption(REPEAT_MASKER_DATA_FILE, true, "Path to repeat masker data for LINE elements");
         options.addOption(LOG_DEBUG, false, "Log verbose");

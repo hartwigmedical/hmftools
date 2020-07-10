@@ -27,11 +27,11 @@ public enum LineElementType
 
     public static LineElementType fromString(final String lineType)
     {
-        if(lineType.equals("Known"))
+        if(lineType.equals("KNOWN"))
             return LineElementType.KNOWN;
-        else if(lineType.contains("Known"))
+        else if(lineType.contains("KNOWN"))
             return LineElementType.KNOWN_SUSPECT;
-        else if(lineType.equals("Suspect"))
+        else if(lineType.equals("SUSPECT"))
             return LineElementType.SUSPECT;
         else
             return LineElementType.NONE;
