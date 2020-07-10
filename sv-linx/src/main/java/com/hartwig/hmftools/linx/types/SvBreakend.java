@@ -4,7 +4,9 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 
 import java.util.List;
+import java.util.Set;
 
+import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 
 public class SvBreakend {
@@ -131,5 +133,11 @@ public class SvBreakend {
         return mSV.getFoldbackBreakend(mUsesStart) != null;
     }
     public final SvBreakend getFoldbackBreakend() { return mSV.getFoldbackBreakend(mUsesStart); }
+
+    public boolean inLineElement()
+    {
+        return mSV.isLineElement(mUsesStart);
+    }
+    public boolean hasLineElement(LineElementType type) { return mSV.hasLineElement(type, mUsesStart); }
 
 }

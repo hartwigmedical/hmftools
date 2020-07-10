@@ -7,13 +7,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -74,7 +71,7 @@ public class LineChainer
             {
                 final SvBreakend breakend = var.getBreakend(se);
 
-                if(breakend == null || var.getLineElement(isStart(se)).equals(NO_LINE_ELEMENT))
+                if(breakend == null || !var.isLineElement(isStart(se)))
                     continue;
 
                 // skip breakends already assembled into links

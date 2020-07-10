@@ -3,6 +3,9 @@ package com.hartwig.hmftools.linx.annotators;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
@@ -11,6 +14,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
+import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
+import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
 
 import java.io.File;
@@ -33,10 +38,6 @@ public class LineElementAnnotator {
     private final List<SvRegion> mKnownLineElements;
     private PseudoGeneFinder mPseudoGeneFinder;
     private final int mProximityDistance;
-
-    public static final String KNOWN_LINE_ELEMENT = "Known";
-    public static final String NO_LINE_ELEMENT = "None";
-    public static final String SUSPECTED_LINE_ELEMENT = "Suspect";
 
     public static final int LINE_ELEMENT_PROXIMITY_DISTANCE = 5000;
 
@@ -95,29 +96,31 @@ public class LineElementAnnotator {
         }
     }
 
-    public String isLineElement(final SvVarData svData, final boolean useStart)
+    public void setKnownLineElements(final SvVarData svData)
     {
         if(mKnownLineElements.isEmpty())
-            return NO_LINE_ELEMENT;
+            return;
 
-        for(final SvRegion lineRegion : mKnownLineElements)
+        for(int se = SE_START; se <= SE_END; ++se)
         {
-            if(!lineRegion.Chromosome.equals(svData.chromosome(useStart)))
-                continue;
-
-            // test if the SV falls within the LE +/- a buffer
-            if(positionWithin(
-                    svData.position(useStart),
-                    lineRegion.start() - LINE_ELEMENT_PROXIMITY_DISTANCE,
-                    lineRegion.end() + LINE_ELEMENT_PROXIMITY_DISTANCE))
+            for(final SvRegion lineRegion : mKnownLineElements)
             {
-                LNX_LOGGER.debug("var({}) found in known line element({} -> {})",
-                        svData.posId(), lineRegion.Chromosome, lineRegion.start(), lineRegion.end());
-                return KNOWN_LINE_ELEMENT;
+                if(!lineRegion.Chromosome.equals(svData.chromosome(isStart(se))))
+                    continue;
+
+                // test if the SV falls within the LE +/- a buffer
+                if(positionWithin(
+                        svData.position(isStart(se)),
+                        lineRegion.start() - LINE_ELEMENT_PROXIMITY_DISTANCE,
+                        lineRegion.end() + LINE_ELEMENT_PROXIMITY_DISTANCE))
+                {
+                    LNX_LOGGER.debug("var({}) found in known line element({} -> {})",
+                            svData.posId(), lineRegion.Chromosome, lineRegion.start(), lineRegion.end());
+
+                    svData.addLineElement(KNOWN, isStart(se));
+                }
             }
         }
-
-        return NO_LINE_ELEMENT;
     }
 
     public static boolean hasPolyAorTMotif(final SvVarData var)
@@ -128,7 +131,7 @@ public class LineElementAnnotator {
     public void markLineCluster(final SvCluster cluster)
     {
         /* Identify a suspected LINE element if:
-           - has 2+ BND within 5K NOT forming a short DB bases at the suspected LINE source location
+           - has 2+ BND within 5K NOT forming a short deletion bridge at the suspected LINE source location
                 AND at least one SV also within 5kb having poly A/T INS sequence
                 AND either the 2 BNDs going to different chromosomes or forming a short DB at their non-line / insertion location
            - OR at least 1 BND with only 1 remote SGL forming a 30 base DB (ie on the remote arm)
@@ -146,6 +149,8 @@ public class LineElementAnnotator {
         boolean hasSuspected = false;
         boolean hasPolyAorT = false;
 
+        // LineClusterState clusterState = new LineClusterState();
+
         for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
@@ -156,7 +161,7 @@ public class LineElementAnnotator {
                 final SvVarData var = breakend.getSV();
 
                 // skip if already marked when handled on its other chromosome (ie for a BND)
-                if (var.getLineElement(breakend.usesStart()).contains(SUSPECTED_LINE_ELEMENT))
+                if (var.hasLineElement(SUSPECT, breakend.usesStart()))
                     continue;
 
                 final Set<SvVarData> polyAtSVs = Sets.newHashSet();
@@ -310,7 +315,7 @@ public class LineElementAnnotator {
                 hasSuspected = true;
 
                 // mark every breakend in this proximity as suspect line
-                proximateBreakends.forEach(x -> x.getSV().setLineElement(SUSPECTED_LINE_ELEMENT, x.usesStart()));
+                proximateBreakends.forEach(x -> x.getSV().addLineElement(SUSPECT, x.usesStart()));
             }
         }
 
@@ -321,6 +326,11 @@ public class LineElementAnnotator {
     {
         if(dbPair == null || dbPair.length() > MIN_DEL_LENGTH)
             return false;
+
+        if(dbPair.firstBreakend().hasLineElement(KNOWN) || dbPair.secondBreakend().hasLineElement(KNOWN))
+        {
+            return false;
+        }
 
         // no other breakends can be within the proximity cut off
         final List<SvBreakend> breakendList = dbPair.first().getCluster().getChrBreakendMap().get(dbPair.chromosome());
@@ -363,9 +373,9 @@ public class LineElementAnnotator {
             if(LNX_LOGGER.isDebugEnabled())
             {
                 long polyAorT = cluster.getSVs().stream().filter(x -> hasPolyAorTMotif(x)).count();
+
                 long suspectLine = cluster.getSVs().stream()
-                        .filter(x -> (x.getLineElement(true).contains(SUSPECTED_LINE_ELEMENT)
-                                || x.getLineElement(false).contains(SUSPECTED_LINE_ELEMENT))).count();
+                        .filter(x -> (x.hasLineElement(SUSPECT, true) || x.hasLineElement(SUSPECT, false))).count();
 
                 LNX_LOGGER.debug("cluster({}) anyLine({}) suspect({}) known({}) polyAT({})",
                         cluster.id(), svInLineCount, suspectLine, knownCount, polyAorT);

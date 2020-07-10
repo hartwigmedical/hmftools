@@ -3,26 +3,23 @@ package com.hartwig.hmftools.linx.analyser;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
+import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.KNOWN_LINE_ELEMENT;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.SUSPECTED_LINE_ELEMENT;
+
+import static org.junit.Assert.assertFalse;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
-import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -40,8 +37,8 @@ public class LineTest
         SvVarData bnd1 = createBnd(tester.nextVarId(), "1", 100, -1, "2", 100, 1);
         SvVarData bnd2 = createBnd(tester.nextVarId(), "1", 200, 1, "2", 200, -1);
 
-        bnd1.setLineElement(KNOWN_LINE_ELEMENT, true);
-        bnd2.setLineElement(KNOWN_LINE_ELEMENT, true);
+        bnd1.addLineElement(KNOWN, true);
+        bnd2.addLineElement(KNOWN, true);
 
         SvCluster cluster = new SvCluster(0);
         cluster.addVariant(bnd1);
@@ -70,10 +67,10 @@ public class LineTest
         tester.addAndCluster(bnd1, bnd2);
 
         // in this case because the DB isn't short on the originating arm, both ends are marked as suspect
-        assertEquals(SUSPECTED_LINE_ELEMENT, bnd1.getLineElement(true));
-        assertEquals(SUSPECTED_LINE_ELEMENT, bnd2.getLineElement(true));
-        assertEquals(NO_LINE_ELEMENT, bnd1.getLineElement(false));
-        assertEquals(NO_LINE_ELEMENT, bnd2.getLineElement(false));
+        assertTrue(bnd1.hasLineElement(SUSPECT, true));
+        assertTrue(bnd2.hasLineElement(SUSPECT, true));
+        assertFalse(bnd1.isLineElement(false));
+        assertFalse(bnd2.isLineElement(false));
 
         SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
@@ -84,10 +81,10 @@ public class LineTest
 
         tester.addAndCluster(bnd1, bnd2);
 
-        assertEquals(SUSPECTED_LINE_ELEMENT, bnd1.getLineElement(true));
-        assertEquals(SUSPECTED_LINE_ELEMENT, bnd2.getLineElement(true));
-        assertEquals(NO_LINE_ELEMENT, bnd1.getLineElement(false));
-        assertEquals(NO_LINE_ELEMENT, bnd2.getLineElement(false));
+        assertTrue(bnd1.hasLineElement(SUSPECT, true));
+        assertTrue(bnd2.hasLineElement(SUSPECT, true));
+        assertFalse(bnd1.isLineElement(false));
+        assertFalse(bnd2.isLineElement(false));
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
@@ -98,9 +95,9 @@ public class LineTest
 
         tester.addAndCluster(bnd1, bnd2);
 
-        assertTrue(bnd1.getLineElement(true).equals(SUSPECTED_LINE_ELEMENT));
-        assertTrue(sgl.getLineElement(true).equals(NO_LINE_ELEMENT));
-        assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
+        assertTrue(bnd1.hasLineElement(SUSPECT, true));
+        assertFalse(sgl.isLineElement(true));
+        assertFalse(bnd1.isLineElement(false));
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
@@ -109,12 +106,12 @@ public class LineTest
         bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  1, 1, BND, "");
         bnd2 = createSv(tester.nextVarId(), "1", "2", 110, 110,  -1, -1, BND, POLY_A_MOTIF);
 
-        tester.addAndCluster(bnd1, sgl);
+        tester.addAndCluster(bnd1, bnd2);
 
-        assertTrue(bnd1.getLineElement(true).equals(NO_LINE_ELEMENT));
-        assertTrue(bnd2.getLineElement(true).equals(NO_LINE_ELEMENT));
-        assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
-        assertEquals(bnd2.getLineElement(false), NO_LINE_ELEMENT);
+        assertFalse(bnd1.isLineElement(true));
+        assertFalse(bnd2.isLineElement(true));
+        assertFalse(bnd1.isLineElement(false));
+        assertFalse(bnd2.isLineElement(false));
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(!cluster.hasLinkingLineElements());
@@ -125,10 +122,10 @@ public class LineTest
 
         tester.addAndCluster(bnd1, bnd2);
 
-        assertTrue(bnd1.getLineElement(true).equals(NO_LINE_ELEMENT));
-        assertTrue(bnd2.getLineElement(true).equals(NO_LINE_ELEMENT));
-        assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
-        assertEquals(bnd2.getLineElement(false), NO_LINE_ELEMENT);
+        assertFalse(bnd1.isLineElement(true));
+        assertFalse(bnd2.isLineElement(true));
+        assertFalse(bnd1.isLineElement(false));
+        assertFalse(bnd2.isLineElement(false));
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(!cluster.hasLinkingLineElements());
@@ -144,12 +141,13 @@ public class LineTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(bnd1.getLineElement(true), SUSPECTED_LINE_ELEMENT);
-        assertEquals(bnd2.getLineElement(true), SUSPECTED_LINE_ELEMENT);
-        assertEquals(del.getLineElement(true), SUSPECTED_LINE_ELEMENT);
-        assertEquals(del.getLineElement(false), NO_LINE_ELEMENT);
-        assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
-        assertEquals(bnd2.getLineElement(false), NO_LINE_ELEMENT);
+        assertTrue(bnd1.hasLineElement(SUSPECT, true));
+        assertTrue(bnd2.hasLineElement(SUSPECT, true));
+        assertTrue(del.hasLineElement(SUSPECT, true));
+
+        assertFalse(del.isLineElement(false));
+        assertFalse(bnd1.isLineElement(false));
+        assertFalse(bnd2.isLineElement(false));
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
@@ -160,8 +158,8 @@ public class LineTest
 
         tester.addAndCluster(sgl1, sgl2);
 
-        assertEquals(sgl1.getLineElement(true), NO_LINE_ELEMENT);
-        assertEquals(sgl2.getLineElement(true), NO_LINE_ELEMENT);
+        assertFalse(sgl1.isLineElement(true));
+        assertFalse(sgl2.isLineElement(true));
         assertTrue(cluster.hasLinkingLineElements());
 
         sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, POLY_A_MOTIF);
@@ -169,9 +167,24 @@ public class LineTest
 
         tester.addAndCluster(sgl1, sgl2);
 
-        assertEquals(sgl1.getLineElement(true), SUSPECTED_LINE_ELEMENT);
-        assertEquals(sgl2.getLineElement(true), SUSPECTED_LINE_ELEMENT);
+        assertTrue(sgl1.hasLineElement(SUSPECT, true));
+        assertTrue(sgl2.hasLineElement(SUSPECT, true));
         assertTrue(cluster.hasLinkingLineElements());
+
+        // BNDs which would be suspect except for the remote DB falling in a known line location
+        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, "");
+        bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 110,  1, -1, BND, POLY_A_MOTIF);
+        bnd1.addLineElement(KNOWN, false);
+
+        tester.addAndCluster(bnd1, bnd2);
+
+        assertFalse(bnd1.hasLineElement(SUSPECT, true));
+        assertFalse(bnd2.hasLineElement(SUSPECT, true));
+        assertFalse(bnd1.isLineElement(true));
+        assertFalse(bnd2.isLineElement(false));
+
+        cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(!cluster.hasLinkingLineElements());
     }
 
     @Test
@@ -187,10 +200,10 @@ public class LineTest
         SvVarData var3 = createBnd(tester.nextVarId(), "1", 1100, -1, "3", 100, 1);
         SvVarData var4 = createBnd(tester.nextVarId(), "1", 1200, 1, "3", 200, -1);
 
-        var1.setLineElement(KNOWN_LINE_ELEMENT, true);
-        var2.setLineElement(KNOWN_LINE_ELEMENT, true);
-        var3.setLineElement(KNOWN_LINE_ELEMENT, true);
-        var4.setLineElement(KNOWN_LINE_ELEMENT, true);
+        var1.addLineElement(KNOWN, true);
+        var2.addLineElement(KNOWN, true);
+        var3.addLineElement(KNOWN, true);
+        var4.addLineElement(KNOWN, true);
         var1.setAssemblyData(true, "asmb12");
         var2.setAssemblyData(true, "asmb12");
 
@@ -228,7 +241,7 @@ public class LineTest
 
         tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4,  var5, var6, var7, var8, var9));
 
-        tester.AllVariants.forEach(x -> x.setLineElement(KNOWN_LINE_ELEMENT, true));
+        tester.AllVariants.forEach(x -> x.addLineElement(KNOWN, true));
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();

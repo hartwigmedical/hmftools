@@ -39,6 +39,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -186,7 +187,7 @@ public class CohortDataWriter
 
                 mSvFileWriter.write(String.format(",%s,%s,%s,%s",
                         var.isFragileSite(true), var.isFragileSite(false),
-                        var.getLineElement(true), var.getLineElement(false)));
+                        LineElementType.toString(var.getLineElement(true)), LineElementType.toString(var.getLineElement(false))));
 
                 // linked pair info
                 for (int be = SE_START; be <= SE_END; ++be)

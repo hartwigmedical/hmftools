@@ -41,6 +41,7 @@ import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.linx.annotators.IndelAnnotator;
 import com.hartwig.hmftools.linx.annotators.KataegisAnnotator;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
+import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.annotators.PseudoGeneFinder;
 import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
@@ -438,8 +439,7 @@ public class SvSampleAnalyser {
                     mFragileSiteAnnotator.isFragileSite(var, true),
                     mFragileSiteAnnotator.isFragileSite(var, false));
 
-            var.setLineElement(mLineElementAnnotator.isLineElement(var, true), true);
-            var.setLineElement(mLineElementAnnotator.isLineElement(var, false), false);
+            mLineElementAnnotator.setKnownLineElements(var);
 
             ChromosomeArm startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
@@ -506,8 +506,8 @@ public class SvSampleAnalyser {
                     .fragileSiteStart(var.isFragileSite(true))
                     .fragileSiteEnd(var.isFragileSite(false))
                     .isFoldback(var.isFoldback())
-                    .lineTypeStart(var.getLineElement(true))
-                    .lineTypeEnd(var.getLineElement(false))
+                    .lineTypeStart(LineElementType.toString(var.getLineElement(true)))
+                    .lineTypeEnd(LineElementType.toString(var.getLineElement(false)))
                     .junctionCopyNumberMin(var.jcnMin())
                     .junctionCopyNumberMax(var.jcnMax())
                     .geneStart(var.getGeneInBreakend(true, false))

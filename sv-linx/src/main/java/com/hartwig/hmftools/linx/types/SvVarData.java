@@ -19,19 +19,20 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.types.SglMapping.convertFromInsertSequenceAlignments;
-import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.linx.analysis.ClusteringReason;
+import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 
 public class SvVarData
@@ -42,7 +43,7 @@ public class SvVarData
     private final ChromosomeArm[] mArm;
     private final SvBreakend[] mBreakend;
     private final boolean[] mFragileSite;
-    private final String[] mLineElement;
+    private final StartEndPair<Set<LineElementType>> mLineElements;
 
     private final String[] mAssemblyData;
 
@@ -99,7 +100,7 @@ public class SvVarData
         mChr = new String[] { stripChromosome(chromosome(true)), stripChromosome(chromosome(false)) };
 
         mFragileSite = new boolean[SE_PAIR];
-        mLineElement = new String[] {NO_LINE_ELEMENT, NO_LINE_ELEMENT};
+        mLineElements = new StartEndPair<>(Sets.newHashSet(), Sets.newHashSet());
         mBreakend = new SvBreakend[SE_PAIR];
 
         mNearestSvDistance = -1;
@@ -282,30 +283,13 @@ public class SvVarData
 
     public boolean isFragileSite(boolean useStart) { return mFragileSite[seIndex(useStart)]; }
 
-    public void setLineElement(String type, boolean isStart)
-    {
-        int seIndex = seIndex(isStart);
-
-        if(mLineElement[seIndex].contains(type))
-            return;
-        else if(mLineElement[seIndex].equals(NO_LINE_ELEMENT))
-            mLineElement[seIndex] = type;
-        else
-            mLineElement[seIndex] = mLineElement[seIndex] + SUBSET_SPLIT + type;
-    }
-
-    public boolean isLineElement(boolean useStart)
-    {
-        return !mLineElement[seIndex(useStart)].equals(NO_LINE_ELEMENT);
-    }
-
+    public void addLineElement(LineElementType type, boolean isStart) { mLineElements.get(isStart).add(type); }
+    public boolean isLineElement(boolean useStart) { return !mLineElements.get(useStart).isEmpty(); }
     public boolean inLineElement() { return isLineElement(true) || isLineElement(false); }
-    public final String getLineElement(boolean useStart) { return mLineElement[seIndex(useStart)]; }
+    public boolean hasLineElement(LineElementType type, boolean isStart) { return mLineElements.get(isStart).contains(type); }
+    public final Set<LineElementType> getLineElement(boolean useStart) { return mLineElements.get(useStart); }
 
-    public final List<SvLinkedPair> getLinkedPairs(boolean isStart)
-    {
-        return mTiLinks.get(isStart);
-    }
+    public final List<SvLinkedPair> getLinkedPairs(boolean isStart) { return mTiLinks.get(isStart); }
 
     public final List<SvLinkedPair> getAssembledLinkedPairs(boolean isStart)
     {
