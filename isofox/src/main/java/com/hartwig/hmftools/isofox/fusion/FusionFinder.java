@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.isValidFragment;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
+import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class FusionFinder
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
-    private final Map<String,List<ReadRecord>> mReadsMap;
+    private final Map<String,ReadGroup> mReadsMap;
     private final Set<String> mDuplicateReadIds;
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
     private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
@@ -96,7 +97,7 @@ public class FusionFinder
         mFusionWriter = new FusionWriter(mConfig);
     }
 
-    public void addChimericReads(final Map<String,List<ReadRecord>> chimericReadMap)
+    public void addChimericReads(final Map<String,ReadGroup> chimericReadMap)
     {
         mergeChimericReadMaps(mReadsMap, chimericReadMap);
     }
@@ -106,18 +107,13 @@ public class FusionFinder
         mergeDuplicateReadIds(mDuplicateReadIds, readIds);
     }
 
-    public static void addChimericReads(final Map<String,List<ReadRecord>> chimericReadMap, final ReadRecord read)
+    public static void addChimericReads(final Map<String,ReadGroup> chimericReadMap, final ReadRecord read)
     {
-        List<ReadRecord> chimericReads = chimericReadMap.get(read.Id);
+        ReadGroup chimericReads = chimericReadMap.get(read.Id);
         if (chimericReads == null)
-            chimericReadMap.put(read.Id, Lists.newArrayList(read));
+            chimericReadMap.put(read.Id, new ReadGroup(read));
         else
-            chimericReads.add(read);
-    }
-
-    public void loadChimericReads()
-    {
-        mReadsMap.putAll(FusionWriter.loadChimericReads(mConfig.Fusions.ReadsFile));
+            chimericReads.Reads.add(read);
     }
 
     public void addChromosomeGeneCollections(final String chromosome, final Map<Integer,List<EnsemblGeneData>> geneCollectionMap)
@@ -154,7 +150,7 @@ public class FusionFinder
 
         final Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
 
-        for(Map.Entry<String,List<ReadRecord>> entry : mReadsMap.entrySet())
+        for(ReadGroup readGroup : mReadsMap.values())
         {
             ++readGroupCount;
 
@@ -164,7 +160,7 @@ public class FusionFinder
                 ISF_LOGGER.info("processed {} chimeric read groups", readGroupCount);
             }
 
-            final List<ReadRecord> reads = entry.getValue();
+            final List<ReadRecord> reads = readGroup.Reads;
 
             if(mDuplicateReadIds.contains(reads.get(0).Id) || reads.stream().anyMatch(x -> x.isDuplicate()))
             {
@@ -512,23 +508,6 @@ public class FusionFinder
     {
         final Map<Integer,List<EnsemblGeneData>> geneCollectionMap = mChrGeneCollectionMap.get(chromosome);
         return geneCollectionMap != null && geneCollectionId >= 0 ? geneCollectionMap.get(geneCollectionId) : Lists.newArrayList();
-    }
-
-    public static void mergeChimericReadMaps(final Map<String,List<ReadRecord>> destMap, final Map<String,List<ReadRecord>> sourceMap)
-    {
-        for(Map.Entry<String,List<ReadRecord>> entry : sourceMap.entrySet())
-        {
-            List<ReadRecord> readsById = destMap.get(entry.getKey());
-
-            if(readsById == null)
-            {
-                destMap.put(entry.getKey(), entry.getValue());
-            }
-            else
-            {
-                readsById.addAll(entry.getValue());
-            }
-        }
     }
 
     public static void mergeDuplicateReadIds(final Set<String> destSet, final Set<String> sourceSet)

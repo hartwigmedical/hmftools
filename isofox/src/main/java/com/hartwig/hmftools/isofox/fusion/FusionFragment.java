@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalAcceptor;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalDonor;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
@@ -32,11 +30,9 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-
 public class FusionFragment
 {
-    private final List<ReadRecord> mReads;
+    private final ReadGroup mReadGroup;
     private final boolean mHasSupplementaryAlignment;
 
     private final int[] mGeneCollections;
@@ -53,8 +49,8 @@ public class FusionFragment
 
     public FusionFragment(final List<ReadRecord> reads)
     {
-        mReads = reads;
-        mHasSupplementaryAlignment = FusionFragmentBuilder.hasSuppAlignment(mReads);
+        mReadGroup = new ReadGroup(reads);
+        mHasSupplementaryAlignment = mReadGroup.hasSuppAlignment();
 
         mGeneCollections = new int[] {NO_GENE_ID, NO_GENE_ID};
         mJunctionPositions = new int[] {-1, -1};
@@ -84,9 +80,10 @@ public class FusionFragment
         extractTranscriptExonData();
     }
 
-    public String readId() { return mReads.get(0).Id; }
+    public String readId() { return mReadGroup.id(); }
 
-    public final List<ReadRecord> reads() { return mReads; }
+    public final List<ReadRecord> reads() { return mReadGroup.Reads; }
+    public final ReadGroup readGroup() { return mReadGroup; }
 
     public FusionFragmentType type() { return mType; }
     public final String[] chromosomes() { return mChromosomes; }
@@ -164,9 +161,9 @@ public class FusionFragment
 
         // doesn't take junctions into consideration
         if(isSingleGeneCollection())
-            return mReads;
+            return mReadGroup.Reads;
 
-        return mReads.stream()
+        return mReadGroup.Reads.stream()
                 .filter(x -> x.Chromosome.equals(mChromosomes[se]))
                 .filter(x -> x.getGeneCollectons()[SE_START] == mGeneCollections[se] || x.getGeneCollectons()[SE_END] == mGeneCollections[se])
                 .collect(Collectors.toList());

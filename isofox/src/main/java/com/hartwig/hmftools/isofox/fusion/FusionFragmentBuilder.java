@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJuncti
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.fusion.ReadGroup.hasSuppAlignment;
 
 import java.util.List;
 import java.util.Map;
@@ -58,11 +59,6 @@ public class FusionFragmentBuilder
         }
 
         return (reads.size() == 2);
-    }
-
-    public static boolean hasSuppAlignment(final List<ReadRecord> reads)
-    {
-        return reads.stream().anyMatch(x -> x.hasSuppAlignment());
     }
 
     public static void setFragmentProperties(final FusionFragment fragment)

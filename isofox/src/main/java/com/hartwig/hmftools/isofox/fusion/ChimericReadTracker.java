@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.hasSuppAlignment;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
@@ -33,10 +32,10 @@ public class ChimericReadTracker
     private final IsofoxConfig mConfig;
 
     private GeneCollection mGeneCollection; // the current collection being processed
-    private final Map<String, List<ReadRecord>> mChimericReadMap;
+    private final Map<String,ReadGroup> mChimericReadMap;
     private final Set<Integer> mJunctionPositions; // from amongst the chimeric fragments with evidence of a fusion junction
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
-    private final Map<String,List<ReadRecord>> mCandidateRealignedReadMap;
+    private final Map<String,ReadGroup> mCandidateRealignedReadMap;
     private final Set<String> mDuplicateReadIds; // used to store chimeric duplicates
 
     // to avoid double-processing reads falling after a gene collection
@@ -58,7 +57,7 @@ public class ChimericReadTracker
         mGeneCollection = null;
     }
 
-    public final Map<String,List<ReadRecord>> getReadMap() { return mChimericReadMap; }
+    public final Map<String,ReadGroup> getReadMap() { return mChimericReadMap; }
     public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
     public final List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public Set<String> getDuplicateReadIds() { return mDuplicateReadIds; }
@@ -88,7 +87,7 @@ public class ChimericReadTracker
         if(read1.isDuplicate() || read2.isDuplicate()) // group complete so drop these
             return;
 
-        mCandidateRealignedReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+        mCandidateRealignedReadMap.put(read1.Id, new ReadGroup(read1, read2));
     }
 
     public void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
@@ -109,9 +108,9 @@ public class ChimericReadTracker
             // shouldn't occur
             ISF_LOGGER.error("overriding chimeric read({})", read1.Id);
 
-            final List<ReadRecord> existingReads = mChimericReadMap.get(read1.Id);
+            final ReadGroup existingGroup = mChimericReadMap.get(read1.Id);
 
-            for(ReadRecord read : existingReads)
+            for(ReadRecord read : existingGroup.Reads)
             {
                 ISF_LOGGER.error("existing read: {}", read);
             }
@@ -119,12 +118,12 @@ public class ChimericReadTracker
             ISF_LOGGER.error("new read: {}", read1);
             ISF_LOGGER.error("new read: {}", read2);
 
-            existingReads.add(read1);
-            existingReads.add(read2);
+            existingGroup.Reads.add(read1);
+            existingGroup.Reads.add(read2);
         }
         else
         {
-            mChimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+            mChimericReadMap.put(read1.Id, new ReadGroup(read1, read2));
         }
     }
 
@@ -160,9 +159,10 @@ public class ChimericReadTracker
         // migrate any local chimeric fragments for analysis as alternate splice junctions
         final List<String> fragsToRemove = Lists.newArrayList();
 
-        for(List<ReadRecord> reads : mChimericReadMap.values())
+        for(final ReadGroup readGroup : mChimericReadMap.values())
         {
             // skip reads if all will be processed later or have been already
+            final List<ReadRecord> reads = readGroup.Reads;
             final String readId = reads.get(0).Id;
 
             if(readId.equals(LOG_READ_ID))
@@ -171,7 +171,7 @@ public class ChimericReadTracker
             }
 
             int readCount = reads.size();
-            boolean readGroupComplete = (readCount == 3 || (!hasSuppAlignment(reads) && readCount == 2));
+            boolean readGroupComplete = readGroup.isComplete(); 
 
             // if any read in the group is a duplicate then drop the entire group
             // but record it's ID for the reads in other gene collections if the group is incomplete
@@ -212,11 +212,11 @@ public class ChimericReadTracker
         mGeneCollection.addCount(TOTAL, chimericCount);
         mGeneCollection.addCount(CHIMERIC, chimericCount);
 
-        for(List<ReadRecord> reads : mCandidateRealignedReadMap.values())
+        for(final ReadGroup readGroup : mCandidateRealignedReadMap.values())
         {
             boolean addRead = false;
 
-            for(ReadRecord read : reads)
+            for(ReadRecord read : readGroup.Reads)
             {
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
@@ -227,7 +227,7 @@ public class ChimericReadTracker
                                 x - SOFT_CLIP_JUNC_BUFFER, x + SOFT_CLIP_JUNC_BUFFER)))
                         {
                             addRead = true;
-                            mChimericReadMap.put(read.Id, reads);
+                            mChimericReadMap.put(read.Id, readGroup);
                             ++mChimericStats.CandidateRealignFrags;
                             break;
                         }
@@ -241,10 +241,9 @@ public class ChimericReadTracker
 
         // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
         // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
-        for(Map.Entry<String,List<ReadRecord>> entry : mChimericReadMap.entrySet())
+        for(final ReadGroup readGroup : mChimericReadMap.values())
         {
-            final List<ReadRecord> reads = entry.getValue();
-            reads.forEach(x -> x.captureGeneInfo(true));
+            readGroup.Reads.forEach(x -> x.captureGeneInfo(true));
         }
     }
 

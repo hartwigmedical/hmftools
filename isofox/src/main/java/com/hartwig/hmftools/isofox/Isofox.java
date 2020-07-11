@@ -105,12 +105,6 @@ public class Isofox
 
     public boolean runAnalysis()
     {
-        if(mConfig.runFunction(FUSIONS) && mConfig.Fusions.ReadsFile != null)
-        {
-            runCachedReadFusions();
-            return true;
-        }
-
         if(mConfig.SampleId != null)
             ISF_LOGGER.info("sample({}) running RNA analysis", mConfig.SampleId);
         else
@@ -265,12 +259,6 @@ public class Isofox
 
         logPerformanceStats(perfCounters);
         return true;
-    }
-
-    private void runCachedReadFusions()
-    {
-        mFusionFinder.loadChimericReads();
-        mFusionFinder.findFusions();
     }
 
     private void applyGcAdjustments(final List<ChromosomeGeneTask> chrTasks, final GcRatioCounts actualGcCounts)
