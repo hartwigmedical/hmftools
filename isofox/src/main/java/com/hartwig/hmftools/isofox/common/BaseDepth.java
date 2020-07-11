@@ -48,6 +48,7 @@ public class BaseDepth
         }
         else
         {
+            // clear previous depth state
             for(int i = 0; i < mDepth.length; ++i)
                 mDepth[i] = 0;
         }

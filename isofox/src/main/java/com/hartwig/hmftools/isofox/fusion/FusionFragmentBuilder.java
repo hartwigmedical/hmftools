@@ -38,7 +38,7 @@ public class FusionFragmentBuilder
     Secondary fusion fragments:
     - 2 reads forming a local DEL without supplementary where 1 or more reads ends outside the current gene collection
         - has an N-split for the actual DEL
-        - has soft-clipped facing reads
+        - has a pair of soft-clipped facing reads
     - 2 discordant reads if not supporting a fusion and in a known pair
 
     Supporting fragments:
@@ -63,23 +63,6 @@ public class FusionFragmentBuilder
     public static boolean hasSuppAlignment(final List<ReadRecord> reads)
     {
         return reads.stream().anyMatch(x -> x.hasSuppAlignment());
-    }
-
-    public static boolean spansGeneCollections(final List<ReadRecord> reads)
-    {
-        if(reads.stream().anyMatch(x -> x.spansGeneCollections()))
-            return true;
-
-        int gc = reads.get(0).getGeneCollectons()[SE_START];
-        final String chr = reads.get(0).Chromosome;
-
-        for(int i = 1; i < reads.size(); ++i)
-        {
-            if(!chr.equals(reads.get(i).Chromosome) || reads.get(i).getGeneCollectons()[SE_START] != gc)
-                return true;
-        }
-
-        return false;
     }
 
     public static void setFragmentProperties(final FusionFragment fragment)
@@ -242,6 +225,7 @@ public class FusionFragmentBuilder
     {
         // set the junction data around the spanning N-split
         final ReadRecord splitRead = fragment.reads().stream()
+                .filter(x -> x.containsSplit())
                 .filter(x -> x.spansGeneCollections() || x.hasInterGeneSplit())
                 .findFirst().orElse(null);
 

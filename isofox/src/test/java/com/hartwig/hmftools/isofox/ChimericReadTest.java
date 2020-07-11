@@ -34,7 +34,6 @@ import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadTracker;
-import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 
 import org.junit.Test;
 

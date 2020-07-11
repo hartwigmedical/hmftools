@@ -336,7 +336,7 @@ public class FusionFinder
         return true;
     }
 
-    private static final int RECOVERED = 0;
+    private static final int RECOVERED = 0; // no longer used
     private static final int MISSING = 1;
     private static final int SKIP = 2;
 
@@ -362,56 +362,10 @@ public class FusionFinder
                 return;
             }
 
-            if(!mConfig.Fusions.RecoverMissingReads)
-            {
-                ISF_LOGGER.info("read({}) missing supp({}), recovery disabled", read, suppData);
-                status[MISSING] = true;
-                return;
-            }
-
-            final List<ReadRecord> missingReads = findMissingReads(read.Id, suppData.Chromosome, suppData.Position, reads.size() == 1);
-
-            if(!missingReads.isEmpty())
-            {
-                ISF_LOGGER.info("id({}) recovered {} missing reads", read.Id, missingReads.size());
-
-                if(ISF_LOGGER.isDebugEnabled())
-                {
-                    missingReads.stream().forEach(x -> ISF_LOGGER.info("recovered read: {}", x));
-                }
-
-                reads.addAll(missingReads);
-                status[RECOVERED] = true;
-            }
-            else
-            {
-                ISF_LOGGER.info("read({}) missing supp({}) not found", read, suppData);
-                status[MISSING] = true;
-            }
-
-            break;
+            ISF_LOGGER.info("read({}) missing supp({})", read, suppData);
+            status[MISSING] = true;
+            return;
         }
-    }
-
-    private List<ReadRecord> findMissingReads(final String readId, final String chromosome, int position, boolean expectPair)
-    {
-        final QueryInterval[] queryIntervals = new QueryInterval[1];
-        int chrIndex = mSamReader.getFileHeader().getSequenceIndex(chromosome);
-
-        // build a buffer around this position to pick up a second read
-        if(expectPair)
-        {
-            int buffer = mConfig.MaxFragmentLength;
-            queryIntervals[0] = new QueryInterval(chrIndex, position - buffer, position + buffer);
-        }
-        else
-        {
-            queryIntervals[0] = new QueryInterval(chrIndex, position, position);
-        }
-
-        final List<SAMRecord> records = mBamSlicer.slice(mSamReader, queryIntervals);
-
-        return records.stream().filter(x -> x.getReadName().equals(readId)).map(x -> ReadRecord.from(x)).collect(Collectors.toList());
     }
 
     private boolean skipRead(final String otherChromosome, int otherPosition)
@@ -562,7 +516,7 @@ public class FusionFinder
 
     public static void mergeChimericReadMaps(final Map<String,List<ReadRecord>> destMap, final Map<String,List<ReadRecord>> sourceMap)
     {
-        for(Map.Entry<String,List<ReadRecord>> entry :  sourceMap.entrySet())
+        for(Map.Entry<String,List<ReadRecord>> entry : sourceMap.entrySet())
         {
             List<ReadRecord> readsById = destMap.get(entry.getKey());
 

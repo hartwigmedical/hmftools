@@ -584,10 +584,9 @@ public class ChromosomeGeneTask implements Callable
 
         if(ISF_LOGGER.isDebugEnabled() && readMap.size() > 50)
         {
-            ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={})",
-                    mChromosome, geneCollection.geneNames(), readMap.size(),
-                    mChimericReadMap.size(), candidateJunctions.size(), depthMap.size(),
-                    mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum());
+            ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={}) missJuncPos({})",
+                    mChromosome, geneCollection.geneNames(), readMap.size(), mChimericReadMap.size(), candidateJunctions.size(),
+                    depthMap.size(), mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum(), mMissingJunctionPositions.size());
         }
 
         mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());

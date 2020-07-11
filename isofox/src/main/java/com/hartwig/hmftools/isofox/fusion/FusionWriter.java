@@ -150,7 +150,7 @@ public class FusionWriter
         }
     }
 
-    public void writeReadData(final List<ReadRecord> reads, final String groupStatus)
+    public synchronized void writeReadData(final List<ReadRecord> reads, final String groupStatus)
     {
         if(!mWriteReads)
             return;
@@ -199,7 +199,7 @@ public class FusionWriter
         }
     }
 
-    public void writeUnfusedFragments(final Map<String,List<FusionFragment>> unfusedFragments)
+    public synchronized void writeUnfusedFragments(final Map<String,List<FusionFragment>> unfusedFragments)
     {
         if(!mWriteReads)
             return;

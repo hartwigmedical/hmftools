@@ -37,7 +37,7 @@ public class ChimericReadTracker
     private final Set<Integer> mJunctionPositions; // from amongst the chimeric fragments with evidence of a fusion junction
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
     private final Map<String,List<ReadRecord>> mCandidateRealignedReadMap;
-    private final Set<String> mDuplicateReadIds; // currently only used to store chimeric duplicates
+    private final Set<String> mDuplicateReadIds; // used to store chimeric duplicates
 
     // to avoid double-processing reads falling after a gene collection
     private final Map<String,List<ReadRecord>> mPostGeneReadMap;
@@ -61,7 +61,7 @@ public class ChimericReadTracker
     public final Map<String,List<ReadRecord>> getReadMap() { return mChimericReadMap; }
     public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
     public final List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
-    public Set<String> getReadIds() { return mDuplicateReadIds; }
+    public Set<String> getDuplicateReadIds() { return mDuplicateReadIds; }
     public ChimericStats getStats() { return mChimericStats; }
 
     public void initialise(final GeneCollection geneCollection)
@@ -173,10 +173,15 @@ public class ChimericReadTracker
             int readCount = reads.size();
             boolean readGroupComplete = (readCount == 3 || (!hasSuppAlignment(reads) && readCount == 2));
 
-            // if an entire group is a duplicate it can be dropped, otherwise record it's ID for the reads in other gene collections then drop it
+            // if any read in the group is a duplicate then drop the entire group
+            // but record it's ID for the reads in other gene collections if the group is incomplete
             if(reads.stream().anyMatch(x -> x.isDuplicate()))
             {
-                mDuplicateReadIds.add(readId);
+                if(mDuplicateReadIds.contains(readId))
+                    mDuplicateReadIds.remove(readId); // not expected to be seen again since occurs across consecutive gene collections
+                else
+                    mDuplicateReadIds.add(readId);
+
                 fragsToRemove.add(readId);
                 continue;
             }
@@ -305,7 +310,6 @@ public class ChimericReadTracker
     private boolean hasMultipleKnownSpliceGenes(final List<ReadRecord> reads)
     {
         Set<Integer> junctionPositions = Sets.newHashSet();
-
         ReadRecord splitRead = null;
 
         for(ReadRecord read : reads)
