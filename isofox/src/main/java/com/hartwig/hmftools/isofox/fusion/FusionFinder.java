@@ -202,7 +202,7 @@ public class FusionFinder
             {
                 reads.forEach(x -> checkMissingGeneData(x));
 
-                FusionFragment fragment = new FusionFragment(reads);
+                FusionFragment fragment = new FusionFragment(readGroup);
 
                 if(fragment.type() == FusionFragmentType.UNKNOWN)
                 {

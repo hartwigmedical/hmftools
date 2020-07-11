@@ -69,6 +69,14 @@ public class FusionUtils
          */
     }
 
+    public static ReadRecord findSplitRead(final List<ReadRecord> reads)
+    {
+        return reads.stream()
+                .filter(x -> x.containsSplit())
+                .filter(x -> x.spansGeneCollections() || x.hasInterGeneSplit())
+                .findFirst().orElse(null);
+    }
+
     public static int[] findSplitReadJunction(final ReadRecord read)
     {
         if(!read.containsSplit())

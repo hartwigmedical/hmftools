@@ -47,9 +47,9 @@ public class FusionFragment
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
     private final List<TransExonRef>[] mTransExonRefs;
 
-    public FusionFragment(final List<ReadRecord> reads)
+    public FusionFragment(final ReadGroup readGroup)
     {
-        mReadGroup = new ReadGroup(reads);
+        mReadGroup = readGroup;
         mHasSupplementaryAlignment = mReadGroup.hasSuppAlignment();
 
         mGeneCollections = new int[] {NO_GENE_ID, NO_GENE_ID};
@@ -79,6 +79,8 @@ public class FusionFragment
 
         extractTranscriptExonData();
     }
+
+    public static FusionFragment from(final List<ReadRecord> reads) { return new FusionFragment(new ReadGroup(reads)); }
 
     public String readId() { return mReadGroup.id(); }
 

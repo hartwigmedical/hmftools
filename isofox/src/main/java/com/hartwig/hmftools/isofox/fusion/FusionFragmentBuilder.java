@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOF
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitRead;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
@@ -115,12 +116,16 @@ public class FusionFragmentBuilder
         }
 
         // identify the properties of the junction and use it to set other properties of the fragment
-        if(fragment.isSingleChromosome()
-        && fragment.reads().stream().anyMatch(x -> x.containsSplit() && (x.spansGeneCollections() || x.hasInterGeneSplit())))
+        if(fragment.isSingleChromosome())
         {
-            // set the junction data around the spanning N-split
-            setSplitReadJunctionData(fragment);
-            return;
+            final ReadRecord splitRead = findSplitRead(fragment.reads());
+
+            if(splitRead != null)
+            {
+                // set the junction data around the spanning N-split
+                setSplitReadJunctionData(fragment, splitRead);
+                return;
+            }
         }
 
         // set single junction info for candidate realignable reads
@@ -217,14 +222,9 @@ public class FusionFragmentBuilder
         fragment.setType(MATCHED_JUNCTION);
     }
 
-    private static void setSplitReadJunctionData(final FusionFragment fragment)
+    private static void setSplitReadJunctionData(final FusionFragment fragment, final ReadRecord splitRead)
     {
         // set the junction data around the spanning N-split
-        final ReadRecord splitRead = fragment.reads().stream()
-                .filter(x -> x.containsSplit())
-                .filter(x -> x.spansGeneCollections() || x.hasInterGeneSplit())
-                .findFirst().orElse(null);
-
         final int[] splitJunction = findSplitReadJunction(splitRead);
 
         if(splitJunction != null)

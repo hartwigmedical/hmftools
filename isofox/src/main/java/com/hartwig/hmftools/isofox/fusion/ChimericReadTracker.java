@@ -9,9 +9,11 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitRead;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
+import static com.hartwig.hmftools.isofox.fusion.ReadGroup.hasSuppAlignment;
 
 import java.util.List;
 import java.util.Map;
@@ -171,7 +173,7 @@ public class ChimericReadTracker
             }
 
             int readCount = reads.size();
-            boolean readGroupComplete = readGroup.isComplete(); 
+            boolean readGroupComplete = readGroup.isComplete();
 
             // if any read in the group is a duplicate then drop the entire group
             // but record it's ID for the reads in other gene collections if the group is incomplete
@@ -200,7 +202,7 @@ public class ChimericReadTracker
                 continue;
             }
 
-            collectCandidateJunctions(reads, mJunctionPositions);
+            collectCandidateJunctions(reads);
         }
 
         if(!fragsToRemove.isEmpty())
@@ -424,23 +426,66 @@ public class ChimericReadTracker
         return false;
     }
 
-    private void collectCandidateJunctions(final List<ReadRecord> reads, final Set<Integer> junctionPositions)
+    private void collectCandidateJunctions(final List<ReadRecord> reads)
     {
-        for(ReadRecord read : reads)
+        final ReadRecord splitRead = findSplitRead(reads);
+
+        if(splitRead != null)
         {
-            if(read.hasInterGeneSplit() || (read.containsSplit() && read.spansGeneCollections()))
+            final int[] splitJunction = findSplitReadJunction(splitRead);
+            mJunctionPositions.add(splitJunction[SE_START]);
+            mJunctionPositions.add(splitJunction[SE_END]);
+            return;
+        }
+
+        if(hasSuppAlignment(reads))
+        {
+            for(ReadRecord read : reads)
             {
-                final int[] splitJunction = findSplitReadJunction(read);
-                junctionPositions.add(splitJunction[SE_START]);
-                junctionPositions.add(splitJunction[SE_END]);
-                break;
+                if(read.hasSuppAlignment())
+                {
+                    for(int se = SE_START; se <= SE_END; ++se)
+                    {
+                        if(hasRealignableSoftClip(read, se, false))
+                            mJunctionPositions.add(read.getCoordsBoundary(se));
+
+                    }
+                }
             }
 
+            return;
+        }
+
+        // otherwise must either have a junction supported by 2 facing soft-clipped reads or a supplementary read
+        // logic needs to match the type and junction assignment in FusionFragmentBuilder
+        if(reads.size() == 1)
+        {
+            final ReadRecord read = reads.get(0);
+
             if(hasRealignableSoftClip(read, SE_START, false))
-                junctionPositions.add(read.getCoordsBoundary(SE_START));
+                mJunctionPositions.add(read.getCoordsBoundary(SE_START));
 
             if(hasRealignableSoftClip(read, SE_END, false))
-                junctionPositions.add(read.getCoordsBoundary(SE_END));
+                mJunctionPositions.add(read.getCoordsBoundary(SE_END));
+
+        }
+        else
+        {
+            int[] scPositions = {-1, -1};
+
+            for(ReadRecord read : reads)
+            {
+                if(hasRealignableSoftClip(read, SE_START, false))
+                    scPositions[SE_END] = read.getCoordsBoundary(SE_START);
+                else if(hasRealignableSoftClip(read, SE_END, false))
+                    scPositions[SE_START] = read.getCoordsBoundary(SE_END);
+            }
+
+            if(scPositions[SE_START] > 0 && scPositions[SE_END] > 0 && scPositions[SE_START] < scPositions[SE_END])
+            {
+                mJunctionPositions.add(scPositions[SE_START]);
+                mJunctionPositions.add(scPositions[SE_END]);
+            }
         }
     }
 
