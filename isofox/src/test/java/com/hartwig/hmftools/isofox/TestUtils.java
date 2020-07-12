@@ -41,28 +41,34 @@ public class TestUtils
     public static final String GENE_NAME_1 = "GENE1"; // +ve strand
     public static final String GENE_ID_1 = "ENSG0001";
     public static final int GENE_START_1 = 1000;
+    public static final int[] GENE_1_BOUNDARIES = {0, 9999};
 
     public static final String GENE_NAME_2 = "GENE2"; // +ve strand
     public static final String GENE_ID_2 = "ENSG0002";
     public static final int GENE_START_2 = 10000;
+    public static final int[] GENE_2_BOUNDARIES = {1501, 19999};
 
     public static final String GENE_NAME_3 = "GENE3"; // -ve strand
     public static final String GENE_ID_3 = "ENSG0003";
     public static final int GENE_START_3 = 20000;
+    public static final int[] GENE_3_BOUNDARIES = {10901, 29999};
 
     public static final String CHR_2 = "2";
 
     public static final String GENE_NAME_4 = "GENE4"; // +ve strand
     public static final String GENE_ID_4 = "ENSG0004";
     public static final int GENE_START_4 = 1000;
+    public static final int[] GENE_4_BOUNDARIES = {0, 9999};
 
     public static final String GENE_NAME_5 = "GENE5"; // -ve strand
     public static final String GENE_ID_5 = "ENSG0005";
     public static final int GENE_START_5 = 10000;
+    public static final int[] GENE_5_BOUNDARIES = {1501, 19999};
 
     public static final String GENE_NAME_6 = "GENE6"; // -ve strand
     public static final String GENE_ID_6 = "ENSG0006";
     public static final int GENE_START_6 = 10400; // will overlap with previous gene and share some exons
+    public static final int[] GENE_6_BOUNDARIES = {10901, 29999};
 
     public static final byte POS_STRAND = 1;
     public static final byte NEG_STRAND = -1;
@@ -91,15 +97,15 @@ public class TestUtils
     public static void addTestGenes(EnsemblDataCache geneTransCache)
     {
         List<EnsemblGeneData> geneList = Lists.newArrayList();
-        geneList.add(createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, GENE_START_1, GENE_START_1 + 1000));
-        geneList.add(createEnsemblGeneData(GENE_ID_2, GENE_NAME_2, CHR_1, POS_STRAND, GENE_START_2, GENE_START_2 + 1000));
-        geneList.add(createEnsemblGeneData(GENE_ID_3, GENE_NAME_3, CHR_1, NEG_STRAND, GENE_START_3, GENE_START_3 + 1000));
+        geneList.add(createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, GENE_START_1, GENE_START_1 + 500));
+        geneList.add(createEnsemblGeneData(GENE_ID_2, GENE_NAME_2, CHR_1, POS_STRAND, GENE_START_2, GENE_START_2 + 900));
+        geneList.add(createEnsemblGeneData(GENE_ID_3, GENE_NAME_3, CHR_1, NEG_STRAND, GENE_START_3, GENE_START_3 + 500));
         addGeneData(geneTransCache, CHR_1, geneList);
 
         geneList = Lists.newArrayList();
-        geneList.add(createEnsemblGeneData(GENE_ID_4, GENE_NAME_4, CHR_2, POS_STRAND, GENE_START_4, GENE_START_4 + 1000));
-        geneList.add(createEnsemblGeneData(GENE_ID_5, GENE_NAME_5, CHR_2, NEG_STRAND, GENE_START_5, GENE_START_5 + 1500));
-        geneList.add(createEnsemblGeneData(GENE_ID_6, GENE_NAME_6, CHR_2, NEG_STRAND, GENE_START_6, GENE_START_6 + 1500));
+        geneList.add(createEnsemblGeneData(GENE_ID_4, GENE_NAME_4, CHR_2, POS_STRAND, GENE_START_4, GENE_START_4 + 500));
+        geneList.add(createEnsemblGeneData(GENE_ID_5, GENE_NAME_5, CHR_2, NEG_STRAND, GENE_START_5, GENE_START_5 + 900));
+        geneList.add(createEnsemblGeneData(GENE_ID_6, GENE_NAME_6, CHR_2, NEG_STRAND, GENE_START_6, GENE_START_6 + 1100));
         addGeneData(geneTransCache, CHR_2, geneList);
     }
 
@@ -119,7 +125,6 @@ public class TestUtils
         List<TranscriptData> transDataList = Lists.newArrayList();
 
         // exons will be gene start + 0-100, 200-300, 400-500
-
         TranscriptData transData = createTransExons(
                 GENE_ID_1, TRANS_1, POS_STRAND, generateExonStarts(GENE_START_1, 3, EXON_LENGTH, 100),
                 EXON_LENGTH, codingStart, codingEnd, canonical, BIOTYPE_PROTEIN_CODING);
@@ -130,6 +135,7 @@ public class TestUtils
 
         transDataList = Lists.newArrayList();
 
+        // exons will be gene start + 0-100, 200-300, 400-500, 600-700, 800-900
         transData = createTransExons(
                 GENE_ID_2, TRANS_2, POS_STRAND, generateExonStarts(GENE_START_2, 5, EXON_LENGTH, 100),
                 EXON_LENGTH, codingStart, codingEnd, canonical, BIOTYPE_PROTEIN_CODING);
@@ -352,8 +358,36 @@ public class TestUtils
 
         GeneCollection gc = new GeneCollection(id, geneReadData);
 
-        gc.setNonGenicPosition(SE_START, gc.regionBounds()[SE_START] - 9000);
-        gc.setNonGenicPosition(SE_END, gc.regionBounds()[SE_END] + 9000);
+        if(gc.geneNames().equals(GENE_NAME_1))
+        {
+            gc.setNonGenicPosition(SE_START, GENE_1_BOUNDARIES[SE_START]);
+            gc.setNonGenicPosition(SE_END, GENE_1_BOUNDARIES[SE_END]);
+        }
+        else if(gc.geneNames().equals(GENE_NAME_2))
+        {
+            gc.setNonGenicPosition(SE_START, GENE_2_BOUNDARIES[SE_START]);
+            gc.setNonGenicPosition(SE_END, GENE_2_BOUNDARIES[SE_END]);
+        }
+        else if(gc.geneNames().equals(GENE_NAME_3))
+        {
+            gc.setNonGenicPosition(SE_START, GENE_3_BOUNDARIES[SE_START]);
+            gc.setNonGenicPosition(SE_END, GENE_3_BOUNDARIES[SE_END]);
+        }
+        else if(gc.geneNames().equals(GENE_NAME_4))
+        {
+            gc.setNonGenicPosition(SE_START, GENE_4_BOUNDARIES[SE_START]);
+            gc.setNonGenicPosition(SE_END, GENE_4_BOUNDARIES[SE_END]);
+        }
+        else if(gc.geneNames().equals(GENE_NAME_5))
+        {
+            gc.setNonGenicPosition(SE_START, GENE_5_BOUNDARIES[SE_START]);
+            gc.setNonGenicPosition(SE_END, GENE_5_BOUNDARIES[SE_END]);
+        }
+        else if(gc.geneNames().equals(GENE_NAME_6))
+        {
+            gc.setNonGenicPosition(SE_START, GENE_6_BOUNDARIES[SE_START]);
+            gc.setNonGenicPosition(SE_END, GENE_6_BOUNDARIES[SE_END]);
+        }
 
         return gc;
     }

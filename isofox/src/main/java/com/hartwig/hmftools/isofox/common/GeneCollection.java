@@ -151,8 +151,8 @@ public class GeneCollection
     {
         if(positionsWithin(read.PosStart, read.PosEnd, mRegionBounds[SE_START], mRegionBounds[SE_END]))
         {
-            read.setGeneCollection(SE_START,mId, true);
-            read.setGeneCollection(SE_END,mId, true);
+            read.setGeneCollection(SE_START, mId, true);
+            read.setGeneCollection(SE_END, mId, true);
         }
         else
         {
@@ -162,11 +162,11 @@ public class GeneCollection
                 if(positionWithin(
                         read.getCoordsBoundary(se), mRegionBounds[SE_START], mRegionBounds[SE_END]))
                 {
-                    read.setGeneCollection(se,mId, true);
+                    read.setGeneCollection(se, mId, true);
                 }
                 else if(positionWithin(read.getCoordsBoundary(se), nonGenicBounds[SE_START], nonGenicBounds[SE_END]))
                 {
-                    read.setGeneCollection(se,mId, false);
+                    read.setGeneCollection(se, mId, false);
                 }
 
                 // otherwise the gene collection will remain unset for now

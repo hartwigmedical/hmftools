@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_5;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_6;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
@@ -162,6 +163,7 @@ public class ChimericReadTest
         assertTrue(chimericRT.getJunctionPositions().contains(10500));
 
         chimericRT.clear();
+        chimericRT.getJunctionPositions().clear(); // force a clean-up
 
         // this DEL doesn't splice at known sites
         read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
@@ -328,6 +330,96 @@ public class ChimericReadTest
         assertFalse(chimericRT.getJunctionPositions().contains(2100)); // already processed
 
         // assertEquals(1, chimericRT.getLocalChimericReads().size());
+    }
+
+    @Test
+    public void testJunctionPositionTracking()
+    {
+        final EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        int gcId = 0;
+
+        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+        final GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
+
+        IsofoxConfig config = new IsofoxConfig();
+        ChimericReadTracker chimericRT = new ChimericReadTracker(config);
+        BaseDepth baseDepth = new BaseDepth();
+
+        chimericRT.initialise(gc1);
+        baseDepth.initialise(gc1.regionBounds());
+
+        FragmentTracker fragTracker = new FragmentTracker();
+
+        int readId = 0;
+
+        // a split read between the first and second genes
+        ReadRecord read1 = createMappedRead(readId, gc1, 1081, 10219, createCigar(0, 20, 9100, 20, 0));
+        read1.setFlag(FIRST_OF_PAIR, true);
+        // read1.setGeneCollection(SE_END, gc2.id(), true);
+        ReadRecord read2 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        read2.setStrand(true, false);
+
+        chimericRT.addChimericReadPair(read1, read2);
+
+        read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 3));
+        read1.setFlag(FIRST_OF_PAIR, true);
+        read2 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        read2.setStrand(true, false);
+
+        chimericRT.addRealignmentCandidates(read1, read2);
+
+        // another one split to the 3rd gene
+        read1 = createMappedRead(++readId, gc1, 1281, 20419, createCigar(0, 20, 19100, 20, 0));
+        read1.setFlag(FIRST_OF_PAIR, true);
+        read1.setGeneCollection(SE_END, gc2.id(), true);
+        read2 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        read2.setStrand(true, false);
+
+        chimericRT.addChimericReadPair(read1, read2);
+
+        chimericRT.postProcessChimericReads(baseDepth, fragTracker);
+
+        assertEquals(3, chimericRT.getReadMap().size());
+        assertEquals(4, chimericRT.getJunctionPositions().size());
+
+        chimericRT.clear();
+        chimericRT.initialise(gc2);
+        baseDepth.initialise(gc2.regionBounds());
+
+        // realign candidate needs the previous split read's junction position to be retained
+        read1 = createMappedRead(++readId, gc1, 10200, 10219, createCigar(3, 20, 3));
+        read1.setFlag(FIRST_OF_PAIR, true);
+        read2 = createMappedRead(readId, gc1, 10210, 10249, createCigar(0, 40, 0));
+        read2.setStrand(true, false);
+
+        chimericRT.addRealignmentCandidates(read1, read2);
+
+        chimericRT.postProcessChimericReads(baseDepth, fragTracker);
+
+        assertEquals(1, chimericRT.getReadMap().size());
+        assertEquals(2, chimericRT.getJunctionPositions().size());
+
+        // same again with the 3rd gene
+        chimericRT.clear();
+        chimericRT.initialise(gc3);
+        baseDepth.initialise(gc3.regionBounds());
+
+        read1 = createMappedRead(++readId, gc3, 20400, 20419, createCigar(3, 20, 3));
+        read1.setFlag(FIRST_OF_PAIR, true);
+        read2 = createMappedRead(readId, gc1, 20410, 20449, createCigar(0, 40, 0));
+        read2.setStrand(true, false);
+
+        chimericRT.addRealignmentCandidates(read1, read2);
+
+        chimericRT.postProcessChimericReads(baseDepth, fragTracker);
+
+        assertEquals(1, chimericRT.getReadMap().size());
+        assertEquals(1, chimericRT.getJunctionPositions().size());
     }
 
 }

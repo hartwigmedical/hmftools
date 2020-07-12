@@ -35,7 +35,11 @@ public class ChimericReadTracker
 
     private GeneCollection mGeneCollection; // the current collection being processed
     private final Map<String,ReadGroup> mChimericReadMap;
-    private final Set<Integer> mJunctionPositions; // from amongst the chimeric fragments with evidence of a fusion junction
+
+    // junction position from fusion junction candidate reads are cached to a) identify candidate realignable reads and b)
+    // to guide the storage of base depth
+    private final Set<Integer> mJunctionPositions;
+
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
     private final Map<String,ReadGroup> mCandidateRealignedReadMap;
     private final Set<String> mDuplicateReadIds; // used to store chimeric duplicates
@@ -72,6 +76,12 @@ public class ChimericReadTracker
         mPreviousPostGeneReadMap.clear();
         mPreviousPostGeneReadMap.putAll(mPostGeneReadMap);
         mPostGeneReadMap.clear();
+
+        // only purge junction positions which are now outside the regions to be processed
+        Set<Integer> pastJuncPositions = mJunctionPositions.stream()
+                .filter(x -> x < geneCollection.getNonGenicPositions()[SE_START]).collect(Collectors.toSet());
+
+        pastJuncPositions.forEach(x -> mJunctionPositions.remove(x));
     }
 
     public void clear()
@@ -80,7 +90,6 @@ public class ChimericReadTracker
         mCandidateRealignedReadMap.clear();
         mChimericStats.clear();
         mLocalChimericReads.clear();
-        mJunctionPositions.clear();
         mDuplicateReadIds.clear();
     }
 
@@ -136,7 +145,7 @@ public class ChimericReadTracker
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:83:HC3NFBGX9:2:12311:8336:12110";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:11306:16464:16602";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
