@@ -47,19 +47,39 @@ public class ReadGroup
         Reads.addAll(other.Reads);
     }
 
-    public static void mergeChimericReadMaps(final Map<String,ReadGroup> destMap, final Map<String,ReadGroup> sourceMap)
+    public String toString() { return String.format("%s reads(%d) complete(%s)", id(), Reads.size(), isComplete()); }
+
+    public static void mergeChimericReadMaps(
+            final Map<String,ReadGroup> partialGroups, final List<ReadGroup> completeGroups, final Map<String,ReadGroup> sourceMap)
     {
         for(Map.Entry<String,ReadGroup> entry : sourceMap.entrySet())
         {
-            ReadGroup readsById = destMap.get(entry.getKey());
+            final ReadGroup srcReadGroup = entry.getValue();
 
-            if(readsById == null)
+            if(srcReadGroup.isComplete())
             {
-                destMap.put(entry.getKey(), entry.getValue());
+                completeGroups.add(srcReadGroup);
             }
             else
             {
-                readsById.merge(entry.getValue());
+                // look for an existing incomplete group to add these reads to
+                final String readId = entry.getKey();
+                ReadGroup existingReadGroup = partialGroups.get(readId);
+
+                if(existingReadGroup == null)
+                {
+                    partialGroups.put(readId, srcReadGroup);
+                }
+                else
+                {
+                    existingReadGroup.merge(srcReadGroup);
+
+                    if(existingReadGroup.isComplete())
+                    {
+                        partialGroups.remove(readId);
+                        completeGroups.add(existingReadGroup);
+                    }
+                }
             }
         }
     }

@@ -35,7 +35,6 @@ import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
@@ -70,7 +69,8 @@ public class ChromosomeGeneTask implements Callable
     private int mCollectionId;
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
-    private final Map<String,ReadGroup> mChimericReadMap;
+    private final List<ReadGroup> mChimericReadGroups;
+    private final Map<String,ReadGroup> mChimericPartialReadGroups;
     private final Set<String> mChimericDuplicateReadIds;
     private final ChimericStats mChimericStats;
     private final Set<Integer> mMissingJunctionPositions;
@@ -127,7 +127,8 @@ public class ChromosomeGeneTask implements Callable
         mEnrichedGenesFragmentCount = 0;
         mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
-        mChimericReadMap = Maps.newHashMap();
+        mChimericPartialReadGroups = Maps.newHashMap();
+        mChimericReadGroups = Lists.newArrayList();
         mChimericDuplicateReadIds = Sets.newHashSet();
         mMissingJunctionPositions = Sets.newHashSet();
         mChimericStats = new ChimericStats();
@@ -150,7 +151,8 @@ public class ChromosomeGeneTask implements Callable
     public final BamFragmentAllocator getFragmentAllocator() { return mBamFragmentAllocator; }
     public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
-    public final Map<String,ReadGroup> getChimericReadMap() { return mChimericReadMap; }
+    public final Map<String,ReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
+    public final List<ReadGroup> getChimericReadGroups() { return mChimericReadGroups; }
     public final Set<String> getChimericDuplicateReadIds() { return mChimericDuplicateReadIds; }
     public final Map<Integer,List<EnsemblGeneData>> getGeneCollectionMap() { return mGeneCollectionMap; }
     public final Map<Integer,BaseDepth> getGeneDepthMap() { return mGeneDepthMap; }
@@ -551,7 +553,7 @@ public class ChromosomeGeneTask implements Callable
         final Map<String,ReadGroup> readMap = mBamFragmentAllocator.getChimericReadTracker().getReadMap();
         final Set<Integer> candidateJunctions = mBamFragmentAllocator.getChimericReadTracker().getJunctionPositions();
 
-        mergeChimericReadMaps(mChimericReadMap, readMap);
+        mergeChimericReadMaps(mChimericPartialReadGroups, mChimericReadGroups, readMap);
         mergeDuplicateReadIds(mChimericDuplicateReadIds, mBamFragmentAllocator.getChimericDuplicateReadIds());
 
         final BaseDepth baseDepth = mBamFragmentAllocator.getBaseDepth();
@@ -586,7 +588,7 @@ public class ChromosomeGeneTask implements Callable
         if(ISF_LOGGER.isDebugEnabled() && readMap.size() > 50)
         {
             ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={}) missJuncPos({})",
-                    mChromosome, geneCollection.geneNames(), readMap.size(), mChimericReadMap.size(), candidateJunctions.size(),
+                    mChromosome, geneCollection.geneNames(), readMap.size(), mChimericPartialReadGroups.size(), candidateJunctions.size(),
                     depthMap.size(), mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum(), mMissingJunctionPositions.size());
         }
 

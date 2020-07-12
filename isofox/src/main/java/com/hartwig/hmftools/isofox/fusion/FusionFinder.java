@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
@@ -16,9 +14,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.isValidFr
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +22,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -42,32 +37,24 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
-
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class FusionFinder
 {
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
-    private final Map<String,ReadGroup> mReadsMap;
+    private final List<ReadGroup> mChimericReadGroups;
+    private final Map<String,ReadGroup> mChimericPartialReadGroups;
     private final Set<String> mDuplicateReadIds;
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
     private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
 
     private List<FusionTask> mFusionTasks;
     private final FusionWriter mFusionWriter;
-
-    private final SamReader mSamReader;
-    private final BamSlicer mBamSlicer;
 
     private final List<GenomeRegion> mRestrictedGeneRegions;
     private final List<GenomeRegion> mExcludedGeneRegions;
@@ -79,16 +66,13 @@ public class FusionFinder
         mConfig = config;
         mGeneTransCache = geneTransCache;
 
-        mReadsMap = Maps.newHashMap();
+        mChimericPartialReadGroups = Maps.newHashMap();
+        mChimericReadGroups = Lists.newArrayList();
         mDuplicateReadIds = Sets.newHashSet();
         mChrGeneCollectionMap = Maps.newHashMap();
         mChrGeneDepthMap = Maps.newHashMap();
         mFusionTasks = Lists.newArrayList();
 
-        mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
-
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
         mExcludedGeneRegions = Lists.newArrayList();
         mRestrictedGeneRegions = Lists.newArrayList();
         buildGeneRegions();
@@ -97,9 +81,15 @@ public class FusionFinder
         mFusionWriter = new FusionWriter(mConfig);
     }
 
-    public void addChimericReads(final Map<String,ReadGroup> chimericReadMap)
+    public void addChimericReads(final Map<String,ReadGroup> partialReadGroups, final List<ReadGroup> readGroups)
     {
-        mergeChimericReadMaps(mReadsMap, chimericReadMap);
+        mergeChimericReadMaps(mChimericPartialReadGroups, mChimericReadGroups, partialReadGroups);
+        mChimericReadGroups.addAll(readGroups);
+    }
+
+    public void addChimericReads(final List<ReadGroup> readGroups)
+    {
+        mChimericReadGroups.addAll(readGroups);
     }
 
     public void addDuplicateReadIds(final Set<String> readIds)
@@ -134,23 +124,31 @@ public class FusionFinder
     public void findFusions()
     {
         // convert any set of valid reads into a fragment, and then process these in groups by chromosomal pair
-        ISF_LOGGER.info("processing {} chimeric read groups", mReadsMap.size());
+        ISF_LOGGER.info("processing {} chimeric read groups", mChimericReadGroups.size());
 
         mPerfCounter.start();
 
         int invalidFragments = 0;
+        int hasMissingReads = 0;
+        int hasExcesssReads = 0;
         int duplicates = 0;
         int skipped = 0;
         int fragments = 0;
         int missingSuppReads = 0;
-        int recoveredSuppReads = 0;
+
+        int partialDups = 0;
+        int partialSkipped = 0;
+
         int readGroupCount = 0;
         int nextLog = LOG_COUNT;
-        final boolean[] recoveryStatus = new boolean[SKIP+1];
 
         final Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
 
-        for(ReadGroup readGroup : mReadsMap.values())
+        final List<ReadGroup> partialGroups = Lists.newArrayList();
+
+        mChimericReadGroups.addAll(mChimericPartialReadGroups.values());
+
+        for(ReadGroup readGroup : mChimericReadGroups)
         {
             ++readGroupCount;
 
@@ -160,46 +158,71 @@ public class FusionFinder
                 ISF_LOGGER.info("processed {} chimeric read groups", readGroupCount);
             }
 
+            boolean isComplete = readGroup.isComplete();
             final List<ReadRecord> reads = readGroup.Reads;
-
-            if(mDuplicateReadIds.contains(reads.get(0).Id) || reads.stream().anyMatch(x -> x.isDuplicate()))
-            {
-                ++duplicates;
-                continue;
-            }
-
-            if(reads.stream().anyMatch(x -> skipRead(x.mateChromosome(), x.mateStartPosition())))
-            {
-                ++skipped;
-                continue;
-            }
-
-            // chimeric supplementary reads may be missed - attempt to find them
-            recoverSupplementaryReads(reads, recoveryStatus);
-
-            if(recoveryStatus[SKIP])
-            {
-                ++skipped;
-                continue;
-            }
-
-            if(recoveryStatus[RECOVERED])
-                ++recoveredSuppReads;
-            else if(recoveryStatus[MISSING])
-                ++missingSuppReads;
 
             if(reads.get(0).Id.equals(LOG_READ_ID))
             {
                 ISF_LOGGER.debug("specific read: {}", reads.get(0));
             }
 
-            if(!isValidFragment(reads))
+            if(mDuplicateReadIds.contains(reads.get(0).Id) || reads.stream().anyMatch(x -> x.isDuplicate()))
             {
+                ++duplicates;
+
+                if(!isComplete)
+                    ++partialDups;
+
+                continue;
+            }
+
+            if(reads.stream().anyMatch(x -> skipRead(x.mateChromosome(), x.mateStartPosition())))
+            {
+                ++skipped;
+
+                if(!isComplete)
+                    ++partialSkipped;
+
+                continue;
+            }
+
+            if(!isComplete)
+            {
+                if(readGroup.hasSuppAlignment())
+                {
+                    if(skipMissingReads(reads))
+                    {
+                        ++skipped;
+                        continue;
+                    }
+
+                    ++missingSuppReads;
+                }
+
                 ++invalidFragments;
+
+                if(reads.size() > 3 || (!readGroup.hasSuppAlignment() && reads.size() > 2))
+                    ++hasExcesssReads;
+                else
+                    ++hasMissingReads;
+
                 mFusionWriter.writeReadData(reads, "INVALID_READ_COUNT");
+
+                partialGroups.add(readGroup);
             }
             else
             {
+                if(mChimericPartialReadGroups.containsKey(readGroup.id()))
+                {
+                    ISF_LOGGER.error("partial read({}) group marked as complete", readGroup.id());
+                    partialGroups.add(readGroup);
+
+                    if(mChimericReadGroups.stream().anyMatch(x -> x.id().equals(readGroup.id())))
+                    {
+                        ISF_LOGGER.error("partial read({}) group also in complete list", readGroup.id());
+                    }
+                }
+
                 reads.forEach(x -> checkMissingGeneData(x));
 
                 FusionFragment fragment = new FusionFragment(readGroup);
@@ -255,11 +278,20 @@ public class FusionFinder
             leastAllocated.getFragments().addAll(chrPairFrags);
         }
 
-        ISF_LOGGER.info("chimeric groups({} skipped={} dups=({} existing={}) invalid={} recov={} miss={} candidates={}) chrPairs({}) tasks({})",
-                mReadsMap.size(), skipped, duplicates, mDuplicateReadIds.size(), invalidFragments, recoveredSuppReads, missingSuppReads, fragments,
+        ISF_LOGGER.info("chimeric groups({} skipped={} dups=({} existing={}) invalid={} miss={} candidates={}) chrPairs({}) tasks({})",
+                mChimericReadGroups.size(), skipped, duplicates, mDuplicateReadIds.size(), invalidFragments, missingSuppReads, fragments,
                 chrPairFragments.size(), mFusionTasks.size());
 
-        mReadsMap.clear();
+        if(!mChimericPartialReadGroups.isEmpty())
+        {
+            int complete = (int)mChimericPartialReadGroups.values().stream().filter(x -> x.isComplete()).count();
+
+            ISF_LOGGER.info("partial groups({} complete={} dups={} skip={} excess={} miss={})",
+                    mChimericPartialReadGroups.size(), complete, partialDups, partialSkipped, hasExcesssReads, hasMissingReads);
+        }
+
+        mChimericPartialReadGroups.clear();
+        mChimericReadGroups.clear();
         mDuplicateReadIds.clear();
 
         if(mFusionTasks.isEmpty())
@@ -332,36 +364,22 @@ public class FusionFinder
         return true;
     }
 
-    private static final int RECOVERED = 0; // no longer used
-    private static final int MISSING = 1;
-    private static final int SKIP = 2;
-
-    private void recoverSupplementaryReads(final List<ReadRecord> reads, final boolean[] status)
+    private boolean skipMissingReads(final List<ReadRecord> reads)
     {
-        status[RECOVERED] = false;
-        status[MISSING] = false;
-        status[SKIP] = false;
-
-        if(reads.size() >= 3 || !reads.stream().anyMatch(x -> x.hasSuppAlignment()))
-            return;
-
         for(final ReadRecord read : reads)
         {
-            if(!read.hasSuppAlignment())
-                continue;
-
-            SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
-
-            if(skipRead(suppData.Chromosome, suppData.Position))
+            if(read.hasSuppAlignment())
             {
-                status[SKIP] = true;
-                return;
-            }
+                SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
 
-            ISF_LOGGER.info("read({}) missing supp({})", read, suppData);
-            status[MISSING] = true;
-            return;
+                if(skipRead(suppData.Chromosome, suppData.Position))
+                    return true;
+
+                ISF_LOGGER.info("read({}) missing supp({})", read, suppData);
+            }
         }
+
+        return false;
     }
 
     private boolean skipRead(final String otherChromosome, int otherPosition)
@@ -547,7 +565,8 @@ public class FusionFinder
 
     public void clearState()
     {
-        mReadsMap.clear();
+        mChimericPartialReadGroups.clear();
+        mChimericReadGroups.clear();
         mFusionTasks.get(0).clearState();
     }
 
