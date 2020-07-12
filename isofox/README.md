@@ -135,7 +135,7 @@ write_exon_data | Write data on transcript exon covered by a supporting fragment
 ISOFOX takes ~10 mins to process a 7GB BAM with 120M reads / 60M fragments using 10 cores, with maximum memory usage of 10GB, and ~30 mins to process a 35GB BAM with 440M reads / 200M fragments using 10 cores, with maximum memory usage of 12GB. 
 
 ### Example Usage
-Example command:
+Running all functions:
 
 ```
 java -jar isofox.jar 
@@ -156,6 +156,21 @@ java -jar isofox.jar
     -enriched_gene_ids "ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735" 
     -write_gc_data 
     -write_frag_lengths     
+    -threads 10 
+```
+
+Fusions only:
+
+```
+java -jar isofox.jar 
+    -sample SAMPLE_ID 
+    -functions FUSIONS
+    -bam_file /path_to_bam/sample.bam 
+    -ref_genome /path_to_ref_files/ef-genome.fasta 
+    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -output_dir /path_to_output_data/ 
+    -read_length 76 
+    -long_frag_limit 550 
     -threads 10 
 ```
 
