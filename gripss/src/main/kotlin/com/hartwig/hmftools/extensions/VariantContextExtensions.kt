@@ -34,6 +34,10 @@ fun VariantContext.homologyLength(): Int {
     return this.getAttributeAsInt("HOMLEN", 0)
 }
 
+fun VariantContext.homologySequence(): String {
+    return this.getAttributeAsString("HOMSEQ", "");
+}
+
 fun VariantContext.inexactHomologyLength(): Int {
     if (!this.hasAttribute("IHOMPOS")) {
         return 0

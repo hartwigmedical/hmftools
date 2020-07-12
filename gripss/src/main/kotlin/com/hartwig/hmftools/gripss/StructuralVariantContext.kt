@@ -18,8 +18,11 @@ typealias Cipos = Pair<Int, Int>
 
 class StructuralVariantContext(val context: VariantContext, private val normalOrdinal: Int = 0, private val tumorOrdinal: Int = 1) {
     private companion object {
-        private val polyG = "G".repeat(16)
-        private val polyC = "C".repeat(16)
+        private val polyGInsert = "G".repeat(16)
+        private val polyCInsert = "C".repeat(16)
+
+        private val polyAHomology = "A".repeat(7)
+        private val polyTHomology = "T".repeat(7)
     }
 
     val contig = context.contig!!
@@ -201,8 +204,12 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(IMPRECISE)
         }
 
-        if (polyGCFilter(config.polyGCRegion)) {
+        if (polyGCInsertFilter(config.polyGCRegion)) {
             result.add(MAX_POLY_G_LENGTH)
+        }
+
+        if (polyATHomologyFilter()) {
+            result.add(MAX_POLY_A_HOM_LENGTH)
         }
 
         if (homologyLengthFilterShortInversion(config.maxHomLengthShortInversion)) {
@@ -246,13 +253,19 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return context.phredScaledQual < minQual.toDouble()
     }
 
-    fun polyGCFilter(polyGRegion: Locatable): Boolean {
+    fun polyGCInsertFilter(polyGRegion: Locatable): Boolean {
         return if (isSingle) {
-            variantType.insertSequence.contains(polyG) || variantType.insertSequence.contains(polyC) or polyGRegion.contains(context)
+            variantType.insertSequence.contains(polyGInsert) || variantType.insertSequence.contains(polyCInsert) or polyGRegion.contains(context)
         } else {
             polyGRegion.contains(context) || polyGRegion.contains((variantType as Paired).let { Interval(it.otherChromosome, it.otherPosition, it.otherPosition) })
         }
     }
+
+    fun polyATHomologyFilter(): Boolean {
+        val homseq = context.homologySequence()
+        return homseq.contains(polyAHomology) || homseq.contains(polyTHomology);
+    }
+
 
     fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
         return !isSingle && !isShortDup && context.inexactHomologyLength() > maxInexactHomLength

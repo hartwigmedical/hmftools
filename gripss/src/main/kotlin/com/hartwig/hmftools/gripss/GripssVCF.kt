@@ -15,6 +15,7 @@ const val SHORT_STRAND_BIAS = "shortStrandBias"
 const val SHORT_DEL_INS_ARTIFACT = "smallDelInsertionArtifact"
 
 const val MAX_POLY_G_LENGTH = "maxPolyGLength"
+const val MAX_POLY_A_HOM_LENGTH = "maxPolyAHomLength"
 
 const val MAX_NORMAL_SUPPORT = "maxNormalSupport"
 const val MIN_NORMAL_COVERAGE = "minNormalCoverage"
@@ -57,6 +58,7 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_STRAND_BIAS, "Short event with excessive strand bias in split reads/soft clipped reads overlapping breakpoint"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_QUAL, "Insufficient quality"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artefact"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_POLY_A_HOM_LENGTH, "Homology containing long polyA or polyT run"))
         header.addMetaDataLine(VCFFilterHeaderLine(IMPRECISE, "Imprecise variant"))
         header.addMetaDataLine(VCFFilterHeaderLine(PASS, "Variant passes all filters"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_DEL_INS_ARTIFACT, "Filter any short DEL where the insert sequence length + 1 = deletion length. This is a known GRIDSS artefact."))
