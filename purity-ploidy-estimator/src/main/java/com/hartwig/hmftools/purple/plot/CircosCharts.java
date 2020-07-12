@@ -104,7 +104,7 @@ class CircosCharts {
     }
 
     private void writeFittedRegions(@NotNull final List<FittedRegion> fittedRegions) throws IOException {
-        CircosFileWriter.writeRegions(baseCircosReferenceSample + ".ratio.circos", fittedRegions, ObservedRegion::observedNormalRatio);
+        CircosFileWriter.writeRegions(baseCircosReferenceSample + ".ratio.circos", fittedRegions, ObservedRegion::unnormalisedObservedNormalRatio);
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".ratio.circos", fittedRegions, ObservedRegion::observedTumorRatio);
     }
 
