@@ -21,7 +21,7 @@ Deletions are restricted to the target deletion genes described in the supplemen
 To include point mutations in the driver catalog, the somatic VCF must be annotated with SnpEff. 
 
 The PURPLE driver catalog does NOT include fusions. 
-Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/sv-linx) can improve the PURPLE driver catalog with the addition of fusion drivers. 
+Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/sv-linx) enriches the PURPLE driver catalog with the addition of fusion drivers. 
 
 # Improvements
 
@@ -30,7 +30,7 @@ The following sections highlight the changes from what is described in the suppl
 ## Significantly amplified & deleted driver gene discovery changes
 
 We updated the method described in the supplementary information to account for the larger cohort by raising the cutoffs for significant deletions to >7 homozygous deletes (previously >5) and for amplifications to a score of >35 (previously >29).
-For annotation of unknown ambiguous amplification and deletion targets, we modified the prioritisation so that the longest protein coding gene was selected as the target gene ahead of the highest scoring gene.     
+For annotation of unknown ambiguous amplification and deletion targets, we modified the prioritisation so that the longest protein coding gene was selected as the target gene ahead of the highest scoring gene.
 Target regions with more than 50% of the amplifications or deletions bounded by a centromere or telomere are also marked as telomeric or centromeric.
 
 ## Panel of driver genes for point mutations
@@ -73,7 +73,7 @@ Figure B shows the classification after the multivariate regression using both p
 ## Gene Driver Likelihood
 
 A driver likelihood estimate between 0 and 1 is calculated for each variant in the gene panel. 
-High level amplifications, Deletions, Fusions (when using LINX), and TERT promoter mutations are all rare so have a likelihood of 1 when found affecting a driver gene, but for coding mutations we need to account for the large number of passenger point mutations that are present throughout the genome and thus also in driver genes.
+High level amplifications, deletions, fusions (when using LINX), and TERT promoter mutations are all rare so have a likelihood of 1 when found affecting a driver gene, but for coding mutations we need to account for the large number of passenger point mutations that are present throughout the genome and thus also in driver genes.
 
 For coding mutations we also mark coding mutations that are highly likely to be drivers and/or highly unlikely to have occurred as passengers as driver likelihood of 1, specifically:
 - Known hotspot variants
@@ -86,7 +86,8 @@ For TSG dnds rates, we find that biallelic dnds rates are typically much higher 
 Hence for missense variants in TSG where we observed a higher biallelic dnds rate compared to non-biallelic, we treat bialllelic and non-biallelic missense variants as independent variant classes and calculated dnds rates, passenger and driver counts separately. 
 If the biallelic dnds rate is lower than the non-biallelic rate for a TSG then all missense variants for that gene are pooled together and the combined dnds rate for that gene is used.
 
-The principle behind the likelihood method is that the likelihood of a passenger variant occuring in a particular sample should be approximately proportional to the tumor mutational burden and hence variants in samples with lower mutational burden are more likely to be drivers.   
+The principle behind the likelihood method is that the likelihood of a passenger variant occuring in a particular sample should be approximately proportional to the tumor mutational burden and hence variants in samples with lower mutational burden are more likely to be drivers.
+
 The sample specific likelihood of a residual excess variant being a driver is estimated for each gene using the following formula:
 
 ```
@@ -105,5 +106,5 @@ And P(Variant|Non-Driver), the probability of observing n or more passenger vari
 P(Variant|Non-Driver) = 1 - poisson(λ = TMB(Sample) / TMB(Cohort) * (# of passenger variants in cohort),k=n-1)
 ```
 
-Note that the TMB for both the samples and cohort are calculated separately for INDELs and SNVs, and in the case of TSG separately for bialllelic and non biallelic variants.
+Note that the TMB is calculated separately for INDELs and SNVs, and in the case of TSG separately for bialllelic and non biallelic variants.
 
