@@ -84,8 +84,8 @@ public class GermlineVariantDAO {
                     variant.hgvsCoding(),
                     variant.biallelic(),
                     DatabaseUtil.decimal(variant.minorAlleleJcn()),
-                    variant.isHomozygous() ? "HOM" : "HET",
-                    variant.clinvarSignificanceInfo(),
+                    variant.refStatus(),
+                    variant.clinvarInfo(),
                     timestamp);
         }
 

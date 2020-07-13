@@ -38,6 +38,9 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
+import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
+import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -421,14 +424,8 @@ class VariantEnricher
                     .hgvsCoding(bachRecord.HgvsCoding)
                     .biallelic(bachRecord.isBiallelic())
                     .minorAlleleJcn(enrichedVariant != null ? enrichedVariant.minorAlleleCopyNumber() : somaticVariant.minorAlleleCopyNumber())
-                    .program(bachRecord.Program)
-                    .variantId(bachRecord.VariantId)
-                    .annotations(bachRecord.Annotations)
-                    .phredScore(bachRecord.PhredScore)
-                    .isHomozygous(bachRecord.IsHomozygous)
-                    .codonInfo(bachRecord.CodonInfo)
-                    .clinvarSignificance(bachRecord.getClinvarSig())
-                    .clinvarSignificanceInfo(bachRecord.getClinvarSigInfo())
+                    .refStatus(bachRecord.IsHomozygous ? "HOM" : "HET")
+                    .clinvarInfo(bachRecord.getClinvarSig() + ";" + bachRecord.getClinvarSigInfo())
                     .build());
         }
 
@@ -441,6 +438,35 @@ class VariantEnricher
         {
             final String filename = GermlineVariantFile.generateFilename(mConfig.OutputDir, sampleId);
             GermlineVariantFile.write(filename, germlineVariants);
+
+            final String reportableVariantsFilename = ReportableGermlineVariantFile.generateFilename(mConfig.OutputDir, sampleId);
+
+            final List<ReportableGermlineVariant> reportableVariants = Lists.newArrayList();
+
+            for(final GermlineVariant germlineVariant : germlineVariants)
+            {
+                if(!germlineVariant.reported())
+                    continue;
+
+                reportableVariants.add(ImmutableReportableGermlineVariant.builder()
+                        .passFilter(true)
+                        .gene(germlineVariant.gene())
+                        .ref(germlineVariant.ref())
+                        .alt(germlineVariant.alts())
+                        .codingEffect(germlineVariant.codingEffect())
+                        .chromosome(germlineVariant.chromosome())
+                        .position(germlineVariant.position())
+                        .hgvsProtein(germlineVariant.hgvsProtein())
+                        .hgvsCoding(germlineVariant.hgvsCoding())
+                        .totalReadCount(germlineVariant.totalReadCount())
+                        .alleleReadCount(germlineVariant.alleleReadCount())
+                        .adjustedVaf(germlineVariant.adjustedVaf())
+                        .adjustedCopyNumber(germlineVariant.adjustedCopyNumber())
+                        .biallelic(germlineVariant.biallelic())
+                        .build());
+            }
+
+            ReportableGermlineVariantFile.write(reportableVariantsFilename, reportableVariants);
         }
         catch (final IOException e)
         {

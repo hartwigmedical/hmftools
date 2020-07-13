@@ -32,15 +32,7 @@ public abstract class GermlineVariant
     public abstract String hgvsCoding();
     public abstract boolean biallelic();
     public abstract double minorAlleleJcn();
-
-    // other fields
-    public abstract String program();
-    public abstract String variantId();
-    public abstract String annotations();
-    public abstract int phredScore();
-    public abstract boolean isHomozygous();
-    public abstract String codonInfo();
-    public abstract String clinvarSignificance();
-    public abstract String clinvarSignificanceInfo();
+    public abstract String refStatus();
+    public abstract String clinvarInfo();
 
 }

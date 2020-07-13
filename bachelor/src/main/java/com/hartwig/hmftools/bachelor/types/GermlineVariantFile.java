@@ -80,14 +80,9 @@ public class GermlineVariantFile
                 .add("hgvsCoding")
                 .add("biallelic")
                 .add("minorAllelePloidy")
-                .add("program")
-                .add("variantId")
-                .add("annotations")
-                .add("phredScore")
-                .add("isHomozygous")
+                .add("refStatus")
                 .add("codonInfo")
-                .add("clinvarSignificance")
-                .add("clinvarSignificanceInfo")
+                .add("clinvarInfo")
                 .toString();
     }
 
@@ -119,14 +114,8 @@ public class GermlineVariantFile
                 .add(String.valueOf(data.hgvsCoding()))
                 .add(String.valueOf(data.biallelic()))
                 .add(String.valueOf(data.minorAlleleJcn()))
-                .add(String.valueOf(data.program()))
-                .add(String.valueOf(data.variantId()))
-                .add(String.valueOf(data.annotations()))
-                .add(String.valueOf(data.phredScore()))
-                .add(String.valueOf(data.isHomozygous()))
-                .add(String.valueOf(data.codonInfo()))
-                .add(String.valueOf(data.clinvarSignificance()))
-                .add(String.valueOf(data.clinvarSignificanceInfo()))
+                .add(String.valueOf(data.refStatus()))
+                .add(String.valueOf(data.clinvarInfo()))
                 .toString();
     }
 
@@ -162,14 +151,8 @@ public class GermlineVariantFile
                 .hgvsCoding(values[index++])
                 .biallelic(Boolean.parseBoolean(values[index++]))
                 .minorAlleleJcn(Double.parseDouble(values[index++]))
-                .program(values[index++])
-                .variantId(values[index++])
-                .annotations(values[index++])
-                .phredScore(Integer.parseInt(values[index++]))
-                .isHomozygous(Boolean.parseBoolean(values[index++]))
-                .codonInfo(values[index++])
-                .clinvarSignificance(values[index++])
-                .clinvarSignificanceInfo(values[index++])
+                .refStatus(values[index++])
+                .clinvarInfo(values[index++])
                 .build();
     }
 }
