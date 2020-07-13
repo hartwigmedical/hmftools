@@ -1,12 +1,18 @@
 package com.hartwig.hmftools.linx.analyser;
 
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.NEG_STRAND;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
 
@@ -17,9 +23,13 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
+import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -253,6 +263,54 @@ public class LineTest
         assertTrue(tester.findChainWithSVs(cluster, Lists.newArrayList(var1, var2)) != null);
         assertTrue(tester.findChainWithSVs(cluster, Lists.newArrayList(var3, var4, var5)) != null);
         assertTrue(tester.findChainWithSVs(cluster, Lists.newArrayList(var6, var7)) != null);
+    }
+
+    @Test
+    public void testLineSglChaining()
+    {
+        LinxTester tester = new LinxTester();
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        // scenario 1: 2 SGLs with mappings to the same location
+        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, POLY_A_MOTIF);
+        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "", 120, 0,  -1, 0, SGL, "");
+
+        // both have additional mappings which are ignored
+        sgl1.getSglMappings().add(new SglMapping(CHR_2, 1000, NEG_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping("5", 10000, NEG_ORIENT, "", 1));
+        sgl2.getSglMappings().add(new SglMapping(CHR_2, 1100, POS_ORIENT, "", 1));
+        sgl2.getSglMappings().add(new SglMapping("3", 2000, NEG_ORIENT, "", 1));
+
+        tester.AllVariants.addAll(Lists.newArrayList(sgl1, sgl2));
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        tester.clearClustersAndSVs();
+
+        // again with a BND to a SGL
+        sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, POLY_A_MOTIF);
+        SvVarData bnd = createSv(tester.nextVarId(), "1", "2", 120, 1100,  -1, 1, BND, "");
+
+        // both have additional mappings which are ignored
+        sgl1.getSglMappings().add(new SglMapping(CHR_2, 1000, NEG_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping("5", 10000, NEG_ORIENT, "", 1));
+
+        tester.AllVariants.addAll(Lists.newArrayList(sgl1, bnd));
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
     }
 
 }

@@ -166,6 +166,7 @@ public class SvVarData
 
     public SvBreakend getBreakend(int seIndex) { return mBreakend[seIndex]; }
     public SvBreakend getBreakend(boolean isStart) { return mBreakend[seIndex(isStart)]; }
+    public void setSglEndBreakend(final SvBreakend breakend) { mBreakend[SE_END] = breakend; }
 
     public boolean isSglBreakend() { return type() == SGL || type() == INF; }
     public boolean isInferredSgl() { return type() == INF; }

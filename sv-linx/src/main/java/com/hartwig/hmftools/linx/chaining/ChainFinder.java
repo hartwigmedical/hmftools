@@ -595,8 +595,7 @@ public class ChainFinder
                             continue;
                     }
 
-                    SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, TEMPLATED_INSERTION,
-                            lowerBreakend.usesStart(), upperBreakend.usesStart());
+                    SvLinkedPair newPair = new SvLinkedPair(lowerBreakend, upperBreakend, TEMPLATED_INSERTION);
 
                     // make note of adjacent facing breakends since these are prioritised in the adjacent pairs rule
                     boolean areAdjacent = false;

@@ -6,15 +6,13 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.getSequenceStr;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
 
 import java.util.List;
 
@@ -206,11 +204,12 @@ public class SvChain {
             {
                 return true;
             }
-            else if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
+            else
             {
-                //  check min TI length
                 int minTILength = getMinTemplatedInsertionLength(chainStart, chainEnd);
-                return abs(chainStart.position() - chainEnd.position()) >= minTILength;
+
+                return isPossibleLink(chainStart.chromosome(), chainStart.position(), chainStart.orientation(),
+                        chainEnd.chromosome(), chainEnd.position(), chainEnd.orientation(), minTILength);
             }
         }
 

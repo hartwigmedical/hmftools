@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.types;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
 
@@ -65,5 +67,11 @@ public class SglMapping
             if(mapping != null)
                 mappings.add(mapping);
         }
+    }
+
+    public boolean possibleLink(final SglMapping other)
+    {
+        return isPossibleLink(
+                Chromosome, Position, Orientation, other.Chromosome, other.Position, other.Orientation, MIN_TEMPLATED_INSERTION_LENGTH);
     }
 }

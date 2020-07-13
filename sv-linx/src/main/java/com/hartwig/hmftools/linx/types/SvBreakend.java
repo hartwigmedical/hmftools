@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.types;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 
@@ -20,6 +22,7 @@ public class SvBreakend {
     private final int mPosition;
     private final byte mOrientation;
     private boolean mUsesStart;
+    private boolean mSglMapping;
 
     public SvBreakend(final SvVarData var, boolean useStart)
     {
@@ -32,6 +35,21 @@ public class SvBreakend {
         mChrArm = makeChrArmStr(mChromosome, mArm);
         mPosition = var.position(useStart);
         mOrientation = var.orientation(useStart);
+        mSglMapping = false;
+    }
+
+    public SvBreakend(final SvVarData var, final SglMapping mapping)
+    {
+        mSV = var;
+        mChrPosIndex = -1;
+        mClusterChrPosIndex = -1;
+        mUsesStart = false;
+        mChromosome = mapping.Chromosome;
+        mArm = getChromosomalArm(mapping.Chromosome, mapping.Position);
+        mChrArm = makeChrArmStr(mChromosome, mArm);
+        mPosition = mapping.Position;
+        mOrientation = mapping.Orientation;
+        mSglMapping = true;
     }
 
     public final SvVarData getSV() { return mSV; }
@@ -44,6 +62,7 @@ public class SvBreakend {
     public final int position() { return mPosition; }
     public final byte orientation() { return mOrientation; }
     public boolean usesStart() { return mUsesStart; }
+    public boolean isSglMapping() { return mSglMapping; }
 
     public final SvBreakend getOtherBreakend() { return mSV.getBreakend(!mUsesStart); }
 
@@ -60,7 +79,7 @@ public class SvBreakend {
 
     public final String toString()
     {
-        return mSV.posId(mUsesStart);
+        return String.format("%s: %s %s:%d:%d", mSV.id(), mUsesStart ? "start" :"end", mChromosome, mPosition, mOrientation);
     }
 
     public int anchorDistance()

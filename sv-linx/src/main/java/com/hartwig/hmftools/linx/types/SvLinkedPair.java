@@ -16,10 +16,8 @@ import com.hartwig.hmftools.linx.visualiser.data.Link;
 
 public class SvLinkedPair {
 
-    private SvVarData mFirst;
-    private SvVarData mSecond;
-    private boolean mFirstLinkOnStart;
-    private boolean mSecondLinkOnStart;
+    private SvBreakend mFirstBreakend;
+    private SvBreakend mSecondBreakend;
     private LinkType mLinkType;
     private int mLinkLength;
     private boolean mIsInferred;
@@ -42,12 +40,10 @@ public class SvLinkedPair {
     public static String LOCATION_TYPE_EXTERNAL = "External"; // TI is on arm with a chain end but outside its bounds
     public static String LOCATION_TYPE_INTERNAL = "Internal";
 
-    public SvLinkedPair(SvVarData first, SvVarData second, final LinkType linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
+    public SvLinkedPair(final SvBreakend first, final SvBreakend second, final LinkType linkType)
     {
-        mFirst = first;
-        mSecond = second;
-        mFirstLinkOnStart = firstLinkOnStart;
-        mSecondLinkOnStart = secondLinkOnStart;
+        mFirstBreakend = first;
+        mSecondBreakend = second;
         mLinkType = linkType;
         mIsInferred = true;
 
@@ -62,10 +58,10 @@ public class SvLinkedPair {
         mIndelCount = 0;
         mExonMatchData = "";
 
-        int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
+        int length = first.position() - second.position();
         mLinkLength = abs(length);
 
-        int minTILength = getMinTemplatedInsertionLength(first.getBreakend(firstLinkOnStart), second.getBreakend(secondLinkOnStart));
+        int minTILength = getMinTemplatedInsertionLength(first, second);
 
         if (mLinkType == TEMPLATED_INSERTION && mLinkLength < minTILength)
         {
@@ -81,9 +77,14 @@ public class SvLinkedPair {
             --mLinkLength;
     }
 
+    public static SvLinkedPair from(SvVarData first, SvVarData second, final LinkType linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
+    {
+        return new SvLinkedPair(first.getBreakend(firstLinkOnStart), second.getBreakend(secondLinkOnStart), linkType);
+    }
+
     public static SvLinkedPair from(final SvBreakend first, final SvBreakend second)
     {
-        return new SvLinkedPair(first.getSV(), second.getSV(), TEMPLATED_INSERTION, first.usesStart(), second.usesStart());
+        return new SvLinkedPair(first, second, TEMPLATED_INSERTION);
     }
 
     public static SvLinkedPair copy(final SvLinkedPair other)
@@ -97,21 +98,25 @@ public class SvLinkedPair {
         return newPair;
     }
 
-    public final SvVarData first() { return mFirst; }
-    public final SvVarData second() { return mSecond; }
+    public final SvVarData first() { return mFirstBreakend.getSV(); }
+    public final SvVarData second() { return mSecondBreakend.getSV(); }
 
-    public boolean firstLinkOnStart() { return mFirstLinkOnStart; }
-    public boolean secondLinkOnStart() { return mSecondLinkOnStart; }
-    public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
-    public boolean secondUnlinkedOnStart() { return !mSecondLinkOnStart; }
+    public boolean firstLinkOnStart() { return mFirstBreakend.usesStart(); }
+    public boolean secondLinkOnStart() { return mSecondBreakend.usesStart(); }
+    public boolean firstUnlinkedOnStart() { return !mFirstBreakend.usesStart(); }
+    public boolean secondUnlinkedOnStart() { return !mSecondBreakend.usesStart(); }
 
     public final SvBreakend getBreakend(int se) { return getBreakend(isStart(se)); }
 
     public final SvBreakend getBreakend(boolean isStart)
     {
         // finds the earlier breakend of the 2, ie with the lower position
-        final SvBreakend beFirst = mFirst.isSglBreakend() ? mFirst.getBreakend(true) : mFirst.getBreakend(firstLinkOnStart());
-        final SvBreakend beSecond = mSecond.isSglBreakend() ? mSecond.getBreakend(true) : mSecond.getBreakend(secondLinkOnStart());
+        // unless explicitly linked on a SGL mapping, INFs and SGLs return their only breakend (ie the first)
+        final SvBreakend beFirst = mFirstBreakend.getSV().isSglBreakend() && mFirstBreakend.usesStart() ?
+                mFirstBreakend.getSV().getBreakend(true) : mFirstBreakend;
+
+        final SvBreakend beSecond = mSecondBreakend.getSV().isSglBreakend() && mSecondBreakend.usesStart() ?
+                mSecondBreakend.getSV().getBreakend(true) : mSecondBreakend;
 
         if(isStart)
             return beFirst.position() <= beSecond.position() ? beFirst : beSecond;
@@ -119,10 +124,10 @@ public class SvLinkedPair {
             return beFirst.position() > beSecond.position() ? beFirst : beSecond;
     }
 
-    public final SvBreakend firstBreakend() { return mFirst.getBreakend(mFirstLinkOnStart); }
-    public final SvBreakend secondBreakend() { return mSecond.getBreakend(mSecondLinkOnStart); }
+    public final SvBreakend firstBreakend() { return mFirstBreakend; }
+    public final SvBreakend secondBreakend() { return mSecondBreakend; }
 
-    public final String chromosome() { return mFirst.chromosome(mFirstLinkOnStart); }
+    public final String chromosome() { return mFirstBreakend.chromosome(); }
 
     public final LinkType linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
@@ -179,8 +184,8 @@ public class SvLinkedPair {
 
     public boolean hasBreakend(final SvVarData var, boolean useStart)
     {
-        return (var == mFirst && mFirstLinkOnStart == useStart)
-                || (var == mSecond && mSecondLinkOnStart == useStart);
+        return (var == mFirstBreakend.getSV() && mFirstBreakend.usesStart() == useStart)
+                || (var == mSecondBreakend.getSV() && mSecondBreakend.usesStart() == useStart);
     }
 
     public boolean hasBreakend(final SvBreakend breakend)
@@ -196,18 +201,18 @@ public class SvLinkedPair {
 
     public void switchSVs()
     {
-        final SvVarData tmp = mSecond;
-        mSecond = mFirst;
-        mFirst = tmp;
-
-        boolean tmp2 = mSecondLinkOnStart;
-        mSecondLinkOnStart = mFirstLinkOnStart;
-        mFirstLinkOnStart = tmp2;
+        final SvBreakend tmp = mSecondBreakend;
+        mSecondBreakend = mFirstBreakend;
+        mFirstBreakend = tmp;
     }
 
     public final String toString()
     {
-        return String.format("%s & %s", svToString(mFirst, mFirstLinkOnStart), svToString(mSecond, mSecondLinkOnStart));
+        return String.format("%s %s:%d:%s & %s %s:%d:%s",
+                mFirstBreakend.getSV().id(), mFirstBreakend.chromosome(), mFirstBreakend.position(),
+                mFirstBreakend.usesStart() ? "start" : "end",
+                mSecondBreakend.getSV().id(), mSecondBreakend.chromosome(), mSecondBreakend.position(),
+                mSecondBreakend.usesStart() ? "start" : "end");
     }
 
     private static final String svToString(final SvVarData var, boolean linkedOnStart)
@@ -231,17 +236,11 @@ public class SvLinkedPair {
             return true;
 
         // first and second can be in either order
-        if(mFirst == other.first() && mFirstLinkOnStart == other.firstLinkOnStart()
-        && mSecond == other.second() && mSecondLinkOnStart == other.secondLinkOnStart())
-        {
+        if(mFirstBreakend == other.firstBreakend() && mSecondBreakend == other.secondBreakend())
             return true;
-        }
 
-        if(mFirst == other.second() && mFirstLinkOnStart == other.secondLinkOnStart()
-        && mSecond == other.first() && mSecondLinkOnStart == other.firstLinkOnStart())
-        {
+        if(mFirstBreakend == other.secondBreakend() && mSecondBreakend == other.firstBreakend())
             return true;
-        }
 
         return false;
     }
@@ -251,14 +250,14 @@ public class SvLinkedPair {
         if(this == other)
             return true;
 
-        if(mFirst == other.first() && mFirstLinkOnStart != other.firstLinkOnStart()
-        && mSecond ==other.second() && mSecondLinkOnStart != other.secondLinkOnStart())
+        if(mFirstBreakend.getSV() == other.first() && mFirstBreakend.usesStart() != other.firstLinkOnStart()
+        && mSecondBreakend.getSV() ==other.second() && mSecondBreakend.usesStart() != other.secondLinkOnStart())
         {
             return true;
         }
 
-        if(mFirst == other.second() && mFirstLinkOnStart != other.secondLinkOnStart()
-        && mSecond == other.first() && mSecondLinkOnStart != other.firstLinkOnStart())
+        if(mFirstBreakend.getSV() == other.second() && mFirstBreakend.usesStart() != other.secondLinkOnStart()
+        && mSecondBreakend.getSV() == other.first() && mSecondBreakend.usesStart() != other.firstLinkOnStart())
         {
             return true;
         }
@@ -269,16 +268,16 @@ public class SvLinkedPair {
     public boolean sameVariants(final SvLinkedPair other)
     {
         // first and second can be in either order
-        if(mFirst == other.first() && mSecond == other.second())
+        if(mFirstBreakend.getSV() == other.first() && mSecondBreakend.getSV() == other.second())
             return true;
 
-        if(mFirst == other.second() && mSecond == other.first())
+        if(mFirstBreakend.getSV() == other.second() && mSecondBreakend.getSV() == other.first())
             return true;
 
         return false;
     }
 
-    public final SvVarData getOtherSV(final SvVarData var) { return mFirst == var ? mSecond : mFirst; }
+    public final SvVarData getOtherSV(final SvVarData var) { return mFirstBreakend.getSV() == var ? mSecondBreakend.getSV() : mFirstBreakend.getSV(); }
 
     public final SvBreakend getOtherBreakend(final SvBreakend breakend)
     {
@@ -286,9 +285,9 @@ public class SvLinkedPair {
         return breakend == lower ? getBreakend(false) : lower;
     }
 
-    public boolean hasVariant(final SvVarData var) { return mFirst == var || mSecond == var; }
+    public boolean hasVariant(final SvVarData var) { return mFirstBreakend.getSV() == var || mSecondBreakend.getSV() == var; }
 
-    public boolean isDupLink() { return mFirst == mSecond && mFirst.type() == DUP; }
+    public boolean isDupLink() { return mFirstBreakend.getSV() == mSecondBreakend.getSV() && mFirstBreakend.getSV().type() == DUP; }
 
     public static boolean hasLinkClash(final List<SvLinkedPair> links1, final List<SvLinkedPair> links2)
     {

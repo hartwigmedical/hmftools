@@ -594,10 +594,10 @@ public class ChainUtils
 
             if(i == 0)
             {
-                if(!pair.first().isSglBreakend())
-                {
-                    SvBreakend startBreakend = chain.getOpenBreakend(true);
+                SvBreakend startBreakend = chain.getOpenBreakend(true);
 
+                if(startBreakend != null)
+                {
                     sequenceStr += makeChrArmStr(startBreakend.chromosome(), startBreakend.arm()) + "_" + startBreakend.direction();
                     sequenceStr += CHAIN_SEQ_DELIM;
 
@@ -620,9 +620,9 @@ public class ChainUtils
 
             if(i == chain.getLinkedPairs().size() - 1)
             {
-                if(!pair.second().isSglBreakend())
+                SvBreakend endBreakend = chain.getOpenBreakend(false);
+                if(endBreakend != null)
                 {
-                    SvBreakend endBreakend = chain.getOpenBreakend(false);
                     sequenceStr += makeChrArmStr(endBreakend.chromosome(), endBreakend.arm()) + "_" + endBreakend.direction();
                 }
                 else

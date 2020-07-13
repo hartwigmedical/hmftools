@@ -23,6 +23,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class FilteringTest
@@ -190,16 +192,6 @@ public class FilteringTest
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(5, tester.getClusters().size());
-
-        /*
-        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var0, var1));
-        assertTrue(cluster != null);
-        assertEquals(ResolvedType.PAIR_INF, cluster.getResolvedType());
-
-        cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
-        assertTrue(cluster != null);
-        assertEquals(ResolvedType.PAIR_INF, cluster.getResolvedType());
-        */
     }
 
 }

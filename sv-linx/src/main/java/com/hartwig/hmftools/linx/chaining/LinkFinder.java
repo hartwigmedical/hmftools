@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
@@ -96,7 +98,7 @@ public class LinkFinder
                     }
 
                     // form a new TI from these 2 BEs
-                    SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, TEMPLATED_INSERTION, v1Start, v2Start);
+                    SvLinkedPair newPair = new SvLinkedPair(lowerBreakend, upperBreakend, TEMPLATED_INSERTION);
                     newPair.setIsAssembled();
                     lowerSV.addLinkedPair(newPair, v1Start);
                     upperSV.addLinkedPair(newPair, v2Start);
@@ -210,36 +212,25 @@ public class LinkFinder
         return var1.getTIAssemblies(v1Start).stream().anyMatch(x -> var2.getTIAssemblies(v2Start).contains(x));
     }
 
-    public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
+    public static boolean isPossibleLink(final String chr1, int pos1, byte orient1, final String chr2, int pos2, byte orient2, int minDistance)
     {
-        // templated insertions are allowed to traverse the centromere
-        if(v1.position(v1Start) < 0 || v2.position(v2Start) < 0)
+        if(!chr1.equals(chr2))
             return false;
 
-        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
+        return isPossibleLink(pos1, orient1, pos2, orient2, minDistance);
+    }
+
+    public static boolean isPossibleLink(int pos1, byte orient1, int pos2, byte orient2, int minDistance)
+    {
+        if(orient1 == orient2)
             return false;
 
-        // start apart and heading towards each other
-        long pos1 = v1.position(v1Start);
-        boolean headsLeft1 = (v1.orientation(v1Start) == 1);
-        long pos2 = v2.position(v2Start);
-        boolean headsLeft2 = (v2.orientation(v2Start) == 1);
-
-        boolean breakendsFace = false;
-        if(pos1 < pos2 && !headsLeft1 && headsLeft2)
-            breakendsFace = true;
-        else if(pos2 < pos1 && headsLeft1 && !headsLeft2)
-            breakendsFace = true;
-
-        if(!breakendsFace)
-            return false;
-
-        return true;
+        return (pos1 <= pos2 - minDistance && orient1 == NEG_ORIENT) || (pos1 >= pos2 + minDistance && orient1 == POS_ORIENT);
     }
 
     public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)
     {
-        if(breakend1.getSV().type() == INF || breakend2.getSV().type() == INF)
+        if(breakend1.getSV().isSglBreakend() || breakend2.getSV().isSglBreakend())
         {
             if(abs(breakend1.position() - breakend2.position()) <= 1)
                 return 0;
@@ -279,7 +270,7 @@ public class LinkFinder
                 if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
                 {
                     // breakends face away as per a normal DB
-                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, DELETION_BRIDGE, breakend.usesStart(), nextBreakend.usesStart());
+                    SvLinkedPair dbPair = new SvLinkedPair(breakend, nextBreakend, DELETION_BRIDGE);
                     markDeletionBridge(dbPair);
                 }
                 else if(distance < minTiLength)
@@ -291,7 +282,7 @@ public class LinkFinder
                         continue;
                     }
 
-                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, TEMPLATED_INSERTION, breakend.usesStart(), nextBreakend.usesStart());
+                    SvLinkedPair dbPair = new SvLinkedPair(breakend, nextBreakend, TEMPLATED_INSERTION);
                     markDeletionBridge(dbPair);
                 }
             }

@@ -280,7 +280,7 @@ public class DoubleMinuteFinder
                 {
                     // special case creating a chain out of a DUP
                     SvChain chain = new SvChain(0);
-                    SvLinkedPair pair = new SvLinkedPair(var, var, TEMPLATED_INSERTION, true, false);
+                    SvLinkedPair pair = SvLinkedPair.from(var, var, TEMPLATED_INSERTION, true, false);
                     chain.addLink(pair, true);
                     chain.setJcnData(var.jcn(), var.jcnUncertainty());
                     chain.closeChain();
