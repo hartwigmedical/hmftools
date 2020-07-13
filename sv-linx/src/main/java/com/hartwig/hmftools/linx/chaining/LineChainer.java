@@ -1,25 +1,29 @@
 package com.hartwig.hmftools.linx.chaining;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
 import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -31,6 +35,7 @@ import org.apache.commons.compress.utils.Lists;
 public class LineChainer
 {
     private int mClusterId;
+    private String mSampleId;
     private final List<SvVarData> mSvList;
     private final List<SvLinkedPair> mAssembledLinks;
 
@@ -38,14 +43,18 @@ public class LineChainer
     private final List<SvBreakend> mSourceBreakends;
     private final Set<String> mSourceChromosomes;
 
+    private BufferedWriter mFileWriter;
+
     public LineChainer()
     {
         mClusterId = -1;
+        mSampleId = "";
         mSvList = Lists.newArrayList();
         mAssembledLinks = Lists.newArrayList();
         mChains = Lists.newArrayList();
         mSourceBreakends = Lists.newArrayList();
         mSourceChromosomes = Sets.newHashSet();
+        mFileWriter = null;
     }
 
     public final List<SvChain> getChains() { return mChains; }
@@ -60,10 +69,11 @@ public class LineChainer
         mSourceChromosomes.clear();
     }
 
-    public void initialise(SvCluster cluster)
+    public void initialise(final String sampleId, final SvCluster cluster)
     {
         clear();
         mClusterId = cluster.id();
+        mSampleId = sampleId;
         mSvList.addAll(cluster.getSVs());
         mAssembledLinks.addAll(cluster.getAssemblyLinkedPairs());
     }
@@ -117,6 +127,8 @@ public class LineChainer
         {
             addSourceBreakends();
         }
+
+        writeChainData();
     }
 
     private void addNewChain(final SvLinkedPair pair)
@@ -338,5 +350,81 @@ public class LineChainer
             }
         }
     }
+
+    public void initialiseOutput(final String outputDir)
+    {
+        if(outputDir == null)
+            return;
+
+        try
+        {
+            String outputFileName = outputDir + "LNX_LINE_CHAINS.csv";
+            mFileWriter = createBufferedWriter(outputFileName, false);
+
+            mFileWriter.write("SampleId,ClusterId,ChainId,ChainDesc,SourceChr,SourcePosStart,SourcePosEnd");
+            mFileWriter.write(",InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd");
+            mFileWriter.newLine();
+        }
+        catch (final IOException e)
+        {
+            LNX_LOGGER.error("error initialising line chain data: {}", e.toString());
+        }
+    }
+
+    private void writeChainData()
+    {
+        if(mFileWriter == null)
+            return;
+
+        try
+        {
+            for(final SvChain chain : mChains)
+            {
+                final SvBreakend chainStart = chain.getOpenBreakend(true);
+                final SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+                final int[] typeCounts = new int[StructuralVariantType.values().length];
+
+                for(final SvVarData var : chain.getSvList())
+                {
+                    ++typeCounts[typeAsInt(var.type())];
+                }
+
+                mFileWriter.write(String.format("%s,%d,%d,%s",
+                        mSampleId, mClusterId, chain.id(), getSvTypesStr(typeCounts)));
+
+                final SvLinkedPair firstLink = chain.getLinkedPairs().get(0);
+                final SvLinkedPair lastLink = chain.getLinkedPairs().get(chain.getLinkedPairs().size() - 1);
+
+                mFileWriter.write(String.format(",%s,%d,%d",
+                        firstLink.chromosome(), firstLink.firstBreakend().position(), lastLink.secondBreakend().position()));
+
+                mFileWriter.write(String.format(",%s,%d,%d",
+                        chainStart != null ? chainStart.chromosome() : "-1",
+                        chainStart != null ? chainStart.position() : -1,
+                        chainEnd != null ? chainEnd.position() : -1));
+
+                final SvVarData inv = chain.getSvList().stream().filter(x -> x.type() == INV).findFirst().orElse(null);
+
+                if(inv != null)
+                {
+                    mFileWriter.write(String.format(",%d,%d", inv.position(true), inv.position(false)));
+                }
+                else
+                {
+                    mFileWriter.write(",-1,-1");
+                }
+
+                mFileWriter.newLine();
+
+            }
+        }
+        catch (final IOException e)
+        {
+            LNX_LOGGER.error("error writing line chain data: {}", e.toString());
+        }
+    }
+
+    public void close() { closeBufferedWriter(mFileWriter); }
 
 }

@@ -92,8 +92,7 @@ public class ClusterAnalyser {
 
         if(mConfig.hasMultipleSamples())
         {
-            mChainFinder.getDiagnostics().setOutputDir(mConfig.OutputDataPath, mConfig.Output.LogChainingMaxSize);
-
+            mChainFinder.initialiseOutput(mConfig);
             mDmFinder.setOutputDir(mConfig.OutputDataPath);
         }
 
@@ -506,7 +505,7 @@ public class ClusterAnalyser {
     public void close()
     {
         mDmFinder.close();
-        mChainFinder.getDiagnostics().close();
+        mChainFinder.close();
         mSimpleClustering.close();
     }
 

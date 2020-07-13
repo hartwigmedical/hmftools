@@ -31,6 +31,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -154,6 +155,12 @@ public class ChainFinder
                 mSvBreakendPossibleLinks, mDoubleMinuteSVs, mLinkAllocator.getUniquePairs());
     }
 
+    public void initialiseOutput(final LinxConfig config)
+    {
+        mDiagnostics.setOutputDir(config.OutputDataPath, config.Output.LogChainingMaxSize);
+        mLineChainer.initialiseOutput(config.OutputDataPath);
+    }
+
     public void clear()
     {
         mClusterId = -1;
@@ -198,7 +205,7 @@ public class ChainFinder
         mIsLineCluster = cluster.getResolvedType() == LINE;
 
         if(mIsLineCluster)
-            mLineChainer.initialise(cluster);
+            mLineChainer.initialise(mSampleId, cluster);
 
         mSvList.addAll(cluster.getSVs());
         mFoldbacks.addAll(cluster.getFoldbacks());
@@ -281,6 +288,12 @@ public class ChainFinder
     public double getValidAllelePloidySegmentPerc() { return mClusterJcnLimits.getValidAlleleJcnSegmentPerc(); }
     public final long[] calcRangeData() { return mClusterJcnLimits.calcRangeData(); }
     public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
+
+    public void close()
+    {
+        mDiagnostics.close();
+        mLineChainer.close();
+    }
 
     public void formChains(boolean assembledLinksOnly)
     {
