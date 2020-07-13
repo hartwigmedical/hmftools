@@ -134,6 +134,14 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public String getClinvarSig() { return mClinvarSig; }
     public String getClinvarSigInfo() { return mClinvarSigInfo; }
 
+    public String getClinvarConsolidatedInfo()
+    {
+        if(mClinvarSigInfo.isEmpty())
+            return mClinvarSig;
+        else
+            return mClinvarSig + ";" + mClinvarSigInfo;
+    }
+
     public String asString()
     {
         return String.format("id(%s) location(%s:%d) gene(%s)", VariantId, Chromosome, Position, Gene);

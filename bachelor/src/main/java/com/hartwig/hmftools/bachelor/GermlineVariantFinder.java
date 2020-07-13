@@ -431,7 +431,7 @@ public class GermlineVariantFinder
                     if(germlineVariant.pathogenicType() == NONE || germlineVariant.pathogenicType() == CLINVAR_BENIGN
                     || germlineVariant.pathogenicType() == CLINVAR_LIKELY_BENIGN)
                     {
-                        BACH_LOGGER.debug("variant gene({} {}) var({}:{}) ref({}) alt({})) in ignore list and benign/unannotated",
+                        BACH_LOGGER.trace("variant gene({} {}) var({}:{}) ref({}) alt({})) in ignore list and benign/unannotated",
                                 gene, transcriptId, chromosome, position, ref, alt);
                         return;
                     }

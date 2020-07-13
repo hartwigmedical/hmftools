@@ -425,7 +425,7 @@ class VariantEnricher
                     .biallelic(bachRecord.isBiallelic())
                     .minorAlleleJcn(enrichedVariant != null ? enrichedVariant.minorAlleleCopyNumber() : somaticVariant.minorAlleleCopyNumber())
                     .refStatus(bachRecord.IsHomozygous ? "HOM" : "HET")
-                    .clinvarInfo(bachRecord.getClinvarSig() + ";" + bachRecord.getClinvarSigInfo())
+                    .clinvarInfo(bachRecord.getClinvarConsolidatedInfo())
                     .build());
         }
 

@@ -111,10 +111,9 @@ public class BachelorConfig {
             mIsValid = false;
         }
 
-        if (!SkipEnrichment && (BamFile == null || PurpleDataDir.isEmpty()))
+        if (!SkipEnrichment && PurpleDataDir.isEmpty())
         {
-            BACH_LOGGER.error("missing input files: BAM({}) purpleDataDir({})", BamFile, PurpleDataDir);
-
+            BACH_LOGGER.error("missing purple data directory required for enrichment");
             mIsValid = false;
         }
     }
