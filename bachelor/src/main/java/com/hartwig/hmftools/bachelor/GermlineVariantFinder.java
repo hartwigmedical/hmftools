@@ -429,7 +429,7 @@ public class GermlineVariantFinder
                 if(mIgnoreEffects.stream().anyMatch(x -> effects.contains(x)))
                 {
                     if(germlineVariant.pathogenicType() == NONE || germlineVariant.pathogenicType() == CLINVAR_BENIGN
-                    || germlineVariant.pathogenicType() == CLINVAR_LIKELY_BENIGN)
+                    || germlineVariant.pathogenicType() == CLINVAR_LIKELY_BENIGN || germlineVariant.pathogenicType() == UNANNOTATED)
                     {
                         BACH_LOGGER.trace("variant gene({} {}) var({}:{}) ref({}) alt({})) in ignore list and benign/unannotated",
                                 gene, transcriptId, chromosome, position, ref, alt);
