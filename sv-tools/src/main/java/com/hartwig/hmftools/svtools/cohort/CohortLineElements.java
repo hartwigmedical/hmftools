@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svtools.cohort;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -10,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.fromString;
@@ -37,6 +40,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class CohortLineElements
 {
     private static final Logger LOGGER = LogManager.getLogger(CohortLineElements.class);
@@ -45,12 +50,14 @@ public class CohortLineElements
     private final Map<SvRegion,Integer> mExtLineSampleCounts;
     private final Map<String,List<LineRepeatMaskerData>> mChrRepeatMaskerData;
     private final List<SvRegion> mKnownLineElements;
+    private IndexedFastaSequenceFile mRefGenomeFile;
 
     private final String mOutputDir;
     private final String mSvDataFile;
     private final String mExtDataFile;
     private final String mRepeatMaskerDataFile;
     private final String mKnownLineElementsFile;
+    public final boolean mWriteRefGenomeLineBases;
 
     public CohortLineElements(final CommandLine cmd)
     {
@@ -64,6 +71,17 @@ public class CohortLineElements
         mExtDataFile = cmd.getOptionValue(EXT_DATA_FILE);
         mRepeatMaskerDataFile = cmd.getOptionValue(REPEAT_MASKER_DATA_FILE);
         mKnownLineElementsFile = cmd.getOptionValue(KNOWN_DATA_FILE);
+        mWriteRefGenomeLineBases = cmd.hasOption(WRITE_LINE_SEQUENCES);
+        mRefGenomeFile = null;
+
+        try
+        {
+            mRefGenomeFile = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME_FILE)));
+        }
+        catch (Exception e)
+        {
+            LNX_LOGGER.error("failed to load ref genome: {}", e.toString());
+        }
     }
 
     public void run()
@@ -77,6 +95,11 @@ public class CohortLineElements
         loadKnownLineElements(mKnownLineElementsFile);
 
         produceResults();
+
+        if(mWriteRefGenomeLineBases && !mChrRepeatMaskerData.isEmpty())
+        {
+            writeRefGeneLineBases();
+        }
     }
 
     private void loadLineElementsFile(final String filename)
@@ -452,10 +475,64 @@ public class CohortLineElements
         return extRegion != null ? extRegion.getValue() : 0;
     }
 
+    private void writeRefGeneLineBases()
+    {
+        if(mChrRepeatMaskerData.isEmpty() || mRefGenomeFile == null)
+            return;
+
+        try
+        {
+            String outputFileName = mOutputDir + "line_ref_bases.fasta";
+
+            final BufferedWriter writer = createBufferedWriter(outputFileName, false);
+
+            for(Map.Entry<String,List<LineRepeatMaskerData>> entry : mChrRepeatMaskerData.entrySet())
+            {
+                final String chromosome = entry.getKey();
+
+                for(final LineRepeatMaskerData rmData : entry.getValue())
+                {
+                    if(rmData.Region.length() < 5000)
+                        continue;
+
+                    int[] coords = new int[] { rmData.Region.start(), rmData.Region.end() };
+
+                    if(rmData.Strand == POS_ORIENT)
+                        coords[SE_END] += 5000;
+                    else
+                        coords[SE_START] -= 5000;
+
+                    final String refBases = mRefGenomeFile.getSubsequenceAt(chromosome, rmData.Region.start(), rmData.Region.end()).getBaseString();
+
+                    if(refBases == null || refBases.isEmpty())
+                        continue;
+
+                    writer.write(String.format(">%d: %s:%d-%d", rmData.RmId, chromosome, coords[SE_START], coords[SE_END]));
+                    writer.newLine();
+
+                    int index = 0;
+                    while(index < refBases.length())
+                    {
+                        writer.write(refBases.substring(index, min(index + 80, refBases.length())));
+                        writer.newLine();
+                        index += 80;
+                    }
+                }
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write to line ref-genome bases: {}", e.toString());
+        }
+    }
+
     private static final String SV_DATA_FILE = "sv_data_file";
     private static final String EXT_DATA_FILE = "ext_data_file";
     private static final String KNOWN_DATA_FILE = "known_line_elements_file";
     private static final String REPEAT_MASKER_DATA_FILE = "repeat_masker_data_file";
+    private static final String WRITE_LINE_SEQUENCES = "write_line_seq";
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
@@ -466,6 +543,8 @@ public class CohortLineElements
         options.addOption(KNOWN_DATA_FILE, true, "Known LINE elements file");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to write results");
         options.addOption(REPEAT_MASKER_DATA_FILE, true, "Path to repeat masker data for LINE elements");
+        options.addOption(WRITE_LINE_SEQUENCES, false, "Write ref genome LINE element sequences");
+        options.addOption(REF_GENOME_FILE, true, "Path to the indexed ref genome fasta file");
         options.addOption(LOG_DEBUG, false, "Log verbose");
 
         final CommandLine cmd = createCommandLine(args, options);
