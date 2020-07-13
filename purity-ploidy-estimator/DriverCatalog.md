@@ -20,8 +20,7 @@ Deletions are restricted to the target deletion genes described in the supplemen
 
 To include point mutations in the driver catalog, the somatic VCF must be annotated with SnpEff. 
 
-The PURPLE driver catalog does NOT include fusions. 
-Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/sv-linx) can improve the PURPLE driver catalog with the addition of fusion drivers. 
+Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/sv-linx) enriches the PURPLE driver catalog with the addition of both homozygous disruption drivers and fusions
 
 # Improvements
 
@@ -30,7 +29,7 @@ The following sections highlight the changes from what is described in the suppl
 ## Significantly amplified & deleted driver gene discovery changes
 
 We updated the method described in the supplementary information to account for the larger cohort by raising the cutoffs for significant deletions to >7 homozygous deletes (previously >5) and for amplifications to a score of >35 (previously >29).
-For annotation of unknown ambiguous amplification and deletion targets, we modified the prioritisation so that the longest protein coding gene was selected as the target gene ahead of the highest scoring gene.     
+For annotation of unknown ambiguous amplification and deletion targets, we modified the prioritisation so that the longest protein coding gene was selected as the target gene ahead of the highest scoring gene.
 Target regions with more than 50% of the amplifications or deletions bounded by a centromere or telomere are also marked as telomeric or centromeric.
 
 ## Panel of driver genes for point mutations
@@ -66,4 +65,45 @@ The following figure shows all genes that have classified using the logistic reg
 Figures A and C show the likelihood of a gene being classified as a TSG under a single variate logistic model of w_missense and w_nonsense respectively. 
 Figure B shows the classification after the multivariate regression using both predictors. 
 
-![Gene Classification](src/main/resources/readme/GeneClassification.png)
+<p align="center">
+    <img src="src/main/resources/readme/GeneClassification.png" width="600" alt="Gene Classification">
+</p>
+
+## Gene Driver Likelihood
+
+A driver likelihood estimate between 0 and 1 is calculated for each variant in the gene panel. 
+High level amplifications, deletions, fusions (when using LINX), and TERT promoter mutations are all rare so have a likelihood of 1 when found affecting a driver gene, but for coding mutations we need to account for the large number of passenger point mutations that are present throughout the genome and thus also in driver genes.
+
+For coding mutations we also mark coding mutations that are highly likely to be drivers and/or highly unlikely to have occurred as passengers as driver likelihood of 1, specifically:
+- Known hotspot variants
+- Inframe indels in oncogenes with repeat count < 8 repeats. Longer repeat count contexts are excluded as these are often mutated by chance in MSI samples
+- Biallelic splice, nonsense or indel variants in tumor suppressor genes
+
+For the remaining point mutation variants (non-hotspot missense variants in oncogenes and non-hotspot variants of all types in TSG) these are only assigned a > 0 driver likelihood where there is a remaining excess of unallocated drivers based on the calculated dNdS rates in that gene across the cohort after applying the above rules. 
+Any remaining point mutations are assigned a driver likelihood between 0 and 1 using a bayesian statistic to calculate a sample specific likelihood of each gene based on the type of variant observed (missense, nonsense, splice or INDEL) and taking into account the mutational load of the sample.
+For TSG dnds rates, we find that biallelic dnds rates are typically much higher than non-biallelic rates reflecting the biology that both alleles are normally required to be knocked out to cause a TSG driver.   
+Hence for missense variants in TSG where we observed a higher biallelic dnds rate compared to non-biallelic, we treat bialllelic and non-biallelic missense variants as independent variant classes and calculated dnds rates, passenger and driver counts separately. 
+If the biallelic dnds rate is lower than the non-biallelic rate for a TSG then all missense variants for that gene are pooled together and the combined dnds rate for that gene is used.
+
+The principle behind the likelihood method is that the likelihood of a passenger variant occuring in a particular sample should be approximately proportional to the tumor mutational burden and hence variants in samples with lower mutational burden are more likely to be drivers.
+
+The sample specific likelihood of a residual excess variant being a driver is estimated for each gene using the following formula:
+
+```
+P(Driver|Variant) = P(Driver) / (P(Driver) + P(Variant|Non-Driver) * (1-P(Driver)))
+```
+
+where P(Driver) in a given gene is assumed to be equal across all samples in the cohort, ie:
+
+```
+P(Driver) = (residual unallocated drivers in gene) / # of samples in cohort
+```
+
+And P(Variant|Non-Driver), the probability of observing n or more passenger variants of a particular variant type in a sample in a given gene, is assumed to vary according to tumor mutational burden, and is modelled as a poisson process:
+
+```
+P(Variant|Non-Driver) = 1 - poisson(λ = TMB(Sample) / TMB(Cohort) * (# of passenger variants in cohort),k=n-1)
+```
+
+Note that the TMB is calculated separately for INDELs and SNVs, and in the case of TSG separately for bialllelic and non biallelic variants.
+

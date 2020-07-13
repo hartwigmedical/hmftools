@@ -65,10 +65,9 @@ class LocationStore private constructor(private val compare: ContigComparator, p
         }
     }
 
-    fun contains(variant: StructuralVariantContext, checkInPotentialLocations: Boolean): Boolean {
+    fun contains(variant: StructuralVariantContext): Boolean {
         return if (variant.isSingle) {
-            val potentialLocations = variant.potentialAlignmentLocations.filter { x -> compare.isValidContig(x.contig)}
-            contains(variant.startBreakend) || (checkInPotentialLocations && potentialLocations.any { x -> contains(Breakpoint(variant.startBreakend, x)) })
+            contains(variant.startBreakend)
         } else {
             contains(variant.breakpoint!!)
         }

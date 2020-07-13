@@ -71,27 +71,36 @@ class StructuralVariantContextTest {
     fun testPolyGFilters() {
         val polyGRegion = Interval("1", 1000, 1010)
 
-        assertFalse(createVariant(999, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter(polyGRegion))
-        assertTrue(createVariant(1000, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter(polyGRegion))
-        assertTrue(createVariant(1010, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter(polyGRegion))
-        assertFalse(createVariant(1011, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(999, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCInsertFilter(polyGRegion))
+        assertTrue(createVariant(1000, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCInsertFilter(polyGRegion))
+        assertTrue(createVariant(1010, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCInsertFilter(polyGRegion))
+        assertFalse(createVariant(1011, "A", "A" + "G".repeat(100) + "[1:123[").toSv().polyGCInsertFilter(polyGRegion))
 
-        assertFalse(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:999[").toSv().polyGCFilter(polyGRegion))
-        assertTrue(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1000[").toSv().polyGCFilter(polyGRegion))
-        assertTrue(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1010[").toSv().polyGCFilter(polyGRegion))
-        assertFalse(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1011[").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:999[").toSv().polyGCInsertFilter(polyGRegion))
+        assertTrue(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1000[").toSv().polyGCInsertFilter(polyGRegion))
+        assertTrue(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1010[").toSv().polyGCInsertFilter(polyGRegion))
+        assertFalse(createVariant(2000, "A", "A" + "G".repeat(100) + "[1:1011[").toSv().polyGCInsertFilter(polyGRegion))
 
-        assertTrue(createVariant(100, "A", "A" + "G".repeat(16) + ".").toSv().polyGCFilter(polyGRegion))
-        assertTrue(createVariant(100, "A", "A" + "C".repeat(16) + ".").toSv().polyGCFilter(polyGRegion))
-        assertFalse(createVariant(100, "A", "A" + "G".repeat(15) + ".").toSv().polyGCFilter(polyGRegion))
-        assertFalse(createVariant(100, "A", "A" + "C".repeat(15) + ".").toSv().polyGCFilter(polyGRegion))
-        assertFalse(createVariant(100, "A", "A" + "A".repeat(16) + ".").toSv().polyGCFilter(polyGRegion))
-        assertFalse(createVariant(100, "A", "A" + "T".repeat(16) + ".").toSv().polyGCFilter(polyGRegion))
+        assertTrue(createVariant(100, "A", "A" + "G".repeat(16) + ".").toSv().polyGCInsertFilter(polyGRegion))
+        assertTrue(createVariant(100, "A", "A" + "C".repeat(16) + ".").toSv().polyGCInsertFilter(polyGRegion))
+        assertFalse(createVariant(100, "A", "A" + "G".repeat(15) + ".").toSv().polyGCInsertFilter(polyGRegion))
+        assertFalse(createVariant(100, "A", "A" + "C".repeat(15) + ".").toSv().polyGCInsertFilter(polyGRegion))
+        assertFalse(createVariant(100, "A", "A" + "A".repeat(16) + ".").toSv().polyGCInsertFilter(polyGRegion))
+        assertFalse(createVariant(100, "A", "A" + "T".repeat(16) + ".").toSv().polyGCInsertFilter(polyGRegion))
 
-        assertFalse(createVariant(999, "A", "A.").toSv().polyGCFilter(polyGRegion))
-        assertTrue(createVariant(1000, "A", "A.").toSv().polyGCFilter(polyGRegion))
-        assertTrue(createVariant(1010, "A", "A.").toSv().polyGCFilter(polyGRegion))
-        assertFalse(createVariant(1011, "A", "A.").toSv().polyGCFilter(polyGRegion))
+        assertFalse(createVariant(999, "A", "A.").toSv().polyGCInsertFilter(polyGRegion))
+        assertTrue(createVariant(1000, "A", "A.").toSv().polyGCInsertFilter(polyGRegion))
+        assertTrue(createVariant(1010, "A", "A.").toSv().polyGCInsertFilter(polyGRegion))
+        assertFalse(createVariant(1011, "A", "A.").toSv().polyGCInsertFilter(polyGRegion))
+    }
+
+    @Test
+    fun testPolyAFilters() {
+        val bnd = bnd()
+        assertTrue(bnd.setAttribute("HOMSEQ", "AAAAAAA").toSv().polyATHomologyFilter())
+        assertTrue(bnd.setAttribute("HOMSEQ", "TTTTTTT").toSv().polyATHomologyFilter())
+        assertFalse(bnd.setAttribute("HOMSEQ", "GTTTTTT").toSv().polyATHomologyFilter())
+        assertFalse(bnd.setAttribute("HOMSEQ", "ATTTTTT").toSv().polyATHomologyFilter())
     }
 
     @Test
