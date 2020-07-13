@@ -20,8 +20,7 @@ Deletions are restricted to the target deletion genes described in the supplemen
 
 To include point mutations in the driver catalog, the somatic VCF must be annotated with SnpEff. 
 
-The PURPLE driver catalog does NOT include fusions. 
-Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/sv-linx) enriches the PURPLE driver catalog with the addition of fusion drivers. 
+Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/sv-linx) enriches the PURPLE driver catalog with the addition of both homozygous disruption drivers and fusions
 
 # Improvements
 
