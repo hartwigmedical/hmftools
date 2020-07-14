@@ -103,12 +103,13 @@ public class LineChainer
                 if(!var.isLineElement(isStart(se)))
                     continue;
 
+                mSourceChromosomes.add(breakend.chromosome());
+
                 // skip breakends already assembled into links
                 if(mAssembledLinks.stream().anyMatch(x -> x.hasBreakend(breakend)))
                     continue;
 
                 mSourceBreakends.add(breakend);
-                mSourceChromosomes.add(breakend.chromosome());
             }
         }
 
@@ -129,6 +130,7 @@ public class LineChainer
         }
 
         writeChainData();
+        writeUnchainedSVs();
     }
 
     private void addNewChain(final SvLinkedPair pair)
@@ -361,7 +363,7 @@ public class LineChainer
             String outputFileName = outputDir + "LNX_LINE_CHAINS.csv";
             mFileWriter = createBufferedWriter(outputFileName, false);
 
-            mFileWriter.write("SampleId,ClusterId,ChainId,ChainDesc,SourceChr,SourcePosStart,SourcePosEnd");
+            mFileWriter.write("SampleId,ClusterId,ChainId,ChainSvCount,AsmbLinks,ChainDesc,SourceChr,SourcePosStart,SourcePosEnd");
             mFileWriter.write(",InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd");
             mFileWriter.newLine();
         }
@@ -373,7 +375,7 @@ public class LineChainer
 
     private void writeChainData()
     {
-        if(mFileWriter == null)
+        if(mFileWriter == null || mChains.isEmpty())
             return;
 
         try
@@ -390,8 +392,8 @@ public class LineChainer
                     ++typeCounts[typeAsInt(var.type())];
                 }
 
-                mFileWriter.write(String.format("%s,%d,%d,%s",
-                        mSampleId, mClusterId, chain.id(), getSvTypesStr(typeCounts)));
+                mFileWriter.write(String.format("%s,%d,%d,%d,%d,%s",
+                        mSampleId, mClusterId, chain.id(), chain.getSvCount(), chain.getAssemblyLinkCount(), getSvTypesStr(typeCounts)));
 
                 final SvLinkedPair firstLink = chain.getLinkedPairs().get(0);
                 final SvLinkedPair lastLink = chain.getLinkedPairs().get(chain.getLinkedPairs().size() - 1);
@@ -409,6 +411,68 @@ public class LineChainer
                 if(inv != null)
                 {
                     mFileWriter.write(String.format(",%d,%d", inv.position(true), inv.position(false)));
+                }
+                else
+                {
+                    mFileWriter.write(",-1,-1");
+                }
+
+                mFileWriter.newLine();
+
+            }
+        }
+        catch (final IOException e)
+        {
+            LNX_LOGGER.error("error writing line chain data: {}", e.toString());
+        }
+    }
+
+    private void writeUnchainedSVs()
+    {
+        if(mFileWriter == null || mSourceBreakends.isEmpty())
+            return;
+
+        try
+        {
+            int nonChainId = mChains.size();
+
+            for(final SvBreakend breakend : mSourceBreakends)
+            {
+                final SvBreakend otherBreakend = breakend.getOtherBreakend();
+                boolean isLineInv = breakend.getSV().type() == INV && breakend.getSV().inLineElement();
+
+                if(mSourceBreakends.contains(otherBreakend))
+                {
+                    if(breakend.position() > otherBreakend.position())
+                        continue;
+                }
+
+                mFileWriter.write(String.format("%s,%d,%d,%d,%d,%s,%s",
+                        mSampleId, mClusterId, nonChainId++, 1, 0, breakend.getSV().type(), breakend.chromosome()));
+
+                if(breakend.inLineElement() && !isLineInv)
+                {
+                    mFileWriter.write(String.format(",%d,%d",
+                            breakend.position(), otherBreakend != null && otherBreakend.inLineElement() ? otherBreakend.position() : -1));
+                }
+                else
+                {
+                    mFileWriter.write(",-1,-1");
+                }
+
+                if(otherBreakend != null && !otherBreakend.inLineElement() && !isLineInv)
+                {
+                    mFileWriter.write(String.format(",%s,%d,-1",
+                            otherBreakend.chromosome(), otherBreakend.position()));
+                }
+                else
+                {
+                    mFileWriter.write(",-1,-1,-1");
+                }
+
+                if(isLineInv)
+                {
+                    mFileWriter.write(String.format(",%d,%d", breakend.position(), otherBreakend.position()));
                 }
                 else
                 {

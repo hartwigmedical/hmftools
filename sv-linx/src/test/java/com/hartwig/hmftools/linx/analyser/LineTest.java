@@ -270,7 +270,7 @@ public class LineTest
     {
         LinxTester tester = new LinxTester();
 
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         // scenario 1: 2 SGLs with mappings to the same location
         SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, POLY_A_MOTIF);
