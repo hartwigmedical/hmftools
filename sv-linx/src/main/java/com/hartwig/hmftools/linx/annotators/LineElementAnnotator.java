@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.linx.annotators;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -9,11 +11,14 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
+import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineInsertMotif;
+import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLinePolyAorTMotif;
+import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineSourceMotif;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
@@ -38,11 +43,13 @@ public class LineElementAnnotator {
     private final List<SvRegion> mKnownLineElements;
     private PseudoGeneFinder mPseudoGeneFinder;
     private final int mProximityDistance;
+    private LineClusterState mLineState;
 
     public static final int LINE_ELEMENT_PROXIMITY_DISTANCE = 5000;
 
     public static final String POLY_A_MOTIF = "AAAAAAAAAAA";
     public static final String POLY_T_MOTIF = "TTTTTTTTTTT";
+    private static final String REPEAT_CLASS_LINE = "LINE/L1";
 
     private static final int LE_COL_CHR = 0;
     private static final int LE_COL_POS_START = 1;
@@ -53,6 +60,7 @@ public class LineElementAnnotator {
         mProximityDistance = proximityDistance;
         mPseudoGeneFinder = null;
         mKnownLineElements = Lists.newArrayList();
+        mLineState = new LineClusterState(proximityDistance);
     }
 
     public void setPseudoGeneFinder(final PseudoGeneFinder pseudoGeneFinder)
@@ -125,22 +133,207 @@ public class LineElementAnnotator {
 
     public static boolean hasPolyAorTMotif(final SvVarData var)
     {
-        return var.getSvData().insertSequence().contains(POLY_A_MOTIF) || var.getSvData().insertSequence().contains(POLY_T_MOTIF);
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            final SvBreakend breakend = var.getBreakend(se);
+
+            if(breakend == null)
+                continue;
+
+            if(hasLineSourceMotif(breakend) || hasLineInsertMotif(breakend))
+                return true;
+        }
+
+        return false;
     }
 
     public void markLineCluster(final SvCluster cluster)
     {
         /* Identify a suspected LINE element if:
-           - has 2+ BND within 5K NOT forming a short deletion bridge at the suspected LINE source location
-                AND at least one SV also within 5kb having poly A/T INS sequence
-                AND either the 2 BNDs going to different chromosomes or forming a short DB at their non-line / insertion location
-           - OR at least 1 BND with only 1 remote SGL forming a 30 base DB (ie on the remote arm)
-                AND EITHER at least one SV also within 5kb OR the remote SGL having poly A/T INS sequence
-           - OR there are 2+ breakends within 5kb which both have a polyA insertion sequence with the same orientation
 
-           Resolve the cluster as type = Line if:
-            -  has a suspected line element
-            -  every variant in the cluster is part of a KNOWN line element
+        1. There are 2+ breakends within 5kb with poly-A/poly-T tails with expected orientations for a source site
+
+        2. There are 2+ BNDs which are not connected at their remote end to a known LINE site (ie within 5kb) with
+            - at least one not forming a short DB (< 30 bases) AND
+            - at least one breakend within 5kb having a poly-A tail with expected orientation for a source site
+
+        3. There is at least 1 BND with it’s remote breakend proximity clustered with ONLY 1 single breakend AND forming a short DB AND
+            - EITHER at least one breakend also within 5kb OR
+            - the remote single breakend having a poly-A/poly-T tail with expected orientation for an insertion site
+        */
+
+        if(isFilteredResolvedType(cluster.getResolvedType()))
+            return;
+
+        boolean hasSuspected = false;
+
+        for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            mLineState.clear();
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+
+                mLineState.addBreakend(breakend);
+
+                if(!mLineState.isSuspected())
+                    continue;
+
+                // gather up all breakends within 5K of this suspect line element
+                List<SvBreakend> proximateBreakends = Lists.newArrayList(breakend);
+
+                for (int j = i + 1; j < breakendList.size(); ++j)
+                {
+                    final SvBreakend nextBreakend = breakendList.get(j);
+
+                    if (abs(nextBreakend.position() - breakend.position()) > mProximityDistance)
+                        break;
+
+                    proximateBreakends.add(nextBreakend);
+                }
+
+                // and in the reverse direction
+                for (int j = i - 1; j >= 0; --j)
+                {
+                    final SvBreakend prevBreakend = breakendList.get(j);
+
+                    if (abs(breakend.position() - prevBreakend.position()) > mProximityDistance)
+                        break;
+
+                    proximateBreakends.add(prevBreakend);
+                }
+
+                // check for a proximate DEL matching exon positions which would invalidate this as a LINE cluster
+                if(mPseudoGeneFinder != null)
+                {
+                    final SvBreakend pseudoDel = proximateBreakends.stream()
+                            .filter(x -> x.type() == DEL)
+                            .filter(x -> mPseudoGeneFinder.variantMatchesPseudogeneExons(x.getSV()))
+                            .findFirst().orElse(null);
+
+                    if(pseudoDel != null)
+                    {
+                        LNX_LOGGER.debug("cluster({}) proximate DEL({}) matches pseudogene exon boundaries",
+                                cluster.id(), pseudoDel.getSV().posId());
+                        continue;
+                    }
+                }
+
+                LNX_LOGGER.debug("cluster({}) chromosome({}) marking {} breakends as suspect, state({})",
+                        cluster.id(), breakend.chromosome(), proximateBreakends.size(), mLineState.toString());
+
+                // mark every breakend in this local range as suspect line
+                proximateBreakends.forEach(x -> x.getSV().addLineElement(SUSPECT, x.usesStart()));
+
+                hasSuspected = true;
+            }
+        }
+
+        checkIsLineCluster(cluster, hasSuspected, mLineState.hasInsertBreakends());
+
+        mLineState.clear();
+    }
+
+    private void checkIsLineCluster(SvCluster cluster, boolean hasSuspected, boolean hasInsertSites)
+    {
+        /* Resolve the cluster LINE if:
+
+        1. Every non single or inferred breakend variant in the cluster is part of a KNOWN line element
+
+        2. Has a suspected line element AND
+        - the cluster has <=10 variants OR at least 50% of the SVs in the cluster have a known or suspected breakend)
+
+        3. The cluster has 2 or less variants both of which are single or inferred breakends AND
+         - at least one poly-A/poly-T tail with the expected orientation of an insertion site
+
+        4. The cluster contains exactly 1 single breakend and 1 inferred breakend AND
+        - the single breakend has insertSequenceRepeatClass = ‘LINE/L1’
+        - (this condition captures LINE insertion sites where we fail to call the polyA side of the insertion)
+        */
+
+        boolean allNonSglInKnown = !(cluster.getSVs().stream()
+                .filter(x -> !x.isSglBreakend())
+                .anyMatch(x -> !(x.hasLineElement(KNOWN, true) || x.hasLineElement(KNOWN, false))));
+
+        if(allNonSglInKnown && cluster.getTypeCount(BND) >= 1)
+        {
+            long knownCount = cluster.getSVs().stream()
+                    .filter(x -> x.hasLineElement(KNOWN, true) || x.hasLineElement(KNOWN, false)).count();
+
+            LNX_LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownCount);
+            cluster.markAsLine();
+            return;
+        }
+
+        if(hasSuspected)
+        {
+            long svInLineCount = cluster.getSVs().stream().filter(x-> x.inLineElement()).count();
+
+            if(LNX_LOGGER.isDebugEnabled())
+            {
+                long polyAorT = cluster.getSVs().stream().filter(x -> hasPolyAorTMotif(x)).count();
+
+                long suspectLine = cluster.getSVs().stream()
+                        .filter(x -> (x.hasLineElement(SUSPECT, true) || x.hasLineElement(SUSPECT, false))).count();
+
+                LNX_LOGGER.debug("cluster({}) anyLine({}) suspect({})) polyAT({})",
+                        cluster.id(), svInLineCount, suspectLine, polyAorT);
+            }
+
+            if(cluster.getSvCount() <= 10 || svInLineCount * 2 >= cluster.getSvCount())
+            {
+                cluster.markAsLine();
+                return;
+            }
+        }
+
+        if(cluster.getSvCount() <= 2 && hasInsertSites)
+        {
+            int sglCount = cluster.getSglBreakendCount();
+
+            if(sglCount >= 1 && sglCount <= 2 && sglCount == cluster.getSvCount())
+            {
+                LNX_LOGGER.debug("cluster({}) marked as line with poly A/T SGL", cluster.id());
+                cluster.markAsLine();
+                return;
+            }
+            /*
+            else if(cluster.getTypeCount(INS) == 1 && cluster.getSvCount() == 1)
+            {
+                cluster.markAsLine();
+            }
+            */
+        }
+
+        if(cluster.getSvCount() == 2 && cluster.getTypeCount(INF) == 1 && cluster.getTypeCount(SGL) == 1)
+        {
+            if(cluster.getSVs().stream()
+                    .filter(x -> x.type() == SGL)
+                    .anyMatch(x -> x.getSvData().insertSequenceRepeatClass().equals(REPEAT_CLASS_LINE)))
+            {
+                LNX_LOGGER.debug("cluster({}) marked as line with SGL with repeat-class LINE", cluster.id());
+                cluster.markAsLine();
+                return;
+            }
+        }
+    }
+
+    public void markLineClusterOld(final SvCluster cluster)
+    {
+        /* Identify a suspected LINE element if:
+
+        1. There are 2+ breakends within 5kb with poly-A/poly-T tails with expected orientations for a source site
+
+        2. There are 2+ BNDs which are not connected at their remote end to a known LINE site (ie within 5kb) with
+            - at least one not forming a short DB (< 30 bases) AND
+            - at least one breakend within 5kb having a poly-A tail with expected orientation for a source site
+
+        3. There is at least 1 BND with it’s remote breakend proximity clustered with ONLY 1 single breakend AND forming a short DB AND
+            - EITHER at least one breakend also within 5kb OR
+            - the remote single breakend having a poly-A/poly-T tail with expected orientation for an insertion site
         */
 
         if(isFilteredResolvedType(cluster.getResolvedType()))
@@ -148,8 +341,6 @@ public class LineElementAnnotator {
 
         boolean hasSuspected = false;
         boolean hasPolyAorT = false;
-
-        // LineClusterState clusterState = new LineClusterState();
 
         for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
@@ -187,7 +378,7 @@ public class LineElementAnnotator {
                     final SvLinkedPair dbPair = var.getDBLink(!breakend.usesStart());
 
                     if (isRemoteInsertionDeletionBridge(dbPair) && dbPair.getOtherSV(var).type() == SGL
-                    && dbPair.getOtherSV(var).getCluster() == cluster)
+                            && dbPair.getOtherSV(var).getCluster() == cluster)
                     {
                         hasRemoteShortBndDB = true;
                         final SvVarData sgl = dbPair.getOtherSV(var);
@@ -223,7 +414,7 @@ public class LineElementAnnotator {
                         }
 
                         if(polyAtBreakends.stream().filter(x -> x.orientation() == 1).count() >= 2
-                        || polyAtBreakends.stream().filter(x -> x.orientation() == -1).count() >= 2)
+                                || polyAtBreakends.stream().filter(x -> x.orientation() == -1).count() >= 2)
                         {
                             isSuspectGroup = true;
                             break;
@@ -297,7 +488,7 @@ public class LineElementAnnotator {
                 if(mPseudoGeneFinder != null)
                 {
                     final SvBreakend pseudoDel = proximateBreakends.stream()
-                            .filter(x -> x.getSV().type() == DEL)
+                            .filter(x -> x.type() == DEL)
                             .filter(x -> mPseudoGeneFinder.variantMatchesPseudogeneExons(x.getSV()))
                             .findFirst().orElse(null);
 
@@ -319,7 +510,7 @@ public class LineElementAnnotator {
             }
         }
 
-        markLineCluster(cluster, hasSuspected, hasPolyAorT);
+        checkIsLineCluster(cluster, hasSuspected, hasPolyAorT);
     }
 
     private boolean isRemoteInsertionDeletionBridge(final SvLinkedPair dbPair)
@@ -355,53 +546,5 @@ public class LineElementAnnotator {
 
         return true;
     }
-
-    private void markLineCluster(SvCluster cluster, boolean hasSuspected, boolean hasPolyAorT)
-    {
-        long knownCount = cluster.getSVs().stream().filter(SvVarData::inLineElement).count();
-
-        if(cluster.getSvCount() == knownCount && cluster.getTypeCount(BND) >= 1)
-        {
-            LNX_LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownCount);
-            cluster.markAsLine();
-            return;
-        }
-        else if(hasSuspected)
-        {
-            long svInLineCount = cluster.getSVs().stream().filter(x-> x.inLineElement()).count();
-
-            if(LNX_LOGGER.isDebugEnabled())
-            {
-                long polyAorT = cluster.getSVs().stream().filter(x -> hasPolyAorTMotif(x)).count();
-
-                long suspectLine = cluster.getSVs().stream()
-                        .filter(x -> (x.hasLineElement(SUSPECT, true) || x.hasLineElement(SUSPECT, false))).count();
-
-                LNX_LOGGER.debug("cluster({}) anyLine({}) suspect({}) known({}) polyAT({})",
-                        cluster.id(), svInLineCount, suspectLine, knownCount, polyAorT);
-            }
-
-            if(cluster.getSvCount() <= 10 || svInLineCount * 2 >= cluster.getSvCount())
-            {
-                cluster.markAsLine();
-            }
-        }
-        else if(hasPolyAorT)
-        {
-            int sglCount = cluster.getSglBreakendCount();
-
-            if(sglCount >= 1 && sglCount <= 2 && sglCount == cluster.getSvCount())
-            {
-                LNX_LOGGER.debug("cluster({}) marked as line with poly A/T SGL", cluster.id());
-                cluster.markAsLine();
-            }
-            else if(cluster.getTypeCount(INS) == 1 && cluster.getSvCount() == 1)
-            {
-                cluster.markAsLine();
-            }
-        }
-
-    }
-
 
 }

@@ -4,13 +4,17 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLinePolyAorTMotif;
+import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_T_MOTIF;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.NEG_STRAND;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInf;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
@@ -47,12 +51,18 @@ public class LineTest
         SvVarData bnd1 = createBnd(tester.nextVarId(), "1", 100, -1, "2", 100, 1);
         SvVarData bnd2 = createBnd(tester.nextVarId(), "1", 200, 1, "2", 200, -1);
 
+        // don't need to be marked as LINE
+        SvVarData sgl = createSgl(tester.nextVarId(), "1", 500, 1);
+        SvVarData inf = createInf(tester.nextVarId(), "1", 1500, 1);
+
         bnd1.addLineElement(KNOWN, true);
         bnd2.addLineElement(KNOWN, true);
 
         SvCluster cluster = new SvCluster(0);
         cluster.addVariant(bnd1);
         cluster.addVariant(bnd2);
+        cluster.addVariant(sgl);
+        cluster.addVariant(inf);
 
         tester.addClusterAndSVs(cluster);
 
@@ -63,15 +73,57 @@ public class LineTest
 
         assertTrue(cluster.hasLinkingLineElements());
     }
+    @Test
+    public void testLineMotifs()
+    {
+        String shortBases = "GCTG";
+        String randomBases = "GCTGTGAGCTGATCG";
+
+        String insSequence = shortBases + POLY_A_MOTIF + randomBases;
+
+        assertFalse(hasLinePolyAorTMotif(shortBases, POS_ORIENT, true));
+        assertFalse(hasLinePolyAorTMotif(randomBases, POS_ORIENT, true));
+
+        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false));
+
+        insSequence = shortBases + POLY_T_MOTIF + randomBases;
+
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true));
+        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false));
+
+        insSequence = randomBases + POLY_T_MOTIF + shortBases;
+
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false));
+
+        insSequence = randomBases + POLY_A_MOTIF + shortBases;
+
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true));
+        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false));
+    }
 
     @Test
-    public void testSuspectLineMarking()
+    public void testSuspectBndLineMarking()
     {
         LinxTester tester = new LinxTester();
 
+        String shortBases = "GCTG";
+        String randomBases = "GCTGTGAGCTGATCG";
+        String polyAMotif = shortBases + POLY_A_MOTIF + randomBases;
+        String polyTMotif = randomBases + POLY_T_MOTIF + shortBases;
+
         // scenario 1:
         // 2 BNDs within 5KB and 1 have poly A/T and not forming a DB with other breakends forming a short DB
-        SvVarData bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 150,  -1, 1, BND, POLY_A_MOTIF);
+        SvVarData bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 150,  -1, 1, BND, polyTMotif);
         SvVarData bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 170,  1, -1, BND, "");
 
         tester.addAndCluster(bnd1, bnd2);
@@ -85,8 +137,36 @@ public class LineTest
         SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
 
+        // 2 BNDs both with poly A/T
+        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, polyTMotif);
+        bnd2 = createSv(tester.nextVarId(), "1", "3", 200, 110,  1, -1, BND, polyAMotif);
+
+        tester.addAndCluster(bnd1, bnd2);
+
+        assertTrue(bnd1.hasLineElement(SUSPECT, true));
+        assertTrue(bnd2.hasLineElement(SUSPECT, true));
+        assertFalse(bnd1.isLineElement(false));
+        assertFalse(bnd2.isLineElement(false));
+
+        cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.hasLinkingLineElements());
+
+        // now a BND with a remote SGL in a short DB
+        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, polyTMotif);
+        SvVarData sgl = createSv(tester.nextVarId(), "2", "", 90, -1,  -1, -1, SGL, "");
+
+        tester.addAndCluster(bnd1, bnd2);
+
+        assertTrue(bnd1.hasLineElement(SUSPECT, true));
+        assertFalse(sgl.isLineElement(true));
+        assertFalse(bnd1.isLineElement(false));
+
+        cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.hasLinkingLineElements());
+
+
         // now with BNDs going to different arms
-        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, POLY_A_MOTIF);
+        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, polyTMotif);
         bnd2 = createSv(tester.nextVarId(), "1", "3", 200, 110,  1, -1, BND, "");
 
         tester.addAndCluster(bnd1, bnd2);
@@ -100,8 +180,8 @@ public class LineTest
         assertTrue(cluster.hasLinkingLineElements());
 
         // now a BND with a remote SGL in a short DB
-        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, POLY_A_MOTIF);
-        SvVarData sgl = createSv(tester.nextVarId(), "2", "", 90, -1,  -1, -1, SGL, "");
+        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, polyTMotif);
+        sgl = createSv(tester.nextVarId(), "2", "", 90, -1,  -1, -1, SGL, "");
 
         tester.addAndCluster(bnd1, bnd2);
 
@@ -114,21 +194,7 @@ public class LineTest
 
         // now test BNDs in a DB on the LINE arm which will invalidate the line test
         bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  1, 1, BND, "");
-        bnd2 = createSv(tester.nextVarId(), "1", "2", 110, 110,  -1, -1, BND, POLY_A_MOTIF);
-
-        tester.addAndCluster(bnd1, bnd2);
-
-        assertFalse(bnd1.isLineElement(true));
-        assertFalse(bnd2.isLineElement(true));
-        assertFalse(bnd1.isLineElement(false));
-        assertFalse(bnd2.isLineElement(false));
-
-        cluster = tester.Analyser.getClusters().get(0);
-        assertTrue(!cluster.hasLinkingLineElements());
-
-        // now test BNDs in a longer DB on the remote arm which will invalidate the line test
-        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, "");
-        bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 200,  1, -1, BND, POLY_A_MOTIF);
+        bnd2 = createSv(tester.nextVarId(), "1", "2", 110, 110,  -1, -1, BND, polyTMotif);
 
         tester.addAndCluster(bnd1, bnd2);
 
@@ -145,7 +211,7 @@ public class LineTest
 
         bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, "");
         bnd2 = createSv(tester.nextVarId(), "1", "3", 150, 200,  -1, -1, BND, "");
-        SvVarData del = createSv(tester.nextVarId(), "1", "1", 1000, 11000,  1, -1, DEL, POLY_A_MOTIF);
+        SvVarData del = createSv(tester.nextVarId(), "1", "1", 1000, 11000,  1, -1, DEL, polyAMotif);
 
         tester.AllVariants.addAll(Lists.newArrayList(bnd1, bnd2, del));
         tester.preClusteringInit();
@@ -162,9 +228,12 @@ public class LineTest
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
 
+        tester.clearClustersAndSVs();
+
+        /*
         // 2 proximate breakends with poly A or T - only mark the breakends as line if they have the same orientation
-        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, POLY_A_MOTIF);
-        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "0", 1020, 0,  1, 0, SGL, POLY_A_MOTIF);
+        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, polyTMotif);
+        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "0", 1020, 0,  1, 0, SGL, polyAMotif);
 
         tester.addAndCluster(sgl1, sgl2);
 
@@ -172,18 +241,19 @@ public class LineTest
         assertFalse(sgl2.isLineElement(true));
         assertTrue(cluster.hasLinkingLineElements());
 
-        sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, POLY_A_MOTIF);
-        sgl2 = createSv(tester.nextVarId(), "1", "0", 1100, 0,  -1, 0, SGL, POLY_A_MOTIF);
+        sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, polyTMotif);
+        sgl2 = createSv(tester.nextVarId(), "1", "0", 1100, 0,  -1, 0, SGL, polyTMotif);
 
         tester.addAndCluster(sgl1, sgl2);
 
         assertTrue(sgl1.hasLineElement(SUSPECT, true));
         assertTrue(sgl2.hasLineElement(SUSPECT, true));
         assertTrue(cluster.hasLinkingLineElements());
+        */
 
         // BNDs which would be suspect except for the remote DB falling in a known line location
         bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, "");
-        bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 110,  1, -1, BND, POLY_A_MOTIF);
+        bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 110,  1, -1, BND, polyAMotif);
         bnd1.addLineElement(KNOWN, false);
 
         tester.addAndCluster(bnd1, bnd2);
@@ -195,6 +265,42 @@ public class LineTest
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(!cluster.hasLinkingLineElements());
+    }
+
+    @Test
+    public void testSuspectSglLineMarking()
+    {
+        LinxTester tester = new LinxTester();
+
+        String shortBases = "GCTG";
+        String randomBases = "GCTGTGAGCTGATCG";
+        String insertPolyAMotif = randomBases + POLY_A_MOTIF + shortBases;
+
+        // 2 SGLs with an insert-site motif
+        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, "");
+        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "", 120, 0,  -1, 0, SGL, insertPolyAMotif);
+
+        tester.addAndCluster(sgl1, sgl2);
+
+        assertFalse(sgl1.isLineElement(false));
+        assertFalse(sgl2.isLineElement(false));
+
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.hasLinkingLineElements());
+
+        tester.clearClustersAndSVs();
+
+        // can also be just with a lone SGL
+        sgl1 = createSv(tester.nextVarId(), "1", "", 120, 0,  -1, 0, SGL, insertPolyAMotif);
+
+        tester.AllVariants.add(sgl1);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertFalse(sgl1.isLineElement(false));
+
+        cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.hasLinkingLineElements());
     }
 
     @Test
@@ -272,8 +378,12 @@ public class LineTest
 
         // Configurator.setRootLevel(Level.DEBUG);
 
+        String shortBases = "GCTG";
+        String randomBases = "GCTGTGAGCTGATCG";
+        String insertPolyTMotif = shortBases + POLY_T_MOTIF + randomBases;
+
         // scenario 1: 2 SGLs with mappings to the same location
-        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, POLY_A_MOTIF);
+        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, insertPolyTMotif);
         SvVarData sgl2 = createSv(tester.nextVarId(), "1", "", 120, 0,  -1, 0, SGL, "");
 
         // both have additional mappings which are ignored
@@ -295,8 +405,9 @@ public class LineTest
         tester.clearClustersAndSVs();
 
         // again with a BND to a SGL
-        sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, POLY_A_MOTIF);
+        sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, insertPolyTMotif);
         SvVarData bnd = createSv(tester.nextVarId(), "1", "2", 120, 1100,  -1, 1, BND, "");
+        bnd.addLineElement(KNOWN, false);
 
         // both have additional mappings which are ignored
         sgl1.getSglMappings().add(new SglMapping(CHR_2, 1000, NEG_ORIENT, "", 1));
@@ -309,6 +420,7 @@ public class LineTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.hasLinkingLineElements());
 
         assertEquals(1, cluster.getChains().size());
     }
