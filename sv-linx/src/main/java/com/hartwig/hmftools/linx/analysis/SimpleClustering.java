@@ -1190,7 +1190,7 @@ public class SimpleClustering
                 {
                     SvBreakend lohBreakend = lohEvent.getBreakend(isStart(be));
 
-                    if(lohBreakend == null || lohBreakend.getSV().type() != DUP)
+                    if(lohBreakend == null || lohBreakend.type() != DUP)
                         continue;
 
                     // it's possible that the breakends for this LOH are not clustered, eg if one is LINE

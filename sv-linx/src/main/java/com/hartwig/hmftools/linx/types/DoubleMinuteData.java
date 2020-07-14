@@ -195,7 +195,7 @@ public class DoubleMinuteData
                 }
             }
 
-            StructuralVariantType svType = breakend.getSV().type();
+            StructuralVariantType svType = breakend.type();
             if(svType != SGL && svType != INF)
             {
                 if(breakend.isFoldback() && !breakend.getSV().isChainedFoldback())

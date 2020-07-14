@@ -445,7 +445,7 @@ public class LineChainer
             for(final SvBreakend breakend : mSourceBreakends)
             {
                 final SvBreakend otherBreakend = breakend.getOtherBreakend();
-                boolean isLineInv = breakend.getSV().type() == INV && breakend.getSV().inLineElement();
+                boolean isLineInv = breakend.type() == INV && breakend.getSV().inLineElement();
 
                 if(mSourceBreakends.contains(otherBreakend))
                 {
@@ -454,7 +454,7 @@ public class LineChainer
                 }
 
                 mFileWriter.write(String.format("%s,%d,%d,%d,%d,%s,%s",
-                        mSampleId, mClusterId, nonChainId++, 1, 0, breakend.getSV().type(), breakend.chromosome()));
+                        mSampleId, mClusterId, nonChainId++, 1, 0, breakend.type(), breakend.chromosome()));
 
                 if(breakend.inLineElement() && !isLineInv)
                 {

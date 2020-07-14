@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 
@@ -62,6 +63,7 @@ public class SvBreakend {
     public final int position() { return mPosition; }
     public final byte orientation() { return mOrientation; }
     public boolean usesStart() { return mUsesStart; }
+    public StructuralVariantType type() { return mSV.type(); }
     public boolean isSglMapping() { return mSglMapping; }
 
     public final SvBreakend getOtherBreakend() { return mSV.getBreakend(!mUsesStart); }

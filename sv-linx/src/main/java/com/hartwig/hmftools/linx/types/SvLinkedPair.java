@@ -287,7 +287,7 @@ public class SvLinkedPair {
 
     public boolean hasVariant(final SvVarData var) { return mFirstBreakend.getSV() == var || mSecondBreakend.getSV() == var; }
 
-    public boolean isDupLink() { return mFirstBreakend.getSV() == mSecondBreakend.getSV() && mFirstBreakend.getSV().type() == DUP; }
+    public boolean isDupLink() { return mFirstBreakend.getSV() == mSecondBreakend.getSV() && mFirstBreakend.type() == DUP; }
 
     public static boolean hasLinkClash(final List<SvLinkedPair> links1, final List<SvLinkedPair> links2)
     {

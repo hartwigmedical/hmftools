@@ -87,7 +87,7 @@ public class CnSegmentBuilder
 
                 if (i == 0)
                 {
-                    if(breakend.getSV().type() == DUP && breakendList.get(i + 1).getSV() == breakend.getSV())
+                    if(breakend.type() == DUP && breakendList.get(i + 1).getSV() == breakend.getSV())
                     {
                         // starts with a DUP so don't treat the first breakend as a copy-number drop
                         currentCopyNumber += jcnChange;
@@ -159,7 +159,7 @@ public class CnSegmentBuilder
                         cnDataList.add(cnData);
 
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, nextBreakend.position() - 1,
-                                currentCopyNumber, CENTROMERE.toString(), nextBreakend.getSV().type().toString(),
+                                currentCopyNumber, CENTROMERE.toString(), nextBreakend.type().toString(),
                                 1, actualBaf, 100);
 
                         extraCnData.setIndex(cnDataList.size());
@@ -168,7 +168,7 @@ public class CnSegmentBuilder
                     else
                     {
                         cnData = new SvCNData(cnId++, chromosome, breakend.position(), nextBreakend.position() - 1,
-                                currentCopyNumber, var.type().toString(), nextBreakend.getSV().type().toString(),
+                                currentCopyNumber, var.type().toString(), nextBreakend.type().toString(),
                                 1, actualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());

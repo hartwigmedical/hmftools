@@ -232,7 +232,7 @@ public class DeletionDrivers
             for(final SvBreakend breakend : entry.getValue())
             {
                 boolean delType = breakend.orientation() == 1 && breakend.getDBLink() != null;
-                boolean dupType = breakend.orientation() == -1 && breakend.getSV().type() == DUP;
+                boolean dupType = breakend.orientation() == -1 && breakend.type() == DUP;
 
                 if(!delType && !dupType)
                     continue;

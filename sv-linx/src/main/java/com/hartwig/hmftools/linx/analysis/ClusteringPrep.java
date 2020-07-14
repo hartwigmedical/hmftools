@@ -101,7 +101,7 @@ public class ClusteringPrep
 
             for(final SvBreakend breakend : breakendList)
             {
-                if(!breakend.usesStart() || !(breakend.getSV().type() == DEL || breakend.getSV().type() == DUP))
+                if(!breakend.usesStart() || !(breakend.type() == DEL || breakend.type() == DUP))
                     continue;
 
                 final SvVarData var = breakend.getSV();
