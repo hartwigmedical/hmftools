@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.cohort;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
@@ -376,7 +377,7 @@ public class CohortLineElements
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             writer.write("LineId,Type,Chromosome,PosStart,PosEnd");
-            writer.write(",SampleCount,TotalInserts,PcawgSampleCount,KnownPosStart,KnownPosEnd,LowerRmId,UpperRmId");
+            writer.write(",SampleCount,TotalInserts,PcawgSampleCount,KnownPosStart,KnownPosEnd,RmId,RmPosStart,RmPosEnd,RmStrand");
             writer.write(",SampleId,ClusterId,SamplePosStart,SamplePosEnd,SampleSourceLocations,SourceBreakends,SampleInserts");
 
             writer.newLine();
@@ -391,13 +392,16 @@ public class CohortLineElements
 
                 final SvRegion knownLineRegion = findKnownLineRegion(primarySource.Region);
 
-                int[] repeatMaskerIds = findRepeatMaskerIds(primarySource.Region, knownLineRegion);
+                LineRepeatMaskerData rmData = findRepeatMaskerMatch(primarySource.Region, knownLineRegion);
 
-                final String lineDefn = String.format("%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                final String rmDataStr = rmData != null ?
+                        String.format("%d,%d,%d,%d", rmData.RmId, rmData.Region.start(), rmData.Region.end(), rmData.Strand) : "-1,-1,-1,0";
+
+                final String lineDefn = String.format("%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s",
                         lineId, primarySource.LineType, combinedRegion.Chromosome, combinedRegion.start(), combinedRegion.end(),
                         lineData.sampleCount(), lineData.insertRegionsCount(), extRegionCount,
                         knownLineRegion != null ? knownLineRegion.start() : -1, knownLineRegion != null ? knownLineRegion.end() : -1,
-                        repeatMaskerIds[SE_START], repeatMaskerIds[SE_END]);
+                        rmDataStr);
 
                 writer.write(lineDefn);
                 writer.write(String.format(",%s", lineData.sampleClusterData()));
@@ -427,39 +431,54 @@ public class CohortLineElements
         return mKnownLineElements.stream().filter(x -> x.overlaps(lineRegion)).findFirst().orElse(null);
     }
 
-    private int[] findRepeatMaskerIds(final SvRegion lineRegion, final SvRegion knownLineRegion)
-    {
-        int[] repeatMaskerIds = {-1, -1};
+    private static final int INTACT_LINE_ELEMENT_LENGTH = 5000;
 
+    private LineRepeatMaskerData findRepeatMaskerMatch(final SvRegion lineRegion, final SvRegion knownLineRegion)
+    {
         final List<LineRepeatMaskerData> rmDataList = mChrRepeatMaskerData.get(lineRegion.Chromosome);
 
         if(rmDataList == null)
-            return repeatMaskerIds;
+            return null;
 
-        LineRepeatMaskerData prevData = null;
+        LineRepeatMaskerData closestRmData = null;
+        int closestDistance = -1;
+
         for(LineRepeatMaskerData rmData : rmDataList)
         {
             if(knownLineRegion != null && knownLineRegion.overlaps(rmData.Region))
             {
-                repeatMaskerIds[SE_START] = rmData.RmId;
-                repeatMaskerIds[SE_END] = rmData.RmId;
-                return repeatMaskerIds;
+                return rmData;
             }
 
-            if(rmData.Region.start() >= lineRegion.end())
+            if(rmData.Region.length() < INTACT_LINE_ELEMENT_LENGTH)
+                continue;
+
+            // teh line element is expected to be up-stream of the SV activity
+            final int[] rmMatchLimits = {0, 0};
+
+            if(rmData.Strand == POS_ORIENT)
             {
-                repeatMaskerIds[SE_END] = rmData.RmId;
-
-                if(prevData != null)
-                    repeatMaskerIds[SE_START] = prevData.RmId;
-
-                return repeatMaskerIds;
+                rmMatchLimits[SE_START] = rmData.Region.start() - LINE_ELEMENT_PROXIMITY_DISTANCE;
+                rmMatchLimits[SE_END] = rmData.Region.end() + LINE_ELEMENT_PROXIMITY_DISTANCE * 4;
+            }
+            else
+            {
+                rmMatchLimits[SE_START] = rmData.Region.start() - LINE_ELEMENT_PROXIMITY_DISTANCE * 4;
+                rmMatchLimits[SE_END] = rmData.Region.end() + LINE_ELEMENT_PROXIMITY_DISTANCE;
             }
 
-            prevData = rmData;
+            if(positionsOverlap(lineRegion.start(), lineRegion.end(), rmMatchLimits[SE_START], rmMatchLimits[SE_END]))
+            {
+                int distance = abs((lineRegion.start() + lineRegion.end()) / 2 - (rmData.Region.start() + rmData.Region.end()) / 2);
+                if(closestRmData == null || distance < closestDistance)
+                {
+                    closestRmData = rmData;
+                    closestDistance = distance;
+                }
+            }
         }
 
-        return repeatMaskerIds;
+        return closestRmData;
     }
 
     private int getExternalLineSampleCount(final SvRegion region)
