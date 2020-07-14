@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.chaining;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
+import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
 import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
@@ -257,6 +259,10 @@ public class LineChainer
         {
             return null;
         }
+
+        // if too far away are likely in different line elements
+        if(abs(breakend1.position() - breakend2.position()) > LINE_ELEMENT_PROXIMITY_DISTANCE * 2)
+            return null;
 
         // the other ends of these breakends must either go to the same insertion location or be part of chains which do the same
         final SvBreakend otherBreakend1 = getOtherBreakend(breakend1);
