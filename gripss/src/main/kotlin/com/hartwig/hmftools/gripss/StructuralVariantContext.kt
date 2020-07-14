@@ -46,7 +46,6 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
     val breakpoint: Breakpoint? = endBreakend?.let { Breakpoint(startBreakend, it) }
     val minStart = startBreakend.start
-    val potentialAlignmentLocations = context.potentialAlignmentLocations()
 
     val maxStart = startBreakend.end
     val insertSequenceLength = variantType.insertSequence.length

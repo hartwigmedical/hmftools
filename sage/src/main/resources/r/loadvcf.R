@@ -67,6 +67,7 @@ info_data_frame <- function(vcf) {
       readContextRepeatCount = ifelse(is.na(readContextRepeatCount), 0, readContextRepeatCount),
       referenceRepeatSequence = ifelse(is.na(referenceRepeatSequence), "", referenceRepeatSequence),
       referenceRepeatCount = ifelse(is.na(referenceRepeatCount), 0, referenceRepeatCount),
+      localRealignSet = ifelse(is.na(localRealignSet), 0, localRealignSet),
       localPhaseSet = ifelse(is.na(localPhaseSet), 0, localPhaseSet)
     )
 }
@@ -166,10 +167,9 @@ normal = geno_data_frame(sample, 1, "COLO829v003R")
 tumor1 = geno_data_frame(sample, 2, "COLO829v001T")
 tumor2 = geno_data_frame(sample, 3, "COLO829v002T")
 tumor3 = geno_data_frame(sample, 4, "COLO829v003T")
-tumor4 = geno_data_frame(sample, 5, "COLO829v004T")
 multicolo829 = left_join(info, normal, by = c("chromosome", "pos", "ref", "alt")) %>%
   left_join(tumor1, by = c("chromosome", "pos", "ref", "alt")) %>%
   left_join(tumor2, by = c("chromosome", "pos", "ref", "alt")) %>%
-  left_join(tumor3, by = c("chromosome", "pos", "ref", "alt")) %>%
-  left_join(tumor4, by = c("chromosome", "pos", "ref", "alt"))
+  left_join(tumor3, by = c("chromosome", "pos", "ref", "alt"))
 save(multicolo829, file = "~/hmf/tmp/multicolo829.RData")
+passing = multicolo829 %>% filter(filter == 'PASS')
