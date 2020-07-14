@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.gripss.store
 
 import com.hartwig.hmftools.common.gripss.GripssFilters.DEDUP
+import com.hartwig.hmftools.common.gripss.GripssFilters.MIN_QUAL
 import com.hartwig.hmftools.gripss.GripssFilterConfig
 import com.hartwig.hmftools.gripss.MATE
 import com.hartwig.hmftools.gripss.PON
@@ -51,13 +52,13 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     fun isPassing(vcfId: String) = get(vcfId).isEmpty()
 
-    fun isEligibleForRescue(vcfId: String, mateId: String?): Boolean {
-        return isEligibleForRescue(vcfId) && mateId?.let { isDuplicate(it) } != true
+    fun isFiltered(vcfId: String) = get(vcfId).isNotEmpty()
+
+    fun containsDuplicateFilter(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == true
+
+    fun isExclusivelyMinQualFiltered(vcfId: String): Boolean {
+        return filters[vcfId]?.let { it.size == 1 && it.contains(MIN_QUAL) } == true
     }
-
-    fun isEligibleForRescue(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == false
-
-    fun isDuplicate(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == true
 
     fun update(duplicates: Set<String>, rescues: Set<String>): SoftFilterStore {
         val result = mutableMapOf<String, MutableSet<String>>()
