@@ -19,7 +19,6 @@ public class WideEcrfFileReader {
 
     private static final Logger LOGGER = LogManager.getLogger(WideEcrfFileReader.class);
     private static final char COMMA_DELIMITER = ',';
-    private static final char SEMICOLON_DELIMITER = ';';
 
     private static final int FIVE_DAYS_DATA_COUNT = 15;
     private static final int FIVE_DAYS_DATA_PATIENT_ID = 1;
@@ -165,7 +164,7 @@ public class WideEcrfFileReader {
     public static List<WideAvlTreatmentData> readAvlTreatments(@NotNull String pathToCsv) throws IOException {
         List<WideAvlTreatmentData> wideTreatments = Lists.newArrayList();
 
-        for (CSVRecord line : readCsvSkipHeader(pathToCsv, SEMICOLON_DELIMITER)) {
+        for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == AVL_TREATMENT_DATA_COUNT) {
                 String widePatientId = WideFileInputInterpreter.toWideID(line.get(AVL_TREATMENT_DATA_PATIENT_ID));
                 if (!widePatientId.isEmpty()) {
@@ -173,8 +172,8 @@ public class WideEcrfFileReader {
                             .widePatientId(widePatientId)
                             .drugCode(line.get(AVL_TREATMENT_DATA_DRUG_CODE))
                             .drug(line.get(AVL_TREATMENT_DATA_DRUG))
-                            .startDate(WideFileInputInterpreter.interpretDateNL(line.get(AVL_TREATMENT_DATA_START_DATE)))
-                            .endDate(WideFileInputInterpreter.interpretDateNL(line.get(AVL_TREATMENT_DATA_END_DATE)))
+                            .startDate(WideFileInputInterpreter.interpretDateEN(line.get(AVL_TREATMENT_DATA_START_DATE)))
+                            .endDate(WideFileInputInterpreter.interpretDateEN(line.get(AVL_TREATMENT_DATA_END_DATE)))
                             .build();
 
                     wideTreatments.add(wideTreatment);

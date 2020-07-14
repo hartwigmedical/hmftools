@@ -32,12 +32,6 @@ final class WideFileInputInterpreter {
     }
 
     @Nullable
-    static LocalDate interpretDateNL(@NotNull String date) {
-        return interpretDate(date,
-                new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(new Locale("nl", "NL")));
-    }
-
-    @Nullable
     private static LocalDate interpretDate(@NotNull String date, @NotNull DateTimeFormatter formatter) {
         if (date.isEmpty()) {
             return null;
