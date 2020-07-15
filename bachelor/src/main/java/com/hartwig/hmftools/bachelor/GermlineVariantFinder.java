@@ -353,7 +353,7 @@ public class GermlineVariantFinder
 
             if(mRequiredEffects.stream().anyMatch(x -> effects.contains(x)))
             {
-                BACH_LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
+                BACH_LOGGER.debug("Match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
                         gene, transcriptId, chromosome, position, ref, alt, effects);
 
                 germlineVariant.setMatchRequiredEffect();
@@ -374,7 +374,7 @@ public class GermlineVariantFinder
 
                         if(filter != null)
                         {
-                            BACH_LOGGER.debug("black-list filter match: gene({}) var({}:{}) ref({}) alt({}) protein({})",
+                            BACH_LOGGER.debug("Black-list filter match: gene({}) var({}:{}) ref({}) alt({}) protein({})",
                                     gene, chromosome, position, ref, alt, hgvsProtein);
 
                             if(filter.Configured)
@@ -407,7 +407,7 @@ public class GermlineVariantFinder
 
                         if(filter != null)
                         {
-                            BACH_LOGGER.debug("white-list match found: gene({} {}) var({}:{}) ref({}) alt({}) hgvsProtein({})",
+                            BACH_LOGGER.debug("White-list match found: gene({} {}) var({}:{}) ref({}) alt({}) hgvsProtein({})",
                                     gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
 
                             if(filter.Configured)
