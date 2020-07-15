@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.annotators;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -54,6 +55,7 @@ public class LineClusterState
     }
 
     public boolean isSuspected() { return mSuspectReason != NONE; }
+    public LineSuspectReason suspectReason() { return mSuspectReason; }
 
     public void addBreakend(final SvBreakend breakend)
     {
@@ -83,44 +85,47 @@ public class LineClusterState
                 mSuspectReason, mBreakends.size(), mSourceBreakends.size(), mInsertBreakends.size(), mHasRemoteDB);
     }
 
+    private static final int SPANNING_LOCAL_MIN_DISTANCE = 1000000;
+
     private LineSuspectReason checkSuspectedCriteria()
     {
         if(mSuspectReason != NONE)
             return mSuspectReason;
 
         // check 1: 2+ breakends within 5kb with poly-A/poly-T tails with expected orientations for a source site
-        if(mSourceBreakends.size() == 2)
+        if(mSourceBreakends.size() >= 2)
             return BND_PAIR_POLY_AT;
 
         // 2+ BNDs which are not connected at their remote end to a known LINE site (ie within 5kb) with
         // - at least one not forming a short DB (< 30 bases) AND
         // - at least one breakend within 5kb having a poly-A tail with expected orientation for a source site
-        final List<SvBreakend> bndBreakends = mBreakends.stream()
-                .filter(x -> x.type() == BND)
+        final List<SvBreakend> spanningBreakends = mBreakends.stream()
+                .filter(x -> x.type() == BND || (!x.getSV().isSglBreakend() && x.getSV().length() > SPANNING_LOCAL_MIN_DISTANCE))
                 .filter(x -> !x.getOtherBreakend().hasLineElement(LineElementType.KNOWN))
                 .collect(Collectors.toList());
 
-        if(bndBreakends.size() == 2 && !mSourceBreakends.isEmpty())
+        if(spanningBreakends.size() >= 2 && !mSourceBreakends.isEmpty())
         {
-            if(bndBreakends.stream().anyMatch(x -> x.getDBLink() == null || x.getDBLink().length() > MIN_DEL_LENGTH))
+            if(spanningBreakends.stream().anyMatch(x -> x.getDBLink() == null || x.getDBLink().length() > MIN_DEL_LENGTH))
                 return BND_PAIR_NO_DB;
         }
 
         // at least 1 BND with it’s remote breakend proximity clustered with ONLY 1 single breakend AND forming a short DB AND
         // - EITHER at least one breakend also within 5kb OR
         // - the remote single breakend having a poly-A/poly-T tail with expected orientation for an insertion site
-        if(!bndBreakends.isEmpty())
+        if(!spanningBreakends.isEmpty())
         {
-            for(final SvBreakend breakend : bndBreakends)
+            for(final SvBreakend breakend : spanningBreakends)
             {
-                final SvLinkedPair dbLink = breakend.getDBLink();
+                final SvBreakend otherBreakend = breakend.getOtherBreakend();
+                final SvLinkedPair dbLink = otherBreakend.getDBLink();
 
                 if(dbLink == null)
                     continue;
 
-                final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
+                final SvBreakend remoteOtherBreakend = dbLink.getOtherBreakend(otherBreakend);
 
-                if(otherBreakend.type() != SGL || !isRemoteIsolatedDeletionBridge(dbLink))
+                if(remoteOtherBreakend.type() != SGL || !isRemoteIsolatedDeletionBridge(dbLink))
                     continue;
 
                 mHasRemoteDB = true;
@@ -128,9 +133,9 @@ public class LineClusterState
                 if(mBreakends.size() >= 2)
                     return BND_SGL_REMOTE_DB_PLUS;
 
-                if(hasLineInsertMotif(otherBreakend))
+                if(hasLineInsertMotif(remoteOtherBreakend))
                 {
-                    mInsertBreakends.add(otherBreakend);
+                    mInsertBreakends.add(remoteOtherBreakend);
                     return BND_SGL_REMOTE_DB_POLY_AT;
                 }
             }
@@ -143,15 +148,29 @@ public class LineClusterState
 
     public static boolean hasLineSourceMotif(final SvBreakend breakend)
     {
-        return hasLinePolyAorTMotif(breakend.getSV().getSvData().insertSequence(), breakend.orientation(), true);
+        /* For non-SGL SVs:
+        1. Orientation has to match still (ie. polyA for positive breakend & poly T for negative breakend)
+        2. Tail can be either at the start or the end of the insert sequence (in practice it will normally always be both
+        3. If considering the end breakend of the break junction then need to flip As and Ts
+        */
+        boolean flipOrientation = flipExpectedSequence(breakend);
+        boolean eitherEnd = !breakend.getSV().isSglBreakend();
+        return hasLinePolyAorTMotif(breakend.getSV().getSvData().insertSequence(), breakend.orientation(), !flipOrientation, eitherEnd);
     }
 
     public static boolean hasLineInsertMotif(final SvBreakend breakend)
     {
-        return hasLinePolyAorTMotif(breakend.getSV().getSvData().insertSequence(), breakend.orientation(),false);
+        boolean flipOrientation = flipExpectedSequence(breakend);
+        boolean eitherEnd = !breakend.getSV().isSglBreakend();
+        return hasLinePolyAorTMotif(breakend.getSV().getSvData().insertSequence(), breakend.orientation(), flipOrientation, eitherEnd);
     }
 
-    public static boolean hasLinePolyAorTMotif(final String insSequence, byte orientation, boolean isSource)
+    private static boolean flipExpectedSequence(final SvBreakend breakend)
+    {
+        return !breakend.usesStart() && breakend.orientation() == breakend.getOtherBreakend().orientation();
+    }
+
+    public static boolean hasLinePolyAorTMotif(final String insSequence, byte orientation, boolean isSource, boolean eitherEnd)
     {
         /*
         We define a poly-A tail as a repeat of 11 or more A within 5 bases from the end of the insert sequence.
@@ -168,16 +187,25 @@ public class LineClusterState
         if(insSeqLength < POLY_A_MOTIF.length())
             return false;
 
-        if(orientation == POS_ORIENT)
+        final String requiredSequence = (orientation == POS_ORIENT) == isSource ? POLY_A_MOTIF : POLY_T_MOTIF;
+
+        if(orientation == POS_ORIENT || eitherEnd)
         {
             final String startSeq = insSequence.substring(0, min(insSeqLength, POLY_A_MOTIF.length() + INS_SEQ_BUFFER));
-            return isSource ? startSeq.contains(POLY_A_MOTIF) : startSeq.contains(POLY_T_MOTIF);
+
+            if(startSeq.contains(requiredSequence))
+                return true;
         }
-        else
+
+        if(orientation == NEG_ORIENT || eitherEnd)
         {
             final String endSeq = insSequence.substring(max(0, insSeqLength - (POLY_A_MOTIF.length() + INS_SEQ_BUFFER)), insSeqLength);
-            return isSource ? endSeq.contains(POLY_T_MOTIF) : endSeq.contains(POLY_A_MOTIF);
+
+            if(endSeq.contains(requiredSequence))
+                return true;
         }
+
+        return false;
     }
 
     private boolean isRemoteIsolatedDeletionBridge(final SvLinkedPair dbPair)

@@ -177,6 +177,9 @@ public class LineElementAnnotator {
             {
                 final SvBreakend breakend = breakendList.get(i);
 
+                if(breakend.inLineElement())
+                    continue; // breakends may have already been marked if proximate to an earlier suspect site
+
                 mLineState.addBreakend(breakend);
 
                 if(!mLineState.isSuspected())
@@ -226,7 +229,14 @@ public class LineElementAnnotator {
                         cluster.id(), breakend.chromosome(), proximateBreakends.size(), mLineState.toString());
 
                 // mark every breakend in this local range as suspect line
-                proximateBreakends.forEach(x -> x.getSV().addLineElement(SUSPECT, x.usesStart()));
+                for(SvBreakend proxBreakend : proximateBreakends)
+                {
+                    if(proxBreakend.hasLineElement(SUSPECT))
+                        continue;
+
+                    proxBreakend.getSV().addLineElement(SUSPECT, proxBreakend.usesStart());
+                    proxBreakend.getSV().addAnnotation(String.format("SLR=%s", mLineState.suspectReason()));
+                }
 
                 hasSuspected = true;
             }
@@ -246,12 +256,13 @@ public class LineElementAnnotator {
         2. Has a suspected line element AND
         - the cluster has <=10 variants OR at least 50% of the SVs in the cluster have a known or suspected breakend)
 
-        3. The cluster has 2 or less variants both of which are single or inferred breakends AND
-         - at least one poly-A/poly-T tail with the expected orientation of an insertion site
+        3. The cluster contains only 2 single breakends forming a short DB bridge with one side having an insert poly-A/poly-T tail
 
         4. The cluster contains exactly 1 single breakend and 1 inferred breakend AND
         - the single breakend has insertSequenceRepeatClass = ‘LINE/L1’
         - (this condition captures LINE insertion sites where we fail to call the polyA side of the insertion)
+
+        5. The cluster contains only 1 single breakend with an insert poly-A/poly-T tail
         */
 
         boolean allNonSglInKnown = !(cluster.getSVs().stream()
@@ -290,31 +301,41 @@ public class LineElementAnnotator {
             }
         }
 
-        if(cluster.getSvCount() <= 2 && hasInsertSites)
+        // otherwise a 1 or 2 cluster made up of SGLs or INFs only
+        if(cluster.getSvCount() <= 2 && cluster.getSglBreakendCount() == cluster.getSvCount())
         {
-            int sglCount = cluster.getSglBreakendCount();
-
-            if(sglCount >= 1 && sglCount <= 2 && sglCount == cluster.getSvCount())
-            {
-                LNX_LOGGER.debug("cluster({}) marked as line with poly A/T SGL", cluster.id());
-                cluster.markAsLine();
-                return;
-            }
             /*
-            else if(cluster.getTypeCount(INS) == 1 && cluster.getSvCount() == 1)
-            {
-                cluster.markAsLine();
-            }
-            */
-        }
+            3. The cluster contains only 2 single breakends forming a short DB bridge with one side having an insert poly-A/poly-T tail
 
-        if(cluster.getSvCount() == 2 && cluster.getTypeCount(INF) == 1 && cluster.getTypeCount(SGL) == 1)
-        {
-            if(cluster.getSVs().stream()
-                    .filter(x -> x.type() == SGL)
-                    .anyMatch(x -> x.getSvData().insertSequenceRepeatClass().equals(REPEAT_CLASS_LINE)))
+            4. The cluster contains exactly 1 single breakend and 1 inferred breakend AND
+            - the single breakend has insertSequenceRepeatClass = ‘LINE/L1’
+            - (this condition captures LINE insertion sites where we fail to call the polyA side of the insertion)
+
+            5. The cluster contains only 1 single breakend with an insert poly-A/poly-T tail
+
+             */
+            if(cluster.getSvCount() == 2 && hasInsertSites)
             {
-                LNX_LOGGER.debug("cluster({}) marked as line with SGL with repeat-class LINE", cluster.id());
+                final SvVarData var1 = cluster.getSV(0);
+                final SvVarData var2 = cluster.getSV(1);
+
+                if(var1.orientation(true) != var2.orientation(true))
+                {
+                    LNX_LOGGER.debug("cluster({}) marked as line with SGL pair in DB and with insert poly A/T", cluster.id());
+                    cluster.markAsLine();
+                    return;
+                }
+            }
+
+            boolean hasSglLineRepeatClass = cluster.getSVs().stream()
+                    .filter(x -> x.type() == SGL)
+                    .anyMatch(x -> x.getSvData().insertSequenceRepeatClass().equals(REPEAT_CLASS_LINE));
+
+            if(cluster.getTypeCount(SGL) == 1 && (hasSglLineRepeatClass || hasInsertSites))
+            {
+                LNX_LOGGER.debug("cluster({}) marked as line with SGL with LINE repeat-class({}) insertPolyAT({})",
+                        cluster.id(), hasSglLineRepeatClass, hasInsertSites);
+
                 cluster.markAsLine();
                 return;
             }

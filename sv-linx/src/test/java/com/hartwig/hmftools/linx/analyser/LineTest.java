@@ -81,34 +81,42 @@ public class LineTest
 
         String insSequence = shortBases + POLY_A_MOTIF + randomBases;
 
-        assertFalse(hasLinePolyAorTMotif(shortBases, POS_ORIENT, true));
-        assertFalse(hasLinePolyAorTMotif(randomBases, POS_ORIENT, true));
+        assertFalse(hasLinePolyAorTMotif(shortBases, POS_ORIENT, true, false));
+        assertFalse(hasLinePolyAorTMotif(randomBases, POS_ORIENT, true, false));
 
-        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true));
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false, false));
 
         insSequence = shortBases + POLY_T_MOTIF + randomBases;
 
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true));
-        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false, false));
 
         insSequence = randomBases + POLY_T_MOTIF + shortBases;
 
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true));
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false));
-        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false, false));
 
         insSequence = randomBases + POLY_A_MOTIF + shortBases;
 
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true));
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true));
-        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false, false));
+
+        // test allowing the sequence at either end
+        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, true));
+
+        insSequence = shortBases + POLY_T_MOTIF + randomBases;
+        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, true));
     }
 
     @Test
@@ -120,6 +128,7 @@ public class LineTest
         String randomBases = "GCTGTGAGCTGATCG";
         String polyAMotif = shortBases + POLY_A_MOTIF + randomBases;
         String polyTMotif = randomBases + POLY_T_MOTIF + shortBases;
+        String insertPolyAMotif = randomBases + POLY_A_MOTIF + shortBases;
 
         // scenario 1:
         // 2 BNDs within 5KB and 1 have poly A/T and not forming a DB with other breakends forming a short DB
@@ -153,9 +162,9 @@ public class LineTest
 
         // now a BND with a remote SGL in a short DB
         bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, polyTMotif);
-        SvVarData sgl = createSv(tester.nextVarId(), "2", "", 90, -1,  -1, -1, SGL, "");
+        SvVarData sgl = createSv(tester.nextVarId(), "2", "", 90, -1,  -1, 0, SGL, insertPolyAMotif);
 
-        tester.addAndCluster(bnd1, bnd2);
+        tester.addAndCluster(bnd1, sgl);
 
         assertTrue(bnd1.hasLineElement(SUSPECT, true));
         assertFalse(sgl.isLineElement(true));
@@ -163,7 +172,6 @@ public class LineTest
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
-
 
         // now with BNDs going to different arms
         bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, polyTMotif);
@@ -175,19 +183,6 @@ public class LineTest
         assertTrue(bnd2.hasLineElement(SUSPECT, true));
         assertFalse(bnd1.isLineElement(false));
         assertFalse(bnd2.isLineElement(false));
-
-        cluster = tester.Analyser.getClusters().get(0);
-        assertTrue(cluster.hasLinkingLineElements());
-
-        // now a BND with a remote SGL in a short DB
-        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, polyTMotif);
-        sgl = createSv(tester.nextVarId(), "2", "", 90, -1,  -1, -1, SGL, "");
-
-        tester.addAndCluster(bnd1, bnd2);
-
-        assertTrue(bnd1.hasLineElement(SUSPECT, true));
-        assertFalse(sgl.isLineElement(true));
-        assertFalse(bnd1.isLineElement(false));
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
@@ -229,6 +224,26 @@ public class LineTest
         assertTrue(cluster.hasLinkingLineElements());
 
         tester.clearClustersAndSVs();
+
+        //
+        String insertPolyTMotif = shortBases + POLY_T_MOTIF + randomBases;
+        sgl = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, insertPolyTMotif);
+        bnd1 = createSv(tester.nextVarId(), "1", "2", 110, 100,  -1, 1, BND, "");
+        bnd2 = createSv(tester.nextVarId(), "2", "3", 200, 1000,  1, -1, BND, "");
+
+        tester.AllVariants.addAll(Lists.newArrayList(bnd1, bnd2, sgl));
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(bnd1.hasLineElement(SUSPECT, false));
+        assertTrue(bnd2.hasLineElement(SUSPECT, true));
+        assertTrue(!sgl.inLineElement());
+
+        assertFalse(bnd1.isLineElement(true));
+        assertFalse(bnd2.isLineElement(false));
+
+        cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.hasLinkingLineElements());
 
         /*
         // 2 proximate breakends with poly A or T - only mark the breakends as line if they have the same orientation
@@ -276,7 +291,7 @@ public class LineTest
         String randomBases = "GCTGTGAGCTGATCG";
         String insertPolyAMotif = randomBases + POLY_A_MOTIF + shortBases;
 
-        // 2 SGLs with an insert-site motif
+        // 2 SGLs with an insert-site motif and in a short DB
         SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, "");
         SvVarData sgl2 = createSv(tester.nextVarId(), "1", "", 120, 0,  -1, 0, SGL, insertPolyAMotif);
 

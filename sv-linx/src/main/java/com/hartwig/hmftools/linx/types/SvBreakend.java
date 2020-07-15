@@ -86,6 +86,9 @@ public class SvBreakend {
 
     public int anchorDistance()
     {
+        if(!mUsesStart && mSV.isSglBreakend())
+            return 0;
+
         return mUsesStart ? mSV.getSvData().startAnchoringSupportDistance() : mSV.getSvData().endAnchoringSupportDistance();
     }
 
@@ -108,6 +111,9 @@ public class SvBreakend {
 
     public String homology()
     {
+        if(!mUsesStart && mSV.isSglBreakend())
+            return "";
+
         return mUsesStart ? mSV.getSvData().startHomologySequence() : mSV.getSvData().endHomologySequence();
     }
 
