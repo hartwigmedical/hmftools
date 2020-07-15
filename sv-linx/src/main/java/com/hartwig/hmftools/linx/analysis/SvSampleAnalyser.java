@@ -532,13 +532,6 @@ public class SvSampleAnalyser {
 
         for(final SvCluster cluster : getClusters())
         {
-            int clusterSvCount = cluster.getSvCount();
-
-            if(clusterSvCount == 1 && !mConfig.Output.WriteSingleSVClusters)
-                continue;
-
-            ResolvedType resolvedType = cluster.getResolvedType();
-
             final String superType = getSuperType(cluster);
 
                 clusterData.add(ImmutableLinxCluster.builder()
@@ -547,7 +540,7 @@ public class SvSampleAnalyser {
                         .synthetic(cluster.isSyntheticType())
                         .subClonal(cluster.isSubclonal())
                         .subType(cluster.getResolvedType().toString())
-                        .clusterCount(clusterSvCount)
+                        .clusterCount(cluster.getSvCount())
                         .clusterDesc(cluster.getDesc())
                         .build());
         }
@@ -559,19 +552,13 @@ public class SvSampleAnalyser {
     {
         final List<LinxLink> linksData = Lists.newArrayList();
 
-        if(!mConfig.Output.WriteLinks)
-            return linksData;
-
         for(final SvCluster cluster : getClusters())
         {
-            int clusterSvCount = cluster.getSvCount();
-
             List<SvChain> chains = cluster.getChains();
 
             for (final SvChain chain : chains)
             {
                 int chainSvCount = chain.getSvCount();
-                boolean chainConsistent = chain.isConsistent();
 
                 List<SvLinkedPair> uniquePairs = Lists.newArrayList();
                 final List<SvLinkedPair> chainLinks = chain.getLinkedPairs();
