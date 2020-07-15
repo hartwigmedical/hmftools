@@ -177,7 +177,7 @@ public class LineElementAnnotator {
             {
                 final SvBreakend breakend = breakendList.get(i);
 
-                if(breakend.inLineElement())
+                if(breakend.hasLineElement(SUSPECT))
                     continue; // breakends may have already been marked if proximate to an earlier suspect site
 
                 mLineState.addBreakend(breakend);
