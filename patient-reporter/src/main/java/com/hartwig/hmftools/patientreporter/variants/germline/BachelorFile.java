@@ -18,21 +18,21 @@ public final class BachelorFile {
 
     private static final String DELIMITER = "\t";
 
+    private static final String PROGRAM_COLUMN = "program";
+    private static final String GENE_COLUMN = "gene";
     private static final String CHROMOSOME_COLUMN = "chromosome";
     private static final String POSITION_COLUMN = "position";
-    private static final String FILTER_COLUMN = "filter";
     private static final String REF_COLUMN = "ref";
     private static final String ALT_COLUMN = "alts";
-    private static final String GENE_COLUMN = "gene";
+    private static final String FILTER_COLUMN = "filter";
     private static final String CODING_EFFECT_COLUMN = "codingEffect";
+    private static final String HGVS_CODING_COLUMN = "hgvsCoding";
+    private static final String HGVS_PROTEIN_COLUMN = "hgvsProtein";
     private static final String ALLELE_READ_COLUMN = "alleleReadCount";
     private static final String TOTAL_READ_COLUMN = "totalReadCount";
     private static final String ADJUSTED_VAF_COLUMN = "adjustedVaf";
     private static final String ADJUSTED_COPY_NUMBER_COLUMN = "adjustedCopyNumber";
-    private static final String HGVS_PROTEIN_COLUMN = "hgvsProtein";
-    private static final String HGVS_CODING_COLUMN = "hgvsCoding";
     private static final String BIALLELIC_COLUMN = "biallelic";
-    private static final String PROGRAM_COLUMN = "program";
 
     private BachelorFile() {
     }
@@ -65,17 +65,17 @@ public final class BachelorFile {
         String filter = values[findIndexForValue(headers, FILTER_COLUMN)].trim();
 
         return ImmutableGermlineVariant.builder()
-                .passFilter(filter.equalsIgnoreCase("PASS"))
+                .gene(values[findIndexForValue(headers, GENE_COLUMN)].trim())
                 .chromosome(values[findIndexForValue(headers, CHROMOSOME_COLUMN)].trim())
                 .position(Integer.parseInt(values[findIndexForValue(headers, POSITION_COLUMN)].trim()))
                 .ref(values[findIndexForValue(headers, REF_COLUMN)].trim())
                 .alt(values[findIndexForValue(headers, ALT_COLUMN)].trim())
-                .gene(values[findIndexForValue(headers, GENE_COLUMN)].trim())
+                .passFilter(filter.equalsIgnoreCase("PASS"))
                 .codingEffect(CodingEffect.valueOf(values[findIndexForValue(headers, CODING_EFFECT_COLUMN)].trim()))
                 .hgvsCodingImpact(values[findIndexForValue(headers, HGVS_CODING_COLUMN)].trim())
                 .hgvsProteinImpact(values[findIndexForValue(headers, HGVS_PROTEIN_COLUMN)].trim())
-                .totalReadCount(Integer.parseInt(values[findIndexForValue(headers, TOTAL_READ_COLUMN)]))
                 .alleleReadCount(Integer.parseInt(values[findIndexForValue(headers, ALLELE_READ_COLUMN)]))
+                .totalReadCount(Integer.parseInt(values[findIndexForValue(headers, TOTAL_READ_COLUMN)]))
                 .adjustedVAF(Double.parseDouble(values[findIndexForValue(headers, ADJUSTED_VAF_COLUMN)].trim()))
                 .adjustedCopyNumber(Double.parseDouble(values[findIndexForValue(headers, ADJUSTED_COPY_NUMBER_COLUMN)].trim()))
                 .biallelic(Boolean.parseBoolean(values[findIndexForValue(headers, BIALLELIC_COLUMN)].trim()))
