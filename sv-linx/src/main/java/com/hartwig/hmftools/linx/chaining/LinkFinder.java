@@ -230,7 +230,7 @@ public class LinkFinder
 
     public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)
     {
-        if(breakend1.getSV().isSglBreakend() || breakend2.getSV().isSglBreakend())
+        if(breakend1.type() == INF || breakend2.type() == INF)
         {
             if(abs(breakend1.position() - breakend2.position()) <= 1)
                 return 0;
@@ -251,7 +251,7 @@ public class LinkFinder
             for (int i = 0; i < breakendList.size() - 1; ++i)
             {
                 SvBreakend breakend = breakendList.get(i);
-                SvBreakend nextBreakend = breakendList.get(i+1);
+                SvBreakend nextBreakend = breakendList.get(i + 1);
                 SvVarData var1 = breakend.getSV();
                 SvVarData var2 = nextBreakend.getSV();
 
@@ -269,6 +269,17 @@ public class LinkFinder
 
                 if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
                 {
+                    // skip if the next breakend is a short overlapping DB
+                    if(i < breakendList.size() - 2)
+                    {
+                        SvBreakend nextNextBreakend = breakendList.get(i + 2);
+                        int nextDistance = nextNextBreakend.position() - nextBreakend.position();
+                        int nextMinTiLength = getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend);
+
+                        if(nextDistance < distance && nextDistance < nextMinTiLength)
+                            continue;
+                    }
+
                     // breakends face away as per a normal DB
                     SvLinkedPair dbPair = new SvLinkedPair(breakend, nextBreakend, DELETION_BRIDGE);
                     markDeletionBridge(dbPair);
