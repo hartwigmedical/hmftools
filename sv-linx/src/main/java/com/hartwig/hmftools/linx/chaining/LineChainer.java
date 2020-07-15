@@ -370,7 +370,7 @@ public class LineChainer
             mFileWriter = createBufferedWriter(outputFileName, false);
 
             mFileWriter.write("SampleId,ClusterId,ChainId,ChainSvCount,AsmbLinks,ChainDesc,SourceChr,SourcePosStart,SourcePosEnd");
-            mFileWriter.write(",InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd");
+            mFileWriter.write(",InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd,SourceInvOrient,LoneBeOrient");
             mFileWriter.newLine();
         }
         catch (final IOException e)
@@ -388,9 +388,6 @@ public class LineChainer
         {
             for(final SvChain chain : mChains)
             {
-                final SvBreakend chainStart = chain.getOpenBreakend(true);
-                final SvBreakend chainEnd = chain.getOpenBreakend(false);
-
                 final int[] typeCounts = new int[StructuralVariantType.values().length];
 
                 for(final SvVarData var : chain.getSvList())
@@ -401,30 +398,71 @@ public class LineChainer
                 mFileWriter.write(String.format("%s,%d,%d,%d,%d,%s",
                         mSampleId, mClusterId, chain.id(), chain.getSvCount(), chain.getAssemblyLinkCount(), getSvTypesStr(typeCounts)));
 
+                final SvBreakend chainStart = chain.getOpenBreakend(true);
+                final SvBreakend chainEnd = chain.getOpenBreakend(false);
                 final SvLinkedPair firstLink = chain.getLinkedPairs().get(0);
                 final SvLinkedPair lastLink = chain.getLinkedPairs().get(chain.getLinkedPairs().size() - 1);
 
-                mFileWriter.write(String.format(",%s,%d,%d",
-                        firstLink.chromosome(), firstLink.firstBreakend().position(), lastLink.secondBreakend().position()));
+                final int[] sourcePositions = { -1, -1 };
+                int lowerSourceIndex = 0;
+                int lowerInsertIndex = 0;
+                int[] insertPositions = { -1, -1 };
+                String insertChr = "0";
+                final int[] invPositions = { -1, -1 };
+                byte invOrient = 0;
+                int loneSourceOrient = 0;
 
-                mFileWriter.write(String.format(",%s,%d,%d",
-                        chainStart != null ? chainStart.chromosome() : "-1",
-                        chainStart != null ? chainStart.position() : -1,
-                        chainEnd != null ? chainEnd.position() : -1));
+                final SvVarData inv = chain.getSvList().stream()
+                        .filter(x -> x.type() == INV)
+                        .filter(x -> x.inLineElement())
+                        .findFirst().orElse(null);
 
-                final SvVarData inv = chain.getSvList().stream().filter(x -> x.type() == INV).findFirst().orElse(null);
+                if(firstLink.firstBreakend().inLineElement() && firstLink.firstBreakend().type() != INV)
+                    sourcePositions[0] = firstLink.firstBreakend().position();
+
+                if(lastLink.secondBreakend().inLineElement() && lastLink.secondBreakend().type() != INV)
+                {
+                    if(sourcePositions[0] == -1)
+                        sourcePositions[0] = lastLink.secondBreakend().position();
+                    else
+                        sourcePositions[1] = lastLink.secondBreakend().position();
+                }
+
+                if(sourcePositions[0] > 0 && sourcePositions[1] > 0)
+                    lowerSourceIndex = sourcePositions[0] <= sourcePositions[1] ? 0 : 1;
+
+                if(chainStart != null && !chainStart.inLineElement())
+                {
+                    insertChr = chainStart.chromosome();
+                    insertPositions[0] = chainStart.position();
+                }
+
+                if(chainEnd != null && !chainEnd.inLineElement())
+                {
+                    insertChr = chainEnd.chromosome();
+                    insertPositions[1] = chainEnd.position();
+                }
+
+                if(insertPositions[0] > 0 && insertPositions[1] > 0)
+                    lowerInsertIndex = insertPositions[0] <= insertPositions[1] ? 0 : 1;
 
                 if(inv != null)
                 {
-                    mFileWriter.write(String.format(",%d,%d", inv.position(true), inv.position(false)));
+                    invPositions[SE_START] = inv.position(true);
+                    invPositions[SE_END] = inv.position(false);
+                    invOrient = inv.orientation(true);
                 }
-                else
-                {
-                    mFileWriter.write(",-1,-1");
-                }
+
+                mFileWriter.write(String.format(",%s,%d,%d",
+                        firstLink.chromosome(), sourcePositions[lowerSourceIndex], sourcePositions[switchIndex(lowerSourceIndex)]));
+
+                mFileWriter.write(String.format(",%s,%d,%d",
+                        insertChr, insertPositions[lowerInsertIndex], insertPositions[switchIndex(lowerInsertIndex)]));
+
+                mFileWriter.write(String.format(",%d,%d,%d,%d",
+                        invPositions[SE_START], invPositions[SE_END], invOrient, loneSourceOrient));
 
                 mFileWriter.newLine();
-
             }
         }
         catch (final IOException e)
@@ -445,7 +483,6 @@ public class LineChainer
             for(final SvBreakend breakend : mSourceBreakends)
             {
                 final SvBreakend otherBreakend = breakend.getOtherBreakend();
-                boolean isLineInv = breakend.type() == INV && breakend.getSV().inLineElement();
 
                 if(mSourceBreakends.contains(otherBreakend))
                 {
@@ -456,34 +493,48 @@ public class LineChainer
                 mFileWriter.write(String.format("%s,%d,%d,%d,%d,%s,%s",
                         mSampleId, mClusterId, nonChainId++, 1, 0, breakend.type(), breakend.chromosome()));
 
+                final int[] sourcePositions = { -1, -1 };
+                int lowerSourceIndex = 0;
+                int insertPosition = -1;
+                final int[] invPositions = { -1, -1 };
+                byte invOrient = 0;
+                String insertChr = "0";
+                int loneSourceOrient = breakend.orientation();
+                boolean isLineInv = breakend.type() == INV && breakend.getSV().inLineElement();
+
                 if(breakend.inLineElement() && !isLineInv)
                 {
-                    mFileWriter.write(String.format(",%d,%d",
-                            breakend.position(), otherBreakend != null && otherBreakend.inLineElement() ? otherBreakend.position() : -1));
-                }
-                else
-                {
-                    mFileWriter.write(",-1,-1");
+                    sourcePositions[0] = breakend.position();
+
+                    if(otherBreakend != null && otherBreakend.inLineElement())
+                    {
+                        sourcePositions[1] = otherBreakend.position();
+                        lowerSourceIndex = sourcePositions[0] <= sourcePositions[1] ? 0 : 1;
+                    }
                 }
 
                 if(otherBreakend != null && !otherBreakend.inLineElement() && !isLineInv)
                 {
-                    mFileWriter.write(String.format(",%s,%d,-1",
-                            otherBreakend.chromosome(), otherBreakend.position()));
-                }
-                else
-                {
-                    mFileWriter.write(",-1,-1,-1");
+                    insertChr = otherBreakend.chromosome();
+                    insertPosition = otherBreakend.position();
                 }
 
                 if(isLineInv)
                 {
-                    mFileWriter.write(String.format(",%d,%d", breakend.position(), otherBreakend.position()));
+                    invPositions[SE_START] = breakend.position();
+                    invPositions[SE_END] = otherBreakend.position();
+                    invOrient = breakend.orientation();
                 }
-                else
-                {
-                    mFileWriter.write(",-1,-1");
-                }
+
+                // SampleId,ClusterId,ChainId,ChainSvCount,AsmbLinks,ChainDesc,SourceChr,SourcePosStart,SourcePosEnd");
+                // InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd,SourceInvOrient,LoneBeOrient");
+
+                mFileWriter.write(String.format(",%d,%d,%s,%d,%d",
+                        sourcePositions[lowerSourceIndex], sourcePositions[switchIndex(lowerSourceIndex)],
+                        insertChr, insertPosition, -1));
+
+                mFileWriter.write(String.format(",%d,%d,%d,%d",
+                        invPositions[SE_START], invPositions[SE_END], invOrient, loneSourceOrient));
 
                 mFileWriter.newLine();
 
