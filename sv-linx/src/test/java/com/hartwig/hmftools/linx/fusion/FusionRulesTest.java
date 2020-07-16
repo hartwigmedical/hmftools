@@ -259,31 +259,28 @@ public class FusionRulesTest
         GeneFusion fusion = checkFusionLogic(transUp, transDown, params);
 
         assertTrue( fusion != null);
-        assertTrue( !fusion.phaseMatched());
+        assertTrue(!fusion.phaseMatched());
 
-        Map<Integer,Integer> altPhasings = Maps.newHashMap();
-        altPhasings.put(0, 1);
-        transUp.setAlternativePhasing(altPhasings);
+        Map<Integer,Integer> altPhasingsUp = transUp.getAlternativePhasing();
+        altPhasingsUp.put(0, 1);
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
         assertTrue( fusion != null);
-        assertTrue( fusion.phaseMatched());
+        assertTrue(fusion.phaseMatched());
         assertEquals(fusion.getExonsSkipped(true), 1);
         assertEquals(fusion.getExonsSkipped(false), 0);
 
-        transUp.setAlternativePhasing(Maps.newHashMap());
-
-        altPhasings.clear();
-        altPhasings.put(1, 1);
-        transDown.setAlternativePhasing(altPhasings);
+        altPhasingsUp.clear();
+        Map<Integer,Integer> altPhasingsDown = transDown.getAlternativePhasing();
+        altPhasingsDown.put(1, 1);
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
-        assertTrue( fusion != null);
-        assertTrue( fusion.phaseMatched());
-        assertEquals(fusion.getExonsSkipped(true), 0);
-        assertEquals(fusion.getExonsSkipped(false), 1);
+        assertTrue(fusion != null);
+        assertTrue(fusion.phaseMatched());
+        assertEquals(0, fusion.getExonsSkipped(true));
+        assertEquals(1, fusion.getExonsSkipped(false));
 
         // check 5' gene fusing from the 3'UTR region
         transUp = new Transcript(gene1, transId1, transName1, 6, -1, 7, -1,
@@ -293,9 +290,10 @@ public class FusionRulesTest
         assertEquals(transUp.ExonDownstreamPhase, POST_CODING_PHASE);
         assertEquals(transUp.ExonUpstreamPhase, POST_CODING_PHASE);
 
-        altPhasings.clear();
-        altPhasings.put(0, 3);
-        transUp.setAlternativePhasing(altPhasings);
+        altPhasingsUp = transUp.getAlternativePhasing();
+
+        altPhasingsUp.clear();
+        altPhasingsUp.put(0, 3);
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
@@ -304,8 +302,31 @@ public class FusionRulesTest
         assertEquals(fusion.getExonsSkipped(true), 3);
         assertEquals(fusion.getExonsSkipped(false), 0);
 
+        // check a fusion requiring skipping on both transcripts
+        transUp = new Transcript(gene1, transId1, transName1, 2, 1, 3, 1,
+                10, getCodingBases(codingStart, codingEnd),10, true, 50, 250, codingStart, codingEnd);
+
+        transDown = new Transcript(gene2, transId2, transName2, 2, 0, 3, 0,
+                10, getCodingBases(codingStart, codingEnd),10, true, 50, 250, codingStart, codingEnd);
+
+        params.AllowExonSkipping = true;
+
+        fusion = checkFusionLogic(transUp, transDown, params);
+
+        assertTrue(fusion != null);
+        assertTrue(!fusion.phaseMatched());
+
+        altPhasingsUp = transUp.getAlternativePhasing();
+        altPhasingsDown = transDown.getAlternativePhasing();
+        altPhasingsUp.put(2, 2);
+        altPhasingsDown.put(2, 3);
+
+        fusion = checkFusionLogic(transUp, transDown, params);
+
+        assertTrue( fusion != null);
+        assertTrue(fusion.phaseMatched());
+        assertEquals(2, fusion.getExonsSkipped(true));
+        assertEquals(3, fusion.getExonsSkipped(false));
+
     }
-
-
-
 }

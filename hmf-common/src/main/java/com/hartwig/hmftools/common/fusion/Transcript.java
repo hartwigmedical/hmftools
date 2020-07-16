@@ -60,7 +60,7 @@ public class Transcript {
     private Integer mPrevSpliceAcceptorDistance;
     private Integer mNextSpliceAcceptorDistance;
 
-    private Map<Integer,Integer> mAlternativePhasing;
+    private final Map<Integer,Integer> mAlternativePhasing;
 
     private boolean mIsDisruptive;
     private boolean mReportableDisruption;
@@ -266,7 +266,6 @@ public class Transcript {
     public boolean isCanonical() { return mCanonical; }
 
     public final Map<Integer,Integer> getAlternativePhasing() { return mAlternativePhasing; }
-    public void setAlternativePhasing(final Map<Integer,Integer> phasings) { mAlternativePhasing = phasings; }
 
     public void setSpliceAcceptorDistance(boolean isPrevious, Integer distance)
     {

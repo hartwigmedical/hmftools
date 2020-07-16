@@ -278,9 +278,15 @@ public class FusionFinder
         }
         else if(upstreamTrans.isCoding())
         {
-            if(!downstreamTrans.isCoding())
+            if(downstreamTrans.nonCoding())
             {
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "coding to non-coding");
+                return null;
+            }
+
+            if(downstreamTrans.preCoding() && !isKnownPair)
+            {
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "coding to pre-coding");
                 return null;
             }
 
@@ -304,7 +310,7 @@ public class FusionFinder
         }
         else if(upstreamTrans.nonCoding())
         {
-            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
+            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic() && !isKnownPair)
             {
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up non-coding exonic to down non-exonic");
                 return null;
@@ -387,7 +393,26 @@ public class FusionFinder
                             break;
                         }
                     }
+
+                    if(!phaseMatched)
+                    {
+                        for (Map.Entry<Integer, Integer> altPhasingUp : upstreamTrans.getAlternativePhasing().entrySet())
+                        {
+                            for(Map.Entry<Integer, Integer> altPhasingDown : downstreamTrans.getAlternativePhasing().entrySet())
+                            {
+                                if(altPhasingUp.getKey() == altPhasingDown.getKey())
+                                {
+                                    phaseMatched = true;
+                                    phaseExonsSkippedUp = altPhasingUp.getValue();
+                                    phaseExonsSkippedDown = altPhasingDown.getValue();
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
+
+                // look for any match between the 2 sets of alt-phasings
             }
 
             if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())

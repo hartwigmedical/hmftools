@@ -672,34 +672,28 @@ public class EnsemblDataCache
         return exonData;
     }
 
-    public static void setAlternativeTranscriptPhasings(Transcript transcript, final List<ExonData> exonDataList,
-            int position, byte orientation)
+    public static void setAlternativeTranscriptPhasings(Transcript transcript, final List<ExonData> exonDataList, int position, byte orientation)
     {
         // collect exon phasings before the position on the upstream and after it on the downstream
         boolean isUpstream = (transcript.gene().Strand * orientation) > 0;
-        boolean forwardStrand = (transcript.gene().Strand == 1);
+        boolean forwardStrand = (transcript.gene().Strand == POS_STRAND);
 
-        Map<Integer,Integer> alternativePhasing = Maps.newHashMap();
+        Map<Integer,Integer> alternativePhasing = transcript.getAlternativePhasing();
 
         int transPhase = isUpstream ? transcript.ExonUpstreamPhase : transcript.ExonDownstreamPhase;
         int transRank = isUpstream ? transcript.ExonUpstream : transcript.ExonDownstream;
 
         for (ExonData exonData : exonDataList)
         {
-
             if(isUpstream == forwardStrand)
             {
                 if (exonData.ExonStart > position || transRank == exonData.ExonRank)
-                {
                     break;
-                }
             }
             else
             {
                 if (position > exonData.ExonEnd || transRank == exonData.ExonRank)
-                {
                     continue;
-                }
             }
 
             int exonPhase = isUpstream ? exonData.ExonPhaseEnd : exonData.ExonPhase;
@@ -729,8 +723,6 @@ public class EnsemblDataCache
                 }
             }
         }
-
-        transcript.setAlternativePhasing(alternativePhasing);
     }
 
     public boolean load(boolean delayTranscriptLoading)
