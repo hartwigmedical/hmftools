@@ -679,6 +679,7 @@ public class EnsemblDataCache
         boolean forwardStrand = (transcript.gene().Strand == POS_STRAND);
 
         Map<Integer,Integer> alternativePhasing = transcript.getAlternativePhasing();
+        alternativePhasing.clear();
 
         int transPhase = isUpstream ? transcript.ExonUpstreamPhase : transcript.ExonDownstreamPhase;
         int transRank = isUpstream ? transcript.ExonUpstream : transcript.ExonDownstream;

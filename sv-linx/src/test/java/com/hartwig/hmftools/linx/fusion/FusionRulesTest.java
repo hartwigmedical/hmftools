@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
@@ -8,10 +9,13 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBa
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 
 import org.junit.Test;
@@ -214,6 +218,13 @@ public class FusionRulesTest
 
         assertTrue(checkFusionLogic(trans1, trans2, params) != null);
 
+        FusionFinder fusionFinder = new FusionFinder(null, null);
+        fusionFinder.getKnownFusionCache().addData(new KnownFusionData(KNOWN_PAIR, gene1.GeneName, gene2.GeneName, "", "", ""));
+        gene1.addTranscript(trans1);
+        gene2.addTranscript(trans2);
+        final List<GeneFusion> fusions = fusionFinder.findFusions(Lists.newArrayList(gene1), Lists.newArrayList(gene2), params, false);
+        assertEquals(1, fusions.size());
+        assertTrue(fusions.get(0).phaseMatched());
     }
 
     @Test

@@ -174,7 +174,6 @@ public class KnownFusionCache
         }
 
         LOGGER.info("loaded known fusion data: {}", refDataStr.toString());
-
         return true;
     }
 

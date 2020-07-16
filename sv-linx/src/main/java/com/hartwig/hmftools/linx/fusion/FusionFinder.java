@@ -68,7 +68,7 @@ public class FusionFinder
         mGeneTransCache = geneTransCache;
 
         mKnownFusionCache = new KnownFusionCache();
-        mHasValidConfigData = false;
+        mHasValidConfigData = true;
 
         mProteinsRequiredKept = Lists.newArrayList();
         mProteinsRequiredLost = Lists.newArrayList();
@@ -84,14 +84,9 @@ public class FusionFinder
 
     private void initialise(@NotNull final CommandLine cmd)
     {
-        if(mKnownFusionCache.loadFromFile(cmd))
-        {
-            LNX_LOGGER.debug("loaded known fusion data");
-            mHasValidConfigData = true;
-        }
+        mHasValidConfigData = mKnownFusionCache.loadFromFile(cmd);
     }
 
-    public void setHasValidConfigData(boolean toggle) { mHasValidConfigData = toggle; }
     public boolean hasValidConfigData() { return mHasValidConfigData; }
     public void setLogInvalidReasons(boolean toggle) { mLogInvalidReasons = toggle; }
 

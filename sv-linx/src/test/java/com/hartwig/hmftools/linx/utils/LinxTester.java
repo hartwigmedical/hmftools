@@ -70,7 +70,6 @@ public class LinxTester
     public void initialiseFusions(EnsemblDataCache geneTransCache)
     {
         FusionAnalyser = new FusionDisruptionAnalyser(null, Config, geneTransCache, null);
-        FusionAnalyser.setHasValidConfigData(true);
     }
 
     public final int nextVarId() { return mNextVarId++; }

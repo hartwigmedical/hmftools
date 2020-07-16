@@ -1030,9 +1030,4 @@ public class FusionDisruptionAnalyser
         if(mNeoEpitopeFinder != null)
             mNeoEpitopeFinder.close();
     }
-
-    @VisibleForTesting
-    public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
-
-
 }
