@@ -77,7 +77,10 @@ public class CohortLineElements
 
         try
         {
-            mRefGenomeFile = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME_FILE)));
+            if(cmd.hasOption(REF_GENOME_FILE))
+            {
+                mRefGenomeFile = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME_FILE)));
+            }
         }
         catch (Exception e)
         {
