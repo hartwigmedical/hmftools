@@ -303,7 +303,7 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    private static VariantType type(@NotNull VariantContext context) {
+    public static VariantType type(@NotNull VariantContext context) {
         switch (context.getType()) {
             case MNP:
                 return VariantType.MNP;

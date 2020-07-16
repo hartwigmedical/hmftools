@@ -8,7 +8,14 @@ import static com.hartwig.hmftools.bachelor.types.PathogenicType.BLACK_LIST;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.type;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
 
 import java.io.BufferedWriter;
@@ -17,14 +24,13 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bachelor.types.BachelorConfig;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
-import com.hartwig.hmftools.bachelor.types.EnrichedSomaticVariant;
-import com.hartwig.hmftools.bachelor.types.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.bachelor.types.GermlineVariant;
 import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
 import com.hartwig.hmftools.bachelor.types.ImmutableGermlineVariant;
@@ -34,13 +40,14 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
+import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -48,6 +55,7 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -60,6 +68,7 @@ class VariantEnricher
     private IndexedFastaSequenceFile mIndexedFastaSeqFile;
     private BufferedWriter mWriter;
     private BamCountReader mBamCountReader;
+    private final RefGenomeEnrichment mRefGenomeEnrichment;
 
     private List<BachelorGermlineVariant> mBachRecords;
 
@@ -91,9 +100,10 @@ class VariantEnricher
             catch (IOException e)
             {
                 BACH_LOGGER.error("Reference file loading failed");
-                return;
             }
         }
+
+        mRefGenomeEnrichment = new RefGenomeEnrichment(mIndexedFastaSeqFile);
 
         mWriter = null;
     }
@@ -154,12 +164,11 @@ class VariantEnricher
             // sort by chromosome and position
             Collections.sort(sampleRecords);
 
-            // create variant objects for VCF file writing and enrichment, and cache against bachelor record
             buildVariants(specificSample, sampleRecords);
 
             if(!mConfig.SkipEnrichment)
             {
-                annotateRecords(specificSample, sampleRecords);
+                addPurpleData(specificSample, sampleRecords);
             }
 
             filterRecords(sampleRecords);
@@ -209,8 +218,35 @@ class VariantEnricher
             builder.genotypes(genoTypes);
             VariantContext variantContext = builder.make();
 
-            variantContext.getCommonInfo().addFilter("PASS");
-            variantContext.getCommonInfo().putAttribute(SNPEFF_IDENTIFIER, bachRecord.Annotations);
+            final CommonInfo variantInfo = variantContext.getCommonInfo();
+            variantInfo.addFilter(bachRecord.filterType().toString());
+            variantInfo.putAttribute(SNPEFF_IDENTIFIER, bachRecord.Annotations);
+
+            // enrich with data from the ref genome
+            if(mRefGenomeEnrichment.isValid())
+            {
+                final VariantType variantType = type(variantContext);
+
+                final String sequence = mRefGenomeEnrichment.getSequence(bachRecord.Chromosome, bachRecord.Position, bachRecord.Ref);
+
+                final Optional<RepeatContext> repeatContext = mRefGenomeEnrichment.getRepeatContext(
+                        variantType, sequence, bachRecord.Position, bachRecord.Alts);
+
+                final String trinucleotideContext =
+                        mRefGenomeEnrichment.getTrinucleotideContext(bachRecord.Chromosome, bachRecord.Position);
+
+                final String microhomology = mRefGenomeEnrichment.getMicrohomology(
+                        variantType, bachRecord.Ref, bachRecord.Alts, bachRecord.Position, sequence);
+
+                variantInfo.putAttribute(TRINUCLEOTIDE_FLAG, trinucleotideContext);
+                variantInfo.putAttribute(MICROHOMOLOGY_FLAG, microhomology);
+
+                if(repeatContext.isPresent())
+                {
+                    variantInfo.putAttribute(REPEAT_COUNT_FLAG, repeatContext.get().count());
+                    variantInfo.putAttribute(REPEAT_SEQUENCE_FLAG, repeatContext.get().sequence());
+                }
+            }
 
             bachRecord.setVariantContext(variantContext);
 
@@ -219,14 +255,14 @@ class VariantEnricher
         }
     }
 
-    private void annotateRecords(final String sampleId, List<BachelorGermlineVariant> bachRecords)
+    private void addPurpleData(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
     {
         final PurityContext purityContext;
         final List<PurpleCopyNumber> copyNumbers;
 
         if (!mConfig.PurpleDataDir.isEmpty())
         {
-            BACH_LOGGER.debug("Sample({}) loading purple data from file using path {}", sampleId, mConfig.PurpleDataDir);
+            BACH_LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, mConfig.PurpleDataDir);
 
             try
             {
@@ -235,28 +271,30 @@ class VariantEnricher
             }
             catch (IOException e)
             {
-                BACH_LOGGER.error("Failed to read purple data from {}: {}", mConfig.PurpleDataDir, e.toString());
+                BACH_LOGGER.error("failed to read purple data from {}: {}", mConfig.PurpleDataDir, e.toString());
                 return;
             }
         }
         else
         {
-            BACH_LOGGER.debug("Sample({}) loading purple data from database", sampleId);
+            BACH_LOGGER.debug("sample({}) loading purple data from database", sampleId);
 
             purityContext = mDbAccess.readPurityContext(sampleId);
 
             if (purityContext == null)
             {
-                BACH_LOGGER.warn("Failed to read purity data");
+                BACH_LOGGER.warn("sample({}) failed to read purity data", sampleId);
+                return;
             }
 
             copyNumbers = mDbAccess.readCopynumbers(sampleId);
-        }
 
-        List<SomaticVariant> variants = bachRecords.stream()
-                .filter(x -> x.getSomaticVariant() != null)
-                .map(BachelorGermlineVariant::getSomaticVariant)
-                .collect(Collectors.toList());
+            if(copyNumbers.isEmpty())
+            {
+                BACH_LOGGER.warn("sample({}) failed to read copy number data", sampleId);
+                return;
+            }
+        }
 
         final PurityAdjuster purityAdjuster = purityContext == null
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
@@ -265,64 +303,22 @@ class VariantEnricher
         final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
                 new PurityAdjustedSomaticVariantFactory(sampleId, purityAdjuster, copyNumbers);
 
-        final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
-
-        for (PurityAdjustedSomaticVariant var : purityAdjustedVariants)
-        {
-            for (BachelorGermlineVariant bachRecord : bachRecords)
-            {
-                if (bachRecord.Chromosome.equals(var.chromosome()) && bachRecord.Position == var.position())
-                {
-                    double adjVaf;
-
-                    if (bachRecord.IsHomozygous)
-                    {
-                        adjVaf = purityAdjuster.purityAdjustedVAFWithHomozygousNormal(
-                                var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
-                    }
-                    else
-                    {
-                        adjVaf = purityAdjuster.purityAdjustedVAFWithHeterozygousNormal(
-                                var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
-                    }
-
-                    if (Double.isNaN(adjVaf) || Double.isInfinite(adjVaf))
-                    {
-                        adjVaf = 0;
-                    }
-
-                    bachRecord.setAdjustedVaf(adjVaf);
-                    break;
-                }
-            }
-        }
-
-        BACH_LOGGER.debug("Sample({}) enriching variants", sampleId);
-
-        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(mIndexedFastaSeqFile);
-
-        final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
-
         for (BachelorGermlineVariant bachRecord : bachRecords)
         {
-            boolean matched = false;
+            VariantContext purpleVarContext = purityAdjustmentFactory.enrich(bachRecord.getVariantContext());
 
-            for (final EnrichedSomaticVariant var : enrichedVariants)
-            {
-                if (bachRecord.Chromosome.equals(var.chromosome()) && bachRecord.Position == var.position())
-                {
-                    bachRecord.setEnrichedVariant(var);
-                    matched = true;
-                    break;
-                }
-            }
+            double adjustedCopyNumber = purpleVarContext.getAttributeAsDouble(PURPLE_CN_INFO, 0);
+            double alleleFrequency = bachRecord.getSomaticVariant().alleleFrequency();
+            double minorAlleleCopyNumber = purpleVarContext.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, 0);
 
-            if (!matched)
-            {
-                BACH_LOGGER.debug("Sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
-                        sampleId, bachRecord.VariantId, bachRecord.Gene, bachRecord.TranscriptId,
-                        bachRecord.Chromosome, bachRecord.Position);
-            }
+            double adjVaf = bachRecord.IsHomozygous ?
+                    purityAdjuster.purityAdjustedVAFWithHomozygousNormal(bachRecord.Chromosome, adjustedCopyNumber, alleleFrequency)
+                    : purityAdjuster.purityAdjustedVAFWithHeterozygousNormal(bachRecord.Chromosome, adjustedCopyNumber, alleleFrequency);
+
+            if (Double.isNaN(adjVaf) || Double.isInfinite(adjVaf))
+                adjVaf = 0;
+
+            bachRecord.setEnrichmentData(adjVaf, minorAlleleCopyNumber, adjustedCopyNumber);
         }
     }
 
@@ -397,7 +393,6 @@ class VariantEnricher
                 continue;
 
             final SomaticVariant somaticVariant = bachRecord.getSomaticVariant();
-            final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
 
             germlineVariants.add(ImmutableGermlineVariant.builder()
                     .chromosome(bachRecord.Chromosome)
@@ -414,7 +409,7 @@ class VariantEnricher
                     .transcriptId(bachRecord.TranscriptId)
                     .alleleReadCount(bachRecord.getTumorAltCount())
                     .totalReadCount(bachRecord.getTumorReadDepth())
-                    .adjustedCopyNumber(enrichedVariant != null ? enrichedVariant.adjustedCopyNumber() : somaticVariant.adjustedCopyNumber())
+                    .adjustedCopyNumber(bachRecord.getAdjustedCopyNumber())
                     .adjustedVaf(bachRecord.getAdjustedVaf())
                     .trinucleotideContext(somaticVariant.trinucleotideContext())
                     .microhomology(somaticVariant.microhomology())
@@ -423,8 +418,8 @@ class VariantEnricher
                     .hgvsProtein(bachRecord.HgvsProtein)
                     .hgvsCoding(bachRecord.HgvsCoding)
                     .biallelic(bachRecord.isBiallelic())
-                    .minorAlleleJcn(enrichedVariant != null ? enrichedVariant.minorAlleleCopyNumber() : somaticVariant.minorAlleleCopyNumber())
-                    .refStatus(bachRecord.IsHomozygous ? "HOM" : "HET")
+                    .minorAlleleJcn(bachRecord.getMinorAlleleCopyNumber())
+                    .refStatus(bachRecord.refStatus())
                     .clinvarInfo(bachRecord.getClinvarConsolidatedInfo())
                     .build());
         }

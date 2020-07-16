@@ -45,11 +45,13 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     private int mTumorReadDepth;
     private boolean mReadDataSet;
 
+    private boolean mHasEnrichmentData;
+    private double mAdjustedCopyNumber;
     private double mAdjustedVaf;
+    private double mMinorAlleleCopyNumber;
 
     private SomaticVariant mSomaticVariant;
     private VariantContext mVariantContext;
-    private EnrichedSomaticVariant mEnrichedVariant;
 
     public static final int PHRED_SCORE_CUTOFF = 150;
 
@@ -86,14 +88,17 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mGermlineReadDepth = 0;
         mTumorReadDepth = 0;
         mReadDataSet = false;
+
+        mHasEnrichmentData = false;
         mAdjustedVaf = 0;
+        mAdjustedCopyNumber = 0;
+        mMinorAlleleCopyNumber = 0;
 
         mClinvarSig = "";
         mClinvarSigInfo = "";
 
         mSomaticVariant = null;
         mVariantContext = null;
-        mEnrichedVariant = null;
     }
 
     public FilterType filterType() { return mFilterType; }
@@ -130,9 +135,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mClinvarSig = clinvarSig;
         mClinvarSigInfo = clinvarSigInfo;
     }
-
-    public String getClinvarSig() { return mClinvarSig; }
-    public String getClinvarSigInfo() { return mClinvarSigInfo; }
 
     public String getClinvarConsolidatedInfo()
     {
@@ -182,6 +184,8 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         }
     }
 
+    public String refStatus() { return IsHomozygous ? "HOM" : "HET"; }
+
     public int getGermlineReadDepth() { return mGermlineReadDepth; }
     public int getTumorAltCount() { return mTumorAltCount; }
     public int getTumorRefCount() { return mTumorReadDepth - mTumorAltCount; }
@@ -207,22 +211,30 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
     public boolean isReadDataSet() { return mReadDataSet; }
 
-    public void setAdjustedVaf(double vaf) { mAdjustedVaf = vaf; }
+    public void setEnrichmentData(double adjustedVaf, double maCopyNumber, double adjustedCopyNumber)
+    {
+        mHasEnrichmentData = true;
+        mMinorAlleleCopyNumber = maCopyNumber;
+        mAdjustedVaf = adjustedVaf;
+        mAdjustedCopyNumber = adjustedCopyNumber;
+    }
+
     public double getAdjustedVaf() { return mAdjustedVaf; }
+    public double getMinorAlleleCopyNumber() { return mMinorAlleleCopyNumber; }
+    public double getAdjustedCopyNumber() { return mAdjustedCopyNumber; }
 
     public boolean isBiallelic()
     {
-        if(mEnrichedVariant == null)
-            return false;
-
-        double copyNumber = mEnrichedVariant.adjustedCopyNumber();
-        double minorAllelePloidy = copyNumber - (copyNumber * mAdjustedVaf);
+        double minorAllelePloidy = mAdjustedCopyNumber - (mAdjustedCopyNumber * mAdjustedVaf);
         return (minorAllelePloidy < 0.5);
     }
 
     public boolean isValid(boolean requireEnrichment)
     {
-        return mSomaticVariant != null && (!requireEnrichment || mEnrichedVariant != null) && mVariantContext != null;
+        if(mSomaticVariant == null)
+            return false;
+
+        return !requireEnrichment || mHasEnrichmentData;
     }
 
     public boolean isLowScore()
@@ -231,9 +243,8 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     }
 
     public final SomaticVariant getSomaticVariant() { return mSomaticVariant; }
-    public final EnrichedSomaticVariant getEnrichedVariant() { return mEnrichedVariant; }
-
     public void setSomaticVariant(final SomaticVariant var) { mSomaticVariant = var; }
+
     public void setVariantContext(final VariantContext var) { mVariantContext = var; }
-    public void setEnrichedVariant(final EnrichedSomaticVariant var) { mEnrichedVariant = var; }
+    public final VariantContext getVariantContext() { return mVariantContext; }
 }
