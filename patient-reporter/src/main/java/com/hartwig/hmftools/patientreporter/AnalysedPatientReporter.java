@@ -29,6 +29,8 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
+import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -40,12 +42,10 @@ import com.hartwig.hmftools.patientreporter.purple.PurpleAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;
-import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariantExtended;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
@@ -88,7 +88,7 @@ class AnalysedPatientReporter {
         ChordStatus chordStatus = ChordStatus.fromHRD(chordAnalysis.hrdValue());
 
         LimsGermlineReportingLevel germlineChoice = reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode());
-        List<ReportableGermlineVariant> germlineVariantsToReport =
+        List<ReportableGermlineVariantExtended> germlineVariantsToReport =
                 analyzeGermlineVariants(bachelorTsv, purpleAnalysis, somaticVariantAnalysis, chordStatus, germlineChoice);
 
         ReportVariantAnalysis reportableVariantsAnalysis =
@@ -193,11 +193,12 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<ReportableGermlineVariant> analyzeGermlineVariants(@NotNull String bachelorTsv, @NotNull PurpleAnalysis purpleAnalysis,
+    private List<ReportableGermlineVariantExtended> analyzeGermlineVariants(@NotNull String bachelorTsv, @NotNull PurpleAnalysis purpleAnalysis,
             @NotNull SomaticVariantAnalysis somaticVariantAnalysis, @NotNull ChordStatus chordStatus,
             @NotNull LimsGermlineReportingLevel germlineChoice) throws IOException {
-        List<GermlineVariant> variants =
-                BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+
+        List<ReportableGermlineVariant> variants = ReportableGermlineVariantFile.read(bachelorTsv);
+
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
 
         if (germlineChoice != LimsGermlineReportingLevel.NO_REPORTING) {

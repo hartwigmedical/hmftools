@@ -22,13 +22,13 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.purple.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.driver.ImmutableDriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
-import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableGermlineVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -106,21 +106,21 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static ImmutableGermlineVariant.Builder createTestGermlineVariantBuilder() {
-        return ImmutableGermlineVariant.builder()
-                .passFilter(true)
+    public static ImmutableReportableGermlineVariant.Builder createTestGermlineVariantBuilder() {
+        return ImmutableReportableGermlineVariant.builder()
+                .passFilter(Strings.EMPTY)
                 .gene(Strings.EMPTY)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .codingEffect(CodingEffect.UNDEFINED)
                 .chromosome(Strings.EMPTY)
                 .position(0)
-                .hgvsCodingImpact(Strings.EMPTY)
-                .hgvsProteinImpact(Strings.EMPTY)
+                .hgvsCoding(Strings.EMPTY)
+                .hgvsProtein(Strings.EMPTY)
                 .totalReadCount(0)
                 .alleleReadCount(0)
                 .adjustedCopyNumber(0)
-                .adjustedVAF(0)
+                .adjustedVaf(0)
                 .biallelic(false);
     }
 

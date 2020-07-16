@@ -8,8 +8,9 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableGermlineVariant;
-import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;
+import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableGermlineVariantExtended;
+import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariantExtended;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,15 +21,14 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    public static List<ReportableGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<GermlineVariant> germlineVariants,
+    public static List<ReportableGermlineVariantExtended> filterGermlineVariantsForReporting(@NotNull List<ReportableGermlineVariant> germlineVariants,
             @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport,
             @NotNull ChordStatus chordStatus) {
-        List<ReportableGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
+        List<ReportableGermlineVariantExtended> reportableGermlineVariants = Lists.newArrayList();
 
         Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
-        for (GermlineVariant germlineVariant : germlineVariants) {
-            assert germlineVariant.passFilter();
+        for (ReportableGermlineVariant germlineVariant : germlineVariants) {
 
             if (reportableGermlineGenes.contains(germlineVariant.gene())) {
                 // Note: Reportable germline genes may not necessarily be present in driverGeneView!
@@ -53,7 +53,7 @@ public final class FilterGermlineVariants {
                     }
 
                     boolean filterGermlineVariantInSameGene = false;
-                    for (GermlineVariant variant : germlineVariants) {
+                    for (ReportableGermlineVariant variant : germlineVariants) {
                         if (variant != germlineVariant && variant.gene().equals(germlineVariant.gene())) {
                             filterGermlineVariantInSameGene = true;
                         }
@@ -71,9 +71,9 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    private static ReportableGermlineVariant reportableGermlineVariantWithDriverLikelihood(@NotNull GermlineVariant germlineVariant,
+    private static ReportableGermlineVariantExtended reportableGermlineVariantWithDriverLikelihood(@NotNull ReportableGermlineVariant germlineVariant,
             double driverLikelihood) {
-        return ImmutableReportableGermlineVariant.builder().variant(germlineVariant).driverLikelihood(driverLikelihood).build();
+        return ImmutableReportableGermlineVariantExtended.builder().variant(germlineVariant).driverLikelihood(driverLikelihood).build();
     }
 
     @NotNull

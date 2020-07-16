@@ -5,13 +5,12 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +23,7 @@ final class ReportableVariantFactory {
     @NotNull
     static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
-            @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull List<ReportableGermlineVariantExtended> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
@@ -35,7 +34,7 @@ final class ReportableVariantFactory {
             Double adjustedDriverLikelihood = null;
             if (catalog != null) {
                 adjustedDriverLikelihood = catalog.driverLikelihood();
-                for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
+                for (ReportableGermlineVariantExtended germlineVariant : germlineVariantsToReport) {
                     if (germlineVariant.variant().gene().equals(variant.gene())) {
                         adjustedDriverLikelihood = Math.max(adjustedDriverLikelihood, germlineVariant.driverLikelihood());
                     }
@@ -48,7 +47,7 @@ final class ReportableVariantFactory {
                     .build());
         }
 
-        for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
+        for (ReportableGermlineVariantExtended germlineVariant : germlineVariantsToReport) {
             DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
             double adjustedDriverLikelihood = germlineVariant.driverLikelihood();
@@ -76,7 +75,7 @@ final class ReportableVariantFactory {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull GermlineVariant variant) {
+    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant) {
         return ImmutableReportableVariant.builder()
                 .gene(variant.gene())
                 .position(variant.position())
@@ -84,13 +83,13 @@ final class ReportableVariantFactory {
                 .ref(variant.ref())
                 .alt(variant.alt())
                 .canonicalCodingEffect(variant.codingEffect())
-                .canonicalHgvsCodingImpact(variant.hgvsCodingImpact())
-                .canonicalHgvsProteinImpact(variant.hgvsProteinImpact())
+                .canonicalHgvsCodingImpact(variant.hgvsCoding())
+                .canonicalHgvsProteinImpact(variant.hgvsProtein())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .gDNA(toGDNA(variant))
+                .gDNA(toGDNA(variant.chromosome(), variant.position()))
                 .totalPloidy(variant.adjustedCopyNumber())
-                .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVAF()))
+                .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
                 .biallelic(variant.biallelic());
@@ -109,7 +108,7 @@ final class ReportableVariantFactory {
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .gDNA(toGDNA(variant))
+                .gDNA(toGDNA(variant.chromosome(), variant.position()))
                 .totalPloidy(variant.adjustedCopyNumber())
                 .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
@@ -118,8 +117,8 @@ final class ReportableVariantFactory {
     }
 
     @NotNull
-    private static String toGDNA(@NotNull GenomePosition genomePosition) {
-        return genomePosition.chromosome() + ":" + genomePosition.position();
+    private static String toGDNA(@NotNull String chromosome, long position) {
+        return chromosome + ":" + position;
     }
 
     private static double calcAllelePloidy(double adjustedCopyNumber, double adjustedVAF) {

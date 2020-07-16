@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.germline;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,6 +9,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,6 +36,11 @@ public final class ReportableGermlineVariantFile
     }
 
     @NotNull
+    public static List<ReportableGermlineVariant> read(final String filePath) throws IOException {
+        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    }
+
+    @NotNull
     private static List<String> toLines(@NotNull final List<ReportableGermlineVariant> dataList)
     {
         final List<String> lines = Lists.newArrayList();
@@ -42,15 +50,19 @@ public final class ReportableGermlineVariantFile
     }
 
     @NotNull
+    private static List<ReportableGermlineVariant> fromLines(@NotNull List<String> lines) {
+        return lines.stream().filter(x -> !x.startsWith("gene")).map(ReportableGermlineVariantFile::fromString).collect(toList());
+    }
+
+    @NotNull
     private static String header()
     {
         return new StringJoiner(DELIMITER)
-                .add("program")
                 .add("gene")
                 .add("chromosome")
                 .add("position")
                 .add("ref")
-                .add("alts")
+                .add("alt")
                 .add("filter")
                 .add("codingEffect")
                 .add("hgvsCoding")
@@ -67,7 +79,6 @@ public final class ReportableGermlineVariantFile
     public static String toString(@NotNull final ReportableGermlineVariant data)
     {
         return new StringJoiner(DELIMITER)
-                .add("HMF")
                 .add(String.valueOf(data.gene()))
                 .add(String.valueOf(data.chromosome()))
                 .add(String.valueOf(data.position()))
@@ -83,5 +94,30 @@ public final class ReportableGermlineVariantFile
                 .add(String.valueOf(data.adjustedCopyNumber()))
                 .add(String.valueOf(data.biallelic()))
                 .toString();
+    }
+
+    @NotNull
+    private static ReportableGermlineVariant fromString(@NotNull String line)
+    {
+        String[] values = line.split(DELIMITER);
+
+        int index = 0;
+
+        return ImmutableReportableGermlineVariant.builder()
+                .gene(values[index++])
+                .chromosome(values[index++])
+                .position(Long.valueOf(values[index++]))
+                .ref(values[index++])
+                .alt(values[index++])
+                .passFilter(values[index++])
+                .codingEffect(CodingEffect.valueOf(values[index++]))
+                .hgvsCoding(values[index++])
+                .hgvsProtein(values[index++])
+                .alleleReadCount(Integer.valueOf(values[index++]))
+                .totalReadCount(Integer.valueOf(values[index++]))
+                .adjustedVaf(Double.valueOf(values[index++]))
+                .adjustedCopyNumber(Double.valueOf(values[index++]))
+                .biallelic(Boolean.valueOf(values[index++]))
+                .build();
     }
 }

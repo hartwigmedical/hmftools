@@ -26,7 +26,7 @@ public final class ReportableVariantAnalyzer {
     @NotNull
     public static ReportVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
-            @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull List<ReportableGermlineVariantExtended> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
         List<ReportableVariant> allReportableVariants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(somaticVariantsReport,
