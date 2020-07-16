@@ -72,7 +72,7 @@ class BamCountReader
                 {
                     variant.setTumorData(evidence.altSupport(), evidence.readDepth());
 
-                    BACH_LOGGER.debug("chr({}) position({}) matched, counts(ref={} alt={} depth={})",
+                    BACH_LOGGER.debug("Chr({}) position({}) matched, counts(ref={} alt={} depth={})",
                             variant.Chromosome, variant.Position,
                             variant.getTumorRefCount(), variant.getTumorAltCount(), variant.getTumorReadDepth());
 

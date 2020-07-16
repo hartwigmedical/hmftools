@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ReportableGermlineVariant
 {
-    public abstract boolean passFilter();
+    public abstract String passFilter();
     public abstract String gene();
     public abstract String ref();
     public abstract String alt();

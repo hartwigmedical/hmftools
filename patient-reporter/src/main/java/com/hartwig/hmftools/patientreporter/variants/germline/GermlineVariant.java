@@ -13,19 +13,8 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GermlineVariant implements GenomePosition, AllelicDepth {
 
-    public abstract boolean passFilter();
-
     @NotNull
     public abstract String gene();
-
-    @NotNull
-    public abstract String ref();
-
-    @NotNull
-    public abstract String alt();
-
-    @NotNull
-    public abstract CodingEffect codingEffect();
 
     @Override
     @NotNull
@@ -35,16 +24,27 @@ public abstract class GermlineVariant implements GenomePosition, AllelicDepth {
     public abstract long position();
 
     @NotNull
+    public abstract String ref();
+
+    @NotNull
+    public abstract String alt();
+
+    public abstract boolean passFilter();
+
+    @NotNull
+    public abstract CodingEffect codingEffect();
+
+    @NotNull
     public abstract String hgvsCodingImpact();
 
     @NotNull
     public abstract String hgvsProteinImpact();
 
     @Override
-    public abstract int totalReadCount();
+    public abstract int alleleReadCount();
 
     @Override
-    public abstract int alleleReadCount();
+    public abstract int totalReadCount();
 
     public abstract double adjustedVAF();
 

@@ -17,13 +17,6 @@ public class WideFileInputInterpreterTest {
     }
 
     @Test
-    public void canInterpretDateNL() {
-        assertEquals(LocalDate.parse("2019-04-18"), WideFileInputInterpreter.interpretDateNL("18-apr-2019"));
-        assertEquals(LocalDate.parse("2018-10-17"), WideFileInputInterpreter.interpretDateNL("17-okt-2018"));
-        assertNull(WideFileInputInterpreter.interpretDateNL("not a date"));
-    }
-
-    @Test
     public void canInterpretDateEN() {
         assertEquals(LocalDate.parse("2019-05-21"), WideFileInputInterpreter.interpretDateEN("21-May-2019"));
     }
