@@ -133,7 +133,7 @@ public class FusionTest
         fusions.forEach(x -> x.setKnownType(KNOWN_PAIR));
         tester.FusionAnalyser.getFusionFinder().setReportableGeneFusions(fusions);
 
-        assertEquals(6, fusions.size());
+        assertEquals(9, fusions.size());
         final GeneFusion fusion = fusions.get(0);
 
         // the selected fusion is the longest for coding bases and without any exon skipping
