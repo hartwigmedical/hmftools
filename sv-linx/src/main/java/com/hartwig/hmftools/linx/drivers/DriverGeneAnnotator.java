@@ -101,6 +101,7 @@ public class DriverGeneAnnotator
         mSampleId = sampleId;
         mDataCache.setSampleId(sampleId);
         mChrBreakendMap = chrBreakendMap;
+        mDriverOutputList.clear();
 
         if(mDbAccess != null)
         {
