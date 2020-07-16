@@ -29,7 +29,6 @@ public class BachelorConfig {
     public final String BamFile;
     public final String RefGenomeFile;
     public final String PurpleDataDir;
-    public final boolean SkipEnrichment;
     public final boolean IncludeVcfFiltered;
 
     public final Map<String, Program> ProgramConfigMap;
@@ -53,7 +52,6 @@ public class BachelorConfig {
     private static final String TUMOR_BAM_FILE = "tumor_bam_file";
     private static final String OUTPUT_DIR = "output_dir";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir";
-    private static final String SKIP_ENRICHMENT = "skip_enrichment";
     private static final String INCLUDE_VCF_FILTERED = "include_vcf_filtered";
 
     public static final String LOG_DEBUG = "log_debug";
@@ -83,7 +81,6 @@ public class BachelorConfig {
 
         GermlineVcf = cmd.getOptionValue(GERMLINE_VCF);
 
-        SkipEnrichment = cmd.hasOption(SKIP_ENRICHMENT);
         IncludeVcfFiltered = cmd.hasOption(INCLUDE_VCF_FILTERED);
         BamFile = cmd.getOptionValue(TUMOR_BAM_FILE);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
@@ -108,12 +105,6 @@ public class BachelorConfig {
         if (RefGenomeFile == null)
         {
             BACH_LOGGER.error("Missing ref genome input file");
-            mIsValid = false;
-        }
-
-        if (!SkipEnrichment && PurpleDataDir.isEmpty())
-        {
-            BACH_LOGGER.error("missing purple data directory required for enrichment");
             mIsValid = false;
         }
     }
@@ -169,7 +160,6 @@ public class BachelorConfig {
         options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
-        options.addOption(SKIP_ENRICHMENT, false, "Skip tumor BAM depth and Purple enrichment");
         options.addOption(INCLUDE_VCF_FILTERED, false, "Include variants filtered in the VCF");
 
         options.addOption(DB_USER, true, "Database user name");

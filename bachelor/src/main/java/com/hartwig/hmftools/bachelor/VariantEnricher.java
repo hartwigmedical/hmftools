@@ -166,7 +166,7 @@ class VariantEnricher
 
             buildVariants(specificSample, sampleRecords);
 
-            if(!mConfig.SkipEnrichment)
+            if(!mConfig.PurpleDataDir.isEmpty())
             {
                 addPurpleData(specificSample, sampleRecords);
             }
@@ -387,9 +387,11 @@ class VariantEnricher
     {
         final List<GermlineVariant> germlineVariants = Lists.newArrayList();
 
+        boolean requirePurpleEnrichmentData = !mConfig.PurpleDataDir.isEmpty();
+
         for(final BachelorGermlineVariant bachRecord : bachRecords)
         {
-            if (!bachRecord.isValid(!mConfig.SkipEnrichment))
+            if (!bachRecord.isValid(requirePurpleEnrichmentData))
                 continue;
 
             final SomaticVariant somaticVariant = bachRecord.getSomaticVariant();
