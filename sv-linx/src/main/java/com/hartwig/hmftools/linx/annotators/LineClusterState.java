@@ -96,6 +96,8 @@ public class LineClusterState
         if(mSourceBreakends.size() >= 2)
             return BND_PAIR_POLY_AT;
 
+        // the term 'BND' below is actually any link to a remote site, eg a long DEL, DUP or INV > 1M bases, or a BND
+
         // 2+ BNDs which are not connected at their remote end to a known LINE site (ie within 5kb) with
         // - at least one not forming a short DB (< 30 bases) AND
         // - at least one breakend within 5kb having a poly-A tail with expected orientation for a source site
@@ -112,7 +114,7 @@ public class LineClusterState
 
         // at least 1 BND with it’s remote breakend proximity clustered with ONLY 1 single breakend AND forming a short DB AND
         // - EITHER at least one breakend also within 5kb OR
-        // - the remote single breakend having a poly-A/poly-T tail with expected orientation for an insertion site
+        // - the remote single breakend having a poly-A/T insert motif or the BND having a poly A/T source motif
         if(!spanningBreakends.isEmpty())
         {
             for(final SvBreakend breakend : spanningBreakends)
@@ -133,7 +135,12 @@ public class LineClusterState
                 if(mBreakends.size() >= 2)
                     return BND_SGL_REMOTE_DB_PLUS;
 
-                if(hasLineInsertMotif(remoteOtherBreakend))
+                if(hasLineSourceMotif(breakend))
+                {
+                    mSourceBreakends.add(breakend);
+                    return BND_SGL_REMOTE_DB_POLY_AT;
+                }
+                else if(hasLineInsertMotif(remoteOtherBreakend))
                 {
                     mInsertBreakends.add(remoteOtherBreakend);
                     return BND_SGL_REMOTE_DB_POLY_AT;
@@ -170,6 +177,8 @@ public class LineClusterState
         return !breakend.usesStart() && breakend.orientation() == breakend.getOtherBreakend().orientation();
     }
 
+    private static int POLY_AT_BASES_SEARCH = 20;
+
     public static boolean hasLinePolyAorTMotif(final String insSequence, byte orientation, boolean isSource, boolean eitherEnd)
     {
         /*
@@ -191,21 +200,37 @@ public class LineClusterState
 
         if(orientation == POS_ORIENT || eitherEnd)
         {
-            final String startSeq = insSequence.substring(0, min(insSeqLength, POLY_A_MOTIF.length() + INS_SEQ_BUFFER));
+            final String startSeq = insSequence.substring(0, min(insSeqLength, POLY_AT_BASES_SEARCH));
 
-            if(startSeq.contains(requiredSequence))
+            if(containsMotif(startSeq, requiredSequence))
                 return true;
         }
 
         if(orientation == NEG_ORIENT || eitherEnd)
         {
-            final String endSeq = insSequence.substring(max(0, insSeqLength - (POLY_A_MOTIF.length() + INS_SEQ_BUFFER)), insSeqLength);
+            final String endSeq = insSequence.substring(max(0, insSeqLength - POLY_AT_BASES_SEARCH), insSeqLength);
 
-            if(endSeq.contains(requiredSequence))
+            if(containsMotif(endSeq, requiredSequence))
                 return true;
         }
 
         return false;
+    }
+
+    public static boolean containsMotif(final String sequence, final String motif)
+    {
+        if(sequence.contains(motif))
+            return true;
+
+        final char base = motif.charAt(0);
+        int baseCount = 0;
+        for(int i = 0; i < sequence.length(); ++i)
+        {
+            if(sequence.charAt(i) == base)
+                ++baseCount;
+        }
+
+        return baseCount >= 16;
     }
 
     private boolean isRemoteIsolatedDeletionBridge(final SvLinkedPair dbPair)

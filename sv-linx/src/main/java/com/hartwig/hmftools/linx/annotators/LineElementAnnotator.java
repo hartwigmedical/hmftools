@@ -294,10 +294,21 @@ public class LineElementAnnotator {
                         cluster.id(), svInLineCount, suspectLine, polyAorT);
             }
 
-            if(cluster.getSvCount() <= 10 || svInLineCount * 2 >= cluster.getSvCount())
+            if(cluster.getSvCount() <= 10)
             {
                 cluster.markAsLine();
                 return;
+            }
+            else
+            {
+                int nonSglCount = cluster.getSvCount() - cluster.getSglBreakendCount();
+                int nonSglLineCount = (int)cluster.getSVs().stream().filter(x -> !x.isSglBreakend()).filter(x -> x.inLineElement()).count();
+
+                if(nonSglLineCount * 2 >= nonSglCount)
+                {
+                    cluster.markAsLine();
+                    return;
+                }
             }
         }
 

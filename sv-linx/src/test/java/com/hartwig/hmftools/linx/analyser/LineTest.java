@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.annotators.LineClusterState.containsMotif;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLinePolyAorTMotif;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_T_MOTIF;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
@@ -79,7 +81,13 @@ public class LineTest
         String shortBases = "GCTG";
         String randomBases = "GCTGTGAGCTGATCG";
 
-        String insSequence = shortBases + POLY_A_MOTIF + randomBases;
+        String insSequence = POLY_A_MOTIF.substring(0, 8) + shortBases + POLY_A_MOTIF.substring(0, 8);
+        assertTrue(containsMotif(insSequence, POLY_A_MOTIF));
+
+        insSequence = POLY_A_MOTIF.substring(0, 7) + shortBases + POLY_A_MOTIF.substring(0, 8);
+        assertFalse(containsMotif(insSequence, POLY_A_MOTIF));
+
+        insSequence = shortBases + POLY_A_MOTIF + randomBases;
 
         assertFalse(hasLinePolyAorTMotif(shortBases, POS_ORIENT, true, false));
         assertFalse(hasLinePolyAorTMotif(randomBases, POS_ORIENT, true, false));
@@ -225,7 +233,7 @@ public class LineTest
 
         tester.clearClustersAndSVs();
 
-        //
+        // more than 1 BND and a SGL
         String insertPolyTMotif = shortBases + POLY_T_MOTIF + randomBases;
         sgl = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, insertPolyTMotif);
         bnd1 = createSv(tester.nextVarId(), "1", "2", 110, 100,  -1, 1, BND, "");
@@ -245,27 +253,6 @@ public class LineTest
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasLinkingLineElements());
 
-        /*
-        // 2 proximate breakends with poly A or T - only mark the breakends as line if they have the same orientation
-        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, polyTMotif);
-        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "0", 1020, 0,  1, 0, SGL, polyAMotif);
-
-        tester.addAndCluster(sgl1, sgl2);
-
-        assertFalse(sgl1.isLineElement(true));
-        assertFalse(sgl2.isLineElement(true));
-        assertTrue(cluster.hasLinkingLineElements());
-
-        sgl1 = createSv(tester.nextVarId(), "1", "0", 1000, 0,  -1, 0, SGL, polyTMotif);
-        sgl2 = createSv(tester.nextVarId(), "1", "0", 1100, 0,  -1, 0, SGL, polyTMotif);
-
-        tester.addAndCluster(sgl1, sgl2);
-
-        assertTrue(sgl1.hasLineElement(SUSPECT, true));
-        assertTrue(sgl2.hasLineElement(SUSPECT, true));
-        assertTrue(cluster.hasLinkingLineElements());
-        */
-
         // BNDs which would be suspect except for the remote DB falling in a known line location
         bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, "");
         bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 110,  1, -1, BND, polyAMotif);
@@ -280,6 +267,18 @@ public class LineTest
 
         cluster = tester.Analyser.getClusters().get(0);
         assertTrue(!cluster.hasLinkingLineElements());
+
+        // long INV plus a single in a remote DB
+        SvVarData inv = createSv(tester.nextVarId(), "1", "1", 100, 1050000,  1, 1, INV, polyAMotif);
+        sgl = createSv(tester.nextVarId(), "1", "0", 1050020, 0,  -1, 0, SGL, polyAMotif);
+
+        tester.addAndCluster(inv, sgl);
+
+        assertTrue(inv.hasLineElement(SUSPECT, true));
+        assertFalse(inv.hasLineElement(SUSPECT, false));
+
+        cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.hasLinkingLineElements());
     }
 
     @Test
