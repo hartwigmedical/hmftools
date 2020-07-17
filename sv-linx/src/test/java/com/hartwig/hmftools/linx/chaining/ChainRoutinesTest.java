@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.linx.chaining.ChainUtils.foldbackChainOnLink;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.reconcileChains;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.reverseSectionOnBreakend;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
-import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -35,7 +34,7 @@ public class ChainRoutinesTest
         // create a chain out of simple DELs and test the various chaining features
         final SvVarData var1 = createDel(1, "1", 1100, 1200);
         final SvVarData var2 = createDel(2, "1", 1300, 1400);
-        SvLinkedPair lp1 = SvLinkedPair.from(var1, var2, TEMPLATED_INSERTION, false, true);
+        SvLinkedPair lp1 = SvLinkedPair.from(var1, var2, false, true);
         lp1.setIsAssembled();
 
         // test adding linked pairs of various orientations to the start and end of a chain
@@ -47,7 +46,7 @@ public class ChainRoutinesTest
         assertTrue(!chain.lastLinkOpenOnStart());
 
         final SvVarData var3 = createDel(3, "1", 1500, 1600);
-        SvLinkedPair lp2 = SvLinkedPair.from(var3, var2, TEMPLATED_INSERTION, true, false);
+        SvLinkedPair lp2 = SvLinkedPair.from(var3, var2, true, false);
         lp2.setIsAssembled();
 
         assertFalse(chain.canAddLinkedPairToStart(lp2));
@@ -60,7 +59,7 @@ public class ChainRoutinesTest
         assertEquals(chain.getSvList().get(1), var2);
 
         final SvVarData var4 = createDel(4, "1", 900, 1000);
-        SvLinkedPair lp3 = SvLinkedPair.from(var1, var4, TEMPLATED_INSERTION, true, false);
+        SvLinkedPair lp3 = SvLinkedPair.from(var1, var4, true, false);
 
         assertTrue(chain.canAddLinkedPairToStart(lp3));
         assertFalse(chain.canAddLinkedPairToEnd(lp3));
@@ -73,7 +72,7 @@ public class ChainRoutinesTest
 
         // test a potentially closing link
         final SvVarData var5 = createDup(5, "1", 800, 1700);
-        SvLinkedPair lp4 = SvLinkedPair.from(var5, var4, TEMPLATED_INSERTION, true, true);
+        SvLinkedPair lp4 = SvLinkedPair.from(var5, var4, true, true);
 
         assertTrue(chain.canAddLinkedPairToStart(lp4));
         chain.addLink(lp4, true);
@@ -82,7 +81,7 @@ public class ChainRoutinesTest
 
         assertTrue(checkIsValid(chain));
 
-        SvLinkedPair lp5 = SvLinkedPair.from(var5, var3, TEMPLATED_INSERTION, false, false);
+        SvLinkedPair lp5 = SvLinkedPair.from(var5, var3, false, false);
 
         assertTrue(chain.canAddLinkedPairToEnd(lp5));
         assertTrue(chain.linkWouldCloseChain(lp5));

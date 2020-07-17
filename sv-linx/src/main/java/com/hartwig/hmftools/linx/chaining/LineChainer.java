@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
-import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.io.BufferedWriter;
@@ -274,7 +273,7 @@ public class LineChainer
         if(otherBreakend1.getDBLink() == null || otherBreakend1.getDBLink() != otherBreakend2.getDBLink())
             return null;
 
-        return new SvLinkedPair(breakend1, breakend2, TEMPLATED_INSERTION);
+        return new SvLinkedPair(breakend1, breakend2);
     }
 
     private SvBreakend getOtherBreakend(final SvBreakend breakend)

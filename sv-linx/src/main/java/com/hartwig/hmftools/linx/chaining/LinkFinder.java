@@ -11,8 +11,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.types.LinkType.DELETION_BRIDGE;
-import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -99,7 +97,7 @@ public class LinkFinder
                     }
 
                     // form a new TI from these 2 BEs
-                    SvLinkedPair newPair = new SvLinkedPair(lowerBreakend, upperBreakend, TEMPLATED_INSERTION);
+                    SvLinkedPair newPair = new SvLinkedPair(lowerBreakend, upperBreakend);
                     newPair.setIsAssembled();
                     lowerSV.addLinkedPair(newPair, v1Start);
                     upperSV.addLinkedPair(newPair, v2Start);

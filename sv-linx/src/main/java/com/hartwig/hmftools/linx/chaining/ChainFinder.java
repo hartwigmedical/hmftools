@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 
 import static org.apache.logging.log4j.Level.TRACE;
@@ -608,7 +607,7 @@ public class ChainFinder
                             continue;
                     }
 
-                    SvLinkedPair newPair = new SvLinkedPair(lowerBreakend, upperBreakend, TEMPLATED_INSERTION);
+                    SvLinkedPair newPair = new SvLinkedPair(lowerBreakend, upperBreakend);
 
                     // make note of adjacent facing breakends since these are prioritised in the adjacent pairs rule
                     boolean areAdjacent = false;

@@ -4,21 +4,13 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.types.LinkType.DELETION_BRIDGE;
-import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
-import static com.hartwig.hmftools.linx.types.LinkType.linkTypeStr;
 
 import java.util.List;
-
-import com.hartwig.hmftools.linx.visualiser.data.Link;
 
 public class SvLinkedPair {
 
     private SvBreakend mFirstBreakend;
     private SvBreakend mSecondBreakend;
-    private LinkType mLinkType;
     private int mLinkLength;
     private boolean mIsInferred;
 
@@ -40,11 +32,10 @@ public class SvLinkedPair {
     public static String LOCATION_TYPE_EXTERNAL = "External"; // TI is on arm with a chain end but outside its bounds
     public static String LOCATION_TYPE_INTERNAL = "Internal";
 
-    public SvLinkedPair(final SvBreakend first, final SvBreakend second, final LinkType linkType)
+    public SvLinkedPair(final SvBreakend first, final SvBreakend second)
     {
         mFirstBreakend = first;
         mSecondBreakend = second;
-        mLinkType = linkType;
         mIsInferred = true;
 
         mLinkReason = "";
@@ -60,31 +51,16 @@ public class SvLinkedPair {
 
         int length = first.position() - second.position();
         mLinkLength = abs(length);
-
-        int minTILength = getMinTemplatedInsertionLength(first, second);
-
-        if (mLinkType == TEMPLATED_INSERTION && (mLinkLength < minTILength || minTILength == 0))
-        {
-            // re-label this as a deletion bridge and give it a negative length to show the overlap
-            mLinkType = DELETION_BRIDGE;
-            mLinkLength = -mLinkLength;
-
-            // if the link is marked as assembled later on, this is reversed
-        }
-
-        // adjust the length of DBs to reflect the position convention for opposite breakend orientations
-        if(mLinkType == DELETION_BRIDGE)
-            --mLinkLength;
     }
 
-    public static SvLinkedPair from(SvVarData first, SvVarData second, final LinkType linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
+    public static SvLinkedPair from(SvVarData first, SvVarData second, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
-        return new SvLinkedPair(first.getBreakend(firstLinkOnStart), second.getBreakend(secondLinkOnStart), linkType);
+        return new SvLinkedPair(first.getBreakend(firstLinkOnStart), second.getBreakend(secondLinkOnStart));
     }
 
     public static SvLinkedPair from(final SvBreakend first, final SvBreakend second)
     {
-        return new SvLinkedPair(first, second, TEMPLATED_INSERTION);
+        return new SvLinkedPair(first, second);
     }
 
     public static SvLinkedPair copy(final SvLinkedPair other)
@@ -129,22 +105,11 @@ public class SvLinkedPair {
 
     public final String chromosome() { return mFirstBreakend.chromosome(); }
 
-    public final LinkType linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
 
-    public void setIsAssembled()
-    {
-        mIsInferred = false;
-
-        if(mLinkLength < 0)
-        {
-            mLinkType = TEMPLATED_INSERTION;
-            mLinkLength = -mLinkLength;
-        }
-    }
+    public void setIsAssembled() { mIsInferred = false; }
     public boolean isInferred() { return mIsInferred; }
     public boolean isAssembled() { return !mIsInferred; }
-    public String assemblyInferredStr() { return mIsInferred ? "Inferred" : "Assembly"; }
 
     public String getLinkReason() { return mLinkReason; }
     public void setLinkReason(String reason, int index)

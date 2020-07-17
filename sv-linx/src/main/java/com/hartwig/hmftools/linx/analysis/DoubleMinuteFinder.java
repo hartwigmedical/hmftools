@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
-import static com.hartwig.hmftools.linx.types.LinkType.TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
@@ -25,7 +24,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -280,7 +278,7 @@ public class DoubleMinuteFinder
                 {
                     // special case creating a chain out of a DUP
                     SvChain chain = new SvChain(0);
-                    SvLinkedPair pair = SvLinkedPair.from(var, var, TEMPLATED_INSERTION, true, false);
+                    SvLinkedPair pair = SvLinkedPair.from(var, var, true, false);
                     chain.addLink(pair, true);
                     chain.setJcnData(var.jcn(), var.jcnUncertainty());
                     chain.closeChain();
