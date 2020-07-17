@@ -260,11 +260,11 @@ public class DeletionDrivers
                         // calculate the copy number over the deletion bridge section
                         double cnLowSide = breakend.copyNumberLowSide();
 
-                        double otherSvPloidy = dbLink.getOtherBreakend(breakend).jcn();
+                        double otherSvJcn = dbLink.getOtherBreakend(breakend).jcn();
 
                         // account for an overlapping DB by subtracting the ploidy of the overlap
                         if(dbLink.length() < 0)
-                            cnLowSide -= otherSvPloidy;
+                            cnLowSide -= otherSvJcn;
 
                         if(cnLowSide >= TOTAL_CN_LOSS)
                             continue;
@@ -284,7 +284,7 @@ public class DeletionDrivers
 
                         LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozyous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
                                 trans.geneName(), breakend.getCluster().id(), breakend,
-                                formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvPloidy));
+                                formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvJcn));
 
                         DriverGeneData dgData = mDataCache.createDriverData(gene);
                         DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);

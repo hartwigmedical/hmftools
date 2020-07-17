@@ -63,7 +63,7 @@ public class SvLinkedPair {
 
         int minTILength = getMinTemplatedInsertionLength(first, second);
 
-        if (mLinkType == TEMPLATED_INSERTION && mLinkLength < minTILength)
+        if (mLinkType == TEMPLATED_INSERTION && (mLinkLength < minTILength || minTILength == 0))
         {
             // re-label this as a deletion bridge and give it a negative length to show the overlap
             mLinkType = DELETION_BRIDGE;

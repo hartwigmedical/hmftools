@@ -276,7 +276,7 @@ public class LinkFinder
                         int nextDistance = nextNextBreakend.position() - nextBreakend.position();
                         int nextMinTiLength = getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend);
 
-                        if(nextDistance < distance && nextDistance < nextMinTiLength)
+                        if(nextDistance < distance && (nextDistance < nextMinTiLength || nextMinTiLength == 0))
                             continue;
                     }
 
@@ -284,7 +284,7 @@ public class LinkFinder
                     SvLinkedPair dbPair = new SvLinkedPair(breakend, nextBreakend, DELETION_BRIDGE);
                     markDeletionBridge(dbPair);
                 }
-                else if(distance < minTiLength)
+                else if(distance < minTiLength || minTiLength == 0) // factoring in INFs at the same base
                 {
                     // facing breakends with a distance less than the anchor distances are in fact a DB with overlap
                     if(haveLinkedAssemblies(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))
