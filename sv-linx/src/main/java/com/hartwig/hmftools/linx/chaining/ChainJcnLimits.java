@@ -10,16 +10,14 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.JcnCalcData;
-import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ChainJcnLimits
@@ -297,7 +295,7 @@ public class ChainJcnLimits
         return allelePloidies.get(breakendIndex).isValid();
     }
 
-    public boolean linkHasJcnSupport(final SvLinkedPair pair, double jcn)
+    public boolean linkHasJcnSupport(final LinkedPair pair, double jcn)
     {
         final SvBreakend lowerBreakend = pair.getBreakend(true);
         final SvBreakend upperBreakend = pair.getBreakend(false);
@@ -325,7 +323,7 @@ public class ChainJcnLimits
         return true;
     }
 
-    public void assignLinkJcn(final SvLinkedPair pair, double jcn)
+    public void assignLinkJcn(final LinkedPair pair, double jcn)
     {
         final SvBreakend lowerBreakend = pair.getBreakend(true);
         final SvBreakend upperBreakend = pair.getBreakend(false);

@@ -18,9 +18,9 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_REP_REPAIR;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
+import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_EXTERNAL;
+import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_INTERNAL;
+import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_REMOTE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
@@ -39,7 +39,7 @@ import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -118,7 +118,7 @@ public class ClusterAnnotations
                     chainEndsCN = max(chainStartCN, chainEndCN);
             }
 
-            for(final SvLinkedPair pair : chain.getLinkedPairs())
+            for(final LinkedPair pair : chain.getLinkedPairs())
             {
                 if(pair.first().isSglBreakend() || pair.second().isSglBreakend())
                     continue;
@@ -169,10 +169,10 @@ public class ClusterAnnotations
                     }
                 }
 
-                List<SvLinkedPair> uniqueOverlaps = Lists.newArrayList();
+                List<LinkedPair> uniqueOverlaps = Lists.newArrayList();
                 int overlapCount = 0;
 
-                for(final SvLinkedPair otherPair : chain.getLinkedPairs())
+                for(final LinkedPair otherPair : chain.getLinkedPairs())
                 {
                     if(pair == otherPair)
                         continue;
@@ -217,7 +217,7 @@ public class ClusterAnnotations
         }
     }
 
-    private static double getLinkPairCopyNumber(final SvLinkedPair pair)
+    private static double getLinkPairCopyNumber(final LinkedPair pair)
     {
         // skip past any DBs
         double[] breakendCN = {0, 0};
@@ -279,7 +279,7 @@ public class ClusterAnnotations
     private static int NEXT_SV_DISTANCE = 0;
     private static int NEXT_CLUSTERED_SV_DISTANCE = 1;
 
-    private static int[] getNextClusterSVData(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
+    private static int[] getNextClusterSVData(final SvCluster cluster, final List<SvBreakend> breakendList, final LinkedPair pair)
     {
         // walk forward and backwards from this pair to the closest SV in the same cluster
         // counting the number of non-trivial SVs traversed in the process
@@ -545,7 +545,7 @@ public class ClusterAnnotations
 
             cluster.getMetrics().ChainedLength += chain.getLength(false);
 
-            for(final SvLinkedPair pair : chain.getLinkedPairs())
+            for(final LinkedPair pair : chain.getLinkedPairs())
             {
                 final SvVarData first = pair.first();
 

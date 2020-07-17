@@ -13,7 +13,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ChainDiagnostics
@@ -39,14 +39,14 @@ public class ChainDiagnostics
     private final List<SvChain> mUniqueChains;
     private final Map<SvVarData,SvChainState> mSvConnectionsMap;
     private final List<SvChainState> mSvCompletedConnections;
-    private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
+    private final Map<SvBreakend, List<LinkedPair>> mSvBreakendPossibleLinks;
     private final List<SvVarData> mDoubleMinuteSVs;
-    private final List<SvLinkedPair> mUniquePairs;
+    private final List<LinkedPair> mUniquePairs;
 
     public ChainDiagnostics(final Map<SvVarData,SvChainState> svConnMap, final List<SvChainState> svCompleteConns,
             final List<SvChain> chains, final List<SvChain> uniqueChains,
-            final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks,
-            final List<SvVarData> doubleMinuteSVs, final List<SvLinkedPair> uniquePairs)
+            final Map<SvBreakend, List<LinkedPair>> svBreakendPossibleLinks,
+            final List<SvVarData> doubleMinuteSVs, final List<LinkedPair> uniquePairs)
     {
         mLogMessages = Lists.newArrayList();
         mInitialComplexDup = Lists.newArrayList();
@@ -300,7 +300,7 @@ public class ChainDiagnostics
         // first check that the remaining possible links are supported by unlinked breakends
         boolean isValid = true;
 
-        for(Map.Entry<SvBreakend,List<SvLinkedPair>> entry : mSvBreakendPossibleLinks.entrySet())
+        for(Map.Entry<SvBreakend,List<LinkedPair>> entry : mSvBreakendPossibleLinks.entrySet())
         {
             SvBreakend breakend = entry.getKey();
 

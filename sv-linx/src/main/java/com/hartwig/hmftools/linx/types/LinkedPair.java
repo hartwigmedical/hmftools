@@ -7,7 +7,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 
 import java.util.List;
 
-public class SvLinkedPair {
+public class LinkedPair
+{
 
     private SvBreakend mFirstBreakend;
     private SvBreakend mSecondBreakend;
@@ -32,7 +33,7 @@ public class SvLinkedPair {
     public static String LOCATION_TYPE_EXTERNAL = "External"; // TI is on arm with a chain end but outside its bounds
     public static String LOCATION_TYPE_INTERNAL = "Internal";
 
-    public SvLinkedPair(final SvBreakend first, final SvBreakend second)
+    public LinkedPair(final SvBreakend first, final SvBreakend second)
     {
         mFirstBreakend = first;
         mSecondBreakend = second;
@@ -53,19 +54,19 @@ public class SvLinkedPair {
         mLinkLength = abs(length);
     }
 
-    public static SvLinkedPair from(SvVarData first, SvVarData second, boolean firstLinkOnStart, boolean secondLinkOnStart)
+    public static LinkedPair from(SvVarData first, SvVarData second, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
-        return new SvLinkedPair(first.getBreakend(firstLinkOnStart), second.getBreakend(secondLinkOnStart));
+        return new LinkedPair(first.getBreakend(firstLinkOnStart), second.getBreakend(secondLinkOnStart));
     }
 
-    public static SvLinkedPair from(final SvBreakend first, final SvBreakend second)
+    public static LinkedPair from(final SvBreakend first, final SvBreakend second)
     {
-        return new SvLinkedPair(first, second);
+        return new LinkedPair(first, second);
     }
 
-    public static SvLinkedPair copy(final SvLinkedPair other)
+    public static LinkedPair copy(final LinkedPair other)
     {
-        SvLinkedPair newPair = SvLinkedPair.from(other.firstBreakend(), other.secondBreakend());
+        LinkedPair newPair = LinkedPair.from(other.firstBreakend(), other.secondBreakend());
         newPair.setLinkReason(other.getLinkReason(), other.getLinkIndex());
 
         if(other.isAssembled())
@@ -158,7 +159,7 @@ public class SvLinkedPair {
         return hasBreakend(breakend.getSV(), breakend.usesStart());
     }
 
-    public boolean hasLinkClash(final SvLinkedPair otherPair)
+    public boolean hasLinkClash(final LinkedPair otherPair)
     {
         return (hasBreakend(otherPair.first(), otherPair.firstLinkOnStart())
             || hasBreakend(otherPair.second(), otherPair.secondLinkOnStart()));
@@ -195,7 +196,7 @@ public class SvLinkedPair {
         }
     }
 
-    public boolean matches(final SvLinkedPair other)
+    public boolean matches(final LinkedPair other)
     {
         if(this == other)
             return true;
@@ -210,7 +211,7 @@ public class SvLinkedPair {
         return false;
     }
 
-    public boolean oppositeMatch(final SvLinkedPair other)
+    public boolean oppositeMatch(final LinkedPair other)
     {
         if(this == other)
             return true;
@@ -230,7 +231,7 @@ public class SvLinkedPair {
         return false;
     }
 
-    public boolean sameVariants(final SvLinkedPair other)
+    public boolean sameVariants(final LinkedPair other)
     {
         // first and second can be in either order
         if(mFirstBreakend.getSV() == other.first() && mSecondBreakend.getSV() == other.second())
@@ -254,9 +255,9 @@ public class SvLinkedPair {
 
     public boolean isDupLink() { return mFirstBreakend.getSV() == mSecondBreakend.getSV() && mFirstBreakend.type() == DUP; }
 
-    public static boolean hasLinkClash(final List<SvLinkedPair> links1, final List<SvLinkedPair> links2)
+    public static boolean hasLinkClash(final List<LinkedPair> links1, final List<LinkedPair> links2)
     {
-        for(final SvLinkedPair pair : links1)
+        for(final LinkedPair pair : links1)
         {
             if(links2.stream().anyMatch(x -> pair.hasLinkClash(x)))
                 return true;

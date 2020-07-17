@@ -41,7 +41,7 @@ import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class SvClassification
@@ -292,7 +292,7 @@ public class SvClassification
 
         int minDistance = NO_LENGTH;
 
-        for(final SvLinkedPair pair : chain.getLinkedPairs())
+        for(final LinkedPair pair : chain.getLinkedPairs())
         {
             if(pair.length() > SHORT_TI_LENGTH)
             {
@@ -332,7 +332,7 @@ public class SvClassification
         // test the chain for short TIs only
         int totalChainLength = 0;
         int longestTILength = 0;
-        for (SvLinkedPair pair : chain.getLinkedPairs())
+        for (LinkedPair pair : chain.getLinkedPairs())
         {
             if (pair.length() > SHORT_TI_LENGTH)
                 return;

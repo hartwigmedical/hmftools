@@ -20,7 +20,7 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class FoldbackFinder
@@ -69,7 +69,7 @@ public class FoldbackFinder
                     if(j + 1 < breakendList.size() && nextBreakend.isAssembledLink()
                     && nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart()) != null)
                     {
-                        SvLinkedPair asmbLink = nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart());
+                        LinkedPair asmbLink = nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart());
                         SvBreakend nextNextBreakend = breakendList.get(j + 1);
                         if(asmbLink.getOtherBreakend(nextBreakend) == nextNextBreakend)
                         {
@@ -171,7 +171,7 @@ public class FoldbackFinder
             if(chain != null)
             {
                 int bndLinks = 0;
-                for (final SvLinkedPair pair : chain.getLinkedPairs())
+                for (final LinkedPair pair : chain.getLinkedPairs())
                 {
                     if (pair.first() == varEnd && pair.second().type() == BND)
                         ++bndLinks;

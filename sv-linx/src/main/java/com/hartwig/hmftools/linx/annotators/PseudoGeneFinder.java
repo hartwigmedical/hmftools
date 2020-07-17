@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
@@ -49,10 +49,10 @@ public class PseudoGeneFinder
 
         for(final SvCluster cluster : clusters)
         {
-            Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap = Maps.newHashMap();
+            Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap = Maps.newHashMap();
             List<GeneAnnotation> matchedGenes = Lists.newArrayList();
 
-            for(final SvLinkedPair pair : cluster.getLinkedPairs())
+            for(final LinkedPair pair : cluster.getLinkedPairs())
             {
                 if(pair.length() > SHORT_TI_LENGTH * 8)
                     continue;
@@ -105,7 +105,7 @@ public class PseudoGeneFinder
                     {
                         // mark a pseudogene link match if either both breakends are an exact match
                         // or one of the SVs also matches another pseudogene
-                        List<SvLinkedPair> matchedPairs = pairMatchesMap.keySet().stream()
+                        List<LinkedPair> matchedPairs = pairMatchesMap.keySet().stream()
                                 .filter(x -> isRelevantMatch(x, pairMatchesMap, maxTrans.TransId))
                                 .collect(Collectors.toList());
 
@@ -118,7 +118,7 @@ public class PseudoGeneFinder
                         final int selectedTransId = maxTrans.TransId;
 
                         // cache this info against the link so it can be recorded in output files and the DB
-                        for(final SvLinkedPair pair : matchedPairs)
+                        for(final LinkedPair pair : matchedPairs)
                         {
                             final PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
                                     .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
@@ -267,7 +267,7 @@ public class PseudoGeneFinder
         return pseudoMatches;
     }
 
-    private boolean hasHomologyMismatch(final SvVarData var, final Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
+    private boolean hasHomologyMismatch(final SvVarData var, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
     {
         if(var.isSglBreakend())
             return false;
@@ -282,11 +282,11 @@ public class PseudoGeneFinder
     }
 
     private Integer getHomologyOffset(
-            final SvBreakend breakend, final Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
+            final SvBreakend breakend, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
     {
-        for (Map.Entry<SvLinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
+        for (Map.Entry<LinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
         {
-            final SvLinkedPair pair = entry.getKey();
+            final LinkedPair pair = entry.getKey();
 
             if (pair.hasBreakend(breakend))
             {
@@ -307,11 +307,11 @@ public class PseudoGeneFinder
     }
 
     private PseudoGeneMatch findPseudoMatch(
-            final SvBreakend breakend, final Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
+            final SvBreakend breakend, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
     {
-        for (Map.Entry<SvLinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
+        for (Map.Entry<LinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
         {
-            final SvLinkedPair pair = entry.getKey();
+            final LinkedPair pair = entry.getKey();
 
             if (pair.hasBreakend(breakend))
             {
@@ -325,7 +325,7 @@ public class PseudoGeneFinder
         return null;
     }
 
-    private boolean isRelevantMatch(final SvLinkedPair pair, final Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
+    private boolean isRelevantMatch(final LinkedPair pair, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
     {
         final PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
                 .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
@@ -351,13 +351,13 @@ public class PseudoGeneFinder
         return false;
     }
 
-    private PseudoGeneMatch findMostCommonTranscript(final String geneName, final Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap)
+    private PseudoGeneMatch findMostCommonTranscript(final String geneName, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap)
     {
         Map<Integer, Integer> transcriptMatches = Maps.newHashMap();
         PseudoGeneMatch maxTrans = null;
         int maxTransIdCount = 0;
 
-        for (Map.Entry<SvLinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
+        for (Map.Entry<LinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
         {
             for (PseudoGeneMatch pseudoMatch : entry.getValue())
             {

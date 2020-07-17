@@ -102,20 +102,20 @@ public class DoubleMinuteData
                 MinAdjMAJcnRatio = min(getAdjacentMajorAPRatio(var), MinAdjMAJcnRatio);
         }
 
-        final List<SvLinkedPair> allLinkedPairs = Lists.newArrayList();
+        final List<LinkedPair> allLinkedPairs = Lists.newArrayList();
         Chains.forEach(x -> allLinkedPairs.addAll(x.getLinkedPairs()));
 
         setChainCharacteristics(chrBreakendMap, allLinkedPairs);
     }
 
-    private void setChainCharacteristics(final Map<String,List<SvBreakend>> chrBreakendMap, final List<SvLinkedPair> allLinkedPairs)
+    private void setChainCharacteristics(final Map<String,List<SvBreakend>> chrBreakendMap, final List<LinkedPair> allLinkedPairs)
     {
         final Set<SvBreakend> observedBreakends = Sets.newHashSet();
         final Set<SvVarData> observedSVs = Sets.newHashSet();
 
         for(SvChain chain : Chains)
         {
-            for(SvLinkedPair pair : chain.getLinkedPairs())
+            for(LinkedPair pair : chain.getLinkedPairs())
             {
                 ClosedSegmentLength += pair.length();
                 ClosedBreakends += 2;
@@ -155,7 +155,7 @@ public class DoubleMinuteData
     public static final int INT_SEG_SUM = 2;
 
     private void setPairCharacteristics(
-            final SvLinkedPair pair, final Map<String,List<SvBreakend>> chrBreakendMap, final List<SvLinkedPair> allLinkedPairs,
+            final LinkedPair pair, final Map<String,List<SvBreakend>> chrBreakendMap, final List<LinkedPair> allLinkedPairs,
             final Set<SvBreakend> observedBreakends, final Set<SvVarData> observedSVs)
     {
         final List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
@@ -211,7 +211,7 @@ public class DoubleMinuteData
         }
     }
 
-    private double getPairCnChange(final SvLinkedPair pair)
+    private double getPairCnChange(final LinkedPair pair)
     {
         // checks if the pair has neither end within another chain link
         double cnChange = 0;
@@ -222,7 +222,7 @@ public class DoubleMinuteData
 
             for(SvChain chain : Chains)
             {
-                for(SvLinkedPair chainLink : chain.getLinkedPairs())
+                for(LinkedPair chainLink : chain.getLinkedPairs())
                 {
                     if(chainLink.chromosome().equals(pair))
                     {

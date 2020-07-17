@@ -12,7 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ChainUtils
@@ -37,7 +37,7 @@ public class ChainUtils
         // so for every SV it's 'first' breakend in a given pair faces up, the 'second' faces down
         for(int i = 0; i < chain.getLinkedPairs().size(); ++i)
         {
-            final SvLinkedPair pair = chain.getLinkedPairs().get(i);
+            final LinkedPair pair = chain.getLinkedPairs().get(i);
 
             if(pair.first() == var1 && pair.firstLinkOnStart() == v1Start)
             {
@@ -88,7 +88,7 @@ public class ChainUtils
         return linkData;
     }
 
-    public static void foldbackChainOnLink(final SvChain chain, final SvLinkedPair pair1, final SvLinkedPair pair2)
+    public static void foldbackChainOnLink(final SvChain chain, final LinkedPair pair1, final LinkedPair pair2)
     {
         // validate the links being added
         final SvBreakend chainBreakend;
@@ -111,13 +111,13 @@ public class ChainUtils
 
         if(connectOnStart)
         {
-            List<SvLinkedPair> existingLinks = Lists.newArrayList(chain.getLinkedPairs());
+            List<LinkedPair> existingLinks = Lists.newArrayList(chain.getLinkedPairs());
 
             chain.addLink(pair1, true);
             chain.addLink(pair2, true);
 
             // the beginning of the chain will now form the middle
-            for(SvLinkedPair pair : existingLinks)
+            for(LinkedPair pair : existingLinks)
             {
                 chain.addLink(pair, true);
             }
@@ -130,13 +130,13 @@ public class ChainUtils
             // the beginning of the chain will now form the middle
             for(int index = linkCount - 1; index >= 0; --index)
             {
-                final SvLinkedPair pair = chain.getLinkedPairs().get(index);
+                final LinkedPair pair = chain.getLinkedPairs().get(index);
                 chain.addLink(pair, false);
             }
         }
     }
 
-    public static void foldbackChainOnChain(final SvChain chain, final SvChain foldbackChain, final SvLinkedPair pair1, final SvLinkedPair pair2)
+    public static void foldbackChainOnChain(final SvChain chain, final SvChain foldbackChain, final LinkedPair pair1, final LinkedPair pair2)
     {
         // the provided chain splits and replicates this chain
         // keep existing links in place
@@ -163,9 +163,9 @@ public class ChainUtils
             return;
         }
 
-        List<SvLinkedPair> existingLinks = Lists.newArrayList(chain.getLinkedPairs());
+        List<LinkedPair> existingLinks = Lists.newArrayList(chain.getLinkedPairs());
 
-        final List<SvLinkedPair> fbLinks = foldbackChain.getLinkedPairs();
+        final List<LinkedPair> fbLinks = foldbackChain.getLinkedPairs();
 
         // doesn't matter which pair is added first
         chain.addLink(pair1, connectOnStart);
@@ -175,7 +175,7 @@ public class ChainUtils
 
         if(connectingFoldbackChainStart)
         {
-            for (final SvLinkedPair fbPair : fbLinks)
+            for (final LinkedPair fbPair : fbLinks)
             {
                 chain.addLink(fbPair, connectOnStart);
             }
@@ -184,7 +184,7 @@ public class ChainUtils
         {
             for(int index = fbLinks.size() - 1; index >= 0; --index)
             {
-                final SvLinkedPair fbPair = fbLinks.get(index);
+                final LinkedPair fbPair = fbLinks.get(index);
                 chain.addLink(fbPair, connectOnStart);
             }
         }
@@ -198,24 +198,24 @@ public class ChainUtils
         {
             for (int index = existingLinks.size() - 1; index >= 0; --index)
             {
-                final SvLinkedPair pair = existingLinks.get(index);
+                final LinkedPair pair = existingLinks.get(index);
                 chain.addLink(pair, connectOnStart);
             }
         }
         else
         {
-            for(final SvLinkedPair pair : existingLinks)
+            for(final LinkedPair pair : existingLinks)
             {
                 chain.addLink(pair, connectOnStart);
             }
         }
     }
 
-    public static void duplicateChainOnLink(final SvChain chain, final SvLinkedPair pair1, final SvLinkedPair pair2)
+    public static void duplicateChainOnLink(final SvChain chain, final LinkedPair pair1, final LinkedPair pair2)
     {
         // validate the links being added
-        final SvLinkedPair endPair;
-        final SvLinkedPair startPair;
+        final LinkedPair endPair;
+        final LinkedPair startPair;
         if(chain.canAddLinkedPairToEnd(pair1) && chain.canAddLinkedPairToStart(pair2))
         {
             endPair = pair1;
@@ -239,7 +239,7 @@ public class ChainUtils
         // the beginning of the chain will now form the middle
         for(int index = 0; index < linkCount; ++index)
         {
-            final SvLinkedPair pair = chain.getLinkedPairs().get(index);
+            final LinkedPair pair = chain.getLinkedPairs().get(index);
             chain.addLink(pair, false);
         }
     }
@@ -251,20 +251,20 @@ public class ChainUtils
 
         for(int i = 0; i < chain.getLinkedPairs().size(); ++i)
         {
-            final SvLinkedPair pair = chain.getLinkedPairs().get(i);
+            final LinkedPair pair = chain.getLinkedPairs().get(i);
 
             // find the location in the chain where the breakend is joined and join its closest chain end here instead
             if(pair.firstBreakend() == breakend)
             {
                 SvBreakend chainStart = chain.getOpenBreakend(true);
-                SvLinkedPair newLink = SvLinkedPair.from(chainStart, pair.secondBreakend());
+                LinkedPair newLink = LinkedPair.from(chainStart, pair.secondBreakend());
 
                 if(newLink.length() <= 0)
                     return false;
 
                 newLink.setLinkReason("RECIP_INV_RECONFIG", 0);
 
-                List<SvLinkedPair> linksToSwitch = Lists.newArrayList();
+                List<LinkedPair> linksToSwitch = Lists.newArrayList();
                 for(int j = 0; j < i; ++j)
                 {
                     linksToSwitch.add(chain.getLinkedPairs().get(j));
@@ -287,14 +287,14 @@ public class ChainUtils
             else if(pair.secondBreakend() == breakend)
             {
                 SvBreakend chainEnd = chain.getOpenBreakend(false);
-                SvLinkedPair newLink = SvLinkedPair.from(pair.firstBreakend(), chainEnd);
+                LinkedPair newLink = LinkedPair.from(pair.firstBreakend(), chainEnd);
 
                 if(newLink.length() <= 0)
                     return false;
 
                 newLink.setLinkReason("RECIP_INV_RECONFIG", 0);
 
-                List<SvLinkedPair> linksToSwitch = Lists.newArrayList();
+                List<LinkedPair> linksToSwitch = Lists.newArrayList();
                 for(int j = i + 1; j < chain.getLinkedPairs().size(); ++j)
                 {
                     linksToSwitch.add(chain.getLinkedPairs().get(j));
@@ -441,7 +441,7 @@ public class ChainUtils
                         if(c2Start)
                         {
                             // merge chains and remove the latter
-                            for (SvLinkedPair linkedPair : chain2.getLinkedPairs())
+                            for (LinkedPair linkedPair : chain2.getLinkedPairs())
                             {
                                 chain1.addLink(linkedPair, c1Start);
                             }
@@ -451,7 +451,7 @@ public class ChainUtils
                             // add in reverse
                             for (int index = chain2.getLinkedPairs().size() - 1; index >= 0; --index)
                             {
-                                SvLinkedPair linkedPair = chain2.getLinkedPairs().get(index);
+                                LinkedPair linkedPair = chain2.getLinkedPairs().get(index);
                                 chain1.addLink(linkedPair, c1Start);
                             }
                         }
@@ -515,7 +515,7 @@ public class ChainUtils
         */
 
         // same SVs forming same links in the same order
-        final List<SvLinkedPair> otherLinks = otherChain.getLinkedPairs();
+        final List<LinkedPair> otherLinks = otherChain.getLinkedPairs();
 
         if(chain.getLinkedPairs().size() == otherLinks.size())
         {
@@ -523,8 +523,8 @@ public class ChainUtils
 
             for(int i = 0; i < chain.getLinkedPairs().size(); ++i)
             {
-                final SvLinkedPair pair = chain.getLinkedPairs().get(i);
-                final SvLinkedPair otherPair = otherLinks.get(i);
+                final LinkedPair pair = chain.getLinkedPairs().get(i);
+                final LinkedPair otherPair = otherLinks.get(i);
 
                 if(pair.first() != otherPair.first() || pair.second() != otherPair.second())
                 {
@@ -543,19 +543,19 @@ public class ChainUtils
             if(!allowSubsets)
                 return false;
 
-            final List<SvLinkedPair> longerLinks = chain.getLinkedPairs().size() > otherLinks.size() ? chain.getLinkedPairs() : otherLinks;
-            final List<SvLinkedPair> shorterLinks = chain.getLinkedPairs().size() < otherLinks.size() ? chain.getLinkedPairs() : otherLinks;
+            final List<LinkedPair> longerLinks = chain.getLinkedPairs().size() > otherLinks.size() ? chain.getLinkedPairs() : otherLinks;
+            final List<LinkedPair> shorterLinks = chain.getLinkedPairs().size() < otherLinks.size() ? chain.getLinkedPairs() : otherLinks;
 
             int j = 0;
             boolean matchingLinkFound = false;
             for(int i = 0; i < longerLinks.size(); ++i)
             {
-                final SvLinkedPair pair = longerLinks.get(i);
+                final LinkedPair pair = longerLinks.get(i);
 
                 if(j >= shorterLinks.size())
                     break;
 
-                final SvLinkedPair otherPair = shorterLinks.get(j);
+                final LinkedPair otherPair = shorterLinks.get(j);
 
                 boolean linksMatch = pair.first() == otherPair.first() && pair.second() == otherPair.second();
 
@@ -590,7 +590,7 @@ public class ChainUtils
 
         for(int i = 0; i < chain.getLinkedPairs().size(); ++i)
         {
-            SvLinkedPair pair = chain.getLinkedPairs().get(i);
+            LinkedPair pair = chain.getLinkedPairs().get(i);
 
             if(i == 0)
             {

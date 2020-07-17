@@ -18,7 +18,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class SvChain {
@@ -28,7 +28,7 @@ public class SvChain {
     // links are added in such a way the the 'first' SV in the link is the link to the preceding
     // link in the chain, and the 'second' SV links to its other breakend in the next link in the chain
     private List<SvVarData> mSvList;
-    private List<SvLinkedPair> mLinkedPairs;
+    private List<LinkedPair> mLinkedPairs;
     private SvBreakend[] mOpenBreakends; // cached for convenience
     private double mJcn;
     private double mJcnUncertainty;
@@ -57,9 +57,9 @@ public class SvChain {
     public List<SvVarData> getSvList() { return mSvList; }
 
     public int getLinkCount() { return mLinkedPairs.size(); }
-    public List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
+    public List<LinkedPair> getLinkedPairs() { return mLinkedPairs; }
 
-    public void addLink(final SvLinkedPair pair, boolean addToStart)
+    public void addLink(final LinkedPair pair, boolean addToStart)
     {
         if(!mSvList.contains(pair.first()))
             mSvList.add(pair.first());
@@ -67,7 +67,7 @@ public class SvChain {
         if(!mSvList.contains(pair.second()))
             mSvList.add(pair.second());
 
-        SvLinkedPair newPair = SvLinkedPair.copy(pair);
+        LinkedPair newPair = LinkedPair.copy(pair);
 
         mLinkSum += pair.first().id() + pair.second().id();
 
@@ -147,17 +147,17 @@ public class SvChain {
         return getOpenBreakend(seIndex(isStart));
     }
 
-    public boolean canAddLinkedPairToStart(final SvLinkedPair pair)
+    public boolean canAddLinkedPairToStart(final LinkedPair pair)
     {
         return canAddLinkedPair(pair, true, false);
     }
 
-    public boolean canAddLinkedPairToEnd(final SvLinkedPair pair)
+    public boolean canAddLinkedPairToEnd(final LinkedPair pair)
     {
         return canAddLinkedPair(pair, false, false);
     }
 
-    public boolean canAddLinkedPair(final SvLinkedPair pair, boolean toStart, boolean allowReplicated)
+    public boolean canAddLinkedPair(final LinkedPair pair, boolean toStart, boolean allowReplicated)
     {
         if(mLinkedPairs.isEmpty())
             return true;
@@ -177,7 +177,7 @@ public class SvChain {
             return false;
     }
 
-    public boolean linkWouldCloseChain(final SvLinkedPair pair)
+    public boolean linkWouldCloseChain(final LinkedPair pair)
     {
         final SvBreakend chainStart = getOpenBreakend(true);
         final SvBreakend chainEnd = getOpenBreakend(false);
@@ -236,7 +236,7 @@ public class SvChain {
             return;
         }
 
-        SvLinkedPair link = SvLinkedPair.from(chainEnd, chainStart);
+        LinkedPair link = LinkedPair.from(chainEnd, chainStart);
         link.setLinkReason(reason, linkIndex);
 
         mLinkedPairs.add(link);
@@ -260,7 +260,7 @@ public class SvChain {
             // if ends on a different arm it needs to go through a centromere once and have 2 telomeres
             boolean traversesCentromere = false;
 
-            for (final SvLinkedPair pair : mLinkedPairs)
+            for (final LinkedPair pair : mLinkedPairs)
             {
                 if (pair.firstBreakend().arm() != pair.secondBreakend().arm())
                 {
@@ -289,7 +289,7 @@ public class SvChain {
 
     public void copyFrom(final SvChain otherChain)
     {
-        for(final SvLinkedPair pair : otherChain.getLinkedPairs())
+        for(final LinkedPair pair : otherChain.getLinkedPairs())
         {
             addLink(pair, false);
         }
@@ -305,7 +305,7 @@ public class SvChain {
         // check for duplicate breakends
         for(int i = 0; i < chain.getLinkCount() - 1; ++i)
         {
-            final SvLinkedPair pair = chain.getLinkedPairs().get(i);
+            final LinkedPair pair = chain.getLinkedPairs().get(i);
 
             if(pair.first() == pair.second() && !pair.isDupLink())
                 return false;
@@ -313,7 +313,7 @@ public class SvChain {
             if(!chain.getSvList().contains(pair.first()) || !chain.getSvList().contains(pair.second()))
                 return false;
 
-            final SvLinkedPair nextPair = chain.getLinkedPairs().get(i+1);
+            final LinkedPair nextPair = chain.getLinkedPairs().get(i+1);
 
             if(pair.second() != nextPair.first())
                 return false;
@@ -334,7 +334,7 @@ public class SvChain {
 
         for(int i = 0; i < mLinkedPairs.size(); ++i)
         {
-            final SvLinkedPair pair = mLinkedPairs.get(i);
+            final LinkedPair pair = mLinkedPairs.get(i);
 
             LNX_LOGGER.debug("chain({}) {}: pair({}) {} length({}) index({})",
                     mId, i, pair.toString(), pair.getLinkReason(), pair.length(), pair.getLinkIndex());
@@ -386,7 +386,7 @@ public class SvChain {
 
         for(int index = 0; index < mLinkedPairs.size(); ++index)
         {
-            final SvLinkedPair pair = mLinkedPairs.get(index);
+            final LinkedPair pair = mLinkedPairs.get(index);
 
             String linkInfo = "";
 
@@ -436,7 +436,7 @@ public class SvChain {
         if(other.getLinkCount() != mLinkedPairs.size())
             return false;
 
-        for(final SvLinkedPair pair : mLinkedPairs)
+        for(final LinkedPair pair : mLinkedPairs)
         {
             if(!other.getLinkedPairs().stream().anyMatch(x -> x.matches(pair)))
                 return false;

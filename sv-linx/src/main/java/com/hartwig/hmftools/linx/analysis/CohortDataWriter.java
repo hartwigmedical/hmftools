@@ -48,7 +48,7 @@ import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 
@@ -194,7 +194,7 @@ public class CohortDataWriter
                 for (int be = SE_START; be <= SE_END; ++be)
                 {
                     boolean isStart = isStart(be);
-                    final SvLinkedPair link = var.getLinkedPair(isStart);
+                    final LinkedPair link = var.getLinkedPair(isStart);
                     if (link != null)
                     {
                         mSvFileWriter.write(String.format(",%s,%d",
@@ -479,12 +479,12 @@ public class CohortDataWriter
                     int chainSvCount = chain.getSvCount();
                     boolean chainConsistent = chain.isConsistent();
 
-                    List<SvLinkedPair> uniquePairs = Lists.newArrayList();
-                    final List<SvLinkedPair> chainLinks = chain.getLinkedPairs();
+                    List<LinkedPair> uniquePairs = Lists.newArrayList();
+                    final List<LinkedPair> chainLinks = chain.getLinkedPairs();
 
                     for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                     {
-                        final SvLinkedPair pair = chainLinks.get(chainIndex);
+                        final LinkedPair pair = chainLinks.get(chainIndex);
 
                         if(uniquePairs.stream().anyMatch(x -> x.matches(pair)))
                             continue;

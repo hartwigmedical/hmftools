@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.linx.types;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 
 import java.util.List;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
@@ -153,7 +151,7 @@ public class SvBreakend {
     }
 
     public final DbPair getDBLink() { return mSV.getDBLink(mUsesStart); }
-    public final List<SvLinkedPair> getLinkedPairs() { return mSV.getLinkedPairs(mUsesStart); }
+    public final List<LinkedPair> getLinkedPairs() { return mSV.getLinkedPairs(mUsesStart); }
 
     public boolean isFoldback()
     {

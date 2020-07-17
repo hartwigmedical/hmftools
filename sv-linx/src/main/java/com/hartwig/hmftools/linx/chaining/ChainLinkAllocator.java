@@ -29,19 +29,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.JcnCalcData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ChainLinkAllocator
 {
     private int mClusterId;
 
-    private final Map<SvLinkedPair,LinkSkipType> mSkippedPairs;
+    private final Map<LinkedPair,LinkSkipType> mSkippedPairs;
     private int mLinkIndex; // incrementing value for each link added to any chain
     private boolean mIsValid;
     private boolean mPairSkipped; // keep track of any excluded pair or SV without exiting the chaining routine
     private boolean mChainsSplit;
-    private final List<SvLinkedPair> mUniquePairs; // cache of unique pairs added through chaining
+    private final List<LinkedPair> mUniquePairs; // cache of unique pairs added through chaining
     private int mNextChainId;
 
     // chaining state for each SV
@@ -51,12 +51,12 @@ public class ChainLinkAllocator
     // references
     private final ChainJcnLimits mJcnLimits;
     private final List<SvChain> mChains;
-    private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
+    private final Map<SvBreakend, List<LinkedPair>> mSvBreakendPossibleLinks;
     private final List<SvVarData> mDoubleMinuteSVs;
 
     public ChainLinkAllocator(
             final ChainJcnLimits jcnLimits,
-            final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks,
+            final Map<SvBreakend, List<LinkedPair>> svBreakendPossibleLinks,
             final List<SvChain> chains,
             final List<SvVarData> doubleMinuteSVs)
     {
@@ -76,7 +76,7 @@ public class ChainLinkAllocator
     public final Map<SvVarData, SvChainState> getSvConnectionsMap() { return mSvConnectionsMap; }
     public final List<SvChainState> getSvCompletedConnections() { return mSvCompletedConnections; }
 
-    public final List<SvLinkedPair> getUniquePairs() { return mUniquePairs; }
+    public final List<LinkedPair> getUniquePairs() { return mUniquePairs; }
 
     public int getNextChainId() { return mNextChainId; }
     public int getLinkIndex() { return mLinkIndex; }
@@ -137,14 +137,14 @@ public class ChainLinkAllocator
         }
     }
 
-    protected void addAssemblyLinksToChains(final List<SvLinkedPair> assembledLinks, boolean hasReplication)
+    protected void addAssemblyLinksToChains(final List<LinkedPair> assembledLinks, boolean hasReplication)
     {
         if(assembledLinks.isEmpty())
             return;
 
         if(!hasReplication)
         {
-            for (SvLinkedPair pair : assembledLinks)
+            for (LinkedPair pair : assembledLinks)
             {
                 ProposedLinks proposedLink = new ProposedLinks(pair, ASSEMBLY);
                 proposedLink.addBreakendPloidies(
@@ -169,18 +169,18 @@ public class ChainLinkAllocator
 
         // first gather up all the breakends which have only one assembled link and record their JCN
         List<SvBreakend> singleLinkBreakends = Lists.newArrayList();
-        List<SvLinkedPair> bothMultiPairs = Lists.newArrayList();
+        List<LinkedPair> bothMultiPairs = Lists.newArrayList();
         Map<SvBreakend,Double> breakendPloidies = Maps.newHashMap();
 
         // a working cache reduced as links as allocated
-        List<SvLinkedPair> assemblyLinks = Lists.newArrayList(assembledLinks);
+        List<LinkedPair> assemblyLinks = Lists.newArrayList(assembledLinks);
 
         // identify assembly links where both breakends have only 1 option, and links these immediately
         // make note of those where both breakends have multiple options
         int index = 0;
         while(index < assemblyLinks.size())
         {
-            SvLinkedPair pair = assemblyLinks.get(index);
+            LinkedPair pair = assemblyLinks.get(index);
             final SvBreakend firstBreakend = pair.firstBreakend();
             final SvBreakend secondBreakend = pair.secondBreakend();
 
@@ -227,7 +227,7 @@ public class ChainLinkAllocator
         index = 0;
         while(index < assemblyLinks.size())
         {
-            SvLinkedPair pair = assemblyLinks.get(index);
+            LinkedPair pair = assemblyLinks.get(index);
 
             if(!bothMultiPairs.contains(pair))
             {
@@ -284,7 +284,7 @@ public class ChainLinkAllocator
         while(index < bothMultiPairs.size() && !bothMultiPairs.isEmpty())
         {
             ++iterations;
-            final SvLinkedPair pair = bothMultiPairs.get(index);
+            final LinkedPair pair = bothMultiPairs.get(index);
 
             final SvBreakend firstBreakend = pair.firstBreakend();
             final SvBreakend secondBreakend = pair.secondBreakend();
@@ -404,7 +404,7 @@ public class ChainLinkAllocator
             }
             else
             {
-                List<SvLinkedPair> pairsToRemove = mSkippedPairs.entrySet().stream()
+                List<LinkedPair> pairsToRemove = mSkippedPairs.entrySet().stream()
                         .filter(x -> x.getValue() != JCN_MISMATCH)
                         .map(x -> x.getKey())
                         .collect(Collectors.toList());
@@ -424,7 +424,7 @@ public class ChainLinkAllocator
         // if the chain has a lower ploidy, then only assign the ploidy of the chain
         // if the chain has a matching ploidy then recalculate it with the new SV's ploidy and uncertainty
 
-        SvLinkedPair newPair = proposedLinks.Links.get(0);
+        LinkedPair newPair = proposedLinks.Links.get(0);
 
         final String topRule = proposedLinks.topRule().toString();
         proposedLinks.Links.forEach(x -> x.setLinkReason(topRule, mLinkIndex));
@@ -758,7 +758,7 @@ public class ChainLinkAllocator
         targetChain.setJcnData(newJcn, newUncertainty);
         mChainsSplit = true;
 
-        for (SvLinkedPair pair : proposedLinks.Links)
+        for (LinkedPair pair : proposedLinks.Links)
         {
             LNX_LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} unc={}) match({})",
                     mLinkIndex, proposedLinks.topRule(), pair.toString(), formatJcn(proposedLinks.jcn()), targetChain.id(),
@@ -770,7 +770,7 @@ public class ChainLinkAllocator
             boolean addToStart, boolean pairLinkedOnFirst, boolean matchesChainJcn, double newSvJcn)
     {
         // no longer allow chain splitting if higher ploidy than the proposed link
-        final SvLinkedPair newPair = proposedLinks.Links.get(0);
+        final LinkedPair newPair = proposedLinks.Links.get(0);
         final SvBreakend newSvBreakend = pairLinkedOnFirst ? newPair.secondBreakend() : newPair.firstBreakend();
 
         if(!matchesChainJcn && targetChain.jcn() > proposedLinks.jcn())
@@ -827,12 +827,12 @@ public class ChainLinkAllocator
     private boolean addLinksToNewChain(final ProposedLinks proposedLinks)
     {
         boolean reconcileChains = false;
-        final SvLinkedPair newPair = proposedLinks.Links.get(0);
+        final LinkedPair newPair = proposedLinks.Links.get(0);
 
         // where more than one links is being added, they may not be able to be added to the same chain
         // eg a chained foldback replicating another breakend - the chain reconciliation step will join them back up
         SvChain newChain = null;
-        for (final SvLinkedPair pair : proposedLinks.Links)
+        for (final LinkedPair pair : proposedLinks.Links)
         {
             if (newChain != null)
             {
@@ -892,7 +892,7 @@ public class ChainLinkAllocator
         List<SvBreakend> exhaustedBreakends = Lists.newArrayList();
         boolean canUseMaxJcn = proposedLink.topRule() == ASSEMBLY;
 
-        for (final SvLinkedPair newPair : proposedLink.Links)
+        for (final LinkedPair newPair : proposedLink.Links)
         {
             mJcnLimits.assignLinkJcn(newPair, proposedLink.jcn());
 
@@ -1030,18 +1030,18 @@ public class ChainLinkAllocator
 
     private void removePossibleLinks(SvBreakend breakend)
     {
-        List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
+        List<LinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
 
         if (possibleLinks == null)
             return;
 
         mSvBreakendPossibleLinks.remove(breakend);
 
-        for(SvLinkedPair pair : possibleLinks)
+        for(LinkedPair pair : possibleLinks)
         {
             final SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
 
-            List<SvLinkedPair> otherPossibles = mSvBreakendPossibleLinks.get(otherBreakend);
+            List<LinkedPair> otherPossibles = mSvBreakendPossibleLinks.get(otherBreakend);
 
             if (otherPossibles == null)
                 continue;
@@ -1053,7 +1053,7 @@ public class ChainLinkAllocator
         }
     }
 
-    private void removeOppositeLinks(final SvLinkedPair pair)
+    private void removeOppositeLinks(final LinkedPair pair)
     {
         // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
 
@@ -1064,7 +1064,7 @@ public class ChainLinkAllocator
             if(otherBreakend == null)
                 continue;
 
-            List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(otherBreakend);
+            List<LinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(otherBreakend);
 
             if (possibleLinks == null)
                 continue;
@@ -1080,7 +1080,7 @@ public class ChainLinkAllocator
             if(otherPairBreakend == null)
                 continue;
 
-            for (SvLinkedPair otherPair : possibleLinks)
+            for (LinkedPair otherPair : possibleLinks)
             {
                 if (otherPair.hasBreakend(otherBreakend) && otherPair.hasBreakend(otherPairBreakend))
                 {
@@ -1199,9 +1199,9 @@ public class ChainLinkAllocator
             return 0;
     }
 
-    public boolean matchesExistingPair(final SvLinkedPair pair)
+    public boolean matchesExistingPair(final LinkedPair pair)
     {
-        for(SvLinkedPair existingPair : mUniquePairs)
+        for(LinkedPair existingPair : mUniquePairs)
         {
             if(pair.matches(existingPair))
                 return true;
@@ -1210,7 +1210,7 @@ public class ChainLinkAllocator
         return false;
     }
 
-    public boolean hasSkippedPairs(final SvLinkedPair pair)
+    public boolean hasSkippedPairs(final LinkedPair pair)
     {
         return mSkippedPairs.keySet().stream().anyMatch(x -> x.matches(pair));
     }
@@ -1220,12 +1220,12 @@ public class ChainLinkAllocator
         return (int)mSkippedPairs.values().stream().filter(x -> x == type).count();
     }
 
-    public final Map<SvLinkedPair, LinkSkipType> getSkippedPairs()
+    public final Map<LinkedPair, LinkSkipType> getSkippedPairs()
     {
         return mSkippedPairs;
     }
 
-    private void addSkippedPair(final SvLinkedPair pair, LinkSkipType type)
+    private void addSkippedPair(final LinkedPair pair, LinkSkipType type)
     {
         if(hasSkippedPairs(pair))
             return;
@@ -1253,7 +1253,7 @@ public class ChainLinkAllocator
         }
     }
 
-    public boolean allowDmChainSplits(final SvLinkedPair pair)
+    public boolean allowDmChainSplits(final LinkedPair pair)
     {
         if(mDoubleMinuteSVs.isEmpty())
             return false;

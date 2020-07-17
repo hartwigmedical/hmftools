@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class ChainRoutinesTest
         // create a chain out of simple DELs and test the various chaining features
         final SvVarData var1 = createDel(1, "1", 1100, 1200);
         final SvVarData var2 = createDel(2, "1", 1300, 1400);
-        SvLinkedPair lp1 = SvLinkedPair.from(var1, var2, false, true);
+        LinkedPair lp1 = LinkedPair.from(var1, var2, false, true);
         lp1.setIsAssembled();
 
         // test adding linked pairs of various orientations to the start and end of a chain
@@ -46,7 +46,7 @@ public class ChainRoutinesTest
         assertTrue(!chain.lastLinkOpenOnStart());
 
         final SvVarData var3 = createDel(3, "1", 1500, 1600);
-        SvLinkedPair lp2 = SvLinkedPair.from(var3, var2, true, false);
+        LinkedPair lp2 = LinkedPair.from(var3, var2, true, false);
         lp2.setIsAssembled();
 
         assertFalse(chain.canAddLinkedPairToStart(lp2));
@@ -59,7 +59,7 @@ public class ChainRoutinesTest
         assertEquals(chain.getSvList().get(1), var2);
 
         final SvVarData var4 = createDel(4, "1", 900, 1000);
-        SvLinkedPair lp3 = SvLinkedPair.from(var1, var4, true, false);
+        LinkedPair lp3 = LinkedPair.from(var1, var4, true, false);
 
         assertTrue(chain.canAddLinkedPairToStart(lp3));
         assertFalse(chain.canAddLinkedPairToEnd(lp3));
@@ -72,7 +72,7 @@ public class ChainRoutinesTest
 
         // test a potentially closing link
         final SvVarData var5 = createDup(5, "1", 800, 1700);
-        SvLinkedPair lp4 = SvLinkedPair.from(var5, var4, true, true);
+        LinkedPair lp4 = LinkedPair.from(var5, var4, true, true);
 
         assertTrue(chain.canAddLinkedPairToStart(lp4));
         chain.addLink(lp4, true);
@@ -81,7 +81,7 @@ public class ChainRoutinesTest
 
         assertTrue(checkIsValid(chain));
 
-        SvLinkedPair lp5 = SvLinkedPair.from(var5, var3, false, false);
+        LinkedPair lp5 = LinkedPair.from(var5, var3, false, false);
 
         assertTrue(chain.canAddLinkedPairToEnd(lp5));
         assertTrue(chain.linkWouldCloseChain(lp5));
@@ -132,12 +132,12 @@ public class ChainRoutinesTest
         SvVarData var7 = createDel(7, "1", 700, 750);
 
         SvChain chain1 = new SvChain(1);
-        chain1.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain1.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain1.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain1.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
 
         SvChain chain2 = new SvChain(2);
-        chain2.addLink(SvLinkedPair.from(var3.getBreakend(false), var4.getBreakend(true)), true);
-        chain2.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), false);
+        chain2.addLink(LinkedPair.from(var3.getBreakend(false), var4.getBreakend(true)), true);
+        chain2.addLink(LinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), false);
 
         List<SvChain> chainList = Lists.newArrayList(chain1, chain2);
 
@@ -150,12 +150,12 @@ public class ChainRoutinesTest
 
         // reset and try again with 3 chains
         chain1 = new SvChain(1);
-        chain1.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain1.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain1.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain1.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
 
         SvChain chain3 = new SvChain(3);
-        chain3.addLink(SvLinkedPair.from(var5.getBreakend(false), var6.getBreakend(true)), true);
-        chain3.addLink(SvLinkedPair.from(var6.getBreakend(false), var7.getBreakend(true)), false);
+        chain3.addLink(LinkedPair.from(var5.getBreakend(false), var6.getBreakend(true)), true);
+        chain3.addLink(LinkedPair.from(var6.getBreakend(false), var7.getBreakend(true)), false);
 
         chainList = Lists.newArrayList(chain3, chain1, chain2);
 
@@ -168,12 +168,12 @@ public class ChainRoutinesTest
 
         // check cannot merge chains on the inner starting SVs
         chain1 = new SvChain(1);
-        chain1.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain1.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain1.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain1.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
 
         chain2 = new SvChain(2);
-        chain2.addLink(SvLinkedPair.from(var2.getBreakend(false), var4.getBreakend(true)), true);
-        chain2.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), false);
+        chain2.addLink(LinkedPair.from(var2.getBreakend(false), var4.getBreakend(true)), true);
+        chain2.addLink(LinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), false);
 
         chainList = Lists.newArrayList(chain1, chain2);
         reconcileChains(chainList);
@@ -196,8 +196,8 @@ public class ChainRoutinesTest
 
         SvChain chain = new SvChain(0);
 
-        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
 
         assertTrue(checkIsValid(chain));
 
@@ -205,8 +205,8 @@ public class ChainRoutinesTest
         SvVarData var4 = createInv(4, "1", 900, 1000, 1);
 
         foldbackChainOnLink(chain,
-                SvLinkedPair.from(var4.getBreakend(true), var3.getBreakend(false)),
-                SvLinkedPair.from(var4.getBreakend(false), var3.getBreakend(false)));
+                LinkedPair.from(var4.getBreakend(true), var3.getBreakend(false)),
+                LinkedPair.from(var4.getBreakend(false), var3.getBreakend(false)));
 
         assertEquals(6, chain.getLinkCount());
         assertEquals(4, chain.getSvCount());
@@ -216,8 +216,8 @@ public class ChainRoutinesTest
         // again but with a foldback connected at the start
         chain = new SvChain(0);
 
-        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
 
         assertTrue(checkIsValid(chain));
 
@@ -225,8 +225,8 @@ public class ChainRoutinesTest
         var4 = createInv(4, "1", 100, 200, -1);
 
         foldbackChainOnLink(chain,
-                SvLinkedPair.from(var1.getBreakend(true), var4.getBreakend(true)),
-                SvLinkedPair.from(var4.getBreakend(false), var1.getBreakend(true)));
+                LinkedPair.from(var1.getBreakend(true), var4.getBreakend(true)),
+                LinkedPair.from(var4.getBreakend(false), var1.getBreakend(true)));
 
         assertEquals(6, chain.getLinkCount());
         assertEquals(4, chain.getSvCount());
@@ -243,8 +243,8 @@ public class ChainRoutinesTest
 
         SvChain chain = new SvChain(0);
 
-        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
 
         assertTrue(checkIsValid(chain));
 
@@ -255,13 +255,13 @@ public class ChainRoutinesTest
         SvVarData var5 = createDel(5, "2", 500, 600);
         SvVarData var6 = createBnd(6, "1", 1000, -1, "2", 1000, 1);
 
-        fbChain.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), true);
-        fbChain.addLink(SvLinkedPair.from(var5.getBreakend(false), var6.getBreakend(false)), false);
+        fbChain.addLink(LinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), true);
+        fbChain.addLink(LinkedPair.from(var5.getBreakend(false), var6.getBreakend(false)), false);
 
         foldbackChainOnChain(chain,
                 fbChain,
-                SvLinkedPair.from(var4.getBreakend(true), var3.getBreakend(false)),
-                SvLinkedPair.from(var6.getBreakend(true), var3.getBreakend(false)));
+                LinkedPair.from(var4.getBreakend(true), var3.getBreakend(false)),
+                LinkedPair.from(var6.getBreakend(true), var3.getBreakend(false)));
 
         assertEquals(8, chain.getLinkCount());
         assertEquals(6, chain.getSvCount());
@@ -271,8 +271,8 @@ public class ChainRoutinesTest
         // again but with a foldback connected at the start
         chain = new SvChain(0);
 
-        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
 
         assertTrue(checkIsValid(chain));
 
@@ -283,13 +283,13 @@ public class ChainRoutinesTest
         var5 = createDel(5, "2", 500, 600);
         var6 = createBnd(6, "1", 200, -1, "2", 1000, 1);
 
-        fbChain.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), true);
-        fbChain.addLink(SvLinkedPair.from(var5.getBreakend(false), var6.getBreakend(false)), false);
+        fbChain.addLink(LinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), true);
+        fbChain.addLink(LinkedPair.from(var5.getBreakend(false), var6.getBreakend(false)), false);
 
         foldbackChainOnChain(chain,
                 fbChain,
-                SvLinkedPair.from(var1.getBreakend(true), var4.getBreakend(true)),
-                SvLinkedPair.from(var1.getBreakend(true), var6.getBreakend(true)));
+                LinkedPair.from(var1.getBreakend(true), var4.getBreakend(true)),
+                LinkedPair.from(var1.getBreakend(true), var6.getBreakend(true)));
 
         assertEquals(8, chain.getLinkCount());
         assertEquals(6, chain.getSvCount());
@@ -307,8 +307,8 @@ public class ChainRoutinesTest
 
         SvChain chain = new SvChain(0);
 
-        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
 
         assertTrue(checkIsValid(chain));
 
@@ -316,8 +316,8 @@ public class ChainRoutinesTest
         SvVarData var4 = createDup(4, "1", 200, 900);
 
         duplicateChainOnLink(chain,
-                SvLinkedPair.from(var4.getBreakend(true), var1.getBreakend(true)),
-                SvLinkedPair.from(var4.getBreakend(false), var3.getBreakend(false)));
+                LinkedPair.from(var4.getBreakend(true), var1.getBreakend(true)),
+                LinkedPair.from(var4.getBreakend(false), var3.getBreakend(false)));
 
         assertEquals(6, chain.getLinkCount());
         assertEquals(4, chain.getSvCount());
@@ -333,7 +333,7 @@ public class ChainRoutinesTest
         SvChain chain = new SvChain(0);
 
         // test with a single-link chain
-        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
 
         reverseSectionOnBreakend(chain, var1.getBreakend(false));
         assertEquals(var1.getBreakend(false), chain.getOpenBreakend(true));
@@ -352,10 +352,10 @@ public class ChainRoutinesTest
 
         chain = new SvChain(0);
 
-        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
-        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
-        chain.addLink(SvLinkedPair.from(var3.getBreakend(false), var4.getBreakend(true)), false);
-        chain.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), false);
+        chain.addLink(LinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(LinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+        chain.addLink(LinkedPair.from(var3.getBreakend(false), var4.getBreakend(true)), false);
+        chain.addLink(LinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), false);
 
 
         reverseSectionOnBreakend(chain, var3.getBreakend(false));

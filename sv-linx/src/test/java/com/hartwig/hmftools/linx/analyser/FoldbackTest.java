@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
-import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInf;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
@@ -12,9 +11,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.linx.analysis.FoldbackFinder;
 import com.hartwig.hmftools.linx.types.DbPair;
-import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;

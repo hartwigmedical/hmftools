@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
 
 import org.apache.commons.compress.utils.Lists;
 

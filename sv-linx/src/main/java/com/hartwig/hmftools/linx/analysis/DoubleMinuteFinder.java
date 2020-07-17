@@ -37,7 +37,7 @@ import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class DoubleMinuteFinder
@@ -278,7 +278,7 @@ public class DoubleMinuteFinder
                 {
                     // special case creating a chain out of a DUP
                     SvChain chain = new SvChain(0);
-                    SvLinkedPair pair = SvLinkedPair.from(var, var, true, false);
+                    LinkedPair pair = LinkedPair.from(var, var, true, false);
                     chain.addLink(pair, true);
                     chain.setJcnData(var.jcn(), var.jcnUncertainty());
                     chain.closeChain();
@@ -431,7 +431,7 @@ public class DoubleMinuteFinder
             return "";
 
         String genesStr = "";
-        for(SvLinkedPair pair : chain.getLinkedPairs())
+        for(LinkedPair pair : chain.getLinkedPairs())
         {
             String chromosome = pair.chromosome();
 

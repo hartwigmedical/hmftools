@@ -41,7 +41,7 @@ import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.jetbrains.annotations.NotNull;
@@ -82,7 +82,7 @@ public class PairResolution
         SvBreakend startBe2 = null;
         SvBreakend endBe2 = null;
 
-        SvLinkedPair longTiLink = null;
+        LinkedPair longTiLink = null;
         boolean uniformJcn = false;
 
         // establish the characteristics of this cluster:
@@ -97,7 +97,7 @@ public class PairResolution
 
         if(!clusterChains.isEmpty())
         {
-            List<SvLinkedPair> longTiLinks = cluster.getChains().get(0).getLinkedPairs().stream()
+            List<LinkedPair> longTiLinks = cluster.getChains().get(0).getLinkedPairs().stream()
                     .filter(x -> x.length() > SHORT_TI_LENGTH).collect(Collectors.toList());
 
             if(cluster.getChains().size() == 2)
@@ -131,7 +131,7 @@ public class PairResolution
             clusterChains.clear();
             existingChainModified = true;
 
-            final List<SvLinkedPair> pairs = chain.getLinkedPairs();
+            final List<LinkedPair> pairs = chain.getLinkedPairs();
 
             if(pairs.size() > 1)
             {
@@ -142,7 +142,7 @@ public class PairResolution
                     unchainedSvCount = 1;
                     unchainedSv = pairs.get(0) == longTiLink ? pairs.get(0).first() : pairs.get(pairs.size() - 1).second();
 
-                    for (SvLinkedPair pair : pairs)
+                    for (LinkedPair pair : pairs)
                     {
                         if (pair != longTiLink)
                         {
@@ -154,7 +154,7 @@ public class PairResolution
                 }
                 else
                 {
-                    for (SvLinkedPair pair : pairs)
+                    for (LinkedPair pair : pairs)
                     {
                         if (pair == longTiLink)
                         {
@@ -287,7 +287,7 @@ public class PairResolution
         cluster.addAnnotation(String.format("PairLen=%d;%d;%d", syntheticLength, otherLength, gapLength));
     }
 
-    private static boolean isLohBoundedTi(final SvLinkedPair pair)
+    private static boolean isLohBoundedTi(final LinkedPair pair)
     {
         for(final LohEvent lohEvent : pair.first().getCluster().getLohEvents())
         {
@@ -303,7 +303,7 @@ public class PairResolution
     private static void classifyTranslocationPairClusters(
             SvCluster cluster, long longDelThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
-            boolean uniformJcn, final SvLinkedPair longestTiPair,
+            boolean uniformJcn, final LinkedPair longestTiPair,
             List<SvChain> rearrangedChains)
     {
         // first check consistency
@@ -443,7 +443,7 @@ public class PairResolution
     private static void classifyInversionPairClusters(
             SvCluster cluster, long longDelThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
-            boolean uniformJcn, @NotNull final SvLinkedPair longestTiPair)
+            boolean uniformJcn, @NotNull final LinkedPair longestTiPair)
     {
         /* establish configuration:
         1. FB_INV_PAIR - facing foldbacks - +ve INV positions 3,4, -ve INV positions 1,2
@@ -593,7 +593,7 @@ public class PairResolution
         boolean isResolved = false;
 
         // test DEL and DUP lengths vs thresholds to determine whether the cluster is protected
-        long longestTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(SvLinkedPair::length).max().getAsLong();
+        long longestTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::length).max().getAsLong();
         final SvBreakend chainStart = cluster.getChains().get(0).getOpenBreakend(true);
         final SvBreakend chainEnd = cluster.getChains().get(0).getOpenBreakend(false);
         long nonTiDistance = abs(chainStart.position() - chainEnd.position());

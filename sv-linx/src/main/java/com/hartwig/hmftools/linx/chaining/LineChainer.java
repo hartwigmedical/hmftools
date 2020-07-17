@@ -28,7 +28,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.compress.utils.Lists;
@@ -38,7 +38,7 @@ public class LineChainer
     private int mClusterId;
     private String mSampleId;
     private final List<SvVarData> mSvList;
-    private final List<SvLinkedPair> mAssembledLinks;
+    private final List<LinkedPair> mAssembledLinks;
 
     private final List<SvChain> mChains;
     private final List<SvBreakend> mSourceBreakends;
@@ -117,7 +117,7 @@ public class LineChainer
         addSglMappings(sglMapped);
 
         // form chains from existing assembled links
-        for(SvLinkedPair pair : mAssembledLinks)
+        for(LinkedPair pair : mAssembledLinks)
         {
             if(tryAddLink(pair))
                 continue;
@@ -134,7 +134,7 @@ public class LineChainer
         writeUnchainedSVs();
     }
 
-    private void addNewChain(final SvLinkedPair pair)
+    private void addNewChain(final LinkedPair pair)
     {
         SvChain newChain = new SvChain(mChains.size());
 
@@ -153,7 +153,7 @@ public class LineChainer
         LNX_LOGGER.debug("new chain({}) with pair({})", newChain.id(), pair);
     }
 
-    private boolean tryAddLink(final SvLinkedPair pair)
+    private boolean tryAddLink(final LinkedPair pair)
     {
         for(SvChain chain : mChains)
         {
@@ -183,8 +183,8 @@ public class LineChainer
         // breakends going to insertion sites, or the new linked pair joins 2 chains with their other ends going similarly
         while(true)
         {
-            final List<SvLinkedPair> possiblePairs = Lists.newArrayList();
-            SvLinkedPair shortestPair = null;
+            final List<LinkedPair> possiblePairs = Lists.newArrayList();
+            LinkedPair shortestPair = null;
 
             for(int i = 0; i < mSourceBreakends.size(); ++i)
             {
@@ -195,7 +195,7 @@ public class LineChainer
                 {
                     SvBreakend breakend2 = mSourceBreakends.get(j);
 
-                    SvLinkedPair newPair = tryFormLinkedPair(breakend, breakend2);
+                    LinkedPair newPair = tryFormLinkedPair(breakend, breakend2);
 
                     if(newPair == null)
                         continue;
@@ -216,7 +216,7 @@ public class LineChainer
                         if(chainBreakend == null || !mSourceChromosomes.contains(chainBreakend.chromosome()))
                             continue;
 
-                        SvLinkedPair newPair = tryFormLinkedPair(breakend, chainBreakend);
+                        LinkedPair newPair = tryFormLinkedPair(breakend, chainBreakend);
 
                         if(newPair == null)
                             continue;
@@ -245,7 +245,7 @@ public class LineChainer
         }
     }
 
-    private SvLinkedPair tryFormLinkedPair(final SvBreakend breakend1, final SvBreakend breakend2)
+    private LinkedPair tryFormLinkedPair(final SvBreakend breakend1, final SvBreakend breakend2)
     {
         if(breakend1 == null || breakend2 == null)
             return null;
@@ -273,7 +273,7 @@ public class LineChainer
         if(otherBreakend1.getDBLink() == null || otherBreakend1.getDBLink() != otherBreakend2.getDBLink())
             return null;
 
-        return new SvLinkedPair(breakend1, breakend2);
+        return new LinkedPair(breakend1, breakend2);
     }
 
     private SvBreakend getOtherBreakend(final SvBreakend breakend)
@@ -399,8 +399,8 @@ public class LineChainer
 
                 final SvBreakend chainStart = chain.getOpenBreakend(true);
                 final SvBreakend chainEnd = chain.getOpenBreakend(false);
-                final SvLinkedPair firstLink = chain.getLinkedPairs().get(0);
-                final SvLinkedPair lastLink = chain.getLinkedPairs().get(chain.getLinkedPairs().size() - 1);
+                final LinkedPair firstLink = chain.getLinkedPairs().get(0);
+                final LinkedPair lastLink = chain.getLinkedPairs().get(chain.getLinkedPairs().size() - 1);
 
                 final int[] sourcePositions = { -1, -1 };
                 int lowerSourceIndex = 0;

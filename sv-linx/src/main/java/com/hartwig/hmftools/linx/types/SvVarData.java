@@ -57,7 +57,7 @@ public class SvVarData
     private int mNearestSvDistance;
     private String mNearestSvRelation;
 
-    private final StartEndPair<List<SvLinkedPair>> mTiLinks; // start and end lists of inferred or assembled TIs
+    private final StartEndPair<List<LinkedPair>> mTiLinks; // start and end lists of inferred or assembled TIs
 
     private final DbPair[] mDbLink; // deletion bridge formed from this breakend to another
     private final StartEndPair<List<String>> mTIAssemblies;
@@ -289,27 +289,27 @@ public class SvVarData
     public boolean hasLineElement(LineElementType type, boolean isStart) { return mLineElements.get(isStart).contains(type); }
     public final Set<LineElementType> getLineElement(boolean useStart) { return mLineElements.get(useStart); }
 
-    public final List<SvLinkedPair> getLinkedPairs(boolean isStart) { return mTiLinks.get(isStart); }
+    public final List<LinkedPair> getLinkedPairs(boolean isStart) { return mTiLinks.get(isStart); }
 
-    public final List<SvLinkedPair> getAssembledLinkedPairs(boolean isStart)
+    public final List<LinkedPair> getAssembledLinkedPairs(boolean isStart)
     {
-        return mTiLinks.get(isStart).stream().filter(SvLinkedPair::isAssembled).collect(Collectors.toList());
+        return mTiLinks.get(isStart).stream().filter(LinkedPair::isAssembled).collect(Collectors.toList());
     }
 
-    public final SvLinkedPair getLinkedPair(boolean isStart)
+    public final LinkedPair getLinkedPair(boolean isStart)
     {
         return mTiLinks.get(isStart).isEmpty() ? null : mTiLinks.get(isStart).get(0);
     }
 
-    public void addLinkedPair(final SvLinkedPair link, boolean isStart)
+    public void addLinkedPair(final LinkedPair link, boolean isStart)
     {
         // add in order from shortest to longest
-        final List<SvLinkedPair> links = mTiLinks.get(isStart);
+        final List<LinkedPair> links = mTiLinks.get(isStart);
 
         int index = 0;
         while(index < links.size())
         {
-            final SvLinkedPair otherPair = links.get(index);
+            final LinkedPair otherPair = links.get(index);
 
             if(otherPair.matches(link))
                 return;
@@ -474,7 +474,7 @@ public class SvVarData
 
     public boolean hasAssemblyLink(boolean isStart)
     {
-        return mTiLinks.get(isStart).stream().anyMatch(SvLinkedPair::isAssembled);
+        return mTiLinks.get(isStart).stream().anyMatch(LinkedPair::isAssembled);
     }
 
     private void setAssemblyData(boolean useExisting)

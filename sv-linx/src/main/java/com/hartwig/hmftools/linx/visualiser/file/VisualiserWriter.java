@@ -20,7 +20,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -31,7 +30,7 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class VisualiserWriter
@@ -230,7 +229,7 @@ public class VisualiserWriter
             }
 
             // for any linked pair which is repeated in a separate chain, skip writing it for subsequent chains
-            List<SvLinkedPair> uniquePairs = Lists.newArrayList();
+            List<LinkedPair> uniquePairs = Lists.newArrayList();
 
             // log chains in order of highest to lowest ploidy so that where an SV is is more than 1 chain it will show the max ploidy
             List<SvChain> chains = Lists.newArrayList();
@@ -266,7 +265,7 @@ public class VisualiserWriter
                     }
                 }
 
-                for (final SvLinkedPair pair : chain.getLinkedPairs())
+                for (final LinkedPair pair : chain.getLinkedPairs())
                 {
                     boolean isRepeat = uniquePairs.stream().anyMatch(x -> x.matches(pair));
 

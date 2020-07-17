@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
@@ -158,7 +158,7 @@ public class InversionPairTest
         assertEquals(RECIP_INV_DUPS, cluster.getResolvedType());
         assertEquals(1, cluster.getChains().size());
 
-        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(SvLinkedPair::length).max().getAsLong();
+        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::length).max().getAsLong();
         assertEquals(longTiLength, var1.position(false) - var2.position(true));
 
         // test another instance with short TIs mixed in
@@ -240,7 +240,7 @@ public class InversionPairTest
         assertTrue(!cluster.isResolved());
         assertEquals(RECIP_INV_DEL_DUP, cluster.getResolvedType());
         assertEquals(1, cluster.getChains().size());
-        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(SvLinkedPair::length).max().getAsLong();;
+        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::length).max().getAsLong();;
         assertEquals(longTiLength, var4.position(true) - var1.position(true));
     }
 

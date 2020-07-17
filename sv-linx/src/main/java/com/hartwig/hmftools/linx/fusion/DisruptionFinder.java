@@ -38,7 +38,7 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
@@ -189,9 +189,9 @@ public class DisruptionFinder
 
             boolean otherBreakendNonGenic = se == SE_START ? genesEnd.isEmpty() : genesStart.isEmpty();
 
-            final List<SvLinkedPair> links = var.getLinkedPairs(breakend.usesStart());
+            final List<LinkedPair> links = var.getLinkedPairs(breakend.usesStart());
 
-            for(final SvLinkedPair pair : links)
+            for(final LinkedPair pair : links)
             {
                 final SvBreakend otherSvBreakend = pair.getOtherBreakend(breakend);
 
@@ -254,7 +254,7 @@ public class DisruptionFinder
         // b) both breakends are in chained sections which come back to the same intro with correct orientation and
         // without traversing a splice acceptor OR
 
-        final List<SvLinkedPair> links = chain.getLinkedPairs();
+        final List<LinkedPair> links = chain.getLinkedPairs();
 
         for(int i = 0; i < links.size(); ++i)
         {
@@ -291,7 +291,7 @@ public class DisruptionFinder
                 if(index < 0 || index >= links.size())
                     break;
 
-                final SvLinkedPair nextPair = links.get(index);
+                final LinkedPair nextPair = links.get(index);
 
                 // does this next link traverse another splice acceptor?
                 boolean traversesGene = pairTraversesGene(nextPair, 0, false);
@@ -432,7 +432,7 @@ public class DisruptionFinder
         mRemovedDisruptions.put(transcript, context);
     }
 
-    public boolean pairTraversesGene(SvLinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
+    public boolean pairTraversesGene(LinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
     {
         // for this pair to not affect the fusion, the section it traverses cannot cross any gene's splice acceptor
         // with the same strand direction unless that is part of a fully traversed non-coding 5' exon

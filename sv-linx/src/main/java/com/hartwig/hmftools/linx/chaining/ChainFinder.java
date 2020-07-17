@@ -31,10 +31,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.LinxConfig;
-import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.Level;
@@ -71,7 +70,7 @@ public class ChainFinder
     private final List<SvVarData> mSvList;
     private final List<SvVarData> mFoldbacks;
     private final List<SvVarData> mDoubleMinuteSVs;
-    private final List<SvLinkedPair> mAssembledLinks;
+    private final List<LinkedPair> mAssembledLinks;
     private Map<String,List<SvBreakend>> mChrBreakendMap;
 
     // links a breakend to its position in a chromosome's breakend list - only applicable if a subset of SVs are being chained
@@ -79,9 +78,9 @@ public class ChainFinder
     private final Map<SvBreakend,Integer> mSubsetBreakendClusterIndexMap;
 
     // chaining state
-    private final Map<SvVarData,List<SvLinkedPair>> mComplexDupCandidates; // identified SVs which duplication another SV
-    private final List<SvLinkedPair> mAdjacentMatchingPairs;
-    private final List<SvLinkedPair> mAdjacentPairs;
+    private final Map<SvVarData,List<LinkedPair>> mComplexDupCandidates; // identified SVs which duplication another SV
+    private final List<LinkedPair> mAdjacentMatchingPairs;
+    private final List<LinkedPair> mAdjacentPairs;
 
     private final List<SvChain> mChains;
     private final List<SvChain> mUniqueChains;
@@ -94,7 +93,7 @@ public class ChainFinder
     private final ChainJcnLimits mClusterJcnLimits;
 
     // determined up-front - the set of all possible links from a specific breakend to other breakends, ordered shortest first
-    private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
+    private final Map<SvBreakend, List<LinkedPair>> mSvBreakendPossibleLinks;
 
     private List<SvVarData> mReplicatedSVs;
     private List<SvBreakend> mReplicatedBreakends;
@@ -259,7 +258,7 @@ public class ChainFinder
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 // only add an assembled link if it has a partner in the provided SV set, and can be replicated equally
-                for (SvLinkedPair link : var.getAssembledLinkedPairs(isStart(se)))
+                for (LinkedPair link : var.getAssembledLinkedPairs(isStart(se)))
                 {
                     final SvVarData otherVar = link.getOtherSV(var);
 
@@ -487,14 +486,14 @@ public class ChainFinder
         {
             int ploidyMismatches = 0;
             int ploidyOverlaps = 0;
-            for(Map.Entry<SvLinkedPair,LinkSkipType> entry : mLinkAllocator.getSkippedPairs().entrySet())
+            for(Map.Entry<LinkedPair,LinkSkipType> entry : mLinkAllocator.getSkippedPairs().entrySet())
             {
                 if(entry.getValue() != JCN_MISMATCH)
                     continue;
 
                 ++ploidyMismatches;
 
-                final SvLinkedPair pair = entry.getKey();
+                final LinkedPair pair = entry.getKey();
 
                 if(ChainJcnLimits.jcnMatch(pair.firstBreakend(), pair.secondBreakend()))
                 {
@@ -556,7 +555,7 @@ public class ChainFinder
                 if(alreadyLinkedBreakend(lowerBreakend))
                     continue;
 
-                List<SvLinkedPair> lowerPairs = null;
+                List<LinkedPair> lowerPairs = null;
 
                 final SvVarData lowerSV = lowerBreakend.getSV();
 
@@ -607,7 +606,7 @@ public class ChainFinder
                             continue;
                     }
 
-                    SvLinkedPair newPair = new SvLinkedPair(lowerBreakend, upperBreakend);
+                    LinkedPair newPair = new LinkedPair(lowerBreakend, upperBreakend);
 
                     // make note of adjacent facing breakends since these are prioritised in the adjacent pairs rule
                     boolean areAdjacent = false;
@@ -642,7 +641,7 @@ public class ChainFinder
 
                     lowerPairs.add(newPair);
 
-                    List<SvLinkedPair> upperPairs = mSvBreakendPossibleLinks.get(upperBreakend);
+                    List<LinkedPair> upperPairs = mSvBreakendPossibleLinks.get(upperBreakend);
 
                     if(upperPairs == null)
                     {
@@ -744,8 +743,8 @@ public class ChainFinder
             if(!jcnMatchForSplits(var.jcn(), var.jcnUncertainty(), otherSV2.jcn(), otherSV2.jcnUncertainty()))
                 return;
 
-            List<SvLinkedPair> links = Lists.newArrayList(SvLinkedPair.from(lowerJcnBreakend, higherJcnBreakend),
-                    SvLinkedPair.from(otherBreakend, breakend));
+            List<LinkedPair> links = Lists.newArrayList(LinkedPair.from(lowerJcnBreakend, higherJcnBreakend),
+                    LinkedPair.from(otherBreakend, breakend));
 
             if(otherSV == otherSV2)
             {
@@ -853,7 +852,7 @@ public class ChainFinder
             {
                 final SvChain chain2 = mChains.get(j);
 
-                for(final SvLinkedPair pair : chain2.getLinkedPairs())
+                for(final LinkedPair pair : chain2.getLinkedPairs())
                 {
                     if(chain1.getLinkedPairs().stream().anyMatch(x -> x == pair))
                     {

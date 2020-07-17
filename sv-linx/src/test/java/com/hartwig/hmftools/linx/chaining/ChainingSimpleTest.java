@@ -11,15 +11,11 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -222,7 +218,7 @@ public class ChainingSimpleTest
         assertEquals(1, cluster.getChains().size());
         assertEquals(3, cluster.getChains().get(0).getLinkCount());
 
-        final SvLinkedPair pair = var4.getLinkedPair(true);
+        final LinkedPair pair = var4.getLinkedPair(true);
         assertTrue(pair != null);
         assertTrue(pair.hasVariant(var3));
     }

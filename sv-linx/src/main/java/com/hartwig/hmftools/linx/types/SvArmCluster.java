@@ -231,7 +231,7 @@ public class SvArmCluster
                 return;
             }
 
-            final SvLinkedPair tiPair = var1.getLinkedPair(be1.usesStart());
+            final LinkedPair tiPair = var1.getLinkedPair(be1.usesStart());
 
             if(tiPair != null && tiPair.hasBreakend(be2))
             {
@@ -271,7 +271,7 @@ public class SvArmCluster
 
             if(breakend.orientation() == -1)
             {
-                final SvLinkedPair tiPair = breakend.getSV().getLinkedPair(breakend.usesStart());
+                final LinkedPair tiPair = breakend.getSV().getLinkedPair(breakend.usesStart());
 
                 if (tiPair != null && mBreakends.contains(tiPair.getOtherBreakend(breakend)))
                 {

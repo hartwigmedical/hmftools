@@ -16,7 +16,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.linx.types.DbPair;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class CfSvData

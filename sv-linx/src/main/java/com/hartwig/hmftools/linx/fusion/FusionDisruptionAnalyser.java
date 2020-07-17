@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -50,14 +49,13 @@ import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -510,7 +508,7 @@ public class FusionDisruptionAnalyser
         // b) the left-most / lower breakend of each SV with with right-most / upper breakend of SVs higher up in the chain
 
         // whenever a linked pair is traversed by a fusion, it cannot touch or traverse genic regions without disrupting the fusion
-        final List<SvLinkedPair> linkedPairs = chain.getLinkedPairs();
+        final List<LinkedPair> linkedPairs = chain.getLinkedPairs();
 
         for (int lpIndex1 = 0; lpIndex1 <= linkedPairs.size(); ++lpIndex1)
         {
@@ -521,13 +519,13 @@ public class FusionDisruptionAnalyser
             // and in order for it to also test the last SV in isolation, also takes the last pair's second (upper) breakend
             if(lpIndex1 < linkedPairs.size())
             {
-                SvLinkedPair pair = linkedPairs.get(lpIndex1);
+                LinkedPair pair = linkedPairs.get(lpIndex1);
                 lowerSV = pair.first();
                 lowerBreakend = pair.first().getBreakend(!pair.firstLinkOnStart());
             }
             else
             {
-                SvLinkedPair prevPair = linkedPairs.get(lpIndex1 - 1);
+                LinkedPair prevPair = linkedPairs.get(lpIndex1 - 1);
                 lowerSV = prevPair.second();
                 lowerBreakend = prevPair.secondBreakend();
             }
@@ -557,7 +555,7 @@ public class FusionDisruptionAnalyser
             if (genesListLower.isEmpty())
                 continue;
 
-            List<SvLinkedPair> traversedPairs = Lists.newArrayList();
+            List<LinkedPair> traversedPairs = Lists.newArrayList();
 
             for (int lpIndex2 = lpIndex1; lpIndex2 <= linkedPairs.size(); ++lpIndex2)
             {
@@ -568,7 +566,7 @@ public class FusionDisruptionAnalyser
                 // and beyond all the links, it must also test fusions with the chain's upper open breakend
                 if(lpIndex2 < linkedPairs.size())
                 {
-                    SvLinkedPair pair = linkedPairs.get(lpIndex2);
+                    LinkedPair pair = linkedPairs.get(lpIndex2);
                     upperSV = pair.first();
                     upperBreakend = pair.firstBreakend();
                 }
@@ -602,7 +600,7 @@ public class FusionDisruptionAnalyser
                 // and test whether it traverses any genic region, and if so invalidate the fusion
                 if(lpIndex2 > lpIndex1)
                 {
-                    SvLinkedPair lastPair = linkedPairs.get(lpIndex2 - 1);
+                    LinkedPair lastPair = linkedPairs.get(lpIndex2 - 1);
                     traversedPairs.add(lastPair);
                 }
 
@@ -650,7 +648,7 @@ public class FusionDisruptionAnalyser
                     boolean validTraversal = true;
                     boolean allTraversalAssembled = true;
 
-                    for(SvLinkedPair pair : traversedPairs)
+                    for(LinkedPair pair : traversedPairs)
                     {
                         totalLinkLength += pair.length();
 
@@ -841,7 +839,7 @@ public class FusionDisruptionAnalyser
 
         // starting with this breakend and working onwards from it in the chain, check for any disruptions to the transcript
         // this includes subsequent links within the same chain and transcript
-        SvLinkedPair startPair = chain.getLinkedPairs().get(linkIndex);
+        LinkedPair startPair = chain.getLinkedPairs().get(linkIndex);
         boolean traverseUp = startPair.firstBreakend() == breakend; // whether to search up or down the chain
 
         boolean transcriptTerminated = false;
@@ -850,7 +848,7 @@ public class FusionDisruptionAnalyser
 
         while(linkIndex >= 0 && linkIndex <= chain.getLinkedPairs().size() - 1)
         {
-            SvLinkedPair pair = chain.getLinkedPairs().get(linkIndex);
+            LinkedPair pair = chain.getLinkedPairs().get(linkIndex);
 
             // identify next exon after this TI
             // the breakend's transcript info cannot be used because it faces the opposite way from the fusing breakend

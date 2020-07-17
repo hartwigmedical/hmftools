@@ -25,8 +25,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_LIMIT;
-import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
 import com.google.common.collect.Lists;
@@ -39,7 +37,6 @@ import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,8 +57,8 @@ public class SvCluster
 
     private final List<SvVarData> mSVs;
     private final List<SvChain> mChains; // pairs of SVs linked into chains
-    private final List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
-    private final List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
+    private final List<LinkedPair> mLinkedPairs; // final set after chaining and linking
+    private final List<LinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
     private final List<SvArmGroup> mArmGroups; // organise SVs into a group per chromosomal arm
     private final List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
     private final Map<String, List<SvBreakend>> mChrBreakendMap; // note: does not contain replicated SVs
@@ -307,9 +304,9 @@ public class SvCluster
 
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
 
-    public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
-    public final List<SvLinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
-    public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs)
+    public final List<LinkedPair> getLinkedPairs() { return mLinkedPairs; }
+    public final List<LinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
+    public void setAssemblyLinkedPairs(final List<LinkedPair> pairs)
     {
         mAssemblyLinkedPairs.clear();
         mAssemblyLinkedPairs.addAll(pairs);
@@ -600,7 +597,7 @@ public class SvCluster
         for (final SvChain chain : mChains)
         {
             // any pair of remote SVs which don't form a short TI are fair game
-            for (final SvLinkedPair pair : chain.getLinkedPairs())
+            for (final LinkedPair pair : chain.getLinkedPairs())
             {
                 if (pair.first().isCrossArm() && pair.second().isCrossArm() && pair.length() <= SHORT_TI_LENGTH)
                 {
@@ -767,7 +764,7 @@ public class SvCluster
 
         for (final SvChain chain : mChains)
         {
-            for (final SvLinkedPair pair : chain.getLinkedPairs())
+            for (final LinkedPair pair : chain.getLinkedPairs())
             {
                 if(mLinkedPairs.stream().anyMatch(x -> x.matches(pair)))
                     continue;

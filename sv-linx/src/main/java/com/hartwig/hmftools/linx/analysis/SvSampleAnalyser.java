@@ -51,12 +51,11 @@ import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.JcnCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
-import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -560,12 +559,12 @@ public class SvSampleAnalyser {
             {
                 int chainSvCount = chain.getSvCount();
 
-                List<SvLinkedPair> uniquePairs = Lists.newArrayList();
-                final List<SvLinkedPair> chainLinks = chain.getLinkedPairs();
+                List<LinkedPair> uniquePairs = Lists.newArrayList();
+                final List<LinkedPair> chainLinks = chain.getLinkedPairs();
 
                 for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                 {
-                    final SvLinkedPair pair = chainLinks.get(chainIndex);
+                    final LinkedPair pair = chainLinks.get(chainIndex);
 
                     if(uniquePairs.stream().anyMatch(x -> x.matches(pair)))
                         continue;

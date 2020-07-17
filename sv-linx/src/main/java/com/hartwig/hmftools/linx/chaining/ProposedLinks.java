@@ -14,11 +14,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 
 public class ProposedLinks
 {
-    public final List<SvLinkedPair> Links;
+    public final List<LinkedPair> Links;
 
     private final List<ChainingRule> mRules;
     private int mPriority;
@@ -42,7 +42,7 @@ public class ProposedLinks
     public static String PM_NONE = "None";
     public static String PM_OVERLAP = "Overlap";
 
-    public ProposedLinks(SvLinkedPair link, ChainingRule rule)
+    public ProposedLinks(LinkedPair link, ChainingRule rule)
     {
         Links = Lists.newArrayList(link);
 
@@ -59,7 +59,7 @@ public class ProposedLinks
         mShortestDistance = link.length();
     }
 
-    public ProposedLinks(List<SvLinkedPair> links, ChainingRule rule, final SvChain targetChain, final SvChain foldbackChain)
+    public ProposedLinks(List<LinkedPair> links, ChainingRule rule, final SvChain targetChain, final SvChain foldbackChain)
     {
         Links = links;
 

@@ -23,13 +23,13 @@ import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 
 public class LinkFinder
 {
-    public static List<SvLinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
+    public static List<LinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
     {
-        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
+        List<LinkedPair> linkedPairs = Lists.newArrayList();
 
         // find 2 breakends with matching assembly info and form them into a linked pair
         if(cluster.getSvCount() < 2)
@@ -97,7 +97,7 @@ public class LinkFinder
                     }
 
                     // form a new TI from these 2 BEs
-                    SvLinkedPair newPair = new SvLinkedPair(lowerBreakend, upperBreakend);
+                    LinkedPair newPair = new LinkedPair(lowerBreakend, upperBreakend);
                     newPair.setIsAssembled();
                     lowerSV.addLinkedPair(newPair, v1Start);
                     upperSV.addLinkedPair(newPair, v2Start);
@@ -122,21 +122,21 @@ public class LinkFinder
     }
 
     private static boolean analyseMultiConnectionBreakends(
-            final SvCluster cluster, final List<SvBreakend> multiConnectionBreakends, List<SvLinkedPair> linkedPairs)
+            final SvCluster cluster, final List<SvBreakend> multiConnectionBreakends, List<LinkedPair> linkedPairs)
     {
         // check for the scenario where one link A-B is made but also A-C and B-C, where B is a short simple SV
         boolean reassessMultiConnection = false;
 
         for(final SvBreakend breakend : multiConnectionBreakends)
         {
-            final List<SvLinkedPair> links = breakend.getSV().getAssembledLinkedPairs(breakend.usesStart());
+            final List<LinkedPair> links = breakend.getSV().getAssembledLinkedPairs(breakend.usesStart());
 
             if(links.size() < 2)
                 continue;
 
-            List<SvLinkedPair> spanningLinks = Lists.newArrayList();
+            List<LinkedPair> spanningLinks = Lists.newArrayList();
 
-            for(final SvLinkedPair pair : links)
+            for(final LinkedPair pair : links)
             {
                 if(spanningLinks.contains(pair))
                     continue;
@@ -148,12 +148,12 @@ public class LinkFinder
                     continue;
 
                 // now look for a common breakend partner
-                final List<SvLinkedPair> otherLinks = otherSv.getAssembledLinkedPairs(!otherBreakend.usesStart());
+                final List<LinkedPair> otherLinks = otherSv.getAssembledLinkedPairs(!otherBreakend.usesStart());
 
                 if(otherLinks.isEmpty())
                     continue;
 
-                for(final SvLinkedPair otherPair : links)
+                for(final LinkedPair otherPair : links)
                 {
                     if(otherPair == pair)
                         continue;
@@ -171,7 +171,7 @@ public class LinkFinder
                 }
             }
 
-            for(SvLinkedPair pair : spanningLinks)
+            for(LinkedPair pair : spanningLinks)
             {
                 breakend.getSV().getLinkedPairs(breakend.usesStart()).remove(pair);
 
@@ -188,7 +188,7 @@ public class LinkFinder
         {
             hasMultiConnection = false;
 
-            for(final SvLinkedPair pair : linkedPairs)
+            for(final LinkedPair pair : linkedPairs)
             {
                 for(int se = SE_START; se <= SE_END; ++se)
                 {

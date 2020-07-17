@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -141,7 +141,7 @@ public class IndelAnnotator
 
         int totalIndels = 0;
 
-        for(SvLinkedPair pair : cluster.getLinkedPairs())
+        for(LinkedPair pair : cluster.getLinkedPairs())
         {
             int lowerPos = pair.getBreakend(true).position();
             int upperPos = pair.getBreakend(false).position();

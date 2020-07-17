@@ -621,6 +621,38 @@ Shown below is an example of a SS18-SSX1 fusion:
 
 ## Version History
 
+- 1.10
+- Functional:
+    - LINE - see documentation for Suspect line element identification and cluster classification
+        - lone-SGL cannot have significant CN change, and suspect BND+SGL must include a poly A-T tail
+        - poly A-T tail motif uses orientation and only looks in the last 20 bases for 16+ or 11 consecutive As or Ts
+        - chain SGLs with mapped alignments if other links assembled or only possible link
+    - Fusions - see documentation for full details
+        - call IG fusions, set IG breakend and fusion overrides
+        - new known fusion type for exon DELs and DUPs
+        - upstream fusion partner allowed to skip from exonic and coding to 3' pre-coding
+        - short (<1M) unphased KnownPair fusions not reportable
+        - KnownPairs now require protein domains lost and kept
+        - transcripts disruptive for all upstream breakends
+        - known fusion file types expanded and merged into single source
+    - Double Minutes
+        - allow lower JCN DM candidates if > 25% if max JCN
+        - show DM chains in red even if not closed
+        - DM close any sub-chains
+    - driver DEL analysis skipped for germline deletions
+    - added high facing JCN merge rule
+    - zero-base INF links require JCN greater than adjacent major allele JCN
+    - allow 0-1 base INF links inside anchor distance, added last during chaining
+    - handle hom-loss events for male X & Y chromosomes
+
+- Technical:
+    - allow zero length DBs involving INFs
+    - write line chain cohort file
+    - write driver catalog and linx files even if no driver annotations found
+    - use GRIPSS transitive marker for links
+    - renamed DB ploidy fields to junctionCopyNumber	
+        - DB fields: SV ploidy -> junctionCopyNumber, svAnnotation ploidyMin, ploidyMax, svLink ploidy, ploidyUncertainty
+
 - 1.9
     - check validity of all input files and paths
     - removed 'chr' from chromosome name for HG38 support
