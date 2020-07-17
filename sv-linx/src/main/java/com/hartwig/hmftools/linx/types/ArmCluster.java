@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 
 // clusters of proximate SVs on an arm
-public class SvArmCluster
+public class ArmCluster
 {
     private int mId;
     private List<SvBreakend> mBreakends;
@@ -28,7 +28,7 @@ public class SvArmCluster
     private int mType;
     private int mTICount;
 
-    public SvArmCluster(int id, final SvCluster cluster, final String chr, final ChromosomeArm arm)
+    public ArmCluster(int id, final SvCluster cluster, final String chr, final ChromosomeArm arm)
     {
         mId = id;
         mCluster = cluster;
@@ -112,9 +112,9 @@ public class SvArmCluster
     public String getTypeStr() { return typeToString(mType); }
     public int getTICount() { return mTICount; }
 
-    public static SvArmCluster findArmCluster(final SvCluster cluster, final SvBreakend breakend)
+    public static ArmCluster findArmCluster(final SvCluster cluster, final SvBreakend breakend)
     {
-        for(final SvArmCluster armCluster : cluster.getArmClusters())
+        for(final ArmCluster armCluster : cluster.getArmClusters())
         {
             if(armCluster.getBreakends().contains(breakend))
                 return armCluster;
@@ -125,13 +125,13 @@ public class SvArmCluster
 
     public static void buildArmClusters(final SvCluster cluster)
     {
-        final List<SvArmCluster> armClusters = cluster.getArmClusters();
+        final List<ArmCluster> armClusters = cluster.getArmClusters();
 
         for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
 
-            SvArmCluster prevArmCluster = null;
+            ArmCluster prevArmCluster = null;
 
             for (int i = 0; i < breakendList.size(); ++i)
             {
@@ -142,7 +142,7 @@ public class SvArmCluster
                 if(var.isFoldback() && var.getFoldbackBreakend(breakend.usesStart()) != null)
                 {
                     SvBreakend otherFoldbackBreakend = var.getFoldbackBreakend(breakend.usesStart());
-                    SvArmCluster existingAC = findArmCluster(cluster, otherFoldbackBreakend);
+                    ArmCluster existingAC = findArmCluster(cluster, otherFoldbackBreakend);
 
                     if(existingAC != null)
                     {
@@ -165,7 +165,7 @@ public class SvArmCluster
 
                 boolean groupFound = false;
 
-                for(final SvArmCluster armCluster : armClusters)
+                for(final ArmCluster armCluster : armClusters)
                 {
                     if(!breakend.chromosome().equals(armCluster.chromosome()) || breakend.arm() != armCluster.arm())
                         continue;
@@ -183,7 +183,7 @@ public class SvArmCluster
 
                 if(!groupFound)
                 {
-                    SvArmCluster armCluster = new SvArmCluster(armClusters.size(), cluster, breakend.chromosome(), breakend.arm());
+                    ArmCluster armCluster = new ArmCluster(armClusters.size(), cluster, breakend.chromosome(), breakend.arm());
                     armCluster.addBreakend(breakend);
                     armClusters.add(armCluster);
                     prevArmCluster = armCluster;
@@ -371,7 +371,7 @@ public class SvArmCluster
     {
         int[] results = new int[ARM_CL_MAX+1];
 
-        for(final SvArmCluster armCluster : cluster.getArmClusters())
+        for(final ArmCluster armCluster : cluster.getArmClusters())
         {
             ++results[armCluster.getType()];
         }
@@ -381,7 +381,7 @@ public class SvArmCluster
 
     public static void logArmClusterData(final SvCluster cluster)
     {
-        for(final SvArmCluster armCluster : cluster.getArmClusters())
+        for(final ArmCluster armCluster : cluster.getArmClusters())
         {
             LNX_LOGGER.debug("cluster({}) armCluster({}) breakends({}) type({})",
                     cluster.id(), armCluster.toString(), armCluster.getBreakends().size(), typeToString(armCluster.getType()));

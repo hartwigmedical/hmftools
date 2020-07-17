@@ -18,17 +18,17 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_LINE;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_ISOLATED_BE;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SAME_ORIENT;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SIMPLE_DUP;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_LINE;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_OTHER;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK_DSB;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_ISOLATED_BE;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_SAME_ORIENT;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_SIMPLE_DUP;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
+import static com.hartwig.hmftools.linx.types.ArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
@@ -45,7 +45,7 @@ import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
-import com.hartwig.hmftools.linx.types.SvArmCluster;
+import com.hartwig.hmftools.linx.types.ArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -167,9 +167,9 @@ public class CohortDataWriter
 
                 final StructuralVariantData dbData = var.getSvData();
 
-                final SvArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
+                final ArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
 
-                final SvArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
+                final ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
                 mSvFileWriter.write(String.format("%s,%d,%s,%d,%d",
                         sampleId, var.id(), var.typeStr(), cluster.id(), cluster.getSvCount()));
@@ -251,7 +251,7 @@ public class CohortDataWriter
 
                 for (int be = SE_START; be <= SE_END; ++be)
                 {
-                    SvArmCluster armCluster = be == SE_START ? armClusterStart : armClusterEnd;
+                    ArmCluster armCluster = be == SE_START ? armClusterStart : armClusterEnd;
 
                     if (armCluster != null)
                         mSvFileWriter.write(String.format(",%d,%s,%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
@@ -516,8 +516,8 @@ public class CohortDataWriter
                                 pair.getNextSvDistance(), pair.getNextClusteredSvDistance(), pair.getTraversedSVCount(),
                                 pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));
 
-                        SvArmCluster acStart = cluster.findArmCluster(beStart);
-                        SvArmCluster acEnd = cluster.findArmCluster(beEnd);
+                        ArmCluster acStart = cluster.findArmCluster(beStart);
+                        ArmCluster acEnd = cluster.findArmCluster(beEnd);
 
                         mLinksFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s,%s,%s,%s,%s",
                                 beStart.getSV().id(), beEnd.getSV().id(),

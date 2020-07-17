@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
-import com.hartwig.hmftools.linx.types.SvArmCluster;
-import com.hartwig.hmftools.linx.types.SvArmGroup;
+import com.hartwig.hmftools.linx.types.ArmCluster;
+import com.hartwig.hmftools.linx.types.ArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -487,7 +487,7 @@ public class ClusterAnnotations
                 {
                     String overlappingChrStr = "";
 
-                    for(final SvArmGroup group : cluster.getArmGroups())
+                    for(final ArmGroup group : cluster.getArmGroups())
                     {
                         if(otherCluster.getArmGroups().stream().anyMatch(x -> x.id().equals(group.id())))
                         {
@@ -603,9 +603,9 @@ public class ClusterAnnotations
         // determine complex / active arms as those with more than 1 local topology event not including TI-only segments
         Map<String,Integer> armClusterCounts = Maps.newHashMap();
 
-        for(final SvArmCluster armCluster : cluster.getArmClusters())
+        for(final ArmCluster armCluster : cluster.getArmClusters())
         {
-            if(armCluster.getType() == SvArmCluster.ARM_CL_TI_ONLY)
+            if(armCluster.getType() == ArmCluster.ARM_CL_TI_ONLY)
                 continue;
 
             Integer count = armClusterCounts.get(armCluster.getChrArm());

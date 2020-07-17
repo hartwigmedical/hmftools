@@ -52,7 +52,7 @@ import com.hartwig.hmftools.linx.cn.JcnCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SglMapping;
-import com.hartwig.hmftools.linx.types.SvArmCluster;
+import com.hartwig.hmftools.linx.types.ArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -488,7 +488,7 @@ public class SvSampleAnalyser {
                 continue;
             }
 
-            final SvArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
+            final ArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
 
             if(armClusterStart == null)
             {
@@ -496,7 +496,7 @@ public class SvSampleAnalyser {
                 continue;
             }
 
-            final SvArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
+            final ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
             linxSvData.add(ImmutableLinxSvData.builder()
                     .svId(var.id())

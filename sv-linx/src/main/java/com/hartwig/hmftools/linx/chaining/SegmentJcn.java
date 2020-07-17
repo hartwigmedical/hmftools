@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx.chaining;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.linx.chaining.SvChainState.EXHAUSTED_JCN_PERC;
-import static com.hartwig.hmftools.linx.chaining.SvChainState.EXHAUSTED_JCN_ABS;
+import static com.hartwig.hmftools.linx.chaining.ChainState.EXHAUSTED_JCN_PERC;
+import static com.hartwig.hmftools.linx.chaining.ChainState.EXHAUSTED_JCN_ABS;
 
 public class SegmentJcn
 {

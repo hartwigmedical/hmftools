@@ -26,7 +26,7 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.buildArmClusters;
+import static com.hartwig.hmftools.linx.types.ArmCluster.buildArmClusters;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

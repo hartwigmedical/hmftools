@@ -13,7 +13,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
-import com.hartwig.hmftools.linx.types.SvArmGroup;
+import com.hartwig.hmftools.linx.types.ArmGroup;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -105,7 +105,7 @@ public class BfbFinder
     {
         double maxCopyNumber = 0;
 
-        for (SvArmGroup armGroup : cluster.getArmGroups())
+        for (ArmGroup armGroup : cluster.getArmGroups())
         {
             final TelomereCentromereCnData tcData = mCnDataLoader.getChrTeleCentroData().get(armGroup.chromosome());
 

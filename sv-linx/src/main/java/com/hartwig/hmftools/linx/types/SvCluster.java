@@ -59,8 +59,8 @@ public class SvCluster
     private final List<SvChain> mChains; // pairs of SVs linked into chains
     private final List<LinkedPair> mLinkedPairs; // final set after chaining and linking
     private final List<LinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
-    private final List<SvArmGroup> mArmGroups; // organise SVs into a group per chromosomal arm
-    private final List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
+    private final List<ArmGroup> mArmGroups; // organise SVs into a group per chromosomal arm
+    private final List<ArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
     private final Map<String, List<SvBreakend>> mChrBreakendMap; // note: does not contain replicated SVs
     private final List<SvVarData> mUnchainedSVs; // includes replicated SVs
     private final List<LohEvent> mLohEvents;
@@ -191,7 +191,7 @@ public class SvCluster
             boolean useStart = isStart(be);
 
             boolean groupFound = false;
-            for (SvArmGroup armGroup : mArmGroups)
+            for (ArmGroup armGroup : mArmGroups)
             {
                 if (armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
                 {
@@ -203,7 +203,7 @@ public class SvCluster
 
             if (!groupFound)
             {
-                SvArmGroup armGroup = new SvArmGroup(var.chromosome(useStart), var.arm(useStart));
+                ArmGroup armGroup = new ArmGroup(var.chromosome(useStart), var.arm(useStart));
                 armGroup.addVariant(var);
                 mArmGroups.add(armGroup);
             }
@@ -230,7 +230,7 @@ public class SvCluster
             if(breakend == null)
                 continue;
 
-            for (SvArmGroup armGroup : mArmGroups)
+            for (ArmGroup armGroup : mArmGroups)
             {
                 if (armGroup.chromosome().equals(breakend.chromosome()) && armGroup.arm().equals(breakend.arm()))
                 {
@@ -245,7 +245,7 @@ public class SvCluster
         }
     }
 
-    public List<SvArmGroup> getArmGroups() { return mArmGroups; }
+    public List<ArmGroup> getArmGroups() { return mArmGroups; }
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
     public boolean requiresReplication() { return mRequiresReplication; }
@@ -828,8 +828,8 @@ public class SvCluster
         return var.id();
     }
 
-    public final List<SvArmCluster> getArmClusters() { return mArmClusters; }
-    public SvArmCluster findArmCluster(final SvBreakend breakend) { return SvArmCluster.findArmCluster(this, breakend); }
+    public final List<ArmCluster> getArmClusters() { return mArmClusters; }
+    public ArmCluster findArmCluster(final SvBreakend breakend) { return ArmCluster.findArmCluster(this, breakend); }
 
     public ClusterMetrics getMetrics() { return mMetrics; }
 

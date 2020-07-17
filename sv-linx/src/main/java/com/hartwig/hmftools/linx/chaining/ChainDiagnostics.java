@@ -37,13 +37,13 @@ public class ChainDiagnostics
     private boolean mHasReplication;
     private final List<SvChain> mChains;
     private final List<SvChain> mUniqueChains;
-    private final Map<SvVarData,SvChainState> mSvConnectionsMap;
-    private final List<SvChainState> mSvCompletedConnections;
+    private final Map<SvVarData, ChainState> mSvConnectionsMap;
+    private final List<ChainState> mSvCompletedConnections;
     private final Map<SvBreakend, List<LinkedPair>> mSvBreakendPossibleLinks;
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<LinkedPair> mUniquePairs;
 
-    public ChainDiagnostics(final Map<SvVarData,SvChainState> svConnMap, final List<SvChainState> svCompleteConns,
+    public ChainDiagnostics(final Map<SvVarData, ChainState> svConnMap, final List<ChainState> svCompleteConns,
             final List<SvChain> chains, final List<SvChain> uniqueChains,
             final Map<SvBreakend, List<LinkedPair>> svBreakendPossibleLinks,
             final List<SvVarData> doubleMinuteSVs, final List<LinkedPair> uniquePairs)
@@ -119,7 +119,7 @@ public class ChainDiagnostics
         if(!mDoubleMinuteSVs.isEmpty()) // for now skip these
             return;
 
-        List<SvChainState> svConnections = Lists.newArrayList();
+        List<ChainState> svConnections = Lists.newArrayList();
         svConnections.addAll(mSvCompletedConnections);
         svConnections.addAll(mSvConnectionsMap.values());
 
@@ -137,11 +137,11 @@ public class ChainDiagnostics
         }
     }
 
-    private int findMultiConnectionBreakends(List<SvChainState> svConnections)
+    private int findMultiConnectionBreakends(List<ChainState> svConnections)
     {
         int invalidCount = 0;
 
-        for(final SvChainState svConn : svConnections)
+        for(final ChainState svConn : svConnections)
         {
             if(svConn.uniqueConnections(true) <= 1 && svConn.uniqueConnections(false) <= 1)
                 continue;
@@ -232,7 +232,7 @@ public class ChainDiagnostics
         }
     }
 
-    private void writeResults(final List<SvChainState> svConnections, int invalidBreakends)
+    private void writeResults(final List<ChainState> svConnections, int invalidBreakends)
     {
         if(mOutputDir == null)
             return;

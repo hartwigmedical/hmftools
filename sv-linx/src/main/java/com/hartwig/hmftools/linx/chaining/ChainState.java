@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class SvChainState
+public class ChainState
 {
     public final SvVarData SV;
 
@@ -36,7 +36,7 @@ public class SvChainState
     public static final double EXHAUSTED_JCN_PERC = 0.1;
     public static final double EXHAUSTED_JCN_ABS = 0.2;
 
-    public SvChainState(final SvVarData var, Double singleJcn)
+    public ChainState(final SvVarData var, Double singleJcn)
     {
         SV = var;
 
@@ -96,12 +96,12 @@ public class SvChainState
             mConnectionsEnd.add(breakend);
     }
 
-    public boolean overlaps(final SvChainState other)
+    public boolean overlaps(final ChainState other)
     {
         return !(MinJcn > other.MaxJcn || MaxJcn < other.MinJcn);
     }
 
-    public boolean equals(final SvChainState other)
+    public boolean equals(final ChainState other)
     {
         return copyNumbersEqual(Jcn, other.Jcn);
     }

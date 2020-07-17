@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import java.util.List;
 
 // contains all the SVs for an arm within a cluster
-public class SvArmGroup
+public class ArmGroup
 {
     private final String mId;
     private List<SvVarData> mSVs;
@@ -22,7 +22,7 @@ public class SvArmGroup
     private int mStartPos;
     private int mEndPos;
 
-    public SvArmGroup(final String chr, final ChromosomeArm arm)
+    public ArmGroup(final String chr, final ChromosomeArm arm)
     {
         mId = makeChrArmStr(chr, arm);
 
@@ -82,7 +82,7 @@ public class SvArmGroup
         mEndPos = mBreakends.get(mBreakends.size()-1).position();
     }
 
-    public boolean matches(final SvArmGroup other)
+    public boolean matches(final ArmGroup other)
     {
         return mChromosome.equals(other.chromosome()) && mArm.equals(other.arm());
     }

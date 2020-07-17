@@ -4,19 +4,19 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_ISOLATED_BE;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK_DSB;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_ISOLATED_BE;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
+import static com.hartwig.hmftools.linx.types.ArmCluster.getArmClusterData;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
-import com.hartwig.hmftools.linx.types.SvArmCluster;
+import com.hartwig.hmftools.linx.types.ArmCluster;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -110,7 +110,7 @@ public class AnnotationTest
 
         boolean hasDoubleTI = false;
 
-        for(SvArmCluster armCluster : cluster.getArmClusters())
+        for(ArmCluster armCluster : cluster.getArmClusters())
         {
             if(armCluster.getTICount() == 2 && armCluster.getType() == ARM_CL_TI_ONLY)
                 hasDoubleTI = true;

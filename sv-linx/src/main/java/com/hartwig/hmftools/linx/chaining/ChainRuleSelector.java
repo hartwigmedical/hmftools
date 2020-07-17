@@ -57,7 +57,7 @@ public class ChainRuleSelector
     // references from chain-finder
     private final Map<SvBreakend, List<LinkedPair>> mSvBreakendPossibleLinks;
     private final ChainJcnLimits mJcnLimits;
-    private final Map<SvVarData, SvChainState> mSvConnectionsMap;
+    private final Map<SvVarData, ChainState> mSvConnectionsMap;
     private final Map<SvVarData,List<LinkedPair>> mComplexDupCandidates;
     private final List<SvVarData> mFoldbacks;
     private final List<LinkedPair> mAdjacentMatchingPairs;
@@ -608,7 +608,7 @@ public class ChainRuleSelector
 
                     // where there is a choice to be made between which breakends are used as is usually the case of foldbacks,
                     // choose the breakend with the most unlinked ploidy, which implies its other end is already chained
-                    final SvChainState fbConn = mLinkAllocator.getSvConnectionsMap().get(foldback);
+                    final ChainState fbConn = mLinkAllocator.getSvConnectionsMap().get(foldback);
 
                     final SvBreakend fbBreakend = fbConn.unlinked(foldbackStart.usesStart()) > fbConn.unlinked(foldbackEnd.usesStart())
                             ? foldbackStart : foldbackEnd;
@@ -706,7 +706,7 @@ public class ChainRuleSelector
                 if(breakend.getSV() != breakend2.getSV())
                     continue;
 
-                final SvChainState svConn = mLinkAllocator.getSvConnectionsMap().get(breakend.getSV());
+                final ChainState svConn = mLinkAllocator.getSvConnectionsMap().get(breakend.getSV());
 
                 if(svConn == null)
                     continue;
@@ -756,7 +756,7 @@ public class ChainRuleSelector
         {
             SvVarData compDup = entry.getKey();
 
-            SvChainState svConn = mSvConnectionsMap.get(compDup);
+            ChainState svConn = mSvConnectionsMap.get(compDup);
             if(svConn == null || svConn.hasConnections())
             {
                 invalidCompDups.add(compDup);
@@ -788,7 +788,7 @@ public class ChainRuleSelector
             if (otherSv1 == otherSv2)
             {
                 // a single SV duplicated by the complex DUP - check it isn't allocated yet
-                SvChainState otherSvConn = mSvConnectionsMap.get(otherSv1);
+                ChainState otherSvConn = mSvConnectionsMap.get(otherSv1);
 
                 final SvBreakend otherBreakend1 = otherSv1.getBreakend(true);
                 final SvBreakend otherBreakend2 = otherSv1.getBreakend(false);
@@ -881,7 +881,7 @@ public class ChainRuleSelector
         // double currentMaxPloidy = 0;
         List<LinkedPair> addedLinks = Lists.newArrayList();
 
-        for(SvChainState svConn : mSvConnectionsMap.values())
+        for(ChainState svConn : mSvConnectionsMap.values())
         {
             SvVarData var = svConn.SV;
 
@@ -1096,7 +1096,7 @@ public class ChainRuleSelector
         double currentMaxPloidy = 0;
         List<LinkedPair> addedLinks = Lists.newArrayList();
 
-        for(SvChainState svConn : mSvConnectionsMap.values())
+        for(ChainState svConn : mSvConnectionsMap.values())
         {
             SvVarData var = svConn.SV;
 
@@ -1169,7 +1169,7 @@ public class ChainRuleSelector
         // sorts links into shortest first and purges any conflicting longer links with conflicting breakends
         if(proposedLinks.isEmpty())
         {
-            for (SvChainState svConn : mSvConnectionsMap.values())
+            for (ChainState svConn : mSvConnectionsMap.values())
             {
                 SvVarData var = svConn.SV;
 
