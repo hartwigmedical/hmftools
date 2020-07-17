@@ -39,7 +39,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
+import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -289,7 +289,7 @@ public class SpecialFusionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -322,7 +322,7 @@ public class SpecialFusionsTest
 
         assertEquals(1, cluster.getChains().size());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -356,7 +356,7 @@ public class SpecialFusionsTest
 
         assertEquals(1, cluster.getChains().size());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -392,7 +392,7 @@ public class SpecialFusionsTest
         assertEquals(1, cluster.getChains().size());
         assertEquals(3, cluster.getChains().get(0).getSvCount());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,

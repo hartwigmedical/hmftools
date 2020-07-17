@@ -26,7 +26,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
+import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
@@ -83,7 +83,7 @@ public class DisruptionTest
         final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
         disruptionFinder.addDisruptionGene(geneId);
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -168,7 +168,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -195,7 +195,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -223,7 +223,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -253,7 +253,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -306,7 +306,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(false).size()));
@@ -328,7 +328,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(false).size()));

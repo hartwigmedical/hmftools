@@ -44,7 +44,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class SvClassification
+public class ClusterClassification
 {
     // super category for an SV or cluster
     public static final String SUPER_TYPE_SIMPLE = "SIMPLE";

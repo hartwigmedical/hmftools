@@ -5,9 +5,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticGapLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;

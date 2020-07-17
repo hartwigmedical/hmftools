@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.analysis;
 import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSuperType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
@@ -61,7 +61,8 @@ import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
-public class SvSampleAnalyser {
+public class SampleAnalyser
+{
 
     private final LinxConfig mConfig;
     private final ClusterAnalyser mAnalyser;
@@ -87,7 +88,7 @@ public class SvSampleAnalyser {
     private final PerformanceCounter mPcAnnotation;
     private final PerformanceCounter mPcWrite;
 
-    public SvSampleAnalyser(final LinxConfig config, DatabaseAccess dbAccess)
+    public SampleAnalyser(final LinxConfig config, DatabaseAccess dbAccess)
     {
         mConfig = config;
         mSampleId = "";

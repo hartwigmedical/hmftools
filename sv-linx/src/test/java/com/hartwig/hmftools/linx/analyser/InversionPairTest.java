@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticGapLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;

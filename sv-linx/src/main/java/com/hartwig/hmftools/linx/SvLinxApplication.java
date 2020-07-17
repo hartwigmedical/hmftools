@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
+import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare;
@@ -118,7 +118,7 @@ public class SvLinxApplication
         LNX_LOGGER.info("running SV analysis for {}",
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
 
-        SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(config, dbAccess);
+        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess);
 
         CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
         sampleAnalyser.setCnDataLoader(cnDataLoader);

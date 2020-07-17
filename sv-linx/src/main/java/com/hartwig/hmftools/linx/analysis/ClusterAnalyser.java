@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUT
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateClusterChains;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.DELETED_TOTAL;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.RANGE_TOTAL;
@@ -422,7 +422,7 @@ public class ClusterAnalyser {
 
     private void setClusterResolvedState(SvCluster cluster, boolean isFinal)
     {
-        SvClassification.setClusterResolvedState(cluster, isFinal,
+        ClusterClassification.setClusterResolvedState(cluster, isFinal,
                 mState.getDelCutoffLength(), mState.getDupCutoffLength(), mConfig.ProximityDistance);
     }
 

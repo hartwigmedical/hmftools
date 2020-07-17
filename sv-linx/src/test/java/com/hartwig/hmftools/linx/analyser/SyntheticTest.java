@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.INV;

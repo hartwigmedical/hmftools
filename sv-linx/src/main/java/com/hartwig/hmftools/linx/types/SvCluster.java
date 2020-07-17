@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
@@ -32,7 +32,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.analysis.ClusteringReason;
-import com.hartwig.hmftools.linx.analysis.SvClassification;
+import com.hartwig.hmftools.linx.analysis.ClusterClassification;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -427,7 +427,7 @@ public class SvCluster
         if(mSVs.size() == 1)
             return false;
 
-        return SvClassification.isSyntheticType(this);
+        return ClusterClassification.isSyntheticType(this);
     }
 
     public void updateClusterDetails()
