@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -281,7 +282,7 @@ public class LinkFinder
                     }
 
                     // breakends face away as per a normal DB
-                    SvLinkedPair dbPair = new SvLinkedPair(breakend, nextBreakend, DELETION_BRIDGE);
+                    DbPair dbPair = new DbPair(breakend, nextBreakend);
                     markDeletionBridge(dbPair);
                 }
                 else if(distance < minTiLength || minTiLength == 0) // factoring in INFs at the same base
@@ -293,18 +294,18 @@ public class LinkFinder
                         continue;
                     }
 
-                    SvLinkedPair dbPair = new SvLinkedPair(breakend, nextBreakend, TEMPLATED_INSERTION);
+                    DbPair dbPair = new DbPair(breakend, nextBreakend);
                     markDeletionBridge(dbPair);
                 }
             }
         }
     }
 
-    private static void markDeletionBridge(SvLinkedPair dbPair)
+    private static void markDeletionBridge(DbPair dbPair)
     {
         // if either SV has a shorter DB already in existence, then keep it
-        final SvLinkedPair existingDBLink1 = dbPair.first().getDBLink(dbPair.firstLinkOnStart());
-        final SvLinkedPair existingDBLink2 = dbPair.second().getDBLink(dbPair.secondLinkOnStart());
+        final DbPair existingDBLink1 = dbPair.lowerSV().getDBLink(dbPair.lowerLinkOnStart());
+        final DbPair existingDBLink2 = dbPair.upperSV().getDBLink(dbPair.upperLinkOnStart());
 
         if((existingDBLink1 != null && existingDBLink1.length() < dbPair.length())
         || (existingDBLink2 != null && existingDBLink2.length() < dbPair.length()))
@@ -315,22 +316,22 @@ public class LinkFinder
         // remove any conflicting DB link info
         if(existingDBLink1 != null)
         {
-            if(existingDBLink1.first() == dbPair.first())
-                existingDBLink1.second().setDBLink(null, existingDBLink1.secondLinkOnStart());
+            if(existingDBLink1.lowerSV() == dbPair.lowerSV())
+                existingDBLink1.upperSV().setDBLink(null, existingDBLink1.upperLinkOnStart());
             else
-                existingDBLink1.first().setDBLink(null, existingDBLink1.firstLinkOnStart());
+                existingDBLink1.lowerSV().setDBLink(null, existingDBLink1.lowerLinkOnStart());
         }
 
         if(existingDBLink2 != null)
         {
-            if(existingDBLink2.first() == dbPair.first())
-                existingDBLink2.second().setDBLink(null, existingDBLink2.secondLinkOnStart());
+            if(existingDBLink2.lowerSV() == dbPair.lowerSV())
+                existingDBLink2.upperSV().setDBLink(null, existingDBLink2.upperLinkOnStart());
             else
-                existingDBLink2.first().setDBLink(null, existingDBLink2.firstLinkOnStart());
+                existingDBLink2.lowerSV().setDBLink(null, existingDBLink2.lowerLinkOnStart());
         }
 
-        dbPair.first().setDBLink(dbPair, dbPair.firstLinkOnStart());
-        dbPair.second().setDBLink(dbPair, dbPair.secondLinkOnStart());
+        dbPair.lowerSV().setDBLink(dbPair, dbPair.lowerLinkOnStart());
+        dbPair.upperSV().setDBLink(dbPair, dbPair.upperLinkOnStart());
     }
 
 }

@@ -43,6 +43,7 @@ import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -225,8 +226,8 @@ public class CohortDataWriter
                 mSvFileWriter.write(chainStr);
 
                 // only log DB lengths if the partner is in the cluster
-                final SvLinkedPair dbStart = var.getDBLink(true);
-                final SvLinkedPair dbEnd = var.getDBLink(false);
+                final DbPair dbStart = var.getDBLink(true);
+                final DbPair dbEnd = var.getDBLink(false);
 
                 int dbLenStart = NO_DB_MARKER;
                 int dbLenEnd = NO_DB_MARKER;

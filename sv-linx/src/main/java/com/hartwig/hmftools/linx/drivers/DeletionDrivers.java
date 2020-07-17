@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 
@@ -255,7 +256,7 @@ public class DeletionDrivers
 
                     if(delType)
                     {
-                        final SvLinkedPair dbLink = breakend.getDBLink();
+                        final DbPair dbLink = breakend.getDBLink();
 
                         // calculate the copy number over the deletion bridge section
                         double cnLowSide = breakend.copyNumberLowSide();

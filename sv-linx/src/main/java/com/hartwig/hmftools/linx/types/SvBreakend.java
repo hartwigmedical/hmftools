@@ -152,7 +152,7 @@ public class SvBreakend {
         return mSV.hasAssemblyLink(mUsesStart);
     }
 
-    public final SvLinkedPair getDBLink() { return mSV.getDBLink(mUsesStart); }
+    public final DbPair getDBLink() { return mSV.getDBLink(mUsesStart); }
     public final List<SvLinkedPair> getLinkedPairs() { return mSV.getLinkedPairs(mUsesStart); }
 
     public boolean isFoldback()

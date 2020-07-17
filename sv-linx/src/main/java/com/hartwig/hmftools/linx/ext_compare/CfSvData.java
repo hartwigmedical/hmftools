@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -115,7 +116,7 @@ public class CfSvData
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final SvLinkedPair dbLink = mSvData.getDBLink(isStart(se));
+            final DbPair dbLink = mSvData.getDBLink(isStart(se));
 
             if(dbLink == null)
             {

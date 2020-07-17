@@ -59,7 +59,7 @@ public class SvVarData
 
     private final StartEndPair<List<SvLinkedPair>> mTiLinks; // start and end lists of inferred or assembled TIs
 
-    private final SvLinkedPair[] mDbLink; // deletion bridge formed from this breakend to another
+    private final DbPair[] mDbLink; // deletion bridge formed from this breakend to another
     private final StartEndPair<List<String>> mTIAssemblies;
 
     private final StartEndPair<List<GeneAnnotation>> mGenes;
@@ -109,7 +109,7 @@ public class SvVarData
         mClusterReason = "";
         mCluster = null;
 
-        mDbLink = new SvLinkedPair[SE_PAIR];
+        mDbLink = new DbPair[SE_PAIR];
         mTiLinks = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
 
         mFoldbackBreakends = new SvBreakend[SE_PAIR];
@@ -242,7 +242,6 @@ public class SvVarData
 
     public double copyNumberChange(boolean isStart)
     {
-        // TEMP: precise DBs cause incorrect copy number change, so in this case use JCN
         if(mDbLink[seIndex(isStart)] != null && mDbLink[seIndex(isStart)].length() == 0)
             return mJcn;
         else
@@ -331,8 +330,8 @@ public class SvVarData
         mTiLinks.End.clear();
     }
 
-    public final SvLinkedPair getDBLink(boolean isStart) { return mDbLink[seIndex(isStart)]; }
-    public void setDBLink(final SvLinkedPair link, boolean isStart)
+    public final DbPair getDBLink(boolean isStart) { return mDbLink[seIndex(isStart)]; }
+    public void setDBLink(final DbPair link, boolean isStart)
     {
         mDbLink[seIndex(isStart)] = link;
     }

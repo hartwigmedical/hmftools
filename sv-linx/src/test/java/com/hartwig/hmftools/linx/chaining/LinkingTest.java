@@ -76,6 +76,7 @@ public class LinkingTest
 
         tester.clearClustersAndSVs();
 
+        var1 = createInv(tester.nextVarId(), "1", 100, 1000, 1);
         var2 = createInf(tester.nextVarId(), "1", 1000, -1);
 
         tester.AllVariants.addAll(Lists.newArrayList(var1, var2));

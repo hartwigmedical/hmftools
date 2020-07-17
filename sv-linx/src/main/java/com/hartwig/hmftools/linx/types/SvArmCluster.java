@@ -240,7 +240,7 @@ public class SvArmCluster
                 return;
             }
 
-            final SvLinkedPair dbPair = be1.getSV().getDBLink(be1.usesStart());
+            final DbPair dbPair = be1.getSV().getDBLink(be1.usesStart());
 
             if(dbPair != null && dbPair == be2.getSV().getDBLink(be2.usesStart()))
             {

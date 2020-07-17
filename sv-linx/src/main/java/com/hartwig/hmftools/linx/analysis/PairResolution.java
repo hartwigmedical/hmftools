@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.LohEvent;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -358,8 +359,8 @@ public class PairResolution
          */
 
         // check for linked, short DBs at both ends
-        SvLinkedPair arm1Db1 = arm1Be1.getDBLink();
-        SvLinkedPair arm2Db1 = arm2Be1.getDBLink();
+        DbPair arm1Db1 = arm1Be1.getDBLink();
+        DbPair arm2Db1 = arm2Be1.getDBLink();
 
         boolean arm1MatchingDB = arm1Db1 != null && arm1Db1 == arm1Be2.getDBLink();
         boolean arm2MatchingDB = arm2Db1 != null && arm2Db1 == arm2Be2.getDBLink();
@@ -483,8 +484,8 @@ public class PairResolution
         }
 
         // check for linked, short DBs at both ends
-        SvLinkedPair lowerDb1 = lowerBe1.getDBLink();
-        SvLinkedPair upperDb1 = upperBe1.getDBLink();
+        DbPair lowerDb1 = lowerBe1.getDBLink();
+        DbPair upperDb1 = upperBe1.getDBLink();
 
         boolean lowerMatchingDB = lowerDb1 != null && lowerDb1 == lowerBe2.getDBLink();
         boolean upperMatchingDB = upperDb1 != null && upperDb1 == upperBe2.getDBLink();

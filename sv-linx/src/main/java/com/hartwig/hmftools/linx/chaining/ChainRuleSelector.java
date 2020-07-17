@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -434,7 +435,7 @@ public class ChainRuleSelector
                 final SvBreakend frontBreakend = startIsFront ? chainStart : chainEnd;
 
                 // check for a DB which either allows or invalidates this foldback
-                final SvLinkedPair dbLink = frontBreakend.getSV().getDBLink(frontBreakend.usesStart());
+                final DbPair dbLink = frontBreakend.getSV().getDBLink(frontBreakend.usesStart());
 
                 if(dbLink != null && dbLink.length() > 0)
                     continue;

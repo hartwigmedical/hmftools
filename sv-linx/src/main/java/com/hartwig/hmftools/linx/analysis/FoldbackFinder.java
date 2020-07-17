@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -105,7 +106,7 @@ public class FoldbackFinder
                 if(beFront != null && beBack != null)
                 {
                     // the foldback is invalid if it has a deletion bridge with overhang on the front-facing breakend
-                    final SvLinkedPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
+                    final DbPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
 
                     if(dbLink == null || dbLink.length() > 0)
                     {

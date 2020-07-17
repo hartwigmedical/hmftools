@@ -35,6 +35,7 @@ import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -535,7 +536,7 @@ public class DisruptionFinder
     {
         double cnLowSide = breakend.copyNumberLowSide();
 
-        final SvLinkedPair dbLink = breakend.getDBLink();
+        final DbPair dbLink = breakend.getDBLink();
         if(dbLink != null && dbLink.length() < 0)
         {
             cnLowSide -= dbLink.getOtherBreakend(breakend).jcn();

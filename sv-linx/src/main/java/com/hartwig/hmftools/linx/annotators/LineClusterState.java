@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 
@@ -119,7 +120,7 @@ public class LineClusterState
             for(final SvBreakend breakend : spanningBreakends)
             {
                 final SvBreakend otherBreakend = breakend.getOtherBreakend();
-                final SvLinkedPair dbLink = otherBreakend.getDBLink();
+                final DbPair dbLink = otherBreakend.getDBLink();
 
                 if(dbLink == null)
                     continue;
@@ -229,16 +230,16 @@ public class LineClusterState
         return baseCount >= 16;
     }
 
-    private boolean isRemoteIsolatedDeletionBridge(final SvLinkedPair dbPair)
+    private boolean isRemoteIsolatedDeletionBridge(final DbPair dbPair)
     {
         if(dbPair == null || dbPair.length() > MIN_DEL_LENGTH)
             return false;
 
-        if(dbPair.firstBreakend().hasLineElement(KNOWN) || dbPair.secondBreakend().hasLineElement(KNOWN))
+        if(dbPair.lower().hasLineElement(KNOWN) || dbPair.upper().hasLineElement(KNOWN))
             return false;
 
         // no other breakends can be within the proximity cut off
-        final List<SvBreakend> breakendList = dbPair.first().getCluster().getChrBreakendMap().get(dbPair.chromosome());
+        final List<SvBreakend> breakendList = dbPair.lowerSV().getCluster().getChrBreakendMap().get(dbPair.chromosome());
 
         final SvBreakend lowerBreakend = dbPair.getBreakend(true);
         int startIndex = lowerBreakend.getClusterChrPosIndex();

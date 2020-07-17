@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -287,7 +288,7 @@ public class ChainFinderCompare
                     var.getCluster().getSglBreakendCount(), var.getCluster().getResolvedType(), var.type(),
                     parseMainClusterReason(var.getClusterReason()), proximityDistance != null ? proximityDistance : -1));
 
-            final SvLinkedPair[] dbLinks = new SvLinkedPair[] { var.getDBLink(true), var.getDBLink(false) };
+            final DbPair[] dbLinks = new DbPair[] { var.getDBLink(true), var.getDBLink(false) };
 
             if(cfSvData != null)
             {
