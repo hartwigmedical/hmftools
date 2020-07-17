@@ -32,6 +32,9 @@ public class SvRegion
 
     public boolean overlaps(final SvRegion other)
     {
+        if(!Chromosome.equals(other.Chromosome))
+            return false;
+
         return positionsOverlap(Positions[SE_START], Positions[SE_END], other.Positions[SE_START], other.Positions[SE_END]);
     }
 

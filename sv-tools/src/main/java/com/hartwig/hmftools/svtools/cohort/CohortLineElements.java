@@ -51,12 +51,14 @@ public class CohortLineElements
     private final Map<SvRegion,Integer> mExtLineSampleCounts;
     private final Map<String,List<LineRepeatMaskerData>> mChrRepeatMaskerData;
     private final List<SvRegion> mKnownLineElements;
+    private final List<SvRegion> mPolymorphicLineElements;
     private IndexedFastaSequenceFile mRefGenomeFile;
 
     private final String mOutputDir;
     private final String mSvDataFile;
     private final String mExtDataFile;
     private final String mRepeatMaskerDataFile;
+    private final String mPolymorphicDataFile;
     private final String mKnownLineElementsFile;
     public final boolean mWriteRefGenomeLineBases;
 
@@ -66,10 +68,12 @@ public class CohortLineElements
         mExtLineSampleCounts = Maps.newHashMap();
         mChrRepeatMaskerData = Maps.newHashMap();
         mKnownLineElements = Lists.newArrayList();
+        mPolymorphicLineElements = Lists.newArrayList();
 
         mOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
         mSvDataFile = cmd.getOptionValue(SV_DATA_FILE);
         mExtDataFile = cmd.getOptionValue(EXT_DATA_FILE);
+        mPolymorphicDataFile = cmd.getOptionValue(POLYMORPHIC_DATA_FILE);
         mRepeatMaskerDataFile = cmd.getOptionValue(REPEAT_MASKER_DATA_FILE);
         mKnownLineElementsFile = cmd.getOptionValue(KNOWN_DATA_FILE);
         mWriteRefGenomeLineBases = cmd.hasOption(WRITE_LINE_SEQUENCES);
@@ -97,6 +101,7 @@ public class CohortLineElements
         loadExternalLineDataFile(mExtDataFile);
         loadRepeatMaskerLineDataFile(mRepeatMaskerDataFile);
         loadKnownLineElements(mKnownLineElementsFile);
+        loadPolymorphicLineElements(mPolymorphicDataFile);
 
         produceResults();
 
@@ -176,6 +181,42 @@ public class CohortLineElements
             }
 
             LNX_LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);
+        }
+        catch(IOException exception)
+        {
+            LNX_LOGGER.error("Failed to read line element CSV file({})", filename);
+        }
+    }
+
+    public void loadPolymorphicLineElements(final String filename)
+    {
+        if(filename.isEmpty())
+            return;
+
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+            final String header = fileContents.get(0);
+            fileContents.remove(0);
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+
+            for(final String line : fileContents)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                int pos1 = Integer.parseInt(items[fieldsIndexMap.get("PositivePosition")]);
+                int pos2 = Integer.parseInt(items[fieldsIndexMap.get("NegativePosition")]);
+
+                final SvRegion lineRegion = new SvRegion(
+                        refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
+                        pos1 < pos2 ? pos1 : pos2, pos1 < pos2 ? pos2 : pos1);
+
+                mPolymorphicLineElements.add(lineRegion);
+            }
+
+            LNX_LOGGER.info("loaded {} polymorphic line elements from file: {}", mPolymorphicLineElements.size(), filename);
         }
         catch(IOException exception)
         {
@@ -379,8 +420,8 @@ public class CohortLineElements
 
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("LineId,Type,Chromosome,PosStart,PosEnd");
-            writer.write(",SampleCount,TotalInserts,PcawgSampleCount,KnownPosStart,KnownPosEnd,RmId,RmPosStart,RmPosEnd,RmStrand");
+            writer.write("LineId,Type,Chromosome,PosStart,PosEnd,SampleCount,TotalInserts,PcawgSampleCount");
+            writer.write(",KnownPosStart,KnownPosEnd,RmId,RmPosStart,RmPosEnd,RmStrand,PolymorphPosStart,PolymorphPosEnd");
             writer.write(",SampleId,ClusterId,SamplePosStart,SamplePosEnd,SampleSourceLocations,SourceBreakends,SampleInserts");
 
             writer.newLine();
@@ -391,20 +432,22 @@ public class CohortLineElements
                 final LineRegion primarySource = lineData.primaryRegion();
                 final SvRegion combinedRegion = lineData.getCombinedPrimarySourceRegion();
 
-                int extRegionCount = getExternalLineSampleCount(primarySource.Region);
-
                 final SvRegion knownLineRegion = findKnownLineRegion(primarySource.Region);
+
+                final SvRegion pmLineRegion = knownLineRegion == null ? findPolymorphicLineRegion(primarySource.Region) : null;
 
                 LineRepeatMaskerData rmData = findRepeatMaskerMatch(primarySource.Region, knownLineRegion);
 
                 final String rmDataStr = rmData != null ?
                         String.format("%d,%d,%d,%d", rmData.RmId, rmData.Region.start(), rmData.Region.end(), rmData.Strand) : "-1,-1,-1,0";
 
-                final String lineDefn = String.format("%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s",
+                int extRegionCount = getExternalLineSampleCount(primarySource.Region);
+
+                final String lineDefn = String.format("%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d",
                         lineId, primarySource.LineType, combinedRegion.Chromosome, combinedRegion.start(), combinedRegion.end(),
                         lineData.sampleCount(), lineData.insertRegionsCount(), extRegionCount,
                         knownLineRegion != null ? knownLineRegion.start() : -1, knownLineRegion != null ? knownLineRegion.end() : -1,
-                        rmDataStr);
+                        rmDataStr, pmLineRegion != null ? pmLineRegion.start() : -1, pmLineRegion != null ? pmLineRegion.end() : -1);
 
                 writer.write(lineDefn);
                 writer.write(String.format(",%s", lineData.sampleClusterData()));
@@ -431,7 +474,49 @@ public class CohortLineElements
 
     private SvRegion findKnownLineRegion(final SvRegion lineRegion)
     {
-        return mKnownLineElements.stream().filter(x -> x.overlaps(lineRegion)).findFirst().orElse(null);
+        for(SvRegion knownRegion : mKnownLineElements)
+        {
+            if(!lineRegion.Chromosome.equals(knownRegion.Chromosome))
+                continue;
+
+            int[] knownRegionRange = { knownRegion.start() - LINE_ELEMENT_PROXIMITY_DISTANCE, knownRegion.end() + LINE_ELEMENT_PROXIMITY_DISTANCE };
+
+            if(positionsOverlap(lineRegion.start(), lineRegion.end(), knownRegionRange[SE_START], knownRegionRange[SE_END]))
+            {
+                return knownRegion;
+            }
+        }
+
+        return null;
+    }
+
+    private static int regionMidpoint(final SvRegion region) { return (region.end() + region.end())  / 2; }
+
+    private SvRegion findPolymorphicLineRegion(final SvRegion lineRegion)
+    {
+        SvRegion closestPmRegion = null;
+        int closestDistance = -1;
+
+        for(SvRegion pmRegion : mPolymorphicLineElements)
+        {
+            if(!lineRegion.Chromosome.equals(pmRegion.Chromosome))
+                continue;
+
+            int[] pmRegionRange = { pmRegion.start() - LINE_ELEMENT_PROXIMITY_DISTANCE, pmRegion.end() + LINE_ELEMENT_PROXIMITY_DISTANCE };
+
+            if(positionsOverlap(lineRegion.start(), lineRegion.end(), pmRegionRange[SE_START], pmRegionRange[SE_END]))
+            {
+                int distance = abs(regionMidpoint(lineRegion) - regionMidpoint(pmRegion));
+
+                if(closestPmRegion == null || distance < closestDistance)
+                {
+                    closestPmRegion = pmRegion;
+                    closestDistance = distance;
+                }
+            }
+        }
+
+        return closestPmRegion;
     }
 
     private static final int INTACT_LINE_ELEMENT_LENGTH = 5000;
@@ -472,7 +557,7 @@ public class CohortLineElements
 
             if(positionsOverlap(lineRegion.start(), lineRegion.end(), rmMatchLimits[SE_START], rmMatchLimits[SE_END]))
             {
-                int distance = abs((lineRegion.start() + lineRegion.end()) / 2 - (rmData.Region.start() + rmData.Region.end()) / 2);
+                int distance = abs(regionMidpoint(lineRegion) - regionMidpoint(rmData.Region));
                 if(closestRmData == null || distance < closestDistance)
                 {
                     closestRmData = rmData;
@@ -552,6 +637,7 @@ public class CohortLineElements
 
     private static final String SV_DATA_FILE = "sv_data_file";
     private static final String EXT_DATA_FILE = "ext_data_file";
+    private static final String POLYMORPHIC_DATA_FILE = "polymorphic_data_file";
     private static final String KNOWN_DATA_FILE = "known_line_elements_file";
     private static final String REPEAT_MASKER_DATA_FILE = "repeat_masker_data_file";
     private static final String WRITE_LINE_SEQUENCES = "write_line_seq";
@@ -562,6 +648,7 @@ public class CohortLineElements
 
         options.addOption(SV_DATA_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(EXT_DATA_FILE, true, "External LINE data sample counts");
+        options.addOption(POLYMORPHIC_DATA_FILE, true, "Polymorphic LINE data file");
         options.addOption(KNOWN_DATA_FILE, true, "Known LINE elements file");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to write results");
         options.addOption(REPEAT_MASKER_DATA_FILE, true, "Path to repeat masker data for LINE elements");
