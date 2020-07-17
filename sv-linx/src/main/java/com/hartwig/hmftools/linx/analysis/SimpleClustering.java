@@ -204,8 +204,6 @@ public class SimpleClustering
         {
             logClusteringDetails(var1, var2, clusterReason);
         }
-
-        // checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
     }
 
     protected void logClusteringDetails(final SvVarData var1, final SvVarData var2, final ClusteringReason reason)

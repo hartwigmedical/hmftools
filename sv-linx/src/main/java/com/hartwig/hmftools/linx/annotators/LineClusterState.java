@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_T_M
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineSuspectReason.BND_PAIR_NO_DB;
 import static com.hartwig.hmftools.linx.annotators.LineSuspectReason.BND_PAIR_POLY_AT;
-import static com.hartwig.hmftools.linx.annotators.LineSuspectReason.BND_SGL_REMOTE_DB_PLUS;
 import static com.hartwig.hmftools.linx.annotators.LineSuspectReason.BND_SGL_REMOTE_DB_POLY_AT;
 import static com.hartwig.hmftools.linx.annotators.LineSuspectReason.NONE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
@@ -131,9 +130,6 @@ public class LineClusterState
                     continue;
 
                 mHasRemoteDB = true;
-
-                if(mBreakends.size() >= 2)
-                    return BND_SGL_REMOTE_DB_PLUS;
 
                 if(hasLineSourceMotif(breakend))
                 {

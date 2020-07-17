@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertFalse;
 
@@ -304,8 +305,23 @@ public class LineTest
 
         tester.clearClustersAndSVs();
 
-        // can also be just with a lone SGL
+        // can also be just with a lone SGL as long as the CN change is relatively small
         sgl1 = createSv(tester.nextVarId(), "1", "", 120, 0,  -1, 0, SGL, insertPolyAMotif);
+
+        tester.AllVariants.add(sgl1);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertFalse(sgl1.isLineElement(false));
+
+        cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(!cluster.hasLinkingLineElements());
+
+        tester.clearClustersAndSVs();
+
+        // now with a low CN change
+        sgl1 = createTestSv(tester.nextVarId(), "1", "", 120, 0,  -1, 0, SGL,
+                2, 0, 0.1, 0, 0.1, insertPolyAMotif);
 
         tester.AllVariants.add(sgl1);
         tester.preClusteringInit();
