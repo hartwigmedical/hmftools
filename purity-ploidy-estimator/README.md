@@ -959,7 +959,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.44](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.44) 
+  - Requires [database patch](../patient-db/src/main/resources/patches/purple2.43_to_2.44_migration.sql). Note that there are corresponding patches for [Linx](../patient-db/src/main/resources/patches/linx_1.10.sql) and [PatientDb](../patient-db/src/main/resources/patches/patientdb3.43_to_3.44_migration.sql).
   - Use non diplod-normalised normal ratio for input circos figure
   - Do not include chrY in female output in HG38
   - Small change to LOH BAF inferring
@@ -967,7 +968,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Rename structural variant VCF field PURPLE_PLOIDY to PURPLE_JCN
   - Rename somatic VCF fields PURPLE_MAP & PURPLE_PLOIDY to PURPLE_MACN & PURPLE_VCN respectively
   - Fix bug where driver likelihood of having multiple variants can be less than having single variant
-  - Change tumor mutational load to be int rather than double (requires database [patch](../patient-db/src/main/resources/patches/purple2.43_to_2.44_migration.sql))
+  - Change tumor mutational load to be int rather than double
 - [2.43](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.43) 
   - Update allelic frequency calculation
 - [2.42](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.42) 
