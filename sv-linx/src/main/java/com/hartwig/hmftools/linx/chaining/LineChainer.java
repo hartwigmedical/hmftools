@@ -368,8 +368,9 @@ public class LineChainer
             String outputFileName = outputDir + "LNX_LINE_CHAINS.csv";
             mFileWriter = createBufferedWriter(outputFileName, false);
 
-            mFileWriter.write("SampleId,ClusterId,ChainId,ChainSvCount,AsmbLinks,ChainDesc,SourceChr,SourcePosStart,SourcePosEnd");
-            mFileWriter.write(",InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd,SourceInvOrient,LoneBeOrient");
+            mFileWriter.write("SampleId,ClusterId,ChainId,ChainSvCount,AsmbLinks,ChainDesc");
+            mFileWriter.write(",SourceChr,SourcePosStart,SourcePosEnd,SourceOrientStart,SourceOrientEnd");
+            mFileWriter.write(",InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd,SourceInvOrient");
             mFileWriter.newLine();
         }
         catch (final IOException e)
@@ -403,13 +404,13 @@ public class LineChainer
                 final LinkedPair lastLink = chain.getLinkedPairs().get(chain.getLinkedPairs().size() - 1);
 
                 final int[] sourcePositions = { -1, -1 };
+                final byte[] sourceOrients = { 0, 0 };
                 int lowerSourceIndex = 0;
                 int lowerInsertIndex = 0;
                 int[] insertPositions = { -1, -1 };
                 String insertChr = "0";
                 final int[] invPositions = { -1, -1 };
                 byte invOrient = 0;
-                int loneSourceOrient = 0;
 
                 final SvVarData inv = chain.getSvList().stream()
                         .filter(x -> x.type() == INV)
@@ -417,14 +418,23 @@ public class LineChainer
                         .findFirst().orElse(null);
 
                 if(firstLink.firstBreakend().inLineElement() && firstLink.firstBreakend().type() != INV)
+                {
                     sourcePositions[0] = firstLink.firstBreakend().position();
+                    sourceOrients[0] = firstLink.firstBreakend().orientation();
+                }
 
                 if(lastLink.secondBreakend().inLineElement() && lastLink.secondBreakend().type() != INV)
                 {
                     if(sourcePositions[0] == -1)
+                    {
                         sourcePositions[0] = lastLink.secondBreakend().position();
+                        sourceOrients[0] = lastLink.secondBreakend().orientation();
+                    }
                     else
+                    {
                         sourcePositions[1] = lastLink.secondBreakend().position();
+                        sourceOrients[1] = lastLink.secondBreakend().orientation();
+                    }
                 }
 
                 if(sourcePositions[0] > 0 && sourcePositions[1] > 0)
@@ -452,14 +462,15 @@ public class LineChainer
                     invOrient = inv.orientation(true);
                 }
 
-                mFileWriter.write(String.format(",%s,%d,%d",
-                        firstLink.chromosome(), sourcePositions[lowerSourceIndex], sourcePositions[switchIndex(lowerSourceIndex)]));
+                mFileWriter.write(String.format(",%s,%d,%d,%d,%d",
+                        firstLink.chromosome(), sourcePositions[lowerSourceIndex], sourcePositions[switchIndex(lowerSourceIndex)],
+                        sourceOrients[lowerSourceIndex], sourceOrients[switchIndex(lowerSourceIndex)]));
 
                 mFileWriter.write(String.format(",%s,%d,%d",
                         insertChr, insertPositions[lowerInsertIndex], insertPositions[switchIndex(lowerInsertIndex)]));
 
-                mFileWriter.write(String.format(",%d,%d,%d,%d",
-                        invPositions[SE_START], invPositions[SE_END], invOrient, loneSourceOrient));
+                mFileWriter.write(String.format(",%d,%d,%d",
+                        invPositions[SE_START], invPositions[SE_END], invOrient));
 
                 mFileWriter.newLine();
             }
@@ -498,16 +509,18 @@ public class LineChainer
                 final int[] invPositions = { -1, -1 };
                 byte invOrient = 0;
                 String insertChr = "0";
-                int loneSourceOrient = breakend.orientation();
+                byte[] sourceOrient = {0, 0};
                 boolean isLineInv = breakend.type() == INV && breakend.getSV().inLineElement();
 
                 if(breakend.inLineElement() && !isLineInv)
                 {
                     sourcePositions[0] = breakend.position();
+                    sourceOrient[0] = breakend.orientation();
 
                     if(otherBreakend != null && otherBreakend.inLineElement())
                     {
                         sourcePositions[1] = otherBreakend.position();
+                        sourceOrient[1] = otherBreakend.orientation();
                         lowerSourceIndex = sourcePositions[0] <= sourcePositions[1] ? 0 : 1;
                     }
                 }
@@ -528,12 +541,12 @@ public class LineChainer
                 // SampleId,ClusterId,ChainId,ChainSvCount,AsmbLinks,ChainDesc,SourceChr,SourcePosStart,SourcePosEnd");
                 // InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd,SourceInvOrient,LoneBeOrient");
 
-                mFileWriter.write(String.format(",%d,%d,%s,%d,%d",
+                mFileWriter.write(String.format(",%d,%d,%d,%d,%s,%d,%d",
                         sourcePositions[lowerSourceIndex], sourcePositions[switchIndex(lowerSourceIndex)],
-                        insertChr, insertPosition, -1));
+                        sourceOrient[lowerSourceIndex], sourceOrient[switchIndex(lowerSourceIndex)], insertChr, insertPosition, -1));
 
-                mFileWriter.write(String.format(",%d,%d,%d,%d",
-                        invPositions[SE_START], invPositions[SE_END], invOrient, loneSourceOrient));
+                mFileWriter.write(String.format(",%d,%d,%d",
+                        invPositions[SE_START], invPositions[SE_END], invOrient));
 
                 mFileWriter.newLine();
 
