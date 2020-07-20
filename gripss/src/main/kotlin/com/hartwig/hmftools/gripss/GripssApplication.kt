@@ -70,7 +70,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
         logger.info("Reading VCF file: ${config.inputVcf}")
         val variantStore = VariantStore(hardFilterAndRealign(fileReader, hotspotFilter, contigComparator))
-        val hotspots = variantStore.selectAll().filter(hotspotFilter).map { x -> x.vcfId}.toSet()
+        val hotspots = variantStore.selectAll().filter(hotspotFilter).map { x -> x.vcfId }.toSet()
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
         val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll())
@@ -121,9 +121,10 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     }
 
     private fun hotspotFilter(hotspotStore: LocationStore): (StructuralVariantContext) -> Boolean {
+        val appropriateSoftFilters = { x: StructuralVariantContext -> !x.polyATHomologyFilter() }
         val minQualFilter = { x: StructuralVariantContext -> x.qual >= MIN_RESCUE_QUAL }
         val minDistanceFilter = { x: StructuralVariantContext -> x.isSingle || x.isTranslocation || (x.variantType as Paired).length > MIN_HOTSPOT_DISTANCE }
-        return {variant -> minQualFilter(variant) && minDistanceFilter(variant) && hotspotStore.contains(variant)}
+        return { variant -> minQualFilter(variant) && minDistanceFilter(variant) && appropriateSoftFilters(variant) && hotspotStore.contains(variant) }
     }
 
     private fun ponFiltered(contigComparator: ContigComparator, variants: List<StructuralVariantContext>): Set<String> {
@@ -132,7 +133,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val ponStore = LocationStore(contigComparator, breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
 
         logger.info("Applying PON file")
-        return  variants.filter { ponStore.contains(it) }.map { it.vcfId }.toSet()
+        return variants.filter { ponStore.contains(it) }.map { it.vcfId }.toSet()
     }
 
     private fun hardFilterAndRealign(fileReader: VCFFileReader, hotspotFilter: (StructuralVariantContext) -> Boolean, contigComparator: ContigComparator): List<StructuralVariantContext> {
