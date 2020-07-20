@@ -69,7 +69,7 @@
         <strelka-post-process.version>1.6</strelka-post-process.version>
         <health-checker.version>3.1</health-checker.version>
         <patient-reporter.version>7.13</patient-reporter.version>
-        <patient-db.version>3.43</patient-db.version>
+        <patient-db.version>3.44</patient-db.version>
         <gripss.version>0.1</gripss.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
