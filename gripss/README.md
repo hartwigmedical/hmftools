@@ -1,8 +1,30 @@
 # GRIDSS Post Somatic Script (GRIPSS)
 
-GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.    GRIPSS inputs the raw GRIDSS vcf and outputs a somatic vcf.
+GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
+GRIPSS inputs the raw GRIDSS vcf and outputs a somatic vcf.
 
+# Usage
 
+```
+java -Xms4G -Xmx16G -cp com.hartwig.hmftools.gripss.GripssApplicationKt \
+   -ref_genome /path/to/Homo_sapiens_assembly37.fasta \
+   -breakend_pon /path/to/gridss_pon_single_breakend.bed \
+   -breakpoint_pon /path/to/gridss_pon_breakpoint.bedpe \
+   -breakpoint_hotspot /path/to/KnownFusionPairs.hg19.bedpe \
+   -input_vcf /path/to/SAMPLE.gridss.unfiltered.vcf.gz \
+   -output_vcf /path/to/SAMPLE.gridss.somatic.vcf.gz 
+```
+
+We typically then hard-filter all but PON filtered from the somatic file with the following command:
+
+```
+gunzip -c SAMPLE.gridss.somatic.vcf.gz | awk '$7 == "PASS" || $7 == "PON" || $1 ~ /^#/ ' | bgzip > SAMPLE.gridss.somatic.filtered.vcf.gz
+```
+
+These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
+
+The GRCH 37 bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/).
+ 
 # Algorithm
 
 There are 5 steps in GRIPSS described in detail below:
