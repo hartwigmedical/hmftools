@@ -29,6 +29,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
   + [10. Somatic enrichment](#10-somatic-enrichment)
+  + [11. Driver Catalog](#11-driver-catalog)
 * [Output](#output)
   + [Files](#files)
   + [VCF](#VCF)
@@ -553,7 +554,7 @@ To avoid overfitting small amounts of noise in the distribution, we filter out a
 ### 11. Driver Catalog
 
 PURPLE automatically assigns a driver likelihood to all significant amplifications (mininum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that occur in the HMF gene panel.
-If the somatic VCF is SnpEff annotated, the driver likelihood is also calculuated for all point mutations in the gene panel.  
+If the somatic VCF is SnpEff annotated, a driver likelihood is calculated for any point mutations in the gene panel.  
 
 A detailed description of the driver catalog is available [here](./DriverCatalog.md)
 
