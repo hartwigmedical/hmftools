@@ -11,7 +11,10 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.validConfigPaths;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
+import static com.hartwig.hmftools.isofox.TaskType.BAM_READ_COUNTER;
 import static com.hartwig.hmftools.isofox.TaskType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.TaskType.GENERATE_EXPECTED_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
@@ -159,12 +162,18 @@ public class Isofox
             return true;
         }
 
+        if(mConfig.runFunction(READ_COUNTS))
+        {
+            countBamReads(chrTasks);
+            return true;
+        }
+
         boolean validExecution = executeChromosomeTask(chrTasks, TRANSCRIPT_COUNTS);
 
         if(!validExecution)
             return false;
 
-        int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getFragmentAllocator().totalReadCount()).sum();
+        int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.totalReadCount()).sum();
         ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
         if(!mConfig.runFusionsOnly())
@@ -197,7 +206,7 @@ public class Isofox
             if (mConfig.WriteGcData)
             {
                 GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
-                chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getFragmentAllocator().getGcRatioCounts().getCounts()));
+                chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getGcRatioCounts().getCounts()));
 
                 writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getCounts(), false);
                 double[] percentData = new double[combinedGcRatioCounts.size()];
@@ -279,6 +288,17 @@ public class Isofox
 
         if(!validExecution)
             return;
+    }
+
+    private void countBamReads(final List<ChromosomeGeneTask> chrTasks)
+    {
+        boolean validExecution = executeChromosomeTask(chrTasks, BAM_READ_COUNTER);
+
+        if(!validExecution)
+        {
+            mIsValid = false;
+            return;
+        }
     }
 
     private void calcFragmentLengths(final List<ChromosomeGeneTask> chrTasks)

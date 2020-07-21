@@ -144,8 +144,6 @@ public class FusionFinder
 
         final Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
 
-        final List<ReadGroup> partialGroups = Lists.newArrayList();
-
         mChimericReadGroups.addAll(mChimericPartialReadGroups.values());
 
         for(ReadGroup readGroup : mChimericReadGroups)
@@ -207,15 +205,12 @@ public class FusionFinder
                     ++hasMissingReads;
 
                 mFusionWriter.writeReadData(reads, "INVALID_READ_COUNT");
-
-                partialGroups.add(readGroup);
             }
             else
             {
                 if(mChimericPartialReadGroups.containsKey(readGroup.id()))
                 {
                     ISF_LOGGER.error("partial read({}) group marked as complete", readGroup.id());
-                    partialGroups.add(readGroup);
 
                     if(mChimericReadGroups.stream().anyMatch(x -> x.id().equals(readGroup.id())))
                     {
@@ -375,7 +370,7 @@ public class FusionFinder
                 if(skipRead(suppData.Chromosome, suppData.Position))
                     return true;
 
-                ISF_LOGGER.info("read({}) missing supp({})", read, suppData);
+                ISF_LOGGER.debug("read({}) missing supp({})", read, suppData);
             }
         }
 

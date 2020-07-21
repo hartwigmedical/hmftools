@@ -6,6 +6,8 @@ public enum IsofoxFunction
     EXPECTED_TRANS_COUNTS,
     TRANSCRIPT_COUNTS,
     NOVEL_LOCATIONS,
-    FUSIONS;
+    FUSIONS,
+    STATISTICS,
+    READ_COUNTS;
 
 }

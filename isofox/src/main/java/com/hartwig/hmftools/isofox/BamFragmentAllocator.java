@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
@@ -78,7 +79,6 @@ public class BamFragmentAllocator
     private final BamSlicer mBamSlicer;
 
     // state relating to the current gene
-    // state relating to the current gene
     private GeneCollection mCurrentGenes;
     private final FragmentTracker mFragmentReads; // delay processing of read until both have been read
 
@@ -95,6 +95,7 @@ public class BamFragmentAllocator
 
     private final boolean mRunFusions;
     private final boolean mFusionsOnly;
+    private final boolean mStatsOnly;
 
     private final BufferedWriter mReadDataWriter;
     private final GcRatioCounts mGcRatioCounts;
@@ -112,6 +113,7 @@ public class BamFragmentAllocator
 
         mRunFusions = mConfig.Functions.contains(FUSIONS);
         mFusionsOnly = mConfig.runFusionsOnly();
+        mStatsOnly = mConfig.runStatisticsOnly();
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
@@ -122,7 +124,12 @@ public class BamFragmentAllocator
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, !mRunFusions);
+        // duplicates aren't counted towards fusions so can be ignored if only running fusions
+        // reads with supplementary alignment data are only used for fusions
+        boolean dropDuplicates = mFusionsOnly;
+        boolean dropSupplementaries = !mRunFusions;
+
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, dropDuplicates, dropSupplementaries);
 
         mDuplicateTracker = new DuplicateReadTracker(mConfig.MarkDuplicates);
 
@@ -178,7 +185,7 @@ public class BamFragmentAllocator
         clearCache();
 
         mCurrentGenes = geneCollection;
-        mChimericReads.initialise(mCurrentGenes);
+
         mGeneReadCount = 0;
         mNextGeneCountLog = GENE_LOG_COUNT;
         mEnrichedGeneFragments = 0;
@@ -188,6 +195,9 @@ public class BamFragmentAllocator
         baseDepthRange[SE_START] = max((int)genomeRegion.start(), geneCollection.regionBounds()[SE_START] - NON_GENIC_BASE_DEPTH_WIDTH);
         baseDepthRange[SE_END] = min((int)genomeRegion.end(), geneCollection.regionBounds()[SE_END] + NON_GENIC_BASE_DEPTH_WIDTH);
         mBaseDepth.initialise(baseDepthRange);
+
+        if(mRunFusions)
+            mChimericReads.initialise(mCurrentGenes);
 
         if(mConfig.runFunction(NOVEL_LOCATIONS))
         {
@@ -323,9 +333,27 @@ public class BamFragmentAllocator
             - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
+        boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
+        boolean isChimeric = read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection();
+
+        if(mStatsOnly)
+        {
+            if(isDuplicate)
+                mCurrentGenes.addCount(DUPLICATE, 1);
+            else if(isChimeric)
+                mCurrentGenes.addCount(CHIMERIC, 1);
+            else if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
+                mCurrentGenes.addCount(UNSPLICED, 1);
+            else
+                mCurrentGenes.addCount(TRANS_SUPPORTING, 1);
+
+            mCurrentGenes.addCount(TOTAL, 1);
+            return;
+        }
+
         final List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
-        if(read1.isDuplicate() || read2.isDuplicate())
+        if(isDuplicate)
         {
             mCurrentGenes.addCount(DUPLICATE, 1);
         }
@@ -336,7 +364,7 @@ public class BamFragmentAllocator
 
         // if either read is chimeric (including one outside the genic region) then handle them both as such
         // some of these may be re-processed as alternative SJ candidates if they are within a single gene
-        if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection())
+        if(isChimeric)
         {
             processChimericReadPair(read1, read2);
             return;

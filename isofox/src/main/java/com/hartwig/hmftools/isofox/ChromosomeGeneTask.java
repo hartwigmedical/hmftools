@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.isofox.adjusts.BamReadCounter;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentType;
@@ -62,13 +63,16 @@ public class ChromosomeGeneTask implements Callable
     private final GcTranscriptCalculator mTranscriptGcRatios;
     private final FragmentSizeCalcs mFragmentSizeCalc;
     private final ExpectedCountsCache mExpectedCountsCache;
+    private final BamReadCounter mBamReadCounter;
 
     private final List<EnsemblGeneData> mGeneDataList;
     private final Map<Integer,List<EnsemblGeneData>> mGeneCollectionMap;
-    private final Map<Integer, BaseDepth> mGeneDepthMap;
     private int mCollectionId;
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
+
+    // fusion state cached across all gene collections
+    private final Map<Integer, BaseDepth> mGeneDepthMap;
     private final List<ReadGroup> mChimericReadGroups;
     private final Map<String,ReadGroup> mChimericPartialReadGroups;
     private final Set<String> mChimericDuplicateReadIds;
@@ -80,6 +84,8 @@ public class ChromosomeGeneTask implements Callable
     private int mEnrichedGenesFragmentCount;
     private final int[] mCombinedFragmentCounts;
     private final GcRatioCounts mNonEnrichedGcRatioCounts;
+    private int mTotalReadsProcessed;
+    private final GcRatioCounts mGcRatioCounts;
 
     private TaskType mCurrentTaskType;
     private boolean mIsValid;
@@ -113,9 +119,11 @@ public class ChromosomeGeneTask implements Callable
         mCurrentTaskType = null;
 
         mFragmentSizeCalc = new FragmentSizeCalcs(mConfig, mGeneTransCache, mResultsWriter.getFragmentLengthWriter());
+        mBamReadCounter = new BamReadCounter(mConfig);
         mExpectedCountsCache = expectedCountsCache;
 
         mBamFragmentAllocator = new BamFragmentAllocator(mConfig, resultsWriter);
+        mGcRatioCounts = mBamFragmentAllocator.getGcRatioCounts();
         mExpTransRates = mConfig.ApplyExpectedRates ? new TranscriptExpression(mConfig, mExpectedCountsCache, resultsWriter) : null;
 
         mExpRatesGenerator = (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null) || mConfig.runFunction(EXPECTED_TRANS_COUNTS)
@@ -125,6 +133,7 @@ public class ChromosomeGeneTask implements Callable
 
         mGeneCollectionSummaryData = Lists.newArrayList();
         mEnrichedGenesFragmentCount = 0;
+        mTotalReadsProcessed = 0;
         mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
         mChimericPartialReadGroups = Maps.newHashMap();
@@ -148,9 +157,9 @@ public class ChromosomeGeneTask implements Callable
     }
 
     public String chromosome() { return mChromosome; }
-    public final BamFragmentAllocator getFragmentAllocator() { return mBamFragmentAllocator; }
     public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
+    public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final Map<String,ReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
     public final List<ReadGroup> getChimericReadGroups() { return mChimericReadGroups; }
     public final Set<String> getChimericDuplicateReadIds() { return mChimericDuplicateReadIds; }
@@ -158,6 +167,7 @@ public class ChromosomeGeneTask implements Callable
     public final Map<Integer,BaseDepth> getGeneDepthMap() { return mGeneDepthMap; }
     public final ChimericStats getChimericStats() { return mChimericStats; }
     public boolean isValid() { return mIsValid; }
+    public int totalReadCount() { return mTotalReadsProcessed; }
 
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
 
@@ -192,6 +202,10 @@ public class ChromosomeGeneTask implements Callable
                 applyGcAdjustToTranscriptAllocations();
                 break;
 
+            case BAM_READ_COUNTER:
+                countBamReads();
+                break;
+
             default:
                 break;
         }
@@ -199,7 +213,7 @@ public class ChromosomeGeneTask implements Callable
         return (long)1; // return value not used
     }
 
-    public void generateExpectedCounts()
+    private void generateExpectedCounts()
     {
         if(mGeneDataList.size() > 10)
         {
@@ -291,6 +305,12 @@ public class ChromosomeGeneTask implements Callable
                 geneCollection.setNonGenicPosition(SE_END, geneCollection.regionBounds()[SE_END] + 10000);
             }
 
+            if(mConfig.runFusionsOnly() && geneReadDataList.stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneData.GeneId)))
+            {
+                lastGeneCollectionEndPosition = geneCollection.regionBounds()[SE_END] + 1;
+                continue;
+            }
+
             for(GeneReadData geneReadData : geneReadDataList)
             {
                 if(mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
@@ -310,6 +330,7 @@ public class ChromosomeGeneTask implements Callable
                     mChromosome, geneCollection.geneNames(10), mCurrentGeneIndex, mGeneDataList.size());
 
             mGenesProcessed += geneCollection.genes().size();
+            mTotalReadsProcessed += mBamFragmentAllocator.totalReadCount();
 
             lastGeneCollectionEndPosition = geneCollection.regionBounds()[SE_END] + 1;
 
@@ -330,7 +351,7 @@ public class ChromosomeGeneTask implements Callable
         }
     }
 
-    public void calcFragmentLengths()
+    private void calcFragmentLengths()
     {
         mPerfCounters[PERF_FRAG_LENGTH].start();
 
@@ -338,6 +359,11 @@ public class ChromosomeGeneTask implements Callable
         mFragmentSizeCalc.calcSampleFragmentSize(mChromosome, mGeneDataList, requiredFragCount);
 
         mPerfCounters[PERF_FRAG_LENGTH].stop();
+    }
+
+    private void countBamReads()
+    {
+        mBamReadCounter.processBam(mChromosome, mGeneDataList);
     }
 
     public static int findNextOverlappingGenes(
@@ -450,6 +476,16 @@ public class ChromosomeGeneTask implements Callable
 
     private void postBamReadTranscriptCounts(final GeneCollection geneCollection)
     {
+        if(mConfig.runStatisticsOnly())
+        {
+            for(int i = 0; i < mCombinedFragmentCounts.length; ++i)
+            {
+                mCombinedFragmentCounts[i] += geneCollection.getCounts()[i];
+            }
+
+            return;
+        }
+
         if(!mConfig.runFunction(TRANSCRIPT_COUNTS))
             return;
 

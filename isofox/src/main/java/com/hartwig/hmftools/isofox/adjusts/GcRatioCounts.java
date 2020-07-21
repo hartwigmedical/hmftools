@@ -27,7 +27,6 @@ public class GcRatioCounts
     private final double[] mRatios; // the ratios
     private final double[] mCounts; // the frequencies of the ratios
 
-
     public GcRatioCounts()
     {
         int itemCount = (int)floor(1 / GC_RATIO_BUCKET) + 1;

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
@@ -370,6 +371,7 @@ public class IsofoxConfig
 
     public boolean runFunction(IsofoxFunction function) { return Functions.contains(function); }
     public boolean runFusionsOnly() { return Functions.contains(FUSIONS) && Functions.size() == 1; }
+    public boolean runStatisticsOnly() { return Functions.contains(STATISTICS) && Functions.size() == 1; }
 
     public boolean skipChromosome(final String chromosome)
     {
