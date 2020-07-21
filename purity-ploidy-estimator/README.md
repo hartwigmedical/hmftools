@@ -666,7 +666,7 @@ ChromosomeBand | q34 | Chromosome band of driver
 Gene | BRAF | Name of gene
 Driver |  MUTATION | Driver type [AMP, DEL, MUTATION]
 Category | ONCO | Gene driver type [ONCO, TSG]
-LikelihoodMethod | DNDS | Method used to determine likelihood [AMP, DEL, BIALLELIC, DNDS, HOTSPOT, INFAME]
+LikelihoodMethod | DNDS | Method used to determine likelihood [AMP, DEL, BIALLELIC, DNDS, HOTSPOT, INFRAME]
 DriverLikelihood | 1 | Likelihood that gene is a driver 
 DndsLikelihood | 0.3902 | Raw dnds driver likelihood
 Missense | 0 | Number of missense variants in gene
