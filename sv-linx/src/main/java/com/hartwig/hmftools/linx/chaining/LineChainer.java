@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
@@ -25,6 +26,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -324,6 +326,10 @@ public class LineChainer
                             mSourceBreakends.add(new SvBreakend(sgl2, mapping2));
                             sglCandidates.add(sgl1);
                             sglCandidates.add(sgl2);
+
+                            // mark as line elements so they'll feature in the chain data logged
+                            sgl1.addLineElement(SUSPECT, false);
+                            sgl2.addLineElement(SUSPECT, false);
                             break;
                         }
                     }
@@ -346,6 +352,7 @@ public class LineChainer
                                 breakend.chromosome(), breakend.position(), breakend.orientation(), minDistance))
                         {
                             mSourceBreakends.add(new SvBreakend(sgl, mapping));
+                            sgl.addLineElement(SUSPECT, false);
                             linked = true;
                             break;
                         }
