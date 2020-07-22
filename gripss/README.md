@@ -117,3 +117,8 @@ Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and
 To improve detection of mobile element insertions, a pair of breakends which are linked by 'DSB’ may also be rescued if at least one side fails only the minQual filter and the combined qual score of the 2 breakends is >1000
 
 
+
+
+## Version History and Download Links
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.0)
+  - Initial Release 
