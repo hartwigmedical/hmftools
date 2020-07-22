@@ -68,7 +68,6 @@ java -cp bachelor.jar com.hartwig.hmftools.bachelor.LoadGermlineVariants
 
 Optional config:
 - include_vcf_filtered - process non-passing variants from the VCF, mark as filter = GERMLINE_FILTERED
-- skip_enrichment - runs without tumor BAM or purple data
 - log_debug - verbose logging
 
 
@@ -99,6 +98,8 @@ Create a set of files from ClinVar variant classification with this command:
 ```bash
 java -cp bachelor.jar com.hartwig.hmftools.bachelor.ExternalDBFilters
     -xml_config /path/to/bachelor_config.xml 
-    -create_filter_file /path/to/clinvar_snp.vcf.gz 
-    -output_dir /path/to/dir_that_will_hold_all_output
+    -clinvar_db_filter_file /path/to/clinvar_snp.vcf.gz 
+    -output_filter_file /path/to/output_filter_file
 ```
+
+log_debug can be passed an optional additional parameter for additional logging.
