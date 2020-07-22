@@ -11,17 +11,16 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ReportableGermlineVariant
 {
-    public abstract String passFilter();
     public abstract String gene();
+    public abstract String chromosome();
+    public abstract long position();
     public abstract String ref();
     public abstract String alt();
     public abstract CodingEffect codingEffect();
-    public abstract String chromosome();
-    public abstract long position();
-    public abstract String hgvsProtein();
     public abstract String hgvsCoding();
-    public abstract int totalReadCount();
+    public abstract String hgvsProtein();
     public abstract int alleleReadCount();
+    public abstract int totalReadCount();
     public abstract double adjustedVaf();
     public abstract double adjustedCopyNumber();
     public abstract boolean biallelic();

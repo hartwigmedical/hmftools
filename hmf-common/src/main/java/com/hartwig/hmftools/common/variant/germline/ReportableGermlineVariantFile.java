@@ -13,11 +13,6 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.jetbrains.annotations.NotNull;
 
-// TODO as part of patient reporter upgrade to 7.14 (DEV-1055):
-//  - Remove 'program' column
-//  - Remove 'filter' column -> assume always PASS
-//  - Rename 'alts' column to 'alt'
-//  - Potentially remove other fields that are not used downstream.
 public final class ReportableGermlineVariantFile
 {
     private static final String DELIMITER = "\t";
@@ -36,7 +31,8 @@ public final class ReportableGermlineVariantFile
     }
 
     @NotNull
-    public static List<ReportableGermlineVariant> read(final String filePath) throws IOException {
+    public static List<ReportableGermlineVariant> read(final String filePath) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
@@ -50,7 +46,8 @@ public final class ReportableGermlineVariantFile
     }
 
     @NotNull
-    private static List<ReportableGermlineVariant> fromLines(@NotNull List<String> lines) {
+    private static List<ReportableGermlineVariant> fromLines(@NotNull List<String> lines)
+    {
         return lines.stream().filter(x -> !x.startsWith("gene")).map(ReportableGermlineVariantFile::fromString).collect(toList());
     }
 
@@ -63,7 +60,6 @@ public final class ReportableGermlineVariantFile
                 .add("position")
                 .add("ref")
                 .add("alt")
-                .add("filter")
                 .add("codingEffect")
                 .add("hgvsCoding")
                 .add("hgvsProtein")
@@ -84,7 +80,6 @@ public final class ReportableGermlineVariantFile
                 .add(String.valueOf(data.position()))
                 .add(String.valueOf(data.ref()))
                 .add(String.valueOf(data.alt()))
-                .add(String.valueOf(data.passFilter()))
                 .add(String.valueOf(data.codingEffect()))
                 .add(String.valueOf(data.hgvsCoding()))
                 .add(String.valueOf(data.hgvsProtein()))
@@ -103,21 +98,21 @@ public final class ReportableGermlineVariantFile
 
         int index = 0;
 
+        //noinspection UnusedAssignment
         return ImmutableReportableGermlineVariant.builder()
                 .gene(values[index++])
                 .chromosome(values[index++])
-                .position(Long.valueOf(values[index++]))
+                .position(Long.parseLong(values[index++]))
                 .ref(values[index++])
                 .alt(values[index++])
-                .passFilter(values[index++])
                 .codingEffect(CodingEffect.valueOf(values[index++]))
                 .hgvsCoding(values[index++])
                 .hgvsProtein(values[index++])
-                .alleleReadCount(Integer.valueOf(values[index++]))
-                .totalReadCount(Integer.valueOf(values[index++]))
-                .adjustedVaf(Double.valueOf(values[index++]))
-                .adjustedCopyNumber(Double.valueOf(values[index++]))
-                .biallelic(Boolean.valueOf(values[index++]))
+                .alleleReadCount(Integer.parseInt(values[index++]))
+                .totalReadCount(Integer.parseInt(values[index++]))
+                .adjustedVaf(Double.parseDouble(values[index++]))
+                .adjustedCopyNumber(Double.parseDouble(values[index++]))
+                .biallelic(Boolean.parseBoolean(values[index++]))
                 .build();
     }
 }

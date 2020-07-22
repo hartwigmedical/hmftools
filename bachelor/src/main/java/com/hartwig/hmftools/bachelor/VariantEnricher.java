@@ -451,7 +451,6 @@ class VariantEnricher
                         .position(germlineVariant.position())
                         .ref(germlineVariant.ref())
                         .alt(germlineVariant.alts())
-                        .passFilter("PASS")
                         .codingEffect(germlineVariant.codingEffect())
                         .hgvsCoding(germlineVariant.hgvsCoding())
                         .hgvsProtein(germlineVariant.hgvsProtein())

@@ -29,7 +29,6 @@ public final class FilterGermlineVariants {
 
         Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
         for (ReportableGermlineVariant germlineVariant : germlineVariants) {
-
             if (reportableGermlineGenes.contains(germlineVariant.gene())) {
                 // Note: Reportable germline genes may not necessarily be present in driverGeneView!
                 if (driverGeneView.category(germlineVariant.gene()) == DriverCategory.ONCO) {
@@ -67,6 +66,7 @@ public final class FilterGermlineVariants {
                 }
             }
         }
+
         return reportableGermlineVariants;
     }
 
