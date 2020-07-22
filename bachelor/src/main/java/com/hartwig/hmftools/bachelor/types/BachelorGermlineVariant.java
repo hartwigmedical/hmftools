@@ -225,6 +225,12 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
     public boolean isBiallelic()
     {
+        // Purple annotation hasn't been applied in this case, assume no variant is biallelic.
+        if (!mHasEnrichmentData)
+        {
+            return false;
+        }
+
         double minorAllelePloidy = mAdjustedCopyNumber - (mAdjustedCopyNumber * mAdjustedVaf);
         return (minorAllelePloidy < 0.5);
     }
