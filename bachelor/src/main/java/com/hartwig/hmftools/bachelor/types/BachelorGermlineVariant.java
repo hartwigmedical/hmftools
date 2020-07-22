@@ -146,7 +146,7 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
     public String asString()
     {
-        return String.format("id(%s) location(%s:%d) gene(%s)", VariantId, Chromosome, Position, Gene);
+        return String.format("gene(%s) location(%s:%d)", Gene, Chromosome, Position);
     }
 
     public int compareTo(@NotNull BachelorGermlineVariant other)
