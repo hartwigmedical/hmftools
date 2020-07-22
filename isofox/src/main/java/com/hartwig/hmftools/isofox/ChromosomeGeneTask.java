@@ -330,7 +330,7 @@ public class ChromosomeGeneTask implements Callable
                     mChromosome, geneCollection.geneNames(10), mCurrentGeneIndex, mGeneDataList.size());
 
             mGenesProcessed += geneCollection.genes().size();
-            mTotalReadsProcessed += mBamFragmentAllocator.totalReadCount();
+            mTotalReadsProcessed = mBamFragmentAllocator.totalReadCount();
 
             lastGeneCollectionEndPosition = geneCollection.regionBounds()[SE_END] + 1;
 
