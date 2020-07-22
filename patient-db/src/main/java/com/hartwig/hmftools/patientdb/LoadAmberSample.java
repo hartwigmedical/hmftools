@@ -40,7 +40,7 @@ public class LoadAmberSample {
 
     private static final String SAMPLE = "sample";
     private static final String AMBER_SNP_VCF = "amber_snp_vcf";
-    private static final String AMBER_SNP_FILTER_VCF = "mapping_loci_vcf";
+    private static final String SNPCHECK_VCF = "snpcheck_vcf";
     private static final String BED_FILE = "bed";
 
     private static final String DB_USER = "db_user";
@@ -53,7 +53,7 @@ public class LoadAmberSample {
 
         String tumorSample = cmd.getOptionValue(SAMPLE);
         String amberSnpPath = cmd.getOptionValue(AMBER_SNP_VCF);
-        String mappingLoci = cmd.getOptionValue(AMBER_SNP_FILTER_VCF);
+        String mappingLoci = cmd.getOptionValue(SNPCHECK_VCF);
 
         LOGGER.info("Loading mapping loci: {}", mappingLoci);
         final ListMultimap<Chromosome, AmberSite> mappingSites = AmberSiteFactory.sites(mappingLoci);
@@ -97,8 +97,8 @@ public class LoadAmberSample {
     private static Options createBasicOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample");
-        options.addOption(AMBER_SNP_VCF, true, "Path to the amber directory");
-        options.addOption(AMBER_SNP_FILTER_VCF, true, "Path to the amber directory");
+        options.addOption(AMBER_SNP_VCF, true, "Path to the amber snp vcf");
+        options.addOption(SNPCHECK_VCF, true, "Path to the downsampled snp check vcf");
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");
         options.addOption(DB_URL, true, "Database url");
