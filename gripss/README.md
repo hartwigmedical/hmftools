@@ -59,7 +59,6 @@ minQual | 400 (single breakend:1000) | Minimum absolute tumor support for varian
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
 minTumorAF | 0.5 | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
-maxInexactHomLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
 discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
 PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
 maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF

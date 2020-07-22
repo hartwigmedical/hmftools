@@ -104,33 +104,6 @@ class StructuralVariantContextTest {
     }
 
     @Test
-    fun testInexactHomologyLengthFilter() {
-        val attribute = "IHOMPOS"
-        assertFalse(sgl().setAttribute(attribute, listOf(1, 51)).toSv().inexactHomologyLengthFilter(1))
-
-        val bnd = bnd().setAttribute(attribute, listOf(1, 51)).toSv()
-        assertFalse(bnd.inexactHomologyLengthFilter(50))
-        assertTrue(bnd.inexactHomologyLengthFilter(49))
-        assertFalse(bnd.inexactHomologyLengthShortDelFilter(50))
-        assertFalse(bnd.inexactHomologyLengthShortDelFilter(49))
-
-        val tinyDel = shortDel(100, 110).setAttribute(attribute, listOf(1, 51)).toSv()
-        assertFalse(tinyDel.inexactHomologyLengthFilter(50))
-        assertTrue(tinyDel.inexactHomologyLengthFilter(49))
-        assertFalse(tinyDel.inexactHomologyLengthShortDelFilter(50))
-        assertFalse(tinyDel.inexactHomologyLengthShortDelFilter(49))
-
-        val shortDel = shortDel(100, 310).setAttribute(attribute, listOf(1, 51)).toSv()
-        assertFalse(shortDel.inexactHomologyLengthFilter(50))
-        assertTrue(shortDel.inexactHomologyLengthFilter(49))
-        assertFalse(shortDel.inexactHomologyLengthShortDelFilter(50))
-        assertTrue(shortDel.inexactHomologyLengthShortDelFilter(49))
-
-        val shortDup = shortDup().setAttribute(attribute, listOf(1, 51)).toSv()
-        assertFalse(shortDup.inexactHomologyLengthFilter(1))
-    }
-
-    @Test
     fun testLongDPSupport() {
         assertFalse(sgl().toSv().discordantPairSupportFilter())
         assertFalse(shortDel().toSv().discordantPairSupportFilter())

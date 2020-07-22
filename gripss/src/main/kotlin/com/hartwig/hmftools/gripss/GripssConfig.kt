@@ -93,7 +93,6 @@ private const val MAX_SHORT_STRAND_BIAS_OPTION = "max_short_strand_bias"
 private const val MIN_QUAL_BREAK_END_OPTION = "min_qual_break_end"
 private const val MIN_QUAL_BREAK_POINT_OPTION = "min_qual_break_point"
 private const val MAX_HOM_LENGTH_SHORT_INV_OPTION = "max_hom_length_short_inv"
-private const val MAX_INEXACT_HOM_LENGTH_OPTION = "max_inexact_hom_length"
 private const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION = "max_inexact_hom_length_short_del"
 private const val MIN_LENGTH_OPTION = "min_length"
 
@@ -105,7 +104,6 @@ data class GripssFilterConfig(
         val minQualBreakEnd: Int,
         val minQualBreakPoint: Int,
         val maxHomLengthShortInversion: Int,
-        val maxInexactHomLength: Int,
         val maxInexactHomLengthShortDel: Int,
         val minLength: Int,
         val polyGCRegion: Locatable) {
@@ -125,7 +123,6 @@ data class GripssFilterConfig(
             options.addOption(MIN_QUAL_BREAK_END_OPTION, "Min qual break end [${defaultConfig.minQualBreakEnd}]")
             options.addOption(MIN_QUAL_BREAK_POINT_OPTION, "Min qual break point [${defaultConfig.minQualBreakPoint}]")
             options.addOption(MAX_HOM_LENGTH_SHORT_INV_OPTION, "Max homology length short inversion [${defaultConfig.maxHomLengthShortInversion}]")
-            options.addOption(MAX_INEXACT_HOM_LENGTH_OPTION, "Max inexact homology length [${defaultConfig.maxInexactHomLength}]")
             options.addOption(MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, "Max inexact homology length short del [${defaultConfig.maxInexactHomLengthShortDel}]")
             options.addOption(MIN_LENGTH_OPTION, "Min length [${defaultConfig.minLength}]")
 
@@ -141,7 +138,6 @@ data class GripssFilterConfig(
             val minQualBreakEnd = defaultIntValue(cmd, MIN_QUAL_BREAK_END_OPTION, defaultConfig.minQualBreakEnd)
             val minQualBreakPoint = defaultIntValue(cmd, MIN_QUAL_BREAK_POINT_OPTION, defaultConfig.minQualBreakPoint)
             val maxHomLengthShortInversion = defaultIntValue(cmd, MAX_HOM_LENGTH_SHORT_INV_OPTION, defaultConfig.maxHomLengthShortInversion)
-            val maxInexactHomLength = defaultIntValue(cmd, MAX_INEXACT_HOM_LENGTH_OPTION, defaultConfig.maxInexactHomLength)
             val maxInexactHomLengthShortDel = defaultIntValue(cmd, MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, defaultConfig.maxInexactHomLengthShortDel)
             val minLength = defaultIntValue(cmd, MIN_LENGTH_OPTION, defaultConfig.minLength)
             val linc00486Definition = if (isGRCh38) linc00486Definition38 else linc00486Definition37
@@ -154,7 +150,6 @@ data class GripssFilterConfig(
                     minQualBreakEnd,
                     minQualBreakPoint,
                     maxHomLengthShortInversion,
-                    maxInexactHomLength,
                     maxInexactHomLengthShortDel,
                     minLength,
                     linc00486Definition)
@@ -169,7 +164,6 @@ data class GripssFilterConfig(
                     1000,
                     400,
                     6,
-                    50,
                     5,
                     32,
                     linc00486Definition37)

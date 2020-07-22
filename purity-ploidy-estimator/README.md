@@ -556,7 +556,7 @@ To avoid overfitting small amounts of noise in the distribution, we filter out a
 PURPLE automatically assigns a driver likelihood to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that occur in the HMF gene panel.
 If the somatic VCF is SnpEff annotated, a driver likelihood is calculated for any point mutations in the gene panel.  
 
-A detailed description of the driver catalog is available [here](./DriverCatalog.md)
+A detailed description of the driver catalog is available [here](./DriverCatalog.md).
 
 ## Output
 
@@ -657,7 +657,7 @@ MinMinorAllelePloidy | 0 | Minimum allele copy number found over the gene exons 
 The driver catalog file `TUMOR.driver.catalog.tsv` contains significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that occur in the HMF gene panel.
 If the supplied somatic VCF has been enriched with SnpEff, the driver catalog file will also include a likelihood of any point mutations in the gene panel. 
 
-A detailed description of the driver catalog is available [here](./DriverCatalog.md)
+A detailed description of the driver catalog is available [here](./DriverCatalog.md).
 
 Column  | Example Value | Description
 ---|---|---
