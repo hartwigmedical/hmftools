@@ -2,12 +2,12 @@ package com.hartwig.hmftools.common.amber;
 
 import java.util.function.Predicate;
 
-public class NormalHetrozygousFilter implements Predicate<BaseDepth> {
+public class NormalHeterozygousFilter implements Predicate<BaseDepth> {
 
     private final double minHetAFPercentage;
     private final double maxHetAFPercentage;
 
-    public NormalHetrozygousFilter(final double minHetAFPercentage, final double maxHetAFPercentage) {
+    public NormalHeterozygousFilter(final double minHetAFPercentage, final double maxHetAFPercentage) {
         this.minHetAFPercentage = minHetAFPercentage;
         this.maxHetAFPercentage = maxHetAFPercentage;
     }

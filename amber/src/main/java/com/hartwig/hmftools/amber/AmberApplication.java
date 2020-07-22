@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthEvidence;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.amber.BaseDepthFilter;
-import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
+import com.hartwig.hmftools.common.amber.NormalHeterozygousFilter;
 import com.hartwig.hmftools.common.amber.NormalHomozygousFilter;
 import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.amber.TumorBAFEvidence;
@@ -85,7 +85,7 @@ public class AmberApplication implements AutoCloseable {
 
         final Predicate<BaseDepth> isValidFilter = BaseDepth::isValid;
         homozygousFilter = new NormalHomozygousFilter().and(isValidFilter);
-        heterozygousFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent()).and(isValidFilter);
+        heterozygousFilter = new NormalHeterozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent()).and(isValidFilter);
         persistence = new AmberPersistence(config);
 
         final File outputDir = new File(config.outputDirectory());
@@ -218,7 +218,7 @@ public class AmberApplication implements AutoCloseable {
     private ListMultimap<Chromosome, BaseDepth> emptyNormalHetSites(@NotNull final ListMultimap<Chromosome, AmberSite> sites) {
         final ListMultimap<Chromosome, BaseDepth> result = ArrayListMultimap.create();
         for (Chromosome chromosome : sites.keySet()) {
-            result.putAll(chromosome, sites.get(chromosome).stream().map(BaseDepthFactory::create).collect(toList()));
+            result.putAll(chromosome, sites.get(chromosome).stream().map(BaseDepthFactory::fromAmberSite).collect(toList()));
         }
 
         return result;

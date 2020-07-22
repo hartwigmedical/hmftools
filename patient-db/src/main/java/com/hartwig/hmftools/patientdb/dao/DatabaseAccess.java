@@ -8,6 +8,8 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberPatient;
+import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
@@ -200,6 +202,28 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeCopynumbers(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
+    }
+
+    public void writeAmberPatients(@NotNull String sample, List<AmberPatient> mapping) {
+        amberDAO.writePatients(sample, mapping);
+    }
+
+    public void writeAmberSample(@NotNull AmberSample identity) {
+        amberDAO.writeIdentity(identity);
+    }
+
+    @NotNull
+    public List<AmberSample> readAmberSamples() {
+        return amberDAO.readSamples();
+    }
+
+    @NotNull
+    public List<AmberPatient> readAmberPatients() {
+        return amberDAO.readPatients();
+    }
+
+    public void truncateAmberPatients() {
+        amberDAO.truncatePatients();
     }
 
     public void writeAmberBAF(@NotNull String sampleId, @NotNull List<AmberBAF> amber) {
