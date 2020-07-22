@@ -30,9 +30,9 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class LoadAmberDataV2 {
+public class LoadAmberSample {
 
-    private static final Logger LOGGER = LogManager.getLogger(LoadAmberDataV2.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoadAmberSample.class);
 
     private static final int DEFAULT_MIN_DEPTH = 10;
     private static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
