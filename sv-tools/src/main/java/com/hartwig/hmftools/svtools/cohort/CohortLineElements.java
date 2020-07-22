@@ -674,7 +674,4 @@ public class CohortLineElements
         return parser.parse(options, args);
     }
 
-
-
-
 }
