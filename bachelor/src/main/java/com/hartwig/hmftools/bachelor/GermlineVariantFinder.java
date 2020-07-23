@@ -351,12 +351,29 @@ public class GermlineVariantFinder
 
             germlineVariant.setFilterType(filterType);
 
+            boolean isBlacklistEffect = false;
+
             if(mRequiredEffects.stream().anyMatch(x -> effects.contains(x)))
+            {
+                isBlacklistEffect = true;
+                germlineVariant.setMatchRequiredEffect();
+            }
+            else
+            {
+                final List<VariantFilter> blacklistFilters = mBlacklistFilters.get(gene);
+
+                if(blacklistFilters != null && blacklistFilters.stream()
+                        .filter(x -> x.Configured)
+                        .anyMatch(x -> x.blacklistSpecificVariantMatch(gene, chromosome, position, ref, alt)))
+                {
+                    isBlacklistEffect = true;
+                }
+            }
+
+            if(isBlacklistEffect)
             {
                 BACH_LOGGER.debug("Match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
                         gene, transcriptId, chromosome, position, ref, alt, effects);
-
-                germlineVariant.setMatchRequiredEffect();
 
                 if(!mBlacklistFilters.isEmpty())
                 {

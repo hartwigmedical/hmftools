@@ -46,17 +46,25 @@ public class VariantFilter
 
     public boolean blacklistMatch(String gene, String chromosome, long position, String ref, String alt, int proteinPosition)
     {
-        if (MinCodon >= 0)
-        {
-            if (proteinPosition >=0 && MinCodon <= proteinPosition)
-            {
-                BACH_LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on minCodon({})",
-                        gene, chromosome, position, ref, alt, proteinPosition);
+        return blacklistMinCodonMatch(gene, chromosome, position, ref, alt, proteinPosition)
+                || blacklistSpecificVariantMatch(gene, chromosome, position, ref, alt);
+    }
 
-                return true;
-            }
+    public boolean blacklistMinCodonMatch(String gene, String chromosome, long position, String ref, String alt, int proteinPosition)
+    {
+        if (MinCodon >= 0 && proteinPosition >=0 && MinCodon <= proteinPosition)
+        {
+            BACH_LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on minCodon({})",
+                    gene, chromosome, position, ref, alt, proteinPosition);
+
+            return true;
         }
 
+        return false;
+    }
+
+    public boolean blacklistSpecificVariantMatch(String gene, String chromosome, long position, String ref, String alt)
+    {
         if (Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt))
         {
             BACH_LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
