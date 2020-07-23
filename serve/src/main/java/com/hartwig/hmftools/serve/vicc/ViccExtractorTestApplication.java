@@ -157,7 +157,6 @@ public class ViccExtractorTestApplication {
                     featuresWithoutGenomicEvents.add(feature);
                 } else {
                     if (hotspotsForFeature != null) {
-//                        LOGGER.debug("Feature '{}' in '{}' interpreted as hotspot", feature.name(), feature.geneSymbol());
                         featuresWithHotspotsCount++;
                         totalHotspotsCount += hotspotsForFeature.size();
                     }
@@ -196,7 +195,6 @@ public class ViccExtractorTestApplication {
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-//                LOGGER.debug("  {}", feature);
             }
         }
 
