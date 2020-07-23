@@ -115,7 +115,7 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is filtered as DEDUP and is NOT a short DEL or DUP <1kb in length, is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocations or intrachromosomal variants of length greater than 10kb, for all soft filters except maxPolyAHomLength.
 
-To improve detection of mobile element insertions, any pair of breakends consisting of single breakends, translocations or intrachromosomal variants of length greater than 10kb which are linked by 'DSB’ may also be rescued if the combined qual score of the 2 breakends is > 1000.
+To improve detection of mobile element insertions, any pair of breakends which are linked by 'DSB’ excluding intrachromosomal variants of length less than 10kb  may also be rescued if the combined qual score of the 2 breakends is > 1000.
 
 
 
