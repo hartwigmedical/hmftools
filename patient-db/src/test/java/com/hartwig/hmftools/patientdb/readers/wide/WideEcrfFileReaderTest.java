@@ -94,6 +94,32 @@ public class WideEcrfFileReaderTest {
     }
 
     @Test
+    public void canReadWideAvlTreatmentsSemi() throws IOException {
+        List<WideAvlTreatmentData> treatments =
+                WideEcrfFileReader.readAvlTreatments(WIDE_TEST_DIR + File.separator + "wide_avl_treatments_semi.csv");
+
+        assertEquals(4, treatments.size());
+
+        assertEquals("WIDE01018888", treatments.get(0).widePatientId());
+        assertEquals("L01BA04", treatments.get(0).drugCode());
+        assertEquals("pemetrexed", treatments.get(0).drug());
+        assertEquals(LocalDate.parse("2018-03-03"), treatments.get(0).startDate());
+        assertEquals(LocalDate.parse("2018-07-20"), treatments.get(0).endDate());
+
+        assertEquals("WIDE01019999", treatments.get(1).widePatientId());
+        assertEquals("L01XE03", treatments.get(1).drugCode());
+        assertEquals("erlotinib", treatments.get(1).drug());
+        assertEquals(LocalDate.parse("2018-10-06"), treatments.get(1).startDate());
+        assertNull(treatments.get(1).endDate());
+
+        assertEquals("WIDE01019999", treatments.get(2).widePatientId());
+        assertEquals("L01XE03", treatments.get(2).drugCode());
+        assertEquals("erlotinib", treatments.get(2).drug());
+        assertEquals(LocalDate.parse("2018-09-18"), treatments.get(2).startDate());
+        assertNull(treatments.get(2).endDate());
+    }
+
+    @Test
     public void canReadWideResponses() throws IOException {
         List<WideResponseData> responses = WideEcrfFileReader.readResponses(WIDE_TEST_DIR + File.separator + "wide_responses.csv");
 

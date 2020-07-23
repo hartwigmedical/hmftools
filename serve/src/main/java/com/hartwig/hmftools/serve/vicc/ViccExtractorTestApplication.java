@@ -162,22 +162,27 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (ampDelForFeature != null) {
+                        LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
                         featuresWithCopyNumberCount++;
                     }
 
                     if (fusionForFeature != null) {
+                        LOGGER.debug("Feature '{}' in '{}' interpreted as fusion", feature.name(), feature.geneSymbol());
                         featuresWithFusionCount++;
                     }
 
                     if (geneLevelEventForFeature != null) {
+                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event", feature.name(), feature.geneSymbol());
                         featuresWithGeneLevelEventCount++;
                     }
 
                     if (geneRangeForFeature != null) {
+                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
+                        LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
                         featuresWithSignatureCount++;
                     }
                 }
@@ -185,6 +190,14 @@ public class ViccExtractorTestApplication {
                 totalFeatureCount++;
             }
         }
+
+        LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
+        for (Feature feature : featuresWithoutGenomicEvents) {
+            if (!FeatureIgnoreUtil.canIgnore(feature)) {
+                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+            }
+        }
+
         LOGGER.info("Extraction performed on {} features from {} entries", totalFeatureCount, resultsPerEntry.size());
         LOGGER.info(" Extracted {} hotspots for {} features", totalHotspotsCount, featuresWithHotspotsCount);
         LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
@@ -192,14 +205,6 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
         LOGGER.info(" Extracted {} gene ranges", featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
-
-        LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
-        for (Feature feature : featuresWithoutGenomicEvents) {
-            if (!FeatureIgnoreUtil.canIgnore(feature)) {
-                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-                LOGGER.debug("  {}", feature);
-            }
-        }
     }
 
     private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {

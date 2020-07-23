@@ -59,19 +59,20 @@ public class GeneLevelEventExtractor {
     @NotNull
     public Map<Feature, String> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> geneLevelEventsPerFeature = Maps.newHashMap();
-        for (Feature feature : viccEntry.features()) {
 
+        for (Feature feature : viccEntry.features()) {
             if (GENE_ACTIVATION.contains(feature.name()) || GENE_ACTIVATION.contains(feature.biomarkerType()) || GENE_ACTIVATION.contains(
                     feature.proteinAnnotation())) {
                 geneLevelEventsPerFeature.put(feature, "gain of " + feature.geneSymbol());
             } else if (GENE_INACTIVATION.contains(feature.name()) || GENE_INACTIVATION.contains(feature.biomarkerType())
                     || GENE_INACTIVATION.contains(feature.provenanceRule()) || GENE_INACTIVATION.contains(feature.proteinAnnotation())) {
                 geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
-            } else if (GENE.contains(feature.biomarkerType()) || GENE.contains(feature.provenanceRule())
+            }
+            /*else if (GENE.contains(feature.biomarkerType()) || GENE.contains(feature.provenanceRule())
                     || (GENE.contains(feature.proteinAnnotation())) && !feature.name().contains("+")
                     || GENE.contains(feature.name())) { //TODO: determine gain of loss function
                 geneLevelEventsPerFeature.put(feature, "gain/loss of " + feature.geneSymbol());
-            }
+            }*/
         }
 
         return geneLevelEventsPerFeature;
