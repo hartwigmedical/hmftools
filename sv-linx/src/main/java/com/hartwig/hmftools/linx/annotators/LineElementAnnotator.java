@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFiltere
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineInsertMotif;
+import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineRepeatClass;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineSourceMotif;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
@@ -45,7 +46,6 @@ public class LineElementAnnotator {
 
     public static final String POLY_A_MOTIF = "AAAAAAAAAAA";
     public static final String POLY_T_MOTIF = "TTTTTTTTTTT";
-    private static final String REPEAT_CLASS_LINE = "LINE/L1";
 
     private static final int LE_COL_CHR = 0;
     private static final int LE_COL_POS_START = 1;
@@ -334,9 +334,7 @@ public class LineElementAnnotator {
                 }
             }
 
-            boolean hasSglLineRepeatClass = cluster.getSVs().stream()
-                    .filter(x -> x.type() == SGL)
-                    .anyMatch(x -> x.getSvData().insertSequenceRepeatClass().equals(REPEAT_CLASS_LINE));
+            boolean hasSglLineRepeatClass = cluster.getSVs().stream().filter(x -> x.type() == SGL).anyMatch(x -> hasLineRepeatClass(x));
 
             if(cluster.getTypeCount(SGL) == 1 && (hasSglLineRepeatClass || hasInsertSites))
             {

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
+import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineRepeatClass;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.hasPolyAorTMotif;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
@@ -265,7 +266,7 @@ public class SvFilters
             return false;
 
         // ignore possible LINE insertions
-        if(hasPolyAorTMotif(var))
+        if(hasPolyAorTMotif(var) || hasLineRepeatClass(var))
             return false;
 
         for(int se = SE_START; se <= SE_END; ++se)

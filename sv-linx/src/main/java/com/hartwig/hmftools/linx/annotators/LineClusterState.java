@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -147,7 +148,12 @@ public class LineClusterState
         return NONE;
     }
 
-    private static final int INS_SEQ_BUFFER = 5; // ploy A or T motif must be within this distance of the start or end of the sequence
+    private static final String REPEAT_CLASS_LINE = "LINE/L1";
+
+    public static boolean hasLineRepeatClass(final SvVarData var)
+    {
+        return var.getSvData().insertSequenceRepeatClass().equals(REPEAT_CLASS_LINE);
+    }
 
     public static boolean hasLineSourceMotif(final SvBreakend breakend)
     {

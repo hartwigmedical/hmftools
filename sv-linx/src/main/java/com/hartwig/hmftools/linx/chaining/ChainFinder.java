@@ -295,14 +295,14 @@ public class ChainFinder
 
     public void formChains(boolean assembledLinksOnly)
     {
-        if(mSvList.size() < 2)
-            return;
-
         if(mIsLineCluster)
         {
             formLineChains();
             return;
         }
+
+        if(mSvList.size() < 2)
+            return;
 
         if(mSvList.size() >= 4)
         {

@@ -91,7 +91,7 @@ public class EnsemblDAO
 
         final String queryStr = "select coord_system_id from coord_system"
                 + " where version = '" + version + "'"
-                + " order by rank  limit 1";
+                + " order by rank limit 1";
 
         LNX_LOGGER.debug("gene query: {}", queryStr);
 
