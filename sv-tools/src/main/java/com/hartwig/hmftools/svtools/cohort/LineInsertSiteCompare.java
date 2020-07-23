@@ -98,50 +98,20 @@ public class LineInsertSiteCompare
             {
                 ++lineSvCount;
 
-                final String[] items = line.split(",", -1);
+                LineInsertSiteData insertData = LineInsertSiteData.fromLinx(fieldsIndexMap, line);
 
-                final String sampleId = items[fieldsIndexMap.get("SampleId")];
-                final int clusterId = Integer.parseInt(items[fieldsIndexMap.get("ClusterId")]);
-                final int chainId = Integer.parseInt(items[fieldsIndexMap.get("ChainId")]);
-                final String chainDesc = items[fieldsIndexMap.get("ChainDesc")];
-
-                final String insertChromosome = items[fieldsIndexMap.get("InsertChr")];
-
-                final int[] insertPositions =
-                        new int[] { Integer.parseInt(items[fieldsIndexMap.get("InsertPosStart")]),
-                                Integer.parseInt(items[fieldsIndexMap.get("InsertPosEnd")]) };
-
-                if(insertChromosome.isEmpty() || insertChromosome.equals("0"))
-                    continue;
-
-                List<LineInsertSiteData> lineDataList = mSampleInsertSiteData.get(sampleId);
-
-                if(lineDataList == null)
+                if(insertData != null)
                 {
-                    lineDataList = Lists.newArrayList();
-                    mSampleInsertSiteData.put(sampleId, lineDataList);
+                    List<LineInsertSiteData> lineDataList = mSampleInsertSiteData.get(insertData.SampleId);
+
+                    if(lineDataList == null)
+                    {
+                        lineDataList = Lists.newArrayList();
+                        mSampleInsertSiteData.put(insertData.SampleId, lineDataList);
+                    }
+
+                    lineDataList.add(insertData);
                 }
-
-                final String sourceChromosome = items[fieldsIndexMap.get("SourceChr")];
-
-                final int[] sourcePositions =
-                        new int[] { Integer.parseInt(items[fieldsIndexMap.get("SourcePosStart")]),
-                                Integer.parseInt(items[fieldsIndexMap.get("SourcePosEnd")]) };
-
-                final int[] invPositions =
-                        new int[] { Integer.parseInt(items[fieldsIndexMap.get("SourceInvPosStart")]),
-                                Integer.parseInt(items[fieldsIndexMap.get("SourceInvPosEnd")]) };
-
-
-                final SvRegion insertRegion = new SvRegion(insertChromosome, insertPositions);
-                final SvRegion sourceRegion = !sourceChromosome.isEmpty() ? new SvRegion(sourceChromosome, sourcePositions) : null;
-
-                final String insertType = sourceRegion == null ? INSERT_TYPE_SOLO_L1 : INSERT_TYPE_TRANSDUCTION;
-
-                final boolean hasInversion = invPositions[SE_START] > 0;
-
-                lineDataList.add(new LineInsertSiteData(
-                        PROGRAM_LINX, sampleId, insertRegion, insertType, sourceRegion, hasInversion, clusterId, chainId, chainDesc));
             }
 
             LNX_LOGGER.info("loaded {} linx line chain items from file: {}", lineSvCount, filename);
@@ -171,54 +141,20 @@ public class LineInsertSiteCompare
             {
                 ++lineSvCount;
 
-                final String[] items = line.split(",", -1);
+                LineInsertSiteData insertData = LineInsertSiteData.fromExternal(fieldsIndexMap, line);
 
-                final String sampleId = items[fieldsIndexMap.get("SampleId")];
-
-                // SampleId,Chromosome,Pos1,Pos2,InsertType,SourceSite,TransductionSite
-
-                final String insertTypeRaw = items[fieldsIndexMap.get("InsertType")];
-                final String sourceSiteStr = items[fieldsIndexMap.get("SourceSite")];
-
-                final String[] sourcePosItems = sourceSiteStr.split("_");
-
-                // 22_29059272_29065304
-                final SvRegion sourceRegion = sourcePosItems.length == 3 ?
-                        new SvRegion(sourcePosItems[0], Integer.parseInt(sourcePosItems[1]), Integer.parseInt(sourcePosItems[2])) : null;
-
-                final String insertChromosome = items[fieldsIndexMap.get("InsertChr")];
-
-                final int[] insertPositions = new int[] { Integer.parseInt(items[fieldsIndexMap.get("InsertPos1")]), -1 };
-                final String insertPos2Str = items[fieldsIndexMap.get("InsertPos2")];
-
-                int lowerInsertIndex = 0;
-                if(!insertPos2Str.equals("UNK"))
+                if(insertData != null)
                 {
-                    insertPositions[1] = Integer.parseInt(insertPos2Str);
-                    lowerInsertIndex = insertPositions[0] <= insertPositions[1] ? 0 : 1;
+                    List<LineInsertSiteData> lineDataList = mSampleInsertSiteData.get(insertData.SampleId);
+
+                    if(lineDataList == null)
+                    {
+                        lineDataList = Lists.newArrayList();
+                        mSampleInsertSiteData.put(insertData.SampleId, lineDataList);
+                    }
+
+                    lineDataList.add(insertData);
                 }
-
-                if(insertChromosome.isEmpty() || insertChromosome.equals("0"))
-                    continue;
-
-                List<LineInsertSiteData> lineDataList = mSampleInsertSiteData.get(sampleId);
-
-                if(lineDataList == null)
-                {
-                    lineDataList = Lists.newArrayList();
-                    mSampleInsertSiteData.put(sampleId, lineDataList);
-                }
-
-                final SvRegion insertRegion = new SvRegion(
-                        insertChromosome, insertPositions[lowerInsertIndex], insertPositions[switchIndex(lowerInsertIndex)]);
-
-                final String insertType = insertTypeRaw.equals("Solo-L1") ? INSERT_TYPE_SOLO_L1 :
-                        (insertTypeRaw.equals("Orphan") ? INSERT_TYPE_TRANSDUCTION : INSERT_TYPE_PARTNERED);
-
-                final boolean hasInversion = items[fieldsIndexMap.get("InsertStructure")].equals("INV");
-
-                lineDataList.add(new LineInsertSiteData(
-                        PROGRAM_PCAWG, sampleId, insertRegion, insertType, sourceRegion, hasInversion, -1, -1, ""));
             }
 
             LNX_LOGGER.info("loaded {} external line insertion sites from file: {}", lineSvCount, filename);

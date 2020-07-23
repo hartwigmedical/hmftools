@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.utils.sv;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+
 public class SvRegion
 {
     public final String Chromosome;
@@ -29,6 +31,9 @@ public class SvRegion
 
     public int baseLength() { return length() + 1; }
     public int length() { return Positions[SE_END] - Positions[SE_START]; }
+
+    public boolean isValid() { return HumanChromosome.contains(Chromosome) && hasValidPositions(); }
+    public boolean hasValidPositions() { return Positions[SE_START] > 0 & Positions[SE_END] >= Positions[SE_START]; }
 
     public boolean overlaps(final SvRegion other)
     {
