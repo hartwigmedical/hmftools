@@ -215,10 +215,6 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(MAX_HOM_LENGTH_SHORT_INV)
         }
 
-        if (inexactHomologyLengthFilter(config.maxInexactHomLength)) {
-            result.add(MAX_INEXACT_HOM_LENGTH)
-        }
-
         if (inexactHomologyLengthShortDelFilter(config.maxInexactHomLengthShortDel)) {
             result.add(MAX_INEXACT_HOM_LENGTH_SHORT_DEL)
         }
@@ -263,11 +259,6 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     fun polyATHomologyFilter(): Boolean {
         val homseq = context.homologySequence()
         return homseq.contains(polyAHomology) || homseq.contains(polyTHomology);
-    }
-
-
-    fun inexactHomologyLengthFilter(maxInexactHomLength: Int): Boolean {
-        return !isSingle && !isShortDup && context.inexactHomologyLength() > maxInexactHomLength
     }
 
     fun inexactHomologyLengthShortDelFilter(maxInexactHomLength: Int, minDelLength: Int = 100, maxDelLength: Int = 800): Boolean {

@@ -146,7 +146,7 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
     public String asString()
     {
-        return String.format("id(%s) location(%s:%d) gene(%s)", VariantId, Chromosome, Position, Gene);
+        return String.format("gene(%s) location(%s:%d)", Gene, Chromosome, Position);
     }
 
     public int compareTo(@NotNull BachelorGermlineVariant other)
@@ -225,6 +225,12 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
     public boolean isBiallelic()
     {
+        // Purple annotation hasn't been applied in this case, assume no variant is biallelic.
+        if (!mHasEnrichmentData)
+        {
+            return false;
+        }
+
         double minorAllelePloidy = mAdjustedCopyNumber - (mAdjustedCopyNumber * mAdjustedVaf);
         return (minorAllelePloidy < 0.5);
     }

@@ -1,8 +1,30 @@
 # GRIDSS Post Somatic Script (GRIPSS)
 
-GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.    GRIPSS inputs the raw GRIDSS vcf and outputs a somatic vcf.
+GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
+GRIPSS inputs the raw GRIDSS vcf and outputs a somatic vcf.
 
+# Usage
 
+```
+java -Xms4G -Xmx16G -cp com.hartwig.hmftools.gripss.GripssApplicationKt \
+   -ref_genome /path/to/Homo_sapiens_assembly37.fasta \
+   -breakend_pon /path/to/gridss_pon_single_breakend.bed \
+   -breakpoint_pon /path/to/gridss_pon_breakpoint.bedpe \
+   -breakpoint_hotspot /path/to/KnownFusionPairs.hg19.bedpe \
+   -input_vcf /path/to/SAMPLE.gridss.unfiltered.vcf.gz \
+   -output_vcf /path/to/SAMPLE.gridss.somatic.vcf.gz 
+```
+
+We typically then hard-filter all but PON filtered from the somatic file with the following command:
+
+```
+gunzip -c SAMPLE.gridss.somatic.vcf.gz | awk '$7 == "PASS" || $7 == "PON" || $1 ~ /^#/ ' | bgzip > SAMPLE.gridss.somatic.filtered.vcf.gz
+```
+
+These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
+
+The GRCH 37 bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/).
+ 
 # Algorithm
 
 There are 5 steps in GRIPSS described in detail below:
@@ -16,7 +38,7 @@ There are 5 steps in GRIPSS described in detail below:
 
 Two hard filters are applied upfront before other processing occurs:
 * NO_MATE - Any non single breakend with no mate is filtered
-* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3% of tumor support is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
+* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3 reads is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
 
 ## 2. Realignment
 
@@ -35,9 +57,9 @@ Filter | Default | Description / purpose
 ---|---|---
 minQual | 400 (single breakend:1000) | Minimum absolute tumor support for variant
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
+maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor.
 minTumorAF | 0.5 | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
-maxInexactHomLength | 50 | Very long inexact homology may also be artefacts linking low mappability regions of the genome
 discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
 PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
 maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF
@@ -93,6 +115,11 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is filtered as DEDUP and is NOT a short DEL or DUP <1kb in length, is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocations or intrachromosomal variants of length greater than 10kb, for all soft filters except maxPolyAHomLength.
 
-To improve detection of mobile element insertions, a pair of breakends which are linked by 'DSB’ may also be rescued if at least one side fails only the minQual filter and the combined qual score of the 2 breakends is >1000
+To improve detection of mobile element insertions, any pair of breakends which are linked by 'DSB’ excluding intrachromosomal variants of length less than 10kb  may also be rescued if the combined qual score of the 2 breakends is > 1000.
 
 
+
+
+## Version History and Download Links
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.0)
+  - Initial Release 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.amber;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -38,7 +39,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
         bafRegions.forEach(x -> builder.addPosition(x.position()));
         final List<GenomeRegion> bafRegions1 = builder.build();
 
-        this.evidence = bafRegions.stream().map(BaseDepthFactory::create).collect(Collectors.toList());
+        this.evidence = bafRegions.stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
         this.supplier = new SAMSlicer(minMappingQuality, bafRegions1);
     }
@@ -50,7 +51,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
 
     @NotNull
     public List<BaseDepth> evidence() {
-        return evidence.stream().filter(x -> x.readDepth() > 0).collect(Collectors.toList());
+        return new ArrayList<>(evidence);
     }
 
     @Override

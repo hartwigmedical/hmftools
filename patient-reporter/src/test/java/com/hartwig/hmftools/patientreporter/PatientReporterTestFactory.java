@@ -108,19 +108,18 @@ public final class PatientReporterTestFactory {
     @NotNull
     public static ImmutableReportableGermlineVariant.Builder createTestGermlineVariantBuilder() {
         return ImmutableReportableGermlineVariant.builder()
-                .passFilter(Strings.EMPTY)
                 .gene(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .position(0)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .codingEffect(CodingEffect.UNDEFINED)
-                .chromosome(Strings.EMPTY)
-                .position(0)
                 .hgvsCoding(Strings.EMPTY)
                 .hgvsProtein(Strings.EMPTY)
-                .totalReadCount(0)
                 .alleleReadCount(0)
-                .adjustedCopyNumber(0)
+                .totalReadCount(0)
                 .adjustedVaf(0)
+                .adjustedCopyNumber(0)
                 .biallelic(false);
     }
 

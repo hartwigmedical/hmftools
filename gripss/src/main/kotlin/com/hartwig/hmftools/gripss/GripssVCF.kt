@@ -22,7 +22,6 @@ const val MIN_NORMAL_COVERAGE = "minNormalCoverage"
 const val DISCORDANT_PAIR_SUPPORT = "discordantPairSupport"
 
 const val MAX_HOM_LENGTH_SHORT_INV = "maxHomLengthShortInv"
-const val MAX_INEXACT_HOM_LENGTH = "maxInexactHomLength"
 const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
 
 const val MATE = "mate"
@@ -45,7 +44,6 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         header.addMetaDataLine(VCFFilterHeaderLine(MATE, "Mate is filtered"))
         header.addMetaDataLine(VCFFilterHeaderLine(DEDUP, "Event is duplicate of another"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_LENGTH, "Event is too short"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH, "Inexact breakpoint homology length too long"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH_SHORT_DEL, "Short deletion that appears to be a ligation artifact"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_HOM_LENGTH_SHORT_INV, "Short inversion with significant sequence homology"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_SR_SUPPORT, "Short event not supported by any split reads either directly or via assembly"))

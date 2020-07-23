@@ -6,14 +6,11 @@ import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class BaseDepthFactory {
-
-    private final int minBaseQuality;
-
-    BaseDepthFactory(final int minBaseQuality) {
-        this.minBaseQuality = minBaseQuality;
-    }
 
     @NotNull
     public static ModifiableBaseDepth create(@NotNull final BaseDepth pos) {
@@ -21,7 +18,24 @@ public class BaseDepthFactory {
     }
 
     @NotNull
-    public static ModifiableBaseDepth create(@NotNull final AmberSite site) {
+    public static BaseDepth fromVariantContext(@NotNull final VariantContext context) {
+        final Allele refAllele = context.getReference();
+        final Allele altAllele = context.getAlternateAllele(0);
+        final Genotype normal = context.getGenotype(0);
+
+        return ModifiableBaseDepth.create()
+                .setChromosome(context.getContig())
+                .setPosition(context.getStart())
+                .setRef(BaseDepth.Base.valueOf(refAllele.getBaseString()))
+                .setAlt(BaseDepth.Base.valueOf(altAllele.getBaseString()))
+                .setAltSupport(normal.getAD()[0])
+                .setRefSupport(normal.getAD()[1])
+                .setIndelCount(0)
+                .setReadDepth(normal.getDP());
+    }
+
+    @NotNull
+    public static ModifiableBaseDepth fromAmberSite(@NotNull final AmberSite site) {
         return ModifiableBaseDepth.create()
                 .setChromosome(site.chromosome())
                 .setPosition(site.position())
@@ -31,6 +45,12 @@ public class BaseDepthFactory {
                 .setRefSupport(0)
                 .setIndelCount(0)
                 .setReadDepth(0);
+    }
+
+    private final int minBaseQuality;
+
+    BaseDepthFactory(final int minBaseQuality) {
+        this.minBaseQuality = minBaseQuality;
     }
 
     void addEvidence(@NotNull final ModifiableBaseDepth evidence, @NotNull final SAMRecord samRecord) {

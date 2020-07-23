@@ -29,6 +29,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
   + [10. Somatic enrichment](#10-somatic-enrichment)
+  + [11. Driver Catalog](#11-driver-catalog)
 * [Output](#output)
   + [Files](#files)
   + [VCF](#VCF)
@@ -285,7 +286,7 @@ It is important that the substituted bam is of the same gender as the sample.
 
 ## Algorithm`
 
-There are 10 key steps in the PURPLE pipeline described in detail below:
+There are 11 key steps in the PURPLE pipeline described in detail below:
 1. Gender determination
 2. Segmentation
 3. Sample purity and ploidy fitting
@@ -296,6 +297,7 @@ There are 10 key steps in the PURPLE pipeline described in detail below:
 8. Identification of germline copy number alterations that are homozygously deleted in the tumor
 9. QC Status for the tumor
 10. Somatic enrichment
+11. Driver Catalog
 
 ### 1. Sex determination
 
@@ -549,6 +551,13 @@ We apply an iterative algorithm to find peaks in the variant copy number distrib
 This process yields a set of variant copy number peaks, each with a copy number and a total density (i.e. count of variants). 
 To avoid overfitting small amounts of noise in the distribution, we filter out any peaks that account for less than 40% of the variants in the copy number bucket at the peak itself.   After this filtering we scale the fitted peaks by a constant so that the sum of fitted peaks = the total variant count of the sample.  We mark a peak as subclonal if the peak variant copy number < 0.85.   We also calculate the subclonal likelihood for each individual variant as the proportion of variants in that same copy number bucket fitted as belonging to a subclonal peak. 
 
+### 11. Driver Catalog
+
+PURPLE automatically assigns a driver likelihood to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that occur in the HMF gene panel.
+If the somatic VCF is SnpEff annotated, a driver likelihood is calculated for any point mutations in the gene panel.  
+
+A detailed description of the driver catalog is available [here](./DriverCatalog.md).
+
 ## Output
 
 ### Files
@@ -642,6 +651,32 @@ MinRegionStartSupport | TELOMERE | Start support of the copy number region overl
 MinRegionEndSupport | INV | End support of the copy number region overlapping the gene with the minimum copy number
 MinRegionMethod | BAF_WEIGHTED | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
 MinMinorAllelePloidy | 0 | Minimum allele copy number found over the gene exons - useful for identifying LOH events  
+
+#### Driver Catalog File
+
+The driver catalog file `TUMOR.driver.catalog.tsv` contains significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that occur in the HMF gene panel.
+If the supplied somatic VCF has been enriched with SnpEff, the driver catalog file will also include a likelihood of any point mutations in the gene panel. 
+
+A detailed description of the driver catalog is available [here](./DriverCatalog.md).
+
+Column  | Example Value | Description
+---|---|---
+Chromosome | 7 | Chromosome of gene
+ChromosomeBand | q34 | Chromosome band of driver
+Gene | BRAF | Name of gene
+Driver |  MUTATION | Driver type [AMP, DEL, MUTATION]
+Category | ONCO | Gene driver type [ONCO, TSG]
+LikelihoodMethod | DNDS | Method used to determine likelihood [AMP, DEL, BIALLELIC, DNDS, HOTSPOT, INFRAME]
+DriverLikelihood | 1 | Likelihood that gene is a driver 
+DndsLikelihood | 0.3902 | Raw dnds driver likelihood
+Missense | 0 | Number of missense variants in gene
+Nonsense | 0 | Number of nonsense variants in gene
+Splice | 0 | Number of splice variants in gene
+Inframe | 0 | Number of inframe variants in gene
+Frameshift | 0 | Number of frameshift variants in gene
+Biallelic | false | True if any variants in the gene are biallelic
+MinCopyNumber  | 2.0098 | Minimum copy number found in the gene exons
+MaxCopyNumber  | 2.0098 | Maximum copy number found in the gene exons
 
 ### VCF
 
