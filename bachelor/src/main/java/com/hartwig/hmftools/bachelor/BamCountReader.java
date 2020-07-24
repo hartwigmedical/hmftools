@@ -42,7 +42,7 @@ class BamCountReader
 
     void readBamCounts(final String bamFile, List<BachelorGermlineVariant> bachRecords)
     {
-        BACH_LOGGER.debug("reading BAM file: {}", bamFile);
+        BACH_LOGGER.debug("Reading BAM file: {}", bamFile);
 
         mTumorReader = SamReaderFactory.makeDefault().referenceSequence(mRefGenomeFile).open(new File(bamFile));
 
