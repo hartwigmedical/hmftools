@@ -9,6 +9,7 @@ import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.cli.ParseException
+import org.apache.logging.log4j.util.Strings
 import java.io.File
 import java.io.IOException
 
@@ -18,6 +19,8 @@ const val REF_GENOME_OPTION = "ref_genome"
 const val SINGLE_PON_OPTION = "breakend_pon"
 const val PAIRED_PON_OPTION = "breakpoint_pon"
 const val PAIRED_HOTSPOT_OPTION = "breakpoint_hotspot"
+const val REFERENCE = "reference"
+const val TUMOR = "tumor"
 
 data class GripssConfig(
         val inputVcf: String,
@@ -26,6 +29,8 @@ data class GripssConfig(
         val pairedPonFile: String,
         val pairedHotspotFile: String,
         val refGenome: String,
+        val reference: String,
+        val tumor: String,
         val filterConfig: GripssFilterConfig) {
 
     companion object {
@@ -37,6 +42,8 @@ data class GripssConfig(
             options.addOption(requiredOption(PAIRED_PON_OPTION, "Paired breakpoint pon bedpe file"))
             options.addOption(requiredOption(PAIRED_HOTSPOT_OPTION, "Paired breakpoint hotspot bedpe file"))
             options.addOption(requiredOption(REF_GENOME_OPTION, "Ref genome"))
+            options.addOption(Option(REFERENCE, true, "Optional name of reference sample [first sample in VCF]"))
+            options.addOption(Option(TUMOR, true, "Optional name of tumor sample [second sample in VCF]"))
             GripssFilterConfig.createOptions().options.forEach { options.addOption(it) }
             return options
         }
@@ -49,6 +56,8 @@ data class GripssConfig(
             val pairedPon = requiredFile(cmd, PAIRED_PON_OPTION)
             val pairedHotspot = requiredFile(cmd, PAIRED_HOTSPOT_OPTION)
             val outputVcf = cmd.getOptionValue(OUTPUT_VCF_OPTION)
+            val reference = cmd.getOptionValue(REFERENCE, Strings.EMPTY)
+            val tumor = cmd.getOptionValue(TUMOR, Strings.EMPTY)
 
             val outputDir = File(outputVcf).parentFile
             if (!outputDir.exists() && !outputDir.mkdirs()) {
@@ -58,7 +67,7 @@ data class GripssConfig(
             val isGRCh38 = isGRCh38(refGenome)
             val filterConfig = GripssFilterConfig.createConfig(cmd, isGRCh38)
 
-            return GripssConfig(inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, refGenome, filterConfig)
+            return GripssConfig(inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, refGenome, reference, tumor, filterConfig)
         }
 
         private fun isGRCh38(refGenome: String): Boolean {

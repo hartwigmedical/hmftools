@@ -24,7 +24,14 @@ gunzip -c SAMPLE.gridss.somatic.vcf.gz | awk '$7 == "PASS" || $7 == "PON" || $1 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
 The GRCH 37 bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/).
- 
+
+## Optional Arguments
+
+Argument | Default | Description 
+---|---|---
+reference | first sample in VCF header| Name of reference sample in VCF header
+tumor | second sample in VCF header|Name of tumor sample in VCF header
+
 # Algorithm
 
 There are 5 steps in GRIPSS described in detail below:
@@ -124,5 +131,6 @@ To improve detection of mobile element insertions, we also rescue pairs of break
   - Added HardMaxNormalRelativeSupport [0.1] filter to replace MaxNormalRelativeSupport [0.03]
   - Added SoftMaxNormalRelativeSupport [0.03] filter
   - Qual filters and QUAL field in output VCF now refer to tumor qual only
+  - Added optional `reference` and `tumor` parameters
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.0)
   - Initial Release 
