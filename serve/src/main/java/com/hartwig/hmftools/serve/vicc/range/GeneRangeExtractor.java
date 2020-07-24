@@ -38,7 +38,6 @@ public class GeneRangeExtractor {
                     .substring(feature.proteinAnnotation().length() - 1)
                     .equals("X") || GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
 
-                //TODO: possible using transvar for the codons
                 geneRangesPerFeature.put(feature, feature.name());
             }
 
@@ -46,6 +45,7 @@ public class GeneRangeExtractor {
             HmfTranscriptRegion canonicalTranscript = allGenesMap37.get(feature.geneSymbol());
 
             //canonicalTranscript.codingStart() + canonicalTranscript.codingEnd() --> for example V600X
+            // transvar for looking protein annotation
 
             List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
            // String exon = exonRegions.get(1).exonID(); --> for example exon 7 insertion
