@@ -46,6 +46,7 @@ public class GeneRangeExtractor {
 
             //canonicalTranscript.codingStart() + canonicalTranscript.codingEnd() --> for example V600X
             // look up postion in genome V600 example
+            // ignore V600E/K example
 
             List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
            // String exon = exonRegions.get(1).exonID(); --> for example exon 7 insertion
