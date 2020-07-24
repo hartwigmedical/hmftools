@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -20,8 +19,15 @@ import org.jetbrains.annotations.NotNull;
 public class GeneRangeExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneRangeExtractor.class);
 
+    @NotNull
+    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+
     private static final Set<String> GENE_EXON = Sets.newHashSet("exon");
     private static final Set<String> GENE_MULTIPLE_CODONS = Sets.newHashSet("nonsense", "V600E/K");
+
+    GeneRangeExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
+        this.transcriptPerGeneMap = transcriptPerGeneMap;
+    }
 
     @NotNull
     public Map<Feature, String> extractGeneRanges(@NotNull ViccEntry viccEntry) {
@@ -41,15 +47,15 @@ public class GeneRangeExtractor {
                 geneRangesPerFeature.put(feature, feature.name());
             }
 
-            Map<String, HmfTranscriptRegion> allGenesMap37 = HmfGenePanelSupplier.allGenesMap37();
-            HmfTranscriptRegion canonicalTranscript = allGenesMap37.get(feature.geneSymbol());
+            // Map<String, HmfTranscriptRegion> allGenesMap37 = HmfGenePanelSupplier.allGenesMap37();
+            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
             //canonicalTranscript.codingStart() + canonicalTranscript.codingEnd() --> for example V600X
             // look up postion in genome V600 example
             // ignore V600E/K example
 
             List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
-           // String exon = exonRegions.get(1).exonID(); --> for example exon 7 insertion
+             //String exon = exonRegions.get(1).exonID(); --> for example exon 7 insertion
             // look op postion of example exon 7k
         }
 
