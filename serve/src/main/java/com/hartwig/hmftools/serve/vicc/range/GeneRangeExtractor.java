@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.serve.vicc.range;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -36,12 +38,17 @@ public class GeneRangeExtractor {
                     .substring(feature.proteinAnnotation().length() - 1)
                     .equals("X") || GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
 
-                //TODO: possible using transvar for the codons
                 geneRangesPerFeature.put(feature, feature.name());
             }
 
             Map<String, HmfTranscriptRegion> allGenesMap37 = HmfGenePanelSupplier.allGenesMap37();
             HmfTranscriptRegion canonicalTranscript = allGenesMap37.get(feature.geneSymbol());
+
+            //canonicalTranscript.codingStart() + canonicalTranscript.codingEnd() --> for example V600X
+            // transvar for looking protein annotation
+
+            List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
+           // String exon = exonRegions.get(1).exonID(); --> for example exon 7 insertion
         }
 
         return geneRangesPerFeature;
