@@ -11,6 +11,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
@@ -88,11 +90,13 @@ public class ViccExtractorTestApplication {
         HotspotExtractor hotspotExtractor =
                 generateHotspots ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotExtractor.dummy();
 
+        Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
+
         ViccExtractor viccExtractor = new ViccExtractor(hotspotExtractor,
                 new CopyNumberExtractor(),
                 new FusionExtractor(),
                 new GeneLevelEventExtractor(),
-                new GeneRangeExtractor(),
+                new GeneRangeExtractor(transcriptPerGeneMap),
                 new SignaturesExtractor());
 
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
