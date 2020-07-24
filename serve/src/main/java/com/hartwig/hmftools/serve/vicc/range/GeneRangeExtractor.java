@@ -45,10 +45,11 @@ public class GeneRangeExtractor {
             HmfTranscriptRegion canonicalTranscript = allGenesMap37.get(feature.geneSymbol());
 
             //canonicalTranscript.codingStart() + canonicalTranscript.codingEnd() --> for example V600X
-            // transvar for looking protein annotation
+            // look up postion in genome V600 example
 
             List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
            // String exon = exonRegions.get(1).exonID(); --> for example exon 7 insertion
+            // look op postion of example exon 7k
         }
 
         return geneRangesPerFeature;
