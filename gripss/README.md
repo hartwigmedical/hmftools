@@ -115,7 +115,7 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is filtered as DEDUP and is NOT a short DEL or DUP <1kb in length, is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocations or intrachromosomal variants of length greater than 10kb, for all soft filters except maxPolyAHomLength.
 
-To improve detection of mobile element insertions, any pair of breakends which are linked by 'DSB’ excluding intrachromosomal variants of length less than 10kb  may also be rescued if the combined qual score of the 2 breakends is > 1000.
+To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions (excluding intrachromosomal variants of length less than 10kb) which are linked by ‘DSB’, with combined qual > 1000 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion.       We define a poly-A tail as either at least 16 of the last 20 bases of the sequence are A or there is a repeat of 11 or more consecutive A or within the last 20 bases of the insert sequence.   At the insertion site, negative oriented breakends must have poly-A tails at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand)
 
 
 
