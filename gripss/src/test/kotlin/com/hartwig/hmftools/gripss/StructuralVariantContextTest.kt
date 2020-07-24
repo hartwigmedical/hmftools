@@ -7,7 +7,6 @@ import com.hartwig.hmftools.gripss.VariantContextTestFactory.splitReads
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.toSv
 import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.VariantContext
-import htsjdk.variant.variantcontext.VariantContextBuilder
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -36,10 +35,17 @@ class StructuralVariantContextTest {
     }
 
     @Test
-    fun testNormalSupportFilter() {
-        assertTrue(sgl().fragmentSupport(3, 9).toSv().normalSupportFilter(0.03))
-        assertFalse(sgl().fragmentSupport(3, 100).toSv().normalSupportFilter(0.03))
-        assertTrue(sgl().fragmentSupport(3, 100).toSv().normalSupportFilter(0.0299))
+    fun testNormalSupportRelativeFilter() {
+        assertTrue(sgl().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
+        assertFalse(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.03))
+        assertTrue(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.0299))
+    }
+
+    @Test
+    fun testNormalSupportAbsoluteFilter() {
+        assertTrue(sgl().fragmentSupport(4, 0).toSv().normalSupportAbsoluteFilter(3))
+        assertFalse(sgl().fragmentSupport(3, 0).toSv().normalSupportAbsoluteFilter(3))
+        assertTrue(sgl().fragmentSupport(3, 0).toSv().normalSupportAbsoluteFilter(2))
     }
 
     @Test
@@ -166,7 +172,7 @@ class StructuralVariantContextTest {
 
     private fun shortInv(position: Int = 100, otherPosition: Int = 110): VariantContext = createVariant(position, "A", "ATT]1:$otherPosition]")
 
-    private fun shortDel(position: Int = 80, otherPosition: Int = 100, insertSequence:String = "TACTGCTACA"): VariantContext = createVariant(position, "A", "A${insertSequence}[1:${otherPosition}[")
+    private fun shortDel(position: Int = 80, otherPosition: Int = 100, insertSequence: String = "TACTGCTACA"): VariantContext = createVariant(position, "A", "A${insertSequence}[1:${otherPosition}[")
 
     private fun shortDup(position: Int = 110, otherPosition: Int = 100): VariantContext = createVariant(position, "A", "ATACTGCTACA[1:${otherPosition}[")
 
@@ -180,12 +186,13 @@ class StructuralVariantContextTest {
 
     private fun createVariant(pos: Int, ref: String, alt: String): VariantContext {
         val line = "1\t${pos}\tid1\t${ref}\t${alt}\t100\tPASS\tinfo\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
-        return VariantContextTestFactory.decode(line)
+        val result = VariantContextTestFactory.decode(line)
+
+
+        return result;
     }
 
     private fun VariantContext.qual(qual: Int): VariantContext {
-        val builder = VariantContextBuilder(this)
-        builder.log10PError(qual.toDouble() / -10.0)
-        return builder.make()
+        return this.addGenotypeAttribute("QUAL", 0.0, qual.toDouble()).addGenotypeAttribute("BQ", 0.0, qual.toDouble())
     }
 }

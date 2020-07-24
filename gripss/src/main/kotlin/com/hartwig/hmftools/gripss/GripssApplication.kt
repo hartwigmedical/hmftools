@@ -99,10 +99,10 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates())
 
         logger.info("Rescuing linked variants")
-        val dsbRescues = LinkRescue(dsbLinks, softFiltersAfterSingleDedup, variantStore, false).rescues
+        val dsbRescues = LinkRescue.rescue(config.filterConfig, dsbLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = false, rescueQual = true).rescues
         val dsbRescueSingles = LinkRescue.rescueSingles(dsbLinks, softFiltersAfterSingleDedup, variantStore, config.filterConfig).rescues
-        val assemblyRescues = LinkRescue(assemblyLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
-        val transitiveRescues = LinkRescue(transitiveLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
+        val assemblyRescues = LinkRescue.rescue(config.filterConfig, assemblyLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = true, rescueQual = false).rescues
+        val transitiveRescues = LinkRescue.rescue(config.filterConfig, transitiveLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = true, rescueQual = false).rescues
         val allRescues = dsbRescues + dsbRescueSingles + assemblyRescues + transitiveRescues
 
         logger.info("Writing file: ${config.outputVcf}")

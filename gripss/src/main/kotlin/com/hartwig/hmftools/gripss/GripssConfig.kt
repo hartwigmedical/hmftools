@@ -86,7 +86,10 @@ data class GripssConfig(
     }
 }
 
-private const val MAX_NORMAL_SUPPORT_PROPORTION_OPTION = "max_normal_support_proportion"
+private const val HARD_MIN_TUMOR_QUAL_OPTION = "hard_min_tumor_qual"
+private const val HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_OPTION = "hard_max_normal_absolute_support"
+private const val HARD_MAX_NORMAL_RELATIVE_SUPPORT_OPTION = "hard_max_normal_relative_support"
+private const val SOFT_MAX_NORMAL_RELATIVE_SUPPORT_OPTION = "soft_max_normal_relative_support"
 private const val MIN_NORMAL_COVERAGE_OPTION = "min_normal_coverage"
 private const val MIN_TUMOR_AF_OPTION = "min_tumor_af"
 private const val MAX_SHORT_STRAND_BIAS_OPTION = "max_short_strand_bias"
@@ -97,7 +100,10 @@ private const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION = "max_inexact_hom_len
 private const val MIN_LENGTH_OPTION = "min_length"
 
 data class GripssFilterConfig(
-        val maxNormalSupportProportion: Double,
+        val hardMinTumorQual: Int,
+        val hardMaxNormalAbsoluteSupport: Int,
+        val hardMaxNormalRelativeSupport: Double,
+        val softMaxNormalRelativeSupport: Double,
         val minNormalCoverage: Int,
         val minTumorAF: Double,
         val maxShortStrandBias: Double,
@@ -116,7 +122,10 @@ data class GripssFilterConfig(
         fun createOptions(): Options {
             val defaultConfig = default()
             val options = Options()
-            options.addOption(MAX_NORMAL_SUPPORT_PROPORTION_OPTION, "Max normal support [${defaultConfig.maxNormalSupportProportion}]")
+            options.addOption(HARD_MIN_TUMOR_QUAL_OPTION, "Hard min tumor qual [${defaultConfig.hardMinTumorQual}]")
+            options.addOption(HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_OPTION, "Hard max normal absolute support [${defaultConfig.hardMaxNormalAbsoluteSupport}]")
+            options.addOption(HARD_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, "Hard max normal relative support [${defaultConfig.hardMaxNormalRelativeSupport}]")
+            options.addOption(SOFT_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, "Soft max normal relative support [${defaultConfig.softMaxNormalRelativeSupport}]")
             options.addOption(MIN_NORMAL_COVERAGE_OPTION, "Min normal coverage [${defaultConfig.minNormalCoverage}]")
             options.addOption(MIN_TUMOR_AF_OPTION, "Min tumor allelic frequency [${defaultConfig.minTumorAF}]")
             options.addOption(MAX_SHORT_STRAND_BIAS_OPTION, "Max short strand bias [${defaultConfig.maxShortStrandBias}]")
@@ -131,7 +140,10 @@ data class GripssFilterConfig(
 
         fun createConfig(cmd: CommandLine, isGRCh38: Boolean): GripssFilterConfig {
             val defaultConfig = default()
-            val maxNormalSupportProportion = defaultDoubleValue(cmd, MAX_NORMAL_SUPPORT_PROPORTION_OPTION, defaultConfig.maxNormalSupportProportion)
+            val minTumorQual = defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL_OPTION, defaultConfig.hardMinTumorQual)
+            val maxNormalAbsoluteSupport = defaultIntValue(cmd, HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_OPTION, defaultConfig.hardMaxNormalAbsoluteSupport)
+            val hardMaxNormalRelativeSupport = defaultDoubleValue(cmd, HARD_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, defaultConfig.hardMaxNormalRelativeSupport)
+            val softMaxNormalRelativeSupport = defaultDoubleValue(cmd, SOFT_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, defaultConfig.softMaxNormalRelativeSupport)
             val minNormalCoverage = defaultIntValue(cmd, MIN_NORMAL_COVERAGE_OPTION, defaultConfig.minNormalCoverage)
             val minTumorAF = defaultDoubleValue(cmd, MIN_TUMOR_AF_OPTION, defaultConfig.minTumorAF)
             val maxShortStrandBias = defaultDoubleValue(cmd, MAX_SHORT_STRAND_BIAS_OPTION, defaultConfig.maxShortStrandBias)
@@ -143,7 +155,10 @@ data class GripssFilterConfig(
             val linc00486Definition = if (isGRCh38) linc00486Definition38 else linc00486Definition37
 
             return GripssFilterConfig(
-                    maxNormalSupportProportion,
+                    minTumorQual,
+                    maxNormalAbsoluteSupport,
+                    hardMaxNormalRelativeSupport,
+                    softMaxNormalRelativeSupport,
                     minNormalCoverage,
                     minTumorAF,
                     maxShortStrandBias,
@@ -155,8 +170,11 @@ data class GripssFilterConfig(
                     linc00486Definition)
         }
 
-        private fun default(): GripssFilterConfig {
+        fun default(): GripssFilterConfig {
             return GripssFilterConfig(
+                    100,
+                    3,
+                    0.10,
                     0.03,
                     8,
                     0.005,

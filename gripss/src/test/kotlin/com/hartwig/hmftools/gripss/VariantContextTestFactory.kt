@@ -20,22 +20,26 @@ object VariantContextTestFactory {
     }
 
     fun decode(line: String): VariantContext {
-        return codec.decode(line)
+        val result = codec.decode(line)
+        if (!result.getGenotype(0).hasExtendedAttribute("QUAL") && !result.getGenotype(0).hasExtendedAttribute("BQ")) {
+            return result.addQual(0.0)
+        }
+        return result
     }
 
     fun createVariant(contig: String, pos: Int, id: String, ref: String, alt: String, qual: Int, filter: Collection<String>): VariantContext {
         val line = "$contig\t${pos}\t$id\t${ref}\t${alt}\t${qual}\t${filter.joinToString(",")}\tinfo\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
-        return decode(line)
+        return decode(line).addQual(qual.toDouble())
     }
 
     fun createVariant(contig: String, pos: Int, id: String, ref: String, alt: String, qual: Int, mateId: String): VariantContext {
         val line = "$contig\t${pos}\t$id\t${ref}\t${alt}\t${qual}\t.\tMATEID=$mateId\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
-        return decode(line)
+        return decode(line).addQual(qual.toDouble())
     }
 
     fun createImpreciseVariant(contig: String, pos: Int, id: String, ref: String, alt: String, qual: Int, mateId: String): VariantContext {
         val line = "$contig\t${pos}\t$id\t${ref}\t${alt}\t${qual}\t.\tIMPRECISE;MATEID=$mateId\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
-        return decode(line)
+        return decode(line).addQual(qual.toDouble())
     }
 
     fun VariantContext.toSv(): StructuralVariantContext = StructuralVariantContext(this)
@@ -54,6 +58,32 @@ object VariantContextTestFactory {
     }
 
     fun VariantContext.addGenotypeAttribute(attribute: String, normal: Int, tumor: Int): VariantContext {
+        val normalBuilder = GenotypeBuilder(this.getGenotype(0))
+        normalBuilder.attribute(attribute, normal)
+
+        val tumorBuilder = GenotypeBuilder(this.getGenotype(1))
+        tumorBuilder.attribute(attribute, tumor)
+
+        val builder = VariantContextBuilder(this)
+        builder.genotypes(listOf(normalBuilder.make(), tumorBuilder.make()))
+        return builder.make()
+    }
+
+    fun VariantContext.addQual(qual: Double): VariantContext {
+        val normalBuilder = GenotypeBuilder(this.getGenotype(0))
+        normalBuilder.attribute("BQ", qual)
+        normalBuilder.attribute("QUAL", qual)
+
+        val tumorBuilder = GenotypeBuilder(this.getGenotype(1))
+        tumorBuilder.attribute("BQ", qual)
+        tumorBuilder.attribute("QUAL", qual)
+
+        val builder = VariantContextBuilder(this)
+        builder.genotypes(listOf(normalBuilder.make(), tumorBuilder.make()))
+        return builder.make()
+    }
+
+    fun VariantContext.addGenotypeAttribute(attribute: String, normal: Double, tumor: Double): VariantContext {
         val normalBuilder = GenotypeBuilder(this.getGenotype(0))
         normalBuilder.attribute(attribute, normal)
 

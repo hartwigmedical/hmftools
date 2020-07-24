@@ -25,6 +25,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         private val polyTHomology = "T".repeat(7)
     }
 
+    private val remoteConfidenceInterval = context.remoteConfidenceInterval()
+    private val normalGenotype = context.getGenotype(normalOrdinal)
+    private val tumorGenotype = context.getGenotype(tumorOrdinal)
+
     val contig = context.contig!!
     val imprecise = context.imprecise()
     val precise = !imprecise
@@ -40,7 +44,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val mateId: String? = context.mate()
     val confidenceInterval = context.confidenceInterval()
     val start = context.start
-    private val remoteConfidenceInterval = context.remoteConfidenceInterval()
+    val qual = tumorGenotype.qual(isSingle)
 
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
@@ -50,10 +54,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val maxStart = startBreakend.end
     val insertSequenceLength = variantType.insertSequence.length
     val duplicationLength = (variantType as? Duplication)?.let { it.length + 1 } ?: 0
-    val qual = context.phredScaledQual
 
-    private val normalGenotype = context.getGenotype(normalOrdinal)
-    private val tumorGenotype = context.getGenotype(tumorOrdinal)
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 
     fun realign(refGenome: IndexedFastaSequenceFile, comparator: ContigComparator): StructuralVariantContext {
@@ -79,7 +80,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return this
     }
 
-     fun centreAlignConfidenceIntervals(comparator: ContigComparator): Pair<Cipos, Cipos> {
+    fun centreAlignConfidenceIntervals(comparator: ContigComparator): Pair<Cipos, Cipos> {
         assert(!isSingle)
         val mate = variantType as Paired
         val invertStart = orientation == mate.endOrientation && comparator.compare(contig, start, mate.otherChromosome, mate.otherPosition) > 0
@@ -162,7 +163,8 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
         val builder = VariantContextBuilder(context).filters()
 
-        builder.attribute(TAF, tumorAF)
+        builder.log10PError(qual / -10.0)
+                .attribute(TAF, tumorAF)
                 .attribute(LOCAL_LINKED_BY, localLink)
                 .attribute(REMOTE_LINKED_BY, remoteLink)
                 .attribute(HOTSPOT, isHotspot)
@@ -178,13 +180,17 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
 
     fun assemblies(): List<String> = context.assemblies()
 
-    fun isHardFilter(config: GripssFilterConfig) = normalSupportFilter(config.maxNormalSupportProportion)
+    fun isHardFilter(config: GripssFilterConfig) = normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) || tumorQualFilter(config.hardMinTumorQual) || normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport)
 
     fun softFilters(config: GripssFilterConfig): Set<String> {
         val result = mutableSetOf<String>()
 
         if (normalCoverageFilter(config.minNormalCoverage)) {
             result.add(MIN_NORMAL_COVERAGE)
+        }
+
+        if (normalSupportRelativeFilter(config.softMaxNormalRelativeSupport)) {
+            result.add(MAX_NORMAL_RELATIVE_SUPPORT)
         }
 
         if (allelicFrequencyFilter(config.minTumorAF)) {
@@ -245,7 +251,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
 
     fun qualFilter(minQualBreakEnd: Int, minQualBreakPoint: Int): Boolean {
         val minQual = if (isSingle) minQualBreakEnd else minQualBreakPoint
-        return context.phredScaledQual < minQual.toDouble()
+        return qual < minQual.toDouble()
     }
 
     fun polyGCInsertFilter(polyGRegion: Locatable): Boolean {
@@ -326,15 +332,24 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return supportingFragments + ref + refPair < minNormalCoverage
     }
 
-    fun normalSupportFilter(maxNormalSupport: Double): Boolean {
+    fun normalSupportAbsoluteFilter(maxNormalAbsoluteSupport: Int): Boolean {
+        val normalSupport = normalGenotype.fragmentSupport(isSingle)
+        return normalSupport > maxNormalAbsoluteSupport
+    }
+
+    fun tumorQualFilter(minTumorQual: Int): Boolean {
+        return qual < minTumorQual.toDouble()
+    }
+
+    fun normalSupportRelativeFilter(maxNormalRelativeSupport: Double): Boolean {
         val normalSupport = normalGenotype.fragmentSupport(isSingle)
         val tumorSupport = tumorGenotype.fragmentSupport(isSingle)
 
-        return normalSupport > maxNormalSupport * tumorSupport
+        return normalSupport > maxNormalRelativeSupport * tumorSupport
     }
 
     override fun toString(): String {
-        return "${context.id} ${context.contig}:${context.start} QUAL:${context.phredScaledQual} Orientation:${variantType.startOrientation} ${context.alleles[0].displayString}  > ${context.alleles[1].displayString}"
+        return "${context.id} ${context.contig}:${context.start} QUAL:${qual} Orientation:${variantType.startOrientation} ${context.alleles[0].displayString}  > ${context.alleles[1].displayString}"
     }
 
     private fun Cipos.invert(): Cipos {

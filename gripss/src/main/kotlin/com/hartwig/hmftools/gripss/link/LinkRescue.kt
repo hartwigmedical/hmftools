@@ -9,7 +9,7 @@ import com.hartwig.hmftools.gripss.store.VariantStore
 data class LinkRescue(val rescues: Set<String>) {
     companion object {
 
-        operator fun invoke(links: LinkStore, softFilterStore: SoftFilterStore, variantStore: VariantStore, rescueShort: Boolean): LinkRescue {
+        fun rescue(config: GripssFilterConfig, links: LinkStore, softFilterStore: SoftFilterStore, variantStore: VariantStore, rescueShort: Boolean, rescueQual: Boolean): LinkRescue {
             val rescues = mutableSetOf<String>()
             val isShort = { x: StructuralVariantContext -> x.isShortDel || x.isShortIns || x.isShortDup }
             val isRescueCandidate = { x: StructuralVariantContext -> softFilterStore.isRescueCandidate(x.vcfId, x.mateId) && (rescueShort || !isShort(x)) }

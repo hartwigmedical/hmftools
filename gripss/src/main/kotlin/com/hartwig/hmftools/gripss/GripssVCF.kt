@@ -17,7 +17,7 @@ const val SHORT_DEL_INS_ARTIFACT = "smallDelInsertionArtifact"
 const val MAX_POLY_G_LENGTH = "maxPolyGLength"
 const val MAX_POLY_A_HOM_LENGTH = "maxPolyAHomLength"
 
-const val MAX_NORMAL_SUPPORT = "maxNormalSupport"
+const val MAX_NORMAL_RELATIVE_SUPPORT = "maxNormalRelativeSupport"
 const val MIN_NORMAL_COVERAGE = "minNormalCoverage"
 const val DISCORDANT_PAIR_SUPPORT = "discordantPairSupport"
 
@@ -51,7 +51,7 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         header.addMetaDataLine(VCFFilterHeaderLine(DISCORDANT_PAIR_SUPPORT, "Large event not supported by any read pairs either directly or via assembly"))
         header.addMetaDataLine(VCFFilterHeaderLine(PON, "Found in panel of normals"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_TUMOR_AF, "Variant allele fraction too low"))
-        header.addMetaDataLine(VCFFilterHeaderLine(MAX_NORMAL_SUPPORT, "Too many support reads from the normal sample"))
+        header.addMetaDataLine(VCFFilterHeaderLine(MAX_NORMAL_RELATIVE_SUPPORT, "Too many support reads from the normal sample relative to the tumor"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_NORMAL_COVERAGE, "Insufficient normal coverage to determine somatic status"))
         header.addMetaDataLine(VCFFilterHeaderLine(SHORT_STRAND_BIAS, "Short event with excessive strand bias in split reads/soft clipped reads overlapping breakpoint"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_QUAL, "Insufficient quality"))
