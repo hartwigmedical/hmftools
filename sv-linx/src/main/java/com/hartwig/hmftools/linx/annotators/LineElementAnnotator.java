@@ -44,8 +44,9 @@ public class LineElementAnnotator {
 
     public static final int LINE_ELEMENT_PROXIMITY_DISTANCE = 5000;
 
-    public static final String POLY_A_MOTIF = "AAAAAAAAAAA";
-    public static final String POLY_T_MOTIF = "TTTTTTTTTTT";
+    // currently defined as 10 bases long
+    public static final String POLY_A_MOTIF = "AAAAAAAAAA";
+    public static final String POLY_T_MOTIF = "TTTTTTTTTT";
 
     private static final int LE_COL_CHR = 0;
     private static final int LE_COL_POS_START = 1;
