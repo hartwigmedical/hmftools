@@ -35,7 +35,7 @@ public final class RepeatContextFactory {
                     int forwardsCount = forwardRepeats(repeatStartIndex, repeatLength, readSequence);
                     int backwardsCount = backwardRepeats(repeatStartIndex, repeatLength, readSequence);
 
-                    if (forwardsCount + backwardsCount > MIN_COUNT) {
+                    if (forwardsCount + backwardsCount >= MIN_COUNT) {
                         int startIndex = repeatStartIndex - backwardsCount * repeatLength;
                         int endIndex = repeatStartIndex + forwardsCount * repeatLength - 1;
                         int additionalBasesAtEnd = matchingBasesFromLeft(repeatStartIndex, repeatLength, endIndex + 1, readSequence);
