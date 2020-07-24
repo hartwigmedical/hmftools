@@ -64,12 +64,16 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         logger.info("Config ${config.filterConfig}")
         val contigComparator = ContigComparator(dictionary)
 
+        val sampleNames =  fileReader.fileHeader!!.genotypeSamples!!
+        val sampleOrdinals = sampleOrdinals(sampleNames);
+        logger.info("Using ${sampleNames[sampleOrdinals.first]} as reference, ${sampleNames[sampleOrdinals.second]} as tumor")
+
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
         val hotspotStore = LocationStore(contigComparator, listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
         val hotspotFilter = hotspotFilter(hotspotStore)
 
         logger.info("Reading VCF file: ${config.inputVcf}")
-        val variantStore = VariantStore(hardFilterAndRealign(fileReader, hotspotFilter, contigComparator))
+        val variantStore = VariantStore(hardFilterAndRealign(fileReader, sampleOrdinals, hotspotFilter, contigComparator))
         val hotspots = variantStore.selectAll().filter(hotspotFilter).map { x -> x.vcfId }.toSet()
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
@@ -99,10 +103,10 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates())
 
         logger.info("Rescuing linked variants")
-        val dsbRescues = LinkRescue(dsbLinks, softFiltersAfterSingleDedup, variantStore, false).rescues
+        val dsbRescues = LinkRescue.rescue(config.filterConfig, dsbLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = false, rescueQual = true).rescues
         val dsbRescueSingles = LinkRescue.rescueSingles(dsbLinks, softFiltersAfterSingleDedup, variantStore, config.filterConfig).rescues
-        val assemblyRescues = LinkRescue(assemblyLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
-        val transitiveRescues = LinkRescue(transitiveLinks, softFiltersAfterSingleDedup, variantStore, true).rescues
+        val assemblyRescues = LinkRescue.rescue(config.filterConfig, assemblyLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = true, rescueQual = false).rescues
+        val transitiveRescues = LinkRescue.rescue(config.filterConfig, transitiveLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = true, rescueQual = false).rescues
         val allRescues = dsbRescues + dsbRescueSingles + assemblyRescues + transitiveRescues
 
         logger.info("Writing file: ${config.outputVcf}")
@@ -118,6 +122,22 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
             val filters = finalFilters.filters(variant.vcfId, variant.mateId)
             fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
         }
+    }
+
+    private fun sampleOrdinals(sampleNames: List<String>): Pair<Int, Int> {
+        val normalOrdinal = if (config.reference.isEmpty()) 0 else sampleNames.indexOf(config.reference)
+        if (normalOrdinal < 0) {
+            throw IllegalArgumentException("Unable to locate sample ${config.reference} in supplied VCF")
+        }
+        val tumorOrdinal = if (config.tumor.isEmpty()) 1 else sampleNames.indexOf(config.tumor)
+        if (tumorOrdinal < 0) {
+            throw IllegalArgumentException("Unable to locate sample ${config.tumor} in supplied VCF")
+        }
+
+        if (tumorOrdinal == normalOrdinal) {
+            throw ParseException("Tumor and reference must be different")
+        }
+        return Pair(normalOrdinal, tumorOrdinal)
     }
 
     private fun hotspotFilter(hotspotStore: LocationStore): (StructuralVariantContext) -> Boolean {
@@ -136,13 +156,13 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         return variants.filter { ponStore.contains(it) }.map { it.vcfId }.toSet()
     }
 
-    private fun hardFilterAndRealign(fileReader: VCFFileReader, hotspotFilter: (StructuralVariantContext) -> Boolean, contigComparator: ContigComparator): List<StructuralVariantContext> {
+    private fun hardFilterAndRealign(fileReader: VCFFileReader, ordinals: Pair<Int, Int>, hotspotFilter: (StructuralVariantContext) -> Boolean, contigComparator: ContigComparator): List<StructuralVariantContext> {
         val unfiltered: MutableSet<String> = mutableSetOf()
         val hardFilter: MutableSet<String> = mutableSetOf()
         val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()
 
         for (variantContext in fileReader) {
-            val structuralVariant = StructuralVariantContext(variantContext)
+            val structuralVariant = StructuralVariantContext(variantContext, ordinals.first, ordinals.second)
             val isHotspot = hotspotFilter(structuralVariant)
             val isMateFiltered = hardFilter.contains(structuralVariant.vcfId)
             val isHardFiltered = isMateFiltered || (!isHotspot && structuralVariant.isHardFilter(config.filterConfig))

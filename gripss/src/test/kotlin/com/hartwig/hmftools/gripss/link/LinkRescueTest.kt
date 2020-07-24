@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.gripss.link
 
 import com.hartwig.hmftools.common.gripss.GripssFilters
+import com.hartwig.hmftools.gripss.GripssFilterConfig
 import com.hartwig.hmftools.gripss.MIN_LENGTH
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.createVariant
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.toSv
@@ -53,7 +54,7 @@ class LinkRescueTest {
 
         val softFilterStore = SoftFilterStore(listOf(Pair("1start", fail), Pair("1end", fail), Pair("2start", fail), Pair("2end", fail), Pair("3start", fail), Pair("3end", fail)).toMap())
 
-        val victim = LinkRescue(linkStore, softFilterStore, variantStore, true)
+        val victim = LinkRescue.rescue(GripssFilterConfig.default(), linkStore, softFilterStore, variantStore, true, false)
         assertTrue(victim.rescues.contains("1start"))
         assertTrue(victim.rescues.contains("1end"))
         assertTrue(victim.rescues.contains("2start"))
@@ -74,7 +75,7 @@ class LinkRescueTest {
 
         val softFilterStore = SoftFilterStore(listOf(Pair("1start", fail), Pair("1end", fail), Pair("2start", fail), Pair("2end", fail), Pair("3start", fail), Pair("3end", fail)).toMap())
 
-        val victim = LinkRescue(linkStore, softFilterStore, variantStore, true)
+        val victim = LinkRescue.rescue(GripssFilterConfig.default(), linkStore, softFilterStore, variantStore, true, false)
         assertTrue(victim.rescues.contains("1start"))
         assertTrue(victim.rescues.contains("1end"))
         assertTrue(victim.rescues.contains("2start"))

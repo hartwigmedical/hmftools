@@ -192,7 +192,6 @@ ORDER BY 2 DESC;
 
  
 # Version History and Download Links
-To see arguments and usages of AMBER 2 please refer to the old [README](./README_2.md)
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.3)
   - Fixed bug where SNPCHECK loci were not written to REFERENCE.amber.snp.vcf.gz where read depth = 0
   - Added AmberSample and AmberPatient DB tables. [Database patch required](../patient-db/src/main/resources/patches/amber3.3_to_3.4_migration.sql).

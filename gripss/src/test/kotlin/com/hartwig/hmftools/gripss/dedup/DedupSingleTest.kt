@@ -171,6 +171,7 @@ class DedupSingleTest {
         return VariantContextTestFactory.createVariant("1", pos, id, "A", alt, qual, setOf("."))
                 .setAttribute("IMPRECISE", !precise)
                 .cipos(Pair(-cipos, cipos), Pair(-cipos, cipos))
+
                 .toSv()
     }
 }
