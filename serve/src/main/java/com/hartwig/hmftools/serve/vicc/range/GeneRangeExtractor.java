@@ -36,12 +36,12 @@ public class GeneRangeExtractor {
                     .substring(feature.proteinAnnotation().length() - 1)
                     .equals("X") || GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
 
-                Map<String, HmfTranscriptRegion> allGenesMap37 = HmfGenePanelSupplier.allGenesMap37();
-                HmfTranscriptRegion canonicalTranscript = allGenesMap37.get("gene");
-
                 //TODO: possible using transvar for the codons
                 geneRangesPerFeature.put(feature, feature.name());
             }
+
+            Map<String, HmfTranscriptRegion> allGenesMap37 = HmfGenePanelSupplier.allGenesMap37();
+            HmfTranscriptRegion canonicalTranscript = allGenesMap37.get(feature.geneSymbol());
         }
 
         return geneRangesPerFeature;
