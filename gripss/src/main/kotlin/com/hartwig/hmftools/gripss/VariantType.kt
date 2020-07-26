@@ -83,10 +83,10 @@ sealed class Paired : VariantType() {
     abstract val length: Int
 
     fun altString(): String {
-        return when(Pair(startOrientation, endOrientation)) {
-            Pair(1.toByte(),(-1).toByte()) -> "$alt$insertSequence[$otherChromosome:$otherPosition["
-            Pair(1.toByte(),1.toByte()) -> "$alt$insertSequence]$otherChromosome:$otherPosition]"
-            Pair((-1).toByte(),(-1).toByte()) -> "[$otherChromosome:$otherPosition[$insertSequence$alt"
+        return when (Pair(startOrientation, endOrientation)) {
+            Pair(1.toByte(), (-1).toByte()) -> "$alt$insertSequence[$otherChromosome:$otherPosition["
+            Pair(1.toByte(), 1.toByte()) -> "$alt$insertSequence]$otherChromosome:$otherPosition]"
+            Pair((-1).toByte(), (-1).toByte()) -> "[$otherChromosome:$otherPosition[$insertSequence$alt"
             else -> "]$otherChromosome:$otherPosition]$insertSequence$alt"
         }
     }
@@ -103,6 +103,8 @@ sealed class VariantType {
 
     companion object Factory {
         private const val BREAKPOINT_REGEX = "^(.*)([\\[\\]])(.+)[\\[\\]](.*)\$"
+        private val POLY_T = "T".repeat(10)
+        private val POLY_A = "A".repeat(10)
 
         fun create(chromosome: String, position: Int, ref: String, alt: String): VariantType {
             if (alt.startsWith(".")) {
@@ -156,4 +158,35 @@ sealed class VariantType {
                 Deletion(altBase, insertSequence, otherChromosome, otherPosition, startOrientation, endOrientation, length)
         }
     }
+
+    fun isMobileElementInsertion(): Boolean {
+        if (insertSequence.length < 10) {
+            return false
+        }
+
+        val repeatChar: Char
+        val truncatedInsertSequence: String
+        val polyChar: String
+        if (startOrientation == 1.toByte()) {
+            repeatChar = 'T'
+            truncatedInsertSequence = insertSequence.take(20)
+            polyChar = POLY_T
+        } else {
+            repeatChar = 'A'
+            truncatedInsertSequence = insertSequence.takeLast(20)
+            polyChar = POLY_A
+        }
+
+        if (truncatedInsertSequence.filter { x:Char -> x == repeatChar }.length >= 16) {
+            return true
+        }
+
+        if (truncatedInsertSequence.contentEquals(polyChar)) {
+            return true
+        }
+
+        return false
+    }
+
+
 }
