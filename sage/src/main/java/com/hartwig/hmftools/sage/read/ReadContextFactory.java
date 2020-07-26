@@ -18,6 +18,7 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextFactory {
 
     private static final int MIN_CORE_DISTANCE = 2;
+    private static final int MIN_REPEAT_COUNT = 3;
 
     private final int flankSize;
 
@@ -38,7 +39,7 @@ public class ReadContextFactory {
         int endIndex = Math.max(microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
         final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
-        if (refRepeatContext.isPresent()) {
+        if (refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent()) {
             final RepeatContext repeat = refRepeatContext.get();
             int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
             int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
@@ -47,7 +48,7 @@ public class ReadContextFactory {
         }
 
         final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
-        if (readRepeatContext.isPresent()) {
+        if (readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent()) {
             final RepeatContext repeat = readRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
@@ -78,7 +79,7 @@ public class ReadContextFactory {
         int endIndex = Math.max(microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
         final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
-        if (refRepeatContext.isPresent()) {
+        if (refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent()) {
             final RepeatContext repeat = refRepeatContext.get();
             int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
             int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
@@ -87,7 +88,7 @@ public class ReadContextFactory {
         }
 
         final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
-        if (readRepeatContext.isPresent()) {
+        if (readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent()) {
             final RepeatContext repeat = readRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
@@ -118,7 +119,7 @@ public class ReadContextFactory {
         int endIndex = readIndex + length - 1 + MIN_CORE_DISTANCE;
 
         final Optional<RepeatContext> refPriorRepeatContext = RepeatContextFactory.repeats(refIndex - 1, refBases.bases());
-        if (refPriorRepeatContext.isPresent()) {
+        if (refPriorRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent()) {
             final RepeatContext repeat = refPriorRepeatContext.get();
             int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
             int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
@@ -127,7 +128,7 @@ public class ReadContextFactory {
         }
 
         final Optional<RepeatContext> refPostRepeatContext = RepeatContextFactory.repeats(refIndex + length, refBases.bases());
-        if (refPostRepeatContext.isPresent()) {
+        if (refPostRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent()) {
             final RepeatContext repeat = refPostRepeatContext.get();
             int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
             int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
@@ -136,7 +137,7 @@ public class ReadContextFactory {
         }
 
         final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex, record.getReadBases());
-        if (readRepeatContext.isPresent()) {
+        if (readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent()) {
             final RepeatContext repeat = readRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);

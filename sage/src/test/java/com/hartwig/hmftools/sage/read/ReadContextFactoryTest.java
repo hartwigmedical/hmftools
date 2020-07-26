@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -19,7 +18,6 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    @Ignore
     public void testSimpleSnvHas5BaseCore() {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GATCACCTAGG";
@@ -31,7 +29,6 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    @Ignore
     public void testSimpleInsert() {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GAGGCTCATCTAGG";
@@ -87,7 +84,6 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    @Ignore
     public void testDeleteAtHomology() {
         String refSequence = "GATCGGATCGCTT";
         String readSequence = "GATCGCTT";
@@ -121,7 +117,6 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    @Ignore
     public void testDeleteOneBase() {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GTCATCTAGG";
@@ -133,7 +128,6 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    @Ignore
     public void testDeleteTwoBase() {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GCATCTAGG";
