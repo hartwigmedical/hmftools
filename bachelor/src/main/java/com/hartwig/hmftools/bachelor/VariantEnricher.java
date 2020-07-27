@@ -23,12 +23,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bachelor.types.BachelorConfig;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.GermlineVariant;
@@ -121,6 +119,7 @@ class VariantEnricher
     {
         if(bachRecords.isEmpty())
         {
+            // write empty output files even if no variants are found
             writeToFile(mConfig.SampleId, Lists.newArrayList());
             return;
         }
@@ -132,64 +131,38 @@ class VariantEnricher
             mBamCountReader.readBamCounts(mConfig.BamFile, bachRecords);
         }
 
-        Map<String, List<BachelorGermlineVariant>> sampleRecordsMap = Maps.newHashMap();
+        final String sampleId = mConfig.SampleId;
 
-        String currentSample = "";
-        List<BachelorGermlineVariant> sampleRecords = null;
-
-        for (final BachelorGermlineVariant bachRecord : bachRecords)
+        try
         {
-            if (currentSample.isEmpty() || !currentSample.equals(bachRecord.SampleId))
-            {
-                currentSample = bachRecord.SampleId;
-                sampleRecords = sampleRecordsMap.get(bachRecord.SampleId);
-
-                if (sampleRecords == null)
-                {
-                    sampleRecords = Lists.newArrayList();
-                    sampleRecordsMap.put(bachRecord.SampleId, sampleRecords);
-                }
-            }
-
-            sampleRecords.add(bachRecord);
-        }
-
-        for (final Map.Entry<String, List<BachelorGermlineVariant>> entry : sampleRecordsMap.entrySet())
-        {
-            final String specificSample = entry.getKey();
-            sampleRecords = entry.getValue();
-
-            BACH_LOGGER.info("Sample({}) processing {} germline reports", specificSample, sampleRecords.size());
-
             // sort by chromosome and position
-            Collections.sort(sampleRecords);
-
-            buildVariants(specificSample, sampleRecords);
-
-            if(!mConfig.PurpleDataDir.isEmpty())
-            {
-                addPurpleData(specificSample, sampleRecords);
-            }
-
-            filterRecords(sampleRecords);
-
-            if (sampleRecords.isEmpty())
-            {
-                BACH_LOGGER.info("Sample({}) has no valid germline reports", specificSample);
-                writeToFile(specificSample, Lists.newArrayList());
-                continue;
-            }
-
-            final List<GermlineVariant> germlineVariants = convert(sampleRecords);
-
-            if (mDbAccess != null)
-            {
-                BACH_LOGGER.info("Sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
-                writeToDatabase(specificSample, germlineVariants);
-            }
-
-            writeToFile(specificSample, germlineVariants);
+            Collections.sort(bachRecords);
         }
+        catch(Exception e)
+        {
+            BACH_LOGGER.error("sorting error: {}", e.toString());
+        }
+
+        BACH_LOGGER.info("Sample({}) processing {} germline reports", sampleId, bachRecords.size());
+
+        buildVariants(sampleId, bachRecords);
+
+        if(!mConfig.PurpleDataDir.isEmpty())
+        {
+            addPurpleData(sampleId, bachRecords);
+        }
+
+        applyIndelFilter(bachRecords);
+
+        final List<GermlineVariant> germlineVariants = convert(bachRecords);
+
+        if (mDbAccess != null)
+        {
+            BACH_LOGGER.info("Sample({}) writing {} germline reports to database", sampleId, bachRecords.size());
+            writeToDatabase(sampleId, germlineVariants);
+        }
+
+        writeToFile(sampleId, germlineVariants);
     }
 
     private void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
@@ -324,7 +297,7 @@ class VariantEnricher
 
     private static final int HIGH_INDEL_REPEAT_COUNT = 8;
 
-    private void filterRecords(final List<BachelorGermlineVariant> bachRecords)
+    private void applyIndelFilter(final List<BachelorGermlineVariant> bachRecords)
     {
         // currently the only filter is on INDELs with either microhomology matching the gain or loss, or with high repeat count
         final List<BachelorGermlineVariant> invalidRecords = bachRecords.stream().filter(x -> !x.isValid(false)).collect(Collectors.toList());

@@ -22,7 +22,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BachelorConfig {
+public class BachelorConfig
+{
     public final String SampleId;
     public final String OutputDir;
     public final String GermlineVcf;
@@ -74,7 +75,8 @@ public class BachelorConfig {
 
         SampleId = cmd.getOptionValue(SAMPLE, "");
 
-        if (SampleId.isEmpty()) {
+        if (SampleId.isEmpty())
+        {
             BACH_LOGGER.error("Missing Sample config");
             mIsValid = false;
         }

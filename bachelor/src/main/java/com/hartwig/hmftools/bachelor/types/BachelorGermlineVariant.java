@@ -154,6 +154,9 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         // sort based on Chromosome then Position
         if(other.Chromosome.equals(Chromosome))
         {
+            if(Position == other.Position)
+                return 0;
+
             return Position < other.Position ? -1 : 1;
         }
         else
@@ -161,26 +164,27 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
             int chr = chromosomeToInt(Chromosome);
             int otherChr = chromosomeToInt(other.Chromosome);
 
-            if(chr > 0 && otherChr > 0)
-                return chr < otherChr ? -1 : 1;
-            else if(chr > 0)
-                return -1;
-            else if(otherChr > 0)
-                return 1;
-            else
-                return Chromosome.compareTo(other.Chromosome);
+            if(chr == otherChr)
+                return 0;
+
+            return chr < otherChr ? -1 : 1;
         }
     }
 
     private static int chromosomeToInt(final String chr)
     {
+        if(chr.equals("X"))
+            return 23;
+        else if(chr.equals("Y"))
+            return 24;
+
         try
         {
             return Integer.parseInt(chr);
         }
         catch(Exception e)
         {
-            return 0;
+            return 25;
         }
     }
 

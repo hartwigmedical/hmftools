@@ -398,14 +398,12 @@ public class GermlineVariantFinder
                             {
                                 germlineVariant.setPathogenicType(BLACK_LIST);
                             }
-                            else
+                            else if(!filter.ClinvarSignificance.isEmpty())
                             {
-                                if(!filter.ClinvarSignificance.isEmpty())
-                                {
-                                    germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
-                                    germlineVariant.setPathogenicType(filter.determinePathogenicType());
-                                }
+                                germlineVariant.setPathogenicType(filter.determinePathogenicType());
                             }
+
+                            germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
                         }
                     }
                 }
@@ -431,14 +429,12 @@ public class GermlineVariantFinder
                             {
                                 germlineVariant.setPathogenicType(WHITE_LIST);
                             }
-                            else
+                            else if(!filter.ClinvarSignificance.isEmpty())
                             {
-                                if(!filter.ClinvarSignificance.isEmpty())
-                                {
-                                    germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
-                                    germlineVariant.setPathogenicType(filter.determinePathogenicType());
-                                }
+                                germlineVariant.setPathogenicType(filter.determinePathogenicType());
                             }
+
+                            germlineVariant.setClinvarData(filter.ClinvarSignificance, filter.ClinvarSigInfo);
                         }
                     }
                 }
