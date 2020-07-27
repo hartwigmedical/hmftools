@@ -130,9 +130,10 @@ Note that for DSB and hotspot rescue, neither the resued variant nor the rescuin
 - Upcoming
   - Added HardMinTumorQual [100] filter
   - Added HardMaxNormalAbsoluteSupport [3] filter 
-  - Added HardMaxNormalRelativeSupport [0.1] filter to replace MaxNormalRelativeSupport [0.03]
+  - Added HardMaxNormalRelativeSupport [0.06] filter to replace MaxNormalRelativeSupport [0.03]
   - Added SoftMaxNormalRelativeSupport [0.03] filter
   - Qual filters and QUAL field in output VCF now refer to tumor qual only
   - Added optional `reference` and `tumor` parameters
+  - Rescue DSB linked mobile element insertions
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.0)
   - Initial Release 

@@ -33,6 +33,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val imprecise = context.imprecise()
     val precise = !imprecise
     val variantType = context.toVariantType()
+    val isMobileElementInsertion = variantType.isMobileElementInsertion()
     val orientation = variantType.startOrientation
     val isSingle = variantType is Single
     val isTranslocation = variantType is Translocation

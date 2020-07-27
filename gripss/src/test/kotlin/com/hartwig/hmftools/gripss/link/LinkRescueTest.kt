@@ -1,47 +1,16 @@
 package com.hartwig.hmftools.gripss.link
 
-import com.hartwig.hmftools.common.gripss.GripssFilters
-import com.hartwig.hmftools.gripss.GripssFilterConfig
-import com.hartwig.hmftools.gripss.MIN_LENGTH
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.createVariant
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.toSv
-import com.hartwig.hmftools.gripss.link.LinkRescue.Companion.isRescueCandidate
 import com.hartwig.hmftools.gripss.store.LinkStore
 import com.hartwig.hmftools.gripss.store.SoftFilterStore
 import com.hartwig.hmftools.gripss.store.VariantStore
-import junit.framework.Assert.assertFalse
 import junit.framework.Assert.assertTrue
 import org.junit.Test
 
 class LinkRescueTest {
 
     private val fail: Set<String> = setOf("FAIL")
-
-    @Test
-    fun testRescueCandidate() {
-        val filters: MutableMap<String, Set<String>> = HashMap()
-        filters["id1"] = setOf(GripssFilters.MIN_QUAL, MIN_LENGTH)
-        filters["id2"] = setOf(MIN_LENGTH, GripssFilters.DEDUP)
-        filters["id3"] = setOf(GripssFilters.MIN_QUAL)
-        val victim = SoftFilterStore(filters)
-        assertTrue(victim.isRescueCandidate("id1"))
-        assertTrue(victim.isRescueCandidate("id1", null))
-        assertFalse(victim.isRescueCandidate("id1", "id2"))
-        assertTrue(victim.isRescueCandidate("id1", "id3"))
-        assertTrue(victim.isRescueCandidate("id1", "id4"))
-
-        assertFalse(victim.isRescueCandidate("id2"))
-        assertFalse(victim.isRescueCandidate("id2", null))
-        assertFalse(victim.isRescueCandidate("id2", "id1"))
-        assertFalse(victim.isRescueCandidate("id2", "id3"))
-        assertFalse(victim.isRescueCandidate("id2", "id4"))
-
-        assertFalse(victim.isRescueCandidate("id4"))
-        assertFalse(victim.isRescueCandidate("id4", null))
-        assertFalse(victim.isRescueCandidate("id4", "id1"))
-        assertFalse(victim.isRescueCandidate("id4", "id2"))
-        assertFalse(victim.isRescueCandidate("id4", "id3"))
-    }
 
     @Test
     fun testPassAcrossLinks() {
@@ -54,7 +23,7 @@ class LinkRescueTest {
 
         val softFilterStore = SoftFilterStore(listOf(Pair("1start", fail), Pair("1end", fail), Pair("2start", fail), Pair("2end", fail), Pair("3start", fail), Pair("3end", fail)).toMap())
 
-        val victim = LinkRescue.rescue(GripssFilterConfig.default(), linkStore, softFilterStore, variantStore, true, false)
+        val victim = LinkRescue.rescueTransitive(linkStore, softFilterStore, variantStore)
         assertTrue(victim.rescues.contains("1start"))
         assertTrue(victim.rescues.contains("1end"))
         assertTrue(victim.rescues.contains("2start"))
@@ -75,7 +44,7 @@ class LinkRescueTest {
 
         val softFilterStore = SoftFilterStore(listOf(Pair("1start", fail), Pair("1end", fail), Pair("2start", fail), Pair("2end", fail), Pair("3start", fail), Pair("3end", fail)).toMap())
 
-        val victim = LinkRescue.rescue(GripssFilterConfig.default(), linkStore, softFilterStore, variantStore, true, false)
+        val victim = LinkRescue.rescueAssembly(linkStore, softFilterStore, variantStore)
         assertTrue(victim.rescues.contains("1start"))
         assertTrue(victim.rescues.contains("1end"))
         assertTrue(victim.rescues.contains("2start"))
@@ -86,7 +55,7 @@ class LinkRescueTest {
 
     private fun createVariants(): VariantStore {
         val var1 = createVariant("1", 1000, "1start", "A", "A[1:2000[", 100, "1end").toSv()
-        val var3 =  createVariant("1", 2000, "1end", "A", "]1:1000]A", 100, "1start").toSv()
+        val var3 = createVariant("1", 2000, "1end", "A", "]1:1000]A", 100, "1start").toSv()
         val var2 = createVariant("1", 1000, "2start", "A", "A[2:2000[", 100, "2end").toSv()
         val var4 = createVariant("2", 2000, "2end", "A", "]1:1000]A", 100, "2start").toSv()
         val var6 = createVariant("3", 1000, "3start", "A", "A[2:2000[", 100, "3end").toSv()
