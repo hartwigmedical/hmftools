@@ -33,4 +33,22 @@ class SoftFilterStoreTest {
         assertTrue(victim.filters("id3", "id4").isEmpty())
         assertTrue(victim.filters("id3", "id1").isNotEmpty())
     }
+
+
+    @Test
+    fun containsFilter() {
+        val filters: MutableMap<String, Set<String>> = HashMap()
+        filters["id1"] = setOf(MIN_QUAL, MIN_LENGTH)
+        filters["id2"] = setOf(MIN_LENGTH, DEDUP)
+        val victim = SoftFilterStore(filters)
+
+        assertTrue(victim.containsFilter(MIN_QUAL, "id1", null))
+        assertTrue(victim.containsFilter(MIN_QUAL, "id1", "id2"))
+        assertTrue(victim.containsFilter(MIN_QUAL, "id1", "id3"))
+
+        assertFalse(victim.containsFilter(DEDUP, "id1", null))
+        assertTrue(victim.containsFilter(DEDUP, "id1", "id2"))
+        assertFalse(victim.containsFilter(DEDUP, "id1", "id3"))
+    }
+
 }

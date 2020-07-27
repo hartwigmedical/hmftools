@@ -45,7 +45,7 @@ There are 5 steps in GRIPSS described in detail below:
 Two hard filters are applied upfront before other processing occurs:
 * NO_MATE - Any non single breakend with no mate is filtered
 * MINIMUM_TUMOR_QUAL - Any variant with QUAL < 100 is filtered
-* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3 reads OR normalSupport > 10% * tumorSupport is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
+* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3 reads OR normalSupport > 6% * tumorSupport is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
 
 ## 2. Realignment
 
@@ -120,17 +120,20 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 ### D. Rescue
 
-Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is filtered as DEDUP and is NOT a short DEL or DUP <1kb in length, is rescued from soft filtering and marked as PASS.    Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for translocations or intrachromosomal variants of length greater than 10kb, for all soft filters except maxPolyAHomLength.
+Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is NOT filtered as DEDUP is rescued from soft filtering and marked as PASS. Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for all soft filters except maxPolyAHomLength.
 
-To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions (excluding intrachromosomal variants of length less than 10kb) which are linked by ‘DSB’, with combined qual > 1000 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion.       We define a poly-A tail as either at least 16 of the last 20 bases of the sequence are A or there is a repeat of 10 or more consecutive A or within the last 20 bases of the insert sequence.   At the insertion site, negative oriented breakends must have poly-A tails at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand)
+To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions which are linked by ‘DSB’ and NOT PON filtered, with combined qual > 1000 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion. We define a poly-A tail as either at least 16 of the last 20 bases of the sequence are A or there is a repeat of 10 or more consecutive A or within the last 20 bases of the insert sequence. At the insertion site, negative oriented breakends must have poly-A tails at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand).
+
+Note that for DSB and hotspot rescue, neither the resued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
 - Upcoming
   - Added HardMinTumorQual [100] filter
   - Added HardMaxNormalAbsoluteSupport [3] filter 
-  - Added HardMaxNormalRelativeSupport [0.1] filter to replace MaxNormalRelativeSupport [0.03]
+  - Added HardMaxNormalRelativeSupport [0.06] filter to replace MaxNormalRelativeSupport [0.03]
   - Added SoftMaxNormalRelativeSupport [0.03] filter
   - Qual filters and QUAL field in output VCF now refer to tumor qual only
   - Added optional `reference` and `tumor` parameters
+  - Rescue DSB linked mobile element insertions
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.0)
   - Initial Release 

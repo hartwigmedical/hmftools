@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.gripss.store
 
 import com.hartwig.hmftools.common.gripss.GripssFilters.DEDUP
-import com.hartwig.hmftools.common.gripss.GripssFilters.MIN_QUAL
 import com.hartwig.hmftools.gripss.GripssFilterConfig
 import com.hartwig.hmftools.gripss.MATE
 import com.hartwig.hmftools.gripss.PON
@@ -54,10 +53,16 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     fun isFiltered(vcfId: String) = get(vcfId).isNotEmpty()
 
-    fun containsDuplicateFilter(vcfId: String): Boolean = filters[vcfId]?.contains(DEDUP) == true
+    fun containsDuplicateFilter(vcfId: String, mateId: String?): Boolean {
+        return containsFilter(DEDUP, vcfId, mateId)
+    }
 
-    fun isExclusivelyMinQualFiltered(vcfId: String): Boolean {
-        return filters[vcfId]?.let { it.size == 1 && it.contains(MIN_QUAL) } == true
+    fun containsPONFilter(vcfId: String, mateId: String?): Boolean {
+        return containsFilter(PON, vcfId, mateId)
+    }
+
+    fun containsFilter(filter: String, vcfId: String, mateId: String?): Boolean {
+        return (filters[vcfId]?.contains(filter) ?: false) || (mateId?.let { filters[it]?.contains(filter) } ?: false)
     }
 
     fun update(duplicates: Set<String>, rescues: Set<String>): SoftFilterStore {

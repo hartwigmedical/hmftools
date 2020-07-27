@@ -47,8 +47,6 @@ fun main(args: Array<String>) {
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
     companion object {
         const val PON_ADDITIONAL_DISTANCE = 1
-        const val MIN_HOTSPOT_DISTANCE = 1000
-        const val MIN_RESCUE_QUAL = 100
 
         val logger = LogManager.getLogger(this::class.java)
         val version = VersionInfo("gripss.version")
@@ -103,11 +101,12 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates())
 
         logger.info("Rescuing linked variants")
-        val dsbRescues = LinkRescue.rescue(config.filterConfig, dsbLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = false, rescueQual = true).rescues
-        val dsbRescueSingles = LinkRescue.rescueSingles(dsbLinks, softFiltersAfterSingleDedup, variantStore, config.filterConfig).rescues
-        val assemblyRescues = LinkRescue.rescue(config.filterConfig, assemblyLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = true, rescueQual = false).rescues
-        val transitiveRescues = LinkRescue.rescue(config.filterConfig, transitiveLinks, softFiltersAfterSingleDedup, variantStore, rescueShort = true, rescueQual = false).rescues
-        val allRescues = dsbRescues + dsbRescueSingles + assemblyRescues + transitiveRescues
+        val dsbRescues = LinkRescue.rescueDsb(dsbLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val dsbRescueMobileElements = LinkRescue.rescueDsbMobileElementInsertion(config.filterConfig, dsbLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val assemblyRescues = LinkRescue.rescueAssembly(assemblyLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val transitiveRescues = LinkRescue.rescueTransitive(transitiveLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val allRescues = dsbRescues + dsbRescueMobileElements + assemblyRescues + transitiveRescues
+
 
         logger.info("Writing file: ${config.outputVcf}")
         val combinedLinks = LinkStore(combinedTransitiveAssemblyLinks, dsbLinks)
@@ -142,9 +141,8 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
     private fun hotspotFilter(hotspotStore: LocationStore): (StructuralVariantContext) -> Boolean {
         val appropriateSoftFilters = { x: StructuralVariantContext -> !x.polyATHomologyFilter() }
-        val minQualFilter = { x: StructuralVariantContext -> x.qual >= MIN_RESCUE_QUAL }
-        val minDistanceFilter = { x: StructuralVariantContext -> x.isSingle || x.isTranslocation || (x.variantType as Paired).length > MIN_HOTSPOT_DISTANCE }
-        return { variant -> minQualFilter(variant) && minDistanceFilter(variant) && appropriateSoftFilters(variant) && hotspotStore.contains(variant) }
+        val minDistanceFilter = { x: StructuralVariantContext -> !x.isTooShortToRescue }
+        return { variant -> minDistanceFilter(variant) && appropriateSoftFilters(variant) && hotspotStore.contains(variant) }
     }
 
     private fun ponFiltered(contigComparator: ContigComparator, variants: List<StructuralVariantContext>): Set<String> {
