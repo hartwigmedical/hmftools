@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -174,5 +175,24 @@ public class SigUtils
         return rangeVal;
     }
 
+    public static List<String> loadSampleListFile(final String filename)
+    {
+        try
+        {
+            final List<String> sampleIds = Files.readAllLines(new File(filename).toPath());
+
+            if (sampleIds.get(0).equals("SampleId"))
+                sampleIds.remove(0);
+
+            LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
+
+            return sampleIds;
+        }
+        catch (IOException exception)
+        {
+            LOGGER.error("failed to read sample list input CSV file({}): {}", filename, exception.toString());
+            return Lists.newArrayList();
+        }
+    }
 
 }

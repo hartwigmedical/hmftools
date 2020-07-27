@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sig_analyser.loaders;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.SigUtils.loadSampleListFile;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -98,35 +99,6 @@ public class DataLoaderConfig
         options.addOption(SUBCLONAL_MIN, true, "Optional: subclonal min threshold");
         options.addOption(PLOIDY_MAX, true, "Optional: ploidy max threshold");
         options.addOption(PLOIDY_MIN, true, "Optional: ploidy min threshold");
-    }
-
-    private static final List<String> loadSampleListFile(final String filename)
-    {
-        List<String> sampleIds = Lists.newArrayList();
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine(); // skip header
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
-
-                final String sampleId = items[0];
-                sampleIds.add(sampleId);
-            }
-
-            LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
-
-        }
-        catch (IOException exception)
-        {
-            LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
-        }
-
-        return sampleIds;
     }
 
     public boolean passesFilters(final SomaticVariant variant)

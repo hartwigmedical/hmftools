@@ -52,7 +52,7 @@ public class LinxConfig
 
     public final LinxOutput Output;
 
-    private List<String> mSampleIds;
+    private final List<String> mSampleIds;
 
     // config options
     public static final String PURPLE_DATA_DIR = "purple_dir";
