@@ -6,6 +6,59 @@ import org.junit.Test
 class VariantTypeTest {
 
     @Test
+    fun testMobileElementInsertion(){
+        isNotMobileElementInsert("T", "TTTTTTTTTT.")
+        isNotMobileElementInsert("C", "CTTTTTTTTT.")
+        isMobileElementInsertion("C", "CTTTTTTTTTT.")
+        isNotMobileElementInsert("C", "CTTTTTTTTTG.")
+
+        isNotMobileElementInsert("C", "CTTTTTTTTTGTTTTTT.")
+        isMobileElementInsertion("C", "CTTTTTTTTTGTTTTTTT.")
+
+        isNotMobileElementInsert("A", ".AAAAAAAAAA")
+        isNotMobileElementInsert("C", ".AAAAAAAAAC")
+        isMobileElementInsertion("C", ".AAAAAAAAAAC")
+        isNotMobileElementInsert("C", ".GAAAAAAAAAC")
+
+        isNotMobileElementInsert("C", ".AAAAAAAAAAGAAAAAC")
+        isMobileElementInsertion("C", ".AAAAAAAAAAGAAAAAAC")
+    }
+
+    private fun isMobileElementInsertion(ref: String, alt: String) {
+        isMobileElementInsert(true, ref, alt)
+
+        if (alt.endsWith(".")) {
+            isMobileElementInsert(true, ref, alt.replace(".", "[1:1000["))
+
+            val reverseAlt = "." + alt.replace(".","'")
+            isMobileElementInsert(false, ref, reverseAlt)
+            isMobileElementInsert(false, ref, reverseAlt.replace(".", "]1:1000]"))
+        }
+
+        if (alt.startsWith(".'")) {
+            isMobileElementInsert(true, ref, alt.replace(".", "]1:1000]"))
+
+            val reverseAlt = alt.replace(".","'") + "."
+            isMobileElementInsert(false, ref, reverseAlt)
+            isMobileElementInsert(false, ref, reverseAlt.replace(".", "[1:1000["))
+        }
+    }
+
+    private fun isNotMobileElementInsert(ref: String, alt: String) {
+        isMobileElementInsert(false, ref, alt)
+    }
+
+    private fun isMobileElementInsert(expected: Boolean, ref: String, alt: String) {
+        assertEquals(expected, VariantType.create("1", 100, ref, alt).isMobileElementInsertion())
+    }
+
+    @Test
+    fun testSingle() {
+        val sgl = VariantType.create("1", 100, "A", "TAAA.");
+        println(sgl)
+    }
+
+    @Test
     fun testBnd() {
         val start = VariantType.create("1", 100, "A", "AAT[2:110[")
         assertEquals(Translocation("A", "AT","2", 110, 1, -1), start)
