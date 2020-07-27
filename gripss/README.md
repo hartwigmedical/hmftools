@@ -124,7 +124,7 @@ Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and
 
 To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions which are linked by ‘DSB’ and NOT PON filtered, with combined qual > 1000 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion. We define a poly-A tail as either at least 16 of the last 20 bases of the sequence are A or there is a repeat of 10 or more consecutive A or within the last 20 bases of the insert sequence. At the insertion site, negative oriented breakends must have poly-A tails at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand).
 
-Note that in all rescue scenarios neither the resued variant nor the rescuing variant is permitted to be a DEL or DUP < 10kb in length.  
+Note that in all rescue scenarios neither the resued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
 - Upcoming
