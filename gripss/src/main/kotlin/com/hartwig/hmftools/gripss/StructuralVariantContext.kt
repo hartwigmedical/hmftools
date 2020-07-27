@@ -12,7 +12,8 @@ import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 
-const val SHORT_EVENT_SIZE = 1000
+const val SHORT_CALLING_SIZE = 1000
+const val SHORT_RESCUE_SIZE = 10000
 
 typealias Cipos = Pair<Int, Int>
 
@@ -32,15 +33,18 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val contig = context.contig!!
     val imprecise = context.imprecise()
     val precise = !imprecise
+
     val variantType = context.toVariantType()
     val isMobileElementInsertion = variantType.isMobileElementInsertion()
     val orientation = variantType.startOrientation
     val isSingle = variantType is Single
-    val isTranslocation = variantType is Translocation
-    val isShortDup = variantType is Duplication && variantType.length < SHORT_EVENT_SIZE
-    val isShortDel = variantType is Deletion && variantType.length < SHORT_EVENT_SIZE
-    val isShortIns = variantType is Insertion && variantType.length < SHORT_EVENT_SIZE
-    val isShort = isShortDup || isShortDel || isShortIns
+    val isTooShortToRescue = when (variantType) {
+        is Duplication -> variantType.length < SHORT_RESCUE_SIZE
+        is Deletion -> variantType.length < SHORT_RESCUE_SIZE
+        is Insertion -> variantType.length < SHORT_RESCUE_SIZE
+        else -> false
+    }
+
     val vcfId: String = context.id
     val mateId: String? = context.mate()
     val confidenceInterval = context.confidenceInterval()
@@ -55,6 +59,11 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val maxStart = startBreakend.end
     val insertSequenceLength = variantType.insertSequence.length
     val duplicationLength = (variantType as? Duplication)?.let { it.length + 1 } ?: 0
+
+    internal val isShortDup = variantType is Duplication && variantType.length < SHORT_CALLING_SIZE
+    internal val isShortDel = variantType is Deletion && variantType.length < SHORT_CALLING_SIZE
+    internal val isShortIns = variantType is Insertion && variantType.length < SHORT_CALLING_SIZE
+    internal val isShort = isShortDup || isShortDel || isShortIns
 
     private val tumorAF = tumorGenotype.allelicFrequency(isSingle, isShort)
 

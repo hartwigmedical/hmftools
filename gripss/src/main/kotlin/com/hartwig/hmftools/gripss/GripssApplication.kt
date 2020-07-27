@@ -141,7 +141,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
     private fun hotspotFilter(hotspotStore: LocationStore): (StructuralVariantContext) -> Boolean {
         val appropriateSoftFilters = { x: StructuralVariantContext -> !x.polyATHomologyFilter() }
-        val minDistanceFilter = { x: StructuralVariantContext -> !x.isShort }
+        val minDistanceFilter = { x: StructuralVariantContext -> !x.isTooShortToRescue }
         return { variant -> minDistanceFilter(variant) && appropriateSoftFilters(variant) && hotspotStore.contains(variant) }
     }
 

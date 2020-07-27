@@ -23,7 +23,7 @@ data class LinkRescue(val rescues: Set<String>) {
 
         private fun rescue(links: LinkStore, softFilterStore: SoftFilterStore, variantStore: VariantStore, rescueShort: Boolean): LinkRescue {
             val rescues = mutableSetOf<String>()
-            val isValid = { x: StructuralVariantContext -> (rescueShort || !x.isShort) && !softFilterStore.containsDuplicateFilter(x.vcfId, x.mateId) }
+            val isValid = { x: StructuralVariantContext -> (rescueShort || !x.isTooShortToRescue) && !softFilterStore.containsDuplicateFilter(x.vcfId, x.mateId) }
             val isRescueCandidate = { x: StructuralVariantContext -> isValid(x) && softFilterStore.isFiltered(x.vcfId) }
 
             for (vcfId in links.linkedVariants()) {
@@ -51,7 +51,7 @@ data class LinkRescue(val rescues: Set<String>) {
 
         fun rescueDsbMobileElementInsertion(config: GripssFilterConfig, links: LinkStore, softFilterStore: SoftFilterStore, variantStore: VariantStore): LinkRescue {
             val rescues = mutableSetOf<String>()
-            val isValid = { x: StructuralVariantContext -> !softFilterStore.containsPONFilter(x.vcfId, x.mateId) && !softFilterStore.containsDuplicateFilter(x.vcfId, x.mateId) && !x.isShort }
+            val isValid = { x: StructuralVariantContext -> !softFilterStore.containsPONFilter(x.vcfId, x.mateId) && !softFilterStore.containsDuplicateFilter(x.vcfId, x.mateId) && !x.isTooShortToRescue }
             val isRescueCandidate = { x: StructuralVariantContext -> softFilterStore.isFiltered(x.vcfId) && isValid(x) }
 
             for (vcfId in links.linkedVariants()) {
