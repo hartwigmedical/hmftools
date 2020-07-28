@@ -47,30 +47,13 @@ public class GeneRangeExtractor {
                     .equals("X") || GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
                 String proteinAnnotation = feature.proteinAnnotation();
                 String geneSymbol = feature.geneSymbol();
-                int codonNumber = Integer.valueOf(feature.proteinAnnotation().replaceAll("\\D+",""));
-                int genomicPosition = codonNumber * 3;
-                LOGGER.info(geneSymbol);
+                int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+",""));
 
                 HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-                long start;
-                long GDNA;
-                if (canonicalTranscript.strand() == Strand.REVERSE) {
-                    start = canonicalTranscript.codingStart();
-                    LOGGER.info(canonicalTranscript.codonRangeByIndex(600,600));
-                    LOGGER.info(genomicPosition);
-                    GDNA = start - genomicPosition;
-                } else if (canonicalTranscript.strand() == Strand.FORWARD) {
-                    start = canonicalTranscript.codingStart();
-                    GDNA = start + genomicPosition;
-                } else {
-                    start = 0;
-                    GDNA = 0;
-                }
-
-//                LOGGER.info(canonicalTranscript.strand());
-//                LOGGER.info(start);
-//                LOGGER.info(GDNA);
+                LOGGER.info(geneSymbol);
+                LOGGER.info(canonicalTranscript.codonRangeByIndex(codonNumber,codonNumber).get(0).start());
+                LOGGER.info(canonicalTranscript.codonRangeByIndex(codonNumber,codonNumber).get(0).end());
 
 
 
