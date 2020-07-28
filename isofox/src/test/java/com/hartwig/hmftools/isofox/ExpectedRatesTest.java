@@ -21,7 +21,7 @@ import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
-import com.hartwig.hmftools.isofox.expression.ExpectationMaxFit;
+import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.common.sigs.SigMatrix;

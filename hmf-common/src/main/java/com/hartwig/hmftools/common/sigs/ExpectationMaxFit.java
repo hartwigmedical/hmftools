@@ -1,18 +1,20 @@
-package com.hartwig.hmftools.isofox.expression;
+package com.hartwig.hmftools.common.sigs;
 
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_PERC;
 import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_TOTAL;
 import static com.hartwig.hmftools.common.sigs.DataUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.DataUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExpectationMaxFit
 {
     private static final int MAX_ITERATIONS = 20;
     private static final double RESIDUALS_EXIT_PERC = 0.001;
+
+    private static final Logger LOGGER = LogManager.getLogger(ExpectationMaxFit.class);
 
     public static final double[] performFit(final double[] transCounts, final SigMatrix transDefinitions)
     {
@@ -75,7 +77,7 @@ public class ExpectationMaxFit
 
             double[] residuals = calcResiduals(transCounts, fittedCounts, totalCounts);
 
-            ISF_LOGGER.trace(String.format("totalCount(%.0f) residuals(%.0f perc=%.3f) iteration(%d)",
+            LOGGER.trace(String.format("totalCount(%.0f) residuals(%.0f perc=%.3f) iteration(%d)",
                     totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC], iteration));
 
             /*
