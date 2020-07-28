@@ -103,13 +103,13 @@ public class DriverGeneAnnotator
         mChrBreakendMap = chrBreakendMap;
         mDriverOutputList.clear();
 
-        if(mDbAccess != null)
-        {
-            mDataCache.loadDataFromDatabase();
-        }
-        else if(!mConfig.PurpleDataPath.isEmpty())
+        if(!mConfig.PurpleDataPath.isEmpty())
         {
             mDataCache.loadDataFromFile(mConfig.PurpleDataPath);
+        }
+        else if(mDbAccess != null)
+        {
+            mDataCache.loadDataFromDatabase();
         }
         else
         {

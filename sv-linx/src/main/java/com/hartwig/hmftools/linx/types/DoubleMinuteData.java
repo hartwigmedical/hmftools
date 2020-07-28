@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.getAdjacentMajorAPRatio;
 
 import java.util.List;
@@ -183,12 +184,14 @@ public class DoubleMinuteData
                 final SvBreakend otherBreakend = breakend.getOtherBreakend();
 
                 boolean otherBreakendInSegment = allLinkedPairs.stream()
-                        .anyMatch(x -> x.chromosome().equals(breakend.chromosome())
+                        .anyMatch(x -> x.chromosome().equals(otherBreakend.chromosome())
                                 && positionWithin(
                                 otherBreakend.position(), x.getBreakend(SE_START).position(), x.getBreakend(SE_END).position()));
 
                 if(!otherBreakendInSegment)
                 {
+                    LNX_LOGGER.debug("cluster({}) pair({}) has in-out SV({})", Cluster.id(), pair.toString(), breakend.getSV());
+
                     ++IntExtCount;
                     IntExtJcnTotal += breakend.jcn();
                     IntExtMaxJcn = max(IntExtMaxJcn, breakend.jcn());
