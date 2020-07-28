@@ -211,42 +211,6 @@ public class DoubleMinuteData
         }
     }
 
-    private double getPairCnChange(final LinkedPair pair)
-    {
-        // checks if the pair has neither end within another chain link
-        double cnChange = 0;
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            SvBreakend pairBE = pair.getBreakend(se);
-            boolean isOuter = true;
-
-            for(SvChain chain : Chains)
-            {
-                for(LinkedPair chainLink : chain.getLinkedPairs())
-                {
-                    if(chainLink.chromosome().equals(pair))
-                    {
-                        if(positionWithin(pairBE.position(), chainLink.getBreakend(true).position(), chainLink.getBreakend(false).position()))
-                        {
-                            isOuter = false;
-                            break;
-                        }
-                    }
-                }
-
-                if(!isOuter)
-                    break;
-            }
-
-            if(isOuter)
-            {
-                cnChange += pairBE.copyNumberLowSide() * (pairBE.orientation() == -1 ? 1 : -1);
-            }
-        }
-
-        return cnChange;
-    }
-
     public String internalTypeCountsAsStr()
     {
         return String.format("%.0f,%.1f,%.1f,%.0f,%.1f,%.1f,%.0f,%.1f,%.1f",

@@ -111,6 +111,10 @@ public class DriverGeneAnnotator
         {
             mDataCache.loadDataFromFile(mConfig.PurpleDataPath);
         }
+        else
+        {
+            return;
+        }
 
         // types handled:
         // - TSG biallelic point mutations
