@@ -49,7 +49,7 @@ public class GeneRangeExtractor {
                 String geneSymbol = feature.geneSymbol();
                 int codonNumber = Integer.valueOf(feature.proteinAnnotation().replaceAll("\\D+",""));
                 int genomicPosition = codonNumber * 3;
-               // LOGGER.info(geneSymbol);
+                LOGGER.info(geneSymbol);
 
                 HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
@@ -57,6 +57,8 @@ public class GeneRangeExtractor {
                 long GDNA;
                 if (canonicalTranscript.strand() == Strand.REVERSE) {
                     start = canonicalTranscript.codingStart();
+                    LOGGER.info(canonicalTranscript.codonRangeByIndex(600,600));
+                    LOGGER.info(genomicPosition);
                     GDNA = start - genomicPosition;
                 } else if (canonicalTranscript.strand() == Strand.FORWARD) {
                     start = canonicalTranscript.codingStart();
