@@ -52,8 +52,8 @@ public class GeneRangeExtractor {
                 HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
                 LOGGER.info(geneSymbol);
-                LOGGER.info(canonicalTranscript.codonRangeByIndex(codonNumber,codonNumber).get(0).start());
-                LOGGER.info(canonicalTranscript.codonRangeByIndex(codonNumber,codonNumber).get(0).end());
+                LOGGER.info(canonicalTranscript.codonByIndex(codonNumber).get(0).start());
+                LOGGER.info(canonicalTranscript.codonByIndex(codonNumber).get(0).end());
 
 
 
