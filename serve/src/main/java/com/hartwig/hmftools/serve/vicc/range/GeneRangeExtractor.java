@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.vicc.range;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -8,6 +9,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -43,17 +45,44 @@ public class GeneRangeExtractor {
             } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
                     .substring(feature.proteinAnnotation().length() - 1)
                     .equals("X") || GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
+                String proteinAnnotation = feature.proteinAnnotation();
+                String geneSymbol = feature.geneSymbol();
+                int codonNumber = Integer.valueOf(feature.proteinAnnotation().replaceAll("\\D+",""));
+                int genomicPosition = codonNumber * 3;
+               // LOGGER.info(geneSymbol);
+
+                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+
+                long start;
+                long GDNA;
+                if (canonicalTranscript.strand() == Strand.REVERSE) {
+                    start = canonicalTranscript.codingStart();
+                    GDNA = start - genomicPosition;
+                } else if (canonicalTranscript.strand() == Strand.FORWARD) {
+                    start = canonicalTranscript.codingStart();
+                    GDNA = start + genomicPosition;
+                } else {
+                    start = 0;
+                    GDNA = 0;
+                }
+
+//                LOGGER.info(canonicalTranscript.strand());
+//                LOGGER.info(start);
+//                LOGGER.info(GDNA);
+
+
 
                 geneRangesPerFeature.put(feature, feature.name());
             }
 
-            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+            //long startCodingMutation = canonicalTranscript.codingStart();
+            //Strand geneStrand = canonicalTranscript.strand();
 
             //canonicalTranscript.codingStart() + canonicalTranscript.codingEnd() --> for example V600X
             // look up postion in genome V600 example
             // ignore V600E/K example
 
-            List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
+        //    List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
              //String exon = exonRegions.get(1).exonID(); --> for example exon 7 insertion
             // look op postion of example exon 7k
         }
