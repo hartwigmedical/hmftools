@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sig_analyser.cup;
 
+import static com.hartwig.hmftools.sig_analyser.cup.CupConstants.CT_UNKNOWN;
+
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -12,6 +14,7 @@ public class CupSampleData
 
     private int mIndex;
     private final Map<String,Double> mCancerCssTotals;
+    private final Map<String,Double> mSnvSigAllocations;
 
     public CupSampleData(final String sampleId, final String cancerType, final String cancerSubtype)
     {
@@ -20,10 +23,13 @@ public class CupSampleData
         CancerType = cancerType;
         CancerSubtype = cancerSubtype;
         mCancerCssTotals = Maps.newHashMap();
+        mSnvSigAllocations = Maps.newHashMap();
     }
 
     public void setSampleIndex(final int sampleIndex) { mIndex = sampleIndex; }
     public int index() { return mIndex; }
+
+    public boolean isUnknownCancerType() { return CancerType.equalsIgnoreCase(CT_UNKNOWN); }
 
     public void addSampleCss(final String cancerType, double cssWeight)
     {
@@ -36,6 +42,7 @@ public class CupSampleData
     }
 
     public final Map<String,Double> getCancerCssTotals() { return mCancerCssTotals; }
+    public final Map<String,Double> getSnvSigAllocations() { return mSnvSigAllocations; }
 
     public double getTotalWeightedCss()
     {

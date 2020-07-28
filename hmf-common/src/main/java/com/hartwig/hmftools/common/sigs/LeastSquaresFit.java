@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.common;
+package com.hartwig.hmftools.common.sigs;
 
 // File:    NonNegativeLeastSquares.java
 // Package: edu.rit.numeric

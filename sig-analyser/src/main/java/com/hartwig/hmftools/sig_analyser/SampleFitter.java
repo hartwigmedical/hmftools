@@ -16,11 +16,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
 import com.hartwig.hmftools.common.sigs.DataUtils;
-import com.hartwig.hmftools.sig_analyser.common.LeastSquaresFit;
+import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfSampleFitter;
@@ -42,6 +43,7 @@ public class SampleFitter
     private static final String FIT_METHOD_NMF = "NMF";
     private static final String FIT_METHOD_BUCKET = "Bucket";
     private static final String FIT_METHOD_LEAST_SQ = "LeastSquares";
+    private static final String FIT_METHOD_EXPECTATION_MAX = "ExpectationMax";
     private static final String SIGNATURES_FILE = "signatures_file";
 
     private static final Logger LOGGER = LogManager.getLogger(SampleFitter.class);
@@ -92,6 +94,15 @@ public class SampleFitter
                 lsqFit.solve();
 
                 final double[] sigAllocs = lsqFit.getContribs();
+                sampleContribs.setCol(i, sigAllocs);
+            }
+        }
+        else if(fitMethod.equals(FIT_METHOD_EXPECTATION_MAX))
+        {
+            for(int i = 0; i < sampleCount; ++i)
+            {
+                final double[] sampleCounts = sampleCountsMatrix.getCol(i);
+                final double[] sigAllocs = ExpectationMaxFit.performFit(sampleCounts, signatures, 0.001, 100);
                 sampleContribs.setCol(i, sigAllocs);
             }
         }
