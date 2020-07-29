@@ -42,15 +42,18 @@ public class GeneRangeExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
             if (GENE_EXON.contains(feature.name().toLowerCase()) || GENE_EXON.contains(event)) {
+
                 //TODO: fix is ignore events
-                if (!feature.name().contains(",") && !feature.name().contains("/") && !feature.name().equals("3' EXON DELETION")) {
+                if (!feature.name().contains(",") && !feature.name().contains("/") && !feature.name().contains("or") && !feature.name()
+                        .equals("3' EXON DELETION") && !feature.name().contains("-") && !feature.name().contains("&")
+                        && !feature.description().equals("NPM1 EXON 12 MUTATION")) {
                     String exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replaceAll("\\D+", "");
-                    int exonNumberList = Integer.valueOf(exonNumber)-1; // HmfExonRegion start with count 0 so exonNumber is one below
+                    int exonNumberList = Integer.valueOf(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
                     List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
                     HmfExonRegion hmfExonRegion = exonRegions.get(exonNumberList);
 
                     long start = hmfExonRegion.start();
-                    long end = hmfExonRegion.end();
+                    long end = hmfExonRegion.end();¬
                     String chromosome = hmfExonRegion.chromosome();
                     String exonId = hmfExonRegion.exonID();
 
@@ -91,7 +94,6 @@ public class GeneRangeExtractor {
                     LOGGER.warn("Multiple genomic regions known for event {}", feature);
                 }
             }
-        }
-        return geneRangesPerFeature;
+        } return geneRangesPerFeature;
     }
 }
