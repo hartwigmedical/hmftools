@@ -53,7 +53,7 @@ public class GeneRangeExtractor {
                     HmfExonRegion hmfExonRegion = exonRegions.get(exonNumberList);
 
                     long start = hmfExonRegion.start();
-                    long end = hmfExonRegion.end();¬
+                    long end = hmfExonRegion.end();
                     String chromosome = hmfExonRegion.chromosome();
                     String exonId = hmfExonRegion.exonID();
 
