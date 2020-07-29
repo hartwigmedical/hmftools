@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -26,8 +27,8 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 public class DoubleMinuteData
 {
     public final SvCluster Cluster;
-    public final List<SvVarData> SVs;
-    public final List<SvVarData> UnchainedSVs;
+    public final List<SvVarData> SVs; // identified double minute SVs
+    public final List<SvVarData> UnchainedSVs; // subset which could not be chained
 
     public double MaxBFBJcn;
     public double MinAdjacentMARatio;
@@ -41,7 +42,6 @@ public class DoubleMinuteData
     public double IntExtMaxJcn = 0; // SUM JCN of SV that connect a closed segment to a non closed segment
     public double MinAdjMAJcnRatio = 0;
 
-
     // annotations relating to chained segments
     public long ClosedSegmentLength; // Sum of closed segment length
     public int ClosedBreakends; // # of closed breakends
@@ -49,6 +49,9 @@ public class DoubleMinuteData
     public int OpenBreakends; // # of open breakends
     public double OpenJcnTotal; // Sum of JCN of open breakends
     public double OpenJcnMax; // max JCN of open breakends
+
+    public int NonSegmentFoldbacks;
+    public double NonSegmentFoldbackJcnTotal;
 
     public double TotalSegmentCnChange;
     public boolean ChainsCentromere;
@@ -107,6 +110,24 @@ public class DoubleMinuteData
         Chains.forEach(x -> allLinkedPairs.addAll(x.getLinkedPairs()));
 
         setChainCharacteristics(chrBreakendMap, allLinkedPairs);
+
+        for(SvVarData var : Cluster.getFoldbacks())
+        {
+            if(var.isChainedFoldback())
+                continue;
+
+            if(allLinkedPairs.stream()
+                    .anyMatch(x -> x.chromosome().equals(var.chromosome(true))
+                            && positionsOverlap(
+                                    var.position(true), var.position(false),
+                                    x.getBreakend(SE_START).position(), x.getBreakend(SE_END).position())))
+            {
+                continue;
+            }
+
+            ++NonSegmentFoldbacks;
+            NonSegmentFoldbackJcnTotal += var.jcn();
+        }
     }
 
     private void setChainCharacteristics(final Map<String,List<SvBreakend>> chrBreakendMap, final List<LinkedPair> allLinkedPairs)
@@ -148,6 +169,14 @@ public class DoubleMinuteData
                     OpenJcnMax = max(OpenJcnMax, chain.getLastSV().jcn());
                 }
             }
+        }
+
+        // also account for SVs not in chains
+        for(SvVarData var : UnchainedSVs)
+        {
+            OpenJcnTotal += var.jcn() * 2;
+            OpenBreakends += 2;
+            OpenJcnMax = max(OpenJcnMax, var.jcn());
         }
     }
 

@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineRepea
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineSourceMotif;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -313,21 +315,27 @@ public class LineElementAnnotator {
         if(cluster.getSvCount() <= 2 && cluster.getSglBreakendCount() == cluster.getSvCount())
         {
             /*
-            3. The cluster contains only 2 single breakends forming a short DB bridge with one side having an insert poly-A/poly-T tail
+            3. The cluster contains only 2 single breakends forming a short DB bridge AND
+             - one side having an insert poly-A/poly-T tail
+            - the single breakend has insertSequenceRepeatClass = ‘LINE/L1’
 
             4. The cluster contains exactly 1 single breakend and 1 inferred breakend AND
             - the single breakend has insertSequenceRepeatClass = ‘LINE/L1’
             - (this condition captures LINE insertion sites where we fail to call the polyA side of the insertion)
 
-            5. The cluster contains only 1 single breakend with an insert poly-A/poly-T tail
+            5. The cluster contains only 1 single breakend with an insert poly-A/poly-T tail and no CN change
+            */
 
-             */
-            if(cluster.getSvCount() == 2 && hasInsertSites)
+            boolean hasSglLineRepeatClass = cluster.getSVs().stream().filter(x -> x.type() == SGL).anyMatch(x -> hasLineRepeatClass(x));
+
+            if(cluster.getTypeCount(SGL) == 2 && (hasSglLineRepeatClass || hasInsertSites))
             {
                 final SvVarData var1 = cluster.getSV(0);
                 final SvVarData var2 = cluster.getSV(1);
+                final DbPair dbLink = var1.getDBLink(true);
+                boolean inShortDB = dbLink != null && dbLink == var2.getDBLink(true) && dbLink.length() <= MIN_DEL_LENGTH;
 
-                if(var1.orientation(true) != var2.orientation(true))
+                if(inShortDB)
                 {
                     LNX_LOGGER.debug("cluster({}) marked as line with SGL pair in DB and with insert poly A/T", cluster.id());
                     cluster.markAsLine();
@@ -335,25 +343,25 @@ public class LineElementAnnotator {
                 }
             }
 
-            boolean hasSglLineRepeatClass = cluster.getSVs().stream().filter(x -> x.type() == SGL).anyMatch(x -> hasLineRepeatClass(x));
-
             if(cluster.getTypeCount(SGL) == 1 && (hasSglLineRepeatClass || hasInsertSites))
             {
-                // additionally check for a the absence of a CN change
                 final SvVarData var = cluster.getSVs().stream().filter(x -> x.type() == SGL).findFirst().orElse(null);
 
-                double cnLowSide = var.getBreakend(true).copyNumberLowSide();
-                double cnChange = var.copyNumberChange(true);
-                boolean hasCnChange = cnLowSide <= 0 && cnChange > MAX_COPY_NUM_DIFF || !copyNumbersEqual(cnLowSide, cnLowSide + cnChange);
-
-                if(!hasCnChange)
+                if(cluster.getSvCount() == 1)
                 {
-                    LNX_LOGGER.debug("cluster({}) marked as line with SGL with LINE repeat-class({}) insertPolyAT({})",
-                            cluster.id(), hasSglLineRepeatClass, hasInsertSites);
+                    // additionally check for a the absence of a CN change for lone SGLs
+                    double cnLowSide = var.getBreakend(true).copyNumberLowSide();
+                    double cnChange = var.copyNumberChange(true);
 
-                    cluster.markAsLine();
-                    return;
+                    if((cnLowSide <= 0 && cnChange > MAX_COPY_NUM_DIFF) || !copyNumbersEqual(cnLowSide, cnLowSide + cnChange))
+                        return;
                 }
+
+                LNX_LOGGER.debug("cluster({}) marked as line with SGL with LINE repeat-class({}) insertPolyAT({})",
+                        cluster.id(), hasSglLineRepeatClass, hasInsertSites);
+
+                cluster.markAsLine();
+                return;
             }
         }
     }

@@ -105,9 +105,7 @@ java -jar sv-linx.jar
     -viral_hosts_file viral_host_ref.csv 
     -gene_transcripts_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
-    -fusion_pairs_csv knownFusionPairs.csv 
-    -promiscuous_five_csv knownPromiscuousFive.csv 
-    -promiscuous_three_csv knownPromiscuousThree.csv 
+    -known_fusion_file known_fusion_data.csv 
     -write_vis_data 
     -log_debug
 ```
