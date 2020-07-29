@@ -44,9 +44,12 @@ public class GeneRangeExtractor {
             if (GENE_EXON.contains(feature.name().toLowerCase()) || GENE_EXON.contains(event)) {
 
                 //TODO: fix is ignore events
-                if (!feature.name().contains(",") && !feature.name().contains("/") && !feature.name().contains("or") && !feature.name()
-                        .equals("3' EXON DELETION") && !feature.name().contains("-") && !feature.name().contains("&")
-                        && !feature.description().equals("NPM1 EXON 12 MUTATION")) {
+                if (feature.name().contains(",") && feature.name().contains("/") && feature.name().contains("or") && feature.name()
+                        .equals("3' EXON DELETION") && feature.name().contains("-") && feature.name().contains("&") && feature.description()
+                        .equals("NPM1 EXON 12 MUTATION")) {
+                    LOGGER.warn("Skipped future for determine genomic positions of exon range '{}'", feature);
+
+                } else {
                     String exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replaceAll("\\D+", "");
                     int exonNumberList = Integer.valueOf(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
                     List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
@@ -94,6 +97,7 @@ public class GeneRangeExtractor {
                     LOGGER.warn("Multiple genomic regions known for event {}", feature);
                 }
             }
-        } return geneRangesPerFeature;
+        }
+        return geneRangesPerFeature;
     }
 }
