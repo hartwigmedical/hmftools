@@ -10,6 +10,7 @@ import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
+import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -56,7 +57,7 @@ public final class ViccExtractor {
                     copyNumberExtractor.extractKnownAmplificationsDeletions(viccEntry);
             Map<Feature, String> fusionsPerFeature = fusionExtractor.extractKnownFusions(viccEntry);
             Map<Feature, String> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(viccEntry);
-            Map<Feature, String> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(viccEntry);
+            Map<Feature, GeneRangeAnnotation> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(viccEntry);
             Map<Feature, String> signaturesPerFeature = signaturesExtractor.extractSignatures(viccEntry);
 
             extractionResultsPerEntry.put(viccEntry,
