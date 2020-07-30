@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.immutables.value.Value;
@@ -29,7 +30,7 @@ public abstract class ViccExtractionResult {
     public abstract Map<Feature, String> geneLevelEventsPerFeature();
 
     @NotNull
-    public abstract Map<Feature, String> geneRangesPerFeature();
+    public abstract Map<Feature, GeneRangeAnnotation> geneRangesPerFeature();
 
     @NotNull
     public abstract Map<Feature, String> signaturesPerFeature();
