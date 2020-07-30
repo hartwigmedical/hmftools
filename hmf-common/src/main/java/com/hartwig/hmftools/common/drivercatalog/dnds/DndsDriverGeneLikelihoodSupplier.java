@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikel
 
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
 
@@ -13,6 +14,36 @@ import org.jetbrains.annotations.NotNull;
 public final class DndsDriverGeneLikelihoodSupplier {
 
     private DndsDriverGeneLikelihoodSupplier() {
+    }
+
+    @NotNull
+    public static Map<String, DndsDriverGeneLikelihood> tsgLikelihood(@NotNull final Set<String> tsGenes) {
+        Map<String, DndsDriverGeneLikelihood> filtered = Maps.newHashMap();
+        Map<String, DndsDriverGeneLikelihood> all = tsgLikelihood();
+
+        for (String target : tsGenes) {
+            if (!all.containsKey(target)) {
+                throw new IllegalArgumentException(target + " is not a valid TSG driver gene.");
+            }
+            filtered.put(target, all.get(target));
+        }
+
+        return filtered;
+    }
+
+    @NotNull
+    public static Map<String, DndsDriverImpactLikelihood> oncoLikelihood(@NotNull final Set<String> tsGenes) {
+        Map<String, DndsDriverImpactLikelihood> filtered = Maps.newHashMap();
+        Map<String, DndsDriverImpactLikelihood> all = oncoLikelihood();
+
+        for (String target : tsGenes) {
+            if (!all.containsKey(target)) {
+                throw new IllegalArgumentException(target + " is not a valid ONCO driver gene.");
+            }
+            filtered.put(target, all.get(target));
+        }
+
+        return filtered;
     }
 
     @NotNull
