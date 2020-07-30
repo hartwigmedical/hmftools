@@ -24,11 +24,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.DataUtils;
-import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
-import com.hartwig.hmftools.sig_analyser.common.CosineSim;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -64,7 +62,7 @@ public class CupSampleAnalyser
         mSampleTotals = null;
 
         mSnvSignatures = new CupSnvSignatures(config, mSampleDataList, mCancerSampleData);
-        mDrivers = new CupDrivers(config);
+        mDrivers = new CupDrivers(config, mSampleDataList);
 
         mSampleDataWriter = null;
     }
