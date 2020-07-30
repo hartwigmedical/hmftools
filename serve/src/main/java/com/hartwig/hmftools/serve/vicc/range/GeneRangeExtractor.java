@@ -89,7 +89,7 @@ public class GeneRangeExtractor {
                     }
                 } else if (feature.description().equals("NPM1 EXON 12 MUTATION")) {
                     //Skipping because transcript has 11 exons and not 12 both grch 37 and 38
-                    LOGGER.warn("Skipped future for determine genomic positions of exon range '{}'", feature);
+                 //   LOGGER.warn("Skipped future for determine genomic positions of exon range '{}'", feature);
                 } else if (feature.name().equals("3' EXON DELETION")) {
                     //TODO: what to do with this event?
                     //  LOGGER.warn("Skipped future for determine genomic positions of exon range '{}'", feature);
@@ -118,6 +118,9 @@ public class GeneRangeExtractor {
                             .chromosome(chromosome)
                             .event(feature.name())
                             .build();
+                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    LOGGER.warn("Skipped future for determine genomic positions of exon range '{}'", feature);
+
                 } else if (feature.name().contains("&")) {
                     //TODO determine, is it a internal fusion of a combined event
                     List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
@@ -145,6 +148,8 @@ public class GeneRangeExtractor {
                             .chromosome(chromosome)
                             .event(feature.name())
                             .build();
+                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+
                 } else {
                     String exonNumber = feature.proteinAnnotation();
 
