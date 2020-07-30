@@ -88,7 +88,7 @@ public class GeneRangeExtractor {
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     }
                 } else if (feature.description().equals("NPM1 EXON 12 MUTATION")) {
-                    //Skipping because transcript has 11 exons and not 12
+                    //Skipping because transcript has 11 exons and not 12 both grch 37 and 38
                     LOGGER.warn("Skipped future for determine genomic positions of exon range '{}'", feature);
                 } else if (feature.name().equals("3' EXON DELETION")) {
                     //TODO: what to do with this event?
