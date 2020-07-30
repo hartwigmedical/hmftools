@@ -39,7 +39,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-public class CupSnvCosineSim
+public class CupSampleAnalyser
 {
     private final CupConfig mConfig;
 
@@ -49,13 +49,12 @@ public class CupSnvCosineSim
     private final List<CupSampleData> mSampleDataList;
     private final Map<String,List<CupSampleData>> mCancerSampleData;
 
-    private SigMatrix mSnvSignatures;
-    private final List<String> mSnvSigNames;
-    private LeastSquaresFit mLeastSquaresFit;
+    private final CupDrivers mDrivers;
+    private final CupSnvSignatures mSnvSignatures;
 
-    private BufferedWriter mCssPairsWriter;
+    private BufferedWriter mSampleDataWriter;
 
-    public CupSnvCosineSim(final CupConfig config)
+    public CupSampleAnalyser(final CupConfig config)
     {
         mConfig = config;
 
@@ -64,11 +63,10 @@ public class CupSnvCosineSim
         mCancerSampleData = Maps.newHashMap();
         mSampleTotals = null;
 
-        mSnvSignatures = null;
-        mLeastSquaresFit = null;
-        mSnvSigNames = Lists.newArrayList();
+        mSnvSignatures = new CupSnvSignatures(config, mSampleDataList, mCancerSampleData);
+        mDrivers = new CupDrivers(config);
 
-        mCssPairsWriter = null;
+        mSampleDataWriter = null;
     }
 
     public void run()
@@ -84,56 +82,16 @@ public class CupSnvCosineSim
         if(!loadSampleCounts(sampleDataList))
             return;
 
-        loadSnvSignatures();
 
         initialiseOutputFiles();
 
-        int sampleCount = mSampleCounts.Cols;
+        mSnvSignatures.run();
 
-        mSampleTotals = new int[sampleCount];
+        mDrivers.run();
 
-        for(int s = 0; s < sampleCount; ++s)
-        {
-            mSampleTotals[s] = (int)sumVector(mSampleCounts.getCol(s));
-        }
+        mSampleDataList.forEach(x -> writeSampleData(x));
 
-        for(int s = 0; s < sampleCount; ++s)
-        {
-            final CupSampleData sampleData = mSampleDataList.get(s);
-            final double[] sampleCounts = mSampleCounts.getCol(s);
-
-            // for(int s2 = s1 + 1; s2 < sampleCount; ++s2)
-            for(int s2 = 0; s2 < sampleCount; ++s2)
-            {
-                if(s == s2)
-                    continue;
-
-                final CupSampleData otherSampleData = mSampleDataList.get(s2);
-
-                if(otherSampleData.isUnknownCancerType())
-                    continue;
-
-                final double[] otherSampleCounts = mSampleCounts.getCol(s2);
-
-                double css = CosineSim.calcCSS(sampleCounts, otherSampleCounts);
-
-                if(css < SNV_CSS_THRESHOLD)
-                    continue;
-
-                int cancerTypeCount = mCancerSampleData.get(otherSampleData.CancerType).size();
-                double weightedCss = pow((css - SNV_CSS_THRESHOLD) * 100, 2) / cancerTypeCount;
-
-                sampleData.addSampleCss(otherSampleData.CancerType, weightedCss);
-
-                // writeSampleCssPairData(mSampleIds.get(s1), mSampleIds.get(s2), css, mSampleTotals[s1], mSampleTotals[s2]);
-            }
-
-            fitSnvSignatures(sampleData);
-
-            writeSampleData(sampleData);
-        }
-
-        closeBufferedWriter(mCssPairsWriter);
+        closeBufferedWriter(mSampleDataWriter);
 
         CUP_LOGGER.info("CUP SNV run complete");
     }
@@ -206,52 +164,15 @@ public class CupSnvCosineSim
         return true;
     }
 
-    private void fitSnvSignatures(final CupSampleData sampleData)
-    {
-        if(mSnvSignatures == null)
-            return;
-
-        final double[] sampleCounts = mSampleCounts.getCol(sampleData.index());
-
-        mLeastSquaresFit.initialise(mSnvSignatures.getData(), sampleCounts);
-        mLeastSquaresFit.solve();
-
-        final double[] sigAllocs = mLeastSquaresFit.getContribs();
-
-        double sampleTotal = mSampleTotals[sampleData.index()];
-
-        for(int sig = 0; sig < sigAllocs.length; ++sig)
-        {
-            double sigAlloc = sigAllocs[sig];
-            double allocPerc = sigAlloc / sampleTotal;
-
-            if(sigAlloc >= SNV_SIG_MIN_COUNT && allocPerc >= SNV_SIG_MIN_PERCENT)
-            {
-                sampleData.getSnvSigAllocations().put(mSnvSigNames.get(sig), allocPerc);
-            }
-        }
-    }
-
-    private void loadSnvSignatures()
-    {
-        if(mConfig.SnvSignaturesFile.isEmpty())
-            return;
-
-        // cosmic_sig_subset.csv
-        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(mConfig.SnvSignaturesFile);
-        mSnvSigNames.addAll(sigsCollection.getFieldNames());
-        mSnvSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
-        mLeastSquaresFit = new LeastSquaresFit(mSnvSignatures.Rows, mSnvSignatures.Cols);
-    }
-
     private void initialiseOutputFiles()
     {
         try
         {
-            mCssPairsWriter = createBufferedWriter(mConfig.formOutputFilename("css_data"), false);
+            mSampleDataWriter = createBufferedWriter(mConfig.formOutputFilename("css_data"), false);
 
-            mCssPairsWriter.write("SampleId,CancerType,CancerSubtype,SnvCount,TotalWeightedCss,MatchedCancerType,MatchedCancerCss,SigData");
-            mCssPairsWriter.newLine();
+            mSampleDataWriter.write("SampleId,CancerType,CancerSubtype");
+            mSampleDataWriter.write(mSnvSignatures.getHeader());
+            mSampleDataWriter.newLine();
         }
         catch(IOException e)
         {
@@ -263,45 +184,13 @@ public class CupSnvCosineSim
     {
         try
         {
-            final String sampleStr = String.format("%s,%s,%s,%d",
-                    sampleData.SampleId, sampleData.CancerType, sampleData.CancerSubtype, mSampleTotals[sampleData.index()]);
+            mSampleDataWriter.write(String.format("%s,%s,%s",
+                    sampleData.SampleId, sampleData.CancerType, sampleData.CancerSubtype));
 
-            double totalWeightedCss = sampleData.getTotalWeightedCss();
+            mSampleDataWriter.write(String.format(",%s,%s",
+                    mSnvSignatures.getSampleOutput(sampleData), mDrivers.getSampleOutput(sampleData)));
 
-            String sigDataStr = "";
-            for(Map.Entry<String,Double> entry : sampleData.getSnvSigAllocations().entrySet())
-            {
-                sigDataStr = appendStr(sigDataStr, String.format("%s=%.2f", entry.getKey(), entry.getValue()), ';');
-            }
-
-            final Map<String,Double> cssDataMap = sampleData.getCancerCssTotals();
-
-            if(cssDataMap.isEmpty())
-            {
-                mCssPairsWriter.write(String.format("%s,0,NONE,0,%s", sampleStr, sigDataStr));
-                mCssPairsWriter.newLine();
-                return;
-            }
-
-            for(Map.Entry<String,Double> cancerCssData : cssDataMap.entrySet())
-            {
-                mCssPairsWriter.write(String.format("%s,%.4f,%s,%.4f,%s",
-                        sampleStr, totalWeightedCss, cancerCssData.getKey(), cancerCssData.getValue(), sigDataStr));
-                mCssPairsWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
-        }
-    }
-
-    private void writeSampleCssPairData(final String sampleId1, final String sampleId2, double css, int sampleTotal1, int sampleTotal2)
-    {
-        try
-        {
-            mCssPairsWriter.write(String.format("%s,%s,%.6f,%d,%d", sampleId1, sampleId2, css, sampleTotal1, sampleTotal2));
-            mCssPairsWriter.newLine();
+            mSampleDataWriter.newLine();
         }
         catch(IOException e)
         {
@@ -323,8 +212,8 @@ public class CupSnvCosineSim
 
         final CupConfig config = new CupConfig(cmd);
 
-        CupSnvCosineSim snvCosineSim = new CupSnvCosineSim(config);
-        snvCosineSim.run();
+        CupSampleAnalyser sampleAnalyser = new CupSampleAnalyser(config);
+        sampleAnalyser.run();
     }
 
     @NotNull

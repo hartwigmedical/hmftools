@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.fromString;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_PARTNERED;
+import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_PSD;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_SOLO_L1;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_TRANSDUCTION;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_LINX;
@@ -145,6 +146,9 @@ public class LineInsertSiteCompare
 
                 if(insertData != null)
                 {
+                    if(insertData.InsertType.equals(INSERT_TYPE_PSD)) // pseudo-gene insertions skipped from comparison
+                        continue;
+
                     List<LineInsertSiteData> lineDataList = mSampleInsertSiteData.get(insertData.SampleId);
 
                     if(lineDataList == null)

@@ -34,6 +34,7 @@ public class LineInsertSiteData
     public static final String INSERT_TYPE_SOLO_L1 = "SOLO_L1";
     public static final String INSERT_TYPE_PARTNERED = "PARTNERED";
     public static final String INSERT_TYPE_TRANSDUCTION = "TRANSDUCTION";
+    public static final String INSERT_TYPE_PSD = "PSD";
 
     public static final String PROGRAM_LINX = "LINX";
     public static final String PROGRAM_PCAWG = "PCAWG";
@@ -113,8 +114,16 @@ public class LineInsertSiteData
         final SvRegion insertRegion = new SvRegion(
                 insertChromosome, insertPositions[lowerInsertIndex], insertPositions[switchIndex(lowerInsertIndex)]);
 
-        final String insertType = insertTypeRaw.equals("Solo-L1") ? INSERT_TYPE_SOLO_L1 :
-                (insertTypeRaw.equals("Orphan") ? INSERT_TYPE_TRANSDUCTION : INSERT_TYPE_PARTNERED);
+        String insertType = "";
+
+        if(insertTypeRaw.equals("Solo-L1"))
+            insertType = INSERT_TYPE_SOLO_L1;
+        else if(insertTypeRaw.equals("Orphan"))
+            insertType = INSERT_TYPE_TRANSDUCTION;
+        else if(insertTypeRaw.equals("Partnered"))
+            insertType = INSERT_TYPE_PARTNERED;
+        else
+            insertType = INSERT_TYPE_PSD;
 
         final boolean hasInversion = items[fieldsIndexMap.get("InsertStructure")].equals("INV");
 

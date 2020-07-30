@@ -2,9 +2,12 @@ package com.hartwig.hmftools.sig_analyser.cup;
 
 import static com.hartwig.hmftools.sig_analyser.cup.CupConstants.CT_UNKNOWN;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class CupSampleData
 {
@@ -13,8 +16,14 @@ public class CupSampleData
     public final String CancerSubtype;
 
     private int mIndex;
+
+    // SNV signature results
     private final Map<String,Double> mCancerCssTotals;
     private final Map<String,Double> mSnvSigAllocations;
+
+    // drive genes and results
+    private final List<CupSampleDriverData> mDrivers;
+    private final Map<String,Double> mDriverCancerTypeProbs;
 
     public CupSampleData(final String sampleId, final String cancerType, final String cancerSubtype)
     {
@@ -24,6 +33,8 @@ public class CupSampleData
         CancerSubtype = cancerSubtype;
         mCancerCssTotals = Maps.newHashMap();
         mSnvSigAllocations = Maps.newHashMap();
+        mDriverCancerTypeProbs = Maps.newHashMap();
+        mDrivers = Lists.newArrayList();
     }
 
     public void setSampleIndex(final int sampleIndex) { mIndex = sampleIndex; }
@@ -48,4 +59,7 @@ public class CupSampleData
     {
         return mCancerCssTotals.values().stream().mapToDouble(x -> x).sum();
     }
+
+    public final List<CupSampleDriverData> getDrivers() { return mDrivers; }
+    public final Map<String,Double> getDriverCancerTypeProbs() { return mDriverCancerTypeProbs; }
 }

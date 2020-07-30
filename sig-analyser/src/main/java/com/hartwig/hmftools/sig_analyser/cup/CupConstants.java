@@ -9,6 +9,6 @@ public class CupConstants
 
     public final static String CT_UNKNOWN = "Unknown";
 
-
+    public final static double DRIVERS_MIN_PREVALENCE_PERCENT = 0.001;
 
 }
