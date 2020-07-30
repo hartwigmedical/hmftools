@@ -207,12 +207,12 @@ public class DoubleMinuteFinder
 
         dmData.annotate(mChrBreakendMap);
 
+        boolean isDM = dmData.isDoubleMinute();
+
         mDoubleMinutes.put(cluster.id(), dmData);
 
         // cache DM data against the cluster since it used in the chaining routine amongst other things
         cluster.setDoubleMinuteData(dmSVs, dmChains);
-
-        cluster.addAnnotation(CLUSTER_ANNOT_DM);
 
         for(SvChain dmChain : dmChains)
         {
@@ -227,8 +227,9 @@ public class DoubleMinuteFinder
             }
         }
 
-        if(dmSVs.size() == cluster.getSvCount())
+        if(isDM)
         {
+            cluster.addAnnotation(CLUSTER_ANNOT_DM);
             cluster.setResolved(false, DOUBLE_MINUTE);
         }
     }
@@ -324,7 +325,6 @@ public class DoubleMinuteFinder
         final List<String> chromosomes = Lists.newArrayList();
 
         double minDMJcn = 0;
-        double maxDMJcn = 0;
         double maxDMCopyNumber = 0;
         double minDMCopyNumber = 0;
 
@@ -336,8 +336,6 @@ public class DoubleMinuteFinder
                 minDMJcn = var.jcn();
             else
                 minDMJcn = min(minDMJcn, var.jcn());
-
-            maxDMJcn = max(var.jcn(), maxDMJcn);
 
             maxDMCopyNumber = max(maxDMCopyNumber, max(var.copyNumber(true), var.copyNumber(false)));
 
@@ -388,10 +386,10 @@ public class DoubleMinuteFinder
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
                 mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount");
-                mFileWriter.write(",SamplePurity,SamplePloidy,DMSvCount,DMSvTypes,SvIds,Chromosomes");
+                mFileWriter.write(",SamplePurity,SamplePloidy,IsDM,DMSvCount,DMSvTypes,SvIds,Chromosomes");
                 mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
                 mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
-                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,NonSegFoldbacks,NonSegFoldbackJcnTotal");
+                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,NonSegFoldbacks,NonSegFoldbackJcnTotal,SimpleDels");
                 mFileWriter.write(",FbIntCount,FbIntJcnTotal,FbIntJcnMax,SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
                 mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
                 mFileWriter.newLine();
@@ -400,23 +398,23 @@ public class DoubleMinuteFinder
             mFileWriter.write(String.format("%s,%d,%s,%s,%d",
                     sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
 
-            mFileWriter.write(String.format(",%.1f,%.1f,%d,%s,%s,%s",
-                    samplePurity, samplePloidy, dmData.SVs.size(), dmTypesStr, svIds, chromosomeStr));
+            mFileWriter.write(String.format(",%.1f,%.1f,%s,%d,%s,%s,%s",
+                    samplePurity, samplePloidy, dmData.isDoubleMinute(), dmData.SVs.size(), dmTypesStr, svIds, chromosomeStr));
 
             mFileWriter.write(String.format(",%d,%s,%d,%d,%d,%s",
                     dmData.Chains.size(), dmData.FullyChained, dmData.Chains.stream().filter(x -> x.isClosedLoop()).count(),
                     dmData.ClosedSegmentLength, dmData.SVs.size() - dmData.UnchainedSVs.size(),
                     dmData.Chains.stream().anyMatch(x -> x.hasRepeatedSV())));
 
-            mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f,%d,%.1f",
+            mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f,%d,%.1f,%d",
                     dmData.ClosedBreakends, dmData.ClosedJcnTotal, dmData.OpenBreakends, dmData.OpenJcnTotal, dmData.OpenJcnMax,
                     dmData.IntExtCount, dmData.IntExtJcnTotal, dmData.IntExtMaxJcn,
-                    dmData.NonSegmentFoldbacks, dmData.NonSegmentFoldbackJcnTotal));
+                    dmData.NonSegmentFoldbacks, dmData.NonSegmentFoldbackJcnTotal, dmData.SimpleDels));
 
             mFileWriter.write(String.format(",%s", dmData.internalTypeCountsAsStr()));
 
             mFileWriter.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f",
-                    maxDMCopyNumber, minDMJcn, maxDMJcn, amplifiedGenesStr, dmData.ChainsCentromere, dmData.MinAdjMAJcnRatio));
+                    maxDMCopyNumber, minDMJcn, dmData.MaxJcn, amplifiedGenesStr, dmData.ChainsCentromere, dmData.MinAdjMAJcnRatio));
 
             mFileWriter.newLine();
         }

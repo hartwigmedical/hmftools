@@ -129,6 +129,7 @@ public class ClusterAnalyser {
 
     // access for unit testing
     public final ChainFinder getChainFinder() { return mChainFinder; }
+    public final DoubleMinuteFinder getDoubleMinuteFinder() { return mDmFinder; }
 
     public void setRunValidationChecks(boolean toggle) { mRunValidationChecks = toggle; }
 
