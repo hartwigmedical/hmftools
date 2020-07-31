@@ -34,7 +34,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -136,8 +135,6 @@ public class DoubleMinuteFinder
 
         final List<SvChain> dmChains = createDMChains(cluster, dmSVs, false);
 
-        // every SV must be in a chain even if they're not complete, and every chain must either be closed or have a SGL or INF on the end
-
         if(dmSVs.size() > 2 && cluster.requiresReplication())
         {
             final List<SvChain> variedJcnChains = createDMChains(cluster, dmSVs, true);
@@ -211,6 +208,10 @@ public class DoubleMinuteFinder
 
         mDoubleMinutes.put(cluster.id(), dmData);
 
+        // TO-DO
+        // only resolve clusters of size 1 and 2 as DMs, otherwise just annotate the cluster as containing or being a DM
+        // mark each chains individually as meeting the DM criteria or not, and subsequently dismiss any SVs not part of those valid chains
+
         // cache DM data against the cluster since it used in the chaining routine amongst other things
         cluster.setDoubleMinuteData(dmSVs, dmChains);
 
@@ -260,6 +261,7 @@ public class DoubleMinuteFinder
     {
         // first extract stand-alone DUPs to avoid them chaining in just because they can
         final List<SvChain> dmChains = Lists.newArrayList();
+        int chainId = 0;
 
         final List<SvVarData> chainSvList = Lists.newArrayList();
 
@@ -278,7 +280,7 @@ public class DoubleMinuteFinder
                 else
                 {
                     // special case creating a chain out of a DUP
-                    SvChain chain = new SvChain(0);
+                    SvChain chain = new SvChain(chainId++);
                     LinkedPair pair = LinkedPair.from(var, var, true, false);
                     chain.addLink(pair, true);
                     chain.setJcnData(var.jcn(), var.jcnUncertainty());
@@ -292,7 +294,12 @@ public class DoubleMinuteFinder
         mChainFinder.initialise(cluster, chainSvList, applyReplication);
         mChainFinder.formChains(false);
 
-        dmChains.addAll(mChainFinder.getUniqueChains());
+        for(SvChain chain : mChainFinder.getUniqueChains())
+        {
+            chain.setId(chainId++);
+            dmChains.add(chain);
+        }
+
         mChainFinder.clear();
         return dmChains;
     }
@@ -312,8 +319,8 @@ public class DoubleMinuteFinder
         if(mOutputDir == null || mOutputDir.isEmpty())
             return;
 
-        if(!cluster.hasAnnotation(CLUSTER_ANNOT_DM))
-            return;
+        // if(!cluster.hasAnnotation(CLUSTER_ANNOT_DM))
+        //    return;
 
         final DoubleMinuteData dmData = mDoubleMinutes.get(cluster.id());
 

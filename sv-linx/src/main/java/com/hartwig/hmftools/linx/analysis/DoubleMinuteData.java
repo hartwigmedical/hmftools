@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.types;
+package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -27,6 +27,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvCluster;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class DoubleMinuteData
 {
@@ -40,6 +44,7 @@ public class DoubleMinuteData
 
     public final List<SvVarData> CandidateSVs;
     public final List<SvChain> Chains;
+    public final List<SvChain> ValidChains;
     public boolean FullyChained;
 
     // annotations relating to chained segments
@@ -76,6 +81,7 @@ public class DoubleMinuteData
         MaxJcn = 0;
 
         Chains = Lists.newArrayList();
+        ValidChains = Lists.newArrayList();
         CandidateSVs = Lists.newArrayList();
         FullyChained = false;
 
@@ -375,7 +381,6 @@ public class DoubleMinuteData
 
             if(var.jcn() / max(maxAdjacentMaJcn, 0.01) < ADJACENT_JCN_RATIO)
                 return false;
-
         }
 
         double maxJcnThreshold = MaxJcn - 4;
@@ -389,8 +394,11 @@ public class DoubleMinuteData
         final List<Integer> chainIds = Lists.newArrayList(OPEN_CHAIN_ID);
         Chains.stream().filter(x -> x.isClosedLoop()).forEach(x -> chainIds.add(x.id()));
 
-        for(Integer chainId : chainIds)
+        for(int i = 0; i <= Chains.size(); ++i)
         {
+            final SvChain chain = i < Chains.size() ? Chains.get(i) : null;
+            int chainId = chain != null ? chain.id() : OPEN_CHAIN_ID;
+
             final double[] sglInternalValues = ChainSglInternalData.get(chainId);
             final double[] infInternalValues = ChainSglInternalData.get(chainId);
             final double[] intExtValues = ChainIntExtData.get(chainId);
@@ -404,7 +412,13 @@ public class DoubleMinuteData
             double opposingJcn = intExtJcnTotal + sglInfMaxJcn + foldbackJcn;
 
             if(opposingJcn > 0 && maxJcnThreshold / opposingJcn < 1)
+            {
+
                 return false;
+            }
+
+            if(chain != null)
+                ValidChains.add(chain);
         }
 
         return true;

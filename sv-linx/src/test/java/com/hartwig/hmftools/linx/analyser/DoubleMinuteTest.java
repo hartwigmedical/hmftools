@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.types.DoubleMinuteData.SEG_DATA_COUNT;
+import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.SEG_DATA_COUNT;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
@@ -19,12 +19,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.chaining.SvChain;
-import com.hartwig.hmftools.linx.types.DoubleMinuteData;
+import com.hartwig.hmftools.linx.analysis.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -38,8 +38,6 @@ public class BfbFinder
         if(cluster.getFoldbacks().isEmpty() || cluster.getSvCount() == 1)
             return;
 
-        // consider annotating the cluster as BFB
-
         final List<SvVarData> candidateDMSVs = Lists.newArrayList();
 
         double clusterMaxJcn = 0; // the max of the JCN min values

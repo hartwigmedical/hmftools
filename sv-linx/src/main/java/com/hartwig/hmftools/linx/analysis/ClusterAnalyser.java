@@ -41,7 +41,6 @@ import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.LohEvent;
-import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.LinxConfig;
