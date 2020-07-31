@@ -119,7 +119,6 @@ public class GeneRangeExtractor {
                             .build();
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 } else {
-                    LOGGER.info(feature);
 
                     String exonNumber = feature.proteinAnnotation();
 
