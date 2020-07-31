@@ -29,4 +29,6 @@ public class CupDriverPrevalence
 
     public boolean isTypeAll() { return DriverType.equals(DRIVER_TYPE_ALL); }
 
+    public String toString() { return String.format("ct(%s) gene(%s) type(%s) prev(%.4f)", CancerType, Gene, DriverType, Prevalence); }
+
 }

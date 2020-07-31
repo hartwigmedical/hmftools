@@ -123,8 +123,6 @@ public class CupDrivers
             final String header = fileData.get(0);
             fileData.remove(0);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
-
             for(final String line : fileData)
             {
                 final CupDriverPrevalence data = CupDriverPrevalence.from(line);
@@ -141,6 +139,8 @@ public class CupDrivers
                 {
                     dataList.add(data);
                 }
+
+                mGeneList.add(data.Gene);
             }
         }
         catch (IOException e)

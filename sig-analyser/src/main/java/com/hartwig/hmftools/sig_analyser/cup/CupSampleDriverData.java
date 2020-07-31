@@ -27,4 +27,6 @@ public class CupSampleDriverData
     }
 
     public boolean isTypeAll() { return DriverType.equals(DRIVER_TYPE_ALL); }
+
+    public String toString() { return String.format("sample(%s ) ct(%s) gene(%s) type(%s)", SampleId, Gene, DriverType); }
 }
