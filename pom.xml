@@ -27,8 +27,9 @@
         <module>strelka-post-process</module>
         <module>bachelor</module>
         <module>sv-linx</module>
-        <module>sig-analyser</module>
         <module>sv-tools</module>
+        <module>sig-analyser</module>
+        <module>cuppa</module>
         <module>isofox</module>
         <module>stat-calcs</module>
         <module>knowledgebase-importer</module>
@@ -60,6 +61,7 @@
         <bachelor.version>1.10</bachelor.version>
         <sv-linx.version>1.10</sv-linx.version>
         <sig-analyser.version>1.0</sig-analyser.version>
+        <cuppa.version>1.0</cuppa.version>
         <sv-tools.version>1.0</sv-tools.version>
         <isofox.version>1.0</isofox.version>
         <amber.version>3.4</amber.version>

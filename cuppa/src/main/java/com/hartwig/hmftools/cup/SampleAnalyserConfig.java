@@ -1,39 +1,56 @@
-package com.hartwig.hmftools.sig_analyser.cup;
+package com.hartwig.hmftools.cup;
 
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 
 import java.io.File;
+import java.util.List;
+import java.util.Set;
+
+import com.hartwig.hmftools.cup.common.DataType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CupConfig
+public class SampleAnalyserConfig
 {
-    public final String SnvSampleCountsFile;
+    public final List<DataType> DataTypes;
+
+    // sample data, if not sourced from the database
     public final String SampleDataFile;
-    public final String SnvSignaturesFile;
-    public final String DriverPrevFile;
     public final String SampleDriversFile;
+
     public final String OutputDir;
     public final String OutputFileId;
 
-    private static final String SNV_SAMPLE_COUNTS = "snv_sample_counts";
-    private static final String SNV_SIGNATURES = "snv_signatures";
-    private static final String SAMPLE_DATA_FILE = "sample_data_file";
-    private static final String DRIVER_PREV_FILE = "driver_prev_file";
+    // reference data
+    public final String SnvSampleCountsFile;
+    public final String SnvSignaturesFile;
+    public final String DriverPrevFile;
+
+    // config string
+    public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
+    public static final String SAMPLE_DATA_FILE = "sample_data_file";
     private static final String SAMPLE_DRIVERS_FILE = "sample_drivers_file";
 
-    public static final Logger CUP_LOGGER = LogManager.getLogger(CupConfig.class);
+    private static final String SNV_SAMPLE_COUNTS = "snv_sample_counts";
+    private static final String SNV_SIGNATURES = "snv_signatures";
+    private static final String DRIVER_PREV_FILE = "driver_prev_file";
+
+    public static final Logger CUP_LOGGER = LogManager.getLogger(SampleAnalyserConfig.class);
 
     public static final String CANCER_SUBTYPE_OTHER = "Other";
     public static final String DATA_DELIM = ",";
+    public static final String SUBSET_DELIM = ";";
 
-    public CupConfig(final CommandLine cmd)
+    public SampleAnalyserConfig(final CommandLine cmd)
     {
+        DataTypes = Lists.newArrayList();
+
         SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
         SnvSampleCountsFile = cmd.getOptionValue(SNV_SAMPLE_COUNTS, "");
         SnvSignaturesFile = cmd.getOptionValue(SNV_SIGNATURES, "");
@@ -50,7 +67,7 @@ public class CupConfig
 
     public boolean isValid()
     {
-        return !SampleDataFile.isEmpty() && !OutputDir.isEmpty();
+        return !OutputDir.isEmpty();
     }
 
     public String formOutputFilename(final String fileId)
@@ -65,6 +82,7 @@ public class CupConfig
 
     public static void addCmdLineArgs(Options options)
     {
+        options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
         options.addOption(SAMPLE_DATA_FILE, true, "Sample data file");
         options.addOption(SNV_SAMPLE_COUNTS, true, "SNV sample counts");
         options.addOption(SNV_SIGNATURES, true, "SNV signatures");

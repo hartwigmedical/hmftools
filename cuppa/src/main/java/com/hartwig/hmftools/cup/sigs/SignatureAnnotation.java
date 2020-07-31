@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.cup;
+package com.hartwig.hmftools.cup.sigs;
 
 import static java.lang.Math.pow;
 
@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.sig_analyser.cup.CupConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.sig_analyser.cup.CupConstants.SNV_CSS_THRESHOLD;
-import static com.hartwig.hmftools.sig_analyser.cup.CupConstants.SNV_SIG_MIN_COUNT;
-import static com.hartwig.hmftools.sig_analyser.cup.CupConstants.SNV_SIG_MIN_PERCENT;
+import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_SIG_MIN_COUNT;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_SIG_MIN_PERCENT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -22,17 +22,18 @@ import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.sig_analyser.common.CosineSim;
 
-public class CupSnvSignatures
+public class SignatureAnnotation
 {
-    private final CupConfig mConfig;
+    private final SampleAnalyserConfig mConfig;
 
     private SigMatrix mSampleCounts;
-    private int[] mSampleTotals;
 
-    private final List<CupSampleData> mSampleDataList;
-    private final Map<String,List<CupSampleData>> mCancerSampleData;
+    private final List<SampleData> mSampleDataList;
+    private final Map<String,List<SampleData>> mCancerSampleData;
 
     private SigMatrix mSnvSignatures;
     private final List<String> mSnvSigNames;
@@ -41,14 +42,13 @@ public class CupSnvSignatures
     private BufferedWriter mCssPairsWriter;
     private BufferedWriter mSampleDataWriter;
 
-    public CupSnvSignatures(final CupConfig config, final List<CupSampleData> sampleDataList, final Map<String,List<CupSampleData>> cancerSampleData)
+    public SignatureAnnotation(final SampleAnalyserConfig config, final List<SampleData> sampleDataList, final Map<String,List<SampleData>> cancerSampleData)
     {
         mConfig = config;
 
         mSampleCounts = null;
         mSampleDataList = sampleDataList;
         mCancerSampleData = cancerSampleData;
-        mSampleTotals = null;
 
         mSnvSignatures = null;
         mLeastSquaresFit = null;
@@ -58,71 +58,99 @@ public class CupSnvSignatures
         mCssPairsWriter = null;
 
         loadSnvSignatures();
+        loadSampleCounts();
         initialiseOutputFile();
     }
 
-    public void run()
+    private boolean loadSampleCounts()
     {
-        int sampleCount = mSampleCounts.Cols;
+        final GenericDataCollection collection = GenericDataLoader.loadFile(mConfig.SnvSampleCountsFile);
 
-        mSampleTotals = new int[sampleCount];
-
-        for(int s = 0; s < sampleCount; ++s)
+        for(int s = 0; s < collection.getFieldNames().size(); ++s)
         {
-            mSampleTotals[s] = (int)sumVector(mSampleCounts.getCol(s));
+            final String sampleId = collection.getFieldNames().get(s);
+            SampleData sampleData = mSampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
+
+            if(sampleData == null)
+                continue;
+
+            sampleData.setSnvCountsIndex(s);
         }
 
-        for(int s = 0; s < sampleCount; ++s)
+        mSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
+        mSampleCounts.cacheTranspose();
+
+        return true;
+    }
+
+    public void processCohort()
+    {
+        for(SampleData sample : mSampleDataList)
         {
-            final CupSampleData sampleData = mSampleDataList.get(s);
-            final double[] sampleCounts = mSampleCounts.getCol(s);
-
-            // for(int s2 = s1 + 1; s2 < sampleCount; ++s2)
-            for(int s2 = 0; s2 < sampleCount; ++s2)
-            {
-                if(s == s2)
-                    continue;
-
-                final CupSampleData otherSampleData = mSampleDataList.get(s2);
-
-                if(otherSampleData.isUnknownCancerType())
-                    continue;
-
-                final double[] otherSampleCounts = mSampleCounts.getCol(s2);
-
-                double css = CosineSim.calcCSS(sampleCounts, otherSampleCounts);
-
-                if(css < SNV_CSS_THRESHOLD)
-                    continue;
-
-                int cancerTypeCount = mCancerSampleData.get(otherSampleData.CancerType).size();
-                double weightedCss = pow((css - SNV_CSS_THRESHOLD) * 100, 2) / cancerTypeCount;
-
-                sampleData.addSampleCss(otherSampleData.CancerType, weightedCss);
-
-                // writeSampleCssPairData(mSampleIds.get(s1), mSampleIds.get(s2), css, mSampleTotals[s1], mSampleTotals[s2]);
-            }
-
-            fitSnvSignatures(sampleData);
+            processSample(sample);
         }
 
-        mSampleDataList.forEach(x -> writeSampleData(x));
         closeBufferedWriter(mSampleDataWriter);
     }
 
-    private void fitSnvSignatures(final CupSampleData sampleData)
+    public void processSample(SampleData sample)
+    {
+        if(sample.getSnvIndex() < 0)
+        {
+            CUP_LOGGER.error("sample({}) has no SNV data", sample.Id);
+            return;
+        }
+
+        final double[] sampleCounts = mSampleCounts.getCol(sample.getSnvIndex());
+
+        sample.setSnvCount((int)sumVector(sampleCounts));
+
+        int cohortSampleCount = mSampleCounts.Cols;
+
+        for(int s = 0; s < cohortSampleCount; ++s)
+        {
+            if(s == sample.getSnvIndex())
+                continue;
+
+            // fix-me - exclude unknown cancer types from CSS analysis
+            final SampleData otherSampleData = mSampleDataList.get(s);
+
+            if(otherSampleData.isUnknownCancerType())
+                continue;
+
+            final double[] otherSampleCounts = mSampleCounts.getCol(s);
+
+            double css = CosineSim.calcCSS(sampleCounts, otherSampleCounts);
+
+            if(css < SNV_CSS_THRESHOLD)
+                continue;
+
+            int cancerTypeCount = mCancerSampleData.get(otherSampleData.CancerType).size();
+            double weightedCss = pow((css - SNV_CSS_THRESHOLD) * 100, 2) / cancerTypeCount;
+
+            sample.addSampleCss(otherSampleData.CancerType, weightedCss);
+
+            // writeSampleCssPairData(mSampleIds.get(s1), mSampleIds.get(s2), css, mSampleTotals[s1], mSampleTotals[s2]);
+        }
+
+        fitSnvSignatures(sample);
+
+        writeSampleData(sample);
+    }
+
+    private void fitSnvSignatures(final SampleData sampleData)
     {
         if(mSnvSignatures == null)
             return;
 
-        final double[] sampleCounts = mSampleCounts.getCol(sampleData.index());
+        final double[] sampleCounts = mSampleCounts.getCol(sampleData.getSnvIndex());
 
         mLeastSquaresFit.initialise(mSnvSignatures.getData(), sampleCounts);
         mLeastSquaresFit.solve();
 
         final double[] sigAllocs = mLeastSquaresFit.getContribs();
 
-        double sampleTotal = mSampleTotals[sampleData.index()];
+        double sampleTotal = sampleData.getSnvCount();
 
         for(int sig = 0; sig < sigAllocs.length; ++sig)
         {
@@ -141,9 +169,9 @@ public class CupSnvSignatures
         return "SnvCount,TotalWeightedCss,TopMatchCancerType,TopMatchCancerCss,SigData";
     }
 
-    public String getSampleOutput(final CupSampleData sampleData)
+    public String getSampleOutput(final SampleData sampleData)
     {
-        String sampleDataStr = String.format("%d", mSampleTotals[sampleData.index()]);
+        String sampleDataStr = String.format("%d", sampleData.getSnvCount());
 
         double totalWeightedCss = sampleData.getTotalWeightedCss();
 
@@ -195,12 +223,11 @@ public class CupSnvSignatures
         }
     }
 
-    private void writeSampleData(final CupSampleData sampleData)
+    private void writeSampleData(final SampleData sampleData)
     {
         try
         {
-            final String sampleStr = String.format("%s,%d",
-                    sampleData.SampleId, mSampleTotals[sampleData.index()]);
+            final String sampleStr = String.format("%s,%d", sampleData.Id, sampleData.getSnvCount());
 
             double totalWeightedCss = sampleData.getTotalWeightedCss();
 
@@ -243,6 +270,8 @@ public class CupSnvSignatures
         mSnvSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
         mLeastSquaresFit = new LeastSquaresFit(mSnvSignatures.Rows, mSnvSignatures.Cols);
     }
+
+    public void close() { closeBufferedWriter(mSampleDataWriter); }
 
     private void writeSampleCssPairData(final String sampleId1, final String sampleId2, double css, int sampleTotal1, int sampleTotal2)
     {
