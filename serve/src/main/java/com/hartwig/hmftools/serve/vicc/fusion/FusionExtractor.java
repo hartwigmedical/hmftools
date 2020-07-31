@@ -54,13 +54,21 @@ public class FusionExtractor {
     }
 
     @NotNull
-    private String extractKeyFusion(@NotNull Feature feature){
+    private String extractKeyFusion(@NotNull Feature feature) {
         //TODO: fix combi events
         String featureName = feature.name();
         if (featureName.contains("-") && !featureName.equals("Microsatellite Instability-High")) {
             featureName = "fusions";
         }
-        if (feature.biomarkerType() != null ) {
+
+        // Extract internal fusion
+        if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion")) {
+            if (feature.name().contains("-") || feature.name().contains("&")) {
+                featureName = "fusions";
+            }
+        }
+
+        if (feature.biomarkerType() != null) {
             if (feature.biomarkerType().equals("rearrange")) {
                 return FUSION_PAIR;
             }
