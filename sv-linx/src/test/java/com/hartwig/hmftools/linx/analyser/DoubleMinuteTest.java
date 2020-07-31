@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.linx.types.DoubleMinuteData.SEG_DATA_COUNT;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
@@ -172,7 +173,7 @@ public class DoubleMinuteTest
         assertEquals(1, tester.Analyser.getDoubleMinuteFinder().getDoubleMinutes().size());
         DoubleMinuteData dmData = tester.Analyser.getDoubleMinuteFinder().getDoubleMinutes().get(0);
 
-        assertEquals(4, dmData.IntExtCount);
+        assertEquals(4, (int)dmData.ChainIntExtData.get(dmData.Chains.get(0).id())[SEG_DATA_COUNT]);
 
         assertEquals(1, tester.getClusters().size());
         cluster = tester.getClusters().get(0);
@@ -203,7 +204,7 @@ public class DoubleMinuteTest
         assertEquals(1, tester.Analyser.getDoubleMinuteFinder().getDoubleMinutes().size());
         dmData = tester.Analyser.getDoubleMinuteFinder().getDoubleMinutes().get(0);
 
-        assertEquals(0, dmData.IntExtCount);
+        assertTrue(dmData.ChainIntExtData.isEmpty());
 
         assertEquals(1, tester.getClusters().size());
         cluster = tester.getClusters().get(0);

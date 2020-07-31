@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.types;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -37,15 +36,11 @@ public class DoubleMinuteData
 
     public double MaxJcn;
     public double MinAdjacentMARatio;
+    public double MinAdjMAJcnRatio;
 
     public final List<SvVarData> CandidateSVs;
     public final List<SvChain> Chains;
     public boolean FullyChained;
-
-    public int IntExtCount = 0; // count of SV that connect a closed segment to a non closed segment
-    public double IntExtJcnTotal = 0; // Max JCN of SV that connect a closed segment to a non closed segment
-    public double IntExtMaxJcn = 0; // SUM JCN of SV that connect a closed segment to a non closed segment
-    public double MinAdjMAJcnRatio = 0;
 
     // annotations relating to chained segments
     public long ClosedSegmentLength; // Sum of closed segment length
@@ -63,8 +58,11 @@ public class DoubleMinuteData
     public boolean ChainsCentromere;
 
     public double[] FbInternalData;
+    public Map<Integer,double[]> ChainIntExtData; // data for SVs going from a chained segment to outside any chained segment
     public Map<Integer,double[]> ChainSglInternalData;
     public Map<Integer,double[]> ChainInfInternalData;
+
+    private static final int OPEN_CHAIN_ID = -1;
 
     private boolean mIsDoubleMinute;
 
@@ -81,9 +79,6 @@ public class DoubleMinuteData
         CandidateSVs = Lists.newArrayList();
         FullyChained = false;
 
-        IntExtCount = 0;
-        IntExtJcnTotal = 0;
-        IntExtMaxJcn = 0;
         MinAdjMAJcnRatio = 0;
 
         ClosedSegmentLength = 0;
@@ -96,7 +91,8 @@ public class DoubleMinuteData
         TotalSegmentCnChange = 0;
         ChainsCentromere = false;
 
-        FbInternalData = new double[INT_SEG_SUM+1];
+        FbInternalData = new double[SEG_DATA_SUM +1];
+        ChainIntExtData = Maps.newHashMap();
         ChainSglInternalData = Maps.newHashMap();
         ChainInfInternalData = Maps.newHashMap();
 
@@ -212,9 +208,9 @@ public class DoubleMinuteData
         }
     }
 
-    public static final int INT_SEG_COUNT = 0;
-    public static final int INT_SEG_MAX = 1;
-    public static final int INT_SEG_SUM = 2;
+    public static final int SEG_DATA_COUNT = 0;
+    public static final int SEG_DATA_MAX = 1;
+    public static final int SEG_DATA_SUM = 2;
 
     private void setPairCharacteristics(
             final SvChain chain, final LinkedPair pair, final Map<String,List<SvBreakend>> chrBreakendMap, final List<LinkedPair> allLinkedPairs,
@@ -272,9 +268,11 @@ public class DoubleMinuteData
                     {
                         LNX_LOGGER.debug("cluster({}) pair({}) has in-out SV({})", Cluster.id(), pair.toString(), breakend.getSV());
 
-                        ++IntExtCount;
-                        IntExtJcnTotal += breakend.jcn();
-                        IntExtMaxJcn = max(IntExtMaxJcn, breakend.jcn());
+                        double[] segmentData = getOrAddSegmentData(chain, ChainIntExtData);
+
+                        segmentData[SEG_DATA_COUNT] += 1;
+                        segmentData[SEG_DATA_SUM] += breakend.jcn();
+                        segmentData[SEG_DATA_MAX] = max(segmentData[SEG_DATA_MAX], breakend.jcn());
                     }
                 }
             }
@@ -288,28 +286,35 @@ public class DoubleMinuteData
                     continue;
             }
 
-            double[] counts;
+            double[] segmentData;
 
             if(svType == INV)
             {
-                counts = FbInternalData;
+                segmentData = FbInternalData;
             }
             else
             {
                 Map<Integer,double[]> chainMap = svType == SGL ? ChainSglInternalData : ChainInfInternalData;
-
-                counts = chainMap.get(chain.id());
-                if(counts == null)
-                {
-                    counts = new double[INT_SEG_SUM + 1];
-                    chainMap.put(chain.id(), counts);
-                }
+                segmentData = getOrAddSegmentData(chain, chainMap);
             }
 
-            counts[INT_SEG_COUNT] += 1;
-            counts[INT_SEG_SUM] += breakend.jcn();
-            counts[INT_SEG_MAX] = max(counts[INT_SEG_MAX], breakend.jcn());
+            segmentData[SEG_DATA_COUNT] += 1;
+            segmentData[SEG_DATA_SUM] += breakend.jcn();
+            segmentData[SEG_DATA_MAX] = max(segmentData[SEG_DATA_MAX], breakend.jcn());
         }
+    }
+
+    private double[] getOrAddSegmentData(final SvChain chain, Map<Integer,double[]> segmentMap)
+    {
+        int chainId = chain.isClosedLoop() ? chain.id() : OPEN_CHAIN_ID;
+        double[] segmentData = segmentMap.get(chainId);
+        if(segmentData == null)
+        {
+            segmentData = new double[SEG_DATA_SUM + 1];
+            segmentMap.put(chain.id(), segmentData);
+        }
+
+        return segmentData;
     }
 
     private boolean inShortAssemebledLink(final SvBreakend breakend, final SvBreakend nextBreakend)
@@ -322,6 +327,9 @@ public class DoubleMinuteData
         {
             final SvBreakend otherBreakend = breakend.getOtherBreakend();
             final SvBreakend nextOtherBreakend = nextBreakend.getOtherBreakend();
+
+            if(otherBreakend == null || nextOtherBreakend == null)
+                return false;
 
             if(otherBreakend.getLinkedPairs().stream().filter(x -> x.isAssembled()).anyMatch(x -> x.hasBreakend(nextOtherBreakend)))
             {
@@ -377,16 +385,23 @@ public class DoubleMinuteData
                 .mapToDouble(x -> x.isChainedFoldback() ? x.jcn() * 0.5 : x.jcn())
                 .sum();
 
-        for(SvChain chain : Chains)
+        //  check closed chains and open chains / SVs as well
+        final List<Integer> chainIds = Lists.newArrayList(OPEN_CHAIN_ID);
+        Chains.stream().filter(x -> x.isClosedLoop()).forEach(x -> chainIds.add(x.id()));
+
+        for(Integer chainId : chainIds)
         {
-            final double[] sglInternalValues = ChainSglInternalData.get(chain.id());
-            final double[] infInternalValues = ChainSglInternalData.get(chain.id());
+            final double[] sglInternalValues = ChainSglInternalData.get(chainId);
+            final double[] infInternalValues = ChainSglInternalData.get(chainId);
+            final double[] intExtValues = ChainIntExtData.get(chainId);
 
             double sglInfMaxJcn = max(
-                    sglInternalValues != null ? sglInternalValues[INT_SEG_MAX] : 0,
-                    infInternalValues != null ? infInternalValues[INT_SEG_MAX] : 0);
+                    sglInternalValues != null ? sglInternalValues[SEG_DATA_MAX] : 0,
+                    infInternalValues != null ? infInternalValues[SEG_DATA_MAX] : 0);
 
-            double opposingJcn = IntExtJcnTotal + sglInfMaxJcn + foldbackJcn;
+            double intExtJcnTotal = intExtValues != null ? intExtValues[SEG_DATA_SUM] : 0;
+
+            double opposingJcn = intExtJcnTotal + sglInfMaxJcn + foldbackJcn;
 
             if(opposingJcn > 0 && maxJcnThreshold / opposingJcn < 1)
                 return false;
@@ -397,14 +412,17 @@ public class DoubleMinuteData
 
     public String internalTypeCountsAsStr()
     {
-        return String.format("%.0f,%.1f,%.1f,%.0f,%.1f,%.1f,%.0f,%.1f,%.1f",
-                FbInternalData[INT_SEG_COUNT], FbInternalData[INT_SEG_SUM], FbInternalData[INT_SEG_MAX],
-                ChainSglInternalData.values().stream().mapToDouble(x -> x[INT_SEG_COUNT]).sum(),
-                ChainSglInternalData.values().stream().mapToDouble(x -> x[INT_SEG_SUM]).sum(),
-                ChainSglInternalData.values().stream().mapToDouble(x -> x[INT_SEG_MAX]).max(),
-                ChainInfInternalData.values().stream().mapToDouble(x -> x[INT_SEG_COUNT]).sum(),
-                ChainInfInternalData.values().stream().mapToDouble(x -> x[INT_SEG_SUM]).sum(),
-                ChainInfInternalData.values().stream().mapToDouble(x -> x[INT_SEG_MAX]).max());
+        return String.format("%.0f,%.1f,%.1f,%.0f,%.1f,%.1f,%.0f,%.1f,%.1f,%.0f,%.1f,%.1f",
+                ChainIntExtData.values().stream().mapToDouble(x -> x[SEG_DATA_COUNT]).sum(),
+                ChainIntExtData.values().stream().mapToDouble(x -> x[SEG_DATA_SUM]).sum(),
+                ChainIntExtData.values().stream().mapToDouble(x -> x[SEG_DATA_MAX]).max().orElse(0),
+                FbInternalData[SEG_DATA_COUNT], FbInternalData[SEG_DATA_SUM], FbInternalData[SEG_DATA_MAX],
+                ChainSglInternalData.values().stream().mapToDouble(x -> x[SEG_DATA_COUNT]).sum(),
+                ChainSglInternalData.values().stream().mapToDouble(x -> x[SEG_DATA_SUM]).sum(),
+                ChainSglInternalData.values().stream().mapToDouble(x -> x[SEG_DATA_MAX]).max().orElse(0),
+                ChainInfInternalData.values().stream().mapToDouble(x -> x[SEG_DATA_COUNT]).sum(),
+                ChainInfInternalData.values().stream().mapToDouble(x -> x[SEG_DATA_SUM]).sum(),
+                ChainInfInternalData.values().stream().mapToDouble(x -> x[SEG_DATA_MAX]).max().orElse(0));
     }
 
 }

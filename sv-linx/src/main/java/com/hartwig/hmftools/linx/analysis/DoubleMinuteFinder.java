@@ -389,8 +389,9 @@ public class DoubleMinuteFinder
                 mFileWriter.write(",SamplePurity,SamplePloidy,IsDM,DMSvCount,DMSvTypes,SvIds,Chromosomes");
                 mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
                 mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
-                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,NonSegFoldbacks,NonSegFoldbackJcnTotal,SimpleDels");
-                mFileWriter.write(",FbIntCount,FbIntJcnTotal,FbIntJcnMax,SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
+                mFileWriter.write(",NonSegFoldbacks,NonSegFoldbackJcnTotal,SimpleDels");
+                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,FbIntCount,FbIntJcnTotal,FbIntJcnMax");
+                mFileWriter.write(",SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
                 mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
                 mFileWriter.newLine();
             }
@@ -406,9 +407,8 @@ public class DoubleMinuteFinder
                     dmData.ClosedSegmentLength, dmData.SVs.size() - dmData.UnchainedSVs.size(),
                     dmData.Chains.stream().anyMatch(x -> x.hasRepeatedSV())));
 
-            mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f,%d,%.1f,%d",
+            mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%d",
                     dmData.ClosedBreakends, dmData.ClosedJcnTotal, dmData.OpenBreakends, dmData.OpenJcnTotal, dmData.OpenJcnMax,
-                    dmData.IntExtCount, dmData.IntExtJcnTotal, dmData.IntExtMaxJcn,
                     dmData.NonSegmentFoldbacks, dmData.NonSegmentFoldbackJcnTotal, dmData.SimpleDels));
 
             mFileWriter.write(String.format(",%s", dmData.internalTypeCountsAsStr()));
