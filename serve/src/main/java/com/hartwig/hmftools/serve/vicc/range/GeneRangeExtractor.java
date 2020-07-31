@@ -119,17 +119,21 @@ public class GeneRangeExtractor {
                             .build();
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 } else {
+                    LOGGER.info(feature);
+
                     String exonNumber = feature.proteinAnnotation();
 
                     if (exonNumber.equals("mutation")) {
                         exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                     } else if (exonNumber.equals("exon")) {
+                        //exon ...insertions/deletions. Determine of this is a range
                         exonNumber = feature.name()
                                 .substring((feature.name().toLowerCase().indexOf("exon")))
                                 .replace("exon ", "")
                                 .replace(" deletions", "")
                                 .replace(" insertions", "");
                     } else if (exonNumber.equals("proximal")) {
+                        //check what this means
                         exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                     }
                     int exonNumberList = Integer.valueOf(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
