@@ -9,14 +9,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.compress.utils.Lists;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -37,10 +39,14 @@ public class EnsemblDAO
     private DSLContext mDbContext;
     private final int mCoordSystemId;
     private final RefGenomeVersion mRefGenomeVersion;
+    private final Set<String> mGeneIds;
+    private final Set<Integer> mTranscriptIds;
 
     public EnsemblDAO(final CommandLine cmd)
     {
         mRefGenomeVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(HG37)));
+        mGeneIds = Sets.newHashSet();
+        mTranscriptIds = Sets.newHashSet();
 
         if(!connectDB(cmd))
         {
@@ -139,16 +145,24 @@ public class EnsemblDAO
 
             for(final Record record : results)
             {
+                String geneId = (String)record.get("GeneId");
+                String geneName = (String)record.get("GeneName");
+                String chromosome = (String)record.get("Chromosome");
                 UInteger geneStart = (UInteger) record.get("GeneStart");
                 UInteger geneEnd = (UInteger) record.get("GeneEnd");
                 Byte strand = (Byte) record.get("Strand");
+                Object entrezId = record.get("EntrezId");
+
+                if(entrezId != null)
+                    geneName = (String)entrezId;
 
                 writer.write(String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s",
-                        record.get("GeneId"), record.get("GeneName"), record.get("Chromosome"),
-                        strand.intValue(), geneStart.intValue(), geneEnd.intValue(),
+                        geneId, geneName, chromosome, strand.intValue(), geneStart.intValue(), geneEnd.intValue(),
                         record.get("EntrezIds"), record.get("KaryotypeBand"), record.get("Synonyms")));
 
                 writer.newLine();
+
+                mGeneIds.add(geneId);
             }
 
             writer.close();
@@ -162,7 +176,8 @@ public class EnsemblDAO
     private Result<?> queryAllGeneData()
     {
         final String queryStr = "select gene.stable_id as GeneId, display_xref.display_label as GeneName, seq_region.name as Chromosome,"
-                + "gene.seq_region_strand as Strand, gene.seq_region_start as GeneStart, gene.seq_region_end as GeneEnd,"
+                + " max(entrez_xref.display_label) as EntrezId,"
+                + " gene.seq_region_strand as Strand, gene.seq_region_start as GeneStart, gene.seq_region_end as GeneEnd,"
                 + " GROUP_CONCAT(DISTINCT entrez_xref.dbprimary_acc ORDER BY entrez_xref.dbprimary_acc SEPARATOR ';') as EntrezIds,"
                 + " GROUP_CONCAT(DISTINCT karyotype.band ORDER BY karyotype.band SEPARATOR '-') as KaryotypeBand,"
                 + " GROUP_CONCAT(DISTINCT syn_xref.dbprimary_acc ORDER BY syn_xref.dbprimary_acc SEPARATOR ';') as Synonyms"
@@ -202,6 +217,7 @@ public class EnsemblDAO
             for(final Record record : results)
             {
                 UInteger canTransId = (UInteger) record.get("CanonicalTranscriptId");
+                String geneId = (String)record.get("GeneId");
                 UInteger transId = (UInteger) record.get("TransId");
                 Byte strand = (Byte) record.get("Strand");
                 UInteger transStart = (UInteger) record.get("TransStart");
@@ -214,8 +230,11 @@ public class EnsemblDAO
                 ULong codingStart = (ULong) record.get("CodingStart");
                 ULong codingEnd = (ULong) record.get("CodingEnd");
 
+                if(!mGeneIds.contains(geneId))
+                    continue;
+
                 writer.write(String.format("%s,%d,%d,%d,%s,%s,%d,%d",
-                        record.get("GeneId"), canTransId.intValue(), strand, transId.intValue(),
+                        geneId, canTransId.intValue(), strand, transId.intValue(),
                         record.get("Trans"), record.get("BioType"), transStart.intValue(), transEnd.intValue()));
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%s,%s",
@@ -224,6 +243,8 @@ public class EnsemblDAO
                         codingEnd != null ? codingEnd.intValue() : "NULL"));
 
                 writer.newLine();
+
+                mTranscriptIds.add(transId.intValue());
             }
 
             writer.close();
@@ -278,6 +299,9 @@ public class EnsemblDAO
                 UInteger proteinId = (UInteger) record.get("ProteinFeatureId");
                 Integer seqStart = (Integer) record.get("SeqStart");
                 Integer seqEnd = (Integer) record.get("SeqEnd");
+
+                if(!mTranscriptIds.contains(transcriptId.intValue()))
+                    continue;
 
                 writer.write(String.format("%d,%d,%d,%d,%d,%s",
                         transcriptId.intValue(), translationId.intValue(), proteinId.intValue(),

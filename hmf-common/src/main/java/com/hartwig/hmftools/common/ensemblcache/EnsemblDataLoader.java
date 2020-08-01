@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.ensemblcache;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -25,16 +26,7 @@ public class EnsemblDataLoader
 
     private static final Logger LOGGER = LogManager.getLogger(EnsemblDataLoader.class);
 
-    // GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,EntrezIds,KaryotypeBand,Synonyms
-    private static int GD_ID = 0;
-    private static int GD_NAME = 1;
-    private static int GD_CHR = 2;
-    private static int GD_STRAND = 3;
-    private static int GD_START = 4;
-    private static int GD_END = 5;
-    private static int GD_ENTREZ = 6; // currently unused
-    private static int GD_BAND = 7;
-    private static int GD_SYN = 8; // currently unused
+    public static final String ENSEMBL_DELIM = ",";
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
             final Map<String, List<EnsemblGeneData>> chrGeneDataMap, RefGenomeVersion version)
@@ -52,11 +44,22 @@ public class EnsemblDataLoader
 
             String line = fileReader.readLine();
 
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
+
             if (line == null)
             {
                 LOGGER.error("empty Ensembl gene data file({})", filename);
                 return false;
             }
+
+            // GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,EntrezIds,KaryotypeBand,Synonyms
+            int geneIdIndex = fieldsIndexMap.get("GeneId");
+            int geneNameIndex = fieldsIndexMap.get("GeneName");
+            int chromosomeIndex = fieldsIndexMap.get("Chromosome");
+            int strandIndex = fieldsIndexMap.get("Strand");
+            int geneStartIndex = fieldsIndexMap.get("GeneStart");
+            int geneEndIndex = fieldsIndexMap.get("GeneEnd");
+            int karyotypeBandIndex = fieldsIndexMap.get("KaryotypeBand");
 
             line = fileReader.readLine(); // skip header
 
@@ -68,7 +71,7 @@ public class EnsemblDataLoader
             {
                 String[] items = line.split(",");
 
-                final String geneId = items[GD_ID];
+                final String geneId = items[geneIdIndex];
 
                 if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId))
                 {
@@ -76,11 +79,11 @@ public class EnsemblDataLoader
                     continue;
                 }
 
-                final String chromosome = refGenomeChromosome(items[GD_CHR], version);
+                final String chromosome = refGenomeChromosome(items[chromosomeIndex], version);
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
-                        geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
-                        Integer.parseInt(items[GD_START]), Integer.parseInt(items[GD_END]), items[GD_BAND]);
+                        geneId, items[geneNameIndex], chromosome, Byte.parseByte(items[strandIndex]),
+                        Integer.parseInt(items[geneStartIndex]), Integer.parseInt(items[geneEndIndex]), items[karyotypeBandIndex]);
 
                 if(!currentChr.equals(chromosome))
                 {
@@ -111,25 +114,6 @@ public class EnsemblDataLoader
         return true;
     }
 
-
-    // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
-    // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-    private static int TE_GENE_ID = 0;
-    private static int TE_CANONICAL = 1;
-    private static int TE_STRAND = 2;
-    private static int TE_TRANS_ID = 3;
-    private static int TE_TRANS_NAME = 4;
-    private static int TE_BIOTYPE = 5;
-    private static int TE_TRANS_START = 6;
-    private static int TE_TRANS_END = 7;
-    private static int TE_EXON_RANK = 8;
-    private static int TE_EXON_START = 9;
-    private static int TE_EXON_END = 10;
-    private static int TE_PHASE = 11;
-    private static int TE_PHASE_END = 12;
-    private static int TE_CODING_START = 13;
-    private static int TE_CODING_END = 14;
-
     public static boolean loadTranscriptData(final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
             final List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly)
     {
@@ -144,13 +128,32 @@ public class EnsemblDataLoader
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
-            String line = fileReader.readLine(); // skip header
+            String line = fileReader.readLine();
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
 
             if (line == null)
             {
                 LOGGER.error("empty Ensembl gene-exon data file({})", filename);
                 return false;
             }
+
+            // GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd
+            int geneIdIndex = fieldsIndexMap.get("GeneId");
+            int canonicalTransIdIndex = fieldsIndexMap.get("CanonicalTranscriptId");
+            int strandIndex = fieldsIndexMap.get("Strand");
+            int transIdIndex = fieldsIndexMap.get("TransId");
+            int transNameIndex = fieldsIndexMap.get("TransName");
+            int biotypeIndex = fieldsIndexMap.get("BioType");
+            int transStartIndex = fieldsIndexMap.get("TransStart");
+            int transEndIndex = fieldsIndexMap.get("TransEnd");
+            int exonRankIndex = fieldsIndexMap.get("ExonRank");
+            int exonStartIndex = fieldsIndexMap.get("ExonStart");
+            int exonEndIndex = fieldsIndexMap.get("ExonEnd");
+            int exonPhaseIndex = fieldsIndexMap.get("ExonPhase");
+            int exonEndPhaseIndex = fieldsIndexMap.get("ExonEndPhase");
+            int codingStartIndex = fieldsIndexMap.get("CodingStart");
+            int codingEndIndex = fieldsIndexMap.get("CodingEnd");
 
             int exonCount = 0;
             int transcriptCount = 0;
@@ -171,8 +174,8 @@ public class EnsemblDataLoader
                 String[] items = line.split(",");
 
                 // check if still on the same variant
-                final String geneId = items[TE_GENE_ID];
-                int transId = Integer.parseInt(items[TE_TRANS_ID]);
+                final String geneId = items[geneIdIndex];
+                int transId = Integer.parseInt(items[transIdIndex]);
 
                 if(lastSkippedGeneId.equals(geneId) || (!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId)))
                 {
@@ -187,12 +190,9 @@ public class EnsemblDataLoader
                     transcriptDataMap.put(geneId, transDataList);
                 }
 
-                // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
-                // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-
                 if(currentTrans == null || currentTrans.TransId != transId)
                 {
-                    int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
+                    int canonicalTransId = Integer.parseInt(items[canonicalTransIdIndex]);
                     boolean isCanonical = (canonicalTransId == transId);
 
                     if(!isCanonical && canonicalOnly)
@@ -200,13 +200,13 @@ public class EnsemblDataLoader
 
                     exonDataList = Lists.newArrayList();
 
-                    Integer codingStart = !items[TE_CODING_START].equalsIgnoreCase("NULL") ? Integer.parseInt(items[TE_CODING_START]) : null;
-                    Integer codingEnd = !items[TE_CODING_END].equalsIgnoreCase("NULL") ? Integer.parseInt(items[TE_CODING_END]) : null;
+                    Integer codingStart = !items[codingStartIndex].equalsIgnoreCase("NULL") ? Integer.parseInt(items[codingStartIndex]) : null;
+                    Integer codingEnd = !items[codingEndIndex].equalsIgnoreCase("NULL") ? Integer.parseInt(items[codingEndIndex]) : null;
 
                     currentTrans = new TranscriptData(
-                            transId, items[TE_TRANS_NAME], geneId, isCanonical, Byte.parseByte(items[TE_STRAND]),
-                            Integer.parseInt(items[TE_TRANS_START]), Integer.parseInt(items[TE_TRANS_END]),
-                            codingStart, codingEnd, items[TE_BIOTYPE]);
+                            transId, items[transNameIndex], geneId, isCanonical, Byte.parseByte(items[strandIndex]),
+                            Integer.parseInt(items[transStartIndex]), Integer.parseInt(items[transEndIndex]),
+                            codingStart, codingEnd, items[biotypeIndex]);
 
                     ++transcriptCount;
 
@@ -217,8 +217,8 @@ public class EnsemblDataLoader
                 if(cacheExons || currentTrans.IsCanonical)
                 {
                     ExonData exonData = new ExonData(
-                            transId, Integer.parseInt(items[TE_EXON_START]), Integer.parseInt(items[TE_EXON_END]),
-                            Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]));
+                            transId, Integer.parseInt(items[exonStartIndex]), Integer.parseInt(items[exonEndIndex]),
+                            Integer.parseInt(items[exonRankIndex]), Integer.parseInt(items[exonPhaseIndex]), Integer.parseInt(items[exonEndPhaseIndex]));
 
                     exonDataList.add(exonData);
                     ++exonCount;
@@ -237,14 +237,6 @@ public class EnsemblDataLoader
         return true;
     }
 
-    // TranscriptId,TranslationId,ProteinFeatureId,SeqStart,SeqEnd,HitDescription
-    private static int PF_TRANS_ID = 0;
-    private static int PF_TRANL_ID = 1;
-    private static int PF_PF_ID = 2;
-    private static int PF_START = 3;
-    private static int PF_END = 4;
-    private static int PF_DESC = 5;
-
     public static boolean loadTranscriptProteinData(final String dataPath, Map<Integer, List<TranscriptProteinData>> proteinDataMap,
             List<Integer> restrictedTransIds)
     {
@@ -261,11 +253,21 @@ public class EnsemblDataLoader
 
             String line = fileReader.readLine();
 
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
+
             if (line == null)
             {
                 LOGGER.error("empty Ensembl protein feature data file({})", filename);
                 return false;
             }
+
+            // TranscriptId,TranslationId,ProteinFeatureId,SeqStart,SeqEnd,HitDescription
+            int transIdIndex = fieldsIndexMap.get("TranscriptId");
+            int translationIdIndex = fieldsIndexMap.get("TranslationId");
+            int pfIdIndex = fieldsIndexMap.get("ProteinFeatureId");
+            int pfStartIndex = fieldsIndexMap.get("SeqStart");
+            int pfEndIndex = fieldsIndexMap.get("SeqEnd");
+            int pfDescIndex = fieldsIndexMap.get("HitDescription");
 
             int proteinCount = 0;
             int currentTransId = -1;
@@ -279,7 +281,7 @@ public class EnsemblDataLoader
                 String[] items = line.split(",");
 
                 // check if still on the same variant
-                int transId = Integer.parseInt(items[PF_TRANS_ID]);
+                int transId = Integer.parseInt(items[transIdIndex]);
 
                 if(!restrictedTransIds.isEmpty() && !restrictedTransIds.contains(transId))
                 {
@@ -295,8 +297,8 @@ public class EnsemblDataLoader
                 }
 
                 TranscriptProteinData proteinData = new TranscriptProteinData(
-                        transId, Integer.parseInt(items[PF_TRANL_ID]), Integer.parseInt(items[PF_PF_ID]),
-                        Integer.parseInt(items[PF_START]), Integer.parseInt(items[PF_END]), items[PF_DESC]);
+                        transId, Integer.parseInt(items[translationIdIndex]), Integer.parseInt(items[pfIdIndex]),
+                        Integer.parseInt(items[pfStartIndex]), Integer.parseInt(items[pfEndIndex]), items[pfDescIndex]);
 
                 transProteinDataList.add(proteinData);
                 ++proteinCount;
@@ -315,14 +317,6 @@ public class EnsemblDataLoader
         return true;
     }
 
-    // GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance
-    private static int TA_GENE_ID = 0;
-    private static int TA_TRANS_ID = 1;
-    private static int TA_TRANS_NAME = 2;
-    private static int TA_TRANS_START = 3;
-    private static int TA_SA_POSITION = 4;
-    private static int TA_DISTANCE = 5;
-
     public static boolean loadTranscriptSpliceAcceptorData(
             final String dataPath, Map<Integer,Integer> transSaPositionDataMap, final List<Integer> restrictedTransIds)
     {
@@ -339,11 +333,17 @@ public class EnsemblDataLoader
 
             String line = fileReader.readLine();
 
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
+
             if (line == null)
             {
                 LOGGER.error("empty Ensembl trans splice acceptor data file({})", filename);
                 return false;
             }
+
+            // GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance
+            int transIdIndex = fieldsIndexMap.get("TransId");
+            int saPositionIndex = fieldsIndexMap.get("PreSpliceAcceptorPosition");
 
             line = fileReader.readLine(); // skip header
 
@@ -353,7 +353,7 @@ public class EnsemblDataLoader
                 String[] items = line.split(",");
 
                 // check if still on the same variant
-                final int transId = Integer.parseInt(items[TA_TRANS_ID]);
+                final int transId = Integer.parseInt(items[transIdIndex]);
 
                 if(!restrictedTransIds.isEmpty() && !restrictedTransIds.contains(transId))
                 {
@@ -361,7 +361,7 @@ public class EnsemblDataLoader
                     continue;
                 }
 
-                int saPosition = Integer.parseInt(items[TA_SA_POSITION]);
+                int saPosition = Integer.parseInt(items[saPositionIndex]);
 
                 transSaPositionDataMap.put(transId, saPosition);
 
