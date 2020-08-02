@@ -29,6 +29,8 @@ public final class FeatureIgnoreUtil {
 
         // Copy number variation is too vague.
         FEATURE_KEYWORDS_TO_IGNORE.add("COPY NUMBER VARIATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("3' EXON DELETION"); //TODO determine to which event?
+
     }
 
     private FeatureIgnoreUtil() {

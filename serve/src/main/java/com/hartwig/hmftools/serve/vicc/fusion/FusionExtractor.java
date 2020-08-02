@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.vicc.fusion;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -54,13 +53,31 @@ public class FusionExtractor {
     }
 
     @NotNull
-    private String extractKeyFusion(@NotNull Feature feature){
+    private String extractKeyFusion(@NotNull Feature feature) {
         //TODO: fix combi events
+
+        if (feature.proteinAnnotation().equals("Fusion")) {
+            LOGGER.info(feature);
+        }
+
+
+
         String featureName = feature.name();
-        if (featureName.contains("-") && !featureName.equals("Microsatellite Instability-High")) {
+
+
+        if (featureName.contains("-") && featureName.contains("inframe deletion") && !featureName.equals("Microsatellite Instability-High")
+                && !featureName.contains("wild-type")&& !featureName.equals("LOSS-OF-FUNCTION")) {
             featureName = "fusions";
         }
-        if (feature.biomarkerType() != null ) {
+
+        // Extract internal fusion
+        if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion")) {
+            if (feature.name().contains("-") || feature.name().contains("&")) {
+                featureName = "fusions";
+            }
+        }
+
+        if (feature.biomarkerType() != null) {
             if (feature.biomarkerType().equals("rearrange")) {
                 return FUSION_PAIR;
             }
