@@ -64,7 +64,7 @@ data class LinkRescue(val rescues: Set<String>) {
                     if (isRescueCandidate(variant)) {
                         val other = variantStore.select(link.otherVcfId)
                         val combinedQual = variant.qual + other.qual
-                        if (combinedQual >= config.minQualBreakEnd && isValid(other) && (variant.isMobileElementInsertion || other.isMobileElementInsertion)) {
+                        if (combinedQual >= config.minQualRescueMobileElementInsertion && isValid(other) && (variant.isMobileElementInsertion || other.isMobileElementInsertion)) {
                             rescues.add(variant.vcfId)
                             variant.mateId?.let { rescues.add(it) }
                             rescues.add(other.vcfId)
