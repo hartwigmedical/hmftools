@@ -69,6 +69,8 @@ public class ViccExtractorTestApplication {
         boolean generateHotspots;
         String hotspotVcf = null;
         String rangesVcf = null;
+        String fusionVcf = null;
+
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
@@ -76,6 +78,8 @@ public class ViccExtractorTestApplication {
             generateHotspots = true;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
             rangesVcf = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
+            fusionVcf = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
+
 
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
@@ -88,6 +92,7 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' as the ranges output VCF", rangesVcf);
+        LOGGER.debug("Configured '{}' as the fusion output VCF", fusionVcf);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
         List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
@@ -116,6 +121,9 @@ public class ViccExtractorTestApplication {
         }
         if (rangesVcf != null) {
             writeRanges(rangesVcf, resultsPerEntry);
+        }
+        if (fusionVcf != null) {
+            writeFusion(fusionVcf, resultsPerEntry);
         }
     }
 
@@ -224,6 +232,23 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
         LOGGER.info(" Extracted {} gene ranges", featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
+    }
+
+    private static void writeFusion(@NotNull String rangesVcf, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+            throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(rangesVcf));
+        writer.write("Fusion" + "\t" + "Fusion_event" + "\n");
+
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            ViccEntry viccEntry = entry.getKey();
+            ViccExtractionResult viccExtractionResult = entry.getValue();
+            for (Feature feature : viccEntry.features()) {
+                FusionAnnotation geneFusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
+                writer.write(
+                        geneFusionForFeature.fusion() + "\t" + geneFusionForFeature.fusionName() + "\n");
+            }
+        }
+        writer.close();
     }
 
     private static void writeRanges(@NotNull String rangesVcf, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
