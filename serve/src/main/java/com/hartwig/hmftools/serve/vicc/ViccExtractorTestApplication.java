@@ -185,30 +185,30 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (ampDelForFeature != null) {
-                        // LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
+                         LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
                         featuresWithCopyNumberCount++;
                     }
 
                     if (fusionForFeature != null) {
                         LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
-                                feature.name(),
+                                fusionForFeature.fusion(),
                                 feature.geneSymbol(),
-                                fusionForFeature.fusionName());
+                                fusionForFeature.fusionEvent());
                         featuresWithFusionCount++;
                     }
 
                     if (geneLevelEventForFeature != null) {
-                        //  LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event", feature.name(), feature.geneSymbol());
+                          LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event", feature.name(), feature.geneSymbol());
                         featuresWithGeneLevelEventCount++;
                     }
 
                     if (geneRangeForFeature != null) {
-                        //  LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
+                          LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
-                        //  LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
+                          LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
                         featuresWithSignatureCount++;
                     }
                 }
@@ -245,7 +245,7 @@ public class ViccExtractorTestApplication {
             for (Feature feature : viccEntry.features()) {
                 FusionAnnotation geneFusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
                 writer.write(
-                        geneFusionForFeature.fusion() + "\t" + geneFusionForFeature.fusionName() + "\n");
+                        geneFusionForFeature.fusion() + "\t" + geneFusionForFeature.fusionEvent() + "\n");
             }
         }
         writer.close();

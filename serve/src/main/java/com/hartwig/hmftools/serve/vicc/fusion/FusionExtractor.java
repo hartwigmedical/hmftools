@@ -83,10 +83,10 @@ public class FusionExtractor {
 
         for (Feature feature : viccEntry.features()) {
             if (isFusion(feature)) {
-                fusionsPerFeature.put(feature, ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionName(FUSION_PAIR).build());
+                fusionsPerFeature.put(feature, ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FUSION_PAIR).build());
             } else if (isFusionPromiscuous(feature)) {
                 fusionsPerFeature.put(feature,
-                        ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionName(FUSION_PROMISCUOUS).build());
+                        ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FUSION_PROMISCUOUS).build());
             }
         }
         return fusionsPerFeature;
