@@ -27,6 +27,7 @@ public class DriverAnnotation
     private final List<SampleDriverData> mSampleDrivers;
     private final Map<String,List<DriverPrevalence>> mCancerDriverPrevalence;
     private final List<SampleData> mSampleDataList;
+    private boolean mValidData;
 
     private final Set<String> mGeneList;
     private final Map<String,double[]> mGenePrevalenceTotals;
@@ -45,22 +46,32 @@ public class DriverAnnotation
         mGeneList = Sets.newHashSet();
         mSampleDataList = sampleDataList;
         mSampleDataWriter = null;
+        mValidData = false;
 
+        if(config.DriverPrevFile.isEmpty() || config.SampleDriversFile.isEmpty())
+            return;
+
+        mValidData = true;
         loadPrevalenceData(config.DriverPrevFile);
         formGenePrevalenceTotals();
         loadSampleDrivers(config.SampleDriversFile);
-
         initialiseOutputFile();
     }
 
     public void processCohort()
     {
+        if(!mValidData)
+            return;
+
         mSampleDataList.forEach(x -> processSample(x));
         closeBufferedWriter(mSampleDataWriter);
     }
 
     public void processSample(final SampleData sample)
     {
+        if(!mValidData)
+            return;
+
         calculateSampleProbabilities(sample);
         writeSampleData(sample);
     }
