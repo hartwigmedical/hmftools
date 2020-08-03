@@ -104,6 +104,7 @@ private const val MIN_TUMOR_AF_OPTION = "min_tumor_af"
 private const val MAX_SHORT_STRAND_BIAS_OPTION = "max_short_strand_bias"
 private const val MIN_QUAL_BREAK_END_OPTION = "min_qual_break_end"
 private const val MIN_QUAL_BREAK_POINT_OPTION = "min_qual_break_point"
+private const val MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = "min_qual_rescue_mobile_element_insertion"
 private const val MAX_HOM_LENGTH_SHORT_INV_OPTION = "max_hom_length_short_inv"
 private const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION = "max_inexact_hom_length_short_del"
 private const val MIN_LENGTH_OPTION = "min_length"
@@ -118,6 +119,7 @@ data class GripssFilterConfig(
         val maxShortStrandBias: Double,
         val minQualBreakEnd: Int,
         val minQualBreakPoint: Int,
+        val minQualRescueMobileElementInsertion: Int,
         val maxHomLengthShortInversion: Int,
         val maxInexactHomLengthShortDel: Int,
         val minLength: Int,
@@ -140,6 +142,7 @@ data class GripssFilterConfig(
             options.addOption(MAX_SHORT_STRAND_BIAS_OPTION, "Max short strand bias [${defaultConfig.maxShortStrandBias}]")
             options.addOption(MIN_QUAL_BREAK_END_OPTION, "Min qual break end [${defaultConfig.minQualBreakEnd}]")
             options.addOption(MIN_QUAL_BREAK_POINT_OPTION, "Min qual break point [${defaultConfig.minQualBreakPoint}]")
+            options.addOption(MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, "Min qual rescue mobile element insertions [${defaultConfig.minQualRescueMobileElementInsertion}]")
             options.addOption(MAX_HOM_LENGTH_SHORT_INV_OPTION, "Max homology length short inversion [${defaultConfig.maxHomLengthShortInversion}]")
             options.addOption(MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, "Max inexact homology length short del [${defaultConfig.maxInexactHomLengthShortDel}]")
             options.addOption(MIN_LENGTH_OPTION, "Min length [${defaultConfig.minLength}]")
@@ -158,6 +161,7 @@ data class GripssFilterConfig(
             val maxShortStrandBias = defaultDoubleValue(cmd, MAX_SHORT_STRAND_BIAS_OPTION, defaultConfig.maxShortStrandBias)
             val minQualBreakEnd = defaultIntValue(cmd, MIN_QUAL_BREAK_END_OPTION, defaultConfig.minQualBreakEnd)
             val minQualBreakPoint = defaultIntValue(cmd, MIN_QUAL_BREAK_POINT_OPTION, defaultConfig.minQualBreakPoint)
+            val minQualRescueMobileElementInserions = defaultIntValue(cmd, MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, defaultConfig.minQualRescueMobileElementInsertion)
             val maxHomLengthShortInversion = defaultIntValue(cmd, MAX_HOM_LENGTH_SHORT_INV_OPTION, defaultConfig.maxHomLengthShortInversion)
             val maxInexactHomLengthShortDel = defaultIntValue(cmd, MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, defaultConfig.maxInexactHomLengthShortDel)
             val minLength = defaultIntValue(cmd, MIN_LENGTH_OPTION, defaultConfig.minLength)
@@ -173,6 +177,7 @@ data class GripssFilterConfig(
                     maxShortStrandBias,
                     minQualBreakEnd,
                     minQualBreakPoint,
+                    minQualRescueMobileElementInserions,
                     maxHomLengthShortInversion,
                     maxInexactHomLengthShortDel,
                     minLength,
@@ -190,6 +195,7 @@ data class GripssFilterConfig(
                     0.95,
                     1000,
                     400,
+                    1000,
                     6,
                     5,
                     32,

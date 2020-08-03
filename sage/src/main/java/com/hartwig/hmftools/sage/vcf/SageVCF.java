@@ -59,10 +59,7 @@ public class SageVCF implements AutoCloseable {
     public static final String RAW_ALLELIC_DEPTH = "RAD";
     public static final String RAW_ALLELIC_BASE_QUALITY = "RABQ";
 
-    public final static String PHASE = "LPS";
-    private final static String PHASE_DESCRIPTION = "Local Phase Set";
-    public final static String REALIGN = "LRS";
-    private final static String REALIGN_DESCRIPTION = "Local Realignment Set";
+
     public final static String MIXED_SOMATIC_GERMLINE = "MSG";
     public final static String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
     public final static String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";
@@ -141,9 +138,6 @@ public class SageVCF implements AutoCloseable {
                 1,
                 VCFHeaderLineType.String,
                 READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(REALIGN, 1, VCFHeaderLineType.Integer, REALIGN_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_SOMATIC_GERMLINE,
                 1,
                 VCFHeaderLineType.Integer,

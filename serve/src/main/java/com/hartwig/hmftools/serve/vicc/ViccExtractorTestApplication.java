@@ -23,6 +23,7 @@ import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.curation.CurationKey;
 import com.hartwig.hmftools.serve.vicc.curation.FeatureCurator;
+import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
@@ -67,14 +68,18 @@ public class ViccExtractorTestApplication {
         String refGenomeFastaFile;
         boolean generateHotspots;
         String hotspotVcf = null;
-        String rangesVcf = null;
+        String rangesTsv = null;
+        String fusionTsv = null;
+
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            generateHotspots = true;
+            generateHotspots = false; //for generate hostpots set to true
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
-            rangesVcf = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
+            rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
+            fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
+
 
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
@@ -86,7 +91,8 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
-        LOGGER.debug("Configured '{}' as the ranges output VCF", rangesVcf);
+        LOGGER.debug("Configured '{}' as the ranges output TSV", rangesTsv);
+        LOGGER.debug("Configured '{}' as the fusion output TSV", fusionTsv);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
         List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
@@ -113,8 +119,11 @@ public class ViccExtractorTestApplication {
         if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, resultsPerEntry);
         }
-        if (rangesVcf != null) {
-            writeRanges(rangesVcf, resultsPerEntry);
+        if (rangesTsv != null) {
+            writeRanges(rangesTsv, resultsPerEntry);
+        }
+        if (fusionTsv != null) {
+            writeFusion(fusionTsv, resultsPerEntry);
         }
     }
 
@@ -161,7 +170,7 @@ public class ViccExtractorTestApplication {
             for (Feature feature : viccEntry.features()) {
                 List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
                 KnownAmplificationDeletion ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
-                String fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
+                FusionAnnotation fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
                 String geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
                 GeneRangeAnnotation geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
                 String signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
@@ -176,27 +185,30 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (ampDelForFeature != null) {
-                       // LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
+                        // LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
                         featuresWithCopyNumberCount++;
                     }
 
                     if (fusionForFeature != null) {
-                       // LOGGER.debug("Feature '{}' in '{}' interpreted as fusion", feature.name(), feature.geneSymbol());
+                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
+                                fusionForFeature.fusion(),
+                                feature.geneSymbol(),
+                                fusionForFeature.fusionEvent());
                         featuresWithFusionCount++;
                     }
 
                     if (geneLevelEventForFeature != null) {
-                      //  LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event", feature.name(), feature.geneSymbol());
+                        //  LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event", feature.name(), feature.geneSymbol());
                         featuresWithGeneLevelEventCount++;
                     }
 
                     if (geneRangeForFeature != null) {
-                      //  LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
+                        //  LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
-                      //  LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
+                         // LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
                         featuresWithSignatureCount++;
                     }
                 }
@@ -205,10 +217,11 @@ public class ViccExtractorTestApplication {
             }
         }
 
-       // LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
+     //   LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
                // LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+                //  LOGGER.info(feature);
             }
         }
 
@@ -221,16 +234,32 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
     }
 
-    private static void writeRanges(@NotNull String rangesVcf, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+    private static void writeFusion(@NotNull String fusionTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(rangesVcf));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(fusionTsv));
+        writer.write("Fusion" + "\t" + "Fusion_event" + "\n");
+
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+
+            for (Map.Entry<Feature, FusionAnnotation> featureResult : entry.getValue().fusionsPerFeature().entrySet()) {
+                FusionAnnotation geneFusionForFeature = featureResult.getValue();
+
+                writer.write(
+                        geneFusionForFeature.fusion() + "\t" + geneFusionForFeature.fusionEvent() + "\n");
+            }
+        }
+        writer.close();
+    }
+
+    private static void writeRanges(@NotNull String rangesTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+            throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(rangesTsv));
         writer.write("Gene" + "\t" + "chromosome" + "\t" + "start" + "\t" + "end" + "\t" + "event" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            ViccEntry viccEntry = entry.getKey();
-            ViccExtractionResult viccExtractionResult = entry.getValue();
-            for (Feature feature : viccEntry.features()) {
-                GeneRangeAnnotation geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
+            for (Map.Entry<Feature, GeneRangeAnnotation> featureResult : entry.getValue().geneRangesPerFeature().entrySet()) {
+                GeneRangeAnnotation geneRangeForFeature = featureResult.getValue();
+
                 writer.write(
                         geneRangeForFeature.gene() + "\t" + geneRangeForFeature.chromosome() + "\t" + geneRangeForFeature.start() + "\t"
                                 + geneRangeForFeature.end() + "\t" + geneRangeForFeature.event() + "\n");
@@ -340,10 +369,10 @@ public class ViccExtractorTestApplication {
             String existingKey =
                     ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
             String newKey = ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), transcript, feature.proteinAnnotation());
-//            LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
-//                    entry.source().display(),
-//                    existingKey,
-//                    newKey);
+//                        LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
+//                                entry.source().display(),
+//                                existingKey,
+//                                newKey);
         }
     }
 }

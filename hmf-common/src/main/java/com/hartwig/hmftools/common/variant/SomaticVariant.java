@@ -110,4 +110,13 @@ public interface SomaticVariant extends Variant {
 
     @Nullable
     AllelicDepth referenceDepth();
+
+    @Nullable
+    Integer localPhaseSet();
+
+    @Nullable
+    Integer localRealignmentSet();
+
+    @Nullable
+    Integer phasedInframeIndelIdentifier();
 }

@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.sage.variant;
 
+import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_REALIGN_SET;
 import static com.hartwig.hmftools.common.sage.SageMetaData.PHASED_INFRAME_INDEL;
 import static com.hartwig.hmftools.common.sage.SageMetaData.TIER;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PASS;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.PHASE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_DEPTH;
@@ -17,7 +18,6 @@ import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.REALIGN;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RIGHT_ALIGNED_MICROHOMOLOGY;
 
 import java.util.List;
@@ -77,11 +77,11 @@ public class SageVariantContextFactory {
         }
 
         if (variant.localPhaseSet() > 0) {
-            builder.attribute(PHASE, variant.localPhaseSet());
+            builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSet());
         }
 
         if (variant.localRealignSet() > 0) {
-            builder.attribute(REALIGN, variant.localRealignSet());
+            builder.attribute(LOCAL_REALIGN_SET, variant.localRealignSet());
         }
 
         if (variant.mixedGermlineImpact() > 0) {

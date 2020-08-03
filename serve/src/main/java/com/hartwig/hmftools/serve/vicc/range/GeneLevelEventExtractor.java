@@ -31,7 +31,7 @@ public class GeneLevelEventExtractor {
             "Coding Transcript Intron Variant",
             "Nonsynonymous Variant",
             "Inframe Variant",
-            "Inframe Indel", "MUTATION", "Frameshift Elongation", "Disruptive Inframe Deletion");
+            "Inframe Indel", "MUTATION", "Frameshift Elongation", "wild-type");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
@@ -68,11 +68,11 @@ public class GeneLevelEventExtractor {
                     || GENE_INACTIVATION.contains(feature.provenanceRule()) || GENE_INACTIVATION.contains(feature.proteinAnnotation())) {
                 geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
             }
-            /*else if (GENE.contains(feature.biomarkerType()) || GENE.contains(feature.provenanceRule())
-                    || (GENE.contains(feature.proteinAnnotation())) && !feature.name().contains("+")
-                    || GENE.contains(feature.name())) { //TODO: determine gain of loss function
-                geneLevelEventsPerFeature.put(feature, "gain/loss of " + feature.geneSymbol());
-            }*/
+//            else if (GENE.contains(feature.biomarkerType()) || GENE.contains(feature.provenanceRule())
+//                    || (GENE.contains(feature.proteinAnnotation())) && !feature.name().contains("+")
+//                    || GENE.contains(feature.name())) { //TODO: determine gain of loss function
+//                geneLevelEventsPerFeature.put(feature, "gain/loss of " + feature.geneSymbol());
+//            }
         }
 
         return geneLevelEventsPerFeature;

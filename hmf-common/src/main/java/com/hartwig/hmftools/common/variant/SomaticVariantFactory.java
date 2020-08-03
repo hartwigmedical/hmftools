@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
@@ -233,6 +234,18 @@ public class SomaticVariantFactory {
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
                 .biallelic(context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false))
                 .highConfidenceRegion(false);
+
+        if (context.hasAttribute(SageMetaData.PHASED_INFRAME_INDEL)) {
+            builder.phasedInframeIndelIdentifier(context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0));
+        }
+
+        if (context.hasAttribute(SageMetaData.LOCAL_PHASE_SET)) {
+            builder.localPhaseSet(context.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, 0));
+        }
+
+        if (context.hasAttribute(SageMetaData.LOCAL_REALIGN_SET)) {
+            builder.localRealignmentSet(context.getAttributeAsInt(SageMetaData.LOCAL_REALIGN_SET, 0));
+        }
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
         attachSnpEffAnnotations(builder, context, snpEffSummaryFactory);

@@ -23,6 +23,11 @@ public class FusionExtractor {
     private final Set<String> uniqueFusionsPromiscuous = Sets.newHashSet();
     private static final String FUSION_PAIR = "fusion pair";
     private static final String FUSION_PROMISCUOUS = "fusion promiscuous";
+    private static final Set<String> SEARCH_FUSION_PAIRS = Sets.newHashSet("Fusion", "Disruptive Inframe Deletion", "Gene Fusion", "EGFRvII");
+    private static final Set<String> SEARCH_FUSION_PROMISCUOUS =
+            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion");
+    private static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
+    private static final Set<String> INTERNAL_FUSION = Sets.newHashSet("(Partial");
 
     @NotNull
     public Set<String> uniqueFusionsPair() {
@@ -35,8 +40,8 @@ public class FusionExtractor {
     }
 
     private boolean isFusion(@NotNull Feature feature) {
-        String eventKeyFusion = extractKeyFusion(feature);
-        if (eventKeyFusion.equals(FUSION_PAIR)) {
+        FusionEvent eventKeyFusion = extractKeyFusion(feature);
+        if (eventKeyFusion.equals(FusionEvent.FUSION_PAIR)) {
             return true;
         } else {
             return false;
@@ -44,8 +49,8 @@ public class FusionExtractor {
     }
 
     private boolean isFusionPromiscuous(@NotNull Feature feature) {
-        String eventKeyFusion = extractKeyFusion(feature);
-        if (eventKeyFusion.equals(FUSION_PROMISCUOUS)) {
+        FusionEvent eventKeyFusion = extractKeyFusion(feature);
+        if (eventKeyFusion.equals(FusionEvent.FUSION_PROMISCUOUS)) {
             return true;
         } else {
             return false;
@@ -53,52 +58,50 @@ public class FusionExtractor {
     }
 
     @NotNull
-    private String extractKeyFusion(@NotNull Feature feature) {
-        //TODO: fix combi events
-
-        if (feature.proteinAnnotation().equals("Fusion")) {
-            LOGGER.info(feature);
-        }
-
-
-
-        String featureName = feature.name();
-
-
-        if (featureName.contains("-") && featureName.contains("inframe deletion") && !featureName.equals("Microsatellite Instability-High")
-                && !featureName.contains("wild-type")&& !featureName.equals("LOSS-OF-FUNCTION")) {
-            featureName = "fusions";
-        }
-
-        // Extract internal fusion
-        if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion")) {
-            if (feature.name().contains("-") || feature.name().contains("&")) {
-                featureName = "fusions";
+    private FusionEvent extractKeyFusion(@NotNull Feature feature) {
+        if (!IGNORE.contains(feature.name())) { // Extract internal fusion
+            if (INTERNAL_FUSION.contains(feature.proteinAnnotation())) {
+                return FusionEvent.FUSION_PAIR;
+            } else if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
+                return FusionEvent.FUSION_PAIR;
+            } else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
+                if (feature.name().contains("-")) {
+                    return FusionEvent.FUSION_PAIR;
+                } else {
+                    return FusionEvent.FUSION_PROMISCUOUS;
+                }
+            } else if (feature.biomarkerType() != null) {
+                if (SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
+                    if (feature.name().contains("-")) {
+                        return FusionEvent.FUSION_PAIR;
+                    } else {
+                        return FusionEvent.FUSION_PROMISCUOUS;
+                    }
+                }
+                if (SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
+                    return FusionEvent.FUSION_PAIR;
+                }
+            } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
+                    .contains("-") || feature.name().contains("&")) {// Extract internal fusion
+                return FusionEvent.FUSION_PAIR;
+            } else {
+                return FusionEvent.UNKNOWN;
             }
         }
 
-        if (feature.biomarkerType() != null) {
-            if (feature.biomarkerType().equals("rearrange")) {
-                return FUSION_PAIR;
-            }
-        }
-        if (featureName.toLowerCase().contains("fusions") || featureName.equals("REARRANGEMENT")) {
-            return FUSION_PAIR;
-        } else if (featureName.toLowerCase().contains("fusion")) {
-            return FUSION_PROMISCUOUS;
-        } else {
-            return Strings.EMPTY;
-        }
+        //TODO: check why this is needed??
+        return FusionEvent.UNKNOWN;
     }
 
-    public Map<Feature, String> extractKnownFusions(@NotNull ViccEntry viccEntry) {
-        Map<Feature, String> fusionsPerFeature = Maps.newHashMap();
+    public Map<Feature, FusionAnnotation> extractKnownFusions(@NotNull ViccEntry viccEntry) {
+        Map<Feature, FusionAnnotation> fusionsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
             if (isFusion(feature)) {
-                fusionsPerFeature.put(feature, FUSION_PAIR);
+                fusionsPerFeature.put(feature, ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PAIR).build());
             } else if (isFusionPromiscuous(feature)) {
-                fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
+                fusionsPerFeature.put(feature,
+                        ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PROMISCUOUS).build());
             }
         }
         return fusionsPerFeature;

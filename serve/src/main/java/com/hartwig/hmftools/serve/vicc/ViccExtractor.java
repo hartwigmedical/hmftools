@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
@@ -55,7 +56,7 @@ public final class ViccExtractor {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(viccEntry);
             Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature =
                     copyNumberExtractor.extractKnownAmplificationsDeletions(viccEntry);
-            Map<Feature, String> fusionsPerFeature = fusionExtractor.extractKnownFusions(viccEntry);
+            Map<Feature, FusionAnnotation> fusionsPerFeature = fusionExtractor.extractKnownFusions(viccEntry);
             Map<Feature, String> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(viccEntry);
             Map<Feature, GeneRangeAnnotation> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(viccEntry);
             Map<Feature, String> signaturesPerFeature = signaturesExtractor.extractSignatures(viccEntry);
