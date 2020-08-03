@@ -24,7 +24,7 @@ public class GeneRangeExtractor {
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
     private static final Set<String> GENE_EXON = Sets.newHashSet("exon");
-    private static final Set<String> GENE_MULTIPLE_CODONS = Sets.newHashSet("nonsense", "V600E/K");
+    private static final Set<String> GENE_MULTIPLE_CODONS = Sets.newHashSet("nonsense");
 
     public GeneRangeExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
@@ -54,6 +54,15 @@ public class GeneRangeExtractor {
     public Map<Feature, GeneRangeAnnotation> extractGeneRanges(@NotNull ViccEntry viccEntry) {
         Map<Feature, GeneRangeAnnotation> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
+
+            if (feature.biomarkerType() != null) {
+                if (feature.biomarkerType().equals("Exon Variant")) {
+                 //   LOGGER.info(feature);
+                } else if (feature.biomarkerType().equals("any")) {
+                } else if (feature.biomarkerType().equals("Coding Sequence Variant")){
+
+                }
+            }
             String event = Strings.EMPTY;
             if (feature.name().toLowerCase().contains("exon")) {
                 event = "exon";
@@ -61,10 +70,17 @@ public class GeneRangeExtractor {
 
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-            if (GENE_EXON.contains(feature.name().toLowerCase()) || GENE_EXON.contains(event) && !feature.name()
+            if (GENE_EXON.contains(event) && !feature.name()
                     .toLowerCase()
                     .contains("deletion") && !feature.name().equals("3' EXON DELETION")) {
-
+                if (feature.biomarkerType() != null) {
+                    if (feature.biomarkerType().equals("Exon Variant")) {
+                    } else if (feature.biomarkerType().equals("any")) {
+                    } else {
+                        LOGGER.info(feature);
+                    }
+                }
+               // LOGGER.info(feature);
                 if (feature.name().contains(",")) {
                     String[] exons = feature.name()
                             .substring((feature.name().toLowerCase().indexOf("exon")))
@@ -144,7 +160,7 @@ public class GeneRangeExtractor {
 
             } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
                     .substring(feature.proteinAnnotation().length() - 1)
-                    .equals("X") || GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
+                    .equals("X")) {
                 String geneSymbol = feature.geneSymbol();
                 String proteinAnnotation = feature.proteinAnnotation();
                 int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
