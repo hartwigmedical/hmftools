@@ -78,14 +78,15 @@ public class FusionExtractor {
         return Strings.EMPTY;
     }
 
-    public Map<Feature, String> extractKnownFusions(@NotNull ViccEntry viccEntry) {
-        Map<Feature, String> fusionsPerFeature = Maps.newHashMap();
+    public Map<Feature, FusionAnnotation> extractKnownFusions(@NotNull ViccEntry viccEntry) {
+        Map<Feature, FusionAnnotation> fusionsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
             if (isFusion(feature)) {
-                fusionsPerFeature.put(feature, FUSION_PAIR);
+                fusionsPerFeature.put(feature, ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionName(FUSION_PAIR).build());
             } else if (isFusionPromiscuous(feature)) {
-                fusionsPerFeature.put(feature, FUSION_PROMISCUOUS);
+                fusionsPerFeature.put(feature,
+                        ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionName(FUSION_PROMISCUOUS).build());
             }
         }
         return fusionsPerFeature;

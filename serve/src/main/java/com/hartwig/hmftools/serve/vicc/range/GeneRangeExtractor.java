@@ -77,7 +77,7 @@ public class GeneRangeExtractor {
                     if (feature.biomarkerType().equals("Exon Variant")) {
                     } else if (feature.biomarkerType().equals("any")) {
                     } else {
-                        LOGGER.info(feature);
+                     //   LOGGER.info(feature);
                     }
                 }
                // LOGGER.info(feature);
