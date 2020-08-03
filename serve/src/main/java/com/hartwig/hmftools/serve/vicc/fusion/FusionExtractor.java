@@ -23,10 +23,11 @@ public class FusionExtractor {
     private final Set<String> uniqueFusionsPromiscuous = Sets.newHashSet();
     private static final String FUSION_PAIR = "fusion pair";
     private static final String FUSION_PROMISCUOUS = "fusion promiscuous";
-    private static final Set<String> SEARCH_FUSION_PAIRS =
-            Sets.newHashSet("Fusion", "fusion", "Disruptive Inframe Deletion", "Transcript Fusion", "Gene Fusion");
-    private static final Set<String> SEARCH_FUSION_PROMISCUOUS = Sets.newHashSet("REARRANGEMENT", "Fusions", "rearrange");
+    private static final Set<String> SEARCH_FUSION_PAIRS = Sets.newHashSet("Fusion", "Disruptive Inframe Deletion", "Gene Fusion");
+    private static final Set<String> SEARCH_FUSION_PROMISCUOUS =
+            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion");
     private static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
+    private static final Set<String> INTERNAL_FUSION = Sets.newHashSet("(Partial");
 
     @NotNull
     public Set<String> uniqueFusionsPair() {
@@ -58,14 +59,24 @@ public class FusionExtractor {
 
     @NotNull
     private String extractKeyFusion(@NotNull Feature feature) {
-        if (!IGNORE.contains(feature.name())) {
-            if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
+        if (!IGNORE.contains(feature.name())) { // Extract internal fusion
+            if (INTERNAL_FUSION.contains(feature.proteinAnnotation())) {
+                return FUSION_PAIR;
+            } else if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
                 return FUSION_PAIR;
             } else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
-                return FUSION_PROMISCUOUS;
+                if (feature.name().contains("-")) {
+                    return FUSION_PAIR;
+                } else {
+                    return FUSION_PROMISCUOUS;
+                }
             } else if (feature.biomarkerType() != null) {
                 if (SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
-                    return FUSION_PROMISCUOUS;
+                    if (feature.name().contains("-")) {
+                        return FUSION_PAIR;
+                    } else {
+                        return FUSION_PROMISCUOUS;
+                    }
                 }
                 if (SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
                     return FUSION_PAIR;

@@ -190,10 +190,10 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (fusionForFeature != null) {
-//                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
-//                                fusionForFeature.fusion(),
-//                                feature.geneSymbol(),
-//                                fusionForFeature.fusionEvent());
+                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
+                                fusionForFeature.fusion(),
+                                feature.geneSymbol(),
+                                fusionForFeature.fusionEvent());
                         featuresWithFusionCount++;
                     }
 
