@@ -57,38 +57,21 @@ public class FusionExtractor {
         //TODO: fix combi events
 
         if (feature.proteinAnnotation().equals("Fusion")) {
-            LOGGER.info(feature);
-        }
-
-
-
-        String featureName = feature.name();
-
-
-        if (featureName.contains("-") && featureName.contains("inframe deletion") && !featureName.equals("Microsatellite Instability-High")
-                && !featureName.contains("wild-type")&& !featureName.equals("LOSS-OF-FUNCTION")) {
-            featureName = "fusions";
-        }
-
-        // Extract internal fusion
-        if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion")) {
-            if (feature.name().contains("-") || feature.name().contains("&")) {
-                featureName = "fusions";
-            }
-        }
-
-        if (feature.biomarkerType() != null) {
-            if (feature.biomarkerType().equals("rearrange")) {
-                return FUSION_PAIR;
-            }
-        }
-        if (featureName.toLowerCase().contains("fusions") || featureName.equals("REARRANGEMENT")) {
             return FUSION_PAIR;
-        } else if (featureName.toLowerCase().contains("fusion")) {
+        } else if (feature.proteinAnnotation().equals("REARRANGEMENT")) {
             return FUSION_PROMISCUOUS;
+        } else if (feature.biomarkerType() != null) {
+            if (feature.biomarkerType().equals("rearrange")) {
+                return FUSION_PROMISCUOUS;
+            }
+        } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
+                .contains("-") || feature.name().contains("&")) {// Extract internal fusion
+            return FUSION_PAIR;
         } else {
             return Strings.EMPTY;
         }
+        //TODO: check why this is needed??
+        return Strings.EMPTY;
     }
 
     public Map<Feature, String> extractKnownFusions(@NotNull ViccEntry viccEntry) {
