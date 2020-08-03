@@ -143,7 +143,7 @@ public class EnsemblDataLoader
             int canonicalTransIdIndex = fieldsIndexMap.get("CanonicalTranscriptId");
             int strandIndex = fieldsIndexMap.get("Strand");
             int transIdIndex = fieldsIndexMap.get("TransId");
-            int transNameIndex = fieldsIndexMap.get("TransName");
+            int transNameIndex = fieldsIndexMap.containsKey("TransName") ? fieldsIndexMap.get("TransName") : fieldsIndexMap.get("Trans");
             int biotypeIndex = fieldsIndexMap.get("BioType");
             int transStartIndex = fieldsIndexMap.get("TransStart");
             int transEndIndex = fieldsIndexMap.get("TransEnd");

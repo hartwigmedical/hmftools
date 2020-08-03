@@ -263,7 +263,7 @@ public class DoubleMinuteData
                 {
                     //  check for the other breakend forming an assembled TI with the next breakend
                     boolean inShortLink = assembledBreakends.contains(breakend) ||
-                            (index < endIndex - 1 ? inShortAssemebledLink(breakend, breakendList.get(index + 1)) : false);
+                            (index < endIndex - 1 ? inShortAssembledLink(breakend, breakendList.get(index + 1)) : false);
 
                     if(inShortLink)
                     {
@@ -313,17 +313,19 @@ public class DoubleMinuteData
     private double[] getOrAddSegmentData(final SvChain chain, Map<Integer,double[]> segmentMap)
     {
         int chainId = chain.isClosedLoop() ? chain.id() : OPEN_CHAIN_ID;
+
         double[] segmentData = segmentMap.get(chainId);
+
         if(segmentData == null)
         {
             segmentData = new double[SEG_DATA_SUM + 1];
-            segmentMap.put(chain.id(), segmentData);
+            segmentMap.put(chainId, segmentData);
         }
 
         return segmentData;
     }
 
-    private boolean inShortAssemebledLink(final SvBreakend breakend, final SvBreakend nextBreakend)
+    private boolean inShortAssembledLink(final SvBreakend breakend, final SvBreakend nextBreakend)
     {
         if(breakend.getLinkedPairs().stream().filter(x -> x.isAssembled()).anyMatch(x -> x.hasBreakend(nextBreakend)))
         {
@@ -390,6 +392,8 @@ public class DoubleMinuteData
                 .mapToDouble(x -> x.isChainedFoldback() ? x.jcn() * 0.5 : x.jcn())
                 .sum();
 
+        boolean allChainValid = true;
+
         //  check closed chains and open chains / SVs as well
         final List<Integer> chainIds = Lists.newArrayList(OPEN_CHAIN_ID);
         Chains.stream().filter(x -> x.isClosedLoop()).forEach(x -> chainIds.add(x.id()));
@@ -413,15 +417,14 @@ public class DoubleMinuteData
 
             if(opposingJcn > 0 && maxJcnThreshold / opposingJcn < 1)
             {
-
-                return false;
+                allChainValid = false;
             }
 
             if(chain != null)
                 ValidChains.add(chain);
         }
 
-        return true;
+        return allChainValid;
     }
 
     public String internalTypeCountsAsStr()
