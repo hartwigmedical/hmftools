@@ -54,8 +54,6 @@ public class FusionExtractor {
 
     @NotNull
     private String extractKeyFusion(@NotNull Feature feature) {
-        //TODO: fix combi events
-
         if (feature.proteinAnnotation().equals("Fusion")) {
             return FUSION_PAIR;
         } else if (feature.proteinAnnotation().equals("REARRANGEMENT")) {
@@ -63,6 +61,10 @@ public class FusionExtractor {
         } else if (feature.biomarkerType() != null) {
             if (feature.biomarkerType().equals("rearrange")) {
                 return FUSION_PROMISCUOUS;
+            } else if (feature.biomarkerType().equals("fusion")) {
+                return FUSION_PAIR;
+            } else if (feature.biomarkerType().equals("Disruptive Inframe Deletion")) { // Extract internal fusion of EGFR
+                return FUSION_PAIR;
             }
         } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
                 .contains("-") || feature.name().contains("&")) {// Extract internal fusion
