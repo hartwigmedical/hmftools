@@ -23,6 +23,9 @@ public class FusionExtractor {
     private final Set<String> uniqueFusionsPromiscuous = Sets.newHashSet();
     private static final String FUSION_PAIR = "fusion pair";
     private static final String FUSION_PROMISCUOUS = "fusion promiscuous";
+    private static final Set<String> SEARCH_FUSION_PAIRS =
+            Sets.newHashSet("Fusion", "fusion", "Disruptive Inframe Deletion", "Transcript Fusion", "Gene Fusion");
+    private static final Set<String> SEARCH_FUSION_PROMISCUOUS = Sets.newHashSet("REARRANGEMENT", "Fusions", "rearrange");
 
     @NotNull
     public Set<String> uniqueFusionsPair() {
@@ -54,22 +57,15 @@ public class FusionExtractor {
 
     @NotNull
     private String extractKeyFusion(@NotNull Feature feature) {
-        if (feature.proteinAnnotation().equals("Fusion")) {
+        if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
             return FUSION_PAIR;
-        } else if (feature.proteinAnnotation().equals("REARRANGEMENT")) {
-            return FUSION_PROMISCUOUS;
-        } else if (feature.proteinAnnotation().equals("Fusions")) {
+        } else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
             return FUSION_PROMISCUOUS;
         } else if (feature.biomarkerType() != null) {
-            if (feature.biomarkerType().equals("rearrange")) {
+            if (SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
                 return FUSION_PROMISCUOUS;
-            } else if (feature.biomarkerType().equals("fusion")) {
-                return FUSION_PAIR;
-            } else if (feature.biomarkerType().equals("Disruptive Inframe Deletion")) { // Extract internal fusion of EGFR
-                return FUSION_PAIR;
-            } else if (feature.biomarkerType().equals("Transcript Fusion")) {
-                return FUSION_PAIR;
-            } else if (feature.biomarkerType().equals("Gene Fusion")) {
+            }
+            if (SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
                 return FUSION_PAIR;
             }
         } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
