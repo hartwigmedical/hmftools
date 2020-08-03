@@ -185,30 +185,30 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (ampDelForFeature != null) {
-                         LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
+                        // LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
                         featuresWithCopyNumberCount++;
                     }
 
                     if (fusionForFeature != null) {
-                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
-                                fusionForFeature.fusion(),
-                                feature.geneSymbol(),
-                                fusionForFeature.fusionEvent());
+//                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
+//                                fusionForFeature.fusion(),
+//                                feature.geneSymbol(),
+//                                fusionForFeature.fusionEvent());
                         featuresWithFusionCount++;
                     }
 
                     if (geneLevelEventForFeature != null) {
-                          LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event", feature.name(), feature.geneSymbol());
+                        //  LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event", feature.name(), feature.geneSymbol());
                         featuresWithGeneLevelEventCount++;
                     }
 
                     if (geneRangeForFeature != null) {
-                          LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
+                        //  LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
-                          LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
+                         // LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
                         featuresWithSignatureCount++;
                     }
                 }
@@ -217,11 +217,11 @@ public class ViccExtractorTestApplication {
             }
         }
 
-        LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
+       // LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
-                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-                  LOGGER.info(feature);
+//                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+//                  LOGGER.info(feature);
             }
         }
 
@@ -369,10 +369,10 @@ public class ViccExtractorTestApplication {
             String existingKey =
                     ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
             String newKey = ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), transcript, feature.proteinAnnotation());
-                        LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
-                                entry.source().display(),
-                                existingKey,
-                                newKey);
+//                        LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
+//                                entry.source().display(),
+//                                existingKey,
+//                                newKey);
         }
     }
 }

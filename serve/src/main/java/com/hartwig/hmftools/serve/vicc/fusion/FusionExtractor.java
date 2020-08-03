@@ -26,6 +26,7 @@ public class FusionExtractor {
     private static final Set<String> SEARCH_FUSION_PAIRS =
             Sets.newHashSet("Fusion", "fusion", "Disruptive Inframe Deletion", "Transcript Fusion", "Gene Fusion");
     private static final Set<String> SEARCH_FUSION_PROMISCUOUS = Sets.newHashSet("REARRANGEMENT", "Fusions", "rearrange");
+    private static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
 
     @NotNull
     public Set<String> uniqueFusionsPair() {
@@ -57,23 +58,26 @@ public class FusionExtractor {
 
     @NotNull
     private String extractKeyFusion(@NotNull Feature feature) {
-        if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
-            return FUSION_PAIR;
-        } else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
-            return FUSION_PROMISCUOUS;
-        } else if (feature.biomarkerType() != null) {
-            if (SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
-                return FUSION_PROMISCUOUS;
-            }
-            if (SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
+        if (!IGNORE.contains(feature.name())) {
+            if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
                 return FUSION_PAIR;
+            } else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
+                return FUSION_PROMISCUOUS;
+            } else if (feature.biomarkerType() != null) {
+                if (SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
+                    return FUSION_PROMISCUOUS;
+                }
+                if (SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
+                    return FUSION_PAIR;
+                }
+            } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
+                    .contains("-") || feature.name().contains("&")) {// Extract internal fusion
+                return FUSION_PAIR;
+            } else {
+                return Strings.EMPTY;
             }
-        } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
-                .contains("-") || feature.name().contains("&")) {// Extract internal fusion
-            return FUSION_PAIR;
-        } else {
-            return Strings.EMPTY;
         }
+
         //TODO: check why this is needed??
         return Strings.EMPTY;
     }
