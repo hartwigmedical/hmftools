@@ -58,12 +58,18 @@ public class FusionExtractor {
             return FUSION_PAIR;
         } else if (feature.proteinAnnotation().equals("REARRANGEMENT")) {
             return FUSION_PROMISCUOUS;
+        } else if (feature.proteinAnnotation().equals("Fusions")) {
+            return FUSION_PROMISCUOUS;
         } else if (feature.biomarkerType() != null) {
             if (feature.biomarkerType().equals("rearrange")) {
                 return FUSION_PROMISCUOUS;
             } else if (feature.biomarkerType().equals("fusion")) {
                 return FUSION_PAIR;
             } else if (feature.biomarkerType().equals("Disruptive Inframe Deletion")) { // Extract internal fusion of EGFR
+                return FUSION_PAIR;
+            } else if (feature.biomarkerType().equals("Transcript Fusion")) {
+                return FUSION_PAIR;
+            } else if (feature.biomarkerType().equals("Gene Fusion")) {
                 return FUSION_PAIR;
             }
         } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
