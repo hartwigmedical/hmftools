@@ -13,5 +13,5 @@ public abstract class FusionAnnotation {
     public abstract String fusion();
 
     @NotNull
-    public abstract String fusionEvent();
+    public abstract FusionEvent fusionEvent();
 }

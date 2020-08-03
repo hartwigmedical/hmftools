@@ -40,8 +40,8 @@ public class FusionExtractor {
     }
 
     private boolean isFusion(@NotNull Feature feature) {
-        String eventKeyFusion = extractKeyFusion(feature);
-        if (eventKeyFusion.equals(FUSION_PAIR)) {
+        FusionEvent eventKeyFusion = extractKeyFusion(feature);
+        if (eventKeyFusion.equals(FusionEvent.FUSION_PAIR)) {
             return true;
         } else {
             return false;
@@ -49,8 +49,8 @@ public class FusionExtractor {
     }
 
     private boolean isFusionPromiscuous(@NotNull Feature feature) {
-        String eventKeyFusion = extractKeyFusion(feature);
-        if (eventKeyFusion.equals(FUSION_PROMISCUOUS)) {
+        FusionEvent eventKeyFusion = extractKeyFusion(feature);
+        if (eventKeyFusion.equals(FusionEvent.FUSION_PROMISCUOUS)) {
             return true;
         } else {
             return false;
@@ -58,39 +58,39 @@ public class FusionExtractor {
     }
 
     @NotNull
-    private String extractKeyFusion(@NotNull Feature feature) {
+    private FusionEvent extractKeyFusion(@NotNull Feature feature) {
         if (!IGNORE.contains(feature.name())) { // Extract internal fusion
             if (INTERNAL_FUSION.contains(feature.proteinAnnotation())) {
-                return FUSION_PAIR;
+                return FusionEvent.FUSION_PAIR;
             } else if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
-                return FUSION_PAIR;
+                return FusionEvent.FUSION_PAIR;
             } else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
                 if (feature.name().contains("-")) {
-                    return FUSION_PAIR;
+                    return FusionEvent.FUSION_PAIR;
                 } else {
-                    return FUSION_PROMISCUOUS;
+                    return FusionEvent.FUSION_PROMISCUOUS;
                 }
             } else if (feature.biomarkerType() != null) {
                 if (SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
                     if (feature.name().contains("-")) {
-                        return FUSION_PAIR;
+                        return FusionEvent.FUSION_PAIR;
                     } else {
-                        return FUSION_PROMISCUOUS;
+                        return FusionEvent.FUSION_PROMISCUOUS;
                     }
                 }
                 if (SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
-                    return FUSION_PAIR;
+                    return FusionEvent.FUSION_PAIR;
                 }
             } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
                     .contains("-") || feature.name().contains("&")) {// Extract internal fusion
-                return FUSION_PAIR;
+                return FusionEvent.FUSION_PAIR;
             } else {
-                return Strings.EMPTY;
+                return FusionEvent.UNKNOWN;
             }
         }
 
         //TODO: check why this is needed??
-        return Strings.EMPTY;
+        return FusionEvent.UNKNOWN;
     }
 
     public Map<Feature, FusionAnnotation> extractKnownFusions(@NotNull ViccEntry viccEntry) {
@@ -98,10 +98,10 @@ public class FusionExtractor {
 
         for (Feature feature : viccEntry.features()) {
             if (isFusion(feature)) {
-                fusionsPerFeature.put(feature, ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FUSION_PAIR).build());
+                fusionsPerFeature.put(feature, ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PAIR).build());
             } else if (isFusionPromiscuous(feature)) {
                 fusionsPerFeature.put(feature,
-                        ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FUSION_PROMISCUOUS).build());
+                        ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PROMISCUOUS).build());
             }
         }
         return fusionsPerFeature;
