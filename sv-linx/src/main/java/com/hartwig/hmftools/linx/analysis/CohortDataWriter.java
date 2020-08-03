@@ -449,7 +449,7 @@ public class CohortDataWriter
             writer.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChainIndex,Jcn,JcnUncertainty");
             writer.write(",IsAssembled,TILength,NextSvDist,NextClusteredSvDist,TraversedSVCount");
             writer.write(",LocationType,OverlapCount,CopyNumberGain");
-            writer.write(",Id1,Id2,ChrArm,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
+            writer.write(",Id1,Id2,ChrArm,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch,IsDM");
             writer.newLine();
 
             return writer;
@@ -478,6 +478,7 @@ public class CohortDataWriter
                 {
                     int chainSvCount = chain.getSvCount();
                     boolean chainConsistent = chain.isConsistent();
+                    boolean isDoubleMinute = chain.isDoubleMinute();
 
                     List<LinkedPair> uniquePairs = Lists.newArrayList();
                     final List<LinkedPair> chainLinks = chain.getLinkedPairs();
@@ -519,12 +520,13 @@ public class CohortDataWriter
                         ArmCluster acStart = cluster.findArmCluster(beStart);
                         ArmCluster acEnd = cluster.findArmCluster(beEnd);
 
-                        mLinksFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s,%s,%s,%s,%s",
+                        mLinksFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s,%s,%s,%s,%s,%s",
                                 beStart.getSV().id(), beEnd.getSV().id(),
                                 beStart.getChrArm(), beStart.position(), beEnd.position(),
                                 acStart != null ? acStart.getTypeStr() : "", acEnd != null ? acEnd.getTypeStr() : "",
                                 beStart.getSV().getGeneInBreakend(beStart.usesStart(), false),
-                                beEnd.getSV().getGeneInBreakend(beEnd.usesStart(), false), pair.getExonMatchData()));
+                                beEnd.getSV().getGeneInBreakend(beEnd.usesStart(), false),
+                                pair.getExonMatchData(), isDoubleMinute));
 
                         mLinksFileWriter.newLine();
                     }

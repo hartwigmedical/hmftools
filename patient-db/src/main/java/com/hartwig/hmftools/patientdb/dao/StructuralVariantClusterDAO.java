@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep18;
+import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep22;
 import org.jooq.InsertValuesStep5;
 import org.jooq.InsertValuesStep9;
@@ -136,7 +136,7 @@ class StructuralVariantClusterDAO {
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();
 
         for (List<LinxLink> batch : Iterables.partition(links, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep18 inserter = context.insertInto(SVLINK,
+            InsertValuesStep19 inserter = context.insertInto(SVLINK,
                     SVLINK.SAMPLEID,
                     SVLINK.MODIFIED,
                     SVLINK.CLUSTERID,
@@ -154,14 +154,15 @@ class StructuralVariantClusterDAO {
                     SVLINK.LINKLENGTH,
                     SVLINK.JUNCTIONCOPYNUMBER,
                     SVLINK.JUNCTIONCOPYNUMBERUNCERTAINTY,
-                    SVLINK.PSEUDOGENEINFO);
+                    SVLINK.PSEUDOGENEINFO,
+                    SVLINK.ECDNA);
 
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String sample,
             @NotNull LinxLink link) {
         inserter.values(sample,
                 timestamp,
@@ -180,7 +181,8 @@ class StructuralVariantClusterDAO {
                 link.length(),
                 link.junctionCopyNumber(),
                 link.junctionCopyNumberUncertainty(),
-                link.pseudogeneInfo());
+                link.pseudogeneInfo(),
+                link.ecDna());
     }
 
     void writeViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertFile> inserts) {

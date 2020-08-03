@@ -562,6 +562,7 @@ public class SampleAnalyser
 
                 List<LinkedPair> uniquePairs = Lists.newArrayList();
                 final List<LinkedPair> chainLinks = chain.getLinkedPairs();
+                boolean isDoubleMinute = chain.isDoubleMinute();
 
                 for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                 {
@@ -604,6 +605,7 @@ public class SampleAnalyser
                             .junctionCopyNumber(DatabaseUtil.decimal(chain.jcn()))
                             .junctionCopyNumberUncertainty(DatabaseUtil.decimal(chain.jcnUncertainty()))
                             .pseudogeneInfo(pair.getExonMatchData())
+                            .ecDna(isDoubleMinute)
                             .build());
                 }
             }

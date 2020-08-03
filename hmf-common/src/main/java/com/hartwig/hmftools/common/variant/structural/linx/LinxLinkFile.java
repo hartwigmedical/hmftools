@@ -69,6 +69,7 @@ public class LinxLinkFile
                 .add("junctionCopyNumber")
                 .add("junctionCopyNumberUncertainty")
                 .add("pseudogeneInfo")
+                .add("ecDna")
                 .toString();
     }
 
@@ -92,6 +93,7 @@ public class LinxLinkFile
                 .add(String.valueOf(svData.junctionCopyNumber()))
                 .add(String.valueOf(svData.junctionCopyNumberUncertainty()))
                 .add(String.valueOf(svData.pseudogeneInfo()))
+                .add(String.valueOf(svData.ecDna()))
                 .toString();
     }
 
@@ -119,6 +121,7 @@ public class LinxLinkFile
                 .junctionCopyNumber(Double.parseDouble(values[index++]))
                 .junctionCopyNumberUncertainty(Double.parseDouble(values[index++]))
                 .pseudogeneInfo(index < values.length ? values[index++] : "")
+                .ecDna(Boolean.parseBoolean(values[index++]))
                 .build();
     }
 }

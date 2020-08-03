@@ -21,4 +21,5 @@ public abstract class LinxLink
     public abstract double junctionCopyNumber();
     public abstract double junctionCopyNumberUncertainty();
     public abstract String pseudogeneInfo();
+    public abstract boolean ecDna();
 }

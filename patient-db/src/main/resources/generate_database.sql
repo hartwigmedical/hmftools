@@ -586,6 +586,7 @@ CREATE TABLE svLink
     junctionCopyNumber DOUBLE PRECISION,
     junctionCopyNumberUncertainty DOUBLE PRECISION,
     pseudogeneInfo varchar(255),
+    ecDna BOOLEAN,
     PRIMARY KEY (id),
     INDEX(sampleId, clusterId),
     INDEX(clusterId)
