@@ -68,17 +68,17 @@ public class ViccExtractorTestApplication {
         String refGenomeFastaFile;
         boolean generateHotspots;
         String hotspotVcf = null;
-        String rangesVcf = null;
-        String fusionVcf = null;
+        String rangesTsv = null;
+        String fusionTsv = null;
 
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            generateHotspots = false;
+            generateHotspots = false; //for generate hostpots set to true
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
-            rangesVcf = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
-            fusionVcf = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
+            rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
+            fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
 
 
         } else {
@@ -91,8 +91,8 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
-        LOGGER.debug("Configured '{}' as the ranges output VCF", rangesVcf);
-        LOGGER.debug("Configured '{}' as the fusion output VCF", fusionVcf);
+        LOGGER.debug("Configured '{}' as the ranges output TSV", rangesTsv);
+        LOGGER.debug("Configured '{}' as the fusion output TSV", fusionTsv);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
         List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
@@ -119,11 +119,11 @@ public class ViccExtractorTestApplication {
         if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, resultsPerEntry);
         }
-        if (rangesVcf != null) {
-            writeRanges(rangesVcf, resultsPerEntry);
+        if (rangesTsv != null) {
+            writeRanges(rangesTsv, resultsPerEntry);
         }
-        if (fusionVcf != null) {
-            writeFusion(fusionVcf, resultsPerEntry);
+        if (fusionTsv != null) {
+            writeFusion(fusionTsv, resultsPerEntry);
         }
     }
 
@@ -221,7 +221,7 @@ public class ViccExtractorTestApplication {
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-                //  LOGGER.info(feature);
+                  LOGGER.info(feature);
             }
         }
 
@@ -234,9 +234,9 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
     }
 
-    private static void writeFusion(@NotNull String rangesVcf, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+    private static void writeFusion(@NotNull String fusionTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(rangesVcf));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(fusionTsv));
         writer.write("Fusion" + "\t" + "Fusion_event" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
@@ -251,9 +251,9 @@ public class ViccExtractorTestApplication {
         writer.close();
     }
 
-    private static void writeRanges(@NotNull String rangesVcf, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+    private static void writeRanges(@NotNull String rangesTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(rangesVcf));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(rangesTsv));
         writer.write("Gene" + "\t" + "chromosome" + "\t" + "start" + "\t" + "end" + "\t" + "event" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
@@ -369,10 +369,10 @@ public class ViccExtractorTestApplication {
             String existingKey =
                     ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
             String newKey = ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), transcript, feature.proteinAnnotation());
-            //            LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
-            //                    entry.source().display(),
-            //                    existingKey,
-            //                    newKey);
+                        LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
+                                entry.source().display(),
+                                existingKey,
+                                newKey);
         }
     }
 }

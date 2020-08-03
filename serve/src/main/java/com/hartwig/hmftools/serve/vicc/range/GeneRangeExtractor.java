@@ -14,6 +14,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneRangeExtractor {
@@ -54,9 +55,14 @@ public class GeneRangeExtractor {
         Map<Feature, GeneRangeAnnotation> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
 
+            String event = Strings.EMPTY;
+            if (feature.name().toLowerCase().contains("exon")) {
+                event = "exon";
+            }
+
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-            if (GENE_EXON.contains(feature.name().toLowerCase()) && !feature.name().toLowerCase().contains("deletion")) {
+            if (GENE_EXON.contains(event) && !feature.name().toLowerCase().contains("deletion")) {
 
                 if (feature.name().contains(",")) {
                     String[] exons = feature.name()
