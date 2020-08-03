@@ -349,7 +349,8 @@ public class DoubleMinuteData
     }
 
     private static final int MIN_CLOSED_SEG_LENGTH = 1500;
-    private static final double MIN_CLOSED_SEG_RATIO = 0.6667;
+    private static final double MIN_CLOSED_SEG_RATIO = 0.66;
+    private static final double LOW_JCN_BUFFER = 4;
 
     private boolean checkCriteria()
     {
@@ -385,23 +386,53 @@ public class DoubleMinuteData
                 return false;
         }
 
-        double maxJcnThreshold = MaxJcn - 4;
-
         double foldbackJcn = Cluster.getFoldbacks().stream()
                 .filter(x -> !SVs.contains(x))
                 .mapToDouble(x -> x.isChainedFoldback() ? x.jcn() * 0.5 : x.jcn())
                 .sum();
 
-        boolean allChainValid = true;
+        boolean hasValidCriteria = false;
 
         //  check closed chains and open chains / SVs as well
         final List<Integer> chainIds = Lists.newArrayList(OPEN_CHAIN_ID);
         Chains.stream().filter(x -> x.isClosedLoop()).forEach(x -> chainIds.add(x.id()));
 
-        for(int i = 0; i <= Chains.size(); ++i)
+        final List<SvVarData> nonClosedChainSVs = Lists.newArrayList(UnchainedSVs);
+        Chains.stream().filter(x -> !x.isClosedLoop()).forEach(x -> nonClosedChainSVs.addAll(x.getSvList()));
+
+        for(Integer chainId : chainIds)
         {
-            final SvChain chain = i < Chains.size() ? Chains.get(i) : null;
-            int chainId = chain != null ? chain.id() : OPEN_CHAIN_ID;
+            final SvChain chain = Chains.stream().filter(x -> x.id() == chainId).findFirst().orElse(null);
+
+            if(nonClosedChainSVs.isEmpty() && chainId == OPEN_CHAIN_ID)
+                continue;
+
+            // find the highest foldback JCN or if none the highest JCN
+            double maxChainJcn = 0;
+            double maxChainFoldbackJcn = 0;
+
+            if(chain != null)
+            {
+                for(SvVarData var : chain.getSvList())
+                {
+                    maxChainJcn = max(maxChainJcn, var.jcn());
+
+                    if(var.isFoldback())
+                        maxChainFoldbackJcn = maxChainFoldbackJcn == 0 ? var.jcn() : min(maxChainFoldbackJcn, var.jcn());
+                }
+            }
+            else
+            {
+                for(SvVarData var : nonClosedChainSVs)
+                {
+                    maxChainJcn = max(maxChainJcn, var.jcn());
+
+                    if(var.isFoldback())
+                        maxChainFoldbackJcn = maxChainFoldbackJcn == 0 ? var.jcn() : min(maxChainFoldbackJcn, var.jcn());
+                }
+            }
+
+            double maxJcn = maxChainFoldbackJcn > 0 ? maxChainFoldbackJcn : maxChainJcn;
 
             final double[] sglInternalValues = ChainSglInternalData.get(chainId);
             final double[] infInternalValues = ChainSglInternalData.get(chainId);
@@ -415,16 +446,16 @@ public class DoubleMinuteData
 
             double opposingJcn = intExtJcnTotal + sglInfMaxJcn + foldbackJcn;
 
-            if(opposingJcn > 0 && maxJcnThreshold / opposingJcn < 1)
+            if(opposingJcn + LOW_JCN_BUFFER <= maxJcn)
             {
-                allChainValid = false;
-            }
+                hasValidCriteria = true;
 
-            if(chain != null)
-                ValidChains.add(chain);
+                if(chain != null)
+                    ValidChains.add(chain);
+            }
         }
 
-        return allChainValid;
+        return hasValidCriteria;
     }
 
     public String internalTypeCountsAsStr()

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.SEG_DATA_COUNT;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
@@ -209,6 +210,35 @@ public class DoubleMinuteTest
         assertTrue(cluster != null);
         assertEquals(DOUBLE_MINUTE, cluster.getResolvedType());
         assertEquals(2, cluster.getDoubleMinuteSVs().size());
+    }
+
+    @Test
+    public void testInvalidChainedFoldbackMs()
+    {
+        // if a foldback splits a chain, it should be the foldback's JCN which is tested
+        LinxTester tester = new LinxTester();
+
+        // tester.logVerbose(true);
+
+        // the main DM structure
+        SvVarData var1 = createTestSv(tester.nextVarId(),"1","1",1000,1100,-1,-1, INV,8);
+        SvVarData var2 = createTestSv(tester.nextVarId(),"1","2",5000,1000,1,-1, BND,16);
+        SvVarData var3 = createTestSv(tester.nextVarId(),"2","2",5100,5000,1,1, INV,8);
+
+        // an SV which will invalidate the DM
+        SvVarData var4 = createTestSv(tester.nextVarId(),"1","3",2000,1000,1,1, BND,2);
+        SvVarData var5 = createTestSv(tester.nextVarId(),"1","4",3000,1000,-1,1, BND,2);
+        SvVarData var6 = createTestSv(tester.nextVarId(),"1","5",4000,1000,1,1, BND,2);
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4, var5, var6));
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.getClusters().size());
+        SvCluster cluster = tester.getClusters().get(0);
+        assertTrue(cluster != null);
+        assertEquals(COMPLEX, cluster.getResolvedType());
     }
 
     @Test
