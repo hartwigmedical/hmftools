@@ -14,7 +14,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneRangeExtractor {
@@ -55,32 +54,10 @@ public class GeneRangeExtractor {
         Map<Feature, GeneRangeAnnotation> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
 
-            if (feature.biomarkerType() != null) {
-                if (feature.biomarkerType().equals("Exon Variant")) {
-                 //   LOGGER.info(feature);
-                } else if (feature.biomarkerType().equals("any")) {
-                } else if (feature.biomarkerType().equals("Coding Sequence Variant")){
-
-                }
-            }
-            String event = Strings.EMPTY;
-            if (feature.name().toLowerCase().contains("exon")) {
-                event = "exon";
-            }
-
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-            if (GENE_EXON.contains(event) && !feature.name()
-                    .toLowerCase()
-                    .contains("deletion") && !feature.name().equals("3' EXON DELETION")) {
-                if (feature.biomarkerType() != null) {
-                    if (feature.biomarkerType().equals("Exon Variant")) {
-                    } else if (feature.biomarkerType().equals("any")) {
-                    } else {
-                     //   LOGGER.info(feature);
-                    }
-                }
-               // LOGGER.info(feature);
+            if (GENE_EXON.contains(feature.name().toLowerCase()) && !feature.name().toLowerCase().contains("deletion")) {
+
                 if (feature.name().contains(",")) {
                     String[] exons = feature.name()
                             .substring((feature.name().toLowerCase().indexOf("exon")))
