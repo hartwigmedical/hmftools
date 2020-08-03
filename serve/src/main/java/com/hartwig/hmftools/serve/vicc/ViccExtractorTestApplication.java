@@ -75,7 +75,7 @@ public class ViccExtractorTestApplication {
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            generateHotspots = true;
+            generateHotspots = false;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
             rangesVcf = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
             fusionVcf = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
@@ -240,10 +240,10 @@ public class ViccExtractorTestApplication {
         writer.write("Fusion" + "\t" + "Fusion_event" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            ViccEntry viccEntry = entry.getKey();
-            ViccExtractionResult viccExtractionResult = entry.getValue();
-            for (Feature feature : viccEntry.features()) {
-                FusionAnnotation geneFusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
+
+            for (Map.Entry<Feature, FusionAnnotation> featureResult : entry.getValue().fusionsPerFeature().entrySet()) {
+                FusionAnnotation geneFusionForFeature = featureResult.getValue();
+
                 writer.write(
                         geneFusionForFeature.fusion() + "\t" + geneFusionForFeature.fusionEvent() + "\n");
             }
@@ -257,10 +257,9 @@ public class ViccExtractorTestApplication {
         writer.write("Gene" + "\t" + "chromosome" + "\t" + "start" + "\t" + "end" + "\t" + "event" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            ViccEntry viccEntry = entry.getKey();
-            ViccExtractionResult viccExtractionResult = entry.getValue();
-            for (Feature feature : viccEntry.features()) {
-                GeneRangeAnnotation geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
+            for (Map.Entry<Feature, GeneRangeAnnotation> featureResult : entry.getValue().geneRangesPerFeature().entrySet()) {
+                GeneRangeAnnotation geneRangeForFeature = featureResult.getValue();
+
                 writer.write(
                         geneRangeForFeature.gene() + "\t" + geneRangeForFeature.chromosome() + "\t" + geneRangeForFeature.start() + "\t"
                                 + geneRangeForFeature.end() + "\t" + geneRangeForFeature.event() + "\n");
