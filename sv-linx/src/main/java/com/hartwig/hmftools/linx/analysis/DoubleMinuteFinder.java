@@ -49,8 +49,8 @@ public class DoubleMinuteFinder
     private final List<Integer> mProcessedClusters;
     private final Map<Integer, DoubleMinuteData> mDoubleMinutes;
 
-    private String mOutputDir;
     private BufferedWriter mFileWriter;
+    private boolean mLogCandidates;
 
     private static final double JCN_THRESHOLD = 8;
     private static final double JCN_LOWER_THRESHOLD = 6;
@@ -67,15 +67,16 @@ public class DoubleMinuteFinder
         mProcessedClusters = Lists.newArrayList();
         mDoubleMinutes = Maps.newHashMap();
 
-        mOutputDir = null;
         mFileWriter = null;
     }
 
     public void setGeneTransCache(final EnsemblDataCache geneDataCache) { mGeneTransCache = geneDataCache; }
     public void setCopyNumberAnalyser(CnDataLoader cnAnalyser) { mCnDataLoader = cnAnalyser; }
-    public void setOutputDir(final String outputDir)
+
+    public void setOutputDir(final String outputDir, boolean logCandidates)
     {
-        mOutputDir = outputDir;
+        initialiseWriter(outputDir);
+        mLogCandidates = logCandidates;
     }
 
     public final Map<Integer, DoubleMinuteData> getDoubleMinutes() { return mDoubleMinutes; }
@@ -132,6 +133,10 @@ public class DoubleMinuteFinder
         final List<SvVarData> dmSVs = Lists.newArrayList();
 
         candidateDMSVs.stream().filter(x -> x.jcn() >= MIN_PERC_OF_MAX_JCN * maxDmJcn).forEach(x -> dmSVs.add(x));
+
+        // dismiss any single SV which isn't a DUP
+        if(dmSVs.size() == 1 && dmSVs.get(0).type() != DUP)
+            return;
 
         final List<SvChain> dmChains = createDMChains(cluster, dmSVs, false);
 
@@ -193,10 +198,6 @@ public class DoubleMinuteFinder
             }
         }
 
-        LNX_LOGGER.debug("cluster({}) dmSVs({}) chains({}) unchainedSVs({}) {}",
-                cluster.id(), dmSVs.size(), dmChains.size(), unchainedCount,
-                fullyChained ? "fully chained" : "invalid chain");
-
         DoubleMinuteData dmData = new DoubleMinuteData(cluster, dmSVs);
 
         dmData.Chains.addAll(dmChains);
@@ -206,32 +207,39 @@ public class DoubleMinuteFinder
 
         boolean isDM = dmData.isDoubleMinute();
 
+        if(!mLogCandidates && !isDM)
+            return;
+
+        LNX_LOGGER.debug("cluster({}) dmSVs({}) chains({}) unchainedSVs({}) {}",
+                cluster.id(), dmSVs.size(), dmChains.size(), unchainedCount,
+                fullyChained ? "fully chained" : "invalid chain");
+
         mDoubleMinutes.put(cluster.id(), dmData);
 
-        // TO-DO
-        // only resolve clusters of size 1 and 2 as DMs, otherwise just annotate the cluster as containing or being a DM
         // mark each chains individually as meeting the DM criteria or not, and subsequently dismiss any SVs not part of those valid chains
-
-        // cache DM data against the cluster since it used in the chaining routine amongst other things
-        cluster.setDoubleMinuteData(dmSVs, dmChains);
-
-        for(SvChain dmChain : dmChains)
-        {
-            // cache DUP chains now since the cluster may not go through the chaining routine
-            if(dmChain.getSvCount() == 1 && dmChain.getSvList().get(0).type() == DUP)
-            {
-                final SvVarData dup = dmChain.getSvList().get(0);
-                if(!cluster.getChains().stream().anyMatch(x -> x.getSvList().size() == 1 && x.getSvList().contains(dup)))
-                {
-                    cluster.addChain(dmChain, false);
-                }
-            }
-        }
-
         if(isDM)
         {
+            // cache DM data against the cluster since it used in the chaining routine amongst other things
+            cluster.setDoubleMinuteData(dmSVs, dmChains);
+
+            for(SvChain dmChain : dmChains)
+            {
+                // cache single DUP chains now since the cluster may not go through the chaining routine
+                if(dmChain.getSvCount() == 1 && dmChain.getSvList().get(0).type() == DUP)
+                {
+                    final SvVarData dup = dmChain.getSvList().get(0);
+                    if(!cluster.getChains().stream().anyMatch(x -> x.getSvList().size() == 1 && x.getSvList().contains(dup)))
+                    {
+                        cluster.addChain(dmChain, false);
+                    }
+                }
+            }
+
+            // only resolve clusters of size 1 and 2 as DMs, otherwise just annotate the cluster as containing or being a DM
+            if(cluster.getSvCount() <= 2 && cluster.getSvCount() == dmSVs.size())
+                cluster.setResolved(false, DOUBLE_MINUTE);
+
             cluster.addAnnotation(CLUSTER_ANNOT_DM);
-            cluster.setResolved(false, DOUBLE_MINUTE);
         }
     }
 
@@ -314,13 +322,36 @@ public class DoubleMinuteFinder
         return (int)chains.stream().filter(x -> x.couldCloseChain()).count();
     }
 
+    private void initialiseWriter(final String outputDir)
+    {
+        if(outputDir == null || outputDir.isEmpty())
+            return;
+        
+        try
+        {
+            String outputFileName = outputDir + "LNX_DOUBLE_MINUTES.csv";
+            mFileWriter = createBufferedWriter(outputFileName, false);
+
+            mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount");
+            mFileWriter.write(",SamplePurity,SamplePloidy,IsDM,DMSvCount,DMSvTypes,SvIds,Chromosomes");
+            mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
+            mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
+            mFileWriter.write(",NonSegFoldbacks,NonSegFoldbackJcnTotal,SimpleDels");
+            mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,FbIntCount,FbIntJcnTotal,FbIntJcnMax");
+            mFileWriter.write(",SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
+            mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
+            mFileWriter.newLine();
+        }
+        catch (final IOException e)
+        {
+            LNX_LOGGER.error("error initialising DM file: {}", e.toString());
+        }
+    }
+
     public void reportCluster(final String sampleId, final SvCluster cluster)
     {
-        if(mOutputDir == null || mOutputDir.isEmpty())
+        if(mFileWriter == null)
             return;
-
-        // if(!cluster.hasAnnotation(CLUSTER_ANNOT_DM))
-        //    return;
 
         final DoubleMinuteData dmData = mDoubleMinutes.get(cluster.id());
 
@@ -384,25 +415,6 @@ public class DoubleMinuteFinder
 
         try
         {
-            if (mFileWriter == null)
-            {
-                String outputFileName = mOutputDir;
-
-                outputFileName += "LNX_DOUBLE_MINUTES.csv";
-
-                mFileWriter = createBufferedWriter(outputFileName, false);
-
-                mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount");
-                mFileWriter.write(",SamplePurity,SamplePloidy,IsDM,DMSvCount,DMSvTypes,SvIds,Chromosomes");
-                mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
-                mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
-                mFileWriter.write(",NonSegFoldbacks,NonSegFoldbackJcnTotal,SimpleDels");
-                mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,FbIntCount,FbIntJcnTotal,FbIntJcnMax");
-                mFileWriter.write(",SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
-                mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
-                mFileWriter.newLine();
-            }
-
             mFileWriter.write(String.format("%s,%d,%s,%s,%d",
                     sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
 

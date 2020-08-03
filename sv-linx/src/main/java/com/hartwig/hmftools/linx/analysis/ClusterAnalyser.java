@@ -92,7 +92,7 @@ public class ClusterAnalyser {
         if(mConfig.hasMultipleSamples())
         {
             mChainFinder.initialiseOutput(mConfig);
-            mDmFinder.setOutputDir(mConfig.OutputDataPath);
+            mDmFinder.setOutputDir(mConfig.OutputDataPath, runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES));
         }
 
         mChainFinder.setUseAllelePloidies(true); // can probably remove and assume always in place
@@ -481,25 +481,7 @@ public class ClusterAnalyser {
         if(metrics.TotalDeleted == 0)
             metrics.TotalDeleted = metrics.TotalDBLength;
 
-        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
-            mDmFinder.reportCluster(mSampleId, cluster);
-    }
-
-    public void writeComponentSvHeaders(BufferedWriter writer) throws IOException
-    {
-        // allow specialised sub-components to add per-SV data
-        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
-            writer.write(",DMSV");
-    }
-
-    public void writeComponentSvData(BufferedWriter writer, final SvVarData var) throws IOException
-    {
-        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
-        {
-            final DoubleMinuteData dmData = mDmFinder.getDoubleMinutes().get(var.getCluster().id());
-            boolean isDmSv = dmData != null && dmData.SVs.contains(var);
-            writer.write(String.format(",%s", isDmSv));
-        }
+        mDmFinder.reportCluster(mSampleId, cluster);
     }
 
     public void close()

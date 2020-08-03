@@ -6,9 +6,12 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.SEG_DATA_COUNT;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV_DEL_DUP;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
@@ -98,8 +101,7 @@ public class DoubleMinuteTest
     {
         // a cluster is not a DM if it has too high a ratio of open breakends, with simple DELs excluded
         LinxTester tester = new LinxTester();
-
-        // tester.logVerbose(true);
+        tester.Analyser.getDoubleMinuteFinder().setOutputDir("", true);
 
         // the main DM structure, with open breakends
         SvVarData var1 = createTestSv(tester.nextVarId(),"1","2",1000,100,-1,1, BND,8);
@@ -121,11 +123,7 @@ public class DoubleMinuteTest
 
         assertEquals(1, tester.getClusters().size());
         SvCluster cluster = tester.getClusters().get(0);
-        assertEquals(COMPLEX, cluster.getResolvedType());
-        assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
-        assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
-        assertTrue(cluster.getDoubleMinuteSVs().contains(var3));
-        assertTrue(cluster.getDoubleMinuteSVs().contains(var4));
+        assertEquals(RECIP_TRANS_DEL_DUP, cluster.getResolvedType());
     }
 
     @Test
@@ -133,6 +131,7 @@ public class DoubleMinuteTest
     {
         // a cluster is not a DM if it has too many breakends going from within a segment to outside, but  short TIs are excluded
         LinxTester tester = new LinxTester();
+        tester.Analyser.getDoubleMinuteFinder().setOutputDir("", true);
 
         // tester.logVerbose(true);
 
@@ -208,7 +207,8 @@ public class DoubleMinuteTest
         assertEquals(1, tester.getClusters().size());
         cluster = tester.getClusters().get(0);
         assertTrue(cluster != null);
-        assertEquals(DOUBLE_MINUTE, cluster.getResolvedType());
+        assertEquals(COMPLEX, cluster.getResolvedType());
+        assertTrue(cluster.getAnnotations().contains(DOUBLE_MINUTES));
         assertEquals(2, cluster.getDoubleMinuteSVs().size());
     }
 
@@ -272,7 +272,10 @@ public class DoubleMinuteTest
         assertEquals(1, tester.Analyser.getClusters().size());
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster != null);
-        assertEquals(DOUBLE_MINUTE, cluster.getResolvedType());
+
+        assertEquals(COMPLEX, cluster.getResolvedType());
+        assertTrue(cluster.getAnnotations().contains(DOUBLE_MINUTES));
+
         assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var3));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var4));
@@ -280,83 +283,12 @@ public class DoubleMinuteTest
         assertEquals(2, cluster.getChains().stream().filter(x -> x.isDoubleMinute()).count());
     }
 
-    @Test
-    @Ignore
-    public void testInvalidDM()
-    {
-        // first a cluster which grows in JCN evenly
-        LinxTester tester = new LinxTester();
-
-        // Configurator.setRootLevel(Level.DEBUG);
-
-        // a cluster with a set of 3 foldbacks which control the ploidies
-        SvVarData var1 = createTestSv(1,"1","1",400,500,-1,-1, INV,1);
-        SvVarData var2 = createTestSv(2,"1","1",5000,5200,1,1, INV,2);
-        SvVarData var3 = createTestSv(3,"1","1",1000,1200,-1,-1, INV,2);
-        SvVarData var4 = createTestSv(4,"1","1",2000,2200,1,1, INV,3);
-        SvVarData var5 = createTestSv(5,"1","1",2100,2200,1,-1, DEL,8);
-        SvVarData var6 = createTestSv(6,"1","1",100,6000,-1,1, DUP,8);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.AllVariants.add(var5);
-        tester.AllVariants.add(var6);
-
-        tester.preClusteringInit();
-
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
-        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_BFB));
-
-        tester.clearClustersAndSVs();
-
-        // cannot be 2 close INFs
-        var1 = createTestSv(1,"1","0",1000,-1,1,-1, INF,
-                10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
-
-        var2 = createTestSv(2,"1","0",2000,-1,1,-1, INF,
-                10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-
-        tester.preClusteringInit();
-
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.Analyser.getClusters().get(0);
-        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
-
-        tester.clearClustersAndSVs();
-
-        // cannot be a single DEL
-        var1 = createTestSv(1,"1","1",1000,2000,-1,-1, INV,2);
-        var2 = createTestSv(2,"1","1",4000,5000,1,-1, DEL,20);
-        var3 = createTestSv(3,"1","1",5000,6000,1,1, INV,2);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-
-        tester.preClusteringInit();
-
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.Analyser.getClusters().get(0);
-        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
-    }
-
     @Ignore
     @Test
     public void testChainedDMWithMinors()
     {
+        // NOTE: set to ignored since cannot form into a single chain
+
         // form a DM from 3 chained SVs, with some other SVs in the cluster having a lower JCN
         LinxTester tester = new LinxTester();
 

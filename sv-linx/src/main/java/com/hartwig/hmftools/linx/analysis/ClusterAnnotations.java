@@ -50,7 +50,6 @@ public class ClusterAnnotations
 {
     public static final String ALL_ANNOTATIONS = "ALL";
     public static final String DOUBLE_MINUTES = "DM";
-    public static final String FOLDBACK_MATCHES = "FBM";
     public static final String UNDER_CLUSTERING = "UC";
 
     public static boolean runAnnotation(final String annotationsList, final String annotation)

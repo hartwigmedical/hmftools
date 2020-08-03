@@ -133,7 +133,6 @@ public class CohortDataWriter
                 writer.write(",HomologyStart,HomologyEnd,InsertSeq,Imprecise,QualScore");
                 writer.write(",RefContextStart,RefContextEnd,InsSeqAlignments");
                 writer.write(",Recovered,RepeatClass,RepeatType,AnchorStart,AnchorEnd");
-                mAnalyser.writeComponentSvHeaders(writer);
             }
 
             writer.newLine();
@@ -292,8 +291,6 @@ public class CohortDataWriter
                     mSvFileWriter.write(String.format(",%s,%s,%s,%d,%d",
                             dbData.recovered(), dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
                             dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
-
-                    mAnalyser.writeComponentSvData(mSvFileWriter, var);
                 }
 
                 mSvFileWriter.newLine();
