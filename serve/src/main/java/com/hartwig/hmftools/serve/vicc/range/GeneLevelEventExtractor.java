@@ -31,7 +31,7 @@ public class GeneLevelEventExtractor {
             "Coding Transcript Intron Variant",
             "Nonsynonymous Variant",
             "Inframe Variant",
-            "Inframe Indel", "MUTATION", "Frameshift Elongation", "Disruptive Inframe Deletion", "wild-type");
+            "Inframe Indel", "MUTATION", "Frameshift Elongation", "wild-type");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
