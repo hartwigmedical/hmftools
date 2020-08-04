@@ -71,7 +71,6 @@ public class ViccExtractorTestApplication {
         String rangesTsv = null;
         String fusionTsv = null;
 
-
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
@@ -79,8 +78,6 @@ public class ViccExtractorTestApplication {
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
             rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
             fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
-
-
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
@@ -172,7 +169,7 @@ public class ViccExtractorTestApplication {
                 KnownAmplificationDeletion ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
                 FusionAnnotation fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
                 String geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
-                GeneRangeAnnotation geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
+                List<GeneRangeAnnotation> geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
                 String signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
 
                 if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null && geneLevelEventForFeature == null
@@ -208,7 +205,7 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (signatureForFeature != null) {
-                         // LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
+                        // LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
                         featuresWithSignatureCount++;
                     }
                 }
@@ -217,10 +214,10 @@ public class ViccExtractorTestApplication {
             }
         }
 
-     //   LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
+        //   LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
-               // LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+                // LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
                 //  LOGGER.info(feature);
             }
         }
@@ -244,8 +241,7 @@ public class ViccExtractorTestApplication {
             for (Map.Entry<Feature, FusionAnnotation> featureResult : entry.getValue().fusionsPerFeature().entrySet()) {
                 FusionAnnotation geneFusionForFeature = featureResult.getValue();
 
-                writer.write(
-                        geneFusionForFeature.fusion() + "\t" + geneFusionForFeature.fusionEvent() + "\n");
+                writer.write(geneFusionForFeature.fusion() + "\t" + geneFusionForFeature.fusionEvent() + "\n");
             }
         }
         writer.close();
@@ -257,12 +253,14 @@ public class ViccExtractorTestApplication {
         writer.write("Gene" + "\t" + "chromosome" + "\t" + "start" + "\t" + "end" + "\t" + "event" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            for (Map.Entry<Feature, GeneRangeAnnotation> featureResult : entry.getValue().geneRangesPerFeature().entrySet()) {
-                GeneRangeAnnotation geneRangeForFeature = featureResult.getValue();
+            for (Map.Entry<Feature, List<GeneRangeAnnotation>> featureResult : entry.getValue().geneRangesPerFeature().entrySet()) {
 
-                writer.write(
-                        geneRangeForFeature.gene() + "\t" + geneRangeForFeature.chromosome() + "\t" + geneRangeForFeature.start() + "\t"
-                                + geneRangeForFeature.end() + "\t" + geneRangeForFeature.event() + "\n");
+                List<GeneRangeAnnotation> geneRangeForFeature = featureResult.getValue();
+                for (GeneRangeAnnotation geneRangeAnnotation : geneRangeForFeature) {
+                    writer.write(
+                            geneRangeAnnotation.gene() + "\t" + geneRangeAnnotation.chromosome() + "\t" + geneRangeAnnotation.start() + "\t"
+                                    + geneRangeAnnotation.end() + "\t" + geneRangeAnnotation.event() + "\n");
+                }
             }
         }
         writer.close();
@@ -369,10 +367,10 @@ public class ViccExtractorTestApplication {
             String existingKey =
                     ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
             String newKey = ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), transcript, feature.proteinAnnotation());
-//                        LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
-//                                entry.source().display(),
-//                                existingKey,
-//                                newKey);
+            //                        LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
+            //                                entry.source().display(),
+            //                                existingKey,
+            //                                newKey);
         }
     }
 }
