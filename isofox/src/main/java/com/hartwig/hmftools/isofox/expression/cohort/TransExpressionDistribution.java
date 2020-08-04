@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
 import static java.lang.Math.log10;
-import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
+import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.sigs.Percentiles.calcPercentileValues;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionData.RATE_COUNT;
@@ -44,7 +45,7 @@ public class TransExpressionDistribution
     private final Map<String,double[]> mCohortTranscriptDistribution;
     private final Map<String,double[]> mCancerTypeTranscriptDistribution;
 
-    public static final int DISTRIBUTION_SIZE = 101; // percentiles from 0 to 100
+    public static final int DISTRIBUTION_SIZE = PERCENTILE_COUNT; // percentiles from 0 to 100
 
     public TransExpressionDistribution(final CohortConfig config)
     {
@@ -129,7 +130,9 @@ public class TransExpressionDistribution
 
                 final double[] percentileValues = new double[DISTRIBUTION_SIZE];
 
-                calcPercentileValues(convertDistribution(expData.TpmValues, sampleCount), percentileValues);
+                final List<Double> tmpValues = convertDistribution(expData.TpmValues, sampleCount);
+                final double[] tmpDataList = convertList(tmpValues);
+                calcPercentileValues(tmpDataList, percentileValues);
 
                 // skip a transcript if its 100th percentile TPM is below the threshold
                 if(percentileValues[percentileValues.length - 1] < mConfig.TpmLogThreshold)

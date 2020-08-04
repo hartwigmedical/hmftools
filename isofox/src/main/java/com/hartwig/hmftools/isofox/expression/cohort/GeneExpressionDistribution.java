@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
+import static com.hartwig.hmftools.common.sigs.Percentiles.calcPercentileValues;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
 import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.DISTRIBUTION_SIZE;
 import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.convertDistribution;
 import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.roundTPM;
@@ -107,7 +108,10 @@ public class GeneExpressionDistribution
             {
                 final double[] percentileValues = new double[DISTRIBUTION_SIZE];
 
-                calcPercentileValues(convertDistribution(geneData.GeneRates, sampleCount), percentileValues);
+                final List<Double> geneRateValues = convertDistribution(geneData.GeneRates, sampleCount);
+                final double[] geneRateDataList = convertList(geneRateValues);
+
+                calcPercentileValues(geneRateDataList, percentileValues);
 
                 mWriter.write(String.format("%s,%s",geneData.GeneId, geneData.GeneName));
 
