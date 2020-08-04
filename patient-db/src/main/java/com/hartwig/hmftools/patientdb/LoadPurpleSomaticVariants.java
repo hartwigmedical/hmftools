@@ -43,7 +43,7 @@ public class LoadPurpleSomaticVariants {
         LOGGER.info("Removing old data of sample {}", tumorSample);
         try (SomaticVariantStreamWriter somaticWriter = dbAccess.somaticVariantWriter(tumorSample)) {
             LOGGER.info("Streaming data from {} to db", somaticVcf);
-            SomaticVariantFactory.unfilteredInstance().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf, somaticWriter);
+            new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf, somaticWriter);
         }
 
         LOGGER.info("Complete");

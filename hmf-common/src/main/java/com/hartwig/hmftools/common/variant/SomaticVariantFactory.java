@@ -30,10 +30,7 @@ import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
-import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
@@ -57,32 +54,10 @@ import htsjdk.variant.vcf.VCFHeader;
 public class SomaticVariantFactory {
 
     @NotNull
-    public static SomaticVariantFactory unfilteredInstance() {
-        final VariantContextFilter filter = new AlwaysPassFilter();
-        final SomaticEnrichment enrichment = new NoSomaticEnrichment();
-
-        return new SomaticVariantFactory(filter, enrichment);
-    }
-
-    @NotNull
     public static SomaticVariantFactory passOnlyInstance() {
-        return filteredInstance(new PassingVariantFilter());
+        return new SomaticVariantFactory(new PassingVariantFilter());
     }
 
-    @NotNull
-    public static SomaticVariantFactory filteredInstance(@NotNull VariantContextFilter... filters) {
-        final CompoundFilter filter = new CompoundFilter(true);
-        filter.addAll(Arrays.asList(filters));
-        final SomaticEnrichment noEnrichment = new NoSomaticEnrichment();
-
-        return new SomaticVariantFactory(filter, noEnrichment);
-    }
-
-    @NotNull
-    public static SomaticVariantFactory filteredInstanceWithEnrichment(@NotNull VariantContextFilter filter,
-            @NotNull SomaticEnrichment somaticEnrichment) {
-        return new SomaticVariantFactory(filter, somaticEnrichment);
-    }
 
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
@@ -95,17 +70,13 @@ public class SomaticVariantFactory {
     @NotNull
     private final CompoundFilter filter;
     @NotNull
-    private final SomaticEnrichment enrichment;
-    @NotNull
     private final CanonicalAnnotation canonicalAnnotationFactory;
 
-    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
+    public SomaticVariantFactory(@NotNull final VariantContextFilter... filters) {
         this.filter = new CompoundFilter(true);
+        filter.addAll(Arrays.asList(filters));
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new NTFilter());
-        this.filter.add(filter);
-
-        this.enrichment = enrichment;
         this.canonicalAnnotationFactory = new CanonicalAnnotation();
     }
 
@@ -122,14 +93,8 @@ public class SomaticVariantFactory {
         return result;
     }
 
-    public void fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile, @NotNull final Consumer<SomaticVariant> consumer)
-            throws IOException {
-        fromVCFFile(tumor, null, null, vcfFile, consumer);
-    }
-
     public void fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
             @NotNull final String vcfFile, Consumer<SomaticVariant> consumer) throws IOException {
-        final List<VariantContext> variants = Lists.newArrayList();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -156,8 +121,6 @@ public class SomaticVariantFactory {
             }
         }
     }
-
-
 
     @NotNull
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
@@ -186,7 +149,6 @@ public class SomaticVariantFactory {
                 return Optional.of(createVariantBuilder(tumorDepth, context, canonicalAnnotationFactory))
                         .map(x -> x.rnaDepth(rnaDepth.orElse(null)))
                         .map(x -> x.referenceDepth(referenceDepth.orElse(null)))
-                        .map(x -> enrichment.enrich(x, context))
                         .map(ImmutableSomaticVariantImpl.Builder::build);
             }
         }
@@ -198,7 +160,6 @@ public class SomaticVariantFactory {
         final AllelicDepth allelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
 
         return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
-                .map(x -> enrichment.enrich(x, context))
                 .map(ImmutableSomaticVariantImpl.Builder::build)
                 .get();
     }

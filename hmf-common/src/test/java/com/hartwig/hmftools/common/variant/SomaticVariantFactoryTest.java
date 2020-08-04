@@ -31,7 +31,7 @@ public class SomaticVariantFactoryTest {
 
     @Before
     public void setup() {
-        victim = SomaticVariantFactory.unfilteredInstance();
+        victim = new SomaticVariantFactory();
         codec = createTestCodec();
     }
 
@@ -45,7 +45,7 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void canLoadSomaticSimpleVCFFromFile() throws IOException {
-        final List<SomaticVariant> unfiltered = SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
+        final List<SomaticVariant> unfiltered = new SomaticVariantFactory().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
         assertEquals(3, unfiltered.size());
 
         final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
