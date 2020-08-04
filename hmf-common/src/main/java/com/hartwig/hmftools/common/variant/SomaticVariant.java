@@ -91,8 +91,6 @@ public interface SomaticVariant extends Variant {
 
     int repeatCount();
 
-    boolean highConfidenceRegion();
-
     @NotNull
     String kataegis();
 

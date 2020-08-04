@@ -293,7 +293,6 @@ CREATE TABLE somaticVariant
     adjustedVaf DOUBLE PRECISION NOT NULL,
     variantCopyNumber DOUBLE PRECISION NOT NULL,
     copyNumber DOUBLE PRECISION NOT NULL,
-    highConfidence BOOLEAN NOT NULL, # TODO: Remove next time this table changes
     tier varchar(20) NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
     subclonalLikelihood DOUBLE PRECISION NOT NULL,
@@ -308,6 +307,9 @@ CREATE TABLE somaticVariant
     referenceTotalReadCount int,
     rnaAlleleReadCount int,
     rnaTotalReadCount int,
+    localPhaseSet int,
+    localRealignmentSet int,
+    phasedInframeIndel int,
     qual double precision not null,
     PRIMARY KEY (id),
     INDEX(sampleId),

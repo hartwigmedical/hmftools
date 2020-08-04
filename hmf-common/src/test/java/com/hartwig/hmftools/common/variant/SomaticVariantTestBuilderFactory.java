@@ -41,7 +41,6 @@ public final class SomaticVariantTestBuilderFactory {
                 .biallelic(false)
                 .kataegis(Strings.EMPTY)
                 .trinucleotideContext(Strings.EMPTY)
-                .highConfidenceRegion(false)
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)

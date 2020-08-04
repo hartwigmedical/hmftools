@@ -232,8 +232,7 @@ public class SomaticVariantFactory {
                 .subclonalLikelihood(context.getAttributeAsDouble(SubclonalLikelihoodEnrichment.SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
-                .biallelic(context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false))
-                .highConfidenceRegion(false);
+                .biallelic(context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false));
 
         if (context.hasAttribute(SageMetaData.PHASED_INFRAME_INDEL)) {
             builder.phasedInframeIndelIdentifier(context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0));

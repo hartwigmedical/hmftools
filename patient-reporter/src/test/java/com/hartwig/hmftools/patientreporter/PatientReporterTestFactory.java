@@ -70,7 +70,6 @@ public final class PatientReporterTestFactory {
         return ImmutableSomaticVariantImpl.builder()
                 .qual(100)
                 .trinucleotideContext(Strings.EMPTY)
-                .highConfidenceRegion(false)
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
