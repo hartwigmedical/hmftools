@@ -58,7 +58,7 @@ public final class ViccExtractor {
                     copyNumberExtractor.extractKnownAmplificationsDeletions(viccEntry);
             Map<Feature, FusionAnnotation> fusionsPerFeature = fusionExtractor.extractKnownFusions(viccEntry);
             Map<Feature, String> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(viccEntry);
-            Map<Feature, GeneRangeAnnotation> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(viccEntry);
+            Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(viccEntry);
             Map<Feature, String> signaturesPerFeature = signaturesExtractor.extractSignatures(viccEntry);
 
             extractionResultsPerEntry.put(viccEntry,

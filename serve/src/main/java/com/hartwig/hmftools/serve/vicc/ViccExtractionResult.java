@@ -31,7 +31,7 @@ public abstract class ViccExtractionResult {
     public abstract Map<Feature, String> geneLevelEventsPerFeature();
 
     @NotNull
-    public abstract Map<Feature, GeneRangeAnnotation> geneRangesPerFeature();
+    public abstract Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature();
 
     @NotNull
     public abstract Map<Feature, String> signaturesPerFeature();
