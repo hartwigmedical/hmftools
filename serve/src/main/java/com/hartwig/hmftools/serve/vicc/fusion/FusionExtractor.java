@@ -21,8 +21,6 @@ public class FusionExtractor {
     private final Set<String> uniqueFusionsPair = Sets.newHashSet();
     @NotNull
     private final Set<String> uniqueFusionsPromiscuous = Sets.newHashSet();
-    private static final String FUSION_PAIR = "fusion pair";
-    private static final String FUSION_PROMISCUOUS = "fusion promiscuous";
     private static final Set<String> SEARCH_FUSION_PAIRS = Sets.newHashSet("Fusion", "Disruptive Inframe Deletion", "Gene Fusion", "EGFRvII");
     private static final Set<String> SEARCH_FUSION_PROMISCUOUS =
             Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion");
