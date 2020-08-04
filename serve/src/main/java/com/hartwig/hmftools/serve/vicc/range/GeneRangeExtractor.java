@@ -32,7 +32,7 @@ public class GeneRangeExtractor {
     }
 
     @NotNull
-    private List<GeneRangeAnnotation> extractExonGenomicPositions(@NotNull Feature feature, @NotNull HmfTranscriptRegion canonicalTranscript,
+    private GeneRangeAnnotation extractExonGenomicPositions(@NotNull Feature feature, @NotNull HmfTranscriptRegion canonicalTranscript,
             int exonNumberList) {
 
         List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
@@ -41,13 +41,13 @@ public class GeneRangeExtractor {
         long end = hmfExonRegion.end();
         String chromosome = hmfExonRegion.chromosome();
 
-        return Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
+        return ImmutableGeneRangeAnnotation.builder()
                 .gene(feature.geneSymbol())
                 .start(start)
                 .end(end)
                 .chromosome(chromosome)
                 .event(feature.name())
-                .build());
+                .build();
     }
 
     @NotNull
@@ -73,8 +73,7 @@ public class GeneRangeExtractor {
                             .split(",");
                     for (String exon : exons) {
                         int exonNumberList = Integer.valueOf(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-                        geneRangeAnnotation = extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList);
-
+                        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
                     }
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
 
@@ -86,7 +85,7 @@ public class GeneRangeExtractor {
                             .split(",");
                     for (String exon : exons) {
                         int exonNumberList = Integer.valueOf(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-                        geneRangeAnnotation = extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList);
+                        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
 
                     }
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
@@ -111,7 +110,7 @@ public class GeneRangeExtractor {
                     long end = hmfExonRegionEnd.end();
                     String chromosome = hmfExonRegionStart.chromosome();
 
-                    geneRangeAnnotation = Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
+                    geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
                             .gene(feature.geneSymbol())
                             .start(start)
                             .end(end)
@@ -138,7 +137,7 @@ public class GeneRangeExtractor {
                     }
                     int exonNumberList = Integer.valueOf(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
 
-                    geneRangeAnnotation = extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList);
+                    geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
 
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
@@ -156,7 +155,7 @@ public class GeneRangeExtractor {
                     long end = genomeRegions.get(0).end();
                     String chromosome = genomeRegions.get(0).chromosome();
 
-                    geneRangeAnnotation = Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
+                    geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
                             .gene(geneSymbol)
                             .start(start)
                             .end(end)
