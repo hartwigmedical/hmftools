@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.JCN_UPPER_THRESHOLD;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.getAdjacentMajorAPRatio;
 import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
@@ -44,8 +45,10 @@ public class DoubleMinuteData
 
     public final List<SvVarData> CandidateSVs;
     public final List<SvChain> Chains;
-    public final List<SvChain> ValidChains;
     public boolean FullyChained;
+
+    public final List<SvChain> ValidChains;
+    public final List<SvVarData> ValidSVs; // those in valid chains
 
     // annotations relating to chained segments
     public long ClosedSegmentLength; // Sum of closed segment length
@@ -82,6 +85,7 @@ public class DoubleMinuteData
 
         Chains = Lists.newArrayList();
         ValidChains = Lists.newArrayList();
+        ValidSVs = Lists.newArrayList();
         CandidateSVs = Lists.newArrayList();
         FullyChained = false;
 
@@ -378,20 +382,48 @@ public class DoubleMinuteData
             if(var.type() != DUP)
                 return false;
 
-            double maxAdjacentMaJcn = max(
-                    var.getBreakend(true).majorAlleleJcn(true),
-                    var.getBreakend(false).majorAlleleJcn(false));
-
-            if(var.jcn() / max(maxAdjacentMaJcn, 0.01) < ADJACENT_JCN_RATIO)
+            if(!variantExceedsBothAdjacentJcn(var))
                 return false;
         }
+
+        if(MaxJcn < JCN_UPPER_THRESHOLD)
+        {
+            if(SVs.stream().anyMatch(x -> x.isSglBreakend()))
+                return false;
+
+            if(Chains.isEmpty() || Chains.stream().anyMatch(x -> !x.isClosedLoop()))
+                return false;
+
+            // require 1 SV to satisfy the adjacent major allele JCN rule on both sides
+            if(SVs.size() > 1)
+            {
+                if(!SVs.stream().anyMatch(x -> variantExceedsBothAdjacentJcn(x)))
+                    return false;
+            }
+        }
+
+        boolean hasValidCriteria = setValidChains();
+
+        return hasValidCriteria;
+    }
+
+    private boolean variantExceedsBothAdjacentJcn(final SvVarData var)
+    {
+        double minAdjacentMaJcn = min(
+                var.getBreakend(true).majorAlleleJcn(true),
+                var.getBreakend(false).majorAlleleJcn(false));
+
+        return var.jcn() / max(minAdjacentMaJcn, 0.01) >= ADJACENT_JCN_RATIO;
+    }
+
+    private boolean setValidChains()
+    {
+        boolean hasValidCriteria = false;
 
         double foldbackJcn = Cluster.getFoldbacks().stream()
                 .filter(x -> !SVs.contains(x))
                 .mapToDouble(x -> x.isChainedFoldback() ? x.jcn() * 0.5 : x.jcn())
                 .sum();
-
-        boolean hasValidCriteria = false;
 
         //  check closed chains and open chains / SVs as well
         final List<Integer> chainIds = Lists.newArrayList(OPEN_CHAIN_ID);
@@ -451,7 +483,14 @@ public class DoubleMinuteData
                 hasValidCriteria = true;
 
                 if(chain != null)
+                {
                     ValidChains.add(chain);
+                    ValidSVs.addAll(chain.getSvList());
+                }
+                else
+                {
+                    ValidSVs.addAll(nonClosedChainSVs);
+                }
             }
         }
 

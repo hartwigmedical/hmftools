@@ -52,8 +52,9 @@ public class DoubleMinuteFinder
     private BufferedWriter mFileWriter;
     private boolean mLogCandidates;
 
-    private static final double JCN_THRESHOLD = 8;
-    private static final double JCN_LOWER_THRESHOLD = 6;
+    protected static final double JCN_UPPER_THRESHOLD = 8;
+    private static final double JCN_THRESHOLD = 4;
+    private static final double JCN_LOWER_THRESHOLD = 2;
     private static final double LOWER_ADJACENT_JCN_RATIO = 2;
     private static final double MIN_PERC_OF_MAX_JCN = 0.25;
 
@@ -220,9 +221,9 @@ public class DoubleMinuteFinder
         if(isDM)
         {
             // cache DM data against the cluster since it used in the chaining routine amongst other things
-            cluster.setDoubleMinuteData(dmSVs, dmChains);
+            cluster.setDoubleMinuteData(dmData.ValidSVs, dmData.ValidChains);
 
-            for(SvChain dmChain : dmChains)
+            for(SvChain dmChain : dmData.ValidChains)
             {
                 // cache single DUP chains now since the cluster may not go through the chaining routine
                 if(dmChain.getSvCount() == 1 && dmChain.getSvList().get(0).type() == DUP)
@@ -326,7 +327,7 @@ public class DoubleMinuteFinder
     {
         if(outputDir == null || outputDir.isEmpty())
             return;
-        
+
         try
         {
             String outputFileName = outputDir + "LNX_DOUBLE_MINUTES.csv";
@@ -366,7 +367,7 @@ public class DoubleMinuteFinder
         double maxDMCopyNumber = 0;
         double minDMCopyNumber = 0;
 
-        for(final SvVarData var : dmData.SVs)
+        for(final SvVarData var : dmData.ValidSVs)
         {
             ++typeCounts[typeAsInt(var.type())];
 
@@ -404,7 +405,7 @@ public class DoubleMinuteFinder
 
         // get amplified genes list by looking at all section traversed by this chain or breakends with genes in them?
         String amplifiedGenesStr = "";
-        for(SvChain chain : dmData.Chains)
+        for(SvChain chain : dmData.ValidChains)
         {
             String amplifiedGenes = getAmplifiedGenesList(chain);
             if(!amplifiedGenes.isEmpty())
@@ -419,12 +420,12 @@ public class DoubleMinuteFinder
                     sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
 
             mFileWriter.write(String.format(",%.1f,%.1f,%s,%d,%s,%s,%s",
-                    samplePurity, samplePloidy, dmData.isDoubleMinute(), dmData.SVs.size(), dmTypesStr, svIds, chromosomeStr));
+                    samplePurity, samplePloidy, dmData.isDoubleMinute(), dmData.ValidSVs.size(), dmTypesStr, svIds, chromosomeStr));
 
             mFileWriter.write(String.format(",%d,%s,%d,%d,%d,%s",
-                    dmData.Chains.size(), dmData.FullyChained, dmData.Chains.stream().filter(x -> x.isClosedLoop()).count(),
+                    dmData.ValidChains.size(), dmData.FullyChained, dmData.ValidChains.stream().filter(x -> x.isClosedLoop()).count(),
                     dmData.ClosedSegmentLength, dmData.SVs.size() - dmData.UnchainedSVs.size(),
-                    dmData.Chains.stream().anyMatch(x -> x.hasRepeatedSV())));
+                    dmData.ValidChains.stream().anyMatch(x -> x.hasRepeatedSV())));
 
             mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%d",
                     dmData.ClosedBreakends, dmData.ClosedJcnTotal, dmData.OpenBreakends, dmData.OpenJcnTotal, dmData.OpenJcnMax,

@@ -246,31 +246,27 @@ public class DoubleMinuteTest
     {
         LinxTester tester = new LinxTester();
 
-        final SvVarData var1 = createTestSv(1,"1","1",1000,10000,-1,1, DUP,8);
-        final SvVarData var2 = createTestSv(2,"1","1",2000,3000,1,-1, DEL,1);
+        // tester.Analyser.getDoubleMinuteFinder().setOutputDir("", true);
+
+        SvVarData var1 = createTestSv(1,"1","1",1000,10000,-1,1, DUP,8);
+        SvVarData var2 = createTestSv(2,"1","1",2000,3000,1,-1, DEL,1);
         var1.setAssemblyData(true, "asmb12");
         var2.setAssemblyData(true, "asmb12");
 
-        final SvVarData var3 = createTestSv(3,"1","1",12000,12500,-1,-1, INV,8);
-        final SvVarData var4 = createTestSv(4,"1","1",20000,20500,1,1, INV,8);
-        final SvVarData var5 = createTestSv(5,"1","1",13000,14000,1,-1, DEL,1);
-        final SvVarData var6 = createTestSv(6,"1","2",15000,100,1,-1, BND,1);
-        final SvVarData var7 = createTestSv(7,"1","2",16000,200,-1,1, BND,1);
+        SvVarData var3 = createTestSv(3,"1","1",12000,12500,-1,-1, INV,8);
+        SvVarData var4 = createTestSv(4,"1","1",20000,20500,1,1, INV,8);
+        SvVarData var5 = createTestSv(5,"1","1",13000,14000,1,-1, DEL,1);
+        SvVarData var6 = createTestSv(6,"1","2",15000,100,1,-1, BND,1);
+        SvVarData var7 = createTestSv(7,"1","2",16000,200,-1,1, BND,1);
 
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.AllVariants.add(var5);
-        tester.AllVariants.add(var6);
-        tester.AllVariants.add(var7);
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4, var5, var6, var7));
 
         tester.preClusteringInit();
 
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(1, tester.Analyser.getClusters().size());
-        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster != null);
 
         assertEquals(COMPLEX, cluster.getResolvedType());
@@ -281,6 +277,35 @@ public class DoubleMinuteTest
         assertTrue(cluster.getDoubleMinuteSVs().contains(var4));
 
         assertEquals(2, cluster.getChains().stream().filter(x -> x.isDoubleMinute()).count());
+
+        // test again but with 1 chain valid, and one not
+        tester.clearClustersAndSVs();
+
+        var1 = createTestSv(tester.nextVarId(),"1","1",25000,35000,-1,1, DUP,8);
+
+        var2 = createTestSv(tester.nextVarId(),"1","2",100,1100,-1,1, BND,8);
+        var3 = createTestSv(tester.nextVarId(),"1","2",10000,1000,1,-1, BND,8);
+        var4 = createTestSv(tester.nextVarId(),"1","1",1000,20000,1,1, INV,1.5);
+        var5 = createTestSv(tester.nextVarId(),"1","1",2000,21000,-1,-1, INV,1.5);
+        var6 = createTestSv(tester.nextVarId(),"1","1",3000,22000,1,1, INV,1.5);
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4, var5, var6));
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster != null);
+
+        assertEquals(COMPLEX, cluster.getResolvedType());
+        assertTrue(cluster.getAnnotations().contains(DOUBLE_MINUTES));
+
+        assertEquals(1, cluster.getDoubleMinuteSVs().size());
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
+
+        assertEquals(1, cluster.getChains().stream().filter(x -> x.isDoubleMinute()).count());
     }
 
     @Ignore
