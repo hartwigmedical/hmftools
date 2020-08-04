@@ -1,17 +1,16 @@
 package com.hartwig.hmftools.sig_analyser.common;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcLogLikelihood;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
-import static com.hartwig.hmftools.common.sigs.DataUtils.vectorMultiply;
 
 import java.util.List;
 
@@ -70,14 +69,14 @@ public class SigReporter {
         mBucketTotals = new double[mBucketCount];
         for(int i = 0; i < mSampleCounts.Rows; ++i)
         {
-            mBucketTotals[i] = DataUtils.sumVector(mSampleCounts.getRow(i));
+            mBucketTotals[i] = sumVector(mSampleCounts.getRow(i));
         }
 
         mSampleTotals = new double[mSampleCounts.Cols];
 
         for(int i = 0; i < mSampleCounts.Cols; ++i)
         {
-            mSampleTotals[i] = DataUtils.sumVector(mSampleCounts.getCol(i));
+            mSampleTotals[i] = sumVector(mSampleCounts.getCol(i));
         }
 
         mSampleResiduals = new double[mSampleCount];
@@ -124,7 +123,7 @@ public class SigReporter {
                 }
             }
 
-            final List<Integer> sortedContribs = DataUtils.getSortedVectorIndices(sampleContribs, false);
+            final List<Integer> sortedContribs = getSortedVectorIndices(sampleContribs, false);
             double maxContrib = sampleContribs[sortedContribs.get(0)];
 
             // take median from samples with non-zero contribs
@@ -146,7 +145,7 @@ public class SigReporter {
             // log top-X buckets
             final double[] bucketRatios = mSignatures.getCol(sigId);
 
-            final List<Integer> sortedIndices = DataUtils.getSortedVectorIndices(bucketRatios, false);
+            final List<Integer> sortedIndices = getSortedVectorIndices(bucketRatios, false);
 
             // create the fitted bucket counts for this signature
             double[] sigBucketContribs = new double[mBucketCount];
@@ -225,8 +224,8 @@ public class SigReporter {
                 final double[] buckets1 = mSignatures.getCol(sig1);
                 final double[] buckets2 = mSignatures.getCol(sig2);
 
-                final List<Integer> sortedIndices1 = DataUtils.getSortedVectorIndices(buckets1, false);
-                final List<Integer> sortedIndices2 = DataUtils.getSortedVectorIndices(buckets2, false);
+                final List<Integer> sortedIndices1 = getSortedVectorIndices(buckets1, false);
+                final List<Integer> sortedIndices2 = getSortedVectorIndices(buckets2, false);
 
                 int sIndex = 0;
                 while(sortedIndices1.get(sIndex) == sortedIndices2.get(sIndex))

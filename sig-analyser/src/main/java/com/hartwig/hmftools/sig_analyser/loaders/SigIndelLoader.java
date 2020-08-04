@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sig_analyser.loaders;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader.getBucketNameByIndex;
 
 import java.io.BufferedWriter;

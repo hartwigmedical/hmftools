@@ -4,6 +4,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DEFAULT_SIG_RATIO_RANGE_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SIG_SIMILAR_CSS;
@@ -13,13 +17,9 @@ import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
-import static com.hartwig.hmftools.common.sigs.DataUtils.convertToPercentages;
-import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.SigUtils.calcRangeValue;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.calcRangeValue;
 
 import java.util.HashMap;
 import java.util.List;

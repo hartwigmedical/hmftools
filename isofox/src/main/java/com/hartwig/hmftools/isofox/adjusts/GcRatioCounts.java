@@ -5,8 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVectors;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVectors;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -19,8 +19,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class GcRatioCounts
 {

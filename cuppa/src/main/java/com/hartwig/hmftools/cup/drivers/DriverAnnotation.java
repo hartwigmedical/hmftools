@@ -20,13 +20,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
+import com.hartwig.hmftools.cup.common.SampleDataCache;
 
 public class DriverAnnotation
 {
     private final SampleAnalyserConfig mConfig;
     private final List<SampleDriverData> mSampleDrivers;
     private final Map<String,List<DriverPrevalence>> mCancerDriverPrevalence;
-    private final List<SampleData> mSampleDataList;
+    private final SampleDataCache mSampleDataCache;
     private boolean mValidData;
 
     private final Set<String> mGeneList;
@@ -37,14 +38,14 @@ public class DriverAnnotation
 
     private BufferedWriter mSampleDataWriter;
 
-    public DriverAnnotation(final SampleAnalyserConfig config, final List<SampleData> sampleDataList)
+    public DriverAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDrivers = Lists.newArrayList();
         mCancerDriverPrevalence = Maps.newHashMap();
         mGenePrevalenceTotals = Maps.newHashMap();
         mGeneList = Sets.newHashSet();
-        mSampleDataList = sampleDataList;
+        mSampleDataCache = sampleDataCache;
         mSampleDataWriter = null;
         mValidData = false;
 
@@ -63,7 +64,7 @@ public class DriverAnnotation
         if(!mValidData)
             return;
 
-        mSampleDataList.forEach(x -> processSample(x));
+        mSampleDataCache.SampleDataList.forEach(x -> processSample(x));
         closeBufferedWriter(mSampleDataWriter);
     }
 
@@ -182,7 +183,7 @@ public class DriverAnnotation
 
                 if(data != null)
                 {
-                    SampleData sample = mSampleDataList.stream().filter(x -> x.Id.equals(data.SampleId)).findFirst().orElse(null);
+                    SampleData sample = mSampleDataCache.SampleDataList.stream().filter(x -> x.Id.equals(data.SampleId)).findFirst().orElse(null);
 
                     if(sample != null)
                     {

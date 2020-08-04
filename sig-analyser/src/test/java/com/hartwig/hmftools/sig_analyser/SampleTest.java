@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sig_analyser;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
 import static junit.framework.TestCase.assertEquals;
 

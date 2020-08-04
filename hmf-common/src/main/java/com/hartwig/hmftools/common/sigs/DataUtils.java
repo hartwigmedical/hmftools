@@ -7,6 +7,8 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+
 import java.util.List;
 import java.util.Random;
 
@@ -52,121 +54,6 @@ public class DataUtils {
         }
 
         return dataArray;
-    }
-
-    public static double sumVector(double[] vec)
-    {
-        double total = 0;
-        for (double v : vec)
-        {
-            total += v;
-        }
-
-        return total;
-    }
-
-    public static void sumVectors(final double[] source, double[] dest)
-    {
-        if(source.length != dest.length)
-            return;
-
-        for(int i = 0; i < source.length; ++i)
-        {
-            dest[i] += source[i];
-        }
-    }
-
-    public static double[] vectorMultiply(final double[] vec1, final double[] vec2)
-    {
-        if(vec1.length != vec2.length)
-            return null;
-
-        double[] output = new double[vec1.length];
-        for(int i = 0; i < vec1.length; ++i)
-        {
-            output[i] = vec1[i] * vec2[i];
-        }
-
-        return output;
-    }
-
-    public static void initVector(double[] vec, double value)
-    {
-        for(int i = 0; i < vec.length; ++i)
-        {
-            vec[i] = value;
-        }
-    }
-
-    public static boolean equalVector(double[] vec1, double[] vec2)
-    {
-        for(int i = 0; i < vec1.length; ++i)
-        {
-            if(!doublesEqual(vec1[i], vec2[i]))
-                return false;
-        }
-
-        return true;
-    }
-
-    public static void vectorMultiply(double[] vec, double value)
-    {
-        for(int i = 0; i < vec.length; ++i)
-        {
-            vec[i] *= value;
-        }
-    }
-
-    public static void copyVector(final double[] source, double[] dest)
-    {
-        if(source.length != dest.length)
-            return;
-
-        for(int i = 0; i < source.length; ++i)
-        {
-            dest[i] = source[i];
-        }
-    }
-
-    public static void copyMatrix(final double[][] source, final double[][] dest)
-    {
-        if(source.length != dest.length)
-            return;
-
-        int rows = source.length;
-        int cols = source[0].length;
-
-        for(int i = 0; i < rows; ++i)
-        {
-            for (int j = 0; j < cols; ++j)
-            {
-                dest[i][j] = source[i][j];
-            }
-        }
-    }
-
-    public static void addVector(final double[] source, double[] dest)
-    {
-        if(source.length != dest.length)
-            return;
-
-        for(int i = 0; i < source.length; ++i)
-        {
-            dest[i] += source[i];
-        }
-    }
-
-    public static void convertToPercentages(double[] counts)
-    {
-        double total = sumVector(counts);
-
-        if(total <= 0)
-            return;
-
-        for(int i = 0; i < counts.length; ++i)
-        {
-            counts[i] /= total;
-        }
     }
 
     public static double capValue(double value, double minValue, double maxValue)
@@ -258,7 +145,7 @@ public class DataUtils {
         return k - 1;
     }
 
-    public static SigMatrix createMatrixFromListData(List<List<Double>> dataSet)
+    public static SigMatrix createMatrixFromListData(final List<List<Double>> dataSet)
     {
         if(dataSet.isEmpty())
             return null;
@@ -280,35 +167,6 @@ public class DataUtils {
         return matrix;
     }
 
-    public static List<Integer> getSortedVectorIndices(final double[] data, boolean ascending)
-    {
-        // returns a list of indices into the original vector, being the sorted data list
-        List<Integer> sortedList = Lists.newArrayList();
-
-        for(int i = 0; i < data.length; ++i)
-        {
-            if(i == 0) {
-                sortedList.add(i);
-                continue;
-            }
-
-            int j = 0;
-            for(; j < sortedList.size(); ++j)
-            {
-                int origIndex = sortedList.get(j);
-
-                if(ascending && data[i] < data[origIndex])
-                    break;
-                else if(!ascending && data[i] > data[origIndex])
-                    break;
-            }
-
-            sortedList.add(j, i);
-        }
-
-        return sortedList;
-    }
-
     public static void initRandom(SigMatrix matrix, double min, double max, final Random rnGenerator)
     {
         // uniform random in range
@@ -321,96 +179,6 @@ public class DataUtils {
                 data[i][j] = rnGenerator.nextDouble() * (max - min) + min;
             }
         }
-    }
-
-    public static final double[] calculateFittedCounts(final SigMatrix signatures, final double[] allocations)
-    {
-        double[] fittedCounts = new double[signatures.Rows];
-
-        for(int transId = 0; transId < signatures.Cols; ++transId)
-        {
-            double allocation = allocations[transId];
-
-            for(int catId = 0; catId < signatures.Rows; ++catId)
-            {
-                fittedCounts[catId] += allocation * signatures.get(catId, transId);
-            }
-        }
-
-        return fittedCounts;
-    }
-
-    public static final int RESIDUAL_TOTAL = 0;
-    public static final int RESIDUAL_PERC = 1;
-
-    public static double[] calcResiduals(final double[] transcriptCounts, final double[] fittedCounts, double totalCounts)
-    {
-        double residualsTotal = 0;
-
-        for(int catId = 0; catId < transcriptCounts.length; ++catId)
-        {
-            residualsTotal += abs(transcriptCounts[catId] - fittedCounts[catId]);
-        }
-
-        double residualsPerc = residualsTotal / totalCounts;
-
-        return new double[] {residualsTotal, residualsPerc};
-
-    }
-
-    public static double calcLinearLeastSquares(final double[] params, final double[] data)
-    {
-        if(data.length != params.length)
-            return 0;
-
-        // returns the best ratio applying the params to the data assuming direct ratio (ie line through origin)
-        double paramTotal = 0;
-        double multTotal = 0;
-
-        for(int i = 0; i < data.length; ++i)
-        {
-            paramTotal += params[i] * params[i];
-            multTotal += params[i] * data[i];
-        }
-
-        return paramTotal > 0 ? multTotal/paramTotal : 0;
-    }
-
-    public static double calcAbsDiffs(final double[] set1, final double[] set2)
-    {
-        if(set1.length != set2.length)
-            return 0;
-
-        double diffTotal = 0;
-        for(int i = 0; i < set1.length; ++i)
-        {
-            diffTotal += abs(set1[i] - set2[i]);
-        }
-
-        return diffTotal;
-    }
-
-    public static double calcMinPositiveRatio(final double[] params, final double[] data)
-    {
-        if(data.length != params.length)
-            return 0;
-
-        // returns the max ratio applying the params to the data
-        // where the fit values does not exceed the actual data
-        double minRatio = 0;
-
-        for(int i = 0; i < data.length; ++i)
-        {
-            if(data[i] == 0)
-                continue;
-
-            double ratio = data[i] / params[i];
-
-            if(ratio < minRatio || minRatio == 0)
-                minRatio = ratio;
-        }
-
-        return minRatio;
     }
 
     public static String sizeToStr(double size)

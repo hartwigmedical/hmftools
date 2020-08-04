@@ -4,16 +4,16 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_PERC;
+import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_TOTAL;
+import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
+import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.formTranscriptDefinitions;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.writeExpectedRates;
-import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_TOTAL;
-import static com.hartwig.hmftools.common.sigs.DataUtils.calcResiduals;
-import static com.hartwig.hmftools.common.sigs.DataUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

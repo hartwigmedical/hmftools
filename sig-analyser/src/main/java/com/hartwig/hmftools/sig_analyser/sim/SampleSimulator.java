@@ -6,12 +6,12 @@ import static java.lang.Math.log;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandom;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandomLarge;
-import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.extractNonZeros;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.sim.SimSigFactors.SIG_FACTOR_CSV_ITEM_COUNT;

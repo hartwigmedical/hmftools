@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sig_analyser.buckets;
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
 import java.util.Arrays;
 import java.util.List;

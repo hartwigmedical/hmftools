@@ -2,8 +2,8 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.convertToPercentages;
-import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.isofox.ChromosomeGeneTask.PERF_FIT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.validConfigPaths;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.BAM_READ_COUNTER;
 import static com.hartwig.hmftools.isofox.TaskType.FRAGMENT_LENGTHS;

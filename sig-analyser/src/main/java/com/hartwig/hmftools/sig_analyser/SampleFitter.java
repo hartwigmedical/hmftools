@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.sig_analyser;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.GENERIC_INPUT_FILE;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
-import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_EXIT_LEVEL;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_MAX_ITERATIONS;

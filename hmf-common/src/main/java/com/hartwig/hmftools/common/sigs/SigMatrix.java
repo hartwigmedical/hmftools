@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.sigs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -414,7 +415,7 @@ public class SigMatrix
 
         for (int i = 0; i < matrix.Cols; ++i) {
 
-            double colSum = DataUtils.sumVector(matrix.getCol(i));
+            double colSum = sumVector(matrix.getCol(i));
 
             if (colSum > 0)
                 ++nonZeroColCount;
@@ -431,7 +432,7 @@ public class SigMatrix
         int colIndex = 0;
         for (int i = 0; i < matrix.Cols; ++i) {
 
-            double colSum = DataUtils.sumVector(matrix.getCol(i));
+            double colSum = sumVector(matrix.getCol(i));
 
             if (colSum == 0)
                 continue;

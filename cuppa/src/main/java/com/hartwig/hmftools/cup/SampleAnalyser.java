@@ -22,6 +22,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cup.common.SampleData;
+import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.drivers.DriverAnnotation;
 import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
 
@@ -38,9 +39,7 @@ public class SampleAnalyser
 {
     private final SampleAnalyserConfig mConfig;
 
-    private final List<SampleData> mSampleDataList;
-    private SampleData mSpecificSample;
-    private final Map<String,List<SampleData>> mCancerSampleData;
+    private final SampleDataCache mSampleDataCache;
 
     private final DriverAnnotation mDrivers;
     private final SignatureAnnotation mSnvSignatures;
@@ -51,78 +50,19 @@ public class SampleAnalyser
     {
         mConfig = new SampleAnalyserConfig(cmd);
 
-        mSampleDataList = Lists.newArrayList();
-        mCancerSampleData = Maps.newHashMap();
-        mSpecificSample = null;
+        mSampleDataCache = new SampleDataCache();
 
         loadSampleData(cmd);
 
-        mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataList, mCancerSampleData);
-        mDrivers = new DriverAnnotation(mConfig, mSampleDataList);
+        mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataCache);
+        mDrivers = new DriverAnnotation(mConfig, mSampleDataCache);
 
         mSampleDataWriter = null;
     }
 
     private void loadSampleData(final CommandLine cmd)
     {
-        if(cmd.hasOption(SPECIFIC_SAMPLE_DATA))
-        {
-            final String[] sampleItems = cmd.getOptionValue(SPECIFIC_SAMPLE_DATA).split(SUBSET_DELIM, -1);
-            String sampleId = sampleItems[0];
-            String cancerType = CANCER_TYPE_UNKNOWN;
-            String cancerSubtype = CANCER_SUBTYPE_OTHER;
-
-            if(sampleItems.length >= 2)
-                cancerType = sampleItems[1];
-
-            if(sampleItems.length == 3)
-                cancerSubtype = sampleItems[2];
-
-            mSpecificSample = new SampleData(sampleId, cancerType, cancerSubtype);
-            mSampleDataList.add(mSpecificSample);
-        }
-
-        if(cmd.hasOption(SAMPLE_DATA_FILE))
-        {
-            try
-            {
-                final List<String> fileData = Files.readAllLines(new File(mConfig.SampleDataFile).toPath());
-
-                final String header = fileData.get(0);
-                fileData.remove(0);
-
-                final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
-
-                for(final String line : fileData)
-                {
-                    final String[] items = line.split(DATA_DELIM, -1);
-                    final String sampleId = items[fieldsIndexMap.get("SampleId")];
-                    final String cancerType = items[fieldsIndexMap.get("CancerType")];
-
-                    final String cancerSubtype = fieldsIndexMap.containsKey("CancerSubtype") ?
-                            items[fieldsIndexMap.get("CancerSubtype")] : CANCER_SUBTYPE_OTHER;
-
-                    if(mSpecificSample != null && mSpecificSample.Id.equals(sampleId))
-                        continue;
-
-                    mSampleDataList.add(new SampleData(sampleId, cancerType, cancerSubtype));
-                }
-            }
-            catch (IOException e)
-            {
-                CUP_LOGGER.error("failed to read sample data file({}): {}", mConfig.SampleDataFile, e.toString());
-            }
-        }
-
-        // build a cache of samples per cancer type
-        for(SampleData sampleData : mSampleDataList)
-        {
-            List<SampleData> cancerSampleData = mCancerSampleData.get(sampleData.CancerType);
-            if(cancerSampleData == null)
-                mCancerSampleData.put(sampleData.CancerType, Lists.newArrayList(sampleData));
-            else
-                cancerSampleData.add(sampleData);
-        }
+        mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), cmd.getOptionValue(SAMPLE_DATA_FILE));
     }
 
     public void run()
@@ -135,15 +75,16 @@ public class SampleAnalyser
 
         initialiseOutputFiles();
 
-        if(mSpecificSample != null)
+        if(mSampleDataCache.SpecificSample != null)
         {
-            mSnvSignatures.processSample(mSpecificSample);
-            mDrivers.processSample(mSpecificSample);
-            writeSampleData(mSpecificSample);
+            final SampleData specificSample = mSampleDataCache.SpecificSample;
+            mSnvSignatures.processSample(specificSample);
+            mDrivers.processSample(specificSample);
+            writeSampleData(specificSample);
         }
         else
         {
-            for(SampleData sample : mSampleDataList)
+            for(SampleData sample : mSampleDataCache.SampleDataList)
             {
                 mSnvSignatures.processSample(sample);
 

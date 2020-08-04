@@ -45,6 +45,7 @@ public class SampleAnalyserConfig
 
     public static final String CANCER_SUBTYPE_OTHER = "Other";
     public static final String DATA_DELIM = ",";
+    public static final String DB_FILE_DELIM = "\t";
     public static final String SUBSET_DELIM = ";";
 
     public SampleAnalyserConfig(final CommandLine cmd)

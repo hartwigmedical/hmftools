@@ -2,16 +2,16 @@ package com.hartwig.hmftools.sig_analyser.buckets;
 
 import static java.lang.Math.pow;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DEFAULT_SIG_RATIO_RANGE_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_DISCOVERY_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.calcSharedCSS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.minAllocPercent;
-import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getDiffList;
-import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getMatchingList;
-import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getDiffList;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getMatchingList;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
 import java.util.HashMap;
 import java.util.List;

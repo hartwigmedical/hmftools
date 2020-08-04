@@ -6,15 +6,15 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.convertToPercentages;
-import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.DataUtils.greaterThan;
-import static com.hartwig.hmftools.common.sigs.DataUtils.initVector;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.initVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
 import java.util.HashMap;
 import java.util.List;

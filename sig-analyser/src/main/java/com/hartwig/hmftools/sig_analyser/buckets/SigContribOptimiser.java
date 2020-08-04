@@ -4,18 +4,18 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.initVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVectors;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
-import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.DataUtils.greaterThan;
-import static com.hartwig.hmftools.common.sigs.DataUtils.initVector;
 import static com.hartwig.hmftools.common.sigs.DataUtils.lessThan;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVectors;
-import static com.hartwig.hmftools.common.sigs.DataUtils.vectorMultiply;
 
 import java.util.Arrays;
 import java.util.List;

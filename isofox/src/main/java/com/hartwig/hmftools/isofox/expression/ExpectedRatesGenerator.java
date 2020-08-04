@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.expression;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
@@ -13,7 +14,6 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.sigs.DataUtils.convertToPercentages;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

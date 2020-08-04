@@ -6,10 +6,10 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
-import static com.hartwig.hmftools.common.sigs.DataUtils.equalVector;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.equalVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

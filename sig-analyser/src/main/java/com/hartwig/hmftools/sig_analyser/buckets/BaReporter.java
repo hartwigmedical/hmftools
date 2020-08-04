@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.sig_analyser.buckets;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVectors;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT_LOWER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SAMPLE_ALLOCATED_PERCENT;
@@ -14,13 +18,8 @@ import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
-import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getMatchingList;
-import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getMatchingList;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVectors;
-import static com.hartwig.hmftools.common.sigs.DataUtils.vectorMultiply;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_MAJOR;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_MINOR;
 

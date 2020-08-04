@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
+import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.sig_analyser.common.CosineSim;
 
 public class SignatureAnnotation
@@ -32,8 +33,7 @@ public class SignatureAnnotation
 
     private SigMatrix mSampleCounts;
 
-    private final List<SampleData> mSampleDataList;
-    private final Map<String,List<SampleData>> mCancerSampleData;
+    private final SampleDataCache mSampleDataCache;
 
     private SigMatrix mSnvSignatures;
     private final List<String> mSnvSigNames;
@@ -42,13 +42,12 @@ public class SignatureAnnotation
     private BufferedWriter mCssPairsWriter;
     private BufferedWriter mSampleDataWriter;
 
-    public SignatureAnnotation(final SampleAnalyserConfig config, final List<SampleData> sampleDataList, final Map<String,List<SampleData>> cancerSampleData)
+    public SignatureAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
 
         mSampleCounts = null;
-        mSampleDataList = sampleDataList;
-        mCancerSampleData = cancerSampleData;
+        mSampleDataCache = sampleDataCache;
 
         mSnvSignatures = null;
         mLeastSquaresFit = null;
@@ -69,7 +68,7 @@ public class SignatureAnnotation
         for(int s = 0; s < collection.getFieldNames().size(); ++s)
         {
             final String sampleId = collection.getFieldNames().get(s);
-            SampleData sampleData = mSampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
+            SampleData sampleData = mSampleDataCache.SampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
 
             if(sampleData == null)
                 continue;
@@ -85,7 +84,7 @@ public class SignatureAnnotation
 
     public void processCohort()
     {
-        for(SampleData sample : mSampleDataList)
+        for(SampleData sample : mSampleDataCache.SampleDataList)
         {
             processSample(sample);
         }
@@ -113,7 +112,7 @@ public class SignatureAnnotation
                 continue;
 
             // fix-me - exclude unknown cancer types from CSS analysis
-            final SampleData otherSampleData = mSampleDataList.get(s);
+            final SampleData otherSampleData = mSampleDataCache.SampleDataList.get(s);
 
             if(otherSampleData.isUnknownCancerType())
                 continue;
@@ -125,7 +124,7 @@ public class SignatureAnnotation
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            int cancerTypeCount = mCancerSampleData.get(otherSampleData.CancerType).size();
+            int cancerTypeCount = mSampleDataCache.CancerSampleData.get(otherSampleData.CancerType).size();
             double weightedCss = pow((css - SNV_CSS_THRESHOLD) * 100, 2) / cancerTypeCount;
 
             sample.addSampleCss(otherSampleData.CancerType, weightedCss);

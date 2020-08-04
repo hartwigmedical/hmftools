@@ -4,10 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.calcAbsDiffs;
-import static com.hartwig.hmftools.common.sigs.DataUtils.calcLinearLeastSquares;
-import static com.hartwig.hmftools.common.sigs.DataUtils.calcMinPositiveRatio;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.SigUtils.calcAbsDiffs;
+import static com.hartwig.hmftools.common.sigs.SigUtils.calcLinearLeastSquares;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -23,9 +22,9 @@ import com.hartwig.hmftools.sig_analyser.buckets.BaConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SigUtils
+public class CommonUtils
 {
-    private static final Logger LOGGER = LogManager.getLogger(SigUtils.class);
+    private static final Logger LOGGER = LogManager.getLogger(CommonUtils.class);
 
     public static BufferedWriter getNewFile(final String outputDir, final String fileName) throws IOException
     {
@@ -89,6 +88,29 @@ public class SigUtils
         }
 
         return diffList;
+    }
+
+    public static double calcMinPositiveRatio(final double[] params, final double[] data)
+    {
+        if(data.length != params.length)
+            return 0;
+
+        // returns the max ratio applying the params to the data
+        // where the fit values does not exceed the actual data
+        double minRatio = 0;
+
+        for(int i = 0; i < data.length; ++i)
+        {
+            if(data[i] == 0)
+                continue;
+
+            double ratio = data[i] / params[i];
+
+            if(ratio < minRatio || minRatio == 0)
+                minRatio = ratio;
+        }
+
+        return minRatio;
     }
 
     public static double calcBestFitWithinProbability(int itemId, final double[] ratios, final double[] data,

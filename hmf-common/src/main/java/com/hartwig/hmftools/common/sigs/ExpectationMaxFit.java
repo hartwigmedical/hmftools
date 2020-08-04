@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.common.sigs;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_TOTAL;
-import static com.hartwig.hmftools.common.sigs.DataUtils.calcResiduals;
-import static com.hartwig.hmftools.common.sigs.DataUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_PERC;
+import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_TOTAL;
+import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
+import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
