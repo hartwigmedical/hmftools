@@ -150,7 +150,7 @@ public class CommonUtils
             }
 
             residuals = calcAbsDiffs(currentFit, reducedData);
-            currentProb = CosineSim.calcLogLikelihood(currentFit, reducedData, false);
+            currentProb = CssRoutines.calcLogLikelihood(currentFit, reducedData, false);
             probDiff = abs(requiredProb - currentProb) / requiredProb;
             residualsPerc = residuals / dataTotal;
 
@@ -190,7 +190,7 @@ public class CommonUtils
         Integer rangeVal = rangeMap.get(value);
         if (rangeVal == null)
         {
-            rangeVal = CosineSim.calcPoissonRangeGivenProb(value, BaConfig.PERMITTED_PROB_NOISE);
+            rangeVal = CssRoutines.calcPoissonRangeGivenProb(value, BaConfig.PERMITTED_PROB_NOISE);
             rangeMap.put(value, rangeVal);
         }
 

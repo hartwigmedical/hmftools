@@ -13,10 +13,10 @@ import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DEFAULT_SIG_RAT
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SIG_SIMILAR_CSS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.calcSharedCSS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_BACKGROUND;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I1;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I2;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_VAL;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.getTopCssPairs;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.calcRangeValue;

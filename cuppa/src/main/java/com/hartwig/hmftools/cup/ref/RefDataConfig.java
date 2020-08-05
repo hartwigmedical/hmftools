@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.cup.ref;
 
+import static com.hartwig.hmftools.cup.SampleAnalyserConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.cup.SampleAnalyserConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 
 import java.io.File;
 

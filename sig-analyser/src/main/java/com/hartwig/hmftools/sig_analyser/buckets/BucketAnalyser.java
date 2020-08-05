@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.addVector;
@@ -40,7 +41,6 @@ import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_MAJO
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_UNIQUE;
 import static com.hartwig.hmftools.sig_analyser.buckets.SigOptimiser.BUCKET_RANGE_MAX_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.SigOptimiser.SMALL_RATIO_PERC_CUTOFF;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.calcRangeValue;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getDiffList;
@@ -62,7 +62,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.sig_analyser.common.CosineSim;
+import com.hartwig.hmftools.sig_analyser.common.CssRoutines;
 import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 
@@ -711,7 +711,7 @@ public class BucketAnalyser
                     noiseCountsTotal += permElevRangeData[j][i];
                 }
 
-                double sampleNoiseTotal = CosineSim.calcPoissonRangeGivenProb((int) round(mSampleTotals[i]), PERMITTED_PROB_NOISE);
+                double sampleNoiseTotal = CssRoutines.calcPoissonRangeGivenProb((int) round(mSampleTotals[i]), PERMITTED_PROB_NOISE);
 
                 if (noiseCountsTotal > MAX_NOISE_TO_SAMPLE_RATIO * sampleNoiseTotal)
                 {
@@ -1079,7 +1079,7 @@ public class BucketAnalyser
             if(bucketGroup == otherGroup)
                 continue;
 
-            double css = calcCSS(bucketGroup.getBucketRatios(), otherGroup.getBucketRatios());
+            double css = calcCosineSim(bucketGroup.getBucketRatios(), otherGroup.getBucketRatios());
 
             if(css > maxSimilarity)
             {
@@ -1347,7 +1347,7 @@ public class BucketAnalyser
 
             // if(mConfig.logSample(bucketGroup.getId()) && mConfig.logSample(topBucketGroup.getId()))
 
-            double groupCss = calcCSS(topBucketRatios, bucketRatios);
+            double groupCss = calcCosineSim(topBucketRatios, bucketRatios);
             if (groupCss < SIG_SIMILAR_CSS)
                 continue;
 
@@ -1566,7 +1566,7 @@ public class BucketAnalyser
 
             for(final BucketGroup existingGroup : mFinalBucketGroups)
             {
-                double css = calcCSS(bucketGroup.getBucketRatios(), existingGroup.getBucketRatios());
+                double css = calcCosineSim(bucketGroup.getBucketRatios(), existingGroup.getBucketRatios());
 
                 maxCss = max(maxCss, css);
 
@@ -2926,8 +2926,8 @@ public class BucketAnalyser
 
     public static double calcSharedCSS(final double[] set1, final double[] set2)
     {
-        return calcCSS(set1, set2, true);
-        // return calcCSSRelative(set1, set2);
+        return calcCosineSim(set1, set2, true);
+        // return calcCosineSimRelative(set1, set2);
     }
 
     private void populateCancerSamplesMap()

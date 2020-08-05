@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.sigs;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
@@ -32,7 +33,6 @@ import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
-import com.hartwig.hmftools.sig_analyser.common.CosineSim;
 
 public class SignatureAnnotation
 {
@@ -185,7 +185,7 @@ public class SignatureAnnotation
 
             final double[] otherSampleCounts = mRefSampleCounts.getCol(s);
 
-            double css = CosineSim.calcCSS(sampleCounts, otherSampleCounts);
+            double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
             if(css < SNV_CSS_THRESHOLD)
                 continue;

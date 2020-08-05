@@ -1,17 +1,12 @@
 package com.hartwig.hmftools.sig_analyser;
 
-import java.sql.SQLException;
-
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser;
-import com.hartwig.hmftools.sig_analyser.common.CosineSim;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfManager;
 import com.hartwig.hmftools.sig_analyser.sim.SampleSimulator;
 import com.hartwig.hmftools.sig_analyser.sim.SimConfig;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,12 +27,11 @@ public class SigAnalyser
     public static final String OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_FILE_ID = "output_file_id";
 
-    private static final String RUN_CSS = "run_cosine_sim";
     private static final String RUN_NMF = "run_nmf";
     private static final String RUN_BA = "run_buckets";
     private static final String RUN_SAMPLE_SIM = "run_sim";
 
-    private static final Logger LOGGER = LogManager.getLogger(SigAnalyser.class);
+    public static final Logger SIG_LOGGER = LogManager.getLogger(SigAnalyser.class);
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
@@ -55,15 +49,9 @@ public class SigAnalyser
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        LOGGER.info("starting signature analyser");
+        SIG_LOGGER.info("starting signature analyser");
 
         final GenericDataCollection collection = GenericDataLoader.loadFile(cmd.getOptionValue(GENERIC_INPUT_FILE));
-
-        if(cmd.hasOption(RUN_CSS))
-        {
-            CosineSim cosineSim = new CosineSim(cmd.getOptionValue(OUTPUT_DIR));
-            cosineSim.calcCosineSimilarities(collection.getFieldNames(), collection.getData(), 0.8);
-        }
 
         if(cmd.hasOption(RUN_NMF))
         {
@@ -87,7 +75,7 @@ public class SigAnalyser
             sampleSimulator.run();
         }
 
-        LOGGER.info("analysis complete");
+        SIG_LOGGER.info("analysis complete");
     }
 
     @NotNull
@@ -98,7 +86,6 @@ public class SigAnalyser
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
 
-        options.addOption(RUN_CSS, false, "Run cosine similiarities");
         options.addOption(RUN_NMF, false, "Run NMF");
         options.addOption(RUN_BA, false, "Run bucket analysis");
         options.addOption(RUN_SAMPLE_SIM, false, "Generate simulated sample counts");

@@ -3,19 +3,18 @@ package com.hartwig.hmftools.sig_analyser.common;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcLogLikelihood;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I1;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I2;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_VAL;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.calcLogLikelihood;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.getTopCssPairs;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 
@@ -246,7 +245,7 @@ public class SigReporter {
                     mb2[i] = buckets2[sortedIndices1.get(i)];
                 }
 
-                double css = calcCSS(mb1, mb2);
+                double css = calcCosineSim(mb1, mb2);
 
                 LOGGER.debug(String.format("sigs(%d and %d) matching buckets(%d) with css(%.4f)",
                         sig1, sig2, matchingBuckets, css));

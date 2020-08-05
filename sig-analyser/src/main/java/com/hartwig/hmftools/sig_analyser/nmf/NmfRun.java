@@ -4,10 +4,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I1;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I2;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_VAL;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.getTopCssPairs;
 
 import java.util.List;
 import java.util.Random;

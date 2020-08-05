@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.sig_analyser.nmf;
 
 
+import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
 
 import com.hartwig.hmftools.sig_analyser.common.SigReporter;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
@@ -155,7 +155,7 @@ public class NmfSampleFitter
             final double[] newContribs = nmfCalc.getContributions().getCol(0);
             final double[] newFit = nmfCalc.getFit().getCol(0);
 
-            double newFitVsActualCss = calcCSS(newFit, sampleCounts);
+            double newFitVsActualCss = calcCosineSim(newFit, sampleCounts);
 
             if(iterations > 0)
             {
@@ -260,7 +260,7 @@ public class NmfSampleFitter
         }
 
         double[] currentFit = nmfCalc.getFit().getCol(0);
-        lastFitVsActualCss = calcCSS(currentFit, sampleCounts);
+        lastFitVsActualCss = calcCosineSim(currentFit, sampleCounts);
 
         LOGGER.debug(String.format("sample(%d) final run with %d sigs: css(%.4f) residuals(%.0f perc=%.3f) sampleCount(%.0f)",
                 sampleId, currentSigCount, lastFitVsActualCss, nmfCalc.getTotalResiduals(),
@@ -287,7 +287,7 @@ public class NmfSampleFitter
                 }
 
                 final double[] newFit = nmfCalc.getFit().getCol(0);
-                double newFitVsActualCss = calcCSS(newFit, sampleCounts);
+                double newFitVsActualCss = calcCosineSim(newFit, sampleCounts);
 
                 double cssDiff = newFitVsActualCss - lastFitVsActualCss;
 

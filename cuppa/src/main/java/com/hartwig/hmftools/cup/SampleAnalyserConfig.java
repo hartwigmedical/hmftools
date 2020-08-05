@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.cup;
 
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-
 import java.io.File;
 
 import org.apache.commons.cli.CommandLine;
@@ -45,6 +41,10 @@ public class SampleAnalyserConfig
     private static final String REF_DRIVER_PREV_FILE = "ref_driver_prev_file";
     private static final String REF_TRAIT_PERC_FILE = "ref_trait_perc_file";
     private static final String REF_TRAIT_RATE_FILE = "ref_trait_rate_file";
+
+    public static final String OUTPUT_DIR = "output_dir";
+    public static final String OUTPUT_FILE_ID = "output_file_id";
+    public static final String LOG_DEBUG = "log_debug";
 
     public static final Logger CUP_LOGGER = LogManager.getLogger(SampleAnalyserConfig.class);
 

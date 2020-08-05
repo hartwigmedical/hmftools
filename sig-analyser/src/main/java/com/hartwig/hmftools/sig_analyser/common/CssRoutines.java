@@ -6,75 +6,25 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.equalVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
+import static com.hartwig.hmftools.sig_analyser.SigAnalyser.SIG_LOGGER;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-public class CosineSim {
-
-    private String mOutputDir;
-
+public class CssRoutines
+{
     public static int CSSR_I1 = 0;
     public static int CSSR_I2 = 1;
     public static int CSSR_VAL = 2;
-
-    private static double MIN_VALUE = 1e-10;
-
-    private static final Logger LOGGER = LogManager.getLogger(CosineSim.class);
-
-    public CosineSim(final String outputDir)
-    {
-        mOutputDir = outputDir;
-    }
-
-    public static double calcCSS(final double[] set1, final double[] set2)
-    {
-        return calcCSS(set1, set2, false);
-    }
-
-    public static double calcCSS(final double[] set1, final double[] set2, boolean skipZeros)
-    {
-        if(set1.length != set2.length || set1.length == 0)
-            return 0;
-
-        double aaTotal = 0;
-        double bbTotal = 0;
-        double abTotal = 0;
-        int nonZeroCount = 0;
-
-        for(int i = 0; i < set1.length; ++i)
-        {
-            double a = set1[i];
-            double b = set2[i];
-
-            if(skipZeros && (a == 0 || b == 0))
-                continue;
-
-            aaTotal += a*a;
-            bbTotal += b*b;
-            abTotal += a*b;
-            ++nonZeroCount;
-        }
-
-        if(aaTotal <= 0 || bbTotal <= 0 || nonZeroCount < 2)
-            return 0;
-
-        return min(abTotal / (sqrt(aaTotal) * sqrt(bbTotal)), 1.0);
-    }
 
     public static double calcCSSRelative(final double[] set1, final double[] set2)
     {
@@ -123,7 +73,7 @@ public class CosineSim {
         if(set1.length != set2.length)
             return -1;
 
-        double refCss = calcCSS(set1, set2, true);
+        double refCss = calcCosineSim(set1, set2, true);
 
         double[] copy = new double[set1.length];
         copyVector(set1, copy);
@@ -137,7 +87,7 @@ public class CosineSim {
 
             copy[i] = 0;
 
-            double css = calcCSS(copy, set2, true);
+            double css = calcCosineSim(copy, set2, true);
 
             if(css > bestCss)
             {
@@ -179,7 +129,7 @@ public class CosineSim {
             /*
             if(i > 0 && (i % 100) == 0)
             {
-                LOGGER.debug("processed {} items", i);
+                SIG_LOGGER.debug("processed {} items", i);
             }
             */
 
@@ -200,7 +150,7 @@ public class CosineSim {
                 if(skipAllZeros && equalVector(data2, emptyData))
                     continue;
 
-                double css = calcCSS(data1, data2, skipZeroEntries);
+                double css = calcCosineSim(data1, data2, skipZeroEntries);
 
                 if (css < cssMatchCutoff)
                     continue;
@@ -263,7 +213,6 @@ public class CosineSim {
     public static void logSimilarites(final SigMatrix matrix, double cssMatchCutoff, final String item)
     {
         // use CSS to compare each pair of values and log similar ones
-
         for (int i = 0; i < matrix.Cols; ++i) {
 
             double[] sig1 = matrix.getCol(i);
@@ -272,17 +221,17 @@ public class CosineSim {
 
                 double[] sig2 = matrix.getCol(j);
 
-                double css = CosineSim.calcCSS(sig1, sig2);
+                double css = calcCosineSim(sig1, sig2);
 
                 if(css > 1)
                 {
-                    LOGGER.warn("CSS above 1");
+                    SIG_LOGGER.warn("CSS above 1");
                 }
 
                 if (css < cssMatchCutoff)
                     continue;
 
-                LOGGER.debug(String.format("close CSS data: %s(%d) vs %s(%d) css(%.4f)", item, i, item, j, css));
+                SIG_LOGGER.debug(String.format("close CSS data: %s(%d) vs %s(%d) css(%.4f)", item, i, item, j, css));
             }
         }
     }
@@ -332,7 +281,7 @@ public class CosineSim {
 
         if(logVerbose)
         {
-            LOGGER.debug(String.format("prob(%.8f) totals(test=%.1f diff=%.1f same=%.1f) degFreedom(%d)",
+            SIG_LOGGER.debug(String.format("prob(%.8f) totals(test=%.1f diff=%.1f same=%.1f) degFreedom(%d)",
                     probability, testVal, diffTotal, sameTotal, degFreedom));
         }
 
@@ -355,7 +304,7 @@ public class CosineSim {
 
             if(i > 0 && (i % 100) == 0)
             {
-                LOGGER.debug("processed {} items", i);
+                SIG_LOGGER.debug("processed {} items", i);
             }
 
             double[] data1 = matrix1.getCol(i);
@@ -436,60 +385,11 @@ public class CosineSim {
 
         if(iterations >= maxIterations)
         {
-            LOGGER.warn(String.format("max iterations reached: value(%d) test(%d) prob(%.4f diff=%.4f)", value, testValue, currentProb, probDiff));
+            SIG_LOGGER.warn(String.format("max iterations reached: value(%d) test(%d) prob(%.4f diff=%.4f)", value, testValue, currentProb, probDiff));
         }
 
         return value - testValue;
     }
-
-    public void calcCosineSimilarities(final List<String> itemIds, final List<List<Double>> dataSets, double cutoff)
-    {
-        if(dataSets.isEmpty())
-            return;
-
-        LOGGER.debug("calc CSS for {} items", itemIds.size());
-
-        try
-        {
-            BufferedWriter writer = getNewFile(mOutputDir, "css_values,csv");
-            writer.write("Sample1,Sample2,CSS\n");
-
-            double[][] dataArray = DataUtils.convertArray(dataSets, true);
-            int itemCount = itemIds.size();
-
-            for(int i = 0; i < itemCount; ++i)
-            {
-                double[] set1 = dataArray[i];
-
-                for(int j = i+1; j < itemCount; ++j) {
-
-                    double[] set2 = dataArray[j];
-
-                    double css = calcCSS(set1, set2);
-
-                    if(css >= cutoff)
-                    {
-                        // LOGGER.debug("items({} and {}) css({})", itemIds.get(i), itemIds.get(j), css);
-                        writer.write(String.format("%s,%s,%.6f", itemIds.get(i), itemIds.get(j), css));
-                        writer.newLine();
-                    }
-                }
-
-                if(i > 0 && (i % 100) == 0)
-                {
-                    LOGGER.debug("processed {} items", i);
-                }
-            }
-
-            if(writer != null)
-                writer.close();
-
-        }
-        catch (final IOException e) {
-            LOGGER.error("error writing to outputFile");
-        }
-    }
-
 
 
 }

@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
@@ -13,11 +14,10 @@ import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT_LOWER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SAMPLE_ALLOCATED_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SIG_SIMILAR_CSS;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
-import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I1;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I2;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_VAL;
+import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.getTopCssPairs;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getMatchingList;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_MAJOR;
@@ -406,7 +406,7 @@ public class BaReporter
                     maxPotAllocGroup = bucketGroup;
                 }
 
-                double css = calcCSS(unallocCounts, bucketGroup.getBucketRatios());
+                double css = calcCosineSim(unallocCounts, bucketGroup.getBucketRatios());
 
                 if (css > maxCss)
                 {
