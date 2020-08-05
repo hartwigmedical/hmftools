@@ -301,6 +301,14 @@ public class DeletionDrivers
 
                         final SvBreakend otherBreakend = breakend.getOtherBreakend();
 
+                        final Transcript otherTrans = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+                                .filter(x -> x.StableId.equals(gene.StableId))
+                                .map(x -> x.canonical())
+                                .findFirst().orElse(null);
+
+                        if(otherTrans == null || !otherTrans.isDisruptive())
+                            continue;
+
                         double cnLowSideStart = breakend.copyNumberLowSide();
                         double cnLowSideEnd = otherBreakend.copyNumberLowSide();
                         double ploidy = breakend.jcn();
