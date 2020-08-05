@@ -163,7 +163,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
             val structuralVariant = StructuralVariantContext(variantContext, ordinals.first, ordinals.second)
             val isHotspot = hotspotFilter(structuralVariant)
             val isMateFiltered = hardFilter.contains(structuralVariant.vcfId)
-            val isHardFiltered = isMateFiltered || (!isHotspot && structuralVariant.isHardFilter(config.filterConfig))
+            val isHardFiltered = isMateFiltered || structuralVariant.isHardFilter(config.filterConfig, isHotspot)
 
             if (isHardFiltered) {
                 structuralVariant.mateId?.let { hardFilter.add(it) }
