@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cup.sigs;
 
 import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;

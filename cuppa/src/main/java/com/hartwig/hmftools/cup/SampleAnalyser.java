@@ -2,25 +2,14 @@ package com.hartwig.hmftools.cup;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SPECIFIC_SAMPLE_DATA;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SUBSET_DELIM;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CANCER_SUBTYPE_OTHER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.drivers.DriverAnnotation;

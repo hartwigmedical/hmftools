@@ -36,7 +36,7 @@ public class Percentiles
         return INVALID_VALUE;
     }
 
-    public double[] buildPercentiles(final double[] values)
+    public static double[] buildPercentiles(final double[] values)
     {
         double[] percentiles = new double[PERCENTILE_COUNT];
         calcPercentileValues(values, percentiles);

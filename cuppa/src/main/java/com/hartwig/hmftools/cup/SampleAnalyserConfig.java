@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 
 import java.io.File;
 import java.util.List;
-import java.util.Set;
 
 import com.hartwig.hmftools.cup.common.DataType;
 
