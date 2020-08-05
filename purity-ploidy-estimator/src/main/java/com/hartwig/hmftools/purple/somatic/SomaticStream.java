@@ -23,6 +23,7 @@ import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.DriverCatalogConfig;
 import com.hartwig.hmftools.purple.config.RefGenomeData;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
+import com.hartwig.hmftools.purple.plot.RChartData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -46,6 +47,7 @@ public class SomaticStream {
     private final MicrosatelliteIndels microsatelliteIndels;
     private final SomaticVariantDrivers drivers;
     private final SomaticVariantFactory somaticVariantFactory;
+    private final RChartData rChartData;
 
     public SomaticStream(final ConfigSupplier configSupplier) {
         this.somaticConfig = configSupplier.somaticConfig();
@@ -59,6 +61,7 @@ public class SomaticStream {
         this.microsatelliteIndels = new MicrosatelliteIndels();
         this.drivers = new SomaticVariantDrivers();
         this.somaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
+        this.rChartData = new RChartData(commonConfig.outputDirectory(), commonConfig.tumorSample());
     }
 
     public double microsatelliteIndelsPerMb() {
@@ -108,7 +111,8 @@ public class SomaticStream {
                             .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build()) {
 
-                final Consumer<VariantContext> consumer = microsatelliteIndels.andThen(writer::add).andThen(driverConsumer);
+                final Consumer<VariantContext> consumer =
+                        microsatelliteIndels.andThen(writer::add).andThen(driverConsumer).andThen(rChartData);
 
                 final VariantContextEnrichmentPurple enricher = new VariantContextEnrichmentPurple(driverCatalogConfig.enabled(),
                         somaticConfig.clonalityMaxPloidy(),
@@ -131,6 +135,7 @@ public class SomaticStream {
                 }
 
                 enricher.flush();
+                rChartData.write();
 
             }
         }

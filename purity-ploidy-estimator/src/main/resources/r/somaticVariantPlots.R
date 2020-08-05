@@ -43,9 +43,9 @@ standard_mutation <- function(types) {
   return(types)
 }
 
-clonality_plot <- function(somaticVariants, clonalityModel) {
-  clonalityVariants = somaticVariants %>% filter(filter == 'PASS')
-
+clonality_plot <- function(somaticBuckets, clonalityModel) {
+  clonalityVariants = somaticBuckets %>% group_by(variantCopyNumberBucket) %>% summarise(count = sum(count))
+  
   subclonalPercentage = clonalityModel %>% 
     group_by(bucket) %>% 
     mutate(totalWeight = sum(bucketWeight)) %>% 
@@ -74,7 +74,7 @@ clonality_plot <- function(somaticVariants, clonalityModel) {
   singleRed = "#d94701"
   
   pTop = ggplot() +
-    geom_histogram(data=clonalityVariants, aes(x = ploidy), binwidth = 0.05, fill=singleBlue, col=singleBlue,  alpha = .4) +
+    geom_bar(data=clonalityVariants, aes(x = variantCopyNumberBucket, weight = count), fill=singleBlue, col=singleBlue,  alpha = .4, size = 0.07, width = 0.05) +
     geom_line(data=combinedModel , aes(x = bucket, y = bucketWeight), position = "identity", alpha = 0.8) +
     geom_line(data=nonResidualModel, aes(x = bucket, y = bucketWeight, color = peak), position = "identity") +
     geom_area(data=nonResidualSubclonalPercentage %>% filter(isSubclonal), aes(x = bucket, y = bucketWeight), position = "identity",  alpha = 0.3, fill = singleRed, color = singleRed) +
@@ -82,7 +82,7 @@ clonality_plot <- function(somaticVariants, clonalityModel) {
     scale_y_continuous(expand=c(0.02, 0.02)) +
     theme(panel.border = element_blank(), panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position="none") +
     scale_x_continuous( expand=c(0.01, 0.01), limits = c(0, 3.5)) 
-  
+
   pBottom = ggplot(data = subclonalPercentage) +
     geom_bar(width = 0.05, aes(x = bucket, y = subclonalLikelihood), stat = "identity", fill=singleRed, col=singleRed,  alpha = 0.3) + 
     theme(panel.border = element_blank(), panel.grid.minor = element_blank(), axis.ticks = element_blank()) +
@@ -135,45 +135,44 @@ rainfall_plot <- function(somaticVariants) {
   return (p)
 }
 
-somatic_ploidy_pdf <- function(somatics) {
+somatic_ploidy_pdf <- function(somaticBuckets) {
   cnColours = c("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69")
   cnColours = setNames(cnColours, c("CN0", "CN1","CN2","CN3","CN4", "CN5", "CN6+"))
   
-  maxPloidy = somatics %>%
-    mutate(bucket = ceiling(ploidy)) %>%
+  maxPloidy = somaticBuckets %>%
+    mutate(bucket = ceiling(variantCopyNumberBucket)) %>%
     group_by(bucket) %>%
-    summarise(n = n()) %>%
+    summarise(n = sum(count)) %>%
     mutate(cumn = cumsum(n), proportion =  cumn / max(cumn)) %>%
     arrange(proportion) %>%
-    filter(proportion > 0.95) %>%
+    filter(proportion > 0.95)   %>%
     filter(row_number() == 1) %>%
     pull(bucket)
   
-  somatics = somatics %>%
-    filter(!chromosome %in% c('MT'), filter == 'PASS') %>%
+  somatics = somaticBuckets %>%
     mutate(
-      cn = pmax(0, round(copyNumber)),
+      cn = pmax(0, round(copyNumberBucket)),
       cn = ifelse(cn >=6, "CN6+", paste0("CN", cn)))
   
-  ggplot(somatics, aes(x = ploidy)) +
-    geom_histogram(aes(fill = cn), alpha =1, binwidth = 0.1, color = "black",  position = "stack") +
+  ggplot(somatics, aes(x = variantCopyNumberBucket)) +
+    geom_bar(aes(fill = cn, weight = count), alpha=1, color = "black",  position = "stack", size = 0.07, width = 0.05) +
     scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxPloidy + 1.1)) +
     scale_fill_manual(values = cnColours) +
     theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title = element_blank()) +
     xlab("Variant Copy Number") + ylab("Count") + ggtitle("Somatic Variant Copy Number PDF")
 }
 
-vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
-somaticVariants = vcf_data_frame(vcf)
-
-somaticVariantPDF = somatic_ploidy_pdf(somaticVariants)
+somaticBuckets = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.hist.tsv"), sep = "\t", header = T, numerals = "no.loss", skipNul = T)
+somaticVariantPDF = somatic_ploidy_pdf(somaticBuckets)
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.png"), somaticVariantPDF, units = "in", height = 4, width = 4.8, scale = 1)
 
+clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clonality.tsv"), sep = "\t", header = T, numerals = "no.loss", skipNul = T) %>%
+  mutate(isSubclonal = isSubclonal == "true", isValid = isValid == "true", peak = as.character(peak), bucketWeight = as.numeric(as.character(bucketWeight))) %>% filter(isValid)
+clonalityModelPlot = clonality_plot(somaticBuckets, clonalityModel)
+ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
+
+vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
+somaticVariants = vcf_data_frame(vcf)
 rainfallPlot = rainfall_plot(somaticVariants)
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)
-
-clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clonality.tsv"), sep = "\t", header = T, numerals = "no.loss", skipNul = T) %>% 
-  mutate(isSubclonal = isSubclonal == "true", isValid = isValid == "true", peak = as.character(peak), bucketWeight = as.numeric(as.character(bucketWeight))) %>% filter(isValid)
-clonalityModelPlot = clonality_plot(somaticVariants, clonalityModel)
-ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
 
