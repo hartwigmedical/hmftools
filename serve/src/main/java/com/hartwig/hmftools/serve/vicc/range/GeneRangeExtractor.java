@@ -66,7 +66,7 @@ public class GeneRangeExtractor {
             if (GENE_EXON.contains(event) && !feature.name().toLowerCase().contains("deletion")) {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
-                if (transcriptIdVicc != null && transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                     if (feature.name().contains(",")) {
                         String[] exons = feature.name()
                                 .substring((feature.name().toLowerCase().indexOf("exon")))
@@ -157,7 +157,7 @@ public class GeneRangeExtractor {
                     .equals("X")) {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
-                if (transcriptIdVicc != null && transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                     String geneSymbol = feature.geneSymbol();
                     String proteinAnnotation = feature.proteinAnnotation();
                     int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
