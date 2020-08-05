@@ -368,9 +368,6 @@ public class DoubleMinuteData
             FB are always at the full cluster level
         */
 
-        if(ClosedSegmentLength < MIN_CLOSED_SEG_LENGTH)
-            return false;
-
         double closedSegmentRatio = ClosedBreakends / (double)(ClosedBreakends + OpenBreakends);
 
         if(closedSegmentRatio < MIN_CLOSED_SEG_RATIO)
@@ -432,11 +429,18 @@ public class DoubleMinuteData
         final List<SvVarData> nonClosedChainSVs = Lists.newArrayList(UnchainedSVs);
         Chains.stream().filter(x -> !x.isClosedLoop()).forEach(x -> nonClosedChainSVs.addAll(x.getSvList()));
 
+        long nonClosedSegmentLength = Chains.stream().filter(x -> !x.isClosedLoop()).mapToLong(x -> x.getLength(false)).sum();
+
         for(Integer chainId : chainIds)
         {
             final SvChain chain = Chains.stream().filter(x -> x.id() == chainId).findFirst().orElse(null);
 
             if(nonClosedChainSVs.isEmpty() && chainId == OPEN_CHAIN_ID)
+                continue;
+
+            if(chain != null && chain.getLength(false) < MIN_CLOSED_SEG_LENGTH)
+                continue;
+            else if(chain == null && nonClosedSegmentLength < MIN_CLOSED_SEG_LENGTH)
                 continue;
 
             // find the highest foldback JCN or if none the highest JCN

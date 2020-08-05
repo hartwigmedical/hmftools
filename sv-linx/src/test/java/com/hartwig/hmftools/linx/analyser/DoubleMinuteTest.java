@@ -213,7 +213,7 @@ public class DoubleMinuteTest
     }
 
     @Test
-    public void testInvalidChainedFoldbackMs()
+    public void testInvalidChainedFoldbackDMs()
     {
         // if a foldback splits a chain, it should be the foldback's JCN which is tested
         LinxTester tester = new LinxTester();
@@ -278,7 +278,7 @@ public class DoubleMinuteTest
 
         assertEquals(2, cluster.getChains().stream().filter(x -> x.isDoubleMinute()).count());
 
-        // test again but with 1 chain valid, and one not
+        // test again but with 1 chain valid, and 2 not
         tester.clearClustersAndSVs();
 
         var1 = createTestSv(tester.nextVarId(),"1","1",25000,35000,-1,1, DUP,8);
@@ -289,7 +289,10 @@ public class DoubleMinuteTest
         var5 = createTestSv(tester.nextVarId(),"1","1",2000,21000,-1,-1, INV,1.5);
         var6 = createTestSv(tester.nextVarId(),"1","1",3000,22000,1,1, INV,1.5);
 
-        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4, var5, var6));
+        // this DUP is too short
+        var7 = createTestSv(tester.nextVarId(),"1","1",36000,36500,-1,1, DUP,8);
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4, var5, var6, var7));
 
         tester.preClusteringInit();
 

@@ -53,8 +53,7 @@ public class DoubleMinuteFinder
     private boolean mLogCandidates;
 
     protected static final double JCN_UPPER_THRESHOLD = 8;
-    private static final double JCN_THRESHOLD = 4;
-    private static final double JCN_LOWER_THRESHOLD = 2;
+    private static final double JCN_THRESHOLD = 4.5;
     private static final double LOWER_ADJACENT_JCN_RATIO = 2;
     private static final double MIN_PERC_OF_MAX_JCN = 0.25;
 
@@ -113,16 +112,15 @@ public class DoubleMinuteFinder
 
         for (SvVarData var : cluster.getSVs())
         {
-            if (var.jcn() < JCN_LOWER_THRESHOLD)
+            if (var.jcn() < JCN_THRESHOLD)
                 continue;
 
-            double jcn = var.jcn();
             double svAdjMAPRatio = getAdjacentMajorAPRatio(var);
 
-            if(!hasValidSv && jcn >= JCN_THRESHOLD && svAdjMAPRatio >= ADJACENT_JCN_RATIO)
+            if(svAdjMAPRatio >= ADJACENT_JCN_RATIO)
                 hasValidSv = true;
 
-            if(jcn >= JCN_LOWER_THRESHOLD && svAdjMAPRatio >= LOWER_ADJACENT_JCN_RATIO)
+            if(svAdjMAPRatio >= LOWER_ADJACENT_JCN_RATIO)
                 candidateDMSVs.add(var);
         }
 
@@ -130,10 +128,11 @@ public class DoubleMinuteFinder
             return;
 
         // take any candidate which are at high enough JCN relative to the max for the group
-        final double maxDmJcn = candidateDMSVs.stream().mapToDouble(x -> x.jcn()).max().orElse(0);
+        double maxDmJcn = candidateDMSVs.stream().mapToDouble(x -> x.jcn()).max().orElse(0);
+        final double minJcn = max(JCN_THRESHOLD, MIN_PERC_OF_MAX_JCN * maxDmJcn);
         final List<SvVarData> dmSVs = Lists.newArrayList();
 
-        candidateDMSVs.stream().filter(x -> x.jcn() >= MIN_PERC_OF_MAX_JCN * maxDmJcn).forEach(x -> dmSVs.add(x));
+        candidateDMSVs.stream().filter(x -> x.jcn() >= minJcn).forEach(x -> dmSVs.add(x));
 
         // dismiss any single SV which isn't a DUP
         if(dmSVs.size() == 1 && dmSVs.get(0).type() != DUP)
