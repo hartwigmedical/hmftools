@@ -28,17 +28,29 @@ public class SampleTraitsData
         IndelsMbPerMb = indelsMbPerMb;
     }
 
-    public Object getValue(final SampleTraitType type)
+    public double getDoubleValue(final SampleTraitType type)
     {
         switch(type)
         {
-            case GENDER: return GenderType;
-            case WGD: return HasWGD;
             case PURITY: return Purity;
             case PLOIDY: return Ploidy;
             case SNV_COUNT: return SnvCount;
             case MS_INDELS_TMB: return IndelsMbPerMb;
-            default: return 0;
+            default: return -1;
+        }
+    }
+
+    public String getStrValue(final SampleTraitType type)
+    {
+        switch(type)
+        {
+            case GENDER: return GenderType.toString();
+            case WGD: return String.valueOf(HasWGD);
+            case PURITY: return String.valueOf(Purity);
+            case PLOIDY: return String.valueOf(Ploidy);
+            case SNV_COUNT: return String.valueOf(SnvCount);
+            case MS_INDELS_TMB: return String.valueOf(IndelsMbPerMb);
+            default: return "";
         }
     }
 

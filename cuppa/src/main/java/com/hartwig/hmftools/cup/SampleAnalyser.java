@@ -118,6 +118,9 @@ public class SampleAnalyser
         final List<SampleResult> traitsResults = mSampleTraits.processSample(sampleData);
         writeSampleData(sampleData, traitsResults);
 
+        final List<SampleResult> snvResults = mSnvSignatures.processSample(sampleData);
+        writeSampleData(sampleData, snvResults);
+
         // mSnvSignatures.processSample(specificSample);
         // mDrivers.processSample(specificSample);
     }
@@ -136,7 +139,7 @@ public class SampleAnalyser
 
                 for(Map.Entry<String,Double> cancerValues : result.CancerTypeValues.entrySet())
                 {
-                    mSampleDataWriter.write(String.format("%s,%s,%.6f",
+                    mSampleDataWriter.write(String.format("%s,%s,%.3g",
                             sampleStr, cancerValues.getKey(), cancerValues.getValue()));
                     mSampleDataWriter.newLine();
                 }

@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.sigs.Percentiles.calcPercentileValues;
+import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -305,24 +306,7 @@ public class TransExpressionDistribution
         if(transPercentiles == null)
             return -1;
 
-        if(tpm < transPercentiles[0])
-            return 0;
-        else if(tpm > transPercentiles[transPercentiles.length - 1])
-            return transPercentiles.length - 1;
-
-        for(int i = 0; i < transPercentiles.length - 1; ++i)
-        {
-            if(tpm >= transPercentiles[i] && tpm <= transPercentiles[i + 1])
-            {
-                if(transPercentiles[i + 1] == transPercentiles[i])
-                    return i;
-
-                double upperFactor = (tpm - transPercentiles[i]) / (transPercentiles[i + 1] - transPercentiles[i]);
-                return upperFactor * (i + 1) + (1 - upperFactor) * i;
-            }
-        }
-
-        return -1;
+        return getPercentile(transPercentiles, tpm);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
@@ -46,11 +47,11 @@ public class SampleTraits
         loadSampleTraitsData(mConfig.SampleTraitsFile);
     }
 
-    public List<SampleResult> processSample(final SampleData sampleData)
+    public List<SampleResult> processSample(final SampleData sample)
     {
-        List<SampleResult> results = Lists.newArrayList();
+        final List<SampleResult> results = Lists.newArrayList();
 
-        final SampleTraitsData sampleTraits = mSampleTraitsData.get(sampleData.Id);
+        final SampleTraitsData sampleTraits = mSampleTraitsData.get(sample.Id);
 
         if(sampleTraits == null)
             return results;
@@ -60,7 +61,27 @@ public class SampleTraits
             final SampleTraitType traitType = entry.getKey();
             final Map<String,Double> cancerRates = entry.getValue();
 
-            SampleResult result = new SampleResult(sampleData.Id, SAMPLE_TRAIT, traitType.toString(), sampleTraits.getValue(traitType), cancerRates);
+            SampleResult result = new SampleResult(
+                    sample.Id, SAMPLE_TRAIT, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
+
+            results.add(result);
+        }
+
+        for(Map.Entry<SampleTraitType,Map<String,double[]>> entry : mRefTraitPercentiles.entrySet())
+        {
+            final SampleTraitType traitType = entry.getKey();
+            double traitValue = sampleTraits.getDoubleValue(traitType);
+
+            final Map<String,Double> cancerTypeValues = Maps.newHashMap();
+
+            for(Map.Entry<String,double[]> cancerPercentiles : entry.getValue().entrySet())
+            {
+                final String cancerType = cancerPercentiles.getKey();
+                double percentile = getPercentile(cancerPercentiles.getValue(), traitValue);
+                cancerTypeValues.put(cancerType, percentile);
+            }
+
+            SampleResult result = new SampleResult(sample.Id, SAMPLE_TRAIT, traitType.toString(), traitValue, cancerTypeValues);
             results.add(result);
         }
 
