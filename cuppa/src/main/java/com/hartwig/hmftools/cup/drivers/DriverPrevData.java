@@ -3,14 +3,14 @@ package com.hartwig.hmftools.cup.drivers;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.drivers.SampleDriverData.DRIVER_TYPE_ALL;
 
-public class DriverPrevalence
+public class DriverPrevData
 {
     public final String CancerType;
     public final String Gene;
     public final String DriverType;
     public final double Prevalence;
 
-    public DriverPrevalence(final String cancerType, final String gene, final String driverType, final double prevalence)
+    public DriverPrevData(final String cancerType, final String gene, final String driverType, final double prevalence)
     {
         CancerType = cancerType;
         Gene = gene;
@@ -18,13 +18,13 @@ public class DriverPrevalence
         Prevalence = prevalence;
     }
 
-    public static DriverPrevalence from(final String data)
+    public static DriverPrevData from(final String data)
     {
         final String[] items = data.split(DATA_DELIM, -1);
         if(items.length != 4)
             return null;
 
-        return new DriverPrevalence(items[0], items[1], items[2], Double.parseDouble(items[3]));
+        return new DriverPrevData(items[0], items[1], items[2], Double.parseDouble(items[3]));
     }
 
     public boolean isTypeAll() { return DriverType.equals(DRIVER_TYPE_ALL); }

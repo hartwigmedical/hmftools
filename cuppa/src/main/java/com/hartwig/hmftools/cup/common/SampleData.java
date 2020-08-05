@@ -17,7 +17,6 @@ public class SampleData
     public final String CancerSubtype;
 
     // SNV signature data and results
-    private int mSnvCountsIndex;
     private int mSnvCount;
     private final Map<String,Double> mCancerSnvCssTotals;
     private final Map<String,Double> mSnvSigAllocations;
@@ -32,7 +31,6 @@ public class SampleData
         CancerType = cancerType;
         CancerSubtype = cancerSubtype;
 
-        mSnvCountsIndex = -1;
         mSnvCount = 0;
         mCancerSnvCssTotals = Maps.newHashMap();
         mSnvSigAllocations = Maps.newHashMap();
@@ -53,10 +51,8 @@ public class SampleData
     }
 
     // signatures
-    public void setSnvCountsIndex(int sampleIndex) { mSnvCountsIndex = sampleIndex; }
     public void setSnvCount(int snvCount) { mSnvCount = snvCount; }
     public int getSnvCount() { return mSnvCount; }
-    public int getSnvIndex() { return mSnvCountsIndex; }
     public final Map<String,Double> getCancerCssTotals() { return mCancerSnvCssTotals; }
     public final Map<String,Double> getSnvSigAllocations() { return mSnvSigAllocations; }
 

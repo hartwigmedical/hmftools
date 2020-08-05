@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
@@ -31,9 +32,13 @@ public class SignatureAnnotation
 {
     private final SampleAnalyserConfig mConfig;
 
-    private SigMatrix mSampleCounts;
+    private SigMatrix mRefSampleCounts;
+    private final List<String> mRefSampleNames;
 
     private final SampleDataCache mSampleDataCache;
+
+    private SigMatrix mSampleCounts;
+    private final Map<String,Integer> mSampleCountsIndex;
 
     private SigMatrix mSnvSignatures;
     private final List<String> mSnvSigNames;
@@ -47,33 +52,42 @@ public class SignatureAnnotation
         mConfig = config;
 
         mSampleCounts = null;
+        mRefSampleCounts = null;
+        mRefSampleNames = Lists.newArrayList();
         mSampleDataCache = sampleDataCache;
 
         mSnvSignatures = null;
         mLeastSquaresFit = null;
         mSnvSigNames = Lists.newArrayList();
+        mSampleCountsIndex = Maps.newHashMap();
 
         mSampleDataWriter = null;
         mCssPairsWriter = null;
 
         loadSnvSignatures();
+        loadRefSampleCounts();
         loadSampleCounts();
         initialiseOutputFile();
     }
 
+    private boolean loadRefSampleCounts()
+    {
+        final GenericDataCollection collection = GenericDataLoader.loadFile(mConfig.RefSnvCountsFile);
+
+        mRefSampleNames.addAll(collection.getFieldNames());
+        mRefSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
+        mRefSampleCounts.cacheTranspose();
+
+        return true;
+    }
     private boolean loadSampleCounts()
     {
-        final GenericDataCollection collection = GenericDataLoader.loadFile(mConfig.SnvSampleCountsFile);
+        final GenericDataCollection collection = GenericDataLoader.loadFile(mConfig.SampleSnvCountsFile);
 
         for(int s = 0; s < collection.getFieldNames().size(); ++s)
         {
             final String sampleId = collection.getFieldNames().get(s);
-            SampleData sampleData = mSampleDataCache.SampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
-
-            if(sampleData == null)
-                continue;
-
-            sampleData.setSnvCountsIndex(s);
+            mSampleCountsIndex.put(sampleId, s);
         }
 
         mSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
@@ -94,55 +108,55 @@ public class SignatureAnnotation
 
     public void processSample(SampleData sample)
     {
-        if(sample.getSnvIndex() < 0)
+        Integer sampleCountsIndex = mSampleCountsIndex.get(sample.Id);
+
+        if(sampleCountsIndex == null)
         {
             CUP_LOGGER.error("sample({}) has no SNV data", sample.Id);
             return;
         }
 
-        final double[] sampleCounts = mSampleCounts.getCol(sample.getSnvIndex());
+        final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
 
         sample.setSnvCount((int)sumVector(sampleCounts));
 
-        int cohortSampleCount = mSampleCounts.Cols;
+        int refSampleCount = mRefSampleCounts.Cols;
 
-        for(int s = 0; s < cohortSampleCount; ++s)
+        for(int s = 0; s < refSampleCount; ++s)
         {
-            if(s == sample.getSnvIndex())
+            final String refSampleId = mRefSampleNames.get(s);
+
+            if(refSampleId.equals(sample.Id))
                 continue;
 
-            // fix-me - exclude unknown cancer types from CSS analysis
-            final SampleData otherSampleData = mSampleDataCache.SampleDataList.get(s);
-
-            if(otherSampleData.isUnknownCancerType())
-                continue;
-
-            final double[] otherSampleCounts = mSampleCounts.getCol(s);
+            final double[] otherSampleCounts = mRefSampleCounts.getCol(s);
 
             double css = CosineSim.calcCSS(sampleCounts, otherSampleCounts);
 
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            int cancerTypeCount = mSampleDataCache.CancerSampleData.get(otherSampleData.CancerType).size();
+            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
+
+            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
             double weightedCss = pow((css - SNV_CSS_THRESHOLD) * 100, 2) / cancerTypeCount;
 
-            sample.addSampleCss(otherSampleData.CancerType, weightedCss);
+            sample.addSampleCss(refCancerType, weightedCss);
 
             // writeSampleCssPairData(mSampleIds.get(s1), mSampleIds.get(s2), css, mSampleTotals[s1], mSampleTotals[s2]);
         }
 
-        fitSnvSignatures(sample);
+        fitSnvSignatures(sample, sampleCountsIndex);
 
         writeSampleData(sample);
     }
 
-    private void fitSnvSignatures(final SampleData sampleData)
+    private void fitSnvSignatures(final SampleData sampleData, int sampleCountsIndex)
     {
         if(mSnvSignatures == null)
             return;
 
-        final double[] sampleCounts = mSampleCounts.getCol(sampleData.getSnvIndex());
+        final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
 
         mLeastSquaresFit.initialise(mSnvSignatures.getData(), sampleCounts);
         mLeastSquaresFit.solve();
@@ -260,11 +274,11 @@ public class SignatureAnnotation
 
     private void loadSnvSignatures()
     {
-        if(mConfig.SnvSignaturesFile.isEmpty())
+        if(mConfig.RefSnvSignaturesFile.isEmpty())
             return;
 
         // cosmic_sig_subset.csv
-        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(mConfig.SnvSignaturesFile);
+        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(mConfig.RefSnvSignaturesFile);
         mSnvSigNames.addAll(sigsCollection.getFieldNames());
         mSnvSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
         mLeastSquaresFit = new LeastSquaresFit(mSnvSignatures.Rows, mSnvSignatures.Cols);

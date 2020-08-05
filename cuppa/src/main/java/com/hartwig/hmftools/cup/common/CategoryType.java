@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.cup.common;
 
-public enum DataType
+public enum CategoryType
 {
-    SNV_COUNTS,
-    SVS,
-    DRIVERS,
-    FUSIONS
+    SNV,
+    SV,
+    SAMPLE_TRAIT,
+    DRIVER,
+    FUSION
 }

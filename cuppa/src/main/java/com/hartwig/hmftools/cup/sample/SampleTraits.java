@@ -1,123 +1,73 @@
 package com.hartwig.hmftools.cup.sample;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
-import static com.hartwig.hmftools.common.sigs.Percentiles.buildPercentiles;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DB_FILE_DELIM;
+import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
+import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
-import com.hartwig.hmftools.cup.ref.RefDataConfig;
+import com.hartwig.hmftools.cup.common.SampleResult;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class SampleTraits
 {
-    private final RefDataConfig mConfig;
+    private final SampleAnalyserConfig mConfig;
     private final SampleDataCache mSampleDataCache;
-    private final Map<String,List<SampleTraitsData>> mCancerTraitsData;
 
-    private BufferedWriter mRefDataWriter;
+    private final Map<String,SampleTraitsData> mSampleTraitsData;
 
-    public SampleTraits(final RefDataConfig config, final SampleDataCache sampleDataCache)
+    private final Map<SampleTraitType,Map<String,double[]>> mRefTraitPercentiles;
+    private final Map<SampleTraitType,Map<String,Double>> mRefTraitRates;
+
+    public SampleTraits(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mCancerTraitsData = Maps.newHashMap();
-        mRefDataWriter = null;
+        mSampleTraitsData = Maps.newHashMap();
+        mRefTraitPercentiles = Maps.newHashMap();
+        mRefTraitRates = Maps.newHashMap();
 
-        initialiseRefDataWriter();
-
-        loadRefPurityData(mConfig.SampleTraitsFile);
+        loadRefPercentileData(mConfig.RefTraitPercFile);
+        loadRefRateData(mConfig.RefTraitRateFile);
+        loadSampleTraitsData(mConfig.SampleTraitsFile);
     }
 
-    public void buildRefDataSets()
+    public List<SampleResult> processSample(final SampleData sampleData)
     {
-        for(Map.Entry<String,List<SampleTraitsData>> entry : mCancerTraitsData.entrySet())
+        List<SampleResult> results = Lists.newArrayList();
+
+        final SampleTraitsData sampleTraits = mSampleTraitsData.get(sampleData.Id);
+
+        if(sampleTraits == null)
+            return results;
+
+        for(Map.Entry<SampleTraitType,Map<String,Double>> entry : mRefTraitRates.entrySet())
         {
-            final String cancerType = entry.getKey();
-            final List<SampleTraitsData> traitsData = entry.getValue();
+            final SampleTraitType traitType = entry.getKey();
+            final Map<String,Double> cancerRates = entry.getValue();
 
-            final List<Double> purityValues = traitsData.stream().map(x -> x.Purity).collect(Collectors.toList());
-            double[] percentileValues = createPercentileData(purityValues);
-
-            writeRefDataType(cancerType, "Purity", percentileValues);
+            SampleResult result = new SampleResult(sampleData.Id, SAMPLE_TRAIT, traitType.toString(), sampleTraits.getValue(traitType), cancerRates);
+            results.add(result);
         }
 
-        closeBufferedWriter(mRefDataWriter);
-    }
-    
-    private void initialiseRefDataWriter()
-    {
-        try
-        {
-            final String filename = mConfig.OutputDir + "cup_ref_sample_traits.csv";
-            mRefDataWriter = createBufferedWriter(filename, false);
-
-            mRefDataWriter.write("CancerType,DataType");
-
-            for(int i = 0; i < PERCENTILE_COUNT; ++i)
-            {
-                mRefDataWriter.write(String.format(",%.2f", i * 0.01));
-            }
-
-            mRefDataWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write sample traits ref data output: {}", e.toString());
-        }
+        return results;
     }
 
-    private void writeRefDataType(final String cancerType, final String dataType, final double[] percentileValues)
-    {
-        try
-        {
-            mRefDataWriter.write(String.format("%s,%s", cancerType, dataType));
-
-            for(int i = 0; i < percentileValues.length; ++i)
-            {
-                mRefDataWriter.write(String.format(",Pct_%.6f", percentileValues[i]));
-            }
-
-            mRefDataWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write sample traits ref data output: {}", e.toString());
-        }
-    }
-
-    private double[] createPercentileData(final List<Double> values)
-    {
-        // sort the data into an array
-        final List<Integer> sortedIndices = getSortedVectorIndices(convertList(values), true);
-        final double[] sortedValues = new double[values.size()];
-        
-        for(int i = 0; i < values.size(); ++i)
-        {
-            sortedValues[i] = values.get(sortedIndices.get(i));
-        }
-        
-        return buildPercentiles(sortedValues);
-    }
-
-    private void loadRefPurityData(final String filename)
+    private void loadSampleTraitsData(final String filename)
     {
         try
         {
@@ -127,39 +77,11 @@ public class SampleTraits
             fileData.remove(0);
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
-            int sampleIndex = fieldsIndexMap.get("SampleId");
-            int genderIndex = fieldsIndexMap.get("Gender");
-            int wgdIndex = fieldsIndexMap.get("WholeGenomeDuplication");
-            int purityIndex = fieldsIndexMap.get("Purity");
-            int ploidyIndex = fieldsIndexMap.get("Ploidy");
-            int snvMbIndex = fieldsIndexMap.get("TmbPerMb");
-            int msiScoreIndex = fieldsIndexMap.get("MsIndelsPerMb");
 
             for(final String line : fileData)
             {
-                final String[] items = line.split(DATA_DELIM, -1);
-
-                SampleTraitsData traitsData = new SampleTraitsData(
-                        items[sampleIndex], Gender.valueOf(items[genderIndex]), items[wgdIndex].equals("1"),
-                        Double.parseDouble(items[purityIndex]), Double.parseDouble(items[ploidyIndex]),
-                        Double.parseDouble(items[snvMbIndex]), Double.parseDouble(items[msiScoreIndex]));
-
-                final String cancerType = mSampleDataCache.SampleCancerTypeMap.get(traitsData.SampleId);
-                if(cancerType == null)
-                {
-                    CUP_LOGGER.error("sample({}) missing cancer type", traitsData.SampleId);
-                    continue;
-                }
-
-                List<SampleTraitsData> traitsList = mCancerTraitsData.get(cancerType);
-                if(traitsList == null)
-                {
-                    mCancerTraitsData.put(cancerType, Lists.newArrayList(traitsData));
-                }
-                else
-                {
-                    traitsList.add(traitsData);
-                }
+                SampleTraitsData traitsData = SampleTraitsData.from(fieldsIndexMap, line);
+                mSampleTraitsData.put(traitsData.SampleId, traitsData);
             }
         }
         catch (IOException e)
@@ -168,5 +90,87 @@ public class SampleTraits
         }
     }
 
+    private void loadRefPercentileData(final String filename)
+    {
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            final String header = fileData.get(0);
+            fileData.remove(0);
+
+            for(final String line : fileData)
+            {
+                final String[] items = line.split(DATA_DELIM, -1);
+
+                final String cancerType = items[0];
+                final SampleTraitType traitType = SampleTraitType.valueOf(items[1]);
+
+                double[] percentileData = new double[PERCENTILE_COUNT];
+
+                int startIndex = 2;
+
+                for(int i = startIndex; i < items.length; ++i)
+                {
+                    double value = Double.parseDouble(items[i]);
+                    percentileData[i - startIndex] = value;
+                }
+
+                Map<String,double[]> traitData = mRefTraitPercentiles.get(traitType);
+
+                if(traitData == null)
+                {
+                    traitData = Maps.newHashMap();
+                    mRefTraitPercentiles.put(traitType, traitData);
+                }
+
+                traitData.put(cancerType, percentileData);
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read sample traits perc data file({}): {}", filename, e.toString());
+        }
+    }
+
+    private void loadRefRateData(final String filename)
+    {
+        // CancerType,IsFemale,WGD,SampleCount,GenderFemalePerc,WGDPerc
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            final String header = fileData.get(0);
+            fileData.remove(0);
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+
+            int wgdRateIndex = fieldsIndexMap.get("WGDPerc");
+            int genderIndex = fieldsIndexMap.get("GenderFemalePerc");
+
+            Map<String,Double> wgdRates = Maps.newHashMap();
+            Map<String,Double> genderRates = Maps.newHashMap();
+
+            mRefTraitRates.put(WGD, wgdRates);
+            mRefTraitRates.put(GENDER, genderRates);
+
+            for(final String line : fileData)
+            {
+                final String[] items = line.split(DATA_DELIM, -1);
+
+                final String cancerType = items[0];
+
+                double wgdRate = Double.parseDouble(items[wgdRateIndex]);
+                double genderFemaleRate = Double.parseDouble(items[genderIndex]);
+
+                wgdRates.put(cancerType, wgdRate);
+                genderRates.put(cancerType, genderFemaleRate);
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read sample traits rate data file({}): {}", filename, e.toString());
+        }
+    }
 
 }

@@ -3,18 +3,11 @@ package com.hartwig.hmftools.cup.ref;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 
 import java.io.File;
-import java.util.List;
-
-import com.hartwig.hmftools.cup.common.DataType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class RefDataConfig
 {
@@ -26,6 +19,8 @@ public class RefDataConfig
 
     // config strings
     public static final String SAMPLE_TRAITS_FILE = "sample_traits_file";
+
+    public static final String DB_FILE_DELIM = "\t";
 
     public RefDataConfig(final CommandLine cmd)
     {

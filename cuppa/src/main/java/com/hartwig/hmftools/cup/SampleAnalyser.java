@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SPECIFIC_SAMPLE_DATA;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
@@ -9,10 +10,14 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
+import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.drivers.DriverAnnotation;
+import com.hartwig.hmftools.cup.sample.SampleTraits;
 import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,6 +37,7 @@ public class SampleAnalyser
 
     private final DriverAnnotation mDrivers;
     private final SignatureAnnotation mSnvSignatures;
+    private final SampleTraits mSampleTraits;
 
     private BufferedWriter mSampleDataWriter;
 
@@ -45,6 +51,7 @@ public class SampleAnalyser
 
         mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataCache);
         mDrivers = new DriverAnnotation(mConfig, mSampleDataCache);
+        mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
 
         mSampleDataWriter = null;
     }
@@ -52,6 +59,7 @@ public class SampleAnalyser
     private void loadSampleData(final CommandLine cmd)
     {
         mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), cmd.getOptionValue(SAMPLE_DATA_FILE));
+        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
     }
 
     public void run()
@@ -67,19 +75,14 @@ public class SampleAnalyser
         if(mSampleDataCache.SpecificSample != null)
         {
             final SampleData specificSample = mSampleDataCache.SpecificSample;
-            mSnvSignatures.processSample(specificSample);
-            mDrivers.processSample(specificSample);
-            writeSampleData(specificSample);
+
+            processSample(specificSample);
         }
         else
         {
             for(SampleData sample : mSampleDataCache.SampleDataList)
             {
-                mSnvSignatures.processSample(sample);
-
-                mDrivers.processSample(sample);
-
-                writeSampleData(sample);
+                processSample(sample);
             }
         }
 
@@ -95,11 +98,13 @@ public class SampleAnalyser
     {
         try
         {
-            mSampleDataWriter = createBufferedWriter(mConfig.formOutputFilename("SAMPLE_DATA"), false);
+            final String outputFilename = mSampleDataCache.isSingleSample() ?
+                    mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.data.csv"
+                    : mConfig.formOutputFilename("SAMPLE_DATA");
 
-            mSampleDataWriter.write("SampleId,CancerType,CancerSubtype");
-            mSampleDataWriter.write("," + mSnvSignatures.getHeader());
-            mSampleDataWriter.write("," + mDrivers.getHeader());
+            mSampleDataWriter = createBufferedWriter(outputFilename, false);
+
+            mSampleDataWriter.write("SampleId,CancerType,Category,DataType,Value,RefCancerType,RefCancerTypeValue");
             mSampleDataWriter.newLine();
         }
         catch(IOException e)
@@ -108,7 +113,42 @@ public class SampleAnalyser
         }
     }
 
-    private void writeSampleData(final SampleData sampleData)
+    private void processSample(final SampleData sampleData)
+    {
+        final List<SampleResult> traitsResults = mSampleTraits.processSample(sampleData);
+        writeSampleData(sampleData, traitsResults);
+
+        // mSnvSignatures.processSample(specificSample);
+        // mDrivers.processSample(specificSample);
+    }
+
+    private void writeSampleData(final SampleData sampleData, final List<SampleResult> results)
+    {
+        if(results.isEmpty() || mSampleDataWriter == null)
+            return;
+
+        try
+        {
+            for(SampleResult result : results)
+            {
+                final String sampleStr = String.format("%s,%s,%s,%s,%s",
+                        sampleData.Id, sampleData.CancerType, result.Category, result.DataType, result.Value.toString());
+
+                for(Map.Entry<String,Double> cancerValues : result.CancerTypeValues.entrySet())
+                {
+                    mSampleDataWriter.write(String.format("%s,%s,%.6f",
+                            sampleStr, cancerValues.getKey(), cancerValues.getValue()));
+                    mSampleDataWriter.newLine();
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write sample data: {}", e.toString());
+        }
+    }
+
+    private void writeSampleSummary(final SampleData sampleData)
     {
         try
         {
@@ -122,7 +162,7 @@ public class SampleAnalyser
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
+            CUP_LOGGER.error("failed to write sample summary: {}", e.toString());
         }
     }
 

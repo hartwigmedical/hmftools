@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.cup.ref;
 
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
 
 import com.hartwig.hmftools.cup.common.SampleDataCache;
-import com.hartwig.hmftools.cup.sample.SampleTraits;
+import com.hartwig.hmftools.cup.sample.RefSampleTraits;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -22,7 +23,7 @@ public class RefDataBuilder
 
     private final SampleDataCache mSampleDataCache;
 
-    private final SampleTraits mSampleTraits;
+    private final RefSampleTraits mSampleTraits;
 
     public RefDataBuilder(final CommandLine cmd)
     {
@@ -31,12 +32,12 @@ public class RefDataBuilder
         mSampleDataCache = new SampleDataCache();
 
         loadSampleData(cmd);
-        mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
+        mSampleTraits = new RefSampleTraits(mConfig, mSampleDataCache);
     }
 
     private void loadSampleData(final CommandLine cmd)
     {
-        mSampleDataCache.loadSampleData(null, cmd.getOptionValue(SAMPLE_DATA_FILE));
+        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
     }
 
     public void run()
