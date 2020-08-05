@@ -2,26 +2,28 @@ library(ggplot2)
 library(dplyr)
 theme_set(theme_bw())
 
+#sample = "COLO829T"
+#purpleDir = "~/hmf/analysis/COLO829T/purple"
+#plotDir = "~/hmf/analysis/COLO829T/purple/plot"
+
 # Parse the arguments
 args <- commandArgs(trailing=T)
 sample <- args[1]
 purpleDir <- args[2]
 plotDir   <- args[3]
 
-#sample = "COLO829T"
-#purpleDir = "~/hmf/analysis/COLO829T/purple"
-#plotDir = "~/hmf/analysis/COLO829T/purple/plot"
-
 purity_ploidy_range_plot <- function(bestFit, range) {
 
     bestPurity = bestFit[1, "purity"]
     bestPloidy = bestFit[1, "ploidy"]
-
+    bestScore = bestFit[1, "score"]
+    
     range =  range %>%
         arrange(purity, ploidy) %>%
         group_by(purity) %>%
         mutate(
-        score = pmin(4, score),
+        absScore = pmin(4, score),
+        score = pmin(1, abs(score - bestScore) / score),
         leftPloidy = lag(ploidy),
         rightPloidy = lead(ploidy),
         xmin = ploidy - (ploidy - leftPloidy) / 2,
@@ -43,10 +45,10 @@ purity_ploidy_range_plot <- function(bestFit, range) {
 
     result = ggplot(range) +
         geom_rect(aes(fill=score, xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-        scale_fill_gradientn(colours=c("blue","green","yellow","orange", "red"), limits = c(min(range$score), 4)) +
-        geom_segment(aes(y = 0.085, yend = 1.05, x=bestPloidy, xend = bestPloidy), linetype = "dashed") +
+        scale_fill_gradientn(colours=c("blue","blue", "green", "yellow","orange", "red", "red2"), limits = c(0, 1), values=c(0, 0.0999, 0.1, 0.5, 0.8, 0.9, 1), breaks = c(0.1, 0.5, 1), labels = c("10%", "50%", "100%"), name = "Relative\nScore") +
+        geom_segment(aes(y = 0.085, yend = 1.05, x=bestPloidy, xend = bestPloidy), linetype = "dashed", size = 0.1) +
         geom_label(data = data.frame(), aes(x = bestPloidy, y = 1.05, label = round(bestPloidy, 2)), size = 2.5) +
-        geom_segment(aes(y = bestPurity, yend = bestPurity, x=minPloidy, xend = maxPloidy + 0.4), linetype = "dashed") +
+        geom_segment(aes(y = bestPurity, yend = bestPurity, x=minPloidy, xend = maxPloidy + 0.4), linetype = "dashed", size = 0.1) +
         geom_label(data = data.frame(), aes(y = bestPurity, x = maxPloidy + 0.4, label = paste0(bestPurity*100,"%" )), size = 2.5, hjust = 0.7) +
         theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title=element_text(size=6), legend.text=element_text(size=6)) +
         scale_y_continuous(labels = c("25%", "50%", "75%", "100%"), breaks = c(0.25, 0.5, 0.75, 1)) +
@@ -109,7 +111,7 @@ minor_allele_ploidy_pdf <- function(copyNumberRegions) {
         pull(bucket)
 
     ggplot(copyNumberRegions, aes(x = minorAlleleCopyNumber)) +
-        geom_histogram(aes(weight = bafCount, fill = cn), alpha =1, binwidth = 0.1, color = "black",  position = "stack") +
+        geom_histogram(aes(weight = bafCount, fill = cn), alpha =1, binwidth = 0.1, color = "black",  position = "stack", size = 0.07) +
         scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxAllelePloidy + 0.1)) +
         scale_fill_manual(values = cnColours) +
         theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title = element_blank()) +
@@ -144,7 +146,7 @@ copynumber_pdf <- function(copyNumberRegions) {
     minCopyNumber = floor(min(copyNumberRegions$copyNumber))
     
     ggplot(copyNumberRegions, aes(x = copyNumber)) +
-        geom_histogram(aes(weight = bafCount, fill = map), alpha = 1,  binwidth = 0.1, color = "black",  position = "stack") +
+        geom_histogram(aes(weight = bafCount, fill = map), alpha = 1,  binwidth = 0.1, color = "black",  position = "stack", size = 0.07) +
         scale_fill_manual(values = mapColours) +
         scale_x_continuous(breaks = c((minCopyNumber - 1):(maxCopyNumber + 1)), limits = c(minCopyNumber - 0.1, maxCopyNumber + 0.1)) +
         theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.title = element_blank()) +
@@ -164,7 +166,7 @@ if (nrow(copyNumbers) > 0) {
 }
 
 
-bestFitDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.tsv"), sep = "\t", header = T, comment.char = "!") %>% select(purity, ploidy)
+bestFitDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.tsv"), sep = "\t", header = T, comment.char = "!") %>% select(purity, ploidy, score)
 rangeDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.range.tsv"), sep = "\t", header = T, comment.char = "!") %>%
     select(purity, ploidy, score)
 rangePlot = purity_ploidy_range_plot(bestFitDF, rangeDF)
