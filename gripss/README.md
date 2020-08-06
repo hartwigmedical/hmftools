@@ -64,7 +64,7 @@ Filter | Default | Description / purpose
 ---|---|---
 minQual | 400 (single breakend:1000) | Minimum absolute tumor support for variant
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
-maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor.
+maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor. This filter is ignored for single breakends with viral sequence alignments
 minTumorAF | 0.005 | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
 discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
