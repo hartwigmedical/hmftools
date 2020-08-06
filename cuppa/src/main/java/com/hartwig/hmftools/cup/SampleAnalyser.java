@@ -127,8 +127,8 @@ public class SampleAnalyser
         final List<SampleResult> svResults = mSvAnnotation.processSample(sampleData);
         writeSampleData(sampleData, svResults);
 
-        // mSnvSignatures.processSample(specificSample);
-        // mDrivers.processSample(specificSample);
+        final List<SampleResult> driverResults = mDrivers.processSample(sampleData);
+        writeSampleData(sampleData, driverResults);
     }
 
     private void writeSampleData(final SampleData sampleData, final List<SampleResult> results)

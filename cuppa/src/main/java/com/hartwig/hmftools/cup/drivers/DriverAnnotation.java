@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.cup.drivers;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CategoryType.DRIVER;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVERS_MIN_PREVALENCE_PERCENT;
 
@@ -21,30 +25,30 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
+import com.hartwig.hmftools.cup.common.SampleResult;
 
 public class DriverAnnotation
 {
     private final SampleAnalyserConfig mConfig;
-    private final List<SampleDriverData> mSampleDrivers;
+    private final Map<String,List<SampleDriverData>> mSampleDrivers;
     private final Map<String,List<DriverPrevData>> mCancerDriverPrevalence;
     private final SampleDataCache mSampleDataCache;
     private boolean mValidData;
 
-    private final Set<String> mGeneList;
     private final Map<String,double[]> mGenePrevalenceTotals;
 
     private static final int POS_PREV = 0;
     private static final int NEG_PREV = 1;
+    private static final int MAX_PREV = 2;
 
     private BufferedWriter mSampleDataWriter;
 
     public DriverAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
-        mSampleDrivers = Lists.newArrayList();
+        mSampleDrivers = Maps.newHashMap();
         mCancerDriverPrevalence = Maps.newHashMap();
         mGenePrevalenceTotals = Maps.newHashMap();
-        mGeneList = Sets.newHashSet();
         mSampleDataCache = sampleDataCache;
         mSampleDataWriter = null;
         mValidData = false;
@@ -68,16 +72,96 @@ public class DriverAnnotation
         closeBufferedWriter(mSampleDataWriter);
     }
 
-    public void processSample(final SampleData sample)
+    public final List<SampleResult> processSample(final SampleData sample)
     {
-        if(!mValidData)
-            return;
+        final List<SampleResult> results = Lists.newArrayList();
 
-        calculateSampleProbabilities(sample);
-        writeSampleData(sample);
+        if(!mValidData)
+            return results;
+
+        final List<SampleDriverData> sampleDrivers = mSampleDrivers.get(sample.Id);
+
+        if(sampleDrivers == null || sampleDrivers.isEmpty())
+            return results;
+
+        addDriverPrevalence(sample, sampleDrivers, results);
+        calcCancerTypeProbability(sample, sampleDrivers, results);
+
+        // writeSampleData(sample);
+
+        return results;
     }
 
-    private void calculateSampleProbabilities(final SampleData sample)
+    private void addDriverPrevalence(final SampleData sample, final List<SampleDriverData> sampleDrivers, final List<SampleResult> results)
+    {
+        for(final SampleDriverData driverData : sampleDrivers)
+        {
+            final Map<String,Double> cancerTypeValues = Maps.newHashMap();
+
+            for(Map.Entry<String,List<DriverPrevData>> entry : mCancerDriverPrevalence.entrySet())
+            {
+                final String cancerType = entry.getKey();
+
+                final List<DriverPrevData> driverPrevalences = entry.getValue();
+
+                final DriverPrevData driverPrev = driverPrevalences.stream()
+                        .filter(x -> x.isTypeAll())
+                        .filter(x -> x.Gene.equals(driverData.Gene)).findFirst().orElse(null);
+
+                cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.Prevalence : 0);
+            }
+
+            SampleResult result = new SampleResult(sample.Id, DRIVER, "DRIVER", driverData.Gene, cancerTypeValues);
+            results.add(result);
+        }
+    }
+
+    private void calcCancerTypeProbability(
+            final SampleData sample, final List<SampleDriverData> sampleDrivers, final List<SampleResult> results)
+    {
+        // taking the set of drivers as a group, report on the combined probability for each cancer type
+
+        final Map<String, Double> cancerProbTotals = Maps.newHashMap();
+        double allCancerProbTotal = 0;
+
+        for(Map.Entry<String, List<DriverPrevData>> entry : mCancerDriverPrevalence.entrySet())
+        {
+            final String cancerType = entry.getKey();
+            final List<DriverPrevData> driverPrevalences = entry.getValue();
+
+            double probabilityTotal = 1;
+
+            for(final SampleDriverData driverData : sampleDrivers)
+            {
+                final double[] genePrevTotals = mGenePrevalenceTotals.get(driverData.Gene);
+                double minPrevalence = min(MIN_PREV_PERC_OF_MAX * genePrevTotals[MAX_PREV], MIN_PREVALENCE);
+
+                final DriverPrevData driverPrev = driverPrevalences.stream()
+                        .filter(x -> x.isTypeAll())
+                        .filter(x -> x.Gene.equals(driverData.Gene)).findFirst().orElse(null);
+
+                double driverPrevValue = driverPrev != null ? driverPrev.Prevalence : minPrevalence;
+                probabilityTotal *= driverPrevValue / genePrevTotals[POS_PREV];
+            }
+
+            cancerProbTotals.put(cancerType, probabilityTotal);
+            allCancerProbTotal += probabilityTotal;
+        }
+
+        final Map<String,Double> cancerTypeValues = Maps.newHashMap();
+
+        for(Map.Entry<String,Double> entry : cancerProbTotals.entrySet())
+        {
+            double probability = entry.getValue() / allCancerProbTotal;
+            cancerTypeValues.put(entry.getKey(), probability);
+        }
+
+        SampleResult result = new SampleResult(sample.Id, DRIVER, "DRIVER_PREDICTION", "COMBINED", cancerTypeValues);
+        results.add(result);
+    }
+
+    /*
+    private void calculateSampleProbabilitiesOld(final SampleData sample)
     {
         final List<SampleDriverData> sampleDrivers = sample.getDrivers();
 
@@ -132,6 +216,7 @@ public class DriverAnnotation
                 driverCancerProbs.put(entry.getKey(), probability);
         }
     }
+    */
 
     private void loadPrevalenceData(final String filename)
     {
@@ -144,22 +229,30 @@ public class DriverAnnotation
 
             for(final String line : fileData)
             {
-                final DriverPrevData data = DriverPrevData.from(line);
+                final DriverPrevData prevData = DriverPrevData.from(line);
 
-                if(data == null)
+                if(prevData == null)
                     continue;
 
-                List<DriverPrevData> dataList = mCancerDriverPrevalence.get(data.CancerType);
+                double[] genePrevTotals = mGenePrevalenceTotals.get(prevData.Gene);
+
+                if(genePrevTotals == null)
+                {
+                    genePrevTotals = new double[MAX_PREV + 1];
+                    mGenePrevalenceTotals.put(prevData.Gene, genePrevTotals);
+                }
+
+                genePrevTotals[MAX_PREV] = max(genePrevTotals[MAX_PREV], prevData.Prevalence);
+
+                final List<DriverPrevData> dataList = mCancerDriverPrevalence.get(prevData.CancerType);
                 if(dataList == null)
                 {
-                    mCancerDriverPrevalence.put(data.CancerType, Lists.newArrayList(data));
+                    mCancerDriverPrevalence.put(prevData.CancerType, Lists.newArrayList(prevData));
                 }
                 else
                 {
-                    dataList.add(data);
+                    dataList.add(prevData);
                 }
-
-                mGeneList.add(data.Gene);
             }
         }
         catch (IOException e)
@@ -179,16 +272,19 @@ public class DriverAnnotation
 
             for(final String line : fileData)
             {
-                final SampleDriverData data = SampleDriverData.from(line);
+                final SampleDriverData driverData = SampleDriverData.from(line);
 
-                if(data != null)
+                if(driverData != null)
                 {
-                    SampleData sample = mSampleDataCache.SampleDataList.stream().filter(x -> x.Id.equals(data.SampleId)).findFirst().orElse(null);
+                    List<SampleDriverData> drivers = mSampleDrivers.get(driverData.SampleId);
 
-                    if(sample != null)
+                    if(drivers == null)
                     {
-                        sample.getDrivers().add(data);
-                        mSampleDrivers.add(data);
+                        mSampleDrivers.put(driverData.SampleId, Lists.newArrayList(driverData));
+                    }
+                    else
+                    {
+                        drivers.add(driverData);
                     }
                 }
             }
@@ -199,15 +295,21 @@ public class DriverAnnotation
         }
     }
 
+    private static final double MIN_PREV_PERC_OF_MAX = 0.1;
+    private static final double MIN_PREVALENCE = 0.01;
+
     private void formGenePrevalenceTotals()
     {
-        for(final String gene : mGeneList)
+        for(Map.Entry<String,double[]> geneEntry : mGenePrevalenceTotals.entrySet())
         {
-            double[] genePrevTotals = new double[NEG_PREV+1];
-            mGenePrevalenceTotals.put(gene, genePrevTotals);
-            for(Map.Entry<String,List<DriverPrevData>> entry : mCancerDriverPrevalence.entrySet())
+            final String gene = geneEntry.getKey();
+            final double[] genePrevTotals = geneEntry.getValue();
+
+            double minPrevalence = min(MIN_PREV_PERC_OF_MAX * genePrevTotals[MAX_PREV], MIN_PREVALENCE);
+
+            for(Map.Entry<String,List<DriverPrevData>> cancerEntry : mCancerDriverPrevalence.entrySet())
             {
-                final DriverPrevData driverPrevData = entry.getValue().stream()
+                final DriverPrevData driverPrevData = cancerEntry.getValue().stream()
                         .filter(x -> x.isTypeAll())
                         .filter(x -> x.Gene.equals(gene)).findFirst().orElse(null);
 
@@ -218,8 +320,8 @@ public class DriverAnnotation
                 }
                 else
                 {
-                    genePrevTotals[POS_PREV] += DRIVERS_MIN_PREVALENCE_PERCENT;
-                    genePrevTotals[NEG_PREV] += 1 - DRIVERS_MIN_PREVALENCE_PERCENT;
+                    genePrevTotals[POS_PREV] += minPrevalence;
+                    genePrevTotals[NEG_PREV] += 1 - minPrevalence;
                 }
             }
         }
