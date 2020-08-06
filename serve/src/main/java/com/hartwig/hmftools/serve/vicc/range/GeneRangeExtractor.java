@@ -67,6 +67,8 @@ public class GeneRangeExtractor {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                    //TODO: ignore when evidence non exist on canonical transcript ID
+
                     if (feature.name().contains(",")) {
                         String[] exons = feature.name()
                                 .substring((feature.name().toLowerCase().indexOf("exon")))
@@ -158,6 +160,7 @@ public class GeneRangeExtractor {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                    //TODO: ignore when evidence non exist on canonical transcript ID
                     String geneSymbol = feature.geneSymbol();
                     String proteinAnnotation = feature.proteinAnnotation();
                     int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
