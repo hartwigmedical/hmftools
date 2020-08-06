@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -59,7 +60,15 @@ public class SampleTraits
         for(Map.Entry<SampleTraitType,Map<String,Double>> entry : mRefTraitRates.entrySet())
         {
             final SampleTraitType traitType = entry.getKey();
-            final Map<String,Double> cancerRates = entry.getValue();
+            Map<String,Double> cancerRates = entry.getValue();
+
+            // reverse the prevalence for MALE since gender is currently IsFemale
+            if(traitType == GENDER && sampleTraits.GenderType != Gender.FEMALE)
+            {
+                Map<String, Double> oppGenderRates = Maps.newHashMap();
+                cancerRates.entrySet().forEach(x -> oppGenderRates.put(x.getKey(), 1 - x.getValue()));
+                cancerRates = oppGenderRates;
+            }
 
             SampleResult result = new SampleResult(
                     sample.Id, SAMPLE_TRAIT, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);

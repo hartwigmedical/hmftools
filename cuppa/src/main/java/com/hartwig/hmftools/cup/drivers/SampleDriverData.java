@@ -6,15 +6,15 @@ public class SampleDriverData
 {
     public final String SampleId;
     public final String Gene;
-    public final String DriverType;
+    public final String Type;
 
     public static final String DRIVER_TYPE_ALL = "ALL";
 
-    public SampleDriverData(final String sampleId, final String gene, final String driverType)
+    public SampleDriverData(final String sampleId, final String gene, final String type)
     {
         SampleId = sampleId;
         Gene = gene;
-        DriverType = driverType;
+        Type = type;
     }
 
     public static SampleDriverData from(final String data)
@@ -26,7 +26,7 @@ public class SampleDriverData
         return new SampleDriverData(items[0], items[1], items[2]);
     }
 
-    public boolean isTypeAll() { return DriverType.equals(DRIVER_TYPE_ALL); }
+    public boolean isTypeAll() { return Type.equals(DRIVER_TYPE_ALL); }
 
-    public String toString() { return String.format("sample(%s) gene(%s) type(%s)", SampleId, Gene, DriverType); }
+    public String toString() { return String.format("sample(%s) gene(%s) type(%s)", SampleId, Gene, Type); }
 }

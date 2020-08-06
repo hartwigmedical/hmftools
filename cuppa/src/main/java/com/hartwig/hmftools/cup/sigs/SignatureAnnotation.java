@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
@@ -205,7 +206,14 @@ public class SignatureAnnotation
             // writeSampleCssPairData(mSampleIds.get(s1), mSampleIds.get(s2), css, mSampleTotals[s1], mSampleTotals[s2]);
         }
 
-        results.add(new SampleResult(sample.Id, SNV, "CSS", 0, cancerCssTotals));
+        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
+
+        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        {
+            cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
+        }
+
+        results.add(new SampleResult(sample.Id, CLASSIFIER, "CSS", 0, cancerCssTotals));
     }
 
     private void addSigContributionResults(final SampleData sample, int sampleCountsIndex, final List<SampleResult> results)
@@ -244,11 +252,6 @@ public class SignatureAnnotation
                 results.add(new SampleResult(sample.Id, SNV_SIG, sigName.toUpperCase(), round(sampleSigContrib), cancerResults));
             }
         }
-    }
-
-    private String formatSigContribResult(double contrib)
-    {
-        return String.format("%.1f", contrib);
     }
 
     public String getHeader()

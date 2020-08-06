@@ -7,5 +7,5 @@ public enum CategoryType
     SV,
     SAMPLE_TRAIT,
     DRIVER,
-    FUSION
+    CLASSIFIER
 }

@@ -7,14 +7,14 @@ public class DriverPrevData
 {
     public final String CancerType;
     public final String Gene;
-    public final String DriverType;
+    public final String Type;
     public final double Prevalence;
 
-    public DriverPrevData(final String cancerType, final String gene, final String driverType, final double prevalence)
+    public DriverPrevData(final String cancerType, final String gene, final String type, final double prevalence)
     {
         CancerType = cancerType;
         Gene = gene;
-        DriverType = driverType;
+        Type = type;
         Prevalence = prevalence;
     }
 
@@ -27,8 +27,8 @@ public class DriverPrevData
         return new DriverPrevData(items[0], items[1], items[2], Double.parseDouble(items[3]));
     }
 
-    public boolean isTypeAll() { return DriverType.equals(DRIVER_TYPE_ALL); }
+    public boolean isTypeAll() { return true; } // Type.equals(DRIVER_TYPE_ALL); }
 
-    public String toString() { return String.format("ct(%s) gene(%s) type(%s) prev(%.4f)", CancerType, Gene, DriverType, Prevalence); }
+    public String toString() { return String.format("ct(%s) gene(%s) type(%s) prev(%.4f)", CancerType, Gene, Type, Prevalence); }
 
 }
