@@ -1,16 +1,16 @@
 # GRIDSS Post Somatic Script (GRIPSS)
 
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
-GRIPSS inputs the raw GRIDSS vcf and outputs a somatic vcf.
+GRIPSS inputs the GRIDSS vcf (with repeat masker and viral annotations) and outputs a somatic vcf.
 
 # Usage
 
 ```
 java -Xms4G -Xmx16G -cp com.hartwig.hmftools.gripss.GripssApplicationKt \
-   -ref_genome /path/to/Homo_sapiens_assembly37.fasta \
+   -ref_genome /path/to/Homo_sapiens_assembly.fasta \
    -breakend_pon /path/to/gridss_pon_single_breakend.bed \
    -breakpoint_pon /path/to/gridss_pon_breakpoint.bedpe \
-   -breakpoint_hotspot /path/to/KnownFusionPairs.hg19.bedpe \
+   -breakpoint_hotspot /path/to/KnownFusionPairs.bedpe \
    -input_vcf /path/to/SAMPLE.gridss.unfiltered.vcf.gz \
    -output_vcf /path/to/SAMPLE.gridss.somatic.vcf.gz 
 ```
@@ -23,7 +23,7 @@ gunzip -c SAMPLE.gridss.somatic.vcf.gz | awk '$7 == "PASS" || $7 == "PON" || $1 
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
-The GRCH 37 bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/).
+The bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/) for both GRCH 37 and 38.
 
 ## Optional Arguments
 
@@ -64,7 +64,7 @@ Filter | Default | Description / purpose
 ---|---|---
 minQual | 400 (single breakend:1000) | Minimum absolute tumor support for variant
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
-maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor.
+maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor. This filter is ignored for single breakends with viral sequence alignments
 minTumorAF | 0.005 | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
 discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
@@ -129,6 +129,7 @@ Note that for DSB and hotspot rescue, neither the rescued variant nor the rescui
 ## Version History and Download Links
 - Upcoming
   - Hotspots cannot recover HardMinQualFiltered variants
+  - Ignore maxNormalRelativeSupport filter for single breakends with viral sequence alignments
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.1)
   - Added HardMinTumorQual [100] filter
   - Added HardMaxNormalAbsoluteSupport [3] filter 

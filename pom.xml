@@ -72,7 +72,7 @@
         <health-checker.version>3.1</health-checker.version>
         <patient-reporter.version>7.13</patient-reporter.version>
         <patient-db.version>3.44</patient-db.version>
-        <gripss.version>1.1</gripss.version>
+        <gripss.version>1.2</gripss.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
         <iclusion-importer.version>1.1</iclusion-importer.version>
