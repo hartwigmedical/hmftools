@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss
 
+import com.hartwig.hmftools.extensions.hasViralSequenceAlignment
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.addGenotypeAttribute
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.fragmentSupport
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.setAttribute
@@ -14,6 +15,23 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 class StructuralVariantContextTest {
+
+    @Test
+    fun testHasViralSequenceAlignment() {
+        assertTrue(sgl().setViralSequenceAlignment().hasViralSequenceAlignment())
+
+        assertTrue(sgl().bealn("NC_001526:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertFalse(sgl().bealn("1:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertFalse(sgl().bealn("chr1:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertFalse(sgl().bealn("22:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertFalse(sgl().bealn("chr22:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertTrue(sgl().bealn("23:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertTrue(sgl().bealn("chr23:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertFalse(sgl().bealn("X:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertFalse(sgl().bealn("chrX:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertFalse(sgl().bealn("Y:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertFalse(sgl().bealn("chrY:5225|+|10S415M|60").hasViralSequenceAlignment())
+    }
 
     @Test
     fun testBreakendAssemblyReadPair() {
@@ -39,6 +57,11 @@ class StructuralVariantContextTest {
     @Test
     fun testNormalSupportRelativeFilter() {
         assertTrue(sgl().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
+        assertFalse(sgl().setViralSequenceAlignment().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
+
+        assertTrue(bnd().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
+        assertTrue(bnd().setViralSequenceAlignment().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
+
         assertFalse(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.03))
         assertTrue(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.0299))
     }
@@ -243,4 +266,13 @@ class StructuralVariantContextTest {
     private fun VariantContext.qual(qual: Int): VariantContext {
         return this.addGenotypeAttribute("QUAL", 0.0, qual.toDouble()).addGenotypeAttribute("BQ", 0.0, qual.toDouble())
     }
+
+    private fun VariantContext.setViralSequenceAlignment(): VariantContext {
+        return bealn("NC_001526:5225|+|10S415M|60")
+    }
+
+    private fun VariantContext.bealn(bealn: String): VariantContext {
+        return this.setAttribute("BEALN", bealn)
+    }
+
 }

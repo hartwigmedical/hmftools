@@ -1,16 +1,16 @@
 # GRIDSS Post Somatic Script (GRIPSS)
 
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
-GRIPSS inputs the raw GRIDSS vcf and outputs a somatic vcf.
+GRIPSS inputs the GRIDSS vcf (with repeat masker and viral annotations) and outputs a somatic vcf.
 
 # Usage
 
 ```
 java -Xms4G -Xmx16G -cp com.hartwig.hmftools.gripss.GripssApplicationKt \
-   -ref_genome /path/to/Homo_sapiens_assembly37.fasta \
+   -ref_genome /path/to/Homo_sapiens_assembly.fasta \
    -breakend_pon /path/to/gridss_pon_single_breakend.bed \
    -breakpoint_pon /path/to/gridss_pon_breakpoint.bedpe \
-   -breakpoint_hotspot /path/to/KnownFusionPairs.hg19.bedpe \
+   -breakpoint_hotspot /path/to/KnownFusionPairs.bedpe \
    -input_vcf /path/to/SAMPLE.gridss.unfiltered.vcf.gz \
    -output_vcf /path/to/SAMPLE.gridss.somatic.vcf.gz 
 ```
@@ -23,7 +23,7 @@ gunzip -c SAMPLE.gridss.somatic.vcf.gz | awk '$7 == "PASS" || $7 == "PON" || $1 
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
-The GRCH 37 bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/).
+The bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/) for both GRCH 37 and 38.
 
 ## Optional Arguments
 
@@ -129,6 +129,7 @@ Note that for DSB and hotspot rescue, neither the rescued variant nor the rescui
 ## Version History and Download Links
 - Upcoming
   - Hotspots cannot recover HardMinQualFiltered variants
+  - Ignore maxNormalRelativeSupport filter for single breakends with viral sequence alignments
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.1)
   - Added HardMinTumorQual [100] filter
   - Added HardMaxNormalAbsoluteSupport [3] filter 

@@ -362,6 +362,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun normalSupportRelativeFilter(maxNormalRelativeSupport: Double): Boolean {
+        if (isSingle && context.hasViralSequenceAlignment()) {
+            return false
+        }
+
         val normalSupport = normalGenotype.fragmentSupport(isSingle)
         val tumorSupport = tumorGenotype.fragmentSupport(isSingle)
 

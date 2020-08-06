@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.extensions
 
 import com.hartwig.hmftools.bedpe.Breakend
+import com.hartwig.hmftools.gripss.ContigComparator
 import com.hartwig.hmftools.gripss.VariantType
 import htsjdk.variant.variantcontext.VariantContext
 import org.apache.logging.log4j.util.Strings
@@ -72,6 +73,11 @@ fun VariantContext.mate(): String? {
     }
 
     return null
+}
+
+fun VariantContext.hasViralSequenceAlignment(): Boolean {
+    val potentialAlignments = potentialAlignmentLocations();
+    return potentialAlignments.isNotEmpty() && !ContigComparator.defaultContigs.contains(potentialAlignments[0].contig.replace("chr", ""))
 }
 
 fun VariantContext.potentialAlignmentLocations(): List<Breakend> {
