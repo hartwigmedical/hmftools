@@ -167,7 +167,7 @@ class VariantEnricher
 
     private void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
     {
-        final SomaticVariantFactory variantFactory = SomaticVariantFactory.unfilteredInstance();
+        final SomaticVariantFactory variantFactory = new SomaticVariantFactory();
 
         for (final BachelorGermlineVariant bachRecord : bachRecords)
         {

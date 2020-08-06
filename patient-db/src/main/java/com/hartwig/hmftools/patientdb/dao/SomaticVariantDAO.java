@@ -94,7 +94,6 @@ class SomaticVariantDAO {
                     .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
                     .variantCopyNumber(record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER))
                     .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
-                    .highConfidenceRegion(byteToBoolean(record.getValue(SOMATICVARIANT.HIGHCONFIDENCE)))
                     .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
                     .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
                     .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
@@ -110,6 +109,9 @@ class SomaticVariantDAO {
                     .referenceDepth(referenceAllelicDepth)
                     .rnaDepth(rnaAllelicDepth)
                     .qual(record.get(SOMATICVARIANT.QUAL))
+                    .localPhaseSet(record.get(SOMATICVARIANT.LOCALPHASESET))
+                    .localRealignmentSet(record.get(SOMATICVARIANT.LOCALREALIGNMENTSET))
+                    .phasedInframeIndelIdentifier(record.get(SOMATICVARIANT.PHASEDINFRAMEINDEL))
                     .build());
         }
         return variants;
@@ -157,7 +159,6 @@ class SomaticVariantDAO {
                 SOMATICVARIANT.COPYNUMBER,
                 SOMATICVARIANT.ADJUSTEDVAF,
                 SOMATICVARIANT.VARIANTCOPYNUMBER,
-                SOMATICVARIANT.HIGHCONFIDENCE,
                 SOMATICVARIANT.TRINUCLEOTIDECONTEXT,
                 SOMATICVARIANT.MICROHOMOLOGY,
                 SOMATICVARIANT.REPEATSEQUENCE,
@@ -176,6 +177,9 @@ class SomaticVariantDAO {
                 SOMATICVARIANT.RNAALLELEREADCOUNT,
                 SOMATICVARIANT.RNATOTALREADCOUNT,
                 SOMATICVARIANT.QUAL,
+                SOMATICVARIANT.LOCALPHASESET,
+                SOMATICVARIANT.LOCALREALIGNMENTSET,
+                SOMATICVARIANT.PHASEDINFRAMEINDEL,
                 SOMATICVARIANT.MODIFIED);
         variants.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
         inserter.execute();
@@ -206,7 +210,6 @@ class SomaticVariantDAO {
                 DatabaseUtil.decimal(variant.adjustedCopyNumber()),
                 DatabaseUtil.decimal(variant.adjustedVAF()),
                 DatabaseUtil.decimal(variant.variantCopyNumber()),
-                variant.highConfidenceRegion(),
                 variant.trinucleotideContext(),
                 variant.microhomology(),
                 variant.repeatSequence(),
@@ -225,6 +228,9 @@ class SomaticVariantDAO {
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 variant.qual(),
+                variant.localPhaseSet(),
+                variant.localRealignmentSet(),
+                variant.phasedInframeIndelIdentifier(),
                 timestamp);
     }
 

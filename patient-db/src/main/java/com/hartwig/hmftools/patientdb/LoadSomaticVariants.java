@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantStreamWriter;
@@ -26,6 +24,8 @@ public class LoadSomaticVariants {
     private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
 
     private static final String SAMPLE = "sample";
+    private static final String REFERENCE = "reference";
+    private static final String RNA = "rna";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String HOTSPOT_TSV = "hotspot_tsv";
@@ -43,6 +43,8 @@ public class LoadSomaticVariants {
         CommandLine cmd = createCommandLine(args, options);
         String vcfFileLocation = cmd.getOptionValue(SOMATIC_VCF);
         String sample = cmd.getOptionValue(SAMPLE);
+        String referenceSample = cmd.getOptionValue(REFERENCE, null);
+        String rnaSample = cmd.getOptionValue(RNA, null);
         DatabaseAccess dbAccess = databaseAccess(cmd);
         CompoundFilter filter = new CompoundFilter(true);
         if (cmd.hasOption(PASS_FILTER)) {
@@ -52,17 +54,10 @@ public class LoadSomaticVariants {
             filter.add(new SomaticFilter());
         }
 
-        CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
-        if (cmd.hasOption(HOTSPOT_TSV)) {
-            String hotspotFile = cmd.getOptionValue(HOTSPOT_TSV);
-            LOGGER.info("Reading hotspot file: {}", hotspotFile);
-            compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(hotspotFile));
-        }
-
         LOGGER.info("Removing old data of sample {}", sample);
         try (SomaticVariantStreamWriter somaticWriter = dbAccess.somaticVariantWriter(sample)) {
             LOGGER.info("Streaming data from {} to db", vcfFileLocation);
-            SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation, somaticWriter);
+            new SomaticVariantFactory(filter).fromVCFFile(sample, referenceSample, rnaSample, vcfFileLocation, somaticWriter);
         }
 
         LOGGER.info("Complete");
@@ -71,15 +66,18 @@ public class LoadSomaticVariants {
     @NotNull
     private static Options createBasicOptions() {
         Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample.");
+        options.addOption(SAMPLE, true, "Name of the tumor sample.");
+        options.addOption(REFERENCE, true, "Optional name of the reference sample. ");
+        options.addOption(RNA, true, "Optional name of the rna sample.");
+
         options.addOption(SOMATIC_VCF, true, "Path to the somatic SNV/indel vcf file.");
-        options.addOption(HOTSPOT_TSV, true, "Location of hotspot tsv file");
-        options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file.");
         options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
         options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(HOTSPOT_TSV, true, "Deprecated.");
+        options.addOption(HIGH_CONFIDENCE_BED, true, "Deprecated.");
 
         return options;
     }

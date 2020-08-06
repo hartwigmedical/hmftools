@@ -42,7 +42,7 @@ There are 5 steps in GRIPSS described in detail below:
 
 ## 1. Hard filters
 
-Two hard filters are applied upfront before other processing occurs:
+Three hard filters are applied upfront before other processing occurs:
 * NO_MATE - Any non single breakend with no mate is filtered
 * MINIMUM_TUMOR_QUAL - Any variant with QUAL < 100 is filtered
 * MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3 reads OR normalSupport > 6% * tumorSupport is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
@@ -127,6 +127,8 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- Upcoming
+  - Hotspots cannot recover HardMinQualFiltered variants
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.1)
   - Added HardMinTumorQual [100] filter
   - Added HardMaxNormalAbsoluteSupport [3] filter 

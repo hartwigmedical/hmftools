@@ -10,6 +10,8 @@ import htsjdk.variant.variantcontext.VariantContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class StructuralVariantContextTest {
 
@@ -47,6 +49,54 @@ class StructuralVariantContextTest {
         assertFalse(sgl().fragmentSupport(3, 0).toSv().normalSupportAbsoluteFilter(3))
         assertTrue(sgl().fragmentSupport(3, 0).toSv().normalSupportAbsoluteFilter(2))
     }
+
+    @Test
+    fun testTumorQualFilter() {
+        val sgl = sgl().qual(200).toSv()
+        assertFalse(sgl.tumorQualFilter(200))
+        assertTrue(sgl.tumorQualFilter(201))
+    }
+
+
+    @Test
+    fun testHardMinQualFilterIsNotRecoveredByHotspot() {
+        val config = GripssFilterConfig.default()
+        val sgl = sgl().qual(config.hardMinTumorQual - 1).toSv()
+        assertTrue(sgl.tumorQualFilter(config.hardMinTumorQual))
+        assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
+        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
+        assertTrue(sgl.isHardFilter(config, true))
+        assertTrue(sgl.isHardFilter(config, false))
+    }
+
+    @Test
+    fun testHardMaxNormalAbsoluteSupportIsRecoveredByHotspot() {
+        val config = GripssFilterConfig.default()
+        val normalSupport =  config.hardMaxNormalAbsoluteSupport + 1
+        val tumorSupport = ceil(normalSupport / config.hardMaxNormalRelativeSupport).toInt()
+        val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
+        assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
+        assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
+        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
+
+        assertFalse(sgl.isHardFilter(config, true))
+        assertTrue(sgl.isHardFilter(config, false))
+    }
+
+    @Test
+    fun testHardMaxRelativeAbsoluteSupportIsRecoveredByHotspot() {
+        val config = GripssFilterConfig.default()
+        val normalSupport =  config.hardMaxNormalAbsoluteSupport - 1
+        val tumorSupport = floor(normalSupport / config.hardMaxNormalRelativeSupport).toInt()
+        val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
+        assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
+        assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
+        assertTrue(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
+
+        assertFalse(sgl.isHardFilter(config, true))
+        assertTrue(sgl.isHardFilter(config, false))
+    }
+
 
     @Test
     fun testQualFilter() {
@@ -185,10 +235,8 @@ class StructuralVariantContextTest {
     }
 
     private fun createVariant(pos: Int, ref: String, alt: String): VariantContext {
-        val line = "1\t${pos}\tid1\t${ref}\t${alt}\t100\tPASS\tinfo\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1"
+        val line = "1\t${pos}\tid1\t${ref}\t${alt}\t100\tPASS\tinfo\tGT:BVF:VF:REF:REFPAIR\t./.:0:0:1:1\t./.:10:10:1:1"
         val result = VariantContextTestFactory.decode(line)
-
-
         return result;
     }
 

@@ -930,7 +930,7 @@ Rscript copyNumberPlots.R COLO829T ~/hmf/COLO829T/purple ~/hmf/COLO829T/purple/p
 ``` 
 
 The following 'sunrise' chart shows the range of scores of all examined solutions of purity and ploidy. 
-Crosshairs identify the best purity / ploidy solution. 
+Crosshairs identify the best purity / ploidy solution. Other viable solutions are shown in blue.
 
 <p align="center">
     <img src="src/main/resources/readme/COLO829T.purity.range.png" width="500" alt="Purity Range">
@@ -994,6 +994,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Sunrise plot shows relative score
+  - Minor cosmetic changes to plots
 - [2.44](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.44) 
   - Requires [database patch](../patient-db/src/main/resources/patches/purple2.43_to_2.44_migration.sql). Note that there are corresponding patches for [Linx](../patient-db/src/main/resources/patches/linx_1.10.sql) and [PatientDb](../patient-db/src/main/resources/patches/patientdb3.43_to_3.44_migration.sql).
   - Use non diplod-normalised normal ratio for input circos figure
