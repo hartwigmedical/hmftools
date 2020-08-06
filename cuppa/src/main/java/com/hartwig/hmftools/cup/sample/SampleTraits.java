@@ -107,7 +107,7 @@ public class SampleTraits
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read driver prevalence data file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to read sample traits data file({}): {}", filename, e.toString());
         }
     }
 

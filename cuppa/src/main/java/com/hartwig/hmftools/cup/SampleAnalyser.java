@@ -19,6 +19,7 @@ import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.drivers.DriverAnnotation;
 import com.hartwig.hmftools.cup.sample.SampleTraits;
 import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
+import com.hartwig.hmftools.cup.svs.SvAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -38,6 +39,7 @@ public class SampleAnalyser
     private final DriverAnnotation mDrivers;
     private final SignatureAnnotation mSnvSignatures;
     private final SampleTraits mSampleTraits;
+    private final SvAnnotation mSvAnnotation;
 
     private BufferedWriter mSampleDataWriter;
 
@@ -52,6 +54,7 @@ public class SampleAnalyser
         mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataCache);
         mDrivers = new DriverAnnotation(mConfig, mSampleDataCache);
         mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
+        mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
 
         mSampleDataWriter = null;
     }
@@ -120,6 +123,9 @@ public class SampleAnalyser
 
         final List<SampleResult> snvResults = mSnvSignatures.processSample(sampleData);
         writeSampleData(sampleData, snvResults);
+
+        final List<SampleResult> svResults = mSvAnnotation.processSample(sampleData);
+        writeSampleData(sampleData, svResults);
 
         // mSnvSignatures.processSample(specificSample);
         // mDrivers.processSample(specificSample);

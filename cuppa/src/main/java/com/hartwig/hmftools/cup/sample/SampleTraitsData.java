@@ -66,6 +66,5 @@ public class SampleTraitsData
                 Double.parseDouble(items[fieldsIndexMap.get("Ploidy")]),
                 Integer.parseInt(items[fieldsIndexMap.get("SnvCount")]),
                 Double.parseDouble(items[fieldsIndexMap.get("MsIndelsPerMb")]));
-
     }
 }
