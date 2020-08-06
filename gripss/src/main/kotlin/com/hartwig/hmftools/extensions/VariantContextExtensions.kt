@@ -10,6 +10,9 @@ import kotlin.math.max
 
 const val CIPOS = "CIPOS"
 const val CIRPOS = "CIRPOS"
+const val BEALN = "BEALN"
+const val REPEAT_MASKER_REPEAT_CLASS = "INSRMRC"
+const val REPEAT_MASKER_REPEAT_TYPE = "INSRMRT"
 
 fun VariantContext.breakendAssemblyReadPairs(): Int {
     return this.getAttributeAsInt("BASRP", 0)
@@ -81,8 +84,8 @@ fun VariantContext.hasViralSequenceAlignment(): Boolean {
 }
 
 fun VariantContext.potentialAlignmentLocations(): List<Breakend> {
-    if (this.hasAttribute("BEALN")) {
-        return this.getAttributeAsStringList("BEALN", "").map { Breakend.fromBealn(it) }
+    if (this.hasAttribute(BEALN)) {
+        return this.getAttributeAsStringList(BEALN, "").map { Breakend.fromBealn(it) }
     }
 
     return listOf()

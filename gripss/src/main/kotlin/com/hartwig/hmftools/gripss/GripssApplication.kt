@@ -3,6 +3,9 @@ package com.hartwig.hmftools.gripss
 import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.common.utils.version.VersionInfo
+import com.hartwig.hmftools.extensions.BEALN
+import com.hartwig.hmftools.extensions.REPEAT_MASKER_REPEAT_CLASS
+import com.hartwig.hmftools.extensions.REPEAT_MASKER_REPEAT_TYPE
 import com.hartwig.hmftools.gripss.GripssApplication.Companion.logger
 import com.hartwig.hmftools.gripss.dedup.DedupPair
 import com.hartwig.hmftools.gripss.dedup.DedupSingle
@@ -17,6 +20,7 @@ import com.hartwig.hmftools.gripss.store.VariantStore
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContextComparator
 import htsjdk.variant.vcf.VCFFileReader
+import htsjdk.variant.vcf.VCFHeader
 import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.File
@@ -58,11 +62,18 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val fileWriter = GripssVCF(config.outputVcf, dictionary)
     private val refGenome = IndexedFastaSequenceFile(File(config.refGenome))
 
+
+
     override fun run() {
+        val inputHeader = fileReader.fileHeader!!
+        assertInfoLine(inputHeader, BEALN)
+        assertInfoLine(inputHeader, REPEAT_MASKER_REPEAT_CLASS)
+        assertInfoLine(inputHeader, REPEAT_MASKER_REPEAT_TYPE)
+
         logger.info("Config ${config.filterConfig}")
         val contigComparator = ContigComparator(dictionary)
 
-        val sampleNames =  fileReader.fileHeader!!.genotypeSamples!!
+        val sampleNames =  inputHeader.genotypeSamples!!
         val sampleOrdinals = sampleOrdinals(sampleNames);
         logger.info("Using ${sampleNames[sampleOrdinals.first]} as reference, ${sampleNames[sampleOrdinals.second]} as tumor")
 
@@ -179,6 +190,11 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         return structuralVariants.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }.sortedWith(comparator)
     }
 
+    private fun assertInfoLine(header: VCFHeader, tag: String) {
+        if (!header.hasInfoLine(tag)) {
+            throw IllegalArgumentException("Supplied VCF must be enriched with $tag annotation")
+        }
+    }
 
     override fun close() {
         refGenome.close()
