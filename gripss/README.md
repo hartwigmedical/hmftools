@@ -1,7 +1,9 @@
 # GRIDSS Post Somatic Script (GRIPSS)
 
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
-GRIPSS inputs the GRIDSS vcf (with repeat masker and viral annotations) and outputs a somatic vcf.
+GRIPSS processes the GRIDSS output and produces a somatic vcf.
+
+We highly recommend running the repeat masker and viral annotations on the GRIDSS output before running GRIPSS as they are used in the filtering.
 
 # Usage
 
