@@ -174,9 +174,6 @@ public class DoubleMinuteFinder
                 int maxIndex = dmChain.getLinkedPairs().stream().mapToInt(x -> x.getLinkIndex()).max().orElse(0);
                 dmChain.closeChain(LR_METHOD_DM_CLOSE, maxIndex + 1);
             }
-
-            // all DMs, even if partial or not fully closed will be marked for the visualiser
-            dmChain.setDoubleMinute(true);
         }
 
         boolean fullyChained = !dmChains.isEmpty();
@@ -233,6 +230,9 @@ public class DoubleMinuteFinder
                         cluster.addChain(dmChain, false);
                     }
                 }
+
+                // all DMs, even if partial or not fully closed will be marked for the visualiser
+                dmChain.setDoubleMinute(true);
             }
 
             // only resolve clusters of size 1 and 2 as DMs, otherwise just annotate the cluster as containing or being a DM
