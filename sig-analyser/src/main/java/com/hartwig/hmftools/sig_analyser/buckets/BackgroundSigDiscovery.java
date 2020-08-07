@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.SigAnalyser.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DEFAULT_SIG_RATIO_RANGE_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SIG_SIMILAR_CSS;
@@ -37,7 +38,7 @@ public class BackgroundSigDiscovery
 {
     private final BaConfig mConfig;
     private final List<SampleData> mSampleData;
-    private final HashMap<String, List<Integer>> mCancerSamplesMap;
+    private final Map<String,List<Integer>> mCancerSamplesMap;
 
     private Map<String,BucketGroup> mCancerBucketGroups;
     private Map<String,Double> mCancerMutLoadThresholds;
@@ -49,8 +50,6 @@ public class BackgroundSigDiscovery
     private int mNextBucketId;
 
     private static final String BACKGROUND_SIG_TAG = "background";
-
-    private static final Logger LOGGER = LogManager.getLogger(BackgroundSigDiscovery.class);
 
     public BackgroundSigDiscovery(
             final BaConfig config, final List<SampleData> sampleData, final HashMap<String, List<Integer>> cancerSamplesMap,
@@ -179,7 +178,7 @@ public class BackgroundSigDiscovery
             List<Integer> sortedRatioIndices = getSortedVectorIndices(ctSampleTotals, true);
             mutLoadThreshold = ctSampleTotals[sortedRatioIndices.get(4)];
 
-            LOGGER.info("cancerType({}) using higher ML threshold({}) with only {} samples",
+            SIG_LOGGER.info("cancerType({}) using higher ML threshold({}) with only {} samples",
                     cancerType, String.format("%.0f", mutLoadThreshold), samplesIncluded);
         }
 
@@ -199,6 +198,10 @@ public class BackgroundSigDiscovery
             SampleData sample = mSampleData.get(sampleId);
 
             double sampleTotal = sample.getTotalCount();
+
+            if(sampleTotal == 0)
+                continue;
+
             double[] bucketCounts = sample.getBucketCounts();
 
             if (sampleTotal > mutLoadThreshold)
@@ -322,7 +325,7 @@ public class BackgroundSigDiscovery
 
             if(!bucketGroup.isValid())
             {
-                LOGGER.warn("bg({}) has invalid ratios");
+                SIG_LOGGER.warn("bg({}) has invalid ratios");
                 continue;
             }
 
@@ -331,7 +334,7 @@ public class BackgroundSigDiscovery
 
             if(mConfig.LogVerbose)
             {
-                LOGGER.debug(String.format("added bg(%d) samples(%d & %d) totals(%d & %d) css(%.4f)",
+                SIG_LOGGER.debug(String.format("added bg(%d) samples(%d & %d) totals(%d & %d) css(%.4f)",
                         bucketGroup.getId(), sample1.Id, bestOtherSample.Id,
                         sample1.getTotalCount(), bestOtherSample.getTotalCount(), maxSampleCss));
             }
@@ -339,7 +342,7 @@ public class BackgroundSigDiscovery
             candidateGroups.add(bucketGroup);
         }
 
-        LOGGER.debug("cancerType({}) created {} candidate bucket groups, maxCss({})",
+        SIG_LOGGER.debug("cancerType({}) created {} candidate bucket groups, maxCss({})",
                 cancerType, candidateGroups.size(), String.format("%.3f", maxAnyCss));
 
         return candidateGroups;
@@ -398,7 +401,7 @@ public class BackgroundSigDiscovery
 
         if(topGroup == null)
         {
-            LOGGER.info("cancerType({}) no top group found", cancerType);
+            SIG_LOGGER.info("cancerType({}) no top group found", cancerType);
             return null;
         }
 
@@ -409,7 +412,7 @@ public class BackgroundSigDiscovery
 
         double ratioChangeCss = calcSharedCSS(initialRatios, topGroup.getBucketRatios());
 
-        LOGGER.info(String.format("cancerType(%s) top group(%d:%s) with allocation(%.0f) ratioChangeCss(%.3f)",
+        SIG_LOGGER.info(String.format("cancerType(%s) top group(%d:%s) with allocation(%.0f) ratioChangeCss(%.3f)",
                 cancerType, topGroup.getId(), topGroup.getTag(), topGroup.getPotentialAllocation(), ratioChangeCss));
 
         return topGroup;
@@ -471,11 +474,12 @@ public class BackgroundSigDiscovery
             // cache allocated background counts
             mBackgroundCounts.setCol(sampleId, allocCounts);
 
-            LOGGER.debug(String.format("sample(%d) added to background group(%d) alloc(%s perc=%.3f of %s)",
-                    sampleId, bucketGroup.getId(), sizeToStr(allocCountTotal), allocPercent, sizeToStr(sample.getTotalCount())));
+            SIG_LOGGER.debug(String.format("sample(%d) %s added to background group(%d) alloc(%s perc=%.3f of %s)",
+                    sampleId, highMutLoadSample ? "high" : "low",
+                    bucketGroup.getId(), sizeToStr(allocCountTotal), allocPercent, sizeToStr(sample.getTotalCount())));
         }
 
-        LOGGER.debug(String.format("cancerType(%s samples=%d) group(%d:%s) low-ML alloc(%s perc=%.3f of %s) all alloc(%s perc=%.3f of %s)",
+        SIG_LOGGER.debug(String.format("cancerType(%s samples=%d) group(%d:%s) low-ML alloc(%s perc=%.3f of %s) all alloc(%s perc=%.3f of %s)",
                 cancerType, sampleIds.size(), bucketGroup.getId(), bucketGroup.getTag(),
                 sizeToStr(lmlGroupAllocTotal), lmlGroupAllocTotal/lmlSampleCountTotal, sizeToStr(lmlSampleCountTotal),
                 sizeToStr(groupAllocTotal), groupAllocTotal/sampleCountTotal, sizeToStr(sampleCountTotal)));
@@ -505,7 +509,7 @@ public class BackgroundSigDiscovery
 
         if (cssResults.isEmpty())
         {
-            LOGGER.debug("no similar proposed sigs from bucket groups");
+            SIG_LOGGER.debug("no similar proposed sigs from bucket groups");
         }
         else
         {
@@ -517,7 +521,7 @@ public class BackgroundSigDiscovery
                 final BucketGroup bg1 = bucketGroups.get(sigId1);
                 final BucketGroup bg2 = bucketGroups.get(sigId2);
 
-                LOGGER.debug(String.format("background sig(%d:%s) matches sig(%d:%s) with css(%.6f)",
+                SIG_LOGGER.debug(String.format("background sig(%d:%s) matches sig(%d:%s) with css(%.6f)",
                         sigId1, bg1.getCancerType(), bg2.getId(), bg2.getCancerType(), css));
             }
         }
@@ -581,7 +585,7 @@ public class BackgroundSigDiscovery
                 else
                     misAllocCancerCounts.put(sample.getCancerType(), count+1);
 
-                LOGGER.info(String.format("sample(%s) own cancerType(%s alloc=%.3f) less than otherCT(%s alloc=%.3f) of total(%s)",
+                SIG_LOGGER.info(String.format("sample(%s) own cancerType(%s alloc=%.3f) less than otherCT(%s alloc=%.3f) of total(%s)",
                         sample.Id, sample.getCancerType(), allocPerc,
                         maxOtherGroup.getCancerType(), maxOtherAlloc/sample.getTotalCount(), sizeToStr(sample.getTotalCount())));
             }
@@ -599,7 +603,7 @@ public class BackgroundSigDiscovery
 
             if(misAllocPerc >= 0.05 && misAllocCount >= 5)
             {
-                LOGGER.info(String.format("mis-allocation cancerType(%s) counts(%s) perc(%.3f of %d)",
+                SIG_LOGGER.info(String.format("mis-allocation cancerType(%s) counts(%s) perc(%.3f of %d)",
                         cancerType, entry.getValue(), misAllocPerc, ctSampleCount));
             }
         }
@@ -618,7 +622,7 @@ public class BackgroundSigDiscovery
 
             if(misAllocPerc >= 0.05 && misAllocCount >= 5)
             {
-                LOGGER.info(String.format("mis-allocation combo(%s) counts(%s) perc(%.3f of %d)",
+                SIG_LOGGER.info(String.format("mis-allocation combo(%s) counts(%s) perc(%.3f of %d)",
                         entry.getKey(), entry.getValue(), misAllocPerc, ctSampleCount));
             }
         }
@@ -648,7 +652,7 @@ public class BackgroundSigDiscovery
                 mSampleBgAllocations.add(sampleId, bgAllocation);
             }
 
-            LOGGER.debug("loaded {} sample calc data fields", dataSet.size());
+            SIG_LOGGER.debug("loaded {} sample calc data fields", dataSet.size());
             mLoadedSampleCalcData = true;
         }
 
@@ -673,7 +677,7 @@ public class BackgroundSigDiscovery
 
     private void assignToBackgroundBucketGroups(final String cancerType, final List<Integer> sampleIds)
     {
-        LOGGER.debug("cancerType({}) creating background groups for {} samples", cancerType, sampleIds.size());
+        SIG_LOGGER.debug("cancerType({}) creating background groups for {} samples", cancerType, sampleIds.size());
 
         final double[] bgBucketRatios = mCancerTypeBucketRatiosMap.get(cancerType);
 
@@ -715,14 +719,14 @@ public class BackgroundSigDiscovery
             double allocPerc = bgAllocTotal / sample.getTotalCount();
             sample.addBucketGroup(bucketGroup, allocPerc);
 
-            LOGGER.debug(String.format("sample(%d) added to background group(%d) alloc(%s perc=%.3f of %s)",
+            SIG_LOGGER.debug(String.format("sample(%d) added to background group(%d) alloc(%s perc=%.3f of %s)",
                     sampleId, bucketGroup.getId(), sizeToStr(bgAllocTotal), allocPerc,
                     sizeToStr(sample.getTotalCount())));
 
             bucketGroup.addSample(sampleId, sampleCounts);
         }
 
-        LOGGER.debug(String.format("background group(%d) samples(%d) totalAlloc(%s)",
+        SIG_LOGGER.debug(String.format("background group(%d) samples(%d) totalAlloc(%s)",
                 bucketGroup.getId(), bucketGroup.getSampleCount(), sizeToStr(bucketGroup.getTotalCount())));
     }
 
@@ -748,7 +752,7 @@ public class BackgroundSigDiscovery
 
             if(sampleIds.size() < 5)
             {
-                LOGGER.info("skipping cancerType({}) with only {} samples", cancerType, sampleIds.size());
+                SIG_LOGGER.info("skipping cancerType({}) with only {} samples", cancerType, sampleIds.size());
 
                 if(mConfig.UseBackgroundCounts)
                     mHasErrors = true;
@@ -780,7 +784,7 @@ public class BackgroundSigDiscovery
                 List<Integer> sortedRatioIndices = getSortedVectorIndices(ctSampleTotals, true);
                 mutLoadThreshold = ctSampleTotals[sortedRatioIndices.get(4)];
 
-                LOGGER.info("cancerType({}) using higher ML threshold({}) with only {} samples", cancerType, String.format("%.0f", mutLoadThreshold));
+                SIG_LOGGER.info("cancerType({}) using higher ML threshold({}) with only {} samples", cancerType, String.format("%.0f", mutLoadThreshold));
             }
 
             samplesIncluded = 0;
@@ -808,7 +812,7 @@ public class BackgroundSigDiscovery
             }
 
             // now convert back to average counts
-            LOGGER.debug("cancerType({}) has {} low mutational load samples", cancerType, samplesIncluded);
+            SIG_LOGGER.debug("cancerType({}) has {} low mutational load samples", cancerType, samplesIncluded);
 
             int medianIndex = samplesIncluded / 2;
 
@@ -842,7 +846,7 @@ public class BackgroundSigDiscovery
         if(!mSampleBgAllocations.isEmpty())
             return;
 
-        LOGGER.debug("calculating sample background counts");
+        SIG_LOGGER.debug("calculating sample background counts");
 
         for(int s = 0; s < mSampleCount; ++s)
         {

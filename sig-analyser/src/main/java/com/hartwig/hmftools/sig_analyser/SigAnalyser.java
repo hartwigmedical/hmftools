@@ -55,7 +55,6 @@ public class SigAnalyser
 
         if(cmd.hasOption(RUN_NMF))
         {
-
             NmfManager nmfManager = new NmfManager();
             nmfManager.initialise(collection, cmd);
             nmfManager.run();

@@ -200,7 +200,8 @@ public class BaReporter
         LOGGER.debug(String.format("overall: samples(%d alloc=%d) groups(%d) counts: total(%s) initial(bg=%s elev=%s) alloc(%s perc=%.3f bg=%.3f elev=%.3f) noise(%s perc=%.3f)",
                 mActiveSampleCount, fullyAllocated, mFinalBucketGroups.size(), sizeToStr(mTotalCount), sizeToStr(initBackgroundCount),
                 sizeToStr(mElevatedCount), sizeToStr(mTotalAllocatedCount), mTotalAllocatedCount/mTotalCount,
-                backgroundAlloc/mTotalCount, elevatedAllocatedCount/mTotalCount, sizeToStr(noiseAllocated), noiseAllocated/mElevatedCount));
+                backgroundAlloc/mTotalCount, elevatedAllocatedCount/mTotalCount,
+                sizeToStr(noiseAllocated), mElevatedCount > 0 ? noiseAllocated/mElevatedCount : 0));
     }
 
     public void postRunAnalysis()

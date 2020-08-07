@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.sig_analyser;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_EXCESS;
+import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_PERC;
+import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_TOTAL;
+import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
+import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -17,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
+import com.hartwig.hmftools.common.sigs.SigUtils;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
@@ -125,21 +132,45 @@ public class SampleFitter
             sampleContribs.setData(sampleFitter.getContributions().getData());
         }
 
+        double totalCounts = 0;
+        double totalAlloc = 0;
+        double totalResiduals = 0;
+        double totalResidualsExcess = 0;
+
         if(LOGGER.isDebugEnabled())
         {
             for(int i = 0; i < sampleCount; ++i)
             {
-                final double[] sampleCounts = sampleCountsMatrix.getCol(0);
+                final double[] sampleCounts = sampleCountsMatrix.getCol(i);
                 final double[] sigAllocs = sampleContribs.getCol(i);
 
                 double sampleTotal = sumVector(sampleCounts);
+
+                if(sampleTotal == 0)
+                    continue;
+
+                final double[] fittedCounts = calculateFittedCounts(signatures, sigAllocs);
+                final double[] residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
+
+                double allocTotal = sumVector(sigAllocs);
+                double allocPerc = allocTotal / sampleTotal;
+
+                LOGGER.debug(String.format("sample(%s) alloc(%s perc=%.3f of total=%s) residuals(%.3f total=%s excess=%s)",
+                        scCollection.getFieldNames().get(i), sizeToStr(allocTotal), allocPerc, sizeToStr(sampleTotal),
+                        residuals[RESIDUAL_PERC], sizeToStr(residuals[RESIDUAL_TOTAL]), sizeToStr(residuals[RESIDUAL_EXCESS])));
+
+                totalCounts +=sampleTotal;
+                totalAlloc += sumVector(sigAllocs);
+                totalResiduals += residuals[RESIDUAL_TOTAL];
+                totalResidualsExcess += residuals[RESIDUAL_EXCESS];
+
                 List<Integer> sortedSigs = getSortedVectorIndices(sigAllocs, false);
                 for (Integer sigIndex : sortedSigs)
                 {
                     double sigAlloc = sigAllocs[sigIndex];
                     double sigPercent = sigAlloc / sampleTotal;
 
-                    LOGGER.debug(String.format("sample(%s) sampleTotal(%.0f) sig(%d) alloc(%.0f perc=%.3f)",
+                    LOGGER.trace(String.format("sample(%s) sampleTotal(%.0f) sig(%d) alloc(%.0f perc=%.3f)",
                             scCollection.getFieldNames().get(i), sampleTotal, sigIndex, sigAlloc, sigPercent));
 
                     if (sigAlloc < 1)
@@ -147,6 +178,10 @@ public class SampleFitter
                 }
             }
         }
+
+        LOGGER.info(String.format("summary: samples(%s) total(%s) alloc(%.3f %s) residuals(%s excess=%s)",
+                sampleCount, sizeToStr(totalCounts), totalAlloc/totalCounts, sizeToStr(totalAlloc),
+                sizeToStr(totalResiduals), sizeToStr(totalResidualsExcess)));
 
         final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
         final String outputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "siga");

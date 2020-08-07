@@ -123,6 +123,10 @@ public class BucketAnalyser
     private BufferedWriter mBgRatioRangeFileWriter;
     private PerformanceCounter mPerfCounter;
 
+    // TEMP: improve sample external data loading
+    private int SAMPLE_ID_COL_INDEX;
+    private int CANCER_TYPE_COL_INDEX;
+
     // config
     private String mOutputDir;
     private String mOutputFileId;
@@ -130,8 +134,6 @@ public class BucketAnalyser
     private int mRunId; // current run iteration
 
     // external data file attributes
-    private static int COL_SAMPLE_ID = 0;
-    private static int COL_CANCER_TYPE = 1;
     private static int CATEGORY_COL_COUNT = 3;
     private static String CATEGORY_CANCER_TYPE = "Cancer";
 
@@ -222,10 +224,22 @@ public class BucketAnalyser
 
         LOGGER.info("bucketCount({}) sampleCount({})", mBucketCount, mSampleCount);
 
+        SAMPLE_ID_COL_INDEX = 0;
+        CANCER_TYPE_COL_INDEX = 1;
+
         if(cmd.hasOption(BA_EXT_SAMPLE_DATA_FILE))
         {
             final String fileName = cmd.getOptionValue(BA_EXT_SAMPLE_DATA_FILE);
             mExtSampleData = GenericDataLoader.loadFile(fileName, GD_TYPE_STRING);
+
+            for(int i = 0; i < mExtSampleData.getFieldNames().size(); ++i)
+            {
+                String field = mExtSampleData.getFieldNames().get(i);
+                if(field.equals("SampleId"))
+                    SAMPLE_ID_COL_INDEX = i;
+                else if(field.equals("CancerType"))
+                    CANCER_TYPE_COL_INDEX = i;
+            }
         }
         else
         {
@@ -266,7 +280,7 @@ public class BucketAnalyser
             final List<String> extSampleData = getSampleExtData(sample.getSampleName());
             if(extSampleData != null)
             {
-                sample.setCancerType(extSampleData.get(COL_CANCER_TYPE));
+                sample.setCancerType(extSampleData.get(CANCER_TYPE_COL_INDEX));
                 sample.setCategoryData(extSampleData);
             }
             else
@@ -3076,7 +3090,7 @@ public class BucketAnalyser
 
         for(final List<String> sampleData : extSampleData)
         {
-            if(sampleData.get(COL_SAMPLE_ID).equals(sampleName))
+            if(sampleData.get(SAMPLE_ID_COL_INDEX).equals(sampleName))
                 return sampleData;
         }
 

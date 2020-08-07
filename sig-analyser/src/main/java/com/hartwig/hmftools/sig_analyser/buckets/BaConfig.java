@@ -97,7 +97,7 @@ public class BaConfig
     private static final  String BA_SPECIFIC_CANCER = "ba_specific_cancer";
 
     public final String MsiFilter;
-    private static final  String BA_MSI_FILTER = "ba_msi_filter";
+    private static final String BA_MSI_FILTER = "ba_msi_filter";
 
     // performance related
     public static final int MAX_CANDIDATE_GROUPS = 1500; // in place for speed and memory considerations

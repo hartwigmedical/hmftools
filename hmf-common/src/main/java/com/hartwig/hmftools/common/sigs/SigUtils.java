@@ -38,20 +38,25 @@ public class SigUtils
 
     public static final int RESIDUAL_TOTAL = 0;
     public static final int RESIDUAL_PERC = 1;
+    public static final int RESIDUAL_EXCESS = 2;
 
-    public static double[] calcResiduals(final double[] transcriptCounts, final double[] fittedCounts, double totalCounts)
+    public static double[] calcResiduals(final double[] counts, final double[] fittedCounts, double totalCounts)
     {
         double residualsTotal = 0;
+        double residualsExcess = 0;
 
-        for(int catId = 0; catId < transcriptCounts.length; ++catId)
+        for(int catId = 0; catId < counts.length; ++catId)
         {
-            residualsTotal += abs(transcriptCounts[catId] - fittedCounts[catId]);
+            double diff = fittedCounts[catId] - counts[catId];
+            residualsTotal += abs(diff);
+
+            if(diff > 0)
+                residualsExcess += diff;
         }
 
         double residualsPerc = residualsTotal / totalCounts;
 
-        return new double[] {residualsTotal, residualsPerc};
-
+        return new double[] {residualsTotal, residualsPerc, residualsExcess};
     }
 
     public static double calcLinearLeastSquares(final double[] params, final double[] data)

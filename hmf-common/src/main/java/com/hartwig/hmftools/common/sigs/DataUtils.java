@@ -158,8 +158,10 @@ public class DataUtils {
 
         double[][] matrixData = matrix.getData();
 
-        for(int i = 0; i < rows; ++i) {
-            for (int j = 0; j < cols; ++j) {
+        for(int i = 0; i < rows; ++i)
+        {
+            for (int j = 0; j < cols; ++j)
+            {
                 matrixData[i][j] = dataSet.get(i).get(j);
             }
         }

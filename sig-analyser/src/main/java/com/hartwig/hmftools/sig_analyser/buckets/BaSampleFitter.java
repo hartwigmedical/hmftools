@@ -64,7 +64,6 @@ public class BaSampleFitter
         double[] noiseCounts = new double[bucketCount];
         double[] allocCounts = new double[bucketCount];
         double[] emptyBucketData = new double[bucketCount];
-        double[] sigContributions = new double[sigCount];
 
         final List<Integer> allBuckets = Lists.newArrayList();
 
@@ -122,7 +121,7 @@ public class BaSampleFitter
             sigContribOptimiser.setSigIds(sigIds);
             // sigContribOptimiser.setLogVerbose(mConfig.logSample(sample.Id));
 
-            LOGGER.debug("sample({}) fitting with {} sigs", sample.Id, sigIds.size());
+            // LOGGER.debug("sample({}) fitting with {} sigs", sample.Id, sigIds.size());
 
             boolean validCalc = sigContribOptimiser.fitToSample();
 
