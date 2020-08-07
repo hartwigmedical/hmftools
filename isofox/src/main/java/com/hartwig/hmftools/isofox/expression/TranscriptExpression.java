@@ -4,8 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_TOTAL;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
@@ -23,6 +21,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
+import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.GeneResult;
@@ -96,12 +95,12 @@ public class TranscriptExpression
         final double[] fittedCounts = calculateFittedCounts(mCurrentExpRatesData.getTranscriptDefinitions(), fitAllocations);
         double fitTotal = sumVector(fitAllocations);
 
-        double[] residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
+        SigResiduals residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
 
         ISF_LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) fitTotal(%.0f) residuals(%.0f perc=%.3f)",
-                geneSummaryData.GeneNames, totalCounts, fitTotal, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
+                geneSummaryData.GeneNames, totalCounts, fitTotal, residuals.Total, residuals.Percent));
 
-        geneSummaryData.setFitResiduals(residuals[RESIDUAL_TOTAL]);
+        geneSummaryData.setFitResiduals(residuals.Total);
 
         final Map<String,Double> transAllocations = geneSummaryData.getFitAllocations();
 

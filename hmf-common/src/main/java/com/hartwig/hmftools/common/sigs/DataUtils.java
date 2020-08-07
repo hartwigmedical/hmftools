@@ -27,31 +27,6 @@ public class DataUtils {
         return dataArray;
     }
 
-    public static double[][] convertArray(final List<List<Double>> dataSet, boolean transpose)
-    {
-        if(dataSet.isEmpty())
-            return null;
-
-        int rowCount = dataSet.size();
-        int colCount = dataSet.get(0).size();
-        double[][] dataArray = !transpose ? new double[rowCount][colCount] : new double[colCount][rowCount];
-
-        for(int i = 0; i < rowCount; ++i)
-        {
-            final List<Double> data = dataSet.get(i);
-
-            for(int j = 0; j < colCount; ++j)
-            {
-                if(!transpose)
-                    dataArray[i][j] = data.get(j);
-                else
-                    dataArray[j][i] = data.get(j);
-            }
-        }
-
-        return dataArray;
-    }
-
     public static double capValue(double value, double minValue, double maxValue)
     {
         return max(min(value, maxValue), minValue);
@@ -222,13 +197,18 @@ public class DataUtils {
         }
     }
 
-    public static double scaleRoundRatio(double value, int roundFactor)
+    public static double round(double value, int roundFactor)
     {
-        int logScale = (int)round(log10(abs(value)));
+        // 1 rounds to 0.1, -1 to 10
+        double roundUnit = pow(10, -roundFactor);
+        return Math.round(value / roundUnit) * roundUnit;
 
-        double roundUnit = pow(10, logScale - roundFactor);
-
-        return round(value/roundUnit) * roundUnit;
+        /*
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+        */
     }
 
 }

@@ -36,7 +36,7 @@ class SignatureDAO
             InsertValuesStep5 inserter = context.insertInto(SIGNATURE,
                     SIGNATURE.SAMPLEID,
                     SIGNATURE.MODIFIED,
-                    (Field<?>) SIGNATURE.SIGNATURE,
+                    SIGNATURE.SIGNATURE_,
                     SIGNATURE.ALLOCATION,
                     SIGNATURE.PERCENT);
 
@@ -51,8 +51,8 @@ class SignatureDAO
         inserter.values(sample,
                 timestamp,
                 sigAllocation.signature(),
-                sigAllocation.allocation(),
-                sigAllocation.percent());
+                DatabaseUtil.decimal(sigAllocation.allocation()),
+                DatabaseUtil.decimal(sigAllocation.percent()));
     }
 
     void deleteSignatureDataForSample(@NotNull String sample)

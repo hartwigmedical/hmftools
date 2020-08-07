@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 
 import java.io.BufferedWriter;
@@ -100,7 +101,7 @@ public class SigSnvLoader
     {
         try
         {
-            BufferedWriter writer = getNewFile(mOutputDir, "sample_counts.csv");
+            BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("BucketName");
 

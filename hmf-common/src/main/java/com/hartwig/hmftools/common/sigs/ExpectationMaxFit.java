@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.sigs;
 
-import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_TOTAL;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
@@ -75,10 +73,10 @@ public class ExpectationMaxFit
             // calculate residuals
             double[] fittedCounts = calculateFittedCounts(transDefinitions, newAllocations);
 
-            double[] residuals = calcResiduals(transCounts, fittedCounts, totalCounts);
+            SigResiduals residuals = calcResiduals(transCounts, fittedCounts, totalCounts);
 
             LOGGER.trace(String.format("totalCount(%.0f) residuals(%.0f perc=%.3f) iteration(%d)",
-                    totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC], iteration));
+                    totalCounts, residuals.Total, residuals.Percent, iteration));
 
             /*
             if(lastResiduals > 0)
@@ -92,9 +90,9 @@ public class ExpectationMaxFit
             }
             */
 
-            lastResiduals = residuals[RESIDUAL_TOTAL];
+            lastResiduals = residuals.Total;
 
-            if(residuals[RESIDUAL_PERC] < RESIDUALS_EXIT_PERC)
+            if(residuals.Percent < RESIDUALS_EXIT_PERC)
                 break;
 
             for(int transId = 0; transId < definitionCount; ++transId)

@@ -1,21 +1,21 @@
 package com.hartwig.hmftools.sig_analyser;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.scaleRoundRatio;
+import static com.hartwig.hmftools.common.sigs.DataUtils.round;
+
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 public class MiscTest
 {
-
-    private static void testRoundFunction()
+    @Test
+    public void testRoundFunction()
     {
-        double value = 0.25214;
-        double result = scaleRoundRatio(value, 1);
-        result = scaleRoundRatio(value, 2);
-        result = scaleRoundRatio(value, 3);
-
-        value = 0.75214; // should scale to be rounded to 0.1
-        result = scaleRoundRatio(value, 1);
-        result = scaleRoundRatio(value, 2);
-
+        double value = 1234.56789;
+        assertEquals(1234.6, round(value, 1), 0.00001);
+        assertEquals(1234.568, round(value, 3), 0.00001);
+        assertEquals(1230, round(value, -1), 0.00001);
+        assertEquals(1000, round(value, -3), 0.00001);
     }
 
 }

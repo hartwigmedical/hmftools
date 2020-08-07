@@ -1,10 +1,7 @@
-package com.hartwig.hmftools.sig_analyser;
+package com.hartwig.hmftools.sig_analyser.fitter;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
-import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_EXCESS;
-import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.common.sigs.SigUtils.RESIDUAL_TOTAL;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
@@ -26,6 +23,7 @@ import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
@@ -149,19 +147,19 @@ public class FitAnalyser
                     continue;
 
                 final double[] fittedCounts = calculateFittedCounts(signatures, sigAllocs);
-                final double[] residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
+                SigResiduals residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
 
                 double allocTotal = sumVector(sigAllocs);
                 double allocPerc = allocTotal / sampleTotal;
 
                 LOGGER.debug(String.format("sample(%s) alloc(%s perc=%.3f of total=%s) residuals(%.3f total=%s excess=%s)",
                         scCollection.getFieldNames().get(i), sizeToStr(allocTotal), allocPerc, sizeToStr(sampleTotal),
-                        residuals[RESIDUAL_PERC], sizeToStr(residuals[RESIDUAL_TOTAL]), sizeToStr(residuals[RESIDUAL_EXCESS])));
+                        residuals.Percent, sizeToStr(residuals.Total), sizeToStr(residuals.Excess)));
 
                 totalCounts +=sampleTotal;
                 totalAlloc += sumVector(sigAllocs);
-                totalResiduals += residuals[RESIDUAL_TOTAL];
-                totalResidualsExcess += residuals[RESIDUAL_EXCESS];
+                totalResiduals += residuals.Total;
+                totalResidualsExcess += residuals.Excess;
 
                 List<Integer> sortedSigs = getSortedVectorIndices(sigAllocs, false);
                 for (Integer sigIndex : sortedSigs)

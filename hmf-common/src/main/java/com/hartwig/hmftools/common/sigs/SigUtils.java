@@ -36,27 +36,21 @@ public class SigUtils
         return fittedCounts;
     }
 
-    public static final int RESIDUAL_TOTAL = 0;
-    public static final int RESIDUAL_PERC = 1;
-    public static final int RESIDUAL_EXCESS = 2;
-
-    public static double[] calcResiduals(final double[] counts, final double[] fittedCounts, double totalCounts)
+    public static SigResiduals calcResiduals(final double[] counts, final double[] fittedCounts, double totalCounts)
     {
-        double residualsTotal = 0;
-        double residualsExcess = 0;
+        SigResiduals residuals = new SigResiduals();
 
         for(int catId = 0; catId < counts.length; ++catId)
         {
             double diff = fittedCounts[catId] - counts[catId];
-            residualsTotal += abs(diff);
+            residuals.Total += abs(diff);
 
             if(diff > 0)
-                residualsExcess += diff;
+                residuals.Excess += diff;
         }
 
-        double residualsPerc = residualsTotal / totalCounts;
-
-        return new double[] {residualsTotal, residualsPerc, residualsExcess};
+        residuals.Percent = residuals.Total / totalCounts;
+        return residuals;
     }
 
     public static double calcLinearLeastSquares(final double[] params, final double[] data)
