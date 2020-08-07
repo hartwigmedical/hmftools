@@ -674,6 +674,18 @@ CREATE TABLE viralInsertion
     INDEX(svId)
 );
 
+DROP TABLE IF EXISTS signature;
+CREATE TABLE signature
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    signature VARCHAR(50) NOT NULL,
+    allocation DOUBLE PRECISION,
+    percent DOUBLE PRECISION,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
 DROP TABLE IF EXISTS canonicalTranscript;
 CREATE TABLE canonicalTranscript
 (   id int NOT NULL AUTO_INCREMENT,

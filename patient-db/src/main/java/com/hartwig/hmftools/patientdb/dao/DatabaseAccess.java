@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
@@ -86,6 +87,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final StructuralVariantFusionDAO structuralVariantFusionDAO;
     @NotNull
+    private final SignatureDAO signatureDAO;
+    @NotNull
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
     private final ChordDAO chordDAO;
@@ -114,6 +117,7 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantDAO = new StructuralVariantDAO(context);
         structuralVariantClusterDAO = new StructuralVariantClusterDAO(context);
         structuralVariantFusionDAO = new StructuralVariantFusionDAO(context);
+        signatureDAO = new SignatureDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
@@ -266,6 +270,10 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantClusterDAO.writeViralInserts(sample, inserts);
     }
 
+    public void writeSignatures(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations) {
+        signatureDAO.write(sample, sigAllocations);
+    }
+
     public void writeGeneCopynumberRegions(@NotNull String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
@@ -372,6 +380,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting structural variants for sample: {}", sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
+
+        LOGGER.info("Deleting signatures for sample: {}", sample);
+        signatureDAO.deleteSignatureDataForSample(sample);
 
         LOGGER.info("Deleting evidence data for sample: {}", sample);
         clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
