@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_CLASS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
@@ -71,7 +72,7 @@ public class SampleTraits
             }
 
             SampleResult result = new SampleResult(
-                    sample.Id, SAMPLE_TRAIT, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
+                    sample.Id, SAMPLE_CLASS, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
 
             results.add(result);
         }

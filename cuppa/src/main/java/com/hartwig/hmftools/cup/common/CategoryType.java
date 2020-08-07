@@ -6,6 +6,7 @@ public enum CategoryType
     SNV_SIG,
     SV,
     SAMPLE_TRAIT,
+    SAMPLE_CLASS,
     DRIVER,
     CLASSIFIER
 }

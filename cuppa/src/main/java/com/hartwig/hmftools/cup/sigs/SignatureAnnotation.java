@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_SIG_MIN_COUNT;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_SIG_MIN_PERCENT;
 import static com.hartwig.hmftools.cup.sigs.RefSignatures.populateRefSigContributions;
 
 import java.io.BufferedWriter;
@@ -71,7 +73,7 @@ public class SignatureAnnotation
         loadRefSampleCounts();
         loadSampleCounts();
         loadSigContributions();
-        initialiseOutputFile();
+        // initialiseOutputFile();
     }
 
     private boolean loadRefSampleCounts()
@@ -156,23 +158,21 @@ public class SignatureAnnotation
             return results;
         }
 
-        addCssResults(sample, sampleCountsIndex, results);
+        final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
+        int snvTotal = (int)sumVector(sampleCounts);
 
-        addSigContributionResults(sample, sampleCountsIndex, results);
+        addCssResults(sample, sampleCounts, results);
+
+        addSigContributionResults(sample, snvTotal, results);
 
         // fitSnvSignatures(sample, sampleCountsIndex);
-
-        writeSampleData(sample);
+        // writeSampleData(sample);
 
         return results;
     }
 
-    private void addCssResults(final SampleData sample, int sampleCountsIndex, final List<SampleResult> results)
+    private void addCssResults(final SampleData sample, final double[] sampleCounts, final List<SampleResult> results)
     {
-        final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
-
-        sample.setSnvCount((int)sumVector(sampleCounts));
-
         int refSampleCount = mRefSampleCounts.Cols;
 
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
@@ -216,7 +216,7 @@ public class SignatureAnnotation
         results.add(new SampleResult(sample.Id, CLASSIFIER, "CSS", 0, cancerCssTotals));
     }
 
-    private void addSigContributionResults(final SampleData sample, int sampleCountsIndex, final List<SampleResult> results)
+    private void addSigContributionResults(final SampleData sample, int snvTotal, final List<SampleResult> results)
     {
         final Map<String,Double> sampleSigContribs = mSampleSigContributions.get(sample.Id);
 
@@ -231,7 +231,7 @@ public class SignatureAnnotation
             final String sigName = entry.getKey();
             double sampleSigContrib = entry.getValue();
 
-            if(sampleSigContrib < 1)
+            if(sampleSigContrib < SNV_SIG_MIN_COUNT || sampleSigContrib < SNV_SIG_MIN_PERCENT * snvTotal)
                 continue;
 
             for(Map.Entry<String,Map<String,double[]>> cancerContribs : mRefCancerSigContribPercentiles.entrySet())
@@ -254,6 +254,25 @@ public class SignatureAnnotation
         }
     }
 
+    private void loadRefSigContribPercentiles()
+    {
+        if(mConfig.RefSigContribData.isEmpty())
+            return;
+
+        populateRefSigContributions(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
+
+        /*
+        // cosmic_sig_subset.csv
+        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(mConfig.RefSigContribData);
+        mSnvSigNames.addAll(sigsCollection.getFieldNames());
+        mSnvSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
+        mLeastSquaresFit = new LeastSquaresFit(mSnvSignatures.Rows, mSnvSignatures.Cols);
+        */
+    }
+
+    public void close() { closeBufferedWriter(mSampleDataWriter); }
+
+    /*
     public String getHeader()
     {
         return "SnvCount,TotalWeightedCss,TopMatchCancerType,TopMatchCancerCss,SigData";
@@ -348,25 +367,7 @@ public class SignatureAnnotation
             CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
         }
     }
-
-    private void loadRefSigContribPercentiles()
-    {
-        if(mConfig.RefSigContribData.isEmpty())
-            return;
-
-        populateRefSigContributions(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
-
-        /*
-        // cosmic_sig_subset.csv
-        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(mConfig.RefSigContribData);
-        mSnvSigNames.addAll(sigsCollection.getFieldNames());
-        mSnvSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
-        mLeastSquaresFit = new LeastSquaresFit(mSnvSignatures.Rows, mSnvSignatures.Cols);
-        */
-    }
-
-    public void close() { closeBufferedWriter(mSampleDataWriter); }
-
+    */
     private void writeSampleCssPairData(final String sampleId1, final String sampleId2, double css, int sampleTotal1, int sampleTotal2)
     {
         try

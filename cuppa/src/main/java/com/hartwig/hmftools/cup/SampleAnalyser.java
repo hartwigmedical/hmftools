@@ -157,24 +157,6 @@ public class SampleAnalyser
         }
     }
 
-    private void writeSampleSummary(final SampleData sampleData)
-    {
-        try
-        {
-            mSampleDataWriter.write(String.format("%s,%s,%s",
-                    sampleData.Id, sampleData.CancerType, sampleData.CancerSubtype));
-
-            mSampleDataWriter.write(String.format(",%s,%s",
-                    mSnvSignatures.getSampleOutput(sampleData), mDrivers.getSampleOutput(sampleData)));
-
-            mSampleDataWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write sample summary: {}", e.toString());
-        }
-    }
-
     public static void main(@NotNull final String[] args) throws ParseException
     {
         Options options = new Options();

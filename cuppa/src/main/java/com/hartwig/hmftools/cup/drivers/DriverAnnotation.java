@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.DRIVER;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
-import static com.hartwig.hmftools.cup.common.CupConstants.DRIVERS_MIN_PREVALENCE_PERCENT;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -61,7 +59,7 @@ public class DriverAnnotation
         loadPrevalenceData(config.RefDriverPrevFile);
         formGenePrevalenceTotals();
         loadSampleDrivers(config.SampleDriversFile);
-        initialiseOutputFile();
+        // initialiseOutputFile();
     }
 
     public void processCohort()
@@ -299,6 +297,8 @@ public class DriverAnnotation
 
     public void close() { closeBufferedWriter(mSampleDataWriter); }
 
+    /*
+
     private void writeSampleData(final SampleData sample)
     {
         if(sample.getDrivers().isEmpty())
@@ -333,69 +333,6 @@ public class DriverAnnotation
         }
     }
 
-/*
+    */
 
-            final String cancerType = entry.getKey();
-
-            if(cancerType.equals(CANCER_TYPE_UNKNOWN))
-                continue;
-
-            final List<DriverPrevalence> driverPrevalences = entry.getValue();
-
-            double probabilityTotal = 1;
-
-            for(String gene : mGeneList)
-            {
-                final double[] genePrevTotals = mGenePrevalenceTotals.get(gene);
-
-                final DriverPrevalence driverPrev = driverPrevalences.stream()
-                        .filter(x -> x.isTypeAll())
-                        .filter(x -> x.Gene.equals(gene)).findFirst().orElse(null);
-
-                double driverPrevValue = driverPrev != null ? driverPrev.Prevalence : DRIVERS_MIN_PREVALENCE_PERCENT;
-
-                if(hasGeneMatch(gene, sampleDrivers))
-                {
-                    probabilityTotal *= driverPrevValue / genePrevTotals[POS_PREV];
-                }
-                else
-                {
-                    probabilityTotal *= (1 - driverPrevValue) / genePrevTotals[NEG_PREV];
-                }
-            }
-
-            final List<String> matchedGenes = Lists.newArrayList();
-
-            for(final DriverPrevalence driverPrev : driverPrevalences)
-            {
-                // for now skip mutation-type prevalence
-                if(!driverPrev.isTypeAll())
-                    continue;
-
-                final double[] genePrevTotals = mGenePrevalenceTotals.get(driverPrev.Gene);
-
-                if(hasGeneMatch(driverPrev.Gene, sampleDrivers))
-                {
-                    matchedGenes.add(driverPrev.Gene);
-                    probabilityTotal *= driverPrev.Prevalence / genePrevTotals[POS_PREV];
-                }
-                else
-                {
-                    probabilityTotal *= (1 - driverPrev.Prevalence) / genePrevTotals[NEG_PREV];
-                }
-            }
-
-            for(final SampleDriverData driverData : sampleDrivers)
-            {
-                if(matchedGenes.contains(driverData.Gene))
-                    continue;
-
-                final double[] genePrevTotals = mGenePrevalenceTotals.get(driverData.Gene);
-
-                probabilityTotal *= DRIVERS_MIN_PREVALENCE_PERCENT / genePrevTotals[POS_PREV];
-            }
-
-            allCancerProbTotal += probabilityTotal;
-            cancerProbTotals.put(cancerType, probabilityTotal);
- */
 }

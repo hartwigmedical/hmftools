@@ -59,9 +59,6 @@ public class SvAnnotation
             final SvDataType svDataType = entry.getKey();
             double svCount = svData.getCount(svDataType);
 
-            if(svCount == 0)
-                continue;
-
             final Map<String,Double> cancerTypeValues = Maps.newHashMap();
 
             for(Map.Entry<String,double[]> cancerPercentiles : entry.getValue().entrySet())
