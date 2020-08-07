@@ -1,7 +1,10 @@
 # GRIDSS Post Somatic Script (GRIPSS)
 
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
-GRIPSS inputs the GRIDSS vcf (with repeat masker and viral annotations) and outputs a somatic vcf.
+GRIPSS processes the GRIDSS output and produces a somatic vcf.
+
+Repeat masker and viral annotations must be included in the GRIDSS output before running GRIPSS. 
+Details on how to include these are available on the GRIDSS readme [here](https://github.com/PapenfussLab/gridss#how-do-i-do-repeatmasker-annotation-of-breakend-sequences) and [here](https://github.com/PapenfussLab/gridss#how-do-i-do-viral-annotation). 
 
 # Usage
 
@@ -127,9 +130,10 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
-- Upcoming
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.2)
   - Hotspots cannot recover HardMinQualFiltered variants
   - Ignore maxNormalRelativeSupport filter for single breakends with viral sequence alignments
+  - BEALN, INSRMRC and INSRMRT are now mandatory requirements
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.1)
   - Added HardMinTumorQual [100] filter
   - Added HardMaxNormalAbsoluteSupport [3] filter 
