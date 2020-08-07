@@ -427,7 +427,8 @@ public class DoubleMinuteData
         Chains.stream().filter(x -> x.isClosedLoop()).forEach(x -> chainIds.add(x.id()));
 
         final List<SvVarData> nonClosedChainSVs = Lists.newArrayList(UnchainedSVs);
-        Chains.stream().filter(x -> !x.isClosedLoop()).forEach(x -> nonClosedChainSVs.addAll(x.getSvList()));
+        final List<SvChain> openChains = Chains.stream().filter(x -> !x.isClosedLoop()).collect(Collectors.toList());
+        openChains.forEach(x -> nonClosedChainSVs.addAll(x.getSvList()));
 
         long nonClosedSegmentLength = Chains.stream().filter(x -> !x.isClosedLoop()).mapToLong(x -> x.getLength(false)).sum();
 
@@ -494,6 +495,7 @@ public class DoubleMinuteData
                 else
                 {
                     ValidSVs.addAll(nonClosedChainSVs);
+                    ValidChains.addAll(openChains);
                 }
             }
         }

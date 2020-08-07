@@ -811,15 +811,15 @@ public class ChainFinder
                     chain.closeChain(LR_METHOD_DM_CLOSE, mLinkAllocator.getLinkIndex());
                     LNX_LOGGER.debug("cluster({}) closed DM chain({})", mClusterId, chain.id());
                 }
+            }
 
-                for(SvChain dmChain : dmChains)
+            for(SvChain dmChain : dmChains)
+            {
+                if(identicalChain(chain, dmChain, false, true))
                 {
-                    if(identicalChain(chain, dmChain, false, true))
-                    {
-                        chain.setDoubleMinute(true);
-                        unmatchedDmChains.remove(dmChain);
-                        break;
-                    }
+                    chain.setDoubleMinute(true);
+                    unmatchedDmChains.remove(dmChain);
+                    break;
                 }
             }
         }
