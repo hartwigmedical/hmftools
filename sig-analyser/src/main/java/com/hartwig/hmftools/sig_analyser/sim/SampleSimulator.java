@@ -7,8 +7,10 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandom;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandomLarge;
@@ -31,11 +33,16 @@ import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
-public class SampleSimulator {
-
+public class SampleSimulator
+{
     private static final Logger LOGGER = LogManager.getLogger(SampleSimulator.class);
 
     private SimConfig mConfig;
@@ -44,7 +51,7 @@ public class SampleSimulator {
     private String mOutputFileId;
 
     // file of simulated signature parameters
-    private List<SimSigFactors> mSigFactors;
+    private final List<SimSigFactors> mSigFactors;
 
     // reference signatures used to generate bucket counts
     private SigMatrix mInputSignatures;
@@ -56,8 +63,8 @@ public class SampleSimulator {
     private SigMatrix mOutputContributions;
 
     // random number caches
-    private double[] mPoissonDecimals;
-    private int[] mPoissonInts; // used for signature count distribution around the mean
+    private final double[] mPoissonDecimals;
+    private final int[] mPoissonInts; // used for signature count distribution around the mean
     private int mPoissonIndex;
 
     // measure residuals from rounding the counts from fractions to integers
@@ -66,7 +73,7 @@ public class SampleSimulator {
     private int mGrossCountNoise;
     private int mNetCountNoise;
 
-    Random mRandom;
+    private Random mRandom;
 
     private int POISSON_DIST_SIZE = 1000;
     private int POISSON_LAMBDA = 15; // value around which the distribution is centred
@@ -81,8 +88,8 @@ public class SampleSimulator {
         mRandom = null;
         mOutputMatrix = null;
         mOutputContributions = null;
-        mPoissonDecimals = null;
-        mPoissonInts = null;
+        mPoissonDecimals = new double[POISSON_DIST_SIZE];
+        mPoissonInts = new int[POISSON_DIST_SIZE];
         mPoissonIndex = 0;
         mNetResiduals = 0;
         mGrossResiduals = 0;
@@ -434,9 +441,6 @@ public class SampleSimulator {
     private void generatePoissonDist()
     {
         // generate doubles between 0-1 based on a poisson distribution
-        mPoissonDecimals = new double[POISSON_DIST_SIZE];
-        mPoissonInts = new int[POISSON_DIST_SIZE];
-
         int lambda = POISSON_LAMBDA;
 
         int[] freqCounts = new int[lambda*2+1];
@@ -468,4 +472,24 @@ public class SampleSimulator {
         return mPoissonInts[mPoissonIndex++];
     }
 
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        SIG_LOGGER.info("running signature simulation");
+
+        Options options = new Options();
+        options.addOption(OUTPUT_DIR, true, "Path to output files");
+        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+
+        SimConfig.addCmdLineArgs(options);
+
+        final CommandLineParser parser = new DefaultParser();
+        final CommandLine cmd = parser.parse(options, args);
+
+        SampleSimulator sampleSimulator = new SampleSimulator();
+        sampleSimulator.initialise(cmd);
+        sampleSimulator.run();
+
+        SIG_LOGGER.info("signature simulation complete");
+
+    }
 }

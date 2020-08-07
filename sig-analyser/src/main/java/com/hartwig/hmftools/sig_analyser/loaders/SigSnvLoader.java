@@ -17,7 +17,9 @@ import org.apache.logging.log4j.Logger;
 
 public class SigSnvLoader
 {
-    private final DataLoaderConfig mConfig;
+    private final VariantFilters mFilters;
+    private final List<String> mSampleIds;
+    private final String mOutputDir;
 
     private final Map<String,Integer> mBucketStringToIndex;
     private SigMatrix mSampleBucketCounts;
@@ -26,13 +28,17 @@ public class SigSnvLoader
 
     private static final Logger LOGGER = LogManager.getLogger(SigSnvLoader.class);
 
-    public SigSnvLoader(final DataLoaderConfig config)
+    public SigSnvLoader(final VariantFilters filters, final List<String> sampleIds, final String outputDir)
     {
-        mConfig = config;
+        mFilters = filters;
+        mSampleIds = sampleIds;
+        mOutputDir = outputDir;
 
         mBucketStringToIndex = Maps.newHashMap();
         buildBucketMap();
     }
+
+    public SigMatrix getSampleBucketCounts() { return mSampleBucketCounts; }
 
     private void buildBucketMap()
     {
@@ -75,29 +81,32 @@ public class SigSnvLoader
 
     public void loadData(DatabaseAccess dbAccess)
     {
-        mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, mConfig.SampleIds.size());
+        mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
-        LOGGER.info("retrieving SNV data for {} samples", mConfig.SampleIds.size());
+        LOGGER.info("retrieving SNV data for {} samples", mSampleIds.size());
 
-        for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
+        for(int sampleIndex = 0; sampleIndex < mSampleIds.size(); ++sampleIndex)
         {
-            String sampleId = mConfig.SampleIds.get(sampleIndex);
+            String sampleId = mSampleIds.get(sampleIndex);
             final List<SomaticVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
 
             LOGGER.info("sample({}:{}) processing {} variants", sampleIndex, sampleId, variants.size());
 
             processSampleVariants(sampleId, variants, sampleIndex);
         }
+    }
 
+    public void writeSampleCounts(final String filename)
+    {
         try
         {
-            BufferedWriter writer = getNewFile(mConfig.OutputDir, mConfig.OutputFileId + "_sample_counts.csv");
+            BufferedWriter writer = getNewFile(mOutputDir, "sample_counts.csv");
 
             writer.write("BucketName");
 
-            for(int i = 0; i < mConfig.SampleIds.size(); ++i)
+            for(int i = 0; i < mSampleIds.size(); ++i)
             {
-                writer.write(String.format(",%s", mConfig.SampleIds.get(i)));
+                writer.write(String.format(",%s", mSampleIds.get(i)));
             }
 
             writer.newLine();
@@ -115,19 +124,6 @@ public class SigSnvLoader
 
                 writer.newLine();
             }
-
-            /*
-            int i = 0;
-            for(; i < mConfig.SampleIds.size()-1; ++i)
-            {
-                writer.write(String.format("%s,", mConfig.SampleIds.get(i)));
-            }
-            writer.write(String.format("%s", mConfig.SampleIds.get(i)));
-
-            writer.newLine();
-
-            writeMatrixData(writer, mSampleBucketCounts, true);
-            */
 
             writer.close();
         }
@@ -155,7 +151,7 @@ public class SigSnvLoader
                 continue;
 
             // check filters
-            if(!mConfig.passesFilters(variant))
+            if(mFilters != null && !mFilters.passesFilters(variant))
                 continue;
 
             // convert base change to standard set and the context accordingly

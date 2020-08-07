@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+
 import java.sql.SQLException;
 
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -22,9 +23,10 @@ public class SigDataLoader
     private static final String LOAD_SNVS = "load_snvs";
     private static final String LOAD_MNVS = "load_mnvs";
     private static final String LOAD_INDELS = "load_indels";
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
+
+    public static final String DB_USER = "db_user";
+    public static final String DB_PASS = "db_pass";
+    public static final String DB_URL = "db_url";
 
     private static final Logger LOGGER = LogManager.getLogger(SigDataLoader.class);
 
@@ -52,8 +54,10 @@ public class SigDataLoader
 
             if(cmd.hasOption(LOAD_SNVS))
             {
-                SigSnvLoader snvLoader = new SigSnvLoader(config);
+                SigSnvLoader snvLoader = new SigSnvLoader(config.Filters, config.SampleIds, config.OutputDir);
                 snvLoader.loadData(dbAccess);
+                final String filename = config.OutputFileId != null ? config.OutputFileId + "_" + "sample_counts.csv" : "sample_counts.csv";
+                snvLoader.writeSampleCounts(filename);
             }
 
             if(cmd.hasOption(LOAD_MNVS))
@@ -85,13 +89,18 @@ public class SigDataLoader
         options.addOption(LOAD_MNVS, false, "Create sample bucket counts for MNVs from DB");
         options.addOption(LOAD_INDELS, false, "Create sample bucket counts for INDELs from DB");
 
-        options.addOption(DB_USER, true, "Database user name");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database url");
+        addDatabaseCmdLineArgs(options);
 
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         return options;
+    }
+
+    public static void addDatabaseCmdLineArgs(final Options options)
+    {
+        options.addOption(DB_USER, true, "Database user name");
+        options.addOption(DB_PASS, true, "Database password");
+        options.addOption(DB_URL, true, "Database url");
     }
 
     @NotNull
@@ -102,7 +111,7 @@ public class SigDataLoader
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
+    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
     {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);

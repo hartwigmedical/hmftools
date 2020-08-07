@@ -7,12 +7,8 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-
 import java.util.List;
 import java.util.Random;
-
-import com.google.common.collect.Lists;
 
 public class DataUtils {
 
@@ -147,20 +143,29 @@ public class DataUtils {
 
     public static SigMatrix createMatrixFromListData(final List<List<Double>> dataSet)
     {
+        return createMatrixFromListData(dataSet, false);
+    }
+
+    public static SigMatrix createMatrixFromListData(final List<List<Double>> dataSet, boolean stripBucketName)
+    {
         if(dataSet.isEmpty())
             return null;
 
         int rows = dataSet.size();
         int cols = dataSet.get(0).size();
 
+        int colCount = stripBucketName ? cols - 1 : cols;
+        int colIndexStart = stripBucketName ? 1 : 0;
+        int colIndexEnd = stripBucketName ? 1 : 0;
+
         // create and populate the matrix
-        SigMatrix matrix = new SigMatrix(rows, cols);
+        SigMatrix matrix = new SigMatrix(rows, colCount);
 
         double[][] matrixData = matrix.getData();
 
         for(int i = 0; i < rows; ++i)
         {
-            for (int j = 0; j < cols; ++j)
+            for (int j = colIndexStart; j < cols; ++j)
             {
                 matrixData[i][j] = dataSet.get(i).get(j);
             }

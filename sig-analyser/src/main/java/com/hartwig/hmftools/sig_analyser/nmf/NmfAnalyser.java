@@ -2,8 +2,11 @@ package com.hartwig.hmftools.sig_analyser.nmf;
 
 import static java.lang.Integer.max;
 
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.extractNonZeros;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
@@ -20,12 +23,19 @@ import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.jetbrains.annotations.NotNull;
 
-public class NmfManager {
-
-    private static final Logger LOGGER = LogManager.getLogger(NmfManager.class);
+public class NmfAnalyser
+{
+   private static final Logger LOGGER = LogManager.getLogger(NmfAnalyser.class);
 
     private String mOutputDir;
     private String mOutputFileId;
@@ -44,7 +54,7 @@ public class NmfManager {
 
     PerformanceCounter mPerfCounter;
 
-    public NmfManager()
+    public NmfAnalyser()
     {
         mOutputDir = "";
         mOutputFileId = "";
@@ -239,6 +249,33 @@ public class NmfManager {
         {
             LOGGER.error("error writing to outputFile");
         }
+    }
+
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        Options options = new Options();
+        options.addOption(SAMPLE_COUNTS_FILE, true, "Path to the main input file");
+        options.addOption(OUTPUT_DIR, true, "Path to output files");
+
+        NmfConfig.addCmdLineArgs(options);
+
+        final CommandLineParser parser = new DefaultParser();
+        final CommandLine cmd = parser.parse(options, args);
+
+        if (cmd.hasOption(LOG_DEBUG))
+        {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        SIG_LOGGER.info("running NMF signature analyser");
+
+        final GenericDataCollection collection = GenericDataLoader.loadFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE));
+
+        NmfAnalyser nmfAnalyser = new NmfAnalyser();
+        nmfAnalyser.initialise(collection, cmd);
+        nmfAnalyser.run();
+
+        SIG_LOGGER.info("NMF analysis complete");
     }
 
 }

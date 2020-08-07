@@ -9,184 +9,224 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.GENERIC_INPUT_FILE;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
-import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_EXIT_LEVEL;
-import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_MAX_ITERATIONS;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleMatrixCounts;
+import static com.hartwig.hmftools.sig_analyser.loaders.SigDataLoader.DB_URL;
+import static com.hartwig.hmftools.sig_analyser.loaders.SigDataLoader.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.sig_analyser.loaders.SigDataLoader.databaseAccess;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
-import com.hartwig.hmftools.common.sigs.SigUtils;
+import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
-import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
 import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
-import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
-import com.hartwig.hmftools.sig_analyser.nmf.NmfSampleFitter;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class SampleFitter
 {
-    private static final String FIT_METHOD = "fit_method";
-    private static final String FIT_METHOD_NMF = "NMF";
-    private static final String FIT_METHOD_BUCKET = "Bucket";
-    private static final String FIT_METHOD_LEAST_SQ = "LeastSquares";
-    private static final String FIT_METHOD_EXPECTATION_MAX = "ExpectationMax";
-    private static final String SIGNATURES_FILE = "signatures_file";
+    // config
+    private static final String SIGNATURES_FILE = "mSignatures_file";
+    private static final String SAMPLE_IDS = "sample";
+    
+    private final String mSampleIdsConfig;
+    private final List<String> mSampleIdList;
+    private final String mSnvCountsFile;
+    private final String mSignaturesFile;
+    private final String mOutputDir;
 
-    private static final Logger LOGGER = LogManager.getLogger(SampleFitter.class);
+    private SigMatrix mSampleCountsMatrix;
+    private SigMatrix mSignatures;
+    private DatabaseAccess mDbAccess;
+    private BufferedWriter mFitWriter;
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public SampleFitter(final CommandLine cmd)
     {
-        Options options = new Options();
-        options.addOption(GENERIC_INPUT_FILE, true, "Path to the main input file");
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
-        options.addOption(FIT_METHOD, true, "Signatures fit method: NMF, Bucket, LeastSquares");
-        options.addOption(SIGNATURES_FILE, true, "Signature definitions");
-        options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        BaSampleFitter.addCmdLineArgs(options);
+        mSnvCountsFile = cmd.getOptionValue(SAMPLE_COUNTS_FILE);
+        mSignaturesFile = cmd.getOptionValue(SIGNATURES_FILE);
+        mSampleIdsConfig = cmd.getOptionValue(SAMPLE_IDS);
+        mSampleIdList = Lists.newArrayList();
 
-        NmfConfig.addCmdLineArgs(options);
+        mSampleCountsMatrix = null;
+        mSignatures = null;
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
-
-        if (cmd.hasOption(LOG_DEBUG))
+        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
+        if(!outputDir.endsWith(File.separator))
         {
-            Configurator.setRootLevel(Level.DEBUG);
+            outputDir += File.separator;
         }
 
-        final GenericDataCollection scCollection = GenericDataLoader.loadFile(cmd.getOptionValue(GENERIC_INPUT_FILE));
-        final SigMatrix sampleCountsMatrix = DataUtils.createMatrixFromListData(scCollection.getData());
+        mOutputDir = outputDir;
+        mFitWriter = null;
+        mDbAccess = null;
 
-        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(cmd.getOptionValue(SIGNATURES_FILE));
-        final SigMatrix signatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
+        if(cmd.hasOption(DB_URL))
+        {
+            try
+            {
+                mDbAccess = databaseAccess(cmd);
 
-        int sampleCount = sampleCountsMatrix.Cols;
-        int sigCount = signatures.Cols;
+            } catch (SQLException e)
+            {
+                SIG_LOGGER.error("DB connection failed: {}", e.toString());
+            }
+        }
+    }
+
+    public void run()
+    {
+        SIG_LOGGER.info("running sample signature fit");
+
+        if(!initialise())
+            return;
+
+        SIG_LOGGER.info("fitting {} samples");
+
+        performFit();
+
+        SIG_LOGGER.info("sample signature fit complete");
+
+        closeBufferedWriter(mFitWriter);
+    }
+    
+    private boolean initialise()
+    {
+        if(mSignaturesFile == null)
+        {
+            SIG_LOGGER.error("missing mSignatures file");
+            return false;
+        }
+
+        if(mSampleIdsConfig == null && mSnvCountsFile == null)
+        {
+            SIG_LOGGER.error("missing sampleIds config and sample count file");
+            return false;
+        }
+
+        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(mSignaturesFile);
+        mSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
+
+        if(mSnvCountsFile != null)
+        {
+            mSampleCountsMatrix = loadSampleMatrixCounts(mSnvCountsFile, mSampleIdList);
+        }
+        else
+        {
+            // load from file or delimitered list
+            if(mSampleIdsConfig.contains(".csv"))
+            {
+                // load from file
+                mSampleIdList.addAll(loadSampleListFile(mSampleIdsConfig));
+            }
+            else
+            {
+                mSampleIdList.add(mSampleIdsConfig);
+            }
+
+            loadSnvCountsData();
+        }
+
+        initialiseOutputFiles();
+        return true;
+    }
+
+    private void loadSnvCountsData()
+    {
+        if(mDbAccess == null)
+            return;
+
+        SigSnvLoader snvLoader = new SigSnvLoader(null, mSampleIdList, mOutputDir);
+        snvLoader.loadData(mDbAccess);
+
+        final String filename = mSampleIdList.size() == 1 ? mSampleIdList.get(0) + ".sig.snv_counts.csv" : "SIG_SNV_COUNTS.csv";
+        snvLoader.writeSampleCounts(filename);
+
+        mSampleCountsMatrix = snvLoader.getSampleBucketCounts();
+    }
+    
+    private void performFit()
+    {
+        int sampleCount = mSampleCountsMatrix.Cols;
+        int sigCount = mSignatures.Cols;
+        
         final SigMatrix sampleContribs = new SigMatrix(sigCount, sampleCount);
 
-        final String fitMethod = cmd.getOptionValue(FIT_METHOD);
+        SIG_LOGGER.info("fitting sample({}) with {} mSignatures", sampleCount, sigCount);
 
-        LOGGER.info("method({}) fitting {} samples with {} signatures", fitMethod, sampleCount, sigCount);
+        LeastSquaresFit lsqFit = new LeastSquaresFit(mSignatures.Rows, mSignatures.Cols);
 
-        if(fitMethod.equals(FIT_METHOD_LEAST_SQ))
+        for(int i = 0; i < sampleCount; ++i)
         {
-            LeastSquaresFit lsqFit = new LeastSquaresFit(signatures.Rows, signatures.Cols);
+            final double[] sampleCounts = mSampleCountsMatrix.getCol(i);
+            lsqFit.initialise(mSignatures.getData(), sampleCounts);
+            lsqFit.solve();
 
-            for(int i = 0; i < sampleCount; ++i)
+            final double[] sigAllocs = lsqFit.getContribs();
+            sampleContribs.setCol(i, sigAllocs);
+        }
+
+        // post-run analysis
+        for(int i = 0; i < sampleCount; ++i)
+        {
+            final String sampleId = mSampleIdList.get(i);
+            final double[] sampleCounts = mSampleCountsMatrix.getCol(i);
+            final double[] sigAllocs = sampleContribs.getCol(i);
+
+            double sampleTotal = sumVector(sampleCounts);
+
+            if(sampleTotal == 0)
+                continue;
+
+            final double[] fittedCounts = calculateFittedCounts(mSignatures, sigAllocs);
+            final double[] residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
+
+            double allocTotal = sumVector(sigAllocs);
+            double allocPerc = allocTotal / sampleTotal;
+
+            SIG_LOGGER.debug(String.format("sample(%s) alloc(%s perc=%.3f of total=%s) residuals(%.3f total=%s excess=%s)",
+                    sampleId, sizeToStr(allocTotal), allocPerc, sizeToStr(sampleTotal),
+                    residuals[RESIDUAL_PERC], sizeToStr(residuals[RESIDUAL_TOTAL]), sizeToStr(residuals[RESIDUAL_EXCESS])));
+
+            if(SIG_LOGGER.isDebugEnabled())
             {
-                final double[] sampleCounts = sampleCountsMatrix.getCol(i);
-                lsqFit.initialise(signatures.getData(), sampleCounts);
-                lsqFit.solve();
-
-                final double[] sigAllocs = lsqFit.getContribs();
-                sampleContribs.setCol(i, sigAllocs);
-            }
-        }
-        else if(fitMethod.equals(FIT_METHOD_EXPECTATION_MAX))
-        {
-            for(int i = 0; i < sampleCount; ++i)
-            {
-                final double[] sampleCounts = sampleCountsMatrix.getCol(i);
-                final double[] sigAllocs = ExpectationMaxFit.performFit(sampleCounts, signatures, 0.001, 100);
-                sampleContribs.setCol(i, sigAllocs);
-            }
-        }
-        else if(fitMethod.equals(FIT_METHOD_NMF))
-        {
-            NmfConfig nmfConfig = new NmfConfig(
-                    Double.parseDouble(cmd.getOptionValue(NMF_EXIT_LEVEL)),
-                    Integer.parseInt(cmd.getOptionValue(NMF_MAX_ITERATIONS, "100")));
-
-            NmfSampleFitter nmfFitter = new NmfSampleFitter(nmfConfig, sampleCountsMatrix, signatures);
-
-            nmfFitter.fitSamples();
-
-            sampleContribs.setData(nmfFitter.getContributions().getData());
-        }
-        else if(fitMethod.equals(FIT_METHOD_BUCKET))
-        {
-            BaSampleFitter sampleFitter = new BaSampleFitter(sampleCountsMatrix, signatures, cmd);
-            sampleFitter.fitAllSamples();
-            sampleContribs.setData(sampleFitter.getContributions().getData());
-        }
-
-        double totalCounts = 0;
-        double totalAlloc = 0;
-        double totalResiduals = 0;
-        double totalResidualsExcess = 0;
-
-        if(LOGGER.isDebugEnabled())
-        {
-            for(int i = 0; i < sampleCount; ++i)
-            {
-                final double[] sampleCounts = sampleCountsMatrix.getCol(i);
-                final double[] sigAllocs = sampleContribs.getCol(i);
-
-                double sampleTotal = sumVector(sampleCounts);
-
-                if(sampleTotal == 0)
-                    continue;
-
-                final double[] fittedCounts = calculateFittedCounts(signatures, sigAllocs);
-                final double[] residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
-
-                double allocTotal = sumVector(sigAllocs);
-                double allocPerc = allocTotal / sampleTotal;
-
-                LOGGER.debug(String.format("sample(%s) alloc(%s perc=%.3f of total=%s) residuals(%.3f total=%s excess=%s)",
-                        scCollection.getFieldNames().get(i), sizeToStr(allocTotal), allocPerc, sizeToStr(sampleTotal),
-                        residuals[RESIDUAL_PERC], sizeToStr(residuals[RESIDUAL_TOTAL]), sizeToStr(residuals[RESIDUAL_EXCESS])));
-
-                totalCounts +=sampleTotal;
-                totalAlloc += sumVector(sigAllocs);
-                totalResiduals += residuals[RESIDUAL_TOTAL];
-                totalResidualsExcess += residuals[RESIDUAL_EXCESS];
-
                 List<Integer> sortedSigs = getSortedVectorIndices(sigAllocs, false);
-                for (Integer sigIndex : sortedSigs)
+                for(Integer sigIndex : sortedSigs)
                 {
                     double sigAlloc = sigAllocs[sigIndex];
                     double sigPercent = sigAlloc / sampleTotal;
 
-                    LOGGER.trace(String.format("sample(%s) sampleTotal(%.0f) sig(%d) alloc(%.0f perc=%.3f)",
-                            scCollection.getFieldNames().get(i), sampleTotal, sigIndex, sigAlloc, sigPercent));
+                    SIG_LOGGER.trace(String.format("sample(%s) sampleTotal(%.0f) sig(%d) alloc(%.0f perc=%.3f)",
+                            sampleId, sampleTotal, sigIndex, sigAlloc, sigPercent));
 
-                    if (sigAlloc < 1)
+                    if(sigAlloc < 1)
                         break;
                 }
             }
         }
 
-        LOGGER.info(String.format("summary: samples(%s) total(%s) alloc(%.3f %s) residuals(%s excess=%s)",
-                sampleCount, sizeToStr(totalCounts), totalAlloc/totalCounts, sizeToStr(totalAlloc),
-                sizeToStr(totalResiduals), sizeToStr(totalResidualsExcess)));
-
-        final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
-        final String outputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "siga");
-        final String outputFile = outputFileId + "_sample_contribs.csv";
-
+        /*
         try
         {
             BufferedWriter writer = getNewFile(outputDir, outputFile);
@@ -195,11 +235,46 @@ public class SampleFitter
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write sample contributions: {}", e.toString());
+            SIG_LOGGER.error("failed to write sample contributions: {}", e.toString());
             return;
         }
 
-        LOGGER.info("sample signature contributions written");
+         */
+    }
+
+    private void initialiseOutputFiles()
+    {
+        final String filename = mSampleIdList.size() == 1 ?
+                SignatureAllocationFile.generateFilename(mOutputDir, mSampleIdList.get(0)) : mOutputDir + "SIG_SNV_FIT.csv";
+
+        try
+        {
+            mFitWriter = createBufferedWriter(filename, false);
+            mFitWriter.write(SignatureAllocationFile.header());
+            mFitWriter.newLine();
+        }
+        catch (final IOException e)
+        {
+            SIG_LOGGER.error("error writing to outputFile({}): {}", filename, e.toString());
+        }
+    }
+
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        Options options = new Options();
+        options.addOption(SAMPLE_COUNTS_FILE, true, "Path to the main input file");
+        options.addOption(SIGNATURES_FILE, true, "Signature definitions");
+        options.addOption(OUTPUT_DIR, true, "Path to output files");
+        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        addDatabaseCmdLineArgs(options);
+
+        final CommandLineParser parser = new DefaultParser();
+        final CommandLine cmd = parser.parse(options, args);
+
+        if (cmd.hasOption(LOG_DEBUG))
+            Configurator.setRootLevel(Level.DEBUG);
+
+        SampleFitter sampleFitter = new SampleFitter(cmd);
 
     }
 }

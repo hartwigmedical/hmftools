@@ -32,11 +32,11 @@ public class SignatureAllocationFile
 
     public static void write(@NotNull final String filename, @NotNull List<SignatureAllocation> sigAllocations) throws IOException
     {
-        Files.write(new File(filename).toPath(), toLines(sigAllocations));
+        Files.write(new File(filename).toPath(), toLines(sigAllocations, true));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<SignatureAllocation> sigAllocations)
+    public static List<String> toLines(@NotNull final List<SignatureAllocation> sigAllocations, boolean writerHeader)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -45,13 +45,13 @@ public class SignatureAllocationFile
     }
 
     @NotNull
-    static List<SignatureAllocation> fromLines(@NotNull List<String> lines)
+    public static List<SignatureAllocation> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("signature")).map(SignatureAllocationFile::fromString).collect(toList());
     }
 
     @NotNull
-    private static String header()
+    public static String header()
     {
         return new StringJoiner(DELIMITER)
                 .add("signature")

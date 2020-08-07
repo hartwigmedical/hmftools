@@ -17,14 +17,30 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sigs.DataUtils;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.GenericDataCollection;
+import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.buckets.BaConfig;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class CommonUtils
 {
-    private static final Logger LOGGER = LogManager.getLogger(CommonUtils.class);
+    public static final String SAMPLE_COUNTS_FILE = "sample_counts_file";
+    public static final String LOG_DEBUG = "log_debug";
+
+    public static final String OUTPUT_DIR = "output_dir";
+    public static final String OUTPUT_FILE_ID = "output_file_id";
+
+    public static final Logger SIG_LOGGER = LogManager.getLogger(CommonUtils.class);
 
     public static BufferedWriter getNewFile(final String outputDir, final String fileName) throws IOException
     {
@@ -40,6 +56,22 @@ public class CommonUtils
         outputFileName += fileName;
 
         return createBufferedWriter(outputFileName, false);
+    }
+
+    public static SigMatrix loadSampleMatrixCounts(final String filename, final List<String> sampleIds)
+    {
+        final GenericDataCollection scCollection = GenericDataLoader.loadFile(filename);
+        boolean stripBucketName = scCollection.getFieldNames().get(0).equals("BucketName");
+
+        if(sampleIds != null)
+        {
+            sampleIds.addAll(scCollection.getFieldNames());
+
+            if(stripBucketName)
+                sampleIds.remove(0);
+        }
+
+        return DataUtils.createMatrixFromListData(scCollection.getData(), stripBucketName);
     }
 
     public static List<Integer> getCombinedList(final List<Integer> list1, final List<Integer> list2)
@@ -178,7 +210,7 @@ public class CommonUtils
             ++iterations;
         }
 
-        LOGGER.debug(String.format("sample(%d) total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
+        SIG_LOGGER.debug(String.format("sample(%d) total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
                 itemId, dataTotal, currentAlloc, minPosAlloc, lsAlloc, residuals, residualsPerc, currentProb,
                 iterations >= maxIterations ? "max" : String.valueOf(iterations)));
 
@@ -206,13 +238,13 @@ public class CommonUtils
             if (sampleIds.get(0).equals("SampleId"))
                 sampleIds.remove(0);
 
-            LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
+            SIG_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
 
             return sampleIds;
         }
         catch (IOException exception)
         {
-            LOGGER.error("failed to read sample list input CSV file({}): {}", filename, exception.toString());
+            SIG_LOGGER.error("failed to read sample list input CSV file({}): {}", filename, exception.toString());
             return Lists.newArrayList();
         }
     }

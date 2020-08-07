@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
 
 import java.util.Arrays;
@@ -10,13 +10,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class DataLoaderConfig
 {
@@ -24,10 +21,8 @@ public class DataLoaderConfig
     public final String OutputFileId;
     public final List<String> SampleIds;
     public boolean ApplySampleQC;
-    public final Double PloidyMin;
-    public final Double PloidyMax;
-    public final Double SubclonalLikelihoodMin;
-    public final Double SubclonalLikelihoodMax;
+
+    public final VariantFilters Filters;
 
     private static final String SAMPLE_IDS = "sample_ids";
     private static final String APPLY_SAMPLE_QC = "apply_sample_qc";
@@ -36,8 +31,6 @@ public class DataLoaderConfig
     private static final String PLOIDY_MAX = "ploidy_max";
     private static final String PLOIDY_MIN = "ploidy_min";
 
-    private static final Logger LOGGER = LogManager.getLogger(DataLoaderConfig.class);
-
     public DataLoaderConfig(final CommandLine cmd)
     {
         OutputDir = cmd.getOptionValue(OUTPUT_DIR);
@@ -45,11 +38,7 @@ public class DataLoaderConfig
 
         ApplySampleQC = cmd.hasOption(APPLY_SAMPLE_QC);
 
-        SubclonalLikelihoodMin = initialiseDoubleValue(cmd, SUBCLONAL_MIN);
-        SubclonalLikelihoodMax = initialiseDoubleValue(cmd, SUBCLONAL_MAX);
-
-        PloidyMin = initialiseDoubleValue(cmd, PLOIDY_MIN);
-        PloidyMax = initialiseDoubleValue(cmd, PLOIDY_MAX);
+        Filters = new VariantFilters(cmd);
 
         SampleIds = Lists.newArrayList();
 
@@ -78,14 +67,6 @@ public class DataLoaderConfig
             SampleIds.addAll(dbAccess.readSomaticVariantSampleList());
     }
 
-    private static Double initialiseDoubleValue(final CommandLine cmd, final String config)
-    {
-        if(cmd.hasOption(config))
-            return Double.parseDouble(cmd.getOptionValue(config, "0"));
-        else
-            return null;
-    }
-
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SAMPLE_IDS, true, "Optional: restrict to sample list");
@@ -98,20 +79,4 @@ public class DataLoaderConfig
         options.addOption(PLOIDY_MIN, true, "Optional: ploidy min threshold");
     }
 
-    public boolean passesFilters(final SomaticVariant variant)
-    {
-        if(SubclonalLikelihoodMin != null && variant.subclonalLikelihood() < SubclonalLikelihoodMin)
-            return false;
-
-        if(SubclonalLikelihoodMax != null && variant.subclonalLikelihood() > SubclonalLikelihoodMax)
-            return false;
-
-        if(PloidyMin != null && variant.variantCopyNumber() < PloidyMin)
-            return false;
-
-        if(PloidyMax != null && variant.variantCopyNumber() > PloidyMax)
-            return false;
-
-        return true;
-    }
 }

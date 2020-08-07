@@ -118,7 +118,7 @@ public class SigIndelLoader
                 continue;
 
             // check filters
-            if(!mConfig.passesFilters(variant))
+            if(!mConfig.Filters.passesFilters(variant))
                 continue;
 
             final String bucketName = convertToBucket(variant);

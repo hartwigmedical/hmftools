@@ -15,8 +15,6 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_EXT_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_PREDEFINED_SIGS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.CANCER_TYPE_OTHER;
@@ -42,6 +40,11 @@ import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_UNIQ
 import static com.hartwig.hmftools.sig_analyser.buckets.SigOptimiser.BUCKET_RANGE_MAX_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.SigOptimiser.SMALL_RATIO_PERC_CUTOFF;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.calcRangeValue;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getDiffList;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getMatchingList;
@@ -65,12 +68,18 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.sig_analyser.common.CssRoutines;
 import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
+import com.hartwig.hmftools.sig_analyser.sim.SimConfig;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.jetbrains.annotations.NotNull;
 
 public class BucketAnalyser
 {
@@ -137,12 +146,38 @@ public class BucketAnalyser
     private static int CATEGORY_COL_COUNT = 3;
     private static String CATEGORY_CANCER_TYPE = "Cancer";
 
-    private static int SCD_COL_SAMPLE_ID = 0;
-    private static int SCD_COL_BG_ALLOC = 2;
-
     private boolean mHasErrors;
 
-    private static final Logger LOGGER = LogManager.getLogger(BucketAnalyser.class);
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        Options options = new Options();
+        options.addOption(SAMPLE_COUNTS_FILE, true, "Path to the main input file");
+        options.addOption(OUTPUT_DIR, true, "Path to output files");
+        options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
+
+        // allow components to add their own arg lists
+        SimConfig.addCmdLineArgs(options);
+        NmfConfig.addCmdLineArgs(options);
+        BucketAnalyser.addCmdLineArgs(options);
+
+        final CommandLineParser parser = new DefaultParser();
+        final CommandLine cmd = parser.parse(options, args);
+
+        if (cmd.hasOption(LOG_DEBUG))
+        {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        SIG_LOGGER.info("running bucket analysis");
+
+        final GenericDataCollection collection = GenericDataLoader.loadFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE));
+
+        BucketAnalyser bucketAnalyser = new BucketAnalyser(collection, cmd);
+        bucketAnalyser.run();
+
+        SIG_LOGGER.info("bucket analysis complete");
+    }
+
 
     public BucketAnalyser(GenericDataCollection collection, final CommandLine cmd)
     {
@@ -222,7 +257,7 @@ public class BucketAnalyser
             mFinalFitOnly = (mConfig.ApplyPredefinedSigCount == mPredefinedSigs.Cols && mConfig.RunCount == 0);
         }
 
-        LOGGER.info("bucketCount({}) sampleCount({})", mBucketCount, mSampleCount);
+        SIG_LOGGER.info("bucketCount({}) sampleCount({})", mBucketCount, mSampleCount);
 
         SAMPLE_ID_COL_INDEX = 0;
         CANCER_TYPE_COL_INDEX = 1;
@@ -268,7 +303,7 @@ public class BucketAnalyser
 
         mExtCategoriesMap = populateSampleCategoryMap(sampleIds);
 
-        LOGGER.debug("registered {} cancer types and sub-categories", mExtCategoriesMap.size());
+        SIG_LOGGER.debug("registered {} cancer types and sub-categories", mExtCategoriesMap.size());
 
         for(int sampleId = 0; sampleId < mSampleCount; ++sampleId)
         {
@@ -285,7 +320,7 @@ public class BucketAnalyser
             }
             else
             {
-                LOGGER.error("sample({}) cannot find external data", sample.getSampleName());
+                SIG_LOGGER.error("sample({}) cannot find external data", sample.getSampleName());
                 mHasErrors = true;
             }
 
@@ -334,7 +369,7 @@ public class BucketAnalyser
     {
         if(mHasErrors)
         {
-            LOGGER.warn("failed to initialise, aborting run");
+            SIG_LOGGER.warn("failed to initialise, aborting run");
             return;
         }
 
@@ -413,7 +448,7 @@ public class BucketAnalyser
             // find candidate bucket groups via various methods
             if(runDiscovery)
             {
-                LOGGER.debug("run {}: running discovery to find new bucket groups", mRunId);
+                SIG_LOGGER.debug("run {}: running discovery to find new bucket groups", mRunId);
 
                 if (mConfig.ExcessDiscoveryRunId >= 0 && mRunId >= mConfig.ExcessDiscoveryRunId && !lastGroupWasMajor)
                     mSigDiscovery.formExcessBucketGroups();
@@ -424,7 +459,7 @@ public class BucketAnalyser
 
             if(mBucketGroups.isEmpty())
             {
-                LOGGER.debug("run {}: no groups found", mRunId);
+                SIG_LOGGER.debug("run {}: no groups found", mRunId);
 
                 if(onFinalRun)
                     break;
@@ -461,7 +496,7 @@ public class BucketAnalyser
 
                 if(mFinalBucketGroups.contains(nextBestGroup))
                 {
-                    LOGGER.error("run {}: attempted to add bg({}) again", mRunId, nextBestGroup.getId());
+                    SIG_LOGGER.error("run {}: attempted to add bg({}) again", mRunId, nextBestGroup.getId());
                     mHasErrors = true;
                     break;
                 }
@@ -488,7 +523,7 @@ public class BucketAnalyser
                 if(onFinalRun)
                     break;
 
-                LOGGER.debug("run {}: no top grounp found, starting final run", mRunId);
+                SIG_LOGGER.debug("run {}: no top grounp found, starting final run", mRunId);
                 onFinalRun = true;
                 runDiscovery = true;
                 continue;
@@ -497,7 +532,7 @@ public class BucketAnalyser
             double newAllocCount = mReporter.getTotalAllocatedCount();
             if(mRunId > 0 && (newAllocCount - prevAllocCount) / mElevatedCount < 0.0001) // eg 5K out of 55M
             {
-                LOGGER.debug(String.format("run %d: negligible allocPercChange(%s -> %s)", mRunId, doubleToStr(prevAllocCount), doubleToStr(newAllocCount)));
+                SIG_LOGGER.debug(String.format("run %d: negligible allocPercChange(%s -> %s)", mRunId, doubleToStr(prevAllocCount), doubleToStr(newAllocCount)));
 
                 if(onFinalRun)
                     break;
@@ -509,7 +544,7 @@ public class BucketAnalyser
 
             if(mHasErrors)
             {
-                LOGGER.warn("run {}: exiting run with errors", mRunId);
+                SIG_LOGGER.warn("run {}: exiting run with errors", mRunId);
                 return;
             }
         }
@@ -568,7 +603,7 @@ public class BucketAnalyser
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to close bucket groups file");
+            SIG_LOGGER.error("failed to close bucket groups file");
         }
     }
 
@@ -587,7 +622,7 @@ public class BucketAnalyser
     {
         // split each sample's bucket counts into background and elevated
         // and additionally calculate a probability for each bucket that it is elevated above the background
-        LOGGER.debug("splitting sample counts");
+        SIG_LOGGER.debug("splitting sample counts");
 
         // work out bucket median values (literally 50th percentile values)
         mBucketProbs = new SigMatrix(mBucketCount, mSampleCount);
@@ -660,17 +695,17 @@ public class BucketAnalyser
         mBackgroundCount = mBackgroundSigDiscovery.getBackgroundCounts().sum();
         mElevatedCount = mElevatedCounts.sum();
 
-        LOGGER.debug(String.format("total counts: background(%s perc=%.3f) elevated(%s perc=%.3f) of total(%s)",
+        SIG_LOGGER.debug(String.format("total counts: background(%s perc=%.3f) elevated(%s perc=%.3f) of total(%s)",
                 sizeToStr(mBackgroundCount), mBackgroundCount/mTotalCount,
                 sizeToStr(mElevatedCount), mElevatedCount/mTotalCount, sizeToStr(mTotalCount)));
 
         for (int i = 0; i < probFrequencies.length-1; ++i)
         {
-            LOGGER.debug(String.format("probability(1e-%d) freq(%d) percOfTotal(%.4f)",
+            SIG_LOGGER.debug(String.format("probability(1e-%d) freq(%d) percOfTotal(%.4f)",
                     i, probFrequencies[i], probFrequencies[i]/(double)gridSize));
         }
 
-        LOGGER.debug(String.format("probability(zero) freq(%d) percOfTotal(%.4f)",
+        SIG_LOGGER.debug(String.format("probability(zero) freq(%d) percOfTotal(%.4f)",
                 probFrequencies[zeroProbIndex], probFrequencies[zeroProbIndex]/(double)gridSize));
     }
 
@@ -798,7 +833,7 @@ public class BucketAnalyser
             mActiveSampleCount = mSampleCount;
         }
 
-        LOGGER.debug(String.format("samples with elevated buckets: count(%d perc=%.2f), buckets(%d perc=%.3f)",
+        SIG_LOGGER.debug(String.format("samples with elevated buckets: count(%d perc=%.2f), buckets(%d perc=%.3f)",
                 elevSampleCount, elevSampleCount/(double)mActiveSampleCount, totalCount, totalCount/(double)(mBucketCount * mActiveSampleCount)));
     }
 
@@ -806,7 +841,7 @@ public class BucketAnalyser
     {
         mTopAllocBucketGroups.clear();
 
-        LOGGER.debug("finding top potential bucket group from count({} new={})",
+        SIG_LOGGER.debug("finding top potential bucket group from count({} new={})",
                 mBucketGroups.size(), max(mBucketGroups.size() - mLastRunGroupCount, 0));
 
         int maxCandidateGroups = MAX_CANDIDATE_GROUPS;
@@ -833,7 +868,7 @@ public class BucketAnalyser
 
                 if(!bucketGroup.isValid())
                 {
-                    LOGGER.warn("bg({}) skipped since invalid", bucketGroup.getId());
+                    SIG_LOGGER.warn("bg({}) skipped since invalid", bucketGroup.getId());
                     continue;
                 }
             }
@@ -862,7 +897,7 @@ public class BucketAnalyser
                 /*
                 if(mConfig.logSample(sampleId) && bucketGroup.getId() == 194)
                 {
-                    LOGGER.debug("spec sample");
+                    SIG_LOGGER.debug("spec sample");
                 }
                 */
 
@@ -885,7 +920,7 @@ public class BucketAnalyser
 
                             if(allocCountTotal/sample.getElevatedCount() < reqAllocPercent - 0.01)
                             {
-                                LOGGER.error(String.format("sample(%d) part of existing bg(%d) with alloc(%s perc=%.3f)",
+                                SIG_LOGGER.error(String.format("sample(%d) part of existing bg(%d) with alloc(%s perc=%.3f)",
                                         sampleId, bucketGroup.getId(), sizeToStr(allocCountTotal), allocCountTotal/sample.getElevatedCount()));
                                 mHasErrors = true;
                             }
@@ -974,7 +1009,7 @@ public class BucketAnalyser
 
                     if (!validCalc) // couldn't reach the required percent for this candidate sig
                     {
-                        LOGGER.warn("sample({}) fit with existing sigs failed", sample.Id);
+                        SIG_LOGGER.warn("sample({}) fit with existing sigs failed", sample.Id);
                         mHasErrors = true;
                         continue;
                     }
@@ -1008,10 +1043,10 @@ public class BucketAnalyser
             }
         }
 
-        LOGGER.debug("processed {} bucket groups, method(solo={} unalloc={} fit={} skipped={})",
+        SIG_LOGGER.debug("processed {} bucket groups, method(solo={} unalloc={} fit={} skipped={})",
                 mBucketGroups.size(), exceededOnSoloAlloc, exceededOnUnalloc, exceededOnFit, skippedRetry);
 
-        LOGGER.trace(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
+        SIG_LOGGER.trace(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
                 sigContribOptimiser.getInstances(), sigContribOptimiser.getAvgIterations(), sigContribOptimiser.getAvgImprovePerc()));
 
         // now that all samples have been tested and allocated, force a recalc of the ratios
@@ -1036,7 +1071,7 @@ public class BucketAnalyser
 
         if(removedGroups > 0)
         {
-            LOGGER.debug("removed {} bucket groups similar to existing selected groups", removedGroups);
+            SIG_LOGGER.debug("removed {} bucket groups similar to existing selected groups", removedGroups);
         }
 
         removeSkippedAllocations(mBucketGroups);
@@ -1178,7 +1213,7 @@ public class BucketAnalyser
 
         // BucketGroup topBucketGroup = mTopAllocBucketGroups.get(0);
 
-        LOGGER.debug(String.format("top bg(%d) type(%s) with buckets(%d) samples(%d) potential allocation(%s adj=%s)",
+        SIG_LOGGER.debug(String.format("top bg(%d) type(%s) with buckets(%d) samples(%d) potential allocation(%s adj=%s)",
                 topBucketGroup.getId(), topBucketGroup.getTag(), topBucketGroup.getBucketIds().size(), topBucketGroup.getSampleIds().size(),
                 sizeToStr(topBucketGroup.getPotentialAllocation()), sizeToStr(topBucketGroup.getPotentialAdjAllocation())));
 
@@ -1224,7 +1259,7 @@ public class BucketAnalyser
             {
                 if (maxOtherGroupAlloc > maxFinalGroupAlloc)
                 {
-                    LOGGER.debug(String.format("sample(%d) skipped bg(%d) alloc(%s) for other candidate bg(%d alloc=%s)",
+                    SIG_LOGGER.debug(String.format("sample(%d) skipped bg(%d) alloc(%s) for other candidate bg(%d alloc=%s)",
                             sampleId, topBucketGroup.getId(), sizeToStr(newAllocTotal), maxOtherGroup.getId(), sizeToStr(maxOtherGroupAlloc)));
 
                     if (!mSkippedBucketGroups.contains(maxOtherGroup))
@@ -1234,7 +1269,7 @@ public class BucketAnalyser
                 }
                 else
                 {
-                    LOGGER.debug(String.format("sample(%d) skipped bg(%d) alloc(%s) for final bg alloc(%s)", sampleId, topBucketGroup.getId(), sizeToStr(newAllocTotal), sizeToStr(maxFinalGroupAlloc)));
+                    SIG_LOGGER.debug(String.format("sample(%d) skipped bg(%d) alloc(%s) for final bg alloc(%s)", sampleId, topBucketGroup.getId(), sizeToStr(newAllocTotal), sizeToStr(maxFinalGroupAlloc)));
                 }
 
                 skippedAllocTotal += newAllocTotal;
@@ -1258,7 +1293,7 @@ public class BucketAnalyser
                     topBucketGroup.addSample(sampleId, sampleCountAllocations);
                     sample.addBucketGroup(topBucketGroup, allocPerc);
 
-                    LOGGER.debug(String.format("sample(%d) added to bg(%d) count(pot=%s act=%s of %s) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f) groupCount(%d)",
+                    SIG_LOGGER.debug(String.format("sample(%d) added to bg(%d) count(pot=%s act=%s of %s) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f) groupCount(%d)",
                             sampleId, topBucketGroup.getId(), sizeToStr(newAllocTotal), sizeToStr(actualAlloc),
                             sizeToStr(sample.getElevatedCount()), sample.lastAllocPercChange(), sample.getAllocPercent(),
                             sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal(), sample.getElevBucketGroups().size()));
@@ -1285,7 +1320,7 @@ public class BucketAnalyser
                 /*
                 if(mConfig.logSample(sampleId) && mConfig.logSample(topBucketGroup.getId()))
                 {
-                    LOGGER.debug("spec");
+                    SIG_LOGGER.debug("spec");
                 }
                 */
 
@@ -1295,12 +1330,12 @@ public class BucketAnalyser
 
                 if(!fitAllocated)
                 {
-                    LOGGER.warn("sample({}) fit failed", sample.Id);
+                    SIG_LOGGER.warn("sample({}) fit failed", sample.Id);
                     mHasErrors = true;
                 }
                 else if(!sample.getElevBucketGroups().contains(topBucketGroup))
                 {
-                    LOGGER.debug(String.format("sample(%d) missed bg(%d) proposed fit alloc(%s)", sample.Id, topBucketGroup.getId(), sizeToStr(newAllocTotal)));
+                    SIG_LOGGER.debug(String.format("sample(%d) missed bg(%d) proposed fit alloc(%s)", sample.Id, topBucketGroup.getId(), sizeToStr(newAllocTotal)));
 
                     missedAllocTotal += newAllocTotal;
                     ++missedCount;
@@ -1314,13 +1349,13 @@ public class BucketAnalyser
                     else if(sample.getAllocPercent() >= prevAllocPerc + 0.01)
                         allocResult = "better";
 
-                    LOGGER.debug(String.format("sample(%d) new fit alloc(%s perc=%.3f) %s than prev(%.3f)",
+                    SIG_LOGGER.debug(String.format("sample(%d) new fit alloc(%s perc=%.3f) %s than prev(%.3f)",
                             sample.Id, sizeToStr(sample.getAllocatedCount()), sample.getAllocPercent(), allocResult, prevAllocPerc));
                 }
             }
         }
 
-        LOGGER.debug(String.format("new top bg(%d) added %d samples, totalAllocatedCount(%s) missed(%d: %s) skipped(%d: %s)",
+        SIG_LOGGER.debug(String.format("new top bg(%d) added %d samples, totalAllocatedCount(%s) missed(%d: %s) skipped(%d: %s)",
                 topBucketGroup.getId(), topBucketGroup.getSampleIds().size(), sizeToStr(topBucketGroup.getTotalCount()),
                 missedCount, sizeToStr(missedAllocTotal), skippedSamples.size(), sizeToStr(skippedAllocTotal)));
 
@@ -1338,7 +1373,7 @@ public class BucketAnalyser
 
         if(mSkippedBucketGroups.contains(topBucketGroup))
         {
-            LOGGER.debug("previously skipped group({}) now added to final list", topBucketGroup.getId());
+            SIG_LOGGER.debug("previously skipped group({}) now added to final list", topBucketGroup.getId());
             mSkippedBucketGroups.remove(topBucketGroup);
         }
     }
@@ -1416,7 +1451,7 @@ public class BucketAnalyser
                 }
             }
 
-            LOGGER.debug(String.format("top bg(%d) merged with bg(%d) alloc(%s adj=%s) css(%.4f) samples(bg1=%d bg2=%d added=%d) diffBuckets(%d)",
+            SIG_LOGGER.debug(String.format("top bg(%d) merged with bg(%d) alloc(%s adj=%s) css(%.4f) samples(bg1=%d bg2=%d added=%d) diffBuckets(%d)",
                     topBucketGroup.getId(), bucketGroup.getId(), sizeToStr(bucketGroup.getPotentialAllocation()),
                     sizeToStr(bucketGroup.getPotentialAdjAllocation()), groupCss, topSampleIds.size(), bgSamples.size(), samplesAdded, extraBuckets.size()));
 
@@ -1431,7 +1466,7 @@ public class BucketAnalyser
                 mBucketGroups.remove(similarGroup);
             }
 
-            LOGGER.debug("top bg({}) removed {} similar groups", topBucketGroup.getId(), similarGroups.size());
+            SIG_LOGGER.debug("top bg({}) removed {} similar groups", topBucketGroup.getId(), similarGroups.size());
         }
 
         List<SampleData> samples = Lists.newArrayList();
@@ -1605,7 +1640,7 @@ public class BucketAnalyser
 
             setBucketGroupFeatures(bucketGroup, false);
 
-            LOGGER.debug(String.format("bg(%d) unique candidate: tag(%s) maxCss(%.3f) bucketOverlap(%d of %d, perc=%.2f) samples(%d) avgAllocPerc(%.3f) potAlloc(%s) ct(%s) effects(%s)",
+            SIG_LOGGER.debug(String.format("bg(%d) unique candidate: tag(%s) maxCss(%.3f) bucketOverlap(%d of %d, perc=%.2f) samples(%d) avgAllocPerc(%.3f) potAlloc(%s) ct(%s) effects(%s)",
                     bucketGroup.getId(), bucketGroup.getTag(), maxCss, maxBucketOverlap, bucketGroup.getBucketCount(), maxBucketOverlapPerc, bucketGroup.getSampleCount(),
                     avgAllocPerc, sizeToStr(bucketGroup.getPotentialAllocation()), bucketGroup.getCancerType(), bucketGroup.getEffects()));
 
@@ -1759,7 +1794,7 @@ public class BucketAnalyser
                         ++allocatedSamples;
                         mReassessSamples.add(sampleId);
 
-                        LOGGER.debug(String.format("sample(%d) skipped now added to bg(%d) count(prop=%s act=%s of %s) allocatedPerc(+%.3f -> %.3f) groupCount(%d)",
+                        SIG_LOGGER.debug(String.format("sample(%d) skipped now added to bg(%d) count(prop=%s act=%s of %s) allocatedPerc(+%.3f -> %.3f) groupCount(%d)",
                                 sampleId, bucketGroup.getId(), sizeToStr(proposedAllocTotal), sizeToStr(actualAlloc), sizeToStr(sample.getElevatedCount()),
                                 sample.lastAllocPercChange(), sample.getAllocPercent(), sample.getElevBucketGroups().size()));
                     }
@@ -1769,7 +1804,7 @@ public class BucketAnalyser
                 {
                     if (maxOtherGroupAllocPerc >= reqAllocPercent)
                     {
-                        //  LOGGER.debug(String.format("sample(%d) skipped again with better allocation(%s perc=%.3f)",
+                        //  SIG_LOGGER.debug(String.format("sample(%d) skipped again with better allocation(%s perc=%.3f)",
                         //      sampleId, sizeToStr(maxOtherGroupAlloc), maxOtherGroupAllocPerc));
 
                         ++samIndex;
@@ -1777,7 +1812,7 @@ public class BucketAnalyser
                     }
                     else
                     {
-                        LOGGER.debug("sample({}) skipped & not allocated, being removed", sampleId);
+                        SIG_LOGGER.debug("sample({}) skipped & not allocated, being removed", sampleId);
                     }
                 }
 
@@ -1794,7 +1829,7 @@ public class BucketAnalyser
 
         if(initSkippedSamples > mSkippedSamples.size())
         {
-            LOGGER.debug("skipped samples: new({}) initial({}) current({}) allocated({}) reskipped({})",
+            SIG_LOGGER.debug("skipped samples: new({}) initial({}) current({}) allocated({}) reskipped({})",
                     newSkippedSamples.size(), initSkippedSamples, mSkippedSamples.size(), allocatedSamples, reskippedSamples);
         }
     }
@@ -1856,7 +1891,7 @@ public class BucketAnalyser
 
                 if(!ok)
                 {
-                    LOGGER.debug("bg({}) removal of sample({})", bucketGroup.getId(), sampleId);
+                    SIG_LOGGER.debug("bg({}) removal of sample({})", bucketGroup.getId(), sampleId);
                     mHasErrors = true;
                     return;
                 }
@@ -1874,7 +1909,7 @@ public class BucketAnalyser
 
         if(initBgCount > mBucketGroups.size())
         {
-            LOGGER.debug("bucket groups clean-up({} -> {}) from {} reassess samples, skipped groups({})",
+            SIG_LOGGER.debug("bucket groups clean-up({} -> {}) from {} reassess samples, skipped groups({})",
                     initBgCount, mBucketGroups.size(), mReassessSamples.size(), mSkippedBucketGroups.size());
         }
     }
@@ -1930,7 +1965,7 @@ public class BucketAnalyser
                 bucketGroup.addBucket(b, true);
             }
 
-            LOGGER.debug("created predefined bg({}) with {} buckets", bucketGroup.getId(), bucketIds.size());
+            SIG_LOGGER.debug("created predefined bg({}) with {} buckets", bucketGroup.getId(), bucketIds.size());
             mFinalBucketGroups.add(bucketGroup);
 
             ++sigsApplied;
@@ -1981,7 +2016,7 @@ public class BucketAnalyser
     private void fitAllSamples()
     {
         // in the final fit, background groups are included and no distinction is made between elevated and background counts
-        LOGGER.debug("applying final fit with {} bucket groups to all samples", mFinalBucketGroups.size());
+        SIG_LOGGER.debug("applying final fit with {} bucket groups to all samples", mFinalBucketGroups.size());
 
         double reqAllocPercent = MIN_GROUP_ALLOC_PERCENT_LOWER;
 
@@ -1989,7 +2024,7 @@ public class BucketAnalyser
 
         if(mConfig.UseBackgroundCounts)
         {
-            LOGGER.debug("including {} background group(s)", mBackgroundSigDiscovery.getBucketGroups().size());
+            SIG_LOGGER.debug("including {} background group(s)", mBackgroundSigDiscovery.getBucketGroups().size());
 
             List<BucketGroup> elevatedGroups = Lists.newArrayList();
             elevatedGroups.addAll(mFinalBucketGroups);
@@ -2069,7 +2104,7 @@ public class BucketAnalyser
 
             if(potentialGroupList.isEmpty())
             {
-                LOGGER.debug("sample({}) found no potential groups to fit", sample.Id);
+                SIG_LOGGER.debug("sample({}) found no potential groups to fit", sample.Id);
                 continue;
             }
 
@@ -2093,7 +2128,7 @@ public class BucketAnalyser
 
                         if (!usePrevFit)
                         {
-                            LOGGER.warn("sample({}) left unallocated", sample.Id);
+                            SIG_LOGGER.warn("sample({}) left unallocated", sample.Id);
                         }
                     }
                 }
@@ -2112,7 +2147,7 @@ public class BucketAnalyser
                 if(!bucketGroup.isBackground())
                     sample.addBucketGroup(bucketGroup, allocPerc);
 
-                LOGGER.debug(String.format("sample(%d) added to single bg(%d) fit(%s of %s, sc=%.2f) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f)",
+                SIG_LOGGER.debug(String.format("sample(%d) added to single bg(%d) fit(%s of %s, sc=%.2f) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f)",
                         sample.Id, bucketGroup.getId(), sizeToStr(actualAlloc), sizeToStr(sampleCount), bucketGroup.calcSampleFitScore(sample, true), sample.lastAllocPercChange(),
                         sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
             }
@@ -2153,7 +2188,7 @@ public class BucketAnalyser
             else if(sample.getAllocPercent() <= prevAllocPerc - 0.01)
                 allocResult = "worse";
 
-            LOGGER.debug(String.format("sample(%d) final fit: method(%s) groups(%d prev=%d pot=%d) %s allocation(prev=%.3f new=%.3f, act=%s of %s) noise(%s %.3f/%.3f)",
+            SIG_LOGGER.debug(String.format("sample(%d) final fit: method(%s) groups(%d prev=%d pot=%d) %s allocation(prev=%.3f new=%.3f, act=%s of %s) noise(%s %.3f/%.3f)",
                     sample.Id, useNewFit ? "all" : "prev", sample.getBucketGroups().size(), prevGroupCount, potentialGroupList.size(),
                     allocResult, prevAllocPerc, sample.getAllocPercent(), sizeToStr(sample.getAllocatedCount()), sizeToStr(sampleCount),
                     sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
@@ -2162,7 +2197,7 @@ public class BucketAnalyser
                 sampleGroupCounts.add((double)sample.getBucketGroups().size());
         }
 
-        LOGGER.debug(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
+        SIG_LOGGER.debug(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
                 sigContribOptimiser.getInstances(), sigContribOptimiser.getAvgIterations(), sigContribOptimiser.getAvgImprovePerc()));
 
         // report range of group counts across the samples
@@ -2175,7 +2210,7 @@ public class BucketAnalyser
             {
                 int medianIndex = sortedIndicesGCs.size() / 2;
                 double avg = sumVector(groupCounts) / groupCounts.length;
-                LOGGER.debug(String.format("sample group count stats: total(%d) max(%.0f) median(%.0f) avg(%.1f)",
+                SIG_LOGGER.debug(String.format("sample group count stats: total(%d) max(%.0f) median(%.0f) avg(%.1f)",
                         groupCounts.length, groupCounts[sortedIndicesGCs.get(0)], groupCounts[sortedIndicesGCs.get(medianIndex)], avg));
             }
         }
@@ -2190,7 +2225,7 @@ public class BucketAnalyser
 
         if(groupCount == 1)
         {
-            LOGGER.warn("sample({}) called to fit with a single group", sample.Id);
+            SIG_LOGGER.warn("sample({}) called to fit with a single group", sample.Id);
         }
 
         List<double[]> ratiosCollection = Lists.newArrayList();
@@ -2221,7 +2256,7 @@ public class BucketAnalyser
 
         if (!validCalc)
         {
-            LOGGER.error("sample({}) refit of {} sigs failed", sample.Id, groupCount);
+            SIG_LOGGER.error("sample({}) refit of {} sigs failed", sample.Id, groupCount);
             mHasErrors = true;
             return false;
         }
@@ -2233,7 +2268,7 @@ public class BucketAnalyser
 
         if (fitAllocPerc < prevAllocPerc - 0.001)
         {
-            LOGGER.debug(String.format("sample(%d) fit(%.3f) sigs(%d from %d) below required(%.3f)",
+            SIG_LOGGER.debug(String.format("sample(%d) fit(%.3f) sigs(%d from %d) below required(%.3f)",
                     sample.Id, fitAllocPerc, sigContribOptim.contributingSigCount(), groupCount, prevAllocPerc));
 
             if (removeAllocsOnFail)
@@ -2302,7 +2337,7 @@ public class BucketAnalyser
             {
                 if(fitAlloc == 0)
                 {
-                    LOGGER.debug(String.format("sample(%d) missed background bg(%d) fit allocation", sample.Id, bucketGroup.getId()));
+                    SIG_LOGGER.debug(String.format("sample(%d) missed background bg(%d) fit allocation", sample.Id, bucketGroup.getId()));
                     // force a test of allocation to the BG sig once the others have been applied
                 }
             }
@@ -2310,7 +2345,7 @@ public class BucketAnalyser
             {
                 if(fitAlloc / sampleCount < grpReqAllocPerc || fitAlloc < mConfig.MinSampleAllocCount)
                 {
-                    LOGGER.debug(String.format("sample(%d) missed fit contrib bg(%d) fit(%s perc=%.3f of %s)",
+                    SIG_LOGGER.debug(String.format("sample(%d) missed fit contrib bg(%d) fit(%s perc=%.3f of %s)",
                             sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), fitAlloc / sampleCount, sizeToStr(sampleCount)));
                     break;
                 }
@@ -2338,7 +2373,7 @@ public class BucketAnalyser
                 bucketGroup.addSample(sample.Id, allocCounts);
                 sample.addBucketGroup(bucketGroup, allocPerc);
 
-                LOGGER.debug(String.format("sample(%d) added to bg(%d) fit(%s act=%s of %s sc=%.2f) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f)",
+                SIG_LOGGER.debug(String.format("sample(%d) added to bg(%d) fit(%s act=%s of %s sc=%.2f) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f)",
                         sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), sizeToStr(actualAlloc), sizeToStr(sampleCount), bucketGroup.calcSampleFitScore(sample, true),
                         sample.lastAllocPercChange(), sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
 
@@ -2346,14 +2381,14 @@ public class BucketAnalyser
             }
             else
             {
-                LOGGER.debug(String.format("sample(%d) missed alloc to bg(%d) fit(%s perc=%.3f) vs actual(%s perc=%.3f)",
+                SIG_LOGGER.debug(String.format("sample(%d) missed alloc to bg(%d) fit(%s perc=%.3f) vs actual(%s perc=%.3f)",
                         sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), fitAlloc / sampleCount, sizeToStr(actualAlloc), actualAlloc / sampleCount));
             }
         }
 
         if(sample.getAllocPercent() < prevAllocPerc - 0.001)
         {
-            LOGGER.debug(String.format("sample(%d) fit with all alloc total(%s perc=%.3f) below required(%.3f)",
+            SIG_LOGGER.debug(String.format("sample(%d) fit with all alloc total(%s perc=%.3f) below required(%.3f)",
                     sample.Id, sizeToStr(sample.getAllocatedCount()), sample.getAllocPercent(), prevAllocPerc));
 
             if(removeAllocsOnFail)
@@ -2374,7 +2409,7 @@ public class BucketAnalyser
 
     private void checkSampleRefitWithRanges()
     {
-        LOGGER.debug("checking sample refit within bucket ratio ranges");
+        SIG_LOGGER.debug("checking sample refit within bucket ratio ranges");
 
         double reqAllocPercent = MIN_GROUP_ALLOC_PERCENT_LOWER;
 
@@ -2401,7 +2436,7 @@ public class BucketAnalyser
 
                     if(samIndex == -1)
                     {
-                        LOGGER.error("sample({}) not found in bg({})", sample.Id, bucketGroup.getId());
+                        SIG_LOGGER.error("sample({}) not found in bg({})", sample.Id, bucketGroup.getId());
                         continue;
                     }
                 }
@@ -2464,7 +2499,7 @@ public class BucketAnalyser
                     bucketGroup.addSample(sample.Id, allocCounts);
                     sample.addBucketGroup(bucketGroup, allocPerc);
 
-                    LOGGER.debug(String.format("sample(%d) added to bg(%d) refit(%s act=%s of %s) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f) groupCount(%d)",
+                    SIG_LOGGER.debug(String.format("sample(%d) added to bg(%d) refit(%s act=%s of %s) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f) groupCount(%d)",
                             sample.Id, bucketGroup.getId(), sizeToStr(allocTotal), sizeToStr(actualAlloc), sizeToStr(sampleCount), sample.lastAllocPercChange(),
                             sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal(), sample.getBucketGroups().size()));
                 }
@@ -2474,7 +2509,7 @@ public class BucketAnalyser
 
     private void assessBucketGroupSampleRanges()
     {
-        LOGGER.debug("assessing bucket ratio range expansion");
+        SIG_LOGGER.debug("assessing bucket ratio range expansion");
 
         // first purge any empty groups following the final fit
         int bgIndex = 0;
@@ -2483,7 +2518,7 @@ public class BucketAnalyser
             BucketGroup bucketGroup = mFinalBucketGroups.get(bgIndex);
             if(bucketGroup.getSampleCount() == 0)
             {
-                LOGGER.debug("bg({}) has no samples and removed", bucketGroup.getId());
+                SIG_LOGGER.debug("bg({}) has no samples and removed", bucketGroup.getId());
                 mFinalBucketGroups.remove(bgIndex);
                 continue;
             }
@@ -2579,7 +2614,7 @@ public class BucketAnalyser
         if(mExtSampleData == null)
             return;
 
-        LOGGER.debug("analysing {} bucket groups", bgList.size());
+        SIG_LOGGER.debug("analysing {} bucket groups", bgList.size());
 
         // check counts for each external data category against the samples in each bucket group
 
@@ -2630,7 +2665,7 @@ public class BucketAnalyser
 
             if(verbose)
             {
-                LOGGER.debug(String.format("bg(%d) category(%s) count(%d of %d) perc(group=%.3f category=%.3f)",
+                SIG_LOGGER.debug(String.format("bg(%d) category(%s) count(%d of %d) perc(group=%.3f category=%.3f)",
                         bucketGroup.getId(), catName, catSampleCount, sampleCount, samplesPerc, catPerc));
             }
 
@@ -2748,7 +2783,7 @@ public class BucketAnalyser
         }
         catch(IOException exception)
         {
-            LOGGER.error("failed to write output file: interim bucket groups");
+            SIG_LOGGER.error("failed to write output file: interim bucket groups");
         }
     }
 
@@ -2789,7 +2824,7 @@ public class BucketAnalyser
         }
         catch(IOException exception)
         {
-            LOGGER.error("failed to write output file: bucket group ratio range data");
+            SIG_LOGGER.error("failed to write output file: bucket group ratio range data");
         }
     }
 
@@ -2854,7 +2889,7 @@ public class BucketAnalyser
         }
         catch(IOException exception)
         {
-            LOGGER.error("failed to write output file: bucket groups");
+            SIG_LOGGER.error("failed to write output file: bucket groups");
         }
     }
 
@@ -2865,7 +2900,7 @@ public class BucketAnalyser
 
         int proposedSigCount = min(mConfig.MaxProposedSigs, mFinalBucketGroups.size());
 
-        LOGGER.debug("creating {} signatures", proposedSigCount);
+        SIG_LOGGER.debug("creating {} signatures", proposedSigCount);
 
         mProposedSigs = new SigMatrix(mBucketCount, proposedSigCount);
 
@@ -3002,7 +3037,7 @@ public class BucketAnalyser
 
         if(sampleCount != mSampleCount)
         {
-            LOGGER.error("sample count mismatch({} vs {})", sampleCount, mSampleCount);
+            SIG_LOGGER.error("sample count mismatch({} vs {})", sampleCount, mSampleCount);
             mHasErrors = true;
         }
     }
@@ -3183,7 +3218,7 @@ public class BucketAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile");
+            SIG_LOGGER.error("error writing to outputFile");
         }
     }
 
@@ -3270,7 +3305,7 @@ public class BucketAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing sample group alloc file");
+            SIG_LOGGER.error("error writing sample group alloc file");
         }
     }
 
@@ -3309,7 +3344,7 @@ public class BucketAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile");
+            SIG_LOGGER.error("error writing to outputFile");
         }
     }
 
@@ -3358,7 +3393,7 @@ public class BucketAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing sample contrib file");
+            SIG_LOGGER.error("error writing sample contrib file");
         }
     }
 
@@ -3405,7 +3440,7 @@ public class BucketAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing sig sample counts file");
+            SIG_LOGGER.error("error writing sig sample counts file");
         }
     }
 
@@ -3461,7 +3496,7 @@ public class BucketAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing sig sample counts file");
+            SIG_LOGGER.error("error writing sig sample counts file");
         }
     }
 
@@ -3510,7 +3545,7 @@ public class BucketAnalyser
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile");
+            SIG_LOGGER.error("error writing to outputFile");
         }
     }
 
@@ -3536,7 +3571,7 @@ public class BucketAnalyser
             writer.close();
         } catch (final IOException e)
         {
-            LOGGER.error("error writing sample noise file");
+            SIG_LOGGER.error("error writing sample noise file");
         }
     }
 

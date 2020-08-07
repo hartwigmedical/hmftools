@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.equalVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.SIG_LOGGER;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 
 import java.util.List;
 

@@ -8,12 +8,12 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DEFAULT_SIG_RATIO_RANGE_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SIG_SIMILAR_CSS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.calcSharedCSS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_BACKGROUND;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I1;
 import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I2;
 import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_VAL;
@@ -30,9 +30,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class BackgroundSigDiscovery
 {
