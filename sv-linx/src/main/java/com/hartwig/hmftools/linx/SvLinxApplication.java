@@ -3,9 +3,6 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
-import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
-import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
-import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
 import static com.hartwig.hmftools.linx.LinxConfig.DRIVERS_CHECK;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -13,13 +10,14 @@ import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
-import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromGermlineVcf;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
 import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_DATA_DIR;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -78,7 +76,7 @@ public class SvLinxApplication
 
         LinxConfig config = new LinxConfig(cmd);
 
-        final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
+        final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
         boolean sampleDataFromFile = !config.PurpleDataPath.isEmpty() || config.IsGermline;
 
@@ -331,9 +329,7 @@ public class SvLinxApplication
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
+        addDatabaseCmdLineArgs(options);
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: Ensembl data cache directory");

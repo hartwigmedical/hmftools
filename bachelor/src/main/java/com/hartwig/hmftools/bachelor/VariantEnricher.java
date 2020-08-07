@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_URL;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.REF_GENOME;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
 import static com.hartwig.hmftools.bachelor.types.PathogenicType.BLACK_LIST;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
@@ -17,6 +15,7 @@ import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrich
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -75,7 +74,7 @@ class VariantEnricher
         mConfig = config;
         mBachRecords = Lists.newArrayList();
 
-        mDbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
+        mDbAccess = createDatabaseAccess(cmd);
 
         mIndexedFastaSeqFile = null;
         mBamCountReader = null;

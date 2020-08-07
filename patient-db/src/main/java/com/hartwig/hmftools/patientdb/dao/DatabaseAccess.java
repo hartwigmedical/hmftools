@@ -36,6 +36,8 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -53,6 +55,10 @@ public class DatabaseAccess implements AutoCloseable {
     private static final String DEV_CATALOG = "hmfpatients_test";
 
     public static final double MIN_SAMPLE_PURITY = 0.195;
+
+    public static final String DB_USER = "db_user";
+    public static final String DB_PASS = "db_pass";
+    public static final String DB_URL = "db_url";
 
     @NotNull
     private final DSLContext context;
@@ -122,6 +128,45 @@ public class DatabaseAccess implements AutoCloseable {
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
         clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
+    }
+
+    public static void addDatabaseCmdLineArgs(final Options options)
+    {
+        options.addOption(DB_USER, true, "Database user name");
+        options.addOption(DB_PASS, true, "Database password");
+        options.addOption(DB_URL, true, "Database url");
+    }
+
+    public static boolean hasDatabaseConfig(@NotNull final CommandLine cmd)
+    {
+        return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER) && cmd.hasOption(DB_PASS);
+    }
+
+    @NotNull
+    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
+    {
+        final String userName = cmd.getOptionValue(DB_USER);
+        final String password = cmd.getOptionValue(DB_PASS);
+        final String databaseUrl = cmd.getOptionValue(DB_URL);
+        final String jdbcUrl = "jdbc:" + databaseUrl;
+        return new DatabaseAccess(userName, password, jdbcUrl);
+    }
+
+    @Nullable
+    public static DatabaseAccess createDatabaseAccess(@NotNull final CommandLine cmd)
+    {
+        if(!hasDatabaseConfig(cmd))
+            return null;
+
+        try
+        {
+            return databaseAccess(cmd);
+        }
+        catch (SQLException e)
+        {
+            LOGGER.error("DB connection failed: {}", e.toString());
+            return null;
+        }
     }
 
     @NotNull

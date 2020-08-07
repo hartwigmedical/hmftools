@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bachelor.types;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,9 +46,6 @@ public class BachelorConfig
 
     public static final String SAMPLE = "sample";
 
-    public static final String DB_USER = "db_user";
-    public static final String DB_PASS = "db_pass";
-    public static final String DB_URL = "db_url";
     public static final String REF_GENOME = "ref_genome";
 
     private static final String GERMLINE_VCF = "germline_vcf";
@@ -164,9 +163,7 @@ public class BachelorConfig
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
         options.addOption(INCLUDE_VCF_FILTERED, false, "Include variants filtered in the VCF");
 
-        options.addOption(DB_USER, true, "Database user name");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database url");
+        addDatabaseCmdLineArgs(options);
 
         // logging
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
@@ -174,26 +171,5 @@ public class BachelorConfig
         GermlineVcfParser.addCmdLineOptions(options);
 
         return options;
-    }
-    
-    @Nullable
-    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd)
-    {
-        if (!cmd.hasOption(DB_URL))
-            return null;
-
-        try
-        {
-            final String userName = cmd.getOptionValue(DB_USER);
-            final String password = cmd.getOptionValue(DB_PASS);
-            final String databaseUrl = cmd.getOptionValue(DB_URL);
-            final String jdbcUrl = "jdbc:" + databaseUrl;
-            return new DatabaseAccess(userName, password, jdbcUrl);
-        }
-        catch (SQLException e)
-        {
-            BACH_LOGGER.error("DB connection failed: {}", e.toString());
-            return null;
-        }
     }
 }

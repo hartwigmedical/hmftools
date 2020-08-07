@@ -10,13 +10,9 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
-import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
-import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
-import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -25,6 +21,8 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLe
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomeLength;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -95,10 +93,8 @@ public class CopyNumberAnalyser
 
     public static void addCmdLineArgs(Options options)
     {
+        addDatabaseCmdLineArgs(options);
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
-        options.addOption(DB_USER, true, "Database user name");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database URL");
         options.addOption(SAMPLE, true, "Sample(s) or CSV file with sample IDs");
         options.addOption(WRITE_LOH_TO_FILE, false, "Write LOH events to CSV");
         options.addOption(WRITE_JCN_TO_FILE, false, "Write adjusted JCN to CSV");
@@ -641,7 +637,7 @@ public class CopyNumberAnalyser
 
         String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
 
-        final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
+        final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
         CopyNumberAnalyser cnAnalyser = new CopyNumberAnalyser(outputDir, dbAccess);
         cnAnalyser.loadConfig(cmd);

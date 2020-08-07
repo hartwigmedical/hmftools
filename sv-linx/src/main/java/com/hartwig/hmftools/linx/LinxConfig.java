@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -62,10 +63,6 @@ public class LinxConfig
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
 
-    public static final String DB_USER = "db_user";
-    public static final String DB_PASS = "db_pass";
-    public static final String DB_URL = "db_url";
-
     public static final String DRIVERS_CHECK = "check_drivers";
     public static final String CHECK_FUSIONS = "check_fusions";
 
@@ -102,7 +99,7 @@ public class LinxConfig
     {
         mSampleIds = sampleListFromConfigStr(cmd.getOptionValue(SAMPLE));
 
-        if(cmd.hasOption(UPLOAD_TO_DB) && cmd.hasOption(DB_URL))
+        if(cmd.hasOption(UPLOAD_TO_DB) && hasDatabaseConfig(cmd))
         {
             UploadToDB = Boolean.parseBoolean(cmd.getOptionValue(UPLOAD_TO_DB));
         }
@@ -262,16 +259,6 @@ public class LinxConfig
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
 
         LinxOutput.addCmdLineArgs(options);
-    }
-
-    @NotNull
-    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
-    {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 
     private static List<String> loadSampleListFile(final String filename)

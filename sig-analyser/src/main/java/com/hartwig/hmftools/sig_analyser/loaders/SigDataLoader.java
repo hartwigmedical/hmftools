@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
 
 import java.sql.SQLException;
@@ -23,10 +25,6 @@ public class SigDataLoader
     private static final String LOAD_SNVS = "load_snvs";
     private static final String LOAD_MNVS = "load_mnvs";
     private static final String LOAD_INDELS = "load_indels";
-
-    public static final String DB_USER = "db_user";
-    public static final String DB_PASS = "db_pass";
-    public static final String DB_URL = "db_url";
 
     private static final Logger LOGGER = LogManager.getLogger(SigDataLoader.class);
 
@@ -96,28 +94,11 @@ public class SigDataLoader
         return options;
     }
 
-    public static void addDatabaseCmdLineArgs(final Options options)
-    {
-        options.addOption(DB_USER, true, "Database user name");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database url");
-    }
-
     @NotNull
     private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-    }
-
-    @NotNull
-    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
-    {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 
 }

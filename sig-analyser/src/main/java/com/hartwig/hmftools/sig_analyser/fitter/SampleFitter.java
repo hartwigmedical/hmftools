@@ -9,15 +9,16 @@ import static com.hartwig.hmftools.common.sigs.SignatureAllocation.SIG_UNALLOCAT
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleMatrixCounts;
-import static com.hartwig.hmftools.sig_analyser.loaders.SigDataLoader.DB_URL;
-import static com.hartwig.hmftools.sig_analyser.loaders.SigDataLoader.addDatabaseCmdLineArgs;
-import static com.hartwig.hmftools.sig_analyser.loaders.SigDataLoader.databaseAccess;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -84,20 +85,7 @@ public class SampleFitter
 
         mOutputDir = outputDir;
         mFitWriter = null;
-        mDbAccess = null;
-
-        if(cmd.hasOption(DB_URL))
-        {
-            try
-            {
-                mDbAccess = databaseAccess(cmd);
-
-            }
-            catch (SQLException e)
-            {
-                SIG_LOGGER.error("DB connection failed: {}", e.toString());
-            }
-        }
+        mDbAccess = createDatabaseAccess(cmd);
     }
 
     public void run()

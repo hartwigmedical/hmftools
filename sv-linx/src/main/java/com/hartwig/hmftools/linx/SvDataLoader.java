@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.linx;
 
-import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
-import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
-import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
 import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
 import static com.hartwig.hmftools.linx.LinxConfig.SV_DATA_DIR;
-import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
 
 import java.io.IOException;
@@ -63,7 +61,7 @@ public class SvDataLoader
     {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
+        final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
         if(dbAccess == null)
         {
@@ -384,13 +382,11 @@ public class SvDataLoader
     private static Options createBasicOptions()
     {
         final Options options = new Options();
+        addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE");
         options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
         options.addOption(LOAD_SV_DATA, false, "Optional: load purple VCF into SV database table");
         options.addOption(LOAD_LINX_DATA, false, "Optional: load all LINX files to database");
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database url");
         options.addOption(SV_DATA_DIR, true, "Directory to read or write SV data");
 
         return options;

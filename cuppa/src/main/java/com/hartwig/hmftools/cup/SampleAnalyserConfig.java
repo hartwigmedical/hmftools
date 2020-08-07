@@ -2,6 +2,8 @@ package com.hartwig.hmftools.cup;
 
 import java.io.File;
 
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
@@ -9,14 +11,6 @@ import org.apache.logging.log4j.Logger;
 
 public class SampleAnalyserConfig
 {
-    // sample data, if not sourced from the database
-    public final String SampleDataFile;
-    public final String SampleDriversFile;
-    public final String SampleTraitsFile;
-    public final String SampleSnvCountsFile;
-    public final String SampleSigContribFile;
-    public final String SampleSvFile;
-
     // reference data
     public final String RefSampleDataFile;
     public final String RefSnvCountsFile;
@@ -26,10 +20,21 @@ public class SampleAnalyserConfig
     public final String RefTraitPercFile;
     public final String RefTraitRateFile;
 
+    // sample data, if not sourced from the database
+    public final String SampleDataFile;
+    public final String SampleDriversFile;
+    public final String SampleTraitsFile;
+    public final String SampleSnvCountsFile;
+    public final String SampleSigContribFile;
+    public final String SampleSvFile;
+
+    // database access
+    private DatabaseAccess mDbAccess;
+
     public final String OutputDir;
     public final String OutputFileId;
 
-    // config string
+    // config strings
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
     private static final String SAMPLE_DRIVERS_FILE = "sample_drivers_file";

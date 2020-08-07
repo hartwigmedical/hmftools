@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.bachelor;
 
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_PASS;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_URL;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_USER;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.SAMPLE;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.util.List;
 
@@ -28,7 +26,7 @@ public class LoadGermlineVariants
         final Options options = createBasicOptions();
         final CommandLine cmd = new DefaultParser().parse(options, args);
 
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
+        final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
         if(dbAccess == null)
         {
@@ -72,9 +70,7 @@ public class LoadGermlineVariants
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample");
         options.addOption(SAMPLE_DATA_DIR, true, "Path for germline variants TSV file");
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database url");
+        addDatabaseCmdLineArgs(options);
 
         return options;
     }
