@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
+
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -26,10 +30,6 @@ public final class LoadMetricsData {
 
     private static final String REF_METRICS_FILE = "ref_metrics_file";
     private static final String TUMOR_METRICS_FILE = "tumor_metrics_file";
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();

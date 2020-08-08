@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -21,10 +26,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class LoadPgxData {
     private static final Logger LOGGER = LogManager.getLogger(LoadPgxData.class);
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
 
     private static final String SAMPLE = "sample";
     private static final String PGX_CALLS_TXT = "pgx_calls_txt";
@@ -73,9 +74,7 @@ public class LoadPgxData {
         options.addOption(PGX_CALLS_TXT, true, "Path towards the pgx calls txt file");
         options.addOption(PGX_GENOTYPE_TXT, true, "Path towards the pgx genotype txt file");
 
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
+        addDatabaseCmdLineArgs(options);
 
         return options;
     }

@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -82,10 +88,6 @@ public final class LoadClinicalData {
     private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
     private static final String TUMOR_LOCATION_SYMLINK = "tumor_location_symlink";
 
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
-
     public static void main(@NotNull String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         LOGGER.info("Running patient-db v{}", VERSION);
         Options options = createOptions();
@@ -98,7 +100,7 @@ public final class LoadClinicalData {
         }
 
         LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
-        DatabaseAccess dbWriter = createDbWriter(cmd);
+        DatabaseAccess dbWriter = databaseAccess(cmd);
 
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
         List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
@@ -532,12 +534,6 @@ public final class LoadClinicalData {
         return sequencedSamples;
     }
 
-    @NotNull
-    private static DatabaseAccess createDbWriter(@NotNull CommandLine cmd) throws SQLException {
-        String jdbcUrl = "jdbc:" + cmd.getOptionValue(DB_URL);
-        return new DatabaseAccess(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), jdbcUrl);
-    }
-
     private static boolean checkInputs(@NotNull CommandLine cmd) {
         String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
 
@@ -594,9 +590,7 @@ public final class LoadClinicalData {
         options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");
         options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of tumor location csv symlink.");
 
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
+        addDatabaseCmdLineArgs(options);
         return options;
     }
 

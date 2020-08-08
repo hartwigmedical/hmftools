@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
+
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -33,10 +36,6 @@ public class LoadSomaticVariants {
 
     private static final String PASS_FILTER = "pass_filter";
     private static final String SOMATIC_FILTER = "somatic_filter";
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createBasicOptions();
@@ -73,9 +72,7 @@ public class LoadSomaticVariants {
         options.addOption(SOMATIC_VCF, true, "Path to the somatic SNV/indel vcf file.");
         options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
         options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
+        addDatabaseCmdLineArgs(options);
         options.addOption(HOTSPOT_TSV, true, "Deprecated.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Deprecated.");
 
@@ -85,14 +82,5 @@ public class LoadSomaticVariants {
     @NotNull
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         return new DefaultParser().parse(options, args);
-    }
-
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
-        String userName = cmd.getOptionValue(DB_USER);
-        String password = cmd.getOptionValue(DB_PASS);
-        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

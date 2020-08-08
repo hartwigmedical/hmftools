@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -24,10 +29,6 @@ public final class LoadChordData {
     private static final String SAMPLE = "sample";
 
     private static final String PREDICTION_FILE = "prediction_file";
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException {
         Options options = createOptions();
@@ -75,10 +76,7 @@ public final class LoadChordData {
         Options options = new Options();
         options.addOption(SAMPLE, true, "The tumor sample.");
         options.addOption(PREDICTION_FILE, true, "Path towards the chord prediction file.");
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
-
+        addDatabaseCmdLineArgs(options);
         return options;
     }
 

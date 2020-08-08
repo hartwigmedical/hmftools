@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -43,10 +49,6 @@ public class LoadEvidenceData {
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createOptions();
@@ -207,24 +209,12 @@ public class LoadEvidenceData {
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
 
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
-
+        addDatabaseCmdLineArgs(options);
         return options;
     }
 
     @NotNull
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         return new DefaultParser().parse(options, args);
-    }
-
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
-        String userName = cmd.getOptionValue(DB_USER);
-        String password = cmd.getOptionValue(DB_PASS);
-        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

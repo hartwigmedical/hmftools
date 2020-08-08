@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -22,10 +24,6 @@ public class LoadDriverCatalog {
 
     private static final String DATA_DIR = "data_dir";
 
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
-
     private static final Logger LOGGER = LogManager.getLogger(LoadDriverCatalog.class);
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
@@ -47,13 +45,5 @@ public class LoadDriverCatalog {
         }
     }
 
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
-        String userName = cmd.getOptionValue(DB_USER);
-        String password = cmd.getOptionValue(DB_PASS);
-        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
-    }
 
 }

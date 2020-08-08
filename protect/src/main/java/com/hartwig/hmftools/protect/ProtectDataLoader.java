@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.protect;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -25,10 +30,6 @@ public class ProtectDataLoader {
     private static final String SAMPLE = "sample";
 
     private static final String ACTIONABILITY_TSV = "knowledgebase_dir";
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
@@ -92,14 +93,5 @@ public class ProtectDataLoader {
     private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

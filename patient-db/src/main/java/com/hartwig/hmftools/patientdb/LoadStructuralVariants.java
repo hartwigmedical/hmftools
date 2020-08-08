@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
 
 import java.io.IOException;
@@ -34,10 +36,6 @@ public class LoadStructuralVariants {
 
     private static final String SV_VCF = "structural_vcf";
     private static final String SV_DATA_DIRECTORY = "sv_data_dir";
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createBasicOptions();
@@ -146,9 +144,7 @@ public class LoadStructuralVariants {
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
         options.addOption(SV_VCF, true, "Path to the PURPLE structural variant VCF file.");
         options.addOption(SV_DATA_DIRECTORY, true, "Optional: directory to write SV data in TSV format");
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
+        addDatabaseCmdLineArgs(options);
 
         return options;
     }
@@ -156,14 +152,5 @@ public class LoadStructuralVariants {
     @NotNull
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         return new DefaultParser().parse(options, args);
-    }
-
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
-        String userName = cmd.getOptionValue(DB_USER);
-        String password = cmd.getOptionValue(DB_PASS);
-        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }
