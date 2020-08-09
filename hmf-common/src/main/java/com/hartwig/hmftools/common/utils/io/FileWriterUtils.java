@@ -18,12 +18,22 @@ public final class FileWriterUtils
 {
     public static final String OUTPUT_DIR = "output_dir";
 
-    public static final String parseOutputDir(final CommandLine cmd)
+    public static final String parseOutputDir(@NotNull final CommandLine cmd)
     {
         String outputDir = cmd.getOptionValue(OUTPUT_DIR);
-        return outputDir.contains(File.separator) ? outputDir : outputDir + File.separator;
+        if(outputDir == null)
+            return null;
+
+        return checkOutputDir(outputDir);
     }
 
+    public static final String checkOutputDir(@NotNull final String outputDir)
+    {
+        if(outputDir.endsWith(File.separator))
+            return outputDir;
+
+        return outputDir + File.separator;
+    }
 
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException

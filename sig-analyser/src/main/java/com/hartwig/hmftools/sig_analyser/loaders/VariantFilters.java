@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
-
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.commons.cli.CommandLine;

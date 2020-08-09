@@ -7,8 +7,9 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
@@ -100,7 +101,7 @@ public class SampleSimulator
 
     public void initialise(final CommandLine cmd)
     {
-        mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        mOutputDir = parseOutputDir(cmd);
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mConfig = new SimConfig(cmd);
 

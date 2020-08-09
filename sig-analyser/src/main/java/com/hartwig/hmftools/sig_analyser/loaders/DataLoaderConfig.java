@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
 
@@ -33,7 +34,7 @@ public class DataLoaderConfig
 
     public DataLoaderConfig(final CommandLine cmd)
     {
-        OutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
 
         ApplySampleQC = cmd.hasOption(APPLY_SAMPLE_QC);

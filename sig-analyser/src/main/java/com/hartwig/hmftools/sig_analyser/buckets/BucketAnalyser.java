@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_EXT_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_PREDEFINED_SIGS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.CANCER_TYPE_OTHER;
@@ -42,7 +44,6 @@ import static com.hartwig.hmftools.sig_analyser.buckets.SigOptimiser.SMALL_RATIO
 import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.calcRangeValue;
@@ -182,7 +183,7 @@ public class BucketAnalyser
     public BucketAnalyser(GenericDataCollection collection, final CommandLine cmd)
     {
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
-        mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        mOutputDir = parseOutputDir(cmd);
         mConfig = new BaConfig(cmd);
 
         // initialise sample counts and related totals

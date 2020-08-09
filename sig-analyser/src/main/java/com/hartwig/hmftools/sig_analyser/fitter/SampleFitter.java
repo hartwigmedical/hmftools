@@ -7,13 +7,14 @@ import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleMatrixCounts;
@@ -74,13 +75,7 @@ public class SampleFitter
         mSampleCountsMatrix = null;
         mSignatures = null;
 
-        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
-        if(!outputDir.endsWith(File.separator))
-        {
-            outputDir += File.separator;
-        }
-
-        mOutputDir = outputDir;
+        mOutputDir = parseOutputDir(cmd);
         mFitWriter = null;
         mDbAccess = createDatabaseAccess(cmd);
     }

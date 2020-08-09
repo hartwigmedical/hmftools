@@ -2,9 +2,10 @@ package com.hartwig.hmftools.sig_analyser.nmf;
 
 import static java.lang.Integer.max;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
@@ -72,7 +73,7 @@ public class NmfAnalyser
 
     public void initialise(GenericDataCollection collection, final CommandLine cmd)
     {
-        mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        mOutputDir = parseOutputDir(cmd);
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mConfig = new NmfConfig(cmd);
         mDataCollection = collection;

@@ -31,7 +31,6 @@ public class CommonUtils
     public static final String SAMPLE_COUNTS_FILE = "sample_counts_file";
     public static final String LOG_DEBUG = "log_debug";
 
-    public static final String OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_FILE_ID = "output_file_id";
 
     public static final Logger SIG_LOGGER = LogManager.getLogger(CommonUtils.class);
@@ -41,15 +40,7 @@ public class CommonUtils
         if(outputDir.isEmpty())
             return null;
 
-        String outputFileName = outputDir;
-        if (!outputFileName.endsWith(File.separator))
-        {
-            outputFileName += File.separator;
-        }
-
-        outputFileName += fileName;
-
-        return createBufferedWriter(outputFileName, false);
+        return createBufferedWriter(outputDir + fileName, false);
     }
 
     public static SigMatrix loadSampleMatrixCounts(final String filename, final List<String> sampleIds)
