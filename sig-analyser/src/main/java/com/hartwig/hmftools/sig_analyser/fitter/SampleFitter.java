@@ -2,17 +2,15 @@ package com.hartwig.hmftools.sig_analyser.fitter;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
+import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.SignatureAllocation.SIG_EXCESS;
-import static com.hartwig.hmftools.common.sigs.SignatureAllocation.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_DIR;
@@ -23,7 +21,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleMat
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;

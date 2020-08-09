@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.utils.io;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,15 +10,20 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import org.apache.commons.cli.CommandLine;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class FileWriterUtils
 {
+    public static final String OUTPUT_DIR = "output_dir";
 
-    private FileWriterUtils()
+    public static final String parseOutputDir(final CommandLine cmd)
     {
+        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
+        return outputDir.contains(File.separator) ? outputDir : outputDir + File.separator;
     }
+
 
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException
@@ -68,5 +74,7 @@ public final class FileWriterUtils
 
         return fieldsIndexMap;
     }
+
+
 
 }

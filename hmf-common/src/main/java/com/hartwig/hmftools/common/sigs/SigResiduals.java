@@ -6,6 +6,9 @@ public class SigResiduals
     public double Percent;
     public double Excess;
 
+    public static final String SIG_UNALLOCATED = "UNALLOC";
+    public static final String SIG_EXCESS = "EXCESS";
+
     public SigResiduals(final double total, final double percent, final double excess)
     {
         Total = total;
@@ -19,5 +22,7 @@ public class SigResiduals
         Percent = 0;
         Excess = 0;
     }
+
+    public double unallocated() { return Total - Excess; }
 
 }
