@@ -33,8 +33,8 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLinkFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvDataFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotationFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
@@ -92,7 +92,7 @@ public class SvDataLoader
     {
         try
         {
-            List<LinxSvData> linxSvData = LinxSvDataFile.read(LinxSvDataFile.generateFilename(svDataOutputDir, sampleId));
+            List<LinxSvAnnotation> linxSvData = LinxSvAnnotationFile.read(LinxSvAnnotationFile.generateFilename(svDataOutputDir, sampleId));
             LOGGER.info("sample({}) loading {} SV annotation records", sampleId, linxSvData.size());
             dbAccess.writeSvLinxData(sampleId, linxSvData);
 

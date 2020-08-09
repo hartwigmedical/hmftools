@@ -18,6 +18,7 @@ import com.google.common.collect.Maps;
 
 public class SampleDataCache
 {
+    public final List<String> SampleIds;
     public final List<SampleData> SampleDataList;
     public SampleData SpecificSample;
 
@@ -26,6 +27,7 @@ public class SampleDataCache
 
     public SampleDataCache()
     {
+        SampleIds = Lists.newArrayList();
         SampleDataList = Lists.newArrayList();
         RefCancerSampleData = Maps.newHashMap();
         RefSampleCancerTypeMap = Maps.newHashMap();
@@ -85,6 +87,8 @@ public class SampleDataCache
                 CUP_LOGGER.error("failed to read sample data file({}): {}", sampleDataFile, e.toString());
             }
         }
+
+        SampleDataList.forEach(x -> SampleIds.add(x.Id));
     }
 
     public void loadReferenceSampleData(final String refSampleDataFile)

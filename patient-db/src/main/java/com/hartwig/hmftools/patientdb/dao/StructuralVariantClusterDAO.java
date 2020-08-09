@@ -12,10 +12,13 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +27,8 @@ import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep22;
 import org.jooq.InsertValuesStep5;
 import org.jooq.InsertValuesStep9;
+import org.jooq.Record;
+import org.jooq.Result;
 
 class StructuralVariantClusterDAO
 {
@@ -72,13 +77,13 @@ class StructuralVariantClusterDAO
                 DatabaseUtil.checkStringLength(cluster.clusterDesc(), SVCLUSTER.CLUSTERDESC));
     }
 
-    public void writeSvData(@NotNull String sample, @NotNull List<LinxSvData> svData)
+    public void writeSvData(@NotNull String sample, @NotNull List<LinxSvAnnotation> svData)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SVANNOTATION).where(SVANNOTATION.SAMPLEID.eq(sample)).execute();
 
-        for (List<LinxSvData> batch : Iterables.partition(svData, DB_BATCH_INSERT_SIZE))
+        for (List<LinxSvAnnotation> batch : Iterables.partition(svData, DB_BATCH_INSERT_SIZE))
         {
             InsertValuesStep22 inserter = context.insertInto(SVANNOTATION,
                     SVANNOTATION.SAMPLEID,
@@ -110,7 +115,7 @@ class StructuralVariantClusterDAO
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep22 inserter, @NotNull String sample,
-            @NotNull LinxSvData svData)
+            @NotNull LinxSvAnnotation svData)
     {
         inserter.values(sample,
                 timestamp,
@@ -249,6 +254,69 @@ class StructuralVariantClusterDAO
                 driver.clusterId() == -1 ? null : driver.clusterId(),
                 driver.gene(),
                 DatabaseUtil.checkStringLength(driver.eventType(), SVDRIVER.EVENTTYPE));
+    }
+
+    @NotNull
+    public List<LinxSvAnnotation> readAnnotations(@NotNull String sample)
+    {
+        List<LinxSvAnnotation> svAnnotations = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(SVANNOTATION).where(SVANNOTATION.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result)
+        {
+            LinxSvAnnotation svData = ImmutableLinxSvAnnotation.builder()
+                    .svId(record.getValue(SVANNOTATION.SVID))
+                    .clusterId(record.getValue(SVANNOTATION.CLUSTERID))
+                    .clusterReason(record.getValue(SVANNOTATION.CLUSTERREASON))
+                    .fragileSiteStart(record.getValue(SVANNOTATION.FRAGILESITESTART) == 1)
+                    .fragileSiteEnd(record.getValue(SVANNOTATION.FRAGILESITEEND) == 1)
+                    .isFoldback(record.getValue(SVANNOTATION.ISFOLDBACK) == 1)
+                    .lineTypeStart(record.getValue(SVANNOTATION.LINETYPESTART))
+                    .lineTypeEnd(record.getValue(SVANNOTATION.LINETYPEEND))
+                    .junctionCopyNumberMin(record.getValue(SVANNOTATION.JUNCTIONCOPYNUMBERMIN))
+                    .junctionCopyNumberMax(record.getValue(SVANNOTATION.JUNCTIONCOPYNUMBERMAX))
+                    .geneStart(record.getValue(SVANNOTATION.GENESTART))
+                    .geneEnd(record.getValue(SVANNOTATION.GENEEND))
+                    .replicationTimingStart(record.getValue(SVANNOTATION.REPLICATIONTIMINGSTART))
+                    .replicationTimingEnd(record.getValue(SVANNOTATION.REPLICATIONTIMINGEND))
+                    .localTopologyIdStart(record.getValue(SVANNOTATION.LOCALTOPOLOGYIDSTART))
+                    .localTopologyIdEnd(record.getValue(SVANNOTATION.LOCALTOPOLOGYIDEND))
+                    .localTopologyStart(record.getValue(SVANNOTATION.LOCALTOPOLOGYSTART))
+                    .localTopologyEnd(record.getValue(SVANNOTATION.LOCALTOPOLOGYEND))
+                    .localTICountStart(record.getValue(SVANNOTATION.LOCALTICOUNTSTART))
+                    .localTICountEnd(record.getValue(SVANNOTATION.LOCALTICOUNTEND))
+                    .build();
+
+            svAnnotations.add(svData);
+        }
+
+        return svAnnotations;
+    }
+
+    @NotNull
+    public List<LinxCluster> readClusters(@NotNull String sample)
+    {
+        List<LinxCluster> clusterList = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(SVCLUSTER).where(SVCLUSTER.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result)
+        {
+            LinxCluster cluster = ImmutableLinxCluster.builder()
+                    .clusterId(record.getValue(SVCLUSTER.CLUSTERID))
+                    .resolvedType(record.getValue(SVCLUSTER.RESOLVEDTYPE))
+                    .synthetic(record.getValue(SVCLUSTER.SYNTHETIC) == 1)
+                    .subClonal(record.getValue(SVCLUSTER.SUBCLONAL) == 1)
+                    .subType(record.getValue(SVCLUSTER.SUBTYPE))
+                    .clusterCount(record.getValue(SVCLUSTER.CLUSTERCOUNT))
+                    .clusterDesc(record.getValue(SVCLUSTER.CLUSTERDESC))
+                    .build();
+
+            clusterList.add(cluster);
+        }
+
+        return clusterList;
     }
 
     public void deleteClusterDataForSample(@NotNull String sample)

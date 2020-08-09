@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
+
 import java.io.File;
 
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -29,7 +32,7 @@ public class SampleAnalyserConfig
     public final String SampleSvFile;
 
     // database access
-    private DatabaseAccess mDbAccess;
+    public final DatabaseAccess DbAccess;
 
     public final String OutputDir;
     public final String OutputFileId;
@@ -84,6 +87,8 @@ public class SampleAnalyserConfig
 
         OutputDir = outputDir;
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
+
+        DbAccess = createDatabaseAccess(cmd);
     }
 
     public boolean isValid()
@@ -118,6 +123,8 @@ public class SampleAnalyserConfig
         options.addOption(REF_SV_PERC_FILE, true, "Reference SV percentiles file");
         options.addOption(REF_TRAIT_PERC_FILE, true, "Reference traits percentiles file");
         options.addOption(REF_TRAIT_RATE_FILE, true, "Reference traits rates file");
+
+        addDatabaseCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");

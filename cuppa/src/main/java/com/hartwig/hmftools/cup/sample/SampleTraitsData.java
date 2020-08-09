@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 
 public class SampleTraitsData
 {
@@ -52,6 +53,14 @@ public class SampleTraitsData
             case MS_INDELS_TMB: return String.valueOf(IndelsMbPerMb);
             default: return "";
         }
+    }
+
+    public static SampleTraitsData from(final String sampleId, final PurityContext purityContext, int snvCount)
+    {
+        return new SampleTraitsData(
+                sampleId, purityContext.gender(), purityContext.wholeGenomeDuplication(),
+                purityContext.bestFit().purity(), purityContext.bestFit().ploidy(),
+                snvCount, purityContext.microsatelliteIndelsPerMb());
     }
 
     public static SampleTraitsData from(final Map<String,Integer> fieldsIndexMap, final String data)

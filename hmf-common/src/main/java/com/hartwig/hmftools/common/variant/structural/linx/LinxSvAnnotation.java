@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 import org.immutables.value.Value;
 
 @Value.Immutable
-public abstract class LinxSvData
+public abstract class LinxSvAnnotation
 {
     public abstract int svId();
     public abstract int clusterId();

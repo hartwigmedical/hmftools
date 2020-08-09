@@ -12,6 +12,8 @@ import java.util.Map;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 
@@ -19,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep17;
 import org.jooq.InsertValuesStep19;
+import org.jooq.Record;
+import org.jooq.Result;
 import org.jooq.types.UInteger;
 
 public class StructuralVariantFusionDAO {
@@ -164,5 +168,39 @@ public class StructuralVariantFusionDAO {
             fusionInserter.execute();
         }
     }
+
+    @NotNull
+    List<LinxFusion> readFusions(@NotNull String sample)
+    {
+        List<LinxFusion> fusionList = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(SVFUSION).where(SVFUSION.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result)
+        {
+            LinxFusion fusion = ImmutableLinxFusion.builder()
+                    .fivePrimeBreakendId(record.getValue(SVFUSION.FIVEPRIMEBREAKENDID).intValue())
+                    .threePrimeBreakendId(record.getValue(SVFUSION.THREEPRIMEBREAKENDID).intValue())
+                    .name(record.getValue(SVFUSION.NAME))
+                    .reported(record.getValue(SVFUSION.REPORTED) == 1)
+                    .reportedType(record.getValue(SVFUSION.REPORTEDTYPE))
+                    .phased(record.getValue(SVFUSION.PHASED) == 1)
+                    .chainLength(record.getValue(SVFUSION.CHAINLENGTH))
+                    .chainLinks(record.getValue(SVFUSION.CHAINLINKS))
+                    .chainTerminated(record.getValue(SVFUSION.CHAINTERMINATED) == 1)
+                    .domainsKept(record.getValue(SVFUSION.DOMAINSKEPT))
+                    .domainsLost(record.getValue(SVFUSION.DOMAINSLOST))
+                    .skippedExonsUp(record.getValue(SVFUSION.SKIPPEDEXONSUP))
+                    .skippedExonsDown(record.getValue(SVFUSION.SKIPPEDEXONSDOWN))
+                    .fusedExonUp(record.getValue(SVFUSION.FUSEDEXONUP))
+                    .fusedExonDown(record.getValue(SVFUSION.FUSEDEXONDOWN))
+                    .build();
+
+            fusionList.add(fusion);
+        }
+
+        return fusionList;
+    }
+
 }
 

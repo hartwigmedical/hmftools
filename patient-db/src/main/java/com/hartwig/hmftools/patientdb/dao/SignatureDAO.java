@@ -8,12 +8,15 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.Field;
 import org.jooq.InsertValuesStep5;
+import org.jooq.Record;
+import org.jooq.Result;
 
 class SignatureDAO
 {
@@ -53,6 +56,27 @@ class SignatureDAO
                 sigAllocation.signature(),
                 DatabaseUtil.decimal(sigAllocation.allocation()),
                 DatabaseUtil.decimal(sigAllocation.percent()));
+    }
+
+    @NotNull
+    public List<SignatureAllocation> readAllocations(@NotNull String sample)
+    {
+        List<SignatureAllocation> sigAllocationList = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(SIGNATURE).where(SIGNATURE.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result)
+        {
+            SignatureAllocation sigAllocation = ImmutableSignatureAllocation.builder()
+                    .signature(record.getValue(SIGNATURE.SIGNATURE_))
+                    .allocation(record.getValue(SIGNATURE.ALLOCATION))
+                    .percent(record.getValue(SIGNATURE.PERCENT))
+                    .build();
+
+            sigAllocationList.add(sigAllocation);
+        }
+
+        return sigAllocationList;
     }
 
     void deleteSignatureDataForSample(@NotNull String sample)

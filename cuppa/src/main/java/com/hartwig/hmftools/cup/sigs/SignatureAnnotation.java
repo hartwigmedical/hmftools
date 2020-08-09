@@ -6,23 +6,19 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_SIG_MIN_COUNT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_SIG_MIN_PERCENT;
-import static com.hartwig.hmftools.cup.sigs.RefSignatures.populateRefSigContributions;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSigContribPercentiles;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSampleCountsFromCohortFile;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromCohortFile;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +47,6 @@ public class SignatureAnnotation
     private final Map<String,Map<String,Double>> mSampleSigContributions;
 
     private BufferedWriter mCssPairsWriter;
-    private BufferedWriter mSampleDataWriter;
 
     public SignatureAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
@@ -66,28 +61,27 @@ public class SignatureAnnotation
         mRefSampleNames = Lists.newArrayList();
         mRefCancerSigContribPercentiles = Maps.newHashMap();
 
-        mSampleDataWriter = null;
         mCssPairsWriter = null;
 
-        loadRefSigContribPercentiles();
-        loadRefSampleCounts();
+        loadRefSigContribPercentiles(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
+        loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleCounts, mRefSampleNames);
+
         loadSampleCounts();
-        loadSigContributions();
-        // initialiseOutputFile();
+        loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
     }
 
-    private boolean loadRefSampleCounts()
-    {
-        final GenericDataCollection collection = GenericDataLoader.loadFile(mConfig.RefSnvCountsFile);
-
-        mRefSampleNames.addAll(collection.getFieldNames());
-        mRefSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
-        mRefSampleCounts.cacheTranspose();
-
-        return true;
-    }
     private boolean loadSampleCounts()
     {
+        if(!mConfig.SampleSnvCountsFile.isEmpty())
+        {
+            mSampleCounts = loadSampleCountsFromCohortFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
+        }
+        else if(mConfig.DbAccess != null)
+        {
+            CUP_LOGGER.error("retrieval of sample SNV counts unsupported at present");
+
+        }
+
         final GenericDataCollection collection = GenericDataLoader.loadFile(mConfig.SampleSnvCountsFile);
 
         for(int s = 0; s < collection.getFieldNames().size(); ++s)
@@ -96,45 +90,13 @@ public class SignatureAnnotation
             mSampleCountsIndex.put(sampleId, s);
         }
 
-        mSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
-        mSampleCounts.cacheTranspose();
+//        mSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
+//        mSampleCounts.cacheTranspose();
 
         return true;
     }
 
-    private void loadSigContributions()
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(mConfig.SampleSigContribFile).toPath());
 
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            for(final String line : fileData)
-            {
-                // SampleId,SigName,SigContrib,SigPercent
-                final String[] items = line.split(DATA_DELIM, -1);
-                String sampleId = items[0];
-                String sigName = items[1];
-                double sigContrib = Double.parseDouble(items[2]);
-
-                Map<String,Double> sigContribs = mSampleSigContributions.get(sampleId);
-
-                if(sigContribs == null)
-                {
-                    sigContribs = Maps.newHashMap();
-                    mSampleSigContributions.put(sampleId, sigContribs);
-                }
-
-                sigContribs.put(sigName, sigContrib);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read sig contribution data file({}): {}", mConfig.SampleSigContribFile, e.toString());
-        }
-    }
 
     public void processCohort()
     {
@@ -142,8 +104,6 @@ public class SignatureAnnotation
         {
             processSample(sample);
         }
-
-        closeBufferedWriter(mSampleDataWriter);
     }
 
     public List<SampleResult> processSample(final SampleData sample)
@@ -254,30 +214,7 @@ public class SignatureAnnotation
         }
     }
 
-    private void loadRefSigContribPercentiles()
-    {
-        if(mConfig.RefSigContribData.isEmpty())
-            return;
-
-        populateRefSigContributions(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
-
-        /*
-        // cosmic_sig_subset.csv
-        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(mConfig.RefSigContribData);
-        mSnvSigNames.addAll(sigsCollection.getFieldNames());
-        mSnvSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
-        mLeastSquaresFit = new LeastSquaresFit(mSnvSignatures.Rows, mSnvSignatures.Cols);
-        */
-    }
-
-    public void close() { closeBufferedWriter(mSampleDataWriter); }
-
     /*
-    public String getHeader()
-    {
-        return "SnvCount,TotalWeightedCss,TopMatchCancerType,TopMatchCancerCss,SigData";
-    }
-
     public String getSampleOutput(final SampleData sampleData)
     {
         String sampleDataStr = String.format("%d", sampleData.getSnvCount());

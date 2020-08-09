@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxLink;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvData;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile;
@@ -33,8 +33,8 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLinkFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvDataFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotationFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
@@ -363,7 +363,7 @@ public class SampleAnalyser
 
         boolean prepareSampleData = mConfig.isSingleSample() || mConfig.UploadToDB;
 
-        final List<LinxSvData> linxSvData = prepareSampleData ? generateSvDataOutput() : null;
+        final List<LinxSvAnnotation> linxSvData = prepareSampleData ? generateSvDataOutput() : null;
         final List<LinxCluster> clusterData = prepareSampleData ? generateClusterOutput() : null;
         final List<LinxLink> linksData = prepareSampleData ? generateLinksOutput() : null;
         final List<LinxViralInsertFile> viralInserts = prepareSampleData ? generateViralInserts() : null;
@@ -382,7 +382,7 @@ public class SampleAnalyser
             try
             {
                 // write per-sample DB-style output
-                LinxSvDataFile.write(LinxSvDataFile.generateFilename(mConfig.OutputDataPath, mSampleId), linxSvData);
+                LinxSvAnnotationFile.write(LinxSvAnnotationFile.generateFilename(mConfig.OutputDataPath, mSampleId), linxSvData);
                 LinxClusterFile.write(LinxClusterFile.generateFilename(mConfig.OutputDataPath, mSampleId), clusterData);
                 LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
                 LinxViralInsertFile.write(LinxViralInsertFile.generateFilename(mConfig.OutputDataPath, mSampleId), viralInserts);
@@ -409,7 +409,7 @@ public class SampleAnalyser
     {
         try
         {
-            LinxSvDataFile.write(LinxSvDataFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxSvAnnotationFile.write(LinxSvAnnotationFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxClusterFile.write(LinxClusterFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxViralInsertFile.write(LinxViralInsertFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
@@ -475,9 +475,9 @@ public class SampleAnalyser
 
 
 
-    private final List<LinxSvData> generateSvDataOutput()
+    private final List<LinxSvAnnotation> generateSvDataOutput()
     {
-        final List<LinxSvData> linxSvData = Lists.newArrayList();
+        final List<LinxSvAnnotation> linxSvData = Lists.newArrayList();
 
         for(final SvVarData var : mAllVariants)
         {
@@ -499,7 +499,7 @@ public class SampleAnalyser
 
             final ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
-            linxSvData.add(ImmutableLinxSvData.builder()
+            linxSvData.add(ImmutableLinxSvAnnotation.builder()
                     .svId(var.id())
                     .clusterId(cluster.id())
                     .clusterReason(var.getClusterReason())

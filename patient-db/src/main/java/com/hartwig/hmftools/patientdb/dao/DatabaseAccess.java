@@ -29,8 +29,9 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
@@ -233,8 +234,28 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
+    public List<LinxSvAnnotation> readSvAnnotaions(@NotNull String sample) {
+        return structuralVariantClusterDAO.readAnnotations(sample);
+    }
+
+    @NotNull
+    public List<LinxCluster> readClusters(@NotNull String sample) {
+        return structuralVariantClusterDAO.readClusters(sample);
+    }
+
+    @NotNull
     public List<DriverCatalog> readDriverCatalog(@NotNull String sample) {
         return driverCatalogDAO.readDriverData(sample);
+    }
+
+    @NotNull
+    public List<SignatureAllocation> readSignatureAllocations(@NotNull String sample) {
+        return signatureDAO.readAllocations(sample);
+    }
+
+    @NotNull
+    public List<LinxFusion> readFusions(@NotNull String sample) {
+        return structuralVariantFusionDAO.readFusions(sample);
     }
 
     public void writeCanonicalTranscripts(@NotNull String assembly, @NotNull List<CanonicalTranscript> transcripts) {
@@ -299,7 +320,7 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantClusterDAO.writeClusters(sample, clusters);
     }
 
-    public void writeSvLinxData(@NotNull String sample, @NotNull List<LinxSvData> svData) {
+    public void writeSvLinxData(@NotNull String sample, @NotNull List<LinxSvAnnotation> svData) {
         structuralVariantClusterDAO.writeSvData(sample, svData);
     }
 

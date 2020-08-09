@@ -9,15 +9,21 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_CLASS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
+import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadFromCohortFile;
+import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadFromDatabase;
+import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefPercentileData;
+import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefRateData;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -44,9 +50,21 @@ public class SampleTraits
         mRefTraitPercentiles = Maps.newHashMap();
         mRefTraitRates = Maps.newHashMap();
 
-        loadRefPercentileData(mConfig.RefTraitPercFile);
-        loadRefRateData(mConfig.RefTraitRateFile);
-        loadSampleTraitsData(mConfig.SampleTraitsFile);
+        loadRefPercentileData(mConfig.RefTraitPercFile, mRefTraitPercentiles);
+        loadRefRateData(mConfig.RefTraitRateFile, mRefTraitRates);
+        loadSampleTraitsData();
+    }
+
+    private void loadSampleTraitsData()
+    {
+        if(mConfig.SampleTraitsFile != null)
+        {
+            loadFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData);
+        }
+        else if(mConfig.DbAccess != null)
+        {
+            loadFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleTraitsData);
+        }
     }
 
     public List<SampleResult> processSample(final SampleData sample)
@@ -98,110 +116,5 @@ public class SampleTraits
         return results;
     }
 
-    private void loadSampleTraitsData(final String filename)
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
-
-            for(final String line : fileData)
-            {
-                SampleTraitsData traitsData = SampleTraitsData.from(fieldsIndexMap, line);
-                mSampleTraitsData.put(traitsData.SampleId, traitsData);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read sample traits data file({}): {}", filename, e.toString());
-        }
-    }
-
-    private void loadRefPercentileData(final String filename)
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            for(final String line : fileData)
-            {
-                final String[] items = line.split(DATA_DELIM, -1);
-
-                final String cancerType = items[0];
-                final SampleTraitType traitType = SampleTraitType.valueOf(items[1]);
-
-                double[] percentileData = new double[PERCENTILE_COUNT];
-
-                int startIndex = 2;
-
-                for(int i = startIndex; i < items.length; ++i)
-                {
-                    double value = Double.parseDouble(items[i]);
-                    percentileData[i - startIndex] = value;
-                }
-
-                Map<String,double[]> traitData = mRefTraitPercentiles.get(traitType);
-
-                if(traitData == null)
-                {
-                    traitData = Maps.newHashMap();
-                    mRefTraitPercentiles.put(traitType, traitData);
-                }
-
-                traitData.put(cancerType, percentileData);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read sample traits perc data file({}): {}", filename, e.toString());
-        }
-    }
-
-    private void loadRefRateData(final String filename)
-    {
-        // CancerType,IsFemale,WGD,SampleCount,GenderFemalePerc,WGDPerc
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
-
-            int wgdRateIndex = fieldsIndexMap.get("WGDPerc");
-            int genderIndex = fieldsIndexMap.get("GenderFemalePerc");
-
-            Map<String,Double> wgdRates = Maps.newHashMap();
-            Map<String,Double> genderRates = Maps.newHashMap();
-
-            mRefTraitRates.put(WGD, wgdRates);
-            mRefTraitRates.put(GENDER, genderRates);
-
-            for(final String line : fileData)
-            {
-                final String[] items = line.split(DATA_DELIM, -1);
-
-                final String cancerType = items[0];
-
-                double wgdRate = Double.parseDouble(items[wgdRateIndex]);
-                double genderFemaleRate = Double.parseDouble(items[genderIndex]);
-
-                wgdRates.put(cancerType, wgdRate);
-                genderRates.put(cancerType, genderFemaleRate);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read sample traits rate data file({}): {}", filename, e.toString());
-        }
-    }
 
 }

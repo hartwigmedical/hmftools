@@ -89,9 +89,6 @@ public class SampleAnalyser
             }
         }
 
-        mSnvSignatures.close();
-        mDrivers.close();
-
         closeBufferedWriter(mSampleDataWriter);
 
         CUP_LOGGER.info("CUP analysis complete");

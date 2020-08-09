@@ -105,12 +105,6 @@ public class RefSignatures
         }
     }
 
-    private double[] createPercentileData(final List<Double> values)
-    {
-        // sort the data into an array
-        return buildPercentiles(convertList(values));
-    }
-
     private void loadRefSigContributions(final String filename)
     {
         try

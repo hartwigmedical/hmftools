@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class LinxSvDataFile
+public class LinxSvAnnotationFile
 {
     private static final String FILE_EXTENSION = ".linx.svs.tsv";
 
@@ -28,29 +28,29 @@ public class LinxSvDataFile
     }
 
     @NotNull
-    public static List<LinxSvData> read(final String filePath) throws IOException
+    public static List<LinxSvAnnotation> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxSvData> svDataList) throws IOException
+    public static void write(@NotNull final String filename, @NotNull List<LinxSvAnnotation> svDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(svDataList));
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<LinxSvData> svDataList)
+    private static List<String> toLines(@NotNull final List<LinxSvAnnotation> svDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        svDataList.stream().map(LinxSvDataFile::toString).forEach(lines::add);
+        svDataList.stream().map(LinxSvAnnotationFile::toString).forEach(lines::add);
         return lines;
     }
 
     @NotNull
-    private static List<LinxSvData> fromLines(@NotNull List<String> lines)
+    private static List<LinxSvAnnotation> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("svId")).map(LinxSvDataFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("svId")).map(LinxSvAnnotationFile::fromString).collect(toList());
     }
 
     @NotNull
@@ -81,7 +81,7 @@ public class LinxSvDataFile
     }
 
     @NotNull
-    private static String toString(@NotNull final LinxSvData svData) {
+    private static String toString(@NotNull final LinxSvAnnotation svData) {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(svData.svId()))
                 .add(String.valueOf(svData.clusterId()))
@@ -107,13 +107,13 @@ public class LinxSvDataFile
     }
 
     @NotNull
-    private static LinxSvData fromString(@NotNull final String svData)
+    private static LinxSvAnnotation fromString(@NotNull final String svData)
     {
         String[] values = svData.split(DELIMITER);
 
         int index = 0;
 
-        return ImmutableLinxSvData.builder()
+        return ImmutableLinxSvAnnotation.builder()
                 .svId(Integer.parseInt(values[index++]))
                 .clusterId(Integer.parseInt(values[index++]))
                 .clusterReason(values[index++])
