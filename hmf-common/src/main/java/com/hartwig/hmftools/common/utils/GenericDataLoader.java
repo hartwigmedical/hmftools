@@ -19,16 +19,14 @@ public class GenericDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(GenericDataLoader.class);
 
-    public GenericDataLoader()
-    {
-    }
+    public static final String DEFAULT_DELIM = ",";
 
     public static GenericDataCollection loadFile(final String filename)
     {
-        return loadFile(filename, GD_TYPE_DECIMAL);
+        return loadFile(filename, GD_TYPE_DECIMAL, DEFAULT_DELIM, Lists.newArrayList());
     }
 
-    public static GenericDataCollection loadFile(final String filename, int dataType)
+    public static GenericDataCollection loadFile(final String filename, int dataType, final String delimiter, final List<String> ignoreFields)
     {
         if (filename == null || filename.isEmpty()) {
             return null;
@@ -54,11 +52,22 @@ public class GenericDataLoader {
 
             GenericDataCollection collection = new GenericDataCollection(dataType);
 
-            String[] fieldNames = line.split(",");
+            final String[] fieldNames = line.split(delimiter);
             int reqFieldCount = fieldNames.length;
-            List<String> strList = Lists.newArrayList(fieldNames);
+            final List<String> headerNames = Lists.newArrayList(fieldNames);
 
-            collection.setFieldNames(strList);
+            List<Integer> ignoreCols = Lists.newArrayList();
+            for(int i = 0; i < headerNames.size(); ++i)
+            {
+                if(ignoreFields.contains(headerNames.get(i)))
+                {
+                    ignoreCols.add(i);
+                }
+            }
+
+            ignoreFields.forEach(x -> headerNames.remove(x));
+
+            collection.setFieldNames(headerNames);
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -77,6 +86,9 @@ public class GenericDataLoader {
 
                     for (int i = 0; i < items.length; ++i)
                     {
+                        if(ignoreCols.contains(i))
+                            continue;
+
                         dataValues.add(Double.parseDouble(items[i]));
                     }
 
@@ -88,6 +100,9 @@ public class GenericDataLoader {
 
                     for (int i = 0; i < items.length; ++i)
                     {
+                        if(ignoreCols.contains(i))
+                            continue;
+
                         dataValues.add(Integer.parseInt(items[i]));
                     }
 
@@ -99,6 +114,9 @@ public class GenericDataLoader {
 
                     for (int i = 0; i < items.length; ++i)
                     {
+                        if(ignoreCols.contains(i))
+                            continue;
+
                         dataValues.add(items[i]);
                     }
 

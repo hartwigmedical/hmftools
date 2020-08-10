@@ -53,7 +53,7 @@ public class SampleAnalyser
 
         mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataCache);
         mDrivers = new DriverAnnotation(mConfig, mSampleDataCache);
-        mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
+        mSampleTraits = new SampleTraits(mConfig, mSampleDataCache, mSnvSignatures);
         mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
 
         mSampleDataWriter = null;
@@ -83,9 +83,16 @@ public class SampleAnalyser
         }
         else
         {
+            int sampleCount = 0;
             for(SampleData sample : mSampleDataCache.SampleDataList)
             {
                 processSample(sample);
+                ++sampleCount;
+
+                if((sampleCount % 100) == 0)
+                {
+                    CUP_LOGGER.info("processed {} samples", sampleCount);
+                }
             }
         }
 

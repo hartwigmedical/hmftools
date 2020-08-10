@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SampleTraitsDataLoader
 {
-    public static void loadFromCohortFile(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
+    public static void loadTraitsFromCohortFile(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
     {
         if(filename == null)
             return;
@@ -44,8 +44,9 @@ public class SampleTraitsDataLoader
         }
     }
 
-    public static void loadFromDatabase(
-            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,SampleTraitsData> sampleTraitsData)
+    public static void loadTraitsFromDatabase(
+            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,Integer> sampleSnvCounts,
+            final Map<String,SampleTraitsData> sampleTraitsData)
     {
         if(dbAccess == null)
             return;
@@ -60,8 +61,8 @@ public class SampleTraitsDataLoader
                     continue;
                 }
 
-                int snvCount = 0; // FIXME
-                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, snvCount);
+                Integer snvCount = sampleSnvCounts.get(sampleId);
+                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, snvCount != null ? snvCount : 0);
                 sampleTraitsData.put(traitsData.SampleId, traitsData);
             }
         }

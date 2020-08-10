@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -54,7 +56,6 @@ public class SampleAnalyserConfig
     private static final String REF_TRAIT_RATE_FILE = "ref_trait_rate_file";
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
 
-    public static final String OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_FILE_ID = "output_file_id";
     public static final String LOG_DEBUG = "log_debug";
 
@@ -81,11 +82,7 @@ public class SampleAnalyserConfig
         RefSvPercFile = cmd.getOptionValue(REF_SV_PERC_FILE, "");
         RefTraitRateFile = cmd.getOptionValue(REF_TRAIT_RATE_FILE, "");
 
-        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
-        if (!outputDir.endsWith(File.separator))
-            outputDir += File.separator;
-
-        OutputDir = outputDir;
+        OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
 
         DbAccess = createDatabaseAccess(cmd);

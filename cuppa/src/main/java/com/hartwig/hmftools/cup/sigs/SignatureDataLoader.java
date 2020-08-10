@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup.sigs;
 
+import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_DECIMAL;
+import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.sigs.RefSignatures.populateRefSigContributions;
@@ -10,20 +12,20 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
-import com.hartwig.hmftools.cup.svs.SvData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SignatureDataLoader
 {
     public static SigMatrix loadSampleCountsFromCohortFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
-        final GenericDataCollection collection = GenericDataLoader.loadFile(filename);
+        final GenericDataCollection collection = GenericDataLoader.loadFile(filename, GD_TYPE_DECIMAL, DEFAULT_DELIM, Lists.newArrayList("BucketName"));
 
         for(int s = 0; s < collection.getFieldNames().size(); ++s)
         {
@@ -38,16 +40,28 @@ public class SignatureDataLoader
     }
 
 
-    public static void loadSampleCountsFromDatabase(
-            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String, SvData> sampleSvData)
+    public static void loadSigContribsFromDatabase(
+            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,Map<String,Double>> sampleSigContributions)
     {
         if(dbAccess == null)
             return;
 
         for(final String sampleId : sampleIds)
         {
+            Map<String,Double> sigContribs = sampleSigContributions.get(sampleId);
+
+            if(sigContribs == null)
+            {
+                sigContribs = Maps.newHashMap();
+                sampleSigContributions.put(sampleId, sigContribs);
+            }
+
             final List<SignatureAllocation> sigAllocations = dbAccess.readSignatureAllocations(sampleId);
 
+            for(final SignatureAllocation sigAllocation : sigAllocations)
+            {
+                sigContribs.put(sigAllocation.signature(), sigAllocation.allocation());
+            }
         }
     }
 
@@ -93,15 +107,15 @@ public class SignatureDataLoader
         populateRefSigContributions(filename, refCancerSigContribPercentiles);
     }
 
-    public static boolean loadRefSampleCounts(final String filename, SigMatrix refSampleCounts, final List<String> refSampleNames)
+    public static SigMatrix loadRefSampleCounts(final String filename, final List<String> refSampleNames)
     {
         final GenericDataCollection collection = GenericDataLoader.loadFile(filename);
 
         refSampleNames.addAll(collection.getFieldNames());
-        refSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
+        SigMatrix refSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
         refSampleCounts.cacheTranspose();
 
-        return true;
+        return refSampleCounts;
     }
 
 

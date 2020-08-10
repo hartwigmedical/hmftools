@@ -1,33 +1,24 @@
 package com.hartwig.hmftools.cup.sample;
 
-import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_CLASS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
-import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
-import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadFromCohortFile;
-import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadFromDatabase;
+import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromCohortFile;
+import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefRateData;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
+import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -35,16 +26,18 @@ public class SampleTraits
 {
     private final SampleAnalyserConfig mConfig;
     private final SampleDataCache mSampleDataCache;
+    private final SignatureAnnotation mSigAnnotation;
 
     private final Map<String,SampleTraitsData> mSampleTraitsData;
 
     private final Map<SampleTraitType,Map<String,double[]>> mRefTraitPercentiles;
     private final Map<SampleTraitType,Map<String,Double>> mRefTraitRates;
 
-    public SampleTraits(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
+    public SampleTraits(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache, final SignatureAnnotation sigAnnotation)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
+        mSigAnnotation = sigAnnotation;
 
         mSampleTraitsData = Maps.newHashMap();
         mRefTraitPercentiles = Maps.newHashMap();
@@ -57,13 +50,15 @@ public class SampleTraits
 
     private void loadSampleTraitsData()
     {
-        if(mConfig.SampleTraitsFile != null)
+        if(!mConfig.SampleTraitsFile.isEmpty())
         {
-            loadFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData);
+            loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData);
         }
         else if(mConfig.DbAccess != null)
         {
-            loadFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleTraitsData);
+            final Map<String,Integer> sampleSnvCounts = Maps.newHashMap();
+            mSampleDataCache.SampleIds.forEach(x -> sampleSnvCounts.put(x, mSigAnnotation.getSampleSnvCount(x)));
+            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSnvCounts, mSampleTraitsData);
         }
     }
 
@@ -105,7 +100,7 @@ public class SampleTraits
             for(Map.Entry<String,double[]> cancerPercentiles : entry.getValue().entrySet())
             {
                 final String cancerType = cancerPercentiles.getKey();
-                double percentile = getPercentile(cancerPercentiles.getValue(), traitValue);
+                double percentile = getPercentile(cancerPercentiles.getValue(), traitValue, true);
                 cancerTypeValues.put(cancerType, percentile);
             }
 

@@ -10,24 +10,19 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_SIG_MIN_COUNT;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_SIG_MIN_PERCENT;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSigContribPercentiles;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSampleCountsFromCohortFile;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromCohortFile;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromDatabase;
 
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
-import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -64,10 +59,10 @@ public class SignatureAnnotation
         mCssPairsWriter = null;
 
         loadRefSigContribPercentiles(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
-        loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleCounts, mRefSampleNames);
+        mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames);
 
         loadSampleCounts();
-        loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
+        loadSigContributions();
     }
 
     private boolean loadSampleCounts()
@@ -79,24 +74,37 @@ public class SignatureAnnotation
         else if(mConfig.DbAccess != null)
         {
             CUP_LOGGER.error("retrieval of sample SNV counts unsupported at present");
-
+            return false;
         }
-
-        final GenericDataCollection collection = GenericDataLoader.loadFile(mConfig.SampleSnvCountsFile);
-
-        for(int s = 0; s < collection.getFieldNames().size(); ++s)
-        {
-            final String sampleId = collection.getFieldNames().get(s);
-            mSampleCountsIndex.put(sampleId, s);
-        }
-
-//        mSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
-//        mSampleCounts.cacheTranspose();
 
         return true;
     }
 
+    private void loadSigContributions()
+    {
+        if(!mConfig.SampleSigContribFile.isEmpty())
+        {
+            loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
+        }
+        else if(mConfig.DbAccess != null)
+        {
+            loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions);
+        }
+    }
 
+    public int getSampleSnvCount(final String sampleId)
+    {
+        Integer sampleCountsIndex = mSampleCountsIndex.get(sampleId);
+
+        if(sampleCountsIndex == null)
+        {
+            CUP_LOGGER.error("sample({}) has no SNV data", sampleId);
+            return 0;
+        }
+
+        final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
+        return (int)sumVector(sampleCounts);
+    }
 
     public void processCohort()
     {
@@ -108,7 +116,7 @@ public class SignatureAnnotation
 
     public List<SampleResult> processSample(final SampleData sample)
     {
-        final List<SampleResult> results = org.apache.commons.compress.utils.Lists.newArrayList();
+        final List<SampleResult> results = Lists.newArrayList();
 
         Integer sampleCountsIndex = mSampleCountsIndex.get(sample.Id);
 
@@ -124,9 +132,6 @@ public class SignatureAnnotation
         addCssResults(sample, sampleCounts, results);
 
         addSigContributionResults(sample, snvTotal, results);
-
-        // fitSnvSignatures(sample, sampleCountsIndex);
-        // writeSampleData(sample);
 
         return results;
     }
@@ -154,7 +159,10 @@ public class SignatureAnnotation
             final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
 
             int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
-            double weightedCss = pow((css - SNV_CSS_THRESHOLD) * 100, 2) / cancerTypeCount;
+
+            double cssWeight = pow(2, -100 * (1 - css)); // 2^[-100*(1-CSS)]
+            double weightedCss = css * cssWeight / cancerTypeCount;
+            // double weightedCss = pow((css - SNV_CSS_THRESHOLD) * 100, 2) / cancerTypeCount;
 
             Double total = cancerCssTotals.get(refCancerType);
 
@@ -173,8 +181,14 @@ public class SignatureAnnotation
             cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
         }
 
-        results.add(new SampleResult(sample.Id, CLASSIFIER, "CSS", 0, cancerCssTotals));
+        results.add(new SampleResult(sample.Id, CLASSIFIER, "CSS", String.format("%.2f", totalCss), cancerCssTotals));
     }
+
+    private static final List<String> REPORTABLE_SIGS =
+            Lists.newArrayList("Sig1", "Sig2", "Sig4", "Sig6", "Sig7", "Sig10", "Sig11", "Sig13", "Sig17");
+
+    private static final String SIG_NAME_2 = "Sig2";
+    private static final String SIG_NAME_13 = "Sig13";
 
     private void addSigContributionResults(final SampleData sample, int snvTotal, final List<SampleResult> results)
     {
@@ -191,7 +205,19 @@ public class SignatureAnnotation
             final String sigName = entry.getKey();
             double sampleSigContrib = entry.getValue();
 
-            if(sampleSigContrib < SNV_SIG_MIN_COUNT || sampleSigContrib < SNV_SIG_MIN_PERCENT * snvTotal)
+            // report the AID/APOBEC sigs 2 & 13 together
+            if(sigName.equalsIgnoreCase(SIG_NAME_2))
+            {
+                Double otherAlloc = sampleSigContribs.get(SIG_NAME_13);
+                if(otherAlloc != null)
+                    sampleSigContrib += otherAlloc;
+            }
+            else if(sigName.equalsIgnoreCase(SIG_NAME_13))
+            {
+                continue;
+            }
+
+            if(!REPORTABLE_SIGS.stream().anyMatch(x -> sigName.equalsIgnoreCase(x)))
                 continue;
 
             for(Map.Entry<String,Map<String,double[]>> cancerContribs : mRefCancerSigContribPercentiles.entrySet())
@@ -206,7 +232,7 @@ public class SignatureAnnotation
                 }
 
                 Map<String,Double> cancerResults = Maps.newHashMap();
-                double percentile = getPercentile(refSigPercentiles, sampleSigContrib);
+                double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true);
                 cancerResults.put(cancerType, percentile);
 
                 results.add(new SampleResult(sample.Id, SNV_SIG, sigName.toUpperCase(), round(sampleSigContrib), cancerResults));
@@ -215,96 +241,6 @@ public class SignatureAnnotation
     }
 
     /*
-    public String getSampleOutput(final SampleData sampleData)
-    {
-        String sampleDataStr = String.format("%d", sampleData.getSnvCount());
-
-        double totalWeightedCss = sampleData.getTotalWeightedCss();
-
-        String sigDataStr = "";
-        for(Map.Entry<String,Double> entry : sampleData.getSnvSigAllocations().entrySet())
-        {
-            sigDataStr = appendStr(sigDataStr, String.format("%s=%.2f", entry.getKey(), entry.getValue()), ';');
-        }
-
-        final Map<String,Double> cssDataMap = sampleData.getCancerCssTotals();
-
-        String cssDataStr;
-        if(cssDataMap.isEmpty())
-        {
-            cssDataStr = "0,NONE,0";
-        }
-        else
-        {
-            String topType = "";
-            double topCss = 0;
-
-            for(Map.Entry<String,Double> cancerCssData : cssDataMap.entrySet())
-            {
-                if(cancerCssData.getValue() > topCss)
-                {
-                    topCss = cancerCssData.getValue();
-                    topType = cancerCssData.getKey();
-                }
-            }
-
-            cssDataStr = String.format("%.4f,%s,%.4f", totalWeightedCss, topType, topCss);
-        }
-
-        return String.format("%s,%s,%s", sampleDataStr,cssDataStr,sigDataStr);
-    }
-
-    private void initialiseOutputFile()
-    {
-        try
-        {
-            mSampleDataWriter = createBufferedWriter(mConfig.formOutputFilename("SNV"), false);
-
-            mSampleDataWriter.write("SampleId,SnvCount,TotalWeightedCss,MatchedCancerType,MatchedCancerCss,SigData");
-            mSampleDataWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
-        }
-    }
-
-    private void writeSampleData(final SampleData sampleData)
-    {
-        try
-        {
-            final String sampleStr = String.format("%s,%d", sampleData.Id, sampleData.getSnvCount());
-
-            double totalWeightedCss = sampleData.getTotalWeightedCss();
-
-            String sigDataStr = "";
-            for(Map.Entry<String,Double> entry : sampleData.getSnvSigAllocations().entrySet())
-            {
-                sigDataStr = appendStr(sigDataStr, String.format("%s=%.2f", entry.getKey(), entry.getValue()), ';');
-            }
-
-            final Map<String,Double> cssDataMap = sampleData.getCancerCssTotals();
-
-            if(cssDataMap.isEmpty())
-            {
-                mSampleDataWriter.write(String.format("%s,0,NONE,0,%s", sampleStr, sigDataStr));
-                mSampleDataWriter.newLine();
-                return;
-            }
-
-            for(Map.Entry<String,Double> cancerCssData : cssDataMap.entrySet())
-            {
-                mSampleDataWriter.write(String.format("%s,%.4f,%s,%.4f,%s",
-                        sampleStr, totalWeightedCss, cancerCssData.getKey(), cancerCssData.getValue(), sigDataStr));
-                mSampleDataWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
-        }
-    }
-    */
     private void writeSampleCssPairData(final String sampleId1, final String sampleId2, double css, int sampleTotal1, int sampleTotal2)
     {
         try
@@ -317,35 +253,6 @@ public class SignatureAnnotation
             CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
         }
     }
-
-    /*
-    private void fitSnvSignatures(final SampleData sampleData, int sampleCountsIndex)
-    {
-        if(mSnvSignatures == null)
-            return;
-
-        final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
-
-        mLeastSquaresFit.initialise(mSnvSignatures.getData(), sampleCounts);
-        mLeastSquaresFit.solve();
-
-        final double[] sigAllocs = mLeastSquaresFit.getContribs();
-
-        double sampleTotal = sampleData.getSnvCount();
-
-        for(int sig = 0; sig < sigAllocs.length; ++sig)
-        {
-            double sigAlloc = sigAllocs[sig];
-            double allocPerc = sigAlloc / sampleTotal;
-
-            if(sigAlloc >= SNV_SIG_MIN_COUNT && allocPerc >= SNV_SIG_MIN_PERCENT)
-            {
-                sampleData.getSnvSigAllocations().put(mSnvSigNames.get(sig), allocPerc);
-            }
-        }
-    }
     */
-
-
 
 }

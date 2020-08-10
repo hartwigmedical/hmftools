@@ -4,6 +4,9 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_LIKELIHOOD_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_MIN_PREVALENCE;
+import static com.hartwig.hmftools.cup.common.CupConstants.FUSION_MIN_PREVALENCE;
+import static com.hartwig.hmftools.cup.drivers.DriverType.DRIVER;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +22,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DriverDataLoader
 {
-    public static void loadFromCohortFile(final String filename, final Map<String,List<SampleDriverData>> sampleDrivers)
+    public static void loadDriversFromCohortFile(final String filename, final Map<String,List<SampleDriverData>> sampleDrivers)
     {
         if(filename == null)
             return;
@@ -55,7 +58,7 @@ public class DriverDataLoader
         }
     }
 
-    public static void loadFromDatabase(
+    public static void loadDriversFromDatabase(
             final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,List<SampleDriverData>> sampleDrivers)
     {
         if(dbAccess == null)
@@ -68,7 +71,7 @@ public class DriverDataLoader
             {
                 final List<SampleDriverData> driverDataList = drivers.stream()
                         .filter(x -> x.driverLikelihood() >= DRIVER_LIKELIHOOD_THRESHOLD)
-                        .map(x -> new SampleDriverData(sampleId, x.gene(), "DRIVER"))
+                        .map(x -> new SampleDriverData(sampleId, x.gene(), DRIVER))
                         .collect(Collectors.toList());
 
                 sampleDrivers.put(sampleId, driverDataList);
@@ -80,7 +83,7 @@ public class DriverDataLoader
             {
                 final List<SampleDriverData> fusionDataList = fusions.stream()
                         .filter(x -> x.reported())
-                        .map(x -> new SampleDriverData(sampleId, x.name(), "FUSION"))
+                        .map(x -> new SampleDriverData(sampleId, x.name(), DriverType.FUSION))
                         .collect(Collectors.toList());
 
                 sampleDrivers.put(sampleId, fusionDataList);
@@ -115,6 +118,7 @@ public class DriverDataLoader
                 {
                     genePrevTotals = new DriverPrevCounts();
                     genePrevalenceTotals.put(prevData.Gene, genePrevTotals);
+                    genePrevTotals.MinPrevalence = prevData.Type == DRIVER ? DRIVER_MIN_PREVALENCE : FUSION_MIN_PREVALENCE;
                 }
 
                 genePrevTotals.MaxPrevalence = max(genePrevTotals.MaxPrevalence, prevData.Prevalence);

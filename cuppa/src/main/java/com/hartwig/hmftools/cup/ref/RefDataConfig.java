@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.cup.ref;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
 
 import java.io.File;
@@ -33,11 +34,7 @@ public class RefDataConfig
         RefSigContribsFile = cmd.getOptionValue(REF_SIG_CONTRIBS_FILE, "");
         RefSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
 
-        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
-        if (!outputDir.endsWith(File.separator))
-            outputDir += File.separator;
-
-        OutputDir = outputDir;
+        OutputDir = parseOutputDir(cmd);
     }
 
     public static void addCmdLineArgs(Options options)

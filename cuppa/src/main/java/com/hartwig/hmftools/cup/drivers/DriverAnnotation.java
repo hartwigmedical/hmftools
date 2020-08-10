@@ -1,39 +1,23 @@
 package com.hartwig.hmftools.cup.drivers;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
-import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.DRIVER;
-import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_LIKELIHOOD_THRESHOLD;
-import static com.hartwig.hmftools.cup.drivers.DriverDataLoader.loadFromCohortFile;
-import static com.hartwig.hmftools.cup.drivers.DriverDataLoader.loadFromDatabase;
+import static com.hartwig.hmftools.cup.drivers.DriverDataLoader.loadDriversFromCohortFile;
+import static com.hartwig.hmftools.cup.drivers.DriverDataLoader.loadDriversFromDatabase;
 import static com.hartwig.hmftools.cup.drivers.DriverDataLoader.loadRefPrevalenceData;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
-import com.hartwig.hmftools.cup.sample.SampleTraitsData;
 
 public class DriverAnnotation
 {
@@ -60,7 +44,7 @@ public class DriverAnnotation
         mValidData = true;
         loadRefPrevalenceData(config.RefDriverPrevFile, mGenePrevalenceTotals, mCancerDriverPrevalence);
         formGenePrevalenceTotals();
-        loadSampleDrivers(config.SampleDriversFile);
+        loadSampleDrivers();
     }
 
     public void processCohort()
@@ -102,13 +86,12 @@ public class DriverAnnotation
                 final List<DriverPrevData> driverPrevalences = entry.getValue();
 
                 final DriverPrevData driverPrev = driverPrevalences.stream()
-                        .filter(x -> x.isTypeAll())
                         .filter(x -> x.Gene.equals(driverData.Gene)).findFirst().orElse(null);
 
                 cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.Prevalence : 0);
             }
 
-            SampleResult result = new SampleResult(sample.Id, DRIVER, driverData.Type, driverData.Gene, cancerTypeValues);
+            SampleResult result = new SampleResult(sample.Id, DRIVER, driverData.Type.toString(), driverData.Gene, cancerTypeValues);
             results.add(result);
         }
     }
@@ -123,6 +106,8 @@ public class DriverAnnotation
         final Set<String> genes = Sets.newHashSet();
         sampleDrivers.forEach(x -> genes.add(x.Gene));
 
+        final String geneNames = appendStrList(Lists.newArrayList(genes), ';');
+
         for(Map.Entry<String, List<DriverPrevData>> entry : mCancerDriverPrevalence.entrySet())
         {
             final String cancerType = entry.getKey();
@@ -133,13 +118,11 @@ public class DriverAnnotation
             for(final String driverGene : genes)
             {
                 final DriverPrevCounts genePrevTotals = mGenePrevalenceTotals.get(driverGene);
-                double minPrevalence = min(MIN_PREV_PERC_OF_MAX * genePrevTotals.MaxPrevalence, MIN_PREVALENCE);
 
                 final DriverPrevData driverPrev = driverPrevalences.stream()
-                        .filter(x -> x.isTypeAll())
                         .filter(x -> x.Gene.equals(driverGene)).findFirst().orElse(null);
 
-                double driverPrevValue = driverPrev != null ? driverPrev.Prevalence : minPrevalence;
+                double driverPrevValue = driverPrev != null ? driverPrev.Prevalence : genePrevTotals.MinPrevalence;
                 probabilityTotal *= driverPrevValue / genePrevTotals.PositiveTotal;
             }
 
@@ -155,25 +138,22 @@ public class DriverAnnotation
             cancerTypeValues.put(entry.getKey(), probability);
         }
 
-        SampleResult result = new SampleResult(sample.Id, CLASSIFIER, "DRIVER", "COMBINED", cancerTypeValues);
+        SampleResult result = new SampleResult(sample.Id, CLASSIFIER, "DRIVER", geneNames, cancerTypeValues);
         results.add(result);
     }
 
 
-    private void loadSampleDrivers(final String filename)
+    private void loadSampleDrivers()
     {
-        if(filename != null)
+        if(!mConfig.SampleDriversFile.isEmpty())
         {
-            loadFromCohortFile(filename, mSampleDrivers);
+            loadDriversFromCohortFile(mConfig.SampleDriversFile, mSampleDrivers);
         }
         else if(mConfig.DbAccess != null)
         {
-            loadFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleDrivers);
+            loadDriversFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleDrivers);
         }
     }
-
-    private static final double MIN_PREV_PERC_OF_MAX = 0.1;
-    private static final double MIN_PREVALENCE = 0.01;
 
     private void formGenePrevalenceTotals()
     {
@@ -182,12 +162,9 @@ public class DriverAnnotation
             final String gene = geneEntry.getKey();
             final DriverPrevCounts genePrevTotals = geneEntry.getValue();
 
-            double minPrevalence = min(MIN_PREV_PERC_OF_MAX * genePrevTotals.MaxPrevalence, MIN_PREVALENCE);
-
             for(Map.Entry<String,List<DriverPrevData>> cancerEntry : mCancerDriverPrevalence.entrySet())
             {
                 final DriverPrevData driverPrevData = cancerEntry.getValue().stream()
-                        .filter(x -> x.isTypeAll())
                         .filter(x -> x.Gene.equals(gene)).findFirst().orElse(null);
 
                 if(driverPrevData != null)
@@ -197,8 +174,8 @@ public class DriverAnnotation
                 }
                 else
                 {
-                    genePrevTotals.PositiveTotal += minPrevalence;
-                    genePrevTotals.NegitiveTotal += 1 - minPrevalence;
+                    genePrevTotals.PositiveTotal += genePrevTotals.MinPrevalence;
+                    genePrevTotals.NegitiveTotal += 1 - genePrevTotals.MinPrevalence;
                 }
             }
         }

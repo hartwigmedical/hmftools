@@ -118,29 +118,20 @@ public class DataUtils {
 
     public static SigMatrix createMatrixFromListData(final List<List<Double>> dataSet)
     {
-        return createMatrixFromListData(dataSet, false);
-    }
-
-    public static SigMatrix createMatrixFromListData(final List<List<Double>> dataSet, boolean stripBucketName)
-    {
         if(dataSet.isEmpty())
             return null;
 
         int rows = dataSet.size();
         int cols = dataSet.get(0).size();
 
-        int colCount = stripBucketName ? cols - 1 : cols;
-        int colIndexStart = stripBucketName ? 1 : 0;
-        int colIndexEnd = stripBucketName ? 1 : 0;
-
         // create and populate the matrix
-        SigMatrix matrix = new SigMatrix(rows, colCount);
+        SigMatrix matrix = new SigMatrix(rows, cols);
 
         double[][] matrixData = matrix.getData();
 
         for(int i = 0; i < rows; ++i)
         {
-            for (int j = colIndexStart; j < cols; ++j)
+            for (int j = 0; j < cols; ++j)
             {
                 matrixData[i][j] = dataSet.get(i).get(j);
             }
@@ -202,13 +193,6 @@ public class DataUtils {
         // 1 rounds to 0.1, -1 to 10
         double roundUnit = pow(10, -roundFactor);
         return Math.round(value / roundUnit) * roundUnit;
-
-        /*
-        long factor = (long) Math.pow(10, places);
-        value = value * factor;
-        long tmp = Math.round(value);
-        return (double) tmp / factor;
-        */
     }
 
 }

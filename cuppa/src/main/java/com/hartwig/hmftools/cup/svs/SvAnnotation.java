@@ -69,7 +69,7 @@ public class SvAnnotation
             for(Map.Entry<String,double[]> cancerPercentiles : entry.getValue().entrySet())
             {
                 final String cancerType = cancerPercentiles.getKey();
-                double percentile = getPercentile(cancerPercentiles.getValue(), svCount);
+                double percentile = getPercentile(cancerPercentiles.getValue(), svCount, true);
                 cancerTypeValues.put(cancerType, percentile);
             }
 
