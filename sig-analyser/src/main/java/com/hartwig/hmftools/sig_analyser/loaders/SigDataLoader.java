@@ -32,7 +32,6 @@ public class SigDataLoader
     {
         Options options = createBasicOptions();
 
-        // SigSnvLoader.addCmdLineArgs(options);
         DataLoaderConfig.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
@@ -52,9 +51,16 @@ public class SigDataLoader
 
             if(cmd.hasOption(LOAD_SNVS))
             {
-                SigSnvLoader snvLoader = new SigSnvLoader(config.Filters, config.SampleIds, config.OutputDir);
+                SigSnvLoader snvLoader = new SigSnvLoader(config.Filters, config.SampleIds);
+
+                if(config.WritePositionBuckets)
+                    snvLoader.initialisePositionFrequencies(config.OutputDir, config.PositionBucketSize);
+
                 snvLoader.loadData(dbAccess);
-                final String filename = config.OutputFileId != null ? config.OutputFileId + "_" + "sample_counts.csv" : "sample_counts.csv";
+
+                final String filename = config.OutputDir +
+                        (config.OutputFileId != null ? config.OutputFileId + "_sample_counts.csv" : "sample_counts.csv");
+
                 snvLoader.writeSampleCounts(filename);
             }
 

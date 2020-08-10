@@ -20,23 +20,30 @@ public class SigSnvLoader
 {
     private final VariantFilters mFilters;
     private final List<String> mSampleIds;
-    private final String mOutputDir;
 
     private final Map<String,Integer> mBucketStringToIndex;
     private SigMatrix mSampleBucketCounts;
+
+    private PositionFrequencies mPositionFrequencies;
 
     private static final int SNV_BUCKET_COUNT = 96;
 
     private static final Logger LOGGER = LogManager.getLogger(SigSnvLoader.class);
 
-    public SigSnvLoader(final VariantFilters filters, final List<String> sampleIds, final String outputDir)
+    public SigSnvLoader(final VariantFilters filters, final List<String> sampleIds)
     {
         mFilters = filters;
         mSampleIds = sampleIds;
-        mOutputDir = outputDir;
 
         mBucketStringToIndex = Maps.newHashMap();
         buildBucketMap();
+
+        mPositionFrequencies = null;
+    }
+
+    public void initialisePositionFrequencies(final String outputDir, final int bucketSize)
+    {
+        mPositionFrequencies = new PositionFrequencies(outputDir, bucketSize);
     }
 
     public SigMatrix getSampleBucketCounts() { return mSampleBucketCounts; }
@@ -80,7 +87,7 @@ public class SigSnvLoader
         }
     }
 
-    public void loadData(DatabaseAccess dbAccess)
+    public void loadData(final DatabaseAccess dbAccess)
     {
         mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
@@ -94,7 +101,16 @@ public class SigSnvLoader
             LOGGER.info("sample({}:{}) processing {} variants", sampleIndex, sampleId, variants.size());
 
             processSampleVariants(sampleId, variants, sampleIndex);
+
+            if(mPositionFrequencies != null)
+            {
+                mPositionFrequencies.writeResults();
+                mPositionFrequencies.clear();
+            }
         }
+
+        if(mPositionFrequencies != null)
+            mPositionFrequencies.close();
     }
 
     public void writeSampleCounts(final String filename)
@@ -155,6 +171,9 @@ public class SigSnvLoader
             if(mFilters != null && !mFilters.passesFilters(variant))
                 continue;
 
+            if(mPositionFrequencies != null)
+                mPositionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
+
             // convert base change to standard set and the context accordingly
             String baseChange;
             String context;
@@ -205,19 +224,6 @@ public class SigSnvLoader
         }
 
         return String.format("MissingBucket_%d", index);
-    }
-
-    private static String standardiseSnv(final String snv)
-    {
-        // convert to equivalent strand's base
-        if(snv.equals("G>T")) return "C>A";
-        if(snv.equals("G>C")) return "C>G";
-        if(snv.equals("G>A")) return "C>T";
-        if(snv.equals("A>T")) return "T>A";
-        if(snv.equals("A>G")) return "T>C";
-        if(snv.equals("A>C")) return "T>G";
-
-        return snv;
     }
 
 }

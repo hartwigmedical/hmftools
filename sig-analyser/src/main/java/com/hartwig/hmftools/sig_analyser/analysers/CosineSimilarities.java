@@ -98,15 +98,14 @@ public class CosineSimilarities
 
     public void run()
     {
-        for(final String sampleId1 : mSampleIds)
+        for(int i = 0; i < mSampleIds.size(); ++i)
         {
+            final String sampleId1 = mSampleIds.get(i);
             final double[] sampleCounts1 = mSampleCounts.getCol(mSampleCountsIndex.get(sampleId1));
 
-            for(final String sampleId2 : mSampleIds)
+            for(int j = i + 1; j < mSampleIds.size(); ++j)
             {
-                if(sampleId1.equals(sampleId2))
-                    continue;
-
+                final String sampleId2 = mSampleIds.get(j);
                 final double[] sampleCounts2 = mSampleCounts.getCol(mSampleCountsIndex.get(sampleId2));
 
                 double css = calcCosineSim(sampleCounts1, sampleCounts2);
@@ -128,7 +127,7 @@ public class CosineSimilarities
         {
             if(mWriter == null)
             {
-                mWriter = createBufferedWriter(mOutputDir + "SIG_FIT_RESULTS.csv", false);
+                mWriter = createBufferedWriter(mOutputDir + "SIG_CSS_RESULTS.csv", false);
 
                 mWriter.write("SampleId1,SampleId2,CSS");
                 mWriter.newLine();

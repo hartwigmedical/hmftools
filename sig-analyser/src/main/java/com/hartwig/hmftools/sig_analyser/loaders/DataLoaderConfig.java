@@ -25,12 +25,17 @@ public class DataLoaderConfig
 
     public final VariantFilters Filters;
 
+    public final boolean WritePositionBuckets;
+    public final int PositionBucketSize;
+
     private static final String SAMPLE_IDS = "sample_ids";
     private static final String APPLY_SAMPLE_QC = "apply_sample_qc";
     private static final String SUBCLONAL_MIN = "subclonal_min";
     private static final String SUBCLONAL_MAX = "subclonal_max";
     private static final String PLOIDY_MAX = "ploidy_max";
     private static final String PLOIDY_MIN = "ploidy_min";
+    private static final String WRITE_POSITION_BUCKETS = "write_pos_buckets";
+    private static final String POSITION_BUCKET_SIZE = "pos_bucket_size";
 
     public DataLoaderConfig(final CommandLine cmd)
     {
@@ -55,6 +60,9 @@ public class DataLoaderConfig
                 SampleIds.addAll(Arrays.stream(sampleIdsStr.split(";")).collect(Collectors.toList()));
             }
         }
+
+        WritePositionBuckets = cmd.hasOption(WRITE_POSITION_BUCKETS);
+        PositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "1000000"));
     }
 
     public void loadSampleIds(final DatabaseAccess dbAccess)
@@ -78,6 +86,9 @@ public class DataLoaderConfig
         options.addOption(SUBCLONAL_MIN, true, "Optional: subclonal min threshold");
         options.addOption(PLOIDY_MAX, true, "Optional: ploidy max threshold");
         options.addOption(PLOIDY_MIN, true, "Optional: ploidy min threshold");
+
+        options.addOption(WRITE_POSITION_BUCKETS, false, "Optional: write position bucket frequencies");
+        options.addOption(POSITION_BUCKET_SIZE, true, "Optional: position bucket size (default = 1MB)");
     }
 
 }

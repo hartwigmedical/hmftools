@@ -141,7 +141,7 @@ public class SampleFitter
         if(mDbAccess == null)
             return;
 
-        SigSnvLoader snvLoader = new SigSnvLoader(null, mSampleIdList, mOutputDir);
+        SigSnvLoader snvLoader = new SigSnvLoader(null, mSampleIdList);
         snvLoader.loadData(mDbAccess);
 
         final String filename = mSampleIdList.size() == 1 ? mSampleIdList.get(0) + ".sig.snv_counts.csv" : "SIG_SNV_COUNTS.csv";
