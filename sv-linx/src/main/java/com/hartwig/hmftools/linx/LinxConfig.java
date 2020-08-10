@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
@@ -57,7 +59,6 @@ public class LinxConfig
 
     // config options
     public static final String PURPLE_DATA_DIR = "purple_dir";
-    public static final String DATA_OUTPUT_DIR = "output_dir";
     public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String SAMPLE = "sample";
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
@@ -111,11 +112,7 @@ public class LinxConfig
         PurpleDataPath = cmd.getOptionValue(PURPLE_DATA_DIR, "");
         IsGermline = cmd.hasOption(GERMLINE);
 
-        String dataOutputDir = "";
-        if(cmd.hasOption(DATA_OUTPUT_DIR))
-            dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
-
-        OutputDataPath = formOutputPath(dataOutputDir);
+        OutputDataPath = parseOutputDir(cmd);
         Output = new LinxOutput(cmd, isSingleSample());
 
         SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
@@ -150,11 +147,6 @@ public class LinxConfig
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
-    }
-
-    public static final String formOutputPath(final String dir)
-    {
-        return dir.endsWith(File.separator) ? dir : dir + File.separator;
     }
 
     public final List<String> getSampleIds() { return mSampleIds; }
@@ -213,7 +205,7 @@ public class LinxConfig
 
     public static boolean validConfig(final CommandLine cmd)
     {
-        return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SV_DATA_DIR)
+        return configPathValid(cmd, OUTPUT_DIR) && configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SV_DATA_DIR)
             && configPathValid(cmd, FRAGILE_SITE_FILE) && configPathValid(cmd, KATAEGIS_FILE) && configPathValid(cmd, LINE_ELEMENT_FILE)
             && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE)
             && configPathValid(cmd, VIRAL_HOSTS_FILE) && configPathValid(cmd, REPLICATION_ORIGINS_FILE) && configPathValid(cmd, INDEL_FILE)
@@ -238,7 +230,7 @@ public class LinxConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(PURPLE_DATA_DIR, true, "Sample purple data directory");
-        options.addOption(DATA_OUTPUT_DIR, true, "Linx output directory");
+        options.addOption(OUTPUT_DIR, true, "Linx output directory");
         options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");

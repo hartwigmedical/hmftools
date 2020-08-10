@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.svtools.simulation;
 
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,7 +46,7 @@ public class SvSimulator
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Verbose logging");
         ShatteringConfig.addCommandLineOptions(options);
         return options;
@@ -69,7 +69,7 @@ public class SvSimulator
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
+        String outputDir = parseOutputDir(cmd);
 
         SvSimulator simulator = new SvSimulator(cmd, outputDir);
         simulator.run();

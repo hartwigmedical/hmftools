@@ -4,14 +4,15 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
@@ -70,7 +71,7 @@ public class CohortLineElements
         mKnownLineElements = Lists.newArrayList();
         mPolymorphicLineElements = Lists.newArrayList();
 
-        mOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
+        mOutputDir = parseOutputDir(cmd);
         mSvDataFile = cmd.getOptionValue(SV_DATA_FILE);
         mExtDataFile = cmd.getOptionValue(EXT_DATA_FILE);
         mPolymorphicDataFile = cmd.getOptionValue(POLYMORPHIC_DATA_FILE);
@@ -650,7 +651,7 @@ public class CohortLineElements
         options.addOption(EXT_DATA_FILE, true, "External LINE data sample counts");
         options.addOption(POLYMORPHIC_DATA_FILE, true, "Polymorphic LINE data file");
         options.addOption(KNOWN_DATA_FILE, true, "Known LINE elements file");
-        options.addOption(DATA_OUTPUT_DIR, true, "Path to write results");
+        options.addOption(OUTPUT_DIR, true, "Path to write results");
         options.addOption(REPEAT_MASKER_DATA_FILE, true, "Path to repeat masker data for LINE elements");
         options.addOption(WRITE_LINE_SEQUENCES, false, "Write ref genome LINE element sequences");
         options.addOption(REF_GENOME_FILE, true, "Path to the indexed ref genome fasta file");

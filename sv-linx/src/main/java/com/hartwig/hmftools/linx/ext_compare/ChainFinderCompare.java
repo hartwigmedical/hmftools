@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkOutputDir;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfSvData.CF_DATA_DELIMITER;
@@ -52,7 +52,7 @@ public class ChainFinderCompare
 
     public ChainFinderCompare(final String outputDir, final CommandLine cmd)
     {
-        mDataDirectory = formOutputPath(cmd.getOptionValue(CHAIN_FINDER_DATA_DIR));
+        mDataDirectory = checkOutputDir(cmd.getOptionValue(CHAIN_FINDER_DATA_DIR));
         mUseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRECTORIES);
         mSampleData = null;
         mSvDataWriter = null;

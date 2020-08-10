@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.svtools.sequence;
 
 import static com.hartwig.hmftools.common.utils.Strings.reverseString;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkOutputDir;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
-import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -137,7 +138,7 @@ public class KmerGenerator
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl gene transcript data cache directory");
         options.addOption(KMER_INPUT_FILE, true, "File specifying locations to produce K-mers for");
         options.addOption(REF_GENOME_FILE, true, "Ref genome file");
@@ -147,9 +148,9 @@ public class KmerGenerator
 
         Configurator.setRootLevel(Level.DEBUG);
 
-        final String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
-        final String kmerInputFile = formOutputPath(cmd.getOptionValue(KMER_INPUT_FILE));
-        final String refGenomeFile = formOutputPath(cmd.getOptionValue(REF_GENOME_FILE));
+        final String outputDir = parseOutputDir(cmd);
+        final String kmerInputFile = cmd.getOptionValue(KMER_INPUT_FILE);
+        final String refGenomeFile = cmd.getOptionValue(REF_GENOME_FILE);
 
         KmerGenerator kmerGenerator = new KmerGenerator(refGenomeFile, kmerInputFile, outputDir);
         kmerGenerator.generateKmerData();

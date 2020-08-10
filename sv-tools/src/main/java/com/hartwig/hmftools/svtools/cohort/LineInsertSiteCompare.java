@@ -1,29 +1,12 @@
 package com.hartwig.hmftools.svtools.cohort;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.min;
-
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
-import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
-import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
-import static com.hartwig.hmftools.svtools.cohort.LineElementType.fromString;
-import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_PARTNERED;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_PSD;
-import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_SOLO_L1;
-import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_TRANSDUCTION;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_LINX;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_PCAWG;
 import static com.hartwig.hmftools.svtools.germline.GermlineVcfConfig.LOG_DEBUG;
@@ -37,7 +20,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -66,7 +48,7 @@ public class LineInsertSiteCompare
     {
         mSampleInsertSiteData = Maps.newHashMap();
 
-        mOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
+        mOutputDir = parseOutputDir(cmd);
         mLinxDataFile = cmd.getOptionValue(LINX_DATA_FILE);
         mExtDataFile = cmd.getOptionValue(EXT_DATA_FILE);
         mWriter = null;
@@ -251,7 +233,7 @@ public class LineInsertSiteCompare
 
         options.addOption(LINX_DATA_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(EXT_DATA_FILE, true, "External LINE data sample counts");
-        options.addOption(DATA_OUTPUT_DIR, true, "Path to write results");
+        options.addOption(OUTPUT_DIR, true, "Path to write results");
         options.addOption(LOG_DEBUG, false, "Log verbose");
 
         final CommandLine cmd = createCommandLine(args, options);

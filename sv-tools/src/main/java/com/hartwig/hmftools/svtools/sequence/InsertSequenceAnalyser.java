@@ -2,10 +2,10 @@ package com.hartwig.hmftools.svtools.sequence;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
-import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -69,7 +69,7 @@ public class InsertSequenceAnalyser
     {
         return new InsertSequenceAnalyser(
                 cmd.getOptionValue(INS_SEQ_INPUT_FILE),
-                formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR)),
+                parseOutputDir(cmd),
                 Integer.parseInt(cmd.getOptionValue(SEARCH_LENGTH_MAX, "-1")),
                 Integer.parseInt(cmd.getOptionValue(SEARCH_LENGTH_MIN, "1")),
                 Integer.parseInt(cmd.getOptionValue(REQD_MATCH_COUNT, "10")));
@@ -77,7 +77,7 @@ public class InsertSequenceAnalyser
 
     public static void addCmdLineArgs(final Options options)
     {
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(INS_SEQ_INPUT_FILE, true, "File with sample insert sequence data");
         options.addOption(SEARCH_LENGTH_MAX, true, "Sequence max length");
         options.addOption(SEARCH_LENGTH_MIN, true, "Sequence min length");

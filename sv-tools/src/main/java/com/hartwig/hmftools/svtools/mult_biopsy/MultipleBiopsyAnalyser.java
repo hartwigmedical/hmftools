@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.svtools.mult_biopsy;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
-import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.mult_biopsy.MultiBiopsyData.MATCH_TYPE_PARTIAL;
 import static com.hartwig.hmftools.svtools.mult_biopsy.MultiBiopsyData.MATCH_TYPE_PRIVATE;
@@ -57,7 +57,7 @@ public class MultipleBiopsyAnalyser
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
+        String outputDir = parseOutputDir(cmd);
 
         MultipleBiopsyAnalyser mbAnalyser = new MultipleBiopsyAnalyser();
 
@@ -74,7 +74,7 @@ public class MultipleBiopsyAnalyser
         final Options options = new Options();
         options.addOption(PATIENT_SAMPLE_IDS_FILE, true, "File mapping PatientIds to SampleIds file");
         options.addOption(SVS_INPUT_FILE, true, "LINX SVs file");
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         return options;
     }

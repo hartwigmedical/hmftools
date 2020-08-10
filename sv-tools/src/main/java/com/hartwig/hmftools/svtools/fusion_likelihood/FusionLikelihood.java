@@ -4,12 +4,12 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.BUCKET_MAX;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.BUCKET_MIN;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.GENE_PAIR_DELIM;
@@ -129,7 +129,7 @@ public class FusionLikelihood
                     .collect(Collectors.toList()));
         }
 
-        mOutputDir = formOutputPath(cmdLineArgs.getOptionValue(DATA_OUTPUT_DIR));
+        mOutputDir = parseOutputDir(cmdLineArgs);
 
         mCohortCalculator.initialiseLengths(mProximateBucketLengths, mRestrictedChromosomes);
 
@@ -646,7 +646,7 @@ public class FusionLikelihood
     {
         final Options options = new Options();
         addCmdLineArgs(options);
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log in verbose mode");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl gene transcript data cache directory");
 
@@ -657,8 +657,6 @@ public class FusionLikelihood
         {
             Configurator.setRootLevel(Level.DEBUG);
         }
-
-        String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
 
         FusionLikelihood fusionLikelihood = new FusionLikelihood();
 

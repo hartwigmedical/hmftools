@@ -7,13 +7,13 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
@@ -94,7 +94,7 @@ public class CopyNumberAnalyser
     public static void addCmdLineArgs(Options options)
     {
         addDatabaseCmdLineArgs(options);
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(SAMPLE, true, "Sample(s) or CSV file with sample IDs");
         options.addOption(WRITE_LOH_TO_FILE, false, "Write LOH events to CSV");
         options.addOption(WRITE_JCN_TO_FILE, false, "Write adjusted JCN to CSV");
@@ -635,7 +635,7 @@ public class CopyNumberAnalyser
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
+        String outputDir = parseOutputDir(cmd);
 
         final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
