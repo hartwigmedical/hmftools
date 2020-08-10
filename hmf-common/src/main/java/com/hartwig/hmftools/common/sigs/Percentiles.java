@@ -4,12 +4,19 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.capValue;
+
 public class Percentiles
 {
     public static final double INVALID_VALUE = -1;
     public static final int PERCENTILE_COUNT = 101;
 
     public static double getPercentile(final double[] percentileValues, double value)
+    {
+        return getPercentile(percentileValues, value, false);
+    }
+
+    public static double getPercentile(final double[] percentileValues, double value, boolean useMaxMultiple)
     {
         // find the position of a value within a set of percentile values
         if(percentileValues == null || percentileValues.length != PERCENTILE_COUNT)
@@ -18,10 +25,22 @@ public class Percentiles
         if(value < percentileValues[0])
             return 0;
         else if(value > percentileValues[percentileValues.length - 1])
+        {
+            if(useMaxMultiple)
+            {
+                double maxValue = percentileValues[percentileValues.length - 1];
+                return maxValue > 0 ? value / maxValue : 1.01;
+            }
+
             return (percentileValues.length - 1) * 0.01;
+        }
 
         for(int i = 0; i < percentileValues.length - 1; ++i)
         {
+            // where successive percentile values are the same (eg zeros for the first X percentiles), report the highest
+            if(percentileValues[i] ==  percentileValues[i + 1])
+                continue;
+
             if(value >= percentileValues[i] && value <= percentileValues[i + 1])
             {
                 if(percentileValues[i + 1] == percentileValues[i])
@@ -44,58 +63,36 @@ public class Percentiles
 
     public static void calcPercentileValues(final double[] values, final double[] percentileValues)
     {
-        // assumes that values are sorted in ascending order
-        int sampleCount = values.length;
+        // need to handle either #values being less than #percentiles (or slots if not using percentiles) and vice versa
+        if(values == null || percentileValues == null)
+            return;
 
-        // populate the upper and lower bounds
-        double percSlots = percentileValues.length;
-
-        double samplesPerPercentile = sampleCount/percSlots;
-
-        for(int i = 0; i < percentileValues.length; ++i)
+        if(values.length == 1)
         {
-            double lowerIndex = i * samplesPerPercentile;
-            double upperIndex = lowerIndex + samplesPerPercentile * 0.9999;
-
-            int lowerBound = (int)floor(lowerIndex);
-            int upperBound = (int)ceil(upperIndex) - 1;
-            upperBound = min(upperBound, sampleCount);
-
-            if(lowerBound == upperBound)
+            for(int i = 0; i < percentileValues.length; ++i)
             {
-                percentileValues[i] = values[lowerBound];
-                continue;
+                percentileValues[i] = values[0];
             }
 
-            double tpmTotal = 0;
-            double sampleTotal = 0;
+            return;
+        }
 
-            for(int s = lowerBound; s <= upperBound; ++s)
-            {
-                double tpm = values[s];
+        int valueCount = values.length;
+        int slotCount = percentileValues.length;
+        double valuesPerSlot = (valueCount - 1) / (double) (slotCount - 1);
 
-                double fractionOfTpm;
+        percentileValues[0] = values[0];
 
-                if(s == lowerBound)
-                {
-                    fractionOfTpm = 1 - (lowerIndex - lowerBound);
-                    sampleTotal += fractionOfTpm;
-                    tpmTotal += fractionOfTpm * tpm;
-                }
-                else if(s == upperBound)
-                {
-                    fractionOfTpm = upperIndex - upperBound;
-                    sampleTotal += fractionOfTpm;
-                    tpmTotal += fractionOfTpm * tpm;
-                }
-                else
-                {
-                    ++sampleTotal;
-                    tpmTotal += tpm;
-                }
-            }
+        for(int i = 1; i < percentileValues.length; ++i)
+        {
+            double valueIndex = i * valuesPerSlot;
+            int valueLowerIndex = (int) floor(valueIndex);
+            int valueUpperIndex = (int) ceil(valueIndex);
+            double valueLower = values[valueLowerIndex];
+            double valueUpper = values[valueUpperIndex];
+            double lowerFraction = capValue(1 - (valueIndex - valueLowerIndex), 0, 1);
 
-            percentileValues[i] = tpmTotal / sampleTotal;
+            percentileValues[i] = lowerFraction * valueLower + (1 - lowerFraction) * valueUpper;
         }
     }
 
