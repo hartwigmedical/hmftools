@@ -59,7 +59,7 @@ data class GripssConfig(
             val reference = cmd.getOptionValue(REFERENCE, Strings.EMPTY)
             val tumor = cmd.getOptionValue(TUMOR, Strings.EMPTY)
 
-            val outputDir = File(outputVcf).parentFile
+            val outputDir = File(outputVcf).absoluteFile.parentFile
             if (!outputDir.exists() && !outputDir.mkdirs()) {
                 throw IOException("Unable to write to directory ${outputDir.absolutePath}")
             }
