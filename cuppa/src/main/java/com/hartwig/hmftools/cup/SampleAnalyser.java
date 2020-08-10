@@ -111,7 +111,7 @@ public class SampleAnalyser
 
             mSampleDataWriter = createBufferedWriter(outputFilename, false);
 
-            mSampleDataWriter.write("SampleId,CancerType,Category,DataType,Value,RefCancerType,RefCancerTypeValue");
+            mSampleDataWriter.write("SampleId,CancerType,PrimaryLocation,CancerSubtype,Category,DataType,Value,RefCancerType,RefValue");
             mSampleDataWriter.newLine();
         }
         catch(IOException e)
@@ -144,8 +144,9 @@ public class SampleAnalyser
         {
             for(SampleResult result : results)
             {
-                final String sampleStr = String.format("%s,%s,%s,%s,%s",
-                        sampleData.Id, sampleData.CancerType, result.Category, result.DataType, result.Value.toString());
+                final String sampleStr = String.format("%s,%s,%s,%s,%s,%s,%s",
+                        sampleData.Id, sampleData.CancerType, sampleData.OriginalCancerType, sampleData.CancerSubtype,
+                        result.Category, result.DataType, result.Value.toString());
 
                 for(Map.Entry<String,Double> cancerValues : result.CancerTypeValues.entrySet())
                 {

@@ -291,6 +291,5 @@ public class SampleFitter
 
         SampleFitter sampleFitter = new SampleFitter(cmd);
         sampleFitter.run();
-
     }
 }

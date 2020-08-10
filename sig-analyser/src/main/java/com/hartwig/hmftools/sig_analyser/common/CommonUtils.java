@@ -56,7 +56,7 @@ public class CommonUtils
                 sampleIds.remove(0);
         }
 
-        return DataUtils.createMatrixFromListData(scCollection.getData(), stripBucketName);
+        return DataUtils.createMatrixFromListData(scCollection.getData());
     }
 
     public static List<Integer> getCombinedList(final List<Integer> list1, final List<Integer> list2)

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
+import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_EXT_SAMPLE_DATA_FILE;
@@ -266,7 +267,7 @@ public class BucketAnalyser
         if(cmd.hasOption(BA_EXT_SAMPLE_DATA_FILE))
         {
             final String fileName = cmd.getOptionValue(BA_EXT_SAMPLE_DATA_FILE);
-            mExtSampleData = GenericDataLoader.loadFile(fileName, GD_TYPE_STRING);
+            mExtSampleData = GenericDataLoader.loadFile(fileName, GD_TYPE_STRING, DEFAULT_DELIM, Lists.newArrayList());
 
             for(int i = 0; i < mExtSampleData.getFieldNames().size(); ++i)
             {

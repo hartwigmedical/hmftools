@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSampleCounts
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromDatabase;
 
-import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -41,8 +40,6 @@ public class SignatureAnnotation
     private final Map<String,Integer> mSampleCountsIndex;
     private final Map<String,Map<String,Double>> mSampleSigContributions;
 
-    private BufferedWriter mCssPairsWriter;
-
     public SignatureAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
@@ -55,8 +52,6 @@ public class SignatureAnnotation
         mRefSampleCounts = null;
         mRefSampleNames = Lists.newArrayList();
         mRefCancerSigContribPercentiles = Maps.newHashMap();
-
-        mCssPairsWriter = null;
 
         loadRefSigContribPercentiles(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames);
@@ -170,8 +165,6 @@ public class SignatureAnnotation
                 cancerCssTotals.put(refCancerType, weightedCss);
             else
                 cancerCssTotals.put(refCancerType, total + weightedCss);
-
-            // writeSampleCssPairData(mSampleIds.get(s1), mSampleIds.get(s2), css, mSampleTotals[s1], mSampleTotals[s2]);
         }
 
         double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
@@ -181,7 +174,7 @@ public class SignatureAnnotation
             cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
         }
 
-        results.add(new SampleResult(sample.Id, CLASSIFIER, "CSS", String.format("%.2f", totalCss), cancerCssTotals));
+        results.add(new SampleResult(sample.Id, CLASSIFIER, "CSS", String.format("%.6f", totalCss), cancerCssTotals));
     }
 
     private static final List<String> REPORTABLE_SIGS =
@@ -239,20 +232,5 @@ public class SignatureAnnotation
             }
         }
     }
-
-    /*
-    private void writeSampleCssPairData(final String sampleId1, final String sampleId2, double css, int sampleTotal1, int sampleTotal2)
-    {
-        try
-        {
-            mCssPairsWriter.write(String.format("%s,%s,%.6f,%d,%d", sampleId1, sampleId2, css, sampleTotal1, sampleTotal2));
-            mCssPairsWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
-        }
-    }
-    */
 
 }

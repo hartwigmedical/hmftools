@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.fitter;
+package com.hartwig.hmftools.sig_analyser.analysers;
 
 import static java.lang.Math.abs;
 
@@ -35,6 +35,7 @@ import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
+import com.hartwig.hmftools.sig_analyser.fitter.FitMethod;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfSampleFitter;
 

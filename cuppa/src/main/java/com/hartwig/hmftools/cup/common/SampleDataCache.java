@@ -52,7 +52,7 @@ public class SampleDataCache
             if(sampleItems.length == 3)
                 cancerSubtype = sampleItems[2];
 
-            SpecificSample = new SampleData(sampleId, cancerType, cancerSubtype);
+            SpecificSample = new SampleData(sampleId, cancerType, cancerSubtype, cancerType);
             SampleDataList.add(SpecificSample);
         }
 
@@ -69,17 +69,12 @@ public class SampleDataCache
 
                 for(final String line : fileData)
                 {
-                    final String[] items = line.split(DATA_DELIM, -1);
-                    final String sampleId = items[fieldsIndexMap.get("SampleId")];
-                    final String cancerType = items[fieldsIndexMap.get("CancerType")];
+                    SampleData sample = SampleData.from(fieldsIndexMap, line);
 
-                    final String cancerSubtype = fieldsIndexMap.containsKey("CancerSubtype") ?
-                            items[fieldsIndexMap.get("CancerSubtype")] : CANCER_SUBTYPE_OTHER;
-
-                    if(SpecificSample != null && SpecificSample.Id.equals(sampleId))
+                    if(SpecificSample != null && SpecificSample.Id.equals(sample.Id))
                         continue;
 
-                    SampleDataList.add(new SampleData(sampleId, cancerType, cancerSubtype));
+                    SampleDataList.add(sample);
                 }
             }
             catch (IOException e)
@@ -107,23 +102,16 @@ public class SampleDataCache
 
             for(final String line : fileData)
             {
-                final String[] items = line.split(DATA_DELIM, -1);
-                final String sampleId = items[fieldsIndexMap.get("SampleId")];
-                final String cancerType = items[fieldsIndexMap.get("CancerType")];
+                SampleData sample = SampleData.from(fieldsIndexMap, line);
 
-                final String cancerSubtype = fieldsIndexMap.containsKey("CancerSubtype") ?
-                        items[fieldsIndexMap.get("CancerSubtype")] : CANCER_SUBTYPE_OTHER;
-
-                SampleData sampleData = new SampleData(sampleId, cancerType, cancerSubtype);
-
-                List<SampleData> cancerSampleData = RefCancerSampleData.get(cancerType);
+                List<SampleData> cancerSampleData = RefCancerSampleData.get(sample.CancerType);
 
                 if(cancerSampleData == null)
-                    RefCancerSampleData.put(cancerType, Lists.newArrayList(sampleData));
+                    RefCancerSampleData.put(sample.CancerType, Lists.newArrayList(sample));
                 else
-                    cancerSampleData.add(sampleData);
+                    cancerSampleData.add(sample);
 
-                RefSampleCancerTypeMap.put(sampleId, cancerType);
+                RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
             }
         }
         catch (IOException e)
