@@ -27,8 +27,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
-import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
-import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
@@ -58,10 +56,6 @@ public class SomaticVariantFactory {
         return new SomaticVariantFactory(new PassingVariantFilter());
     }
 
-
-    private static final String DBSNP_IDENTIFIER = "rs";
-    private static final String COSMIC_IDENTIFIER = "COSM";
-    private static final String ID_SEPARATOR = ";";
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
 
@@ -207,7 +201,6 @@ public class SomaticVariantFactory {
             builder.localRealignmentSet(context.getAttributeAsInt(SageMetaData.LOCAL_REALIGN_SET, 0));
         }
 
-        attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
         attachSnpEffAnnotations(builder, context, snpEffSummaryFactory);
         attachFilter(builder, context);
         attachType(builder, context);
@@ -221,33 +214,6 @@ public class SomaticVariantFactory {
 
     private static double variantCopyNumber(@NotNull final VariantContext context) {
         return context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, context.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
-    }
-
-    private static void attachIDAndCosmicAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
-        final String ID = context.getID();
-        final List<String> cosmicIDs = Lists.newArrayList();
-        if (!ID.isEmpty()) {
-            final String[] ids = ID.split(ID_SEPARATOR);
-            for (final String id : ids) {
-                if (id.contains(DBSNP_IDENTIFIER)) {
-                    builder.dbsnpID(id);
-                } else if (id.contains(COSMIC_IDENTIFIER)) {
-                    cosmicIDs.add(id);
-                }
-            }
-        }
-        builder.cosmicIDs(cosmicIDs);
-
-        final List<CosmicAnnotation> cosmicAnnotations = CosmicAnnotationFactory.fromContext(context);
-        final Optional<CosmicAnnotation> canonicalCosmicAnnotation =
-                canonicalAnnotationFactory.canonicalCosmicAnnotation(cosmicAnnotations);
-
-        if (canonicalCosmicAnnotation.isPresent()) {
-            builder.canonicalCosmicID(canonicalCosmicAnnotation.get().id());
-        } else if (!cosmicIDs.isEmpty()) {
-            builder.canonicalCosmicID(cosmicIDs.get(0));
-        }
     }
 
     private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context,

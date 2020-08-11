@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,15 +14,6 @@ public interface SomaticVariant extends Variant {
 
     @NotNull
     String filter();
-
-    @Nullable
-    String dbsnpID();
-
-    @NotNull
-    List<String> cosmicIDs();
-
-    @Nullable
-    String canonicalCosmicID();
 
     int genesAffected();
 
@@ -50,14 +39,6 @@ public interface SomaticVariant extends Variant {
     }
 
     double mappability();
-
-    default boolean isDBSNP() {
-        return dbsnpID() != null;
-    }
-
-    default boolean isCOSMIC() {
-        return !cosmicIDs().isEmpty();
-    }
 
     default boolean isFiltered() {
         return !filter().equals(SomaticVariantFactory.PASS_FILTER);

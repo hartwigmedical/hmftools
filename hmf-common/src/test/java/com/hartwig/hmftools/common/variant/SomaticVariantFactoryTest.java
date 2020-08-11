@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -60,8 +59,6 @@ public class SomaticVariantFactoryTest {
         assertEquals("15", variant.chromosome());
         assertEquals(12345678, variant.position());
         assertEquals(VariantType.SNP, variant.type());
-        assertTrue(variant.isDBSNP());
-        assertFalse(variant.isCOSMIC());
 
         assertEquals("C", variant.ref());
         assertEquals("A,G", variant.alt());
@@ -116,31 +113,6 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void correctDBSNPAndCOSMIC() {
-        final String both = "15\t12345678\trs1;COSM2\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasBoth = assertedGet(victim.createVariant(SAMPLE, codec.decode(both)));
-        assertTrue(hasBoth.isDBSNP());
-        assertTrue(hasBoth.isCOSMIC());
-        assertTrue(hasBoth.cosmicIDs().contains("COSM2"));
-
-        final String dbsnpOnly = "15\t12345678\trs1\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasDBSNPOnly = assertedGet(victim.createVariant(SAMPLE, codec.decode(dbsnpOnly)));
-        assertTrue(hasDBSNPOnly.isDBSNP());
-        assertFalse(hasDBSNPOnly.isCOSMIC());
-
-        final String cosmicOnly = "15\t12345678\tCOSM2\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasCOSMICOnly = assertedGet(victim.createVariant(SAMPLE, codec.decode(cosmicOnly)));
-        assertFalse(hasCOSMICOnly.isDBSNP());
-        assertTrue(hasCOSMICOnly.isCOSMIC());
-        assertTrue(hasCOSMICOnly.cosmicIDs().contains("COSM2"));
-
-        final String none = "15\t12345678\tID\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasNone = assertedGet(victim.createVariant(SAMPLE, codec.decode(none)));
-        assertFalse(hasNone.isDBSNP());
-        assertFalse(hasNone.isCOSMIC());
-    }
-
-    @Test
     public void favourCanonicalGeneWhenPossible() {
         final String line =
                 "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|nonsense_mediated_decay|12/16|c.3075C>T|p.Leu1025Leu|3653/4157|3075/3318|1025/1105||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000424834|protein_coding|11/13|c.3441C>T|p.Leu1147Leu|3763/8457|3441/3834|1147/1277||\tGT:AD:DP\t0/1:36,38:75";
@@ -165,27 +137,6 @@ public class SomaticVariantFactoryTest {
         assertEquals(CodingEffect.SYNONYMOUS, variant.canonicalCodingEffect());
         assertEquals("c.78G>A", variant.canonicalHgvsCodingImpact());
         assertEquals("p.Ser26Ser", variant.canonicalHgvsProteinImpact());
-    }
-
-    @Test
-    public void revertToNormalCosmicIDIfCanonicalIsNoMatch() {
-        final String sample = "sample";
-
-        final String canonicalCosmicID =
-                "14\t105246551\trs121434592;COSM33765\tC\tT\t.\tPASS\tCOSM2ENST=COSM33766|AKT1_ENST00000554581|c.49G>A|p.E17K|519\tGT:AD:DP\t0/1:120,71:204";
-
-        final SomaticVariant canonicalCosmicIDVariant = assertedGet(SomaticVariantFactory.passOnlyInstance()
-                .createVariant(sample, VariantContextFromString.decode(sample, canonicalCosmicID)));
-
-        assertEquals("COSM33766", canonicalCosmicIDVariant.canonicalCosmicID());
-
-        final String noCanonicalCosmicID =
-                "14\t105246551\trs121434592;COSM33765\tC\tT\t.\tPASS\tCOSM2ENST=COSM33766|AKT1_ENST00000349310|c.49G>A|p.E17K|519\tGT:AD:DP\t0/1:120,71:204";
-
-        final SomaticVariant noCanonicalCosmicIDVariant = assertedGet(SomaticVariantFactory.passOnlyInstance()
-                .createVariant(sample, VariantContextFromString.decode(sample, noCanonicalCosmicID)));
-
-        assertEquals("COSM33765", noCanonicalCosmicIDVariant.canonicalCosmicID());
     }
 
     @NotNull
