@@ -63,15 +63,12 @@ public class SomaticVariantFactory {
 
     @NotNull
     private final CompoundFilter filter;
-    @NotNull
-    private final CanonicalAnnotation canonicalAnnotationFactory;
 
     public SomaticVariantFactory(@NotNull final VariantContextFilter... filters) {
         this.filter = new CompoundFilter(true);
         filter.addAll(Arrays.asList(filters));
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new NTFilter());
-        this.canonicalAnnotationFactory = new CanonicalAnnotation();
     }
 
     @NotNull
@@ -140,7 +137,7 @@ public class SomaticVariantFactory {
                     .map(AllelicDepth::fromGenotype);
 
             if (tumorDepth.totalReadCount() > 0) {
-                return Optional.of(createVariantBuilder(tumorDepth, context, canonicalAnnotationFactory))
+                return Optional.of(createVariantBuilder(tumorDepth, context))
                         .map(x -> x.rnaDepth(rnaDepth.orElse(null)))
                         .map(x -> x.referenceDepth(referenceDepth.orElse(null)))
                         .map(ImmutableSomaticVariantImpl.Builder::build);
@@ -152,16 +149,12 @@ public class SomaticVariantFactory {
     @NotNull
     public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         final AllelicDepth allelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
-
-        return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
-                .map(ImmutableSomaticVariantImpl.Builder::build)
-                .get();
+        return Optional.of(createVariantBuilder(allelicDepth, context)).map(ImmutableSomaticVariantImpl.Builder::build).get();
     }
 
     @NotNull
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
-            @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
-        SnpEffSummaryFactory snpEffSummaryFactory = new SnpEffSummaryFactory(canonicalAnnotationFactory);
+            @NotNull final VariantContext context) {
 
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .qual(context.getPhredScaledQual())
@@ -201,7 +194,7 @@ public class SomaticVariantFactory {
             builder.localRealignmentSet(context.getAttributeAsInt(SageMetaData.LOCAL_REALIGN_SET, 0));
         }
 
-        attachSnpEffAnnotations(builder, context, snpEffSummaryFactory);
+        attachSnpEffAnnotations(builder, context);
         attachFilter(builder, context);
         attachType(builder, context);
 
@@ -216,9 +209,9 @@ public class SomaticVariantFactory {
         return context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, context.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
     }
 
-    private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context,
-            @NotNull SnpEffSummaryFactory snpEffSummaryFactory) {
-        final SnpEffSummary snpEffSummary = snpEffSummaryFactory.fromAnnotations(context);
+    private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
+            @NotNull VariantContext context) {
+        final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSage(context);
 
         builder.worstEffect(snpEffSummary.worstEffect())
                 .worstCodingEffect(snpEffSummary.worstCodingEffect())

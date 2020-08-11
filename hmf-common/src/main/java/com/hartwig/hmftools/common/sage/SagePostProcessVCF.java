@@ -1,43 +1,40 @@
 package com.hartwig.hmftools.common.sage;
 
+import java.util.List;
+import java.util.function.Consumer;
+
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.variant.enrich.SnpEffEnrichment;
+
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class SagePostProcessVCF implements AutoCloseable {
-
-    public static String SNPEFF_WORST = "SEW";
-    public static String SNPEFF_CANONICAL = "SEC";
-
+public class SagePostProcessVCF implements AutoCloseable, Consumer<VariantContext> {
     private final VariantContextWriter writer;
+    private final SnpEffEnrichment snpEffEnrichment;
+    final List<CanonicalTranscript> transcripts;
 
-    public SagePostProcessVCF(@NotNull final String outputVCF) {
+    public SagePostProcessVCF(@NotNull final String outputVCF, final List<CanonicalTranscript> transcripts) {
         writer = new VariantContextWriterBuilder().setOutputFile(outputVCF).build();
+        this.transcripts = transcripts;
+        this.snpEffEnrichment = new SnpEffEnrichment(transcripts, writer::add);
     }
 
     public void writeHeader(@NotNull final VCFHeader header) {
-        header.addMetaDataLine(new VCFInfoHeaderLine(SNPEFF_WORST,
-                5,
-                VCFHeaderLineType.String,
-                "SnpEff worst transcript summary [Gene, Transcript, Effect, CodingEffect, GenesAffected]"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(SNPEFF_CANONICAL,
-                6,
-                VCFHeaderLineType.String,
-                "SnpEff canonical transcript summary [Gene, Transcript, Effect, CodingEffect, HgvsCodingImpact, HgvsProteinImpact]"));
-        writer.writeHeader(header);
-    }
-
-    public void writeVariant(@NotNull final VariantContext context) {
-        writer.add(context);
+        writer.writeHeader(snpEffEnrichment.enrichHeader(header));
     }
 
     @Override
     public void close() {
         writer.close();
+    }
+
+    @Override
+    public void accept(final VariantContext variantContext) {
+        snpEffEnrichment.accept(variantContext);
     }
 }
