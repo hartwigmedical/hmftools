@@ -64,7 +64,10 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
-            generateJsonFileOfDataQCFail(config.outputDirData(), report.sampleReport().tumorSampleId(), report);
+            generateJsonFileOfDataQCFail(config.outputDirData(),
+                    report.sampleReport().tumorSampleId(),
+                    report.sampleReport().tumorSampleBarcode(),
+                    report);
 
             ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
         } else {
@@ -96,8 +99,8 @@ public class PatientReporterApplication {
     }
 
     private static void generateJsonFileOfDataQCFail(@NotNull String outputDirData, @NotNull String tumorSampleId,
-            @NotNull QCFailReport report) throws IOException {
-        String outputFileData = outputDirData + File.separator + tumorSampleId + ".json";
+            @NotNull String tumorBarcode, @NotNull QCFailReport report) throws IOException {
+        String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
         Gson gson = new Gson();
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
         writer.write(gson.toJson(report));
