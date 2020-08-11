@@ -7,5 +7,6 @@ public enum SampleTraitType
     PURITY,
     PLOIDY,
     SNV_COUNT,
-    MS_INDELS_TMB
+    MS_INDELS_TMB,
+    CHORD_HRD
 }

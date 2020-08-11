@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
@@ -258,6 +258,16 @@ public class DatabaseAccess implements AutoCloseable {
         return structuralVariantFusionDAO.readFusions(sample);
     }
 
+    @NotNull
+    public List<LinxViralInsertion> readViralInsertions(@NotNull String sample) {
+        return structuralVariantFusionDAO.readViralInsertions(sample);
+    }
+
+    @NotNull
+    public ChordAnalysis readChordAnalysis(@NotNull String sample) {
+        return chordDAO.readChordAnalysis(sample);
+    }
+
     public void writeCanonicalTranscripts(@NotNull String assembly, @NotNull List<CanonicalTranscript> transcripts) {
         canonicalTranscriptDAO.write(assembly, transcripts);
     }
@@ -332,7 +342,7 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
-    public void writeSvViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertFile> inserts) {
+    public void writeSvViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertion> inserts) {
         structuralVariantClusterDAO.writeViralInserts(sample, inserts);
     }
 

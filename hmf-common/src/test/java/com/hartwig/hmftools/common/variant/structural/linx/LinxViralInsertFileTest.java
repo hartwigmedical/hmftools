@@ -14,22 +14,22 @@ public class LinxViralInsertFileTest {
 
     @Test
     public void canReadViralInsertionFile() throws IOException {
-        List<LinxViralInsertFile> viralInsertionsFile = LinxViralInsertFile.read(LINX_VIRAL_INSERTIONS_FILE);
+        List<LinxViralInsertion> viralInsertionsFile = LinxViralInsertion.read(LINX_VIRAL_INSERTIONS_FILE);
         assertEquals(3, viralInsertionsFile.size());
 
-        LinxViralInsertFile viralInsertion1 = viralInsertionsFile.get(0);
+        LinxViralInsertion viralInsertion1 = viralInsertionsFile.get(0);
         assertEquals("sample", viralInsertion1.SampleId);
         assertEquals(6, viralInsertion1.SvId);
         assertEquals("NC_001526", viralInsertion1.VirusId);
         assertEquals("Human papillomavirus type 16", viralInsertion1.VirusName);
 
-        LinxViralInsertFile viralInsertion2 = viralInsertionsFile.get(1);
+        LinxViralInsertion viralInsertion2 = viralInsertionsFile.get(1);
         assertEquals("sample", viralInsertion2.SampleId);
         assertEquals(7, viralInsertion2.SvId);
         assertEquals("NC_001526", viralInsertion2.VirusId);
         assertEquals("Human papillomavirus type 16", viralInsertion2.VirusName);
 
-        LinxViralInsertFile viralInsertion3 = viralInsertionsFile.get(2);
+        LinxViralInsertion viralInsertion3 = viralInsertionsFile.get(2);
         assertEquals("sample", viralInsertion3.SampleId);
         assertEquals(7, viralInsertion3.SvId);
         assertEquals("NC_001525", viralInsertion3.VirusId);

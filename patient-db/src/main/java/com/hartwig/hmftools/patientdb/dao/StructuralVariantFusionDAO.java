@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVFUSION;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.VIRALINSERTION;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -16,6 +17,8 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Viralinsertion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -200,6 +203,25 @@ public class StructuralVariantFusionDAO {
         }
 
         return fusionList;
+    }
+
+    @NotNull
+    List<LinxViralInsertion> readViralInsertions(@NotNull String sample)
+    {
+        List<LinxViralInsertion> viralinsertions = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(VIRALINSERTION).where(VIRALINSERTION.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result)
+        {
+            LinxViralInsertion viralInsert = new LinxViralInsertion(
+                    sample, record.getValue(VIRALINSERTION.SVID),
+                    record.getValue(VIRALINSERTION.VIRUSID), record.getValue(VIRALINSERTION.VIRUSNAME));
+
+            viralinsertions.add(viralInsert);
+        }
+
+        return viralinsertions;
     }
 
 }

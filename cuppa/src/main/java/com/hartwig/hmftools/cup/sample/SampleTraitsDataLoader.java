@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -61,8 +62,11 @@ public class SampleTraitsDataLoader
                     continue;
                 }
 
+                final ChordAnalysis chordAnalysis = dbAccess.readChordAnalysis(sampleId);
+                double chordHrd = chordAnalysis.hrdValue();
+
                 Integer snvCount = sampleSnvCounts.get(sampleId);
-                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, snvCount != null ? snvCount : 0);
+                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, snvCount != null ? snvCount : 0, chordHrd);
                 sampleTraitsData.put(traitsData.SampleId, traitsData);
             }
         }

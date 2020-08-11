@@ -31,7 +31,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -243,7 +243,7 @@ class AnalysedPatientReporter {
     @Nullable
     private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean reportViralInsertions)
             throws IOException {
-        List<LinxViralInsertFile> viralInsertionList = LinxViralInsertFile.read(linxViralInsertionTsv);
+        List<LinxViralInsertion> viralInsertionList = LinxViralInsertion.read(linxViralInsertionTsv);
         LOGGER.info("Loaded {} viral insertions from {}", viralInsertionList.size(), linxViralInsertionTsv);
 
         if (reportViralInsertions) {

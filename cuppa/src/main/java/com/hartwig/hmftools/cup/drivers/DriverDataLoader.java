@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_LIKELIHOOD_THR
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_MIN_PREVALENCE;
 import static com.hartwig.hmftools.cup.common.CupConstants.FUSION_MIN_PREVALENCE;
 import static com.hartwig.hmftools.cup.drivers.DriverType.DRIVER;
+import static com.hartwig.hmftools.cup.drivers.ViralInsertionType.OTHER;
+import static com.hartwig.hmftools.cup.drivers.ViralInsertionType.fromVirusName;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +20,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Viralinsertion;
 
 public class DriverDataLoader
 {
@@ -52,7 +56,8 @@ public class DriverDataLoader
                     }
                 }
             }
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample driver data file({}): {}", filename, e.toString());
         }
@@ -77,7 +82,7 @@ public class DriverDataLoader
                 sampleDrivers.put(sampleId, driverDataList);
             }
 
-            final List<LinxFusion> fusions =dbAccess.readFusions(sampleId);
+            final List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
 
             if(fusions != null)
             {
@@ -87,6 +92,18 @@ public class DriverDataLoader
                         .collect(Collectors.toList());
 
                 sampleDrivers.put(sampleId, fusionDataList);
+            }
+
+            final List<LinxViralInsertion> viralInserts = dbAccess.readViralInsertions(sampleId);
+
+            if(viralInserts != null)
+            {
+                final List<SampleDriverData> viralInsertDataList = viralInserts.stream()
+                        .map(x -> new SampleDriverData(sampleId, fromVirusName(x.VirusName).toString(), DriverType.VIRUS))
+                        .filter(x -> !x.Gene.equals(OTHER.toString()))
+                        .collect(Collectors.toList());
+
+                sampleDrivers.put(sampleId, viralInsertDataList);
             }
         }
     }

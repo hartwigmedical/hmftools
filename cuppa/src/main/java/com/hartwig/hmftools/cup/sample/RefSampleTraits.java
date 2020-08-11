@@ -63,6 +63,9 @@ public class RefSampleTraits
 
             final List<Double> msIndelTmbValues = traitsData.stream().map(x -> x.IndelsMbPerMb).collect(Collectors.toList());
             writeRefDataType(cancerType, SampleTraitType.MS_INDELS_TMB, createPercentileData(msIndelTmbValues));
+
+            final List<Double> chordHrdValues = traitsData.stream().map(x -> x.ChordHrd).collect(Collectors.toList());
+            writeRefDataType(cancerType, SampleTraitType.CHORD_HRD, createPercentileData(chordHrdValues));
         }
 
         closeBufferedWriter(mRefDataWriter);

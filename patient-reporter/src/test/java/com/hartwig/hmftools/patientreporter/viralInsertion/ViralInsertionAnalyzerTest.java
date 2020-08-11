@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 
 import org.junit.Test;
 
@@ -17,7 +17,7 @@ public class ViralInsertionAnalyzerTest {
 
     @Test
     public void canMergeViralInsertionsForReporting() throws IOException {
-        List<LinxViralInsertFile> linxViralInsertions = LinxViralInsertFile.read(LINX_VIRAL_INSERTIONS_TSV);
+        List<LinxViralInsertion> linxViralInsertions = LinxViralInsertion.read(LINX_VIRAL_INSERTIONS_TSV);
         List<ViralInsertion> viralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(linxViralInsertions);
         assertEquals(2, viralInsertions.size());
 

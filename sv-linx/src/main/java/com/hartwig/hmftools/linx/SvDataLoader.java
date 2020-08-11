@@ -35,7 +35,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLinkFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotationFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
@@ -104,10 +104,10 @@ public class SvDataLoader
             LOGGER.info("sample({}) loading {} SV links records", sampleId, linksData.size());
             dbAccess.writeSvLinks(sampleId, linksData);
 
-            String viralInsertFilename = LinxViralInsertFile.generateFilename(svDataOutputDir, sampleId);
+            String viralInsertFilename = LinxViralInsertion.generateFilename(svDataOutputDir, sampleId);
             if(Files.exists(Paths.get(viralInsertFilename)))
             {
-                List<LinxViralInsertFile> viralInserts = LinxViralInsertFile.read(viralInsertFilename);
+                List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(viralInsertFilename);
 
                 if (!viralInserts.isEmpty())
                 {

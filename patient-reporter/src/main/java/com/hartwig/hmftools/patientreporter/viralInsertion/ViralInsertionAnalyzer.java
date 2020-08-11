@@ -8,7 +8,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,11 +23,11 @@ public final class ViralInsertionAnalyzer {
     }
 
     @Nullable
-    public static List<ViralInsertion> analyzeViralInsertions(@NotNull List<LinxViralInsertFile> linxViralInsertions) {
-        Map<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
-        for (LinxViralInsertFile viralInsertion : linxViralInsertions) {
+    public static List<ViralInsertion> analyzeViralInsertions(@NotNull List<LinxViralInsertion> linxViralInsertions) {
+        Map<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertion>> itemsPerKey = Maps.newHashMap();
+        for (LinxViralInsertion viralInsertion : linxViralInsertions) {
             ViralInsertionAnalyzer.VirusKey key = new ViralInsertionAnalyzer.VirusKey(viralInsertion.VirusId);
-            List<LinxViralInsertFile> items = itemsPerKey.get(key);
+            List<LinxViralInsertion> items = itemsPerKey.get(key);
 
             if (items == null) {
                 items = Lists.newArrayList();
@@ -37,8 +37,8 @@ public final class ViralInsertionAnalyzer {
         }
 
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        for (Map.Entry<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
-            List<LinxViralInsertFile> itemsForKey = entry.getValue();
+        for (Map.Entry<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertion>> entry : itemsPerKey.entrySet()) {
+            List<LinxViralInsertion> itemsForKey = entry.getValue();
 
             int count = itemsForKey.size();
             assert count > 0;

@@ -14,14 +14,14 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class LinxViralInsertFile
+public class LinxViralInsertion
 {
     public final String SampleId;
     public final int SvId;
     public final String VirusId;
     public final String VirusName;
 
-    public LinxViralInsertFile(final String sampleId, int svId, final String virusId, final String virusName)
+    public LinxViralInsertion(final String sampleId, int svId, final String virusId, final String virusName)
     {
         SampleId = sampleId;
         SvId = svId;
@@ -38,18 +38,18 @@ public class LinxViralInsertFile
     }
 
     @NotNull
-    public static List<LinxViralInsertFile> read(final String filePath) throws IOException
+    public static List<LinxViralInsertion> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxViralInsertFile> inserts) throws IOException
+    public static void write(@NotNull final String filename, @NotNull List<LinxViralInsertion> inserts) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(inserts));
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<LinxViralInsertFile> viruses)
+    private static List<String> toLines(@NotNull final List<LinxViralInsertion> viruses)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -58,9 +58,9 @@ public class LinxViralInsertFile
     }
 
     @NotNull
-    private static List<LinxViralInsertFile> fromLines(@NotNull List<String> lines)
+    private static List<LinxViralInsertion> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(LinxViralInsertFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(LinxViralInsertion::fromString).collect(toList());
     }
 
     @NotNull
@@ -75,7 +75,7 @@ public class LinxViralInsertFile
     }
 
     @NotNull
-    private static String toString(@NotNull final LinxViralInsertFile virus)
+    private static String toString(@NotNull final LinxViralInsertion virus)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(virus.SampleId))
@@ -86,13 +86,13 @@ public class LinxViralInsertFile
     }
 
     @NotNull
-    private static LinxViralInsertFile fromString(@NotNull final String virus)
+    private static LinxViralInsertion fromString(@NotNull final String virus)
     {
         String[] values = virus.split(DELIMITER);
 
         int index = 0;
 
-        return new LinxViralInsertFile(
+        return new LinxViralInsertion(
                 values[index++],
                 Integer.parseInt(values[index++]),
                 values[index++],

@@ -4,5 +4,5 @@ public enum DriverType
 {
     DRIVER,
     FUSION,
-    VIRAL_INSERT
+    VIRUS
 }

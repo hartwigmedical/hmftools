@@ -35,7 +35,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLinkFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotationFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.linx.annotators.IndelAnnotator;
@@ -366,7 +366,7 @@ public class SampleAnalyser
         final List<LinxSvAnnotation> linxSvData = prepareSampleData ? generateSvDataOutput() : null;
         final List<LinxCluster> clusterData = prepareSampleData ? generateClusterOutput() : null;
         final List<LinxLink> linksData = prepareSampleData ? generateLinksOutput() : null;
-        final List<LinxViralInsertFile> viralInserts = prepareSampleData ? generateViralInserts() : null;
+        final List<LinxViralInsertion> viralInserts = prepareSampleData ? generateViralInserts() : null;
 
         if(mConfig.hasMultipleSamples())
         {
@@ -385,7 +385,7 @@ public class SampleAnalyser
                 LinxSvAnnotationFile.write(LinxSvAnnotationFile.generateFilename(mConfig.OutputDataPath, mSampleId), linxSvData);
                 LinxClusterFile.write(LinxClusterFile.generateFilename(mConfig.OutputDataPath, mSampleId), clusterData);
                 LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
-                LinxViralInsertFile.write(LinxViralInsertFile.generateFilename(mConfig.OutputDataPath, mSampleId), viralInserts);
+                LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, mSampleId), viralInserts);
 
             }
             catch (IOException e)
@@ -412,7 +412,7 @@ public class SampleAnalyser
             LinxSvAnnotationFile.write(LinxSvAnnotationFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxClusterFile.write(LinxClusterFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxViralInsertFile.write(LinxViralInsertFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
 
             LinxFusionFile.write(LinxFusionFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxBreakendFile.write(LinxBreakendFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
@@ -614,9 +614,9 @@ public class SampleAnalyser
         return linksData;
     }
 
-    private List<LinxViralInsertFile> generateViralInserts()
+    private List<LinxViralInsertion> generateViralInserts()
     {
-        List<LinxViralInsertFile> viralInserts = Lists.newArrayList();
+        List<LinxViralInsertion> viralInserts = Lists.newArrayList();
 
         for(final SvVarData var : mAllVariants)
         {
@@ -624,7 +624,7 @@ public class SampleAnalyser
 
             if(viralInsertData != null)
             {
-                viralInserts.add(new LinxViralInsertFile(mSampleId, var.id(), viralInsertData[VH_ID], viralInsertData[VH_NAME]));
+                viralInserts.add(new LinxViralInsertion(mSampleId, var.id(), viralInsertData[VH_ID], viralInsertData[VH_NAME]));
             }
         }
 

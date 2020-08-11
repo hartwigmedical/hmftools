@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -199,7 +199,7 @@ class StructuralVariantClusterDAO
                 link.ecDna());
     }
 
-    public void writeViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertFile> inserts)
+    public void writeViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertion> inserts)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -212,7 +212,7 @@ class StructuralVariantClusterDAO
                 VIRALINSERTION.VIRUSID,
                 VIRALINSERTION.VIRUSNAME);
 
-        for (LinxViralInsertFile record : inserts)
+        for (LinxViralInsertion record : inserts)
         {
             addRecord(timestamp, inserter, sample, record);
         }
@@ -221,7 +221,7 @@ class StructuralVariantClusterDAO
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
-            @NotNull LinxViralInsertFile insert)
+            @NotNull LinxViralInsertion insert)
     {
         inserter.values(sample, timestamp, insert.SvId, insert.VirusId, insert.VirusName);
     }

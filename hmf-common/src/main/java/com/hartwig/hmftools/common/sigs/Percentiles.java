@@ -87,7 +87,8 @@ public class Percentiles
         {
             double valueIndex = i * valuesPerSlot;
             int valueLowerIndex = (int) floor(valueIndex);
-            int valueUpperIndex = (int) ceil(valueIndex);
+            int valueUpperIndex = min((int) ceil(valueIndex), valueCount - 1);
+
             double valueLower = values[valueLowerIndex];
             double valueUpper = values[valueUpperIndex];
             double lowerFraction = capValue(1 - (valueIndex - valueLowerIndex), 0, 1);
