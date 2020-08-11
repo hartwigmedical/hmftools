@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -24,27 +25,30 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
     private final VariantContextEnrichment kataegisEnrichment;
     private final VariantContextEnrichment somaticRefContextEnrichment;
     private final VariantContextEnrichment subclonalLikelihoodEnrichment;
+    private final VariantContextEnrichment snpEffEnrichment;
 
     public VariantContextEnrichmentPurple(boolean hotspotEnabled, double clonalityMaxPloidy, double clonalityBinWidth,
             @NotNull final String purpleVersion, @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions, @NotNull final List<PeakModel> peakModel, @NotNull final String hotspots,
-            @NotNull final Consumer<VariantContext> consumer) throws IOException {
+            @NotNull final List<CanonicalTranscript> transcripts, @NotNull final Consumer<VariantContext> consumer) throws IOException {
         subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityMaxPloidy, clonalityBinWidth, peakModel, consumer);
         purityEnrichment =
                 new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, subclonalLikelihoodEnrichment);
         kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
         somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
+        snpEffEnrichment = new SnpEffEnrichment(transcripts, somaticRefContextEnrichment);
         if (hotspotEnabled) {
-            hotspotEnrichment = new VariantHotspotEnrichment(readFromVCF(hotspots), somaticRefContextEnrichment);
+            hotspotEnrichment = new VariantHotspotEnrichment(readFromVCF(hotspots), snpEffEnrichment);
         } else {
-            hotspotEnrichment = VariantContextEnrichmentFactory.noEnrichment().create(somaticRefContextEnrichment);
+            hotspotEnrichment = VariantContextEnrichmentFactory.noEnrichment().create(snpEffEnrichment);
         }
     }
 
     @Override
     public void flush() {
         hotspotEnrichment.flush();
+        snpEffEnrichment.flush();
         somaticRefContextEnrichment.flush();
         kataegisEnrichment.flush();
         purityEnrichment.flush();
@@ -58,6 +62,7 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
         header = kataegisEnrichment.enrichHeader(header);
         header = subclonalLikelihoodEnrichment.enrichHeader(header);
         header = hotspotEnrichment.enrichHeader(header);
+        header = snpEffEnrichment.enrichHeader(header);
         return purityEnrichment.enrichHeader(header);
     }
 

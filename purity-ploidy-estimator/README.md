@@ -997,6 +997,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Sunrise plot shows relative score
   - Minor cosmetic changes to plots
+  - Replicate SAGE SnpEff somatic variant enrichments SEW and SEC for driver catalog
 - [2.44](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.44) 
   - Requires [database patch](../patient-db/src/main/resources/patches/purple2.43_to_2.44_migration.sql). Note that there are corresponding patches for [Linx](../patient-db/src/main/resources/patches/linx_1.10.sql) and [PatientDb](../patient-db/src/main/resources/patches/patientdb3.43_to_3.44_migration.sql).
   - Use non diplod-normalised normal ratio for input circos figure

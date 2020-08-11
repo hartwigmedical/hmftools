@@ -53,9 +53,15 @@ class VariantTypeTest {
     }
 
     @Test
+    fun testExtraColonInContig() {
+        val start = VariantType.create("1", 100, "A", "AA[HLA:10:100:1000[")
+        assertEquals(Translocation("A", "A","HLA:10:100", 1000, 1, -1), start)
+    }
+
+    @Test
     fun testSingle() {
         val sgl = VariantType.create("1", 100, "A", "TAAA.");
-        println(sgl)
+        assertEquals(Single("T", "AAA", 1), sgl)
     }
 
     @Test

@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
+import com.google.gson.Gson;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -30,7 +35,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-//                public static final String VERSION = "7.13";
+    //                public static final String VERSION = "7.13";
 
     public static void main(@NotNull String[] args) throws IOException {
         Options options = PatientReporterConfig.createOptions();
@@ -56,8 +61,13 @@ public class PatientReporterApplication {
                     config.purplePurityTsv(),
                     config.comments(),
                     config.correctedReport());
-            String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
+            String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
+
+            generateJsonFileOfData(config.outputDirData(),
+                    report.sampleReport().tumorSampleId(),
+                    report.sampleReport().tumorSampleBarcode(),
+                    report);
 
             ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
         } else {
@@ -79,11 +89,26 @@ public class PatientReporterApplication {
                     config.comments(),
                     config.correctedReport(),
                     config.unofficialReport());
-            String outputFilePath = generateOutputFilePathForPatientReport(config.outputDir(), report);
-            reportWriter.writeAnalysedPatientReport(report, outputFilePath);
+            String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+            reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
+
+            generateJsonFileOfData(config.outputDirData(),
+                    report.sampleReport().sampleMetadata().tumorSampleId(),
+                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
+                    report);
 
             ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
         }
+    }
+
+    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId,
+            @NotNull String tumorBarcode, @NotNull PatientReport report) throws IOException {
+        String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
+        Gson gson = new Gson();
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
+        writer.write(gson.toJson(report));
+        writer.close();
+        LOGGER.info("Created json file at {} ", outputFileData);
     }
 
     @NotNull

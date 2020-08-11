@@ -25,7 +25,8 @@ public interface PatientReporterConfig {
     String REF_SAMPLE_BARCODE = "ref_sample_barcode";
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
-    String OUTPUT_DIRECTORY = "output_dir";
+    String OUTPUT_DIRECTORY_REPORT = "output_dir_report";
+    String OUTPUT_DIRECTORY_DATA_REPORT = "output_dir_data_report";
 
     String REPORTING_DB_TSV = "reporting_db_tsv";
     String TUMOR_LOCATION_CSV = "tumor_location_csv";
@@ -71,7 +72,8 @@ public interface PatientReporterConfig {
                 "The reference sample barcode for the tumor sample for which we are generating a report.");
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
-        options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF report will be written to.");
+        options.addOption(OUTPUT_DIRECTORY_REPORT, true, "Path to where the PDF report will be written to.");
+        options.addOption(OUTPUT_DIRECTORY_DATA_REPORT, true, "Path to where the data of the report will be written to.");
 
         options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
@@ -120,7 +122,10 @@ public interface PatientReporterConfig {
     String tumorSampleBarcode();
 
     @NotNull
-    String outputDir();
+    String outputDirReport();
+
+    @NotNull
+    String outputDirData();
 
     @NotNull
     String reportingDbTsv();
@@ -249,7 +254,8 @@ public interface PatientReporterConfig {
                 .refSampleBarcode(nonOptionalValue(cmd, REF_SAMPLE_BARCODE))
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
-                .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
+                .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
+                .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA_REPORT))
                 .reportingDbTsv(nonOptionalFile(cmd, REPORTING_DB_TSV))
                 .tumorLocationCsv(nonOptionalFile(cmd, TUMOR_LOCATION_CSV))
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))

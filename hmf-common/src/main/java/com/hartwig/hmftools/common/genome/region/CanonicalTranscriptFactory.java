@@ -25,7 +25,7 @@ public final class CanonicalTranscriptFactory {
     }
 
     @NotNull
-    private static List<CanonicalTranscript> create(@NotNull Collection<HmfTranscriptRegion> regions) {
+    public static List<CanonicalTranscript> create(@NotNull Collection<HmfTranscriptRegion> regions) {
         final List<CanonicalTranscript> transcripts = Lists.newArrayList();
         for (final HmfTranscriptRegion region : regions) {
             final CanonicalTranscript transcript = create(region);

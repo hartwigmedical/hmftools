@@ -6,7 +6,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.sage.SagePostProcessVCF;
-import com.hartwig.hmftools.sage.snpeff.SagePostProcess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -57,7 +56,6 @@ public class SagePostProcessApplication implements AutoCloseable {
         }
     }
 
-    private final SagePostProcess postProcess;
     private final VCFFileReader fileReader;
     private final SagePostProcessVCF fileWriter;
 
@@ -66,17 +64,15 @@ public class SagePostProcessApplication implements AutoCloseable {
         LOGGER.info("Output: {}", outputVCF);
 
         this.fileReader = new VCFFileReader(new File(inputVCF), false);
-        this.fileWriter = new SagePostProcessVCF(outputVCF);
         List<CanonicalTranscript> canonicalTranscripts =
                 assembly.equals(HG19) ? CanonicalTranscriptFactory.create37() : CanonicalTranscriptFactory.create38();
-        this.postProcess = new SagePostProcess(canonicalTranscripts, fileWriter::writeVariant);
+        this.fileWriter = new SagePostProcessVCF(outputVCF, canonicalTranscripts);
     }
 
     private void run() {
         fileWriter.writeHeader(fileReader.getFileHeader());
-
         for (VariantContext context : fileReader) {
-            postProcess.accept(context);
+            fileWriter.accept(context);
         }
     }
 
@@ -98,7 +94,6 @@ public class SagePostProcessApplication implements AutoCloseable {
     @Override
     public void close() {
         fileReader.close();
-        postProcess.close();
         fileWriter.close();
 
         LOGGER.info("Post process complete");

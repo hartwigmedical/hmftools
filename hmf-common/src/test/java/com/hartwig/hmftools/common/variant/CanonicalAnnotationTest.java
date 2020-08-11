@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.ImmutableCosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.ImmutableSnpEffAnnotation;
@@ -21,24 +23,12 @@ public class CanonicalAnnotationTest {
     private static final String CDKN2A = "ENST00000498124";
     private static final String CDKN2A_P14ARF = "ENST00000361570";
     private static final String CDKN2A_OTHER = "ENST00000000000";
+    private final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create37();
 
     @Test
     public void testTrimEnsembleTranscriptId() {
         assertEquals("ENST00000361570", CanonicalAnnotation.trimEnsembleVersion("ENST00000361570"));
         assertEquals("ENST00000361570", CanonicalAnnotation.trimEnsembleVersion("ENST00000361570.v8"));
-    }
-
-    @Test
-    public void favourCDKN2ACosmicAnnotation() {
-        final CosmicAnnotation p16 = createCosmicAnnotation("CDKN2A", CDKN2A);
-        final CosmicAnnotation p14 = createCosmicAnnotation("CDKN2A", CDKN2A_P14ARF);
-        final CosmicAnnotation other = createCosmicAnnotation("CDKN2A", CDKN2A_OTHER);
-
-        final List<CosmicAnnotation> all = Lists.newArrayList(other, p14, p16);
-
-        final CanonicalAnnotation victim = new CanonicalAnnotation();
-        assertEquals(p16, victim.canonicalCosmicAnnotation(all).get());
-        assertFalse(victim.canonicalCosmicAnnotation(Lists.newArrayList(p14)).isPresent());
     }
 
     @Test
@@ -49,7 +39,7 @@ public class CanonicalAnnotationTest {
 
         final List<SnpEffAnnotation> all = Lists.newArrayList(other, p14, p16);
 
-        final CanonicalAnnotation victim = new CanonicalAnnotation();
+        final CanonicalAnnotation victim = new CanonicalAnnotation(transcripts);
         assertEquals(p16, victim.canonicalSnpEffAnnotation(all).get());
         assertFalse(victim.canonicalSnpEffAnnotation(Lists.newArrayList(p14)).isPresent());
     }
@@ -60,7 +50,7 @@ public class CanonicalAnnotationTest {
         final TranscriptAnnotation noDriverGene = createCosmicAnnotation("AL136376.1", "ENST00000598661");
         final TranscriptAnnotation canonicalDriverGene = createCosmicAnnotation("ATP1A1", "ENST00000537345");
 
-        final CanonicalAnnotation victim = new CanonicalAnnotation();
+        final CanonicalAnnotation victim = new CanonicalAnnotation(transcripts);
         assertEquals(Optional.empty(), victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene)));
 
         Optional<TranscriptAnnotation> annotationSecond =

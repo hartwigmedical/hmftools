@@ -75,8 +75,6 @@ class SomaticVariantDAO {
                     .alt(record.getValue(SOMATICVARIANT.ALT))
                     .gene(record.getValue(SOMATICVARIANT.GENE))
                     .genesAffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
-                    .cosmicIDs(Lists.newArrayList(record.getValue(SOMATICVARIANT.COSMICID)))
-                    .dbsnpID(record.getValue(SOMATICVARIANT.DBSNPID))
                     .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
                     .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
                             ? CodingEffect.UNDEFINED
@@ -196,8 +194,8 @@ class SomaticVariantDAO {
                 variant.alt(),
                 variant.gene(),
                 variant.genesAffected(),
-                variant.canonicalCosmicID() != null ? variant.canonicalCosmicID() : Strings.EMPTY,
-                variant.dbsnpID() != null ? variant.dbsnpID() : Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY,
                 variant.worstEffect(),
                 variant.worstCodingEffect() != CodingEffect.UNDEFINED ? variant.worstCodingEffect() : Strings.EMPTY,
                 variant.worstEffectTranscript(),

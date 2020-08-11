@@ -16,21 +16,24 @@ import kotlin.math.floor
 
 class StructuralVariantContextTest {
 
+    private val defaultContigs = (1..22).map { it.toString() } + "X" + "Y" + "MT" + "M"
+    private val contigComparator = ContigComparator(defaultContigs)
+
     @Test
     fun testHasViralSequenceAlignment() {
-        assertTrue(sgl().setViralSequenceAlignment().hasViralSequenceAlignment())
+        assertTrue(sgl().setViralSequenceAlignment().hasViralSequenceAlignment(contigComparator))
 
-        assertTrue(sgl().bealn("NC_001526:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertFalse(sgl().bealn("1:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertFalse(sgl().bealn("chr1:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertFalse(sgl().bealn("22:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertFalse(sgl().bealn("chr22:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertTrue(sgl().bealn("23:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertTrue(sgl().bealn("chr23:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertFalse(sgl().bealn("X:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertFalse(sgl().bealn("chrX:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertFalse(sgl().bealn("Y:5225|+|10S415M|60").hasViralSequenceAlignment())
-        assertFalse(sgl().bealn("chrY:5225|+|10S415M|60").hasViralSequenceAlignment())
+        assertTrue(sgl().bealn("NC_001526:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertFalse(sgl().bealn("1:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertFalse(sgl().bealn("chr1:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertFalse(sgl().bealn("22:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertFalse(sgl().bealn("chr22:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertTrue(sgl().bealn("23:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertTrue(sgl().bealn("chr23:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertFalse(sgl().bealn("X:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertFalse(sgl().bealn("chrX:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertFalse(sgl().bealn("Y:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
+        assertFalse(sgl().bealn("chrY:5225|+|10S415M|60").hasViralSequenceAlignment(contigComparator))
     }
 
     @Test
@@ -56,14 +59,14 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportRelativeFilter() {
-        assertTrue(sgl().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
-        assertFalse(sgl().setViralSequenceAlignment().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
+        assertTrue(sgl().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03, contigComparator))
+        assertFalse(sgl().setViralSequenceAlignment().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03, contigComparator))
 
-        assertTrue(bnd().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
-        assertTrue(bnd().setViralSequenceAlignment().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03))
+        assertTrue(bnd().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03, contigComparator))
+        assertTrue(bnd().setViralSequenceAlignment().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03, contigComparator))
 
-        assertFalse(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.03))
-        assertTrue(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.0299))
+        assertFalse(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.03, contigComparator))
+        assertTrue(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.0299, contigComparator))
     }
 
     @Test
@@ -87,9 +90,9 @@ class StructuralVariantContextTest {
         val sgl = sgl().qual(config.hardMinTumorQual - 1).toSv()
         assertTrue(sgl.tumorQualFilter(config.hardMinTumorQual))
         assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
-        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
-        assertTrue(sgl.isHardFilter(config, true))
-        assertTrue(sgl.isHardFilter(config, false))
+        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
+        assertTrue(sgl.isHardFilter(config, contigComparator, true))
+        assertTrue(sgl.isHardFilter(config, contigComparator, false))
     }
 
     @Test
@@ -100,10 +103,10 @@ class StructuralVariantContextTest {
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
         assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
-        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
+        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
 
-        assertFalse(sgl.isHardFilter(config, true))
-        assertTrue(sgl.isHardFilter(config, false))
+        assertFalse(sgl.isHardFilter(config, contigComparator, true))
+        assertTrue(sgl.isHardFilter(config, contigComparator, false))
     }
 
     @Test
@@ -114,10 +117,10 @@ class StructuralVariantContextTest {
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
         assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
-        assertTrue(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
+        assertTrue(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
 
-        assertFalse(sgl.isHardFilter(config, true))
-        assertTrue(sgl.isHardFilter(config, false))
+        assertFalse(sgl.isHardFilter(config, contigComparator, true))
+        assertTrue(sgl.isHardFilter(config, contigComparator, false))
     }
 
 

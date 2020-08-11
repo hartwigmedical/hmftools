@@ -10,9 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
-import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,10 +23,6 @@ public class CanonicalAnnotation {
     private final Set<String> driverCatalogGenes;
     @NotNull
     private final Map<String, String> canonicalTranscriptGeneMap;
-
-    public CanonicalAnnotation() {
-        this(CanonicalTranscriptFactory.create37());
-    }
 
     public CanonicalAnnotation(@NotNull final List<CanonicalTranscript> transcripts) {
         this.driverCatalogGenes = Sets.newHashSet(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
@@ -43,11 +37,6 @@ public class CanonicalAnnotation {
     }
 
     @NotNull
-    Optional<CosmicAnnotation> canonicalCosmicAnnotation(@NotNull final List<CosmicAnnotation> cosmicAnnotations) {
-        return pickCanonicalFavourDriverGene(cosmicAnnotations);
-    }
-
-    @NotNull
     public Optional<SnpEffAnnotation> canonicalSnpEffAnnotation(@NotNull final List<SnpEffAnnotation> allAnnotations) {
         final List<SnpEffAnnotation> transcriptAnnotations =
                 allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
@@ -58,7 +47,7 @@ public class CanonicalAnnotation {
     @NotNull
     <T extends TranscriptAnnotation> Optional<T> pickCanonicalFavourDriverGene(@NotNull List<T> annotations) {
         List<T> canonicalAnnotations = annotations.stream()
-                .filter(annotation -> canonicalTranscriptGeneMap.keySet().contains(trimEnsembleVersion(annotation.transcript())))
+                .filter(annotation -> canonicalTranscriptGeneMap.containsKey(trimEnsembleVersion(annotation.transcript())))
                 .collect(Collectors.toList());
 
         if (!canonicalAnnotations.isEmpty()) {

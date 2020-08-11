@@ -130,6 +130,9 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- Upcoming
+  - Fixed bug to allow output VCF name to be relative path
+  - Fixed bug handling contigs with colons eg HLA-A*23:01:01
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.2)
   - Hotspots cannot recover HardMinQualFiltered variants
   - Ignore maxNormalRelativeSupport filter for single breakends with viral sequence alignments

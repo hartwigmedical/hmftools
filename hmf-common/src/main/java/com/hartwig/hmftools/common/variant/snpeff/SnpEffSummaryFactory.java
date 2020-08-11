@@ -6,10 +6,10 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.sage.SageMetaData;
-import com.hartwig.hmftools.common.sage.SagePostProcessVCF;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.common.variant.enrich.SnpEffEnrichment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -20,18 +20,14 @@ public class SnpEffSummaryFactory {
 
     private final CanonicalAnnotation canonicalAnnotationFactory;
 
-    public SnpEffSummaryFactory(@NotNull final CanonicalAnnotation canonicalAnnotationFactory) {
-        this.canonicalAnnotationFactory = canonicalAnnotationFactory;
-    }
-
     public SnpEffSummaryFactory(@NotNull final List<CanonicalTranscript> transcripts) {
         this.canonicalAnnotationFactory = new CanonicalAnnotation(transcripts);
     }
 
     @NotNull
     public static SnpEffSummary fromSage(@NotNull final VariantContext context) {
-        final List<String> worst = context.getAttributeAsStringList(SagePostProcessVCF.SNPEFF_WORST, Strings.EMPTY);
-        final List<String> canonical = context.getAttributeAsStringList(SagePostProcessVCF.SNPEFF_CANONICAL, Strings.EMPTY);
+        final List<String> worst = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_WORST, Strings.EMPTY);
+        final List<String> canonical = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_CANONICAL, Strings.EMPTY);
         return SnpEffSummarySerialiser.fromDetails(worst, canonical);
     }
 
