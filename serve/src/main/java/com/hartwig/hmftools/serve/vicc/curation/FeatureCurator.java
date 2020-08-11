@@ -61,16 +61,16 @@ public class FeatureCurator {
         evaluatedCurationKeys.add(key);
 
         if (CurationFactory.FEATURE_BLACKLIST.contains(key)) {
-            LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
+          //  LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
             return null;
         } else {
             String mappedFeatureName = CurationFactory.FEATURE_NAME_MAPPINGS.get(key);
             if (mappedFeatureName != null) {
-                LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
-                        feature.name(),
-                        mappedFeatureName,
-                        feature.geneSymbol(),
-                        entry.source());
+//                LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
+//                        feature.name(),
+//                        mappedFeatureName,
+//                        feature.geneSymbol(),
+//                        entry.source());
                 return ImmutableFeature.builder().from(feature).name(mappedFeatureName).build();
             }
         }

@@ -187,10 +187,10 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (fusionForFeature != null) {
-                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
-                                fusionForFeature.fusion(),
-                                feature.geneSymbol(),
-                                fusionForFeature.fusionEvent());
+//                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
+//                                fusionForFeature.fusion(),
+//                                feature.geneSymbol(),
+//                                fusionForFeature.fusionEvent());
                         featuresWithFusionCount++;
                     }
 
@@ -217,7 +217,7 @@ public class ViccExtractorTestApplication {
         //   LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
-                // LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+                 LOGGER.debug(" No genomic events derived from '{}' in '{}' feature {}", feature.name(), feature.geneSymbol(),feature);
                 //  LOGGER.info(feature);
             }
         }
