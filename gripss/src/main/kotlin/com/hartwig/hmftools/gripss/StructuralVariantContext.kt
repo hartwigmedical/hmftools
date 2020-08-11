@@ -190,7 +190,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
 
     fun assemblies(): List<String> = context.assemblies()
 
-    fun isHardFilter(config: GripssFilterConfig, isHotspot: Boolean): Boolean {
+    fun isHardFilter(config: GripssFilterConfig, comparator: ContigComparator, isHotspot: Boolean): Boolean {
         if (tumorQualFilter(config.hardMinTumorQual)) {
             return true
         }
@@ -199,17 +199,17 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             return false
         }
 
-        return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) || normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
+        return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) || normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, comparator))
     }
 
-    fun softFilters(config: GripssFilterConfig): Set<String> {
+    fun softFilters(config: GripssFilterConfig, comparator: ContigComparator): Set<String> {
         val result = mutableSetOf<String>()
 
         if (normalCoverageFilter(config.minNormalCoverage)) {
             result.add(MIN_NORMAL_COVERAGE)
         }
 
-        if (normalSupportRelativeFilter(config.softMaxNormalRelativeSupport)) {
+        if (normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, comparator)) {
             result.add(MAX_NORMAL_RELATIVE_SUPPORT)
         }
 
@@ -361,8 +361,8 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return qual < minTumorQual.toDouble()
     }
 
-    fun normalSupportRelativeFilter(maxNormalRelativeSupport: Double): Boolean {
-        if (isSingle && context.hasViralSequenceAlignment()) {
+    fun normalSupportRelativeFilter(maxNormalRelativeSupport: Double, comparator: ContigComparator): Boolean {
+        if (isSingle && context.hasViralSequenceAlignment(comparator)) {
             return false
         }
 

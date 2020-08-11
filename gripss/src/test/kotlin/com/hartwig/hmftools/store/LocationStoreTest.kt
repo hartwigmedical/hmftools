@@ -11,7 +11,8 @@ import org.junit.Test
 
 class LocationStoreTest {
 
-    private val contigComparator = ContigComparator(null)
+    private val defaultContigs = (1..22).map { it.toString() } + "X" + "Y" + "MT" + "M"
+    private val contigComparator = ContigComparator(defaultContigs)
 
     @Test
     fun testContainSingle() {

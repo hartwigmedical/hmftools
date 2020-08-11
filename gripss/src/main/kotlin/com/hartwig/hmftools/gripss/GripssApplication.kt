@@ -89,7 +89,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll())
 
         logger.info("Applying initial soft filters")
-        val initialFilters = SoftFilterStore(config.filterConfig, variantStore.selectAll(), ponFiltered, hotspots)
+        val initialFilters = SoftFilterStore(config.filterConfig, contigComparator, variantStore.selectAll(), ponFiltered, hotspots)
 
         logger.info("Finding assembly links")
         val assemblyLinks: LinkStore = AssemblyLink(variantStore.selectAll())
@@ -174,7 +174,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
             val structuralVariant = StructuralVariantContext(variantContext, ordinals.first, ordinals.second)
             val isHotspot = hotspotFilter(structuralVariant)
             val isMateFiltered = hardFilter.contains(structuralVariant.vcfId)
-            val isHardFiltered = isMateFiltered || structuralVariant.isHardFilter(config.filterConfig, isHotspot)
+            val isHardFiltered = isMateFiltered || structuralVariant.isHardFilter(config.filterConfig, contigComparator, isHotspot)
 
             if (isHardFiltered) {
                 structuralVariant.mateId?.let { hardFilter.add(it) }

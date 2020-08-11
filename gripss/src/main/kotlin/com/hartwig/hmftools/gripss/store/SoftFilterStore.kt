@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.gripss.store
 
 import com.hartwig.hmftools.common.gripss.GripssFilters.DEDUP
-import com.hartwig.hmftools.gripss.GripssFilterConfig
-import com.hartwig.hmftools.gripss.MATE
-import com.hartwig.hmftools.gripss.PON
-import com.hartwig.hmftools.gripss.StructuralVariantContext
+import com.hartwig.hmftools.gripss.*
 import java.util.*
 
 class SoftFilterStore(private val filters: Map<String, Set<String>>) {
@@ -12,7 +9,7 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
     companion object {
         private val mateFiltered = setOf(MATE)
 
-        operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>, ponFiltered: Set<String>, hotspots: Set<String>): SoftFilterStore {
+        operator fun invoke(config: GripssFilterConfig, comparator: ContigComparator, variants: List<StructuralVariantContext>, ponFiltered: Set<String>, hotspots: Set<String>): SoftFilterStore {
             val filters = mutableMapOf<String, Set<String>>()
             for (variant in variants) {
                 if (!hotspots.contains(variant.vcfId)) {
@@ -20,7 +17,7 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
                     if (ponFiltered.contains(variant.vcfId)) {
                         variantFilters.add(PON)
                     }
-                    variantFilters.addAll(variant.softFilters(config))
+                    variantFilters.addAll(variant.softFilters(config, comparator))
                     if (variantFilters.isNotEmpty()) {
                         filters[variant.vcfId] = variantFilters
                     }

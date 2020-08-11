@@ -78,9 +78,9 @@ fun VariantContext.mate(): String? {
     return null
 }
 
-fun VariantContext.hasViralSequenceAlignment(): Boolean {
+fun VariantContext.hasViralSequenceAlignment(comparator: ContigComparator): Boolean {
     val potentialAlignments = potentialAlignmentLocations();
-    return potentialAlignments.isNotEmpty() && !ContigComparator.defaultContigs.contains(potentialAlignments[0].contig.replace("chr", ""))
+    return potentialAlignments.isNotEmpty() && !comparator.isValidContig(potentialAlignments[0].contig.replace("chr", ""))
 }
 
 fun VariantContext.potentialAlignmentLocations(): List<Breakend> {

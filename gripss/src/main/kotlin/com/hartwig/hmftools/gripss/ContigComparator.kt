@@ -6,11 +6,8 @@ class ContigComparator private constructor(val contigs: Map<String, Int>) : Comp
 
     companion object {
 
-        val defaultContigs = (1..22).map { it.toString() } + "X" + "Y" + "MT" + "M"
-
-        operator fun invoke(dictionary: SAMSequenceDictionary?): ContigComparator {
-            val contigs = dictionary?.sequences?.map { it.sequenceName } ?: defaultContigs + defaultContigs.map { "chr$it" }
-            return invoke(contigs)
+        operator fun invoke(dictionary: SAMSequenceDictionary): ContigComparator {
+            return invoke(dictionary.sequences.map { it.sequenceName } )
         }
 
         operator fun invoke(contigs: List<String>): ContigComparator {

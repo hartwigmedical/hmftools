@@ -14,6 +14,9 @@ import org.junit.Test
 
 class TransitiveLinkTest {
 
+    private val defaultContigs = (1..22).map { it.toString() } + "X" + "Y" + "MT" + "M"
+    private val contigComparator = ContigComparator(defaultContigs)
+
     @Test
     fun sortByQual() {
         val v1start = VariantContextTestFactory.decode("1\t1000\tid1s\tA\tA[1:2000[\t100\tPASS\tIMPRECISE;CIPOS=-10,10;MATEID=id1e\tGT:BVF:VF:REF:REFPAIR\t./.:1:1:1:1\t./.:10:10:1:1").toSv()
@@ -162,10 +165,9 @@ class TransitiveLinkTest {
     }
 
     private fun variantStore(vararg elements: StructuralVariantContext): VariantStore {
-        val comparator = ContigComparator(null)
         val result = mutableListOf<StructuralVariantContext>()
         elements.forEach { result.add(it) }
-        return VariantStore(result.sortedWith(Comparator {x, y -> comparator.compare(x, y)} ))
+        return VariantStore(result.sortedWith(Comparator {x, y -> contigComparator.compare(x, y)} ))
     }
 
 }
