@@ -64,7 +64,7 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
-            generateJsonFileOfDataQCFail(config.outputDirData(),
+            generateJsonFileOfData(config.outputDirData(),
                     report.sampleReport().tumorSampleId(),
                     report.sampleReport().tumorSampleBarcode(),
                     report);
@@ -101,18 +101,8 @@ public class PatientReporterApplication {
         }
     }
 
-    private static void generateJsonFileOfDataQCFail(@NotNull String outputDirData, @NotNull String tumorSampleId,
-            @NotNull String tumorBarcode, @NotNull QCFailReport report) throws IOException {
-        String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
-        Gson gson = new Gson();
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
-        writer.write(gson.toJson(report));
-        writer.close();
-        LOGGER.info("Created json file at {} ", outputFileData);
-    }
-
-    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
-            @NotNull AnalysedPatientReport report) throws IOException {
+    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId,
+            @NotNull String tumorBarcode, @NotNull PatientReport report) throws IOException {
         String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
         Gson gson = new Gson();
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
