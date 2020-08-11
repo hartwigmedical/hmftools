@@ -102,6 +102,7 @@ public class PatientReporterApplication {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
         writer.write(gson.toJson(report));
         writer.close();
+        LOGGER.info("Created json file at {} ", outputFileData);
     }
 
     private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId,
@@ -111,6 +112,7 @@ public class PatientReporterApplication {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
         writer.write(gson.toJson(report));
         writer.close();
+        LOGGER.info("Created json file at {} ", outputFileData);
     }
 
     @NotNull
