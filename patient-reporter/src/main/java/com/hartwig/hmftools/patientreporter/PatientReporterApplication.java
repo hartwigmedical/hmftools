@@ -92,7 +92,10 @@ public class PatientReporterApplication {
             String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
 
-            generateJsonFileOfData(config.outputDirData(), report.sampleReport().sampleMetadata().tumorSampleId(), report);
+            generateJsonFileOfData(config.outputDirData(),
+                    report.sampleReport().sampleMetadata().tumorSampleId(),
+                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
+                    report);
 
             ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
         }
@@ -108,9 +111,9 @@ public class PatientReporterApplication {
         LOGGER.info("Created json file at {} ", outputFileData);
     }
 
-    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId,
+    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
             @NotNull AnalysedPatientReport report) throws IOException {
-        String outputFileData = outputDirData + File.separator + tumorSampleId + ".json";
+        String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
         Gson gson = new Gson();
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
         writer.write(gson.toJson(report));
