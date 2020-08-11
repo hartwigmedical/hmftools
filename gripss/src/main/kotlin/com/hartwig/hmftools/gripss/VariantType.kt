@@ -121,8 +121,9 @@ sealed class VariantType {
         private fun paired(chromosome: String, position: Int, ref: String, alt: String): Paired {
             val match = Regex(BREAKPOINT_REGEX).find(alt)!!
             val (initialSequence, bracket, location, finalSequence) = match.destructured
-            val locationList = location.split(":")
-            val (otherChromosome, otherPosition) = Pair(locationList[0], locationList[1].toInt())
+            val lastColonIndex: Int = location.lastIndexOf(":")
+            val otherChromosome = location.substring(0, lastColonIndex)
+            val otherPosition = location.substring(lastColonIndex + 1, location.length).toInt()
 
             val endOrientation: Byte = if (bracket == "]") 1 else -1
 
