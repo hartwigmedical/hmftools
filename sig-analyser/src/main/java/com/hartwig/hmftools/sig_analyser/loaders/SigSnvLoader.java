@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -104,7 +104,7 @@ public class SigSnvLoader
 
             if(mPositionFrequencies != null)
             {
-                mPositionFrequencies.writeResults();
+                mPositionFrequencies.writeResults(sampleId);
                 mPositionFrequencies.clear();
             }
         }
@@ -152,6 +152,16 @@ public class SigSnvLoader
 
     private void processSampleVariants(final String sampleId, List<SomaticVariant> variants, int sampleIndex)
     {
+        /* required fields
+        - chromosome
+        - position
+        - ref
+        - alt
+        - trinucleotideContext
+        - variantCopyNumber
+        - subclonalLikelihood
+        */
+
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
         for(final SomaticVariant variant : variants)
@@ -226,4 +236,34 @@ public class SigSnvLoader
         return String.format("MissingBucket_%d", index);
     }
 
+        /*
+    @NotNull
+    public List<SomaticSnv> readPartialSnvInfo(@NotNull String sample) {
+        List<SomaticSnv> variants = Lists.newArrayList();
+
+        Result<Record> result =
+                : context.select()
+                .from(SOMATICVARIANT)
+                .where(SOMATICVARIANT.SAMPLEID.eq(sample))
+                .and(SOMATICVARIANT.TYPE.eq(VariantType.SNP.toString())
+                        .and)
+                .fetch();
+
+        for (Record record : result) {
+
+            variants.add(ImmutableSomaticVariantImpl.builder()
+                    .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
+                    .position(record.getValue(SOMATICVARIANT.POSITION))
+                    .filter(record.getValue(SOMATICVARIANT.FILTER))
+                    .type(VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)))
+                    .ref(record.getValue(SOMATICVARIANT.REF))
+                    .alt(record.getValue(SOMATICVARIANT.ALT))
+                    .variantCopyNumber(record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER))
+                    .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
+                    .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
+                    .build());
+        }
+        return variants;
+    }
+    */
 }

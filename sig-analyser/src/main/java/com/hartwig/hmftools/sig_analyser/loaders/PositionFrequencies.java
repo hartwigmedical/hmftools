@@ -69,7 +69,7 @@ public class PositionFrequencies
         }
     }
 
-    public void writeResults()
+    public void writeResults(final String sampleId)
     {
         try
         {
@@ -79,7 +79,7 @@ public class PositionFrequencies
 
                 for(Map.Entry<Integer,Integer> posEntry : chrEntry.getValue().entrySet())
                 {
-                    mWriter.write(String.format("%s,%d,%d", chromosome, posEntry.getKey(), posEntry.getValue()));
+                    mWriter.write(String.format("%s,%s,%d,%d", sampleId, chromosome, posEntry.getKey(), posEntry.getValue()));
                     mWriter.newLine();
                 }
             }
