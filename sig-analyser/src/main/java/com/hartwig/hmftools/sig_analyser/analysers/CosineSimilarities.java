@@ -98,6 +98,8 @@ public class CosineSimilarities
 
     public void run()
     {
+        SIG_LOGGER.info("running CSS comparison for {} samples", mSampleIds.size());
+
         for(int i = 0; i < mSampleIds.size(); ++i)
         {
             final String sampleId1 = mSampleIds.get(i);
@@ -115,7 +117,14 @@ public class CosineSimilarities
                     writeCssResults(sampleId1, sampleId2, css);
                 }
             }
+
+            if(i > 0 && (i % 100) == 0)
+            {
+                SIG_LOGGER.info("processed {} samples", i);
+            }
         }
+
+        SIG_LOGGER.info("CSS comparison complete");
 
         closeBufferedWriter(mWriter);
     }
