@@ -115,15 +115,16 @@ public class DriverAnnotation
 
             double probabilityTotal = 1;
 
-            for(final String driverGene : genes)
+            for(final String gene : genes)
             {
-                final DriverPrevCounts genePrevTotals = mGenePrevalenceTotals.get(driverGene);
+                double maxLikelihood = sampleDrivers.stream().filter(x -> x.Gene.equals(gene)).mapToDouble(x -> x.Likelihood).max().orElse(0);
+                final DriverPrevCounts genePrevTotals = mGenePrevalenceTotals.get(gene);
 
                 final DriverPrevData driverPrev = driverPrevalences.stream()
-                        .filter(x -> x.Gene.equals(driverGene)).findFirst().orElse(null);
+                        .filter(x -> x.Gene.equals(gene)).findFirst().orElse(null);
 
                 double driverPrevValue = driverPrev != null ? driverPrev.Prevalence : genePrevTotals.MinPrevalence;
-                probabilityTotal *= driverPrevValue / genePrevTotals.PositiveTotal;
+                probabilityTotal *= driverPrevValue * maxLikelihood / genePrevTotals.PositiveTotal;
             }
 
             cancerProbTotals.put(cancerType, probabilityTotal);

@@ -153,11 +153,11 @@ public class SignatureAnnotation
 
             final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
 
-            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
+            double cssWeight = pow(2, -100 * (1 - css));
+            double weightedCss = css * cssWeight;
 
-            double cssWeight = pow(2, -100 * (1 - css)); // 2^[-100*(1-CSS)]
-            double weightedCss = css * cssWeight / cancerTypeCount;
-            // double weightedCss = pow((css - SNV_CSS_THRESHOLD) * 100, 2) / cancerTypeCount;
+            // no longer normalised by cancer cohort size
+            // int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
 
             Double total = cancerCssTotals.get(refCancerType);
 

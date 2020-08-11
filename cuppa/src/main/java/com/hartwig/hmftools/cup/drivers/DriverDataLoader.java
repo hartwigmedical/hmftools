@@ -76,7 +76,7 @@ public class DriverDataLoader
             {
                 final List<SampleDriverData> driverDataList = drivers.stream()
                         .filter(x -> x.driverLikelihood() >= DRIVER_LIKELIHOOD_THRESHOLD)
-                        .map(x -> new SampleDriverData(sampleId, x.gene(), DRIVER))
+                        .map(x -> new SampleDriverData(sampleId, x.gene(), DRIVER, x.driverLikelihood()))
                         .collect(Collectors.toList());
 
                 sampleDrivers.put(sampleId, driverDataList);
@@ -88,7 +88,7 @@ public class DriverDataLoader
             {
                 final List<SampleDriverData> fusionDataList = fusions.stream()
                         .filter(x -> x.reported())
-                        .map(x -> new SampleDriverData(sampleId, x.name(), DriverType.FUSION))
+                        .map(x -> new SampleDriverData(sampleId, x.name(), DriverType.FUSION, 1))
                         .collect(Collectors.toList());
 
                 sampleDrivers.put(sampleId, fusionDataList);
@@ -99,7 +99,7 @@ public class DriverDataLoader
             if(viralInserts != null)
             {
                 final List<SampleDriverData> viralInsertDataList = viralInserts.stream()
-                        .map(x -> new SampleDriverData(sampleId, fromVirusName(x.VirusName).toString(), DriverType.VIRUS))
+                        .map(x -> new SampleDriverData(sampleId, fromVirusName(x.VirusName).toString(), DriverType.VIRUS, 1))
                         .filter(x -> !x.Gene.equals(OTHER.toString()))
                         .collect(Collectors.toList());
 
