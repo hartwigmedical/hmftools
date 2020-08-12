@@ -17,6 +17,7 @@
         <module>hmf-id-generator</module>
         <module>bam-slicer</module>
         <module>gripss</module>
+        <module>paddle</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
         <module>patient-db</module>
@@ -73,6 +74,7 @@
         <patient-reporter.version>7.13</patient-reporter.version>
         <patient-db.version>3.45</patient-db.version>
         <gripss.version>1.2</gripss.version>
+        <paddle.version>0.1</paddle.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
         <iclusion-importer.version>1.1</iclusion-importer.version>
