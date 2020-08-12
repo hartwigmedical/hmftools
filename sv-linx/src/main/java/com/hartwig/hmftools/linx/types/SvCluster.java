@@ -83,8 +83,7 @@ public class SvCluster
     private final List<SvVarData> mShortTIRemoteSVs;
     private final List<SvVarData> mUnlinkedRemoteSVs;
 
-    private double mMinJcn;
-    private double mMaxJcn;
+    private final double[] mJcnRange;
 
     private ClusterMetrics mMetrics;
 
@@ -131,8 +130,7 @@ public class SvCluster
 
         mRequiresReplication = false;
 
-        mMinJcn = 0;
-        mMaxJcn = 0;
+        mJcnRange = new double[] { 0, 0 };
         mClusteringReasons = "";
 
         mMetrics = new ClusterMetrics();
@@ -441,7 +439,7 @@ public class SvCluster
 
         mDesc = getClusterTypesAsString();
 
-        setMinMaxCNChange();
+        setJcnRange();
 
         resetBreakendMapIndices();
 
@@ -620,17 +618,17 @@ public class SvCluster
         mRecalcRemoteSVStatus = false;
     }
 
-    private void setMinMaxCNChange()
+    private void setJcnRange()
     {
         if(mSVs.size() == 1)
         {
-            mMinJcn = mMaxJcn = mSVs.get(0).jcn();
+            mJcnRange[SE_START] = mJcnRange[SE_END] = mSVs.get(0).jcn();
             return;
         }
 
         // establish the high and low ploidy from all SVs
-        mMinJcn = -1;
-        mMaxJcn = 0;
+        mJcnRange[SE_START] = -1;
+        mJcnRange[SE_END] = 0;
 
         int svCalcJcnCount = 0;
         Map<Integer,Integer> jcnFrequency = Maps.newHashMap();
@@ -646,13 +644,13 @@ public class SvCluster
             int svJcn = var.getImpliedJcn();
             maxAssembledMultiple = max(maxAssembledMultiple, var.getMaxAssembledBreakend());
 
-            if (mMinJcn < 0 || svJcn < mMinJcn)
+            if (mJcnRange[SE_START] < 0 || svJcn < mJcnRange[SE_START])
             {
-                mMinJcn = svJcn;
+                mJcnRange[SE_START] = svJcn;
                 minSvJcn = svJcn;
             }
 
-            mMaxJcn = max(mMaxJcn, svJcn);
+            mJcnRange[SE_END] = max(mJcnRange[SE_END], svJcn);
 
             if(var.hasCalculatedJcn())
             {
@@ -683,8 +681,8 @@ public class SvCluster
 
         if(svCalcJcnCount > 0)
         {
-            mMinJcn = -1;
-            mMaxJcn = 0;
+            mJcnRange[SE_START] = -1;
+            mJcnRange[SE_END] = 0;
 
             for (Map.Entry<Integer, Integer> entry : jcnFrequency.entrySet())
             {
@@ -694,30 +692,30 @@ public class SvCluster
                 if (svCount == svCalcJcnCount)
                 {
                     // all SVs can settle on the same ploidy value, so take this
-                    mMaxJcn = ploidy;
-                    mMinJcn = ploidy;
+                    mJcnRange[SE_END] = ploidy;
+                    mJcnRange[SE_START] = ploidy;
                     break;
                 }
 
-                if (ploidy > 0 && (mMinJcn < 0 || ploidy < mMinJcn))
-                     mMinJcn = ploidy;
+                if (ploidy > 0 && (mJcnRange[SE_START] < 0 || ploidy < mJcnRange[SE_START]))
+                     mJcnRange[SE_START] = ploidy;
 
-                mMinJcn = max(mMinJcn, minSvJcn);
-                mMaxJcn = max(mMaxJcn, ploidy);
+                mJcnRange[SE_START] = max(mJcnRange[SE_START], minSvJcn);
+                mJcnRange[SE_END] = max(mJcnRange[SE_END], ploidy);
             }
 
-            if(mMinJcn < mMaxJcn && maxAssembledMultiple == 1)
+            if(mJcnRange[SE_START] < mJcnRange[SE_END] && maxAssembledMultiple == 1)
             {
                 if (tightestMaxJcn > tightestMinJcn && tightestMaxJcn - tightestMinJcn < 1)
                 {
                     // if all SVs cover the same value but it's not an integer, still consider them uniform
-                    mMinJcn = 1;
-                    mMaxJcn = 1;
+                    mJcnRange[SE_START] = 1;
+                    mJcnRange[SE_END] = 1;
                 }
                 else if (countHalfToOneJcn == svCalcJcnCount)
                 {
-                    mMinJcn = 1;
-                    mMaxJcn = 1;
+                    mJcnRange[SE_START] = 1;
+                    mJcnRange[SE_END] = 1;
                 }
             }
         }
@@ -725,12 +723,14 @@ public class SvCluster
         // correct for the ploidy ratios implied from the assembled links
         if(maxAssembledMultiple > 1)
         {
-            mMaxJcn = max(mMaxJcn, maxAssembledMultiple * mMinJcn);
+            mJcnRange[SE_END] = max(mJcnRange[SE_END], maxAssembledMultiple * mJcnRange[SE_START]);
         }
     }
 
-    public double getMaxJcn() { return mMaxJcn; }
-    public double getMinJcn() { return mMinJcn; }
+    public double[] getJcnRange() { return mJcnRange; }
+
+    public double getMinJcn() { return mSVs.stream().mapToDouble(x -> x.jcn()).min().orElse(0); }
+    public double getMaxJcn() { return mSVs.stream().mapToDouble(x -> x.jcn()).max().orElse(0); }
 
     public boolean hasVariedJcn()
     {
@@ -740,7 +740,7 @@ public class SvCluster
         if(mSVs.size() == 1)
             return false;
 
-        return (mMaxJcn > mMinJcn && mMinJcn >= 0);
+        return (mJcnRange[SE_END] > mJcnRange[SE_START] && mJcnRange[SE_START] >= 0);
     }
 
     private void resetBreakendMapIndices()
@@ -860,11 +860,11 @@ public class SvCluster
             return;
 
         // look for varying JCN amongst the SVs in this cluster as indication of replicated breakends to guide chaining
-        double clusterMinJcn = getMinJcn();
+        double clusterMinJcn = mJcnRange[SE_START];
 
         if(clusterMinJcn <= 0)
         {
-            LNX_LOGGER.debug("cluster({}) warning: invalid JCN variation(min={} max={})", mId, clusterMinJcn, mMaxJcn);
+            LNX_LOGGER.debug("cluster({}) warning: invalid JCN variation(min={} max={})", mId, clusterMinJcn, mJcnRange[SE_END]);
             return;
         }
 

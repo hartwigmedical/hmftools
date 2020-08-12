@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.analyser;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -80,8 +82,8 @@ public class CopyNumberTest
         cluster1.addVariant(var3);
 
         assertFalse(cluster1.hasVariedJcn());
-        assertEquals(1.0, cluster1.getMinJcn(), 0.001);
-        assertEquals(1.0, cluster1.getMaxJcn(), 0.001);
+        assertEquals(1.0, cluster1.getJcnRange()[SE_START], 0.001);
+        assertEquals(1.0, cluster1.getJcnRange()[SE_END], 0.001);
 
         // now check alignment to a common but non-integer ploidy
         SvVarData var4 = createDel(tester.nextVarId(), "1", 700, 800);
@@ -91,8 +93,8 @@ public class CopyNumberTest
         cluster1.addVariant(var4);
 
         assertFalse(cluster1.hasVariedJcn());
-        assertEquals(1.0, cluster1.getMinJcn(), 0.001);
-        assertEquals(1.0, cluster1.getMaxJcn(), 0.001);
+        assertEquals(1.0, cluster1.getJcnRange()[SE_START], 0.001);
+        assertEquals(1.0, cluster1.getJcnRange()[SE_END], 0.001);
     }
 
     private void buildCopyNumberData(LinxTester tester)

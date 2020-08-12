@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromGermlineVcf;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
+import static com.hartwig.hmftools.linx.ext_compare.AmpliconCompare.AMPLICON_DATA_FILE;
 import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_DATA_DIR;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -31,6 +32,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
+import com.hartwig.hmftools.linx.ext_compare.AmpliconCompare;
 import com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
@@ -129,6 +131,8 @@ public class SvLinxApplication
 
         ChainFinderCompare chainFinderCompare = cmd.hasOption(CHAIN_FINDER_DATA_DIR) ?
                 new ChainFinderCompare(config.OutputDataPath, cmd) : null;
+
+        AmpliconCompare ampliconCompare = cmd.hasOption(AMPLICON_DATA_FILE) ? new AmpliconCompare(config.OutputDataPath, cmd) : null;
 
         boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
         boolean applyPromotorDistance = checkFusions;
@@ -252,6 +256,11 @@ public class SvLinxApplication
                 chainFinderCompare.processSample(sampleId, svDataList, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
             }
 
+            if(ampliconCompare != null)
+            {
+                ampliconCompare.processSample(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+            }
+
             if(config.MaxSamples > 0 && count >= config.MaxSamples)
             {
                 LNX_LOGGER.info("exiting after max sample count {} reached", count);
@@ -274,6 +283,9 @@ public class SvLinxApplication
 
         if(chainFinderCompare != null)
             chainFinderCompare.close();
+
+        if(ampliconCompare != null)
+            ampliconCompare.close();
 
         if(config.isSingleSample())
         {
@@ -342,6 +354,7 @@ public class SvLinxApplication
         FusionFinder.addCmdLineArgs(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);
         ChainFinderCompare.addCmdLineArgs(options);
+        AmpliconCompare.addCmdLineArgs(options);
 
         return options;
     }
