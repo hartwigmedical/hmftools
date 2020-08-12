@@ -3,23 +3,13 @@ package com.hartwig.hmftools.sig_analyser.analysers;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
-import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
-import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
-import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
-import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
-import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.calcRangeValue;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -30,23 +20,15 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.DataUtils;
-import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
-import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
-import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
-import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
-import com.hartwig.hmftools.sig_analyser.fitter.FitMethod;
-import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
-import com.hartwig.hmftools.sig_analyser.nmf.NmfSampleFitter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;

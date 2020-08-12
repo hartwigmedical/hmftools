@@ -9,6 +9,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
+import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
+import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcRangeValue;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.addVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
@@ -47,7 +49,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.calcRangeValue;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getDiffList;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getMatchingList;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
@@ -762,7 +763,7 @@ public class BucketAnalyser
                     noiseCountsTotal += permElevRangeData[j][i];
                 }
 
-                double sampleNoiseTotal = CssRoutines.calcPoissonRangeGivenProb((int) round(mSampleTotals[i]), PERMITTED_PROB_NOISE);
+                double sampleNoiseTotal = calcPoissonRangeGivenProb((int) round(mSampleTotals[i]), PERMITTED_PROB_NOISE, 10);
 
                 if (noiseCountsTotal > MAX_NOISE_TO_SAMPLE_RATIO * sampleNoiseTotal)
                 {

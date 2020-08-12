@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sig_analyser.analysers;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcRangeValue;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
@@ -18,7 +19,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.calcRangeValue;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

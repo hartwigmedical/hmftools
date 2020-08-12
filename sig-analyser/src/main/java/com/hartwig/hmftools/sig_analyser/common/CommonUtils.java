@@ -14,14 +14,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
-import com.hartwig.hmftools.sig_analyser.buckets.BaConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -200,18 +198,6 @@ public class CommonUtils
                 iterations >= maxIterations ? "max" : String.valueOf(iterations)));
 
         return currentAlloc;
-    }
-
-    public static int calcRangeValue(final Map<Integer,Integer> rangeMap, int value)
-    {
-        Integer rangeVal = rangeMap.get(value);
-        if (rangeVal == null)
-        {
-            rangeVal = CssRoutines.calcPoissonRangeGivenProb(value, BaConfig.PERMITTED_PROB_NOISE);
-            rangeMap.put(value, rangeVal);
-        }
-
-        return rangeVal;
     }
 
     public static List<String> loadSampleListFile(final String filename)
