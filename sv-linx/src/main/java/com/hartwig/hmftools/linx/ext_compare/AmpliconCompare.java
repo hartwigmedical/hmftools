@@ -7,11 +7,14 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkOutputDi
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
+import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.MIN_AMP_PERCENT_VS_MAX;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.findAmplifyingClusters;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.DATA_DELIM;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.HIGH_SV_JCN_THRESHOLD;
+import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MIN_CLUSTER_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.extractSampleId;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 
@@ -22,9 +25,11 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.linx.drivers.DriverAmpData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -75,44 +80,50 @@ public class AmpliconCompare
 
     private void checkClusterMatches(final AmpliconData ampData, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
-        final Set<SvCluster> matchingClusters = Sets.newHashSet();
+        final List<DriverAmpData> ampClusterCandidates = Lists.newArrayList();
 
         for(final SvRegion ampRegion : ampData.Regions)
         {
-            final List<SvCluster> regionClusters =  findClustersMatchingRegion(ampData, ampRegion, chrBreakendMap);
+            final List<SvBreakend> breakendList = chrBreakendMap.get(ampRegion.Chromosome);
+            if(breakendList == null)
+            {
+                LNX_LOGGER.warn("amp(%s) has unmatched region(%s)", ampData, ampRegion);
+                continue;
+            }
 
-            regionClusters.forEach(x -> matchingClusters.add(x));
+            ampClusterCandidates.addAll(findAmplifyingClusters(ampRegion, breakendList));
+        }
+
+        // from the identified AMP clusters, find the max and percentage contributions of each
+        double maxCnChange = ampClusterCandidates.stream().mapToDouble(x -> x.NetCNChange).max().orElse(0);
+        double maxJcn = ampClusterCandidates.stream().mapToDouble(x -> x.Cluster.getMaxJcn()).max().orElse(0);
+
+        final Set<SvCluster> matchingClusters = Sets.newHashSet();
+
+        for(final DriverAmpData clusterAmpData : ampClusterCandidates)
+        {
+            // always keep the highest cluster found
+            if(clusterAmpData.Cluster.getMaxJcn() < MIN_CLUSTER_JCN_THRESHOLD)
+                continue;
+
+            if(Doubles.equal(clusterAmpData.NetCNChange, maxCnChange) || Doubles.equal(clusterAmpData.Cluster.getMaxJcn(), maxJcn))
+            {
+                matchingClusters.add(clusterAmpData.Cluster);
+            }
+            else if(clusterAmpData.NetCNChange >= MIN_AMP_PERCENT_VS_MAX * maxCnChange)
+            {
+                matchingClusters.add(clusterAmpData.Cluster);
+            }
         }
 
         if(matchingClusters.isEmpty())
         {
-            writeMatchData(ampData, null);
+            writeMatchData(ampData, null, chrBreakendMap);
         }
         else
         {
-            matchingClusters.forEach(x -> writeMatchData(ampData, x));
+            matchingClusters.forEach(x -> writeMatchData(ampData, x, chrBreakendMap));
         }
-    }
-
-    private List<SvCluster> findClustersMatchingRegion(
-            final AmpliconData ampData, final SvRegion ampRegion, final Map<String,List<SvBreakend>> chrBreakendMap)
-    {
-        final List<SvCluster> candidateClusters = Lists.newArrayList();
-
-        final List<SvBreakend> breakendList = chrBreakendMap.get(ampRegion.Chromosome);
-        if(breakendList == null)
-        {
-            LNX_LOGGER.warn("amp(%s) has unmatched region(%s)", ampData, ampRegion);
-            return candidateClusters;
-        }
-
-        // possible matches could be:
-        // a link which overlaps or is within the AMP region
-        // an SV with high JCN within or facing the AMP region
-        Map<SvCluster, DriverAmpData> clusterMapData = findAmplifyingClusters(ampRegion, breakendList);
-        candidateClusters.addAll(clusterMapData.keySet());
-
-        return candidateClusters;
     }
 
     private void initialiseResultsWriter(final String outputDir)
@@ -135,7 +146,7 @@ public class AmpliconCompare
         }
     }
 
-    private void writeMatchData(final AmpliconData ampData, final SvCluster cluster)
+    private void writeMatchData(final AmpliconData ampData, final SvCluster cluster, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         try
         {
@@ -189,8 +200,9 @@ public class AmpliconCompare
             }
             else
             {
+                final double[] maxCnData = findMaxCnDataNoCluster(ampData, chrBreakendMap);
                 mResultsWriter.write(",-1,0,,,false");
-                mResultsWriter.write(",0,,0,0,0");
+                mResultsWriter.write(String.format(",0,,%.1f,%.1f,0", maxCnData[0], maxCnData[1]));
             }
 
             mResultsWriter.newLine();
@@ -199,6 +211,30 @@ public class AmpliconCompare
         {
             LNX_LOGGER.error("error writing amplicon match data: {}", e.toString());
         }
+    }
+
+    private double[] findMaxCnDataNoCluster(final AmpliconData ampData, final Map<String,List<SvBreakend>> chrBreakendMap)
+    {
+        double[] maxCnData = {0, 0};
+
+        for(final SvRegion ampRegion : ampData.Regions)
+        {
+            final List<SvBreakend> breakendList = chrBreakendMap.get(ampRegion.Chromosome);
+
+            if(breakendList == null)
+                continue;
+
+            for(final SvBreakend breakend : breakendList)
+            {
+                if(positionWithin(breakend.position(), ampRegion.start() - 10000, ampRegion.end() + 10000))
+                {
+                    maxCnData[0] = max(maxCnData[0], breakendList.stream().mapToDouble(x -> x.copyNumber()).max().orElse(0));
+                    maxCnData[1] = max(maxCnData[1], breakendList.stream().mapToDouble(x -> x.jcn()).max().orElse(0));
+                }
+            }
+        }
+
+        return maxCnData;
     }
 
     public static void addCmdLineArgs(Options options)

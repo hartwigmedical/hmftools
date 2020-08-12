@@ -21,15 +21,15 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 
 public class AmpliconClusterMatch
 {
-    private static final double MIN_AMP_PERCENT_VS_MAX = 0.33;
+    public static final double MIN_AMP_PERCENT_VS_MAX = 0.33;
 
-    public static Map<SvCluster,DriverAmpData> findAmplifyingClusters(
+    public static List<DriverAmpData> findAmplifyingClusters(
             final SvRegion ampRegion, final List<SvBreakend> breakendList)
     {
-        final Map<SvCluster,DriverAmpData> clusterAmpData = Maps.newHashMap();
-
         if (breakendList == null || breakendList.isEmpty())
-            return clusterAmpData;
+            return Lists.newArrayList();
+
+        final Map<SvCluster,DriverAmpData> clusterAmpData = Maps.newHashMap();
 
         double ampCopyNumber = calcRegionCopyNumber(ampRegion, breakendList);
 
@@ -84,19 +84,9 @@ public class AmpliconClusterMatch
         }
 
         if(clusterAmpData.isEmpty())
-            return clusterAmpData;
+            return Lists.newArrayList();
 
-        // from the identified AMP clusters, find the max and percentage contributions of each
-        double maxCnChange = clusterAmpData.values().stream().mapToDouble(x -> x.NetCNChange).max().getAsDouble();
-
-        final List<SvCluster> clustersToRemove = clusterAmpData.entrySet().stream()
-                .filter(x -> x.getValue().NetCNChange / maxCnChange < MIN_AMP_PERCENT_VS_MAX
-                        || x.getKey().getMaxJcn() < MIN_CLUSTER_JCN_THRESHOLD)
-                .map(x -> x.getKey()).collect(Collectors.toList());
-
-        clustersToRemove.forEach(x ->  clusterAmpData.remove(x));
-
-        return clusterAmpData;
+        return clusterAmpData.values().stream().collect(Collectors.toList());
     }
 
     private static DriverAmpData checkClusterForAmplification(
@@ -294,6 +284,9 @@ public class AmpliconClusterMatch
                 {
                     if(nextBreakend.position() < region.start())
                         continue;
+
+                    // next breakend is past the start of the target region
+                    regionCopyNumber = breakend.getCopyNumber(false);
                 }
             }
             else if(breakend.position() > region.end())

@@ -23,7 +23,7 @@ public class AmpliconData
 
     public static final String DATA_DELIM = "\t";
 
-    public static final double MIN_CLUSTER_JCN_THRESHOLD = 4;
+    public static final double MIN_CLUSTER_JCN_THRESHOLD = 3;
     public static final double HIGH_SV_JCN_THRESHOLD = 7;
 
     public AmpliconData(final int clusterId, final String type, final double maxCN, final double maxJCN,
@@ -57,6 +57,10 @@ public class AmpliconData
 
         if(sampleId.endsWith(".2"))
             return sampleId.substring(0, sampleId.length() - 2) + "TII";
+        else if(sampleId.endsWith(".3"))
+            return sampleId.substring(0, sampleId.length() - 2) + "TIII";
+        else if(sampleId.endsWith(".4"))
+            return sampleId.substring(0, sampleId.length() - 2) + "TIV";
         else
             return sampleId + "T";
     }
