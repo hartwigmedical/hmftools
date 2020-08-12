@@ -25,7 +25,7 @@ public class GeneRangeExtractor {
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
     private static final Set<String> GENE_EXON = Sets.newHashSet("exon");
-    private static final Set<String> GENE_MULTIPLE_CODONS = Sets.newHashSet("nonsense");
+    private static final Set<String> GENE_MULTIPLE_CODONS = Sets.newHashSet("nonsense", "(V600)", "V600");
 
     public GeneRangeExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
@@ -67,8 +67,6 @@ public class GeneRangeExtractor {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-                    //TODO: ignore when evidence non exist on canonical transcript ID
-
                     if (feature.name().contains(",")) {
                         String[] exons = feature.name()
                                 .substring((feature.name().toLowerCase().indexOf("exon")))
@@ -156,11 +154,10 @@ public class GeneRangeExtractor {
 
             } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
                     .substring(feature.proteinAnnotation().length() - 1)
-                    .equals("X")) {
+                    .equals("X") || GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-                    //TODO: ignore when evidence non exist on canonical transcript ID
                     String geneSymbol = feature.geneSymbol();
                     String proteinAnnotation = feature.proteinAnnotation();
                     int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
