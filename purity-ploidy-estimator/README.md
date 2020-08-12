@@ -994,7 +994,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.45](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.45) 
   - Sunrise plot shows relative score
   - Minor cosmetic changes to plots
   - Replicate SAGE SnpEff somatic variant enrichments SEW and SEC for driver catalog
