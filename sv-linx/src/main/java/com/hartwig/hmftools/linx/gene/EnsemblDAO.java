@@ -9,7 +9,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -18,7 +17,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.compress.utils.Lists;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;

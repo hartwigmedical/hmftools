@@ -274,8 +274,18 @@ public class DriverGeneAnnotator
 
             final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
 
-            double centromereCopyNumber = dgData.Arm == P_ARM ? tcData.CentromerePArm : tcData.CentromereQArm;
-            double telomereCopyNumber = dgData.Arm == P_ARM ? tcData.TelomerePArm : tcData.TelomereQArm;
+            double centromereCopyNumber = 0;
+            double telomereCopyNumber = 0;
+
+            if(tcData == null)
+            {
+                LNX_LOGGER.warn("chromosome({}) missing centro-telo data", dgData.GeneData.Chromosome);
+            }
+            else
+            {
+                centromereCopyNumber = dgData.Arm == P_ARM ? tcData.CentromerePArm : tcData.CentromereQArm;
+                telomereCopyNumber = dgData.Arm == P_ARM ? tcData.TelomerePArm : tcData.TelomereQArm;
+            }
 
             for(final DriverGeneEvent driverEvent : dgData.getEvents())
             {
