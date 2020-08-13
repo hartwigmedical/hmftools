@@ -518,9 +518,19 @@ The annotation and filtering are done with BCFTools using commands similar to th
 ```
 bcftools annotate -a SageGermlinePon.hg19.1000x.vcf.gz -c PON_COUNT,PON_MAX $sage_vcf -O z -o $annotated_vcf
 
-bcftools filter -e 'PON_COUNT!="." && INFO/TIER="HOTSPOT" && PON_MAX>=5 && PON_COUNT >= 10' -s 1000_PON -m+ $annotated_vcf -O u | \
-bcftools filter -e 'PON_COUNT!="." && INFO/TIER="PANEL" && PON_MAX>=5 && PON_COUNT >= 6' -s 1000_PON -m+ -O u | \
-bcftools filter -e 'PON_COUNT!="." && INFO/TIER!="HOTSPOT" && INFO/TIER!="PANEL" && PON_COUNT >= 6' -s 1000_PON -m+ -O z -o $pon_filtered_vcf
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER="HOTSPOT" && PON_MAX>=5 && PON_COUNT >= 10' -s PON -m+ $annotated_vcf -O u | \
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER="PANEL" && PON_MAX>=5 && PON_COUNT >= 6' -s PON -m+ -O u | \
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER!="HOTSPOT" && INFO/TIER!="PANEL" && PON_COUNT >= 6' -s PON -m+ -O z -o $pon_filtered_vcf
+```
+
+As the HG38 PON is smaller with only 98 germline samples it is recommended that the following filters are used:
+
+```
+bcftools annotate -a SageGermlinePon.hg38.98x.vcf.gz -c PON_COUNT,PON_MAX $sage_vcf -O z -o $annotated_vcf
+
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER="HOTSPOT" && PON_MAX>=5 && PON_COUNT >= 2' -s PON -m+ $annotated_vcf -O u | \
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER="PANEL" && PON_MAX>=5 && PON_COUNT >= 2' -s PON -m+ -O u | \
+bcftools filter -e 'PON_COUNT!="." && INFO/TIER!="HOTSPOT" && INFO/TIER!="PANEL" && PON_COUNT >= 5' -s PON -m+ -O z -o $pon_filtered_vcf
 ```
 
 ## SnpEff
