@@ -62,13 +62,17 @@ public class CosineSimAnalyser
     private static final String USE_ELEVATED = "use_elevated";
     private static final String REF_COUNTS_FILE = "ref_counts_file";
 
+    private static final int MIN_ELEVATED_BUCKETS = 10;
+    private static final double ELEVATED_BUCKET_PROBABILITY = 0.1;
+    private static final double DEFAULT_CSS_THRESHOLD = 0.8;
+
     public CosineSimAnalyser(final CommandLine cmd)
     {
         mOutputDir = parseOutputDir(cmd);
 
         mSampleCountsIndex = Maps.newHashMap();
 
-        mCssThreshold = Double.parseDouble(cmd.getOptionValue(CSS_THRESHOLD, "0.8"));
+        mCssThreshold = cmd.hasOption(CSS_THRESHOLD) ? Double.parseDouble(cmd.getOptionValue(CSS_THRESHOLD)) : DEFAULT_CSS_THRESHOLD;
         mUseElevated = cmd.hasOption(USE_ELEVATED);
         mRangeMap = Maps.newHashMap();
 
@@ -159,8 +163,6 @@ public class CosineSimAnalyser
         closeBufferedWriter(mWriter);
     }
 
-    private static final int MIN_ELEVATED_BUCKETS = 10;
-
     private double calcElevatedCountsCss(final double[] sampleCounts1, final double[] sampleCounts2)
     {
         double[] elevCounts1 = extractElevatedCounts(sampleCounts1);
@@ -193,7 +195,7 @@ public class CosineSimAnalyser
 
         if(maxPermittedValue == null)
         {
-            int permittedRange = calcPoissonRangeGivenProb(expectedValue, 0.0001, 0, false);
+            int permittedRange = calcPoissonRangeGivenProb(expectedValue, ELEVATED_BUCKET_PROBABILITY, 0, false);
             maxPermittedValue = expectedValue + permittedRange;
             mRangeMap.put(expectedValue, maxPermittedValue);
         }
