@@ -15,7 +15,7 @@ class DndsMutationTest {
     private val missense = DndsMutation.fromString("SAMPLE\tX\t66766561\tG\tT\tMISSENSE\tMISSENSE\t3\t0\tNON_HOTSPOT\tAR\tMissense")
     private val nonsense = DndsMutation.fromString("SAMPLE\tX\t66765547\tG\tT\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t0\t0\tNON_HOTSPOT\tAR\tNonsense")
     private val splice = DndsMutation.fromString("SAMPLE\t19\t7795746\tC\tA\tSPLICE\tSPLICE\t2\t0\tNON_HOTSPOT\tCLEC4G\tEssential_Splice")
-    private val synonymous = DndsMutation.fromString("SAMPLE\tX\t66766206\tC\tT\tSYNONYMOUS\tSYNONYMOUS\t2\t1\tNON_HOTSPOT\tAR\tSynonymous")
+    private val synonymous = DndsMutation.fromString("SAMPLE\tX\t66766206\tC\tT\tSYNONYMOUS\tSYNONYMOUS\t2\t0\tNON_HOTSPOT\tAR\tSynonymous")
     private val unknown = DndsMutation.fromString("SAMPLE\tX\t53576468\tTG\tT\tNONE\tNONE\t2\t0\tNON_HOTSPOT\tHUWE1\tno-SNV")
 
     private val hotspotFrameshift = DndsMutation.fromString("SAMPLE\tX\t66766423\tGC\tG\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t5\t0\tHOTSPOT\tAR\tno-SNV")
