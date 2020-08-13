@@ -44,13 +44,13 @@ data class GeneMutation(
             fun Boolean.toInt() = if (this) 1 else 0
             val synonymous = sampleMutations.filter { x -> x.impact == Impact.SYNONYMOUS }.count()
 
-            val sorted = sampleMutations.filter { x -> x.impact != Impact.UNKNOWN && x.impact != Impact.SYNONYMOUS }.sorted()
-            if (sorted.isEmpty()) {
+            val filteredAndSorted = sampleMutations.filter { x -> x.impact != Impact.UNKNOWN && x.impact != Impact.SYNONYMOUS }.sorted()
+            if (filteredAndSorted.isEmpty()) {
                 return empty.copy(gene = gene, synonymous = synonymous)
             }
 
-            val worst = sorted[0]
-            val redundant = sorted.size - synonymous - 1
+            val worst = filteredAndSorted[0]
+            val redundant = filteredAndSorted.size - 1
             val isKnown = worst.hotspot || (worst.impact == Impact.INFRAME && worst.repeatCount < 8)
             val isUnknown = !isKnown
             return when (worst.impact) {
@@ -59,7 +59,7 @@ data class GeneMutation(
                 Impact.SPLICE -> empty.copy(gene = gene, synonymous = synonymous, redundant = redundant, knownSplice = isKnown.toInt(), unknownSplice = isUnknown.toInt())
                 Impact.NONSENSE -> empty.copy(gene = gene, synonymous = synonymous, redundant = redundant, knownNonsense = isKnown.toInt(), unknownNonsense = isUnknown.toInt())
                 Impact.FRAMESHIFT -> empty.copy(gene = gene, synonymous = synonymous, redundant = redundant, knownFrameshift = isKnown.toInt(), unknownFrameshift = isUnknown.toInt())
-                else -> throw IllegalStateException("Seriously?")
+                else -> throw IllegalStateException("Unexpected impact: ${worst.impact}")
             }
         }
 
