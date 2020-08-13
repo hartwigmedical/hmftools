@@ -2,6 +2,7 @@ package com.hartwig.hmftools.paddle
 
 import com.hartwig.hmftools.paddle.dnds.DndsCv
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
+import com.hartwig.hmftools.paddle.dnds.GeneMutation
 import org.apache.logging.log4j.LogManager
 
 fun main(args: Array<String>) {
@@ -23,7 +24,7 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
 
     override fun run() {
 
-        val mutationsFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/DndsMutations.tsv"
+        val mutationsFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/DndsMutations.AR.tsv"
         val dndsCVFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfRefCDSCv.tsv"
 
         logger.info("Loading mutations: $mutationsFile")
@@ -31,6 +32,9 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
 
         logger.info("Loading dNdScv values: $dndsCVFile")
         val dndsCv = DndsCv.fromFile(dndsCVFile)
+
+        logger.info("Calculating onco gene mutation counts")
+        val oncoGeneMutations = GeneMutation.oncoGeneMutations(dndsMutations)
 
         println("Sdf")
 
