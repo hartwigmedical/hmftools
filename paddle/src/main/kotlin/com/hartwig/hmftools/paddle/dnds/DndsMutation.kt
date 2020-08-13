@@ -12,7 +12,7 @@ data class DndsMutation(
 
     companion object {
         fun fromFile(file: String): List<DndsMutation> {
-            return Files.readAllLines(File(file).toPath()).drop(1).map { fromString(it) }
+            return Files.readAllLines(File(file).toPath()).map { fromString(it) }
         }
 
         fun fromString(line: String): DndsMutation {
