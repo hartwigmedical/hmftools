@@ -83,10 +83,10 @@ public class SampleData
         mMaxNoiseTotal = 0;
     }
 
-    public final String getSampleName() { return mSampleName; }
+    public final String name() { return mSampleName; }
     public void setSampleName(final String name) { mSampleName = name; }
 
-    public final String getCancerType() { return mCancerType; }
+    public final String cancerType() { return mCancerType; }
     public void setCancerType(final String type) { mCancerType = type; }
 
     public final List<String> getCategoryData() { return mCategoryData; }

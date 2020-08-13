@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.sig_analyser.buckets;
 
-import static java.lang.Math.floor;
-import static java.lang.Math.min;
-
+import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcRangeValue;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_MAX_NOISE_ALLOC_PERCENT;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
@@ -21,30 +22,37 @@ public class BaSampleFitter
     private final SigMatrix mSignatures;
     private final SigMatrix mContrbutions;
     private final SigMatrix mSampleCounts;
+    private final List<String> mSampleIds;
 
     private final double mMinSigPercent;
+    private final double mNoiseProbability;
+
     private static double DEFAULT_MIN_SIG_PERCENT = 0.01;
     private static final String MIN_SIG_PERCENT = "min_sig_percent";
 
-    private final double mNoisePercent;
-    private static double DEFAULT_NOISE_PERCENT = 0.05;
-    private static final String NOISE_PERCENT = "noise_percent";
-    private static int MIN_ABSOLUTE_NOISE = 5;
+    public static double DEFAULT_NOISE_PROB = 1e-4;
+    public static final String NOISE_PROB = "noise_prob";
+
+    public static int DEFAULT_MIN_NOISE_COUNT = 5;
 
     private static final Logger LOGGER = LogManager.getLogger(BaSampleFitter.class);
 
-    public BaSampleFitter(final SigMatrix sampleCounts, final SigMatrix signatures, final CommandLine cmd)
+    public BaSampleFitter(final SigMatrix sampleCounts, final List<String> sampleIds, final SigMatrix signatures, final CommandLine cmd)
     {
         mSignatures = signatures;
         mSignatures.cacheTranspose();
 
         mSampleCounts = sampleCounts;
         mSampleCounts.cacheTranspose();
+        mSampleIds = sampleIds;
 
         mContrbutions = new SigMatrix(signatures.Cols, sampleCounts.Cols);
 
         mMinSigPercent = Double.parseDouble(cmd.getOptionValue(MIN_SIG_PERCENT, String.valueOf(DEFAULT_MIN_SIG_PERCENT)));
-        mNoisePercent = Double.parseDouble(cmd.getOptionValue(NOISE_PERCENT, String.valueOf(DEFAULT_NOISE_PERCENT)));
+        mNoiseProbability = Double.parseDouble(cmd.getOptionValue(NOISE_PROB, String.valueOf(DEFAULT_NOISE_PROB)));
+
+        // set the max of a sample's total which can be allocated to noise, effecively setting a cap on
+        MAX_NOISE_ALLOC_PERCENT = Double.parseDouble(cmd.getOptionValue(BA_MAX_NOISE_ALLOC_PERCENT, String.valueOf(MAX_NOISE_ALLOC_PERCENT)));
     }
 
     public final SigMatrix getContributions() { return mContrbutions; }
@@ -52,7 +60,8 @@ public class BaSampleFitter
     public static void addCmdLineArgs(final Options options)
     {
         options.addOption(MIN_SIG_PERCENT, true, "Min percent of sample's total count to allocate to signature");
-        options.addOption(NOISE_PERCENT, true, "Min percent of sample's total count to allocate to signature");
+        options.addOption(NOISE_PROB, true, "Poisson probability for noise per buckt");
+        options.addOption(BA_MAX_NOISE_ALLOC_PERCENT, true, "Max percent of sample's total count to allocate to noise");
     }
 
     public void fitAllSamples()
@@ -72,13 +81,20 @@ public class BaSampleFitter
             allBuckets.add(b);
         }
 
-        SigContribOptimiser sigContribOptimiser = new SigContribOptimiser(bucketCount, false, 1.0);
-        List<double[]> ratiosCollection = Lists.newArrayList();
-        List<Integer> sigIds = Lists.newArrayList();
+        final SampleSigContribOptimiser sigContribOptimiser = new SampleSigContribOptimiser(bucketCount, false, 1.0);
+        final List<double[]> ratiosCollection = Lists.newArrayList();
+        final List<Integer> sigIds = Lists.newArrayList();
+
+        final Map<Integer,Integer> rangeCache = Maps.newHashMap();
 
         for(int s = 0; s < mSampleCounts.Cols; ++s)
         {
             SampleData sample = new SampleData(s);
+
+            if(mSampleIds.size() == mSampleCounts.Cols)
+            {
+                sample.setSampleName(mSampleIds.get(s));
+            }
 
             final double[] sampleCounts = mSampleCounts.getCol(s);
             double sampleTotal = sumVector(sampleCounts);
@@ -88,15 +104,16 @@ public class BaSampleFitter
 
             sample.setBucketCounts(sampleCounts);
 
-            double minNoise = Arrays.stream(sampleCounts).filter(x -> x > 0).min().orElse(0);
-            minNoise = minNoise > 0 ? min(minNoise, MIN_ABSOLUTE_NOISE) : MIN_ABSOLUTE_NOISE;
-
             for(int b = 0; b < bucketCount; ++b)
             {
                 if(sampleCounts[b] > 0)
-                    noiseCounts[b] = floor(mNoisePercent * sampleCounts[b]);
+                {
+                    noiseCounts[b] = calcRangeValue(rangeCache, (int)sampleCounts[b], mNoiseProbability, DEFAULT_MIN_NOISE_COUNT, true);
+                }
                 else
-                    noiseCounts[b] = minNoise;
+                {
+                    noiseCounts[b] = DEFAULT_MIN_NOISE_COUNT;
+                }
             }
 
             sample.setElevatedBucketCounts(sample.getBucketCounts(), noiseCounts);

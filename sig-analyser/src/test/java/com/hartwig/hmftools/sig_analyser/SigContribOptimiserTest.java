@@ -10,7 +10,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
-import com.hartwig.hmftools.sig_analyser.buckets.SigContribOptimiser;
+import com.hartwig.hmftools.sig_analyser.buckets.SampleSigContribOptimiser;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -61,7 +61,7 @@ public class SigContribOptimiserTest
         sample.setBucketCounts(counts);
         sample.setElevatedBucketCounts(counts, noiseCounts);
 
-        SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
+        SampleSigContribOptimiser sigOptim = new SampleSigContribOptimiser(bucketCount, true, 1.0);
         // sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
         sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
@@ -141,7 +141,7 @@ public class SigContribOptimiserTest
         sample.setBucketCounts(counts);
         sample.setElevatedBucketCounts(counts, noiseCounts);
 
-        SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
+        SampleSigContribOptimiser sigOptim = new SampleSigContribOptimiser(bucketCount, true, 1.0);
         // sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
         sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
@@ -219,7 +219,7 @@ public class SigContribOptimiserTest
         sample.setBucketCounts(counts);
         sample.setElevatedBucketCounts(counts, noiseCounts);
 
-        SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
+        SampleSigContribOptimiser sigOptim = new SampleSigContribOptimiser(bucketCount, true, 1.0);
         // sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
         sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();

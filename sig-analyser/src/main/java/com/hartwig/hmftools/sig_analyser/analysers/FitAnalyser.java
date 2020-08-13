@@ -11,20 +11,25 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter.DEFAULT_MIN_NOISE_COUNT;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter.DEFAULT_NOISE_PROB;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter.NOISE_PROB;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.DataUtils;
@@ -35,6 +40,7 @@ import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
+import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
 import com.hartwig.hmftools.sig_analyser.fitter.FitMethod;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfSampleFitter;
@@ -54,6 +60,7 @@ public class FitAnalyser
     // config
     private final List<FitMethod> mFitMethods;
     private final String mOutputDir;
+    private final String mOutputId;
     private final CommandLine mCmdLineArgs;
 
     private final SigMatrix mSampleCounts;
@@ -62,6 +69,7 @@ public class FitAnalyser
     private final List<String> mSigNames;
 
     private final Map<Integer,Integer> mNoiseRangeMap;
+    private final double mNoiseProbability;
 
     private BufferedWriter mSampleResultsWriter;
     private BufferedWriter mResidualsWriter;
@@ -73,6 +81,7 @@ public class FitAnalyser
     public FitAnalyser(final CommandLine cmd)
     {
         mOutputDir = parseOutputDir(cmd);
+        mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mCmdLineArgs = cmd;
         mFitMethods = Lists.newArrayList();
 
@@ -82,7 +91,15 @@ public class FitAnalyser
         final GenericDataCollection scCollection = GenericDataLoader.loadFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE));
         mSampleCounts = DataUtils.createMatrixFromListData(scCollection.getData());
         mSampleCounts.cacheTranspose();
-        mSampleIds = scCollection.getFieldNames();
+
+        if(cmd.hasOption(SAMPLE_IDS))
+        {
+            mSampleIds = Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";", -1)).collect(Collectors.toList());
+        }
+        else
+        {
+            mSampleIds = scCollection.getFieldNames();
+        }
 
         final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(cmd.getOptionValue(SIGNATURES_FILE));
         mSigNames = sigsCollection.getFieldNames();
@@ -90,6 +107,7 @@ public class FitAnalyser
         mSignatures.cacheTranspose();
 
         mNoiseRangeMap = Maps.newHashMap();
+        mNoiseProbability = Double.parseDouble(cmd.getOptionValue(NOISE_PROB, String.valueOf(DEFAULT_NOISE_PROB)));
 
         mSampleResultsWriter = null;
         mResidualsWriter = null;
@@ -174,7 +192,7 @@ public class FitAnalyser
     {
         final SigMatrix sampleContribs = new SigMatrix(mSignatures.Cols, mSampleCounts.Cols);
 
-        BaSampleFitter sampleFitter = new BaSampleFitter(mSampleCounts, mSignatures, mCmdLineArgs);
+        BaSampleFitter sampleFitter = new BaSampleFitter(mSampleCounts, mSampleIds, mSignatures, mCmdLineArgs);
         sampleFitter.fitAllSamples();
         sampleContribs.setData(sampleFitter.getContributions().getData());
 
@@ -210,10 +228,6 @@ public class FitAnalyser
 
     private void processFitResults(final FitMethod fitMethod, final SigMatrix sampleContribs)
     {
-        /* for each sample, write
-
-        */
-
         double totalCounts = 0;
         double totalAlloc = 0;
         double totalResiduals = 0;
@@ -254,7 +268,7 @@ public class FitAnalyser
                 double sigPercent = sigAlloc / sampleTotal;
                 final String sigName = mSigNames.get(sigIndex);
 
-                writeSampleResults(fitMethod, sampleId, sigName, allocTotal, allocPerc);
+                writeSampleResults(fitMethod, sampleId, sigName, sigAlloc, sigPercent);
 
                 SIG_LOGGER.trace(String.format("sample(%s) sampleTotal(%.0f) sig(%d) alloc(%.0f perc=%.3f)",
                         sampleId, sampleTotal, sigIndex, sigAlloc, sigPercent));
@@ -264,7 +278,7 @@ public class FitAnalyser
             }
 
             writeSampleResults(fitMethod, sampleId, SIG_UNALLOCATED, residuals.unallocated(), residuals.unallocated()/sampleTotal);
-            writeSampleResults(fitMethod, sampleId, SIG_EXCESS, residuals.unallocated(), residuals.Excess/sampleTotal);
+            writeSampleResults(fitMethod, sampleId, SIG_EXCESS, residuals.Excess, residuals.Excess/sampleTotal);
 
             analyseBucketResiduals(fitMethod, sampleId, sampleCounts, fittedCounts, sigAllocs);
         }
@@ -280,10 +294,20 @@ public class FitAnalyser
         for(int bucket = 0; bucket < sampleCounts.length; ++bucket)
         {
             int bucketCount = (int)sampleCounts[bucket];
-            double fittedCount = fittedCounts[bucket];
-            int permittedNoise = calcRangeValue(mNoiseRangeMap, bucketCount);
 
+            if(bucketCount == 0)
+                continue;
+
+            double fittedCount = fittedCounts[bucket];
             double fitDiff = bucketCount - fittedCount;
+            double fitDiffPerc = abs(fitDiff) / bucketCount;
+
+            if(fitDiffPerc < 0.01)
+                continue;
+
+            // bucket has been over-fitted - ie more allocated to signatures than the actual count
+            int permittedNoise = calcRangeValue(mNoiseRangeMap, bucketCount, mNoiseProbability, DEFAULT_MIN_NOISE_COUNT, true);
+
             if(abs(fitDiff) <= permittedNoise)
                 continue;
 
@@ -311,12 +335,12 @@ public class FitAnalyser
     {
         try
         {
-            mSampleResultsWriter = createBufferedWriter(mOutputDir + "SIG_FIT_RESULTS.csv", false);
+            mSampleResultsWriter = createBufferedWriter(formOutputFilename(mOutputDir, mOutputId, "sig_fit_results"), false);
 
-            mSampleResultsWriter.write("SampleId,FitMethod,Signature,Allocation,Percent");
+            mSampleResultsWriter.write("SampleId,FitMethod,SigName,Allocation,Percent");
             mSampleResultsWriter.newLine();
 
-            mResidualsWriter = createBufferedWriter(mOutputDir + "SIG_FIT_RESIDUALS.csv", false);
+            mResidualsWriter = createBufferedWriter(formOutputFilename(mOutputDir, mOutputId, "sig_fit_residuals"), false);
             mResidualsWriter.write("SampleId,FitMethod,Bucket,Count,FitCount,SigName,SigFitCount");
             mResidualsWriter.newLine();
 
@@ -360,12 +384,8 @@ public class FitAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         Options options = new Options();
-        options.addOption(SAMPLE_COUNTS_FILE, true, "Path to the main input file");
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
+        CommonUtils.addCmdLineArgs(options);
         options.addOption(FIT_METHODS, true, "Signatures fit method: NMF, Bucket, LeastSquares");
-        options.addOption(SIGNATURES_FILE, true, "Signature definitions");
-        options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         BaSampleFitter.addCmdLineArgs(options);
 
         NmfConfig.addCmdLineArgs(options);

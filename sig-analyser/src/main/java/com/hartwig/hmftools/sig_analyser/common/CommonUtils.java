@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcAbsDiffs;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcLinearLeastSquares;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -21,17 +22,38 @@ import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class CommonUtils
 {
+    public static final String SAMPLE_IDS = "samples";
     public static final String SAMPLE_COUNTS_FILE = "sample_counts_file";
+    public static final String SIGNATURES_FILE = "signatures_file";
     public static final String LOG_DEBUG = "log_debug";
 
     public static final String OUTPUT_FILE_ID = "output_file_id";
 
     public static final Logger SIG_LOGGER = LogManager.getLogger(CommonUtils.class);
+
+    public static void addCmdLineArgs(final Options options)
+    {
+        options.addOption(SAMPLE_IDS, true, "Optional - list of sampleIds, separated by ';");
+        options.addOption(SAMPLE_COUNTS_FILE, true, "Path to the main input file");
+        options.addOption(SIGNATURES_FILE, true, "Signature definitions");
+        options.addOption(OUTPUT_DIR, true, "Path to output files");
+        options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
+        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+    }
+
+    public static String formOutputFilename(final String outputDir, final String outputId, final String fileId)
+    {
+        if(outputId != null)
+            return outputDir + fileId + "." + outputId + ".csv";
+        else
+            return outputDir + fileId  + ".csv";
+    }
 
     public static BufferedWriter getNewFile(final String outputDir, final String fileName) throws IOException
     {

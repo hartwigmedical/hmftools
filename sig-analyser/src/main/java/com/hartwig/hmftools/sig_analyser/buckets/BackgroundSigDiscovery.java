@@ -533,8 +533,8 @@ public class BackgroundSigDiscovery
 
         for(SampleData sample : mSampleData)
         {
-            double mutLoadThreshold = mCancerMutLoadThresholds.containsKey(sample.getCancerType()) ?
-                    mCancerMutLoadThresholds.get(sample.getCancerType()) : mCancerMutLoadThresholds.get(CANCER_TYPE_OTHER);
+            double mutLoadThreshold = mCancerMutLoadThresholds.containsKey(sample.cancerType()) ?
+                    mCancerMutLoadThresholds.get(sample.cancerType()) : mCancerMutLoadThresholds.get(CANCER_TYPE_OTHER);
 
             if(sample.getTotalCount() > mutLoadThreshold)
                 continue;
@@ -550,7 +550,7 @@ public class BackgroundSigDiscovery
             {
                 final String cancerType = entry.getKey();
 
-                if(cancerType.equals(sample.getCancerType()))
+                if(cancerType.equals(sample.cancerType()))
                     continue;
 
                 final BucketGroup bucketGroup = entry.getValue();
@@ -567,7 +567,7 @@ public class BackgroundSigDiscovery
 
             if(maxOtherGroup != null)
             {
-                String misAllocTypes = sample.getCancerType() + "_" + maxOtherGroup.getCancerType();
+                String misAllocTypes = sample.cancerType() + "_" + maxOtherGroup.getCancerType();
 
                 Integer count = misAllocPairingCounts.get(misAllocTypes);
                 if(count == null)
@@ -575,15 +575,15 @@ public class BackgroundSigDiscovery
                 else
                     misAllocPairingCounts.put(misAllocTypes, count+1);
 
-                count = misAllocCancerCounts.get(sample.getCancerType());
+                count = misAllocCancerCounts.get(sample.cancerType());
 
                 if(count == null)
-                    misAllocCancerCounts.put(sample.getCancerType(), 1);
+                    misAllocCancerCounts.put(sample.cancerType(), 1);
                 else
-                    misAllocCancerCounts.put(sample.getCancerType(), count+1);
+                    misAllocCancerCounts.put(sample.cancerType(), count+1);
 
                 SIG_LOGGER.info(String.format("sample(%s) own cancerType(%s alloc=%.3f) less than otherCT(%s alloc=%.3f) of total(%s)",
-                        sample.Id, sample.getCancerType(), allocPerc,
+                        sample.Id, sample.cancerType(), allocPerc,
                         maxOtherGroup.getCancerType(), maxOtherAlloc/sample.getTotalCount(), sizeToStr(sample.getTotalCount())));
             }
         }

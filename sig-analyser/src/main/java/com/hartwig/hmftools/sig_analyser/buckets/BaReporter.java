@@ -272,7 +272,7 @@ public class BaReporter
                 ++tinyMatchCount;
 
             LOGGER.debug(String.format("sample(%d: %s) %s allocated: groups(%d) buckets(%d unalloc=%d) count(total=%s bg=%s elev=%s alloc=%.3f noise=%.2f of %s) cancer(%s) effects(%d: %s)",
-                    sampleId, sample.getSampleName(), fullyAllocated ? "fully" : (partiallyAllocated ? "partially" : "tiny"),
+                    sampleId, sample.name(), fullyAllocated ? "fully" : (partiallyAllocated ? "partially" : "tiny"),
                     sample.getBucketGroups().size(), samBucketList.size(), sample.getUnallocBuckets().size(),
                     sizeToStr(sample.getTotalCount()), sizeToStr(bgTotal),
                     sizeToStr(sample.getElevatedCount()), sample.getAllocPercent(), sample.getNoisePerc(), sizeToStr(sample.getMaxNoise()),
@@ -491,7 +491,7 @@ public class BaReporter
             totalUnallocated += sample.getUnallocatedCount();
 
             LOGGER.debug(String.format("%d: worst sample(%d: %s) cancer(%s) unallocated(%s of %s, perc=%.3f) percOfTotal(%.4f) groupCount(%d)",
-                    worstIndex, sample.Id, sample.getSampleName(), sample.getCancerType(), sizeToStr(unallocTotal),
+                    worstIndex, sample.Id, sample.name(), sample.cancerType(), sizeToStr(unallocTotal),
                     sizeToStr(sample.getElevatedCount()), sample.getUnallocPercent(), unallocTotal/mElevatedCount, sample.getBucketGroups().size()));
         }
 
@@ -661,7 +661,7 @@ public class BaReporter
         // LOGGER.debug("testing sig reconstruction");
 
         // test whether any sigs can be reconstructed from the others
-        SigContribOptimiser sigOptim = new SigContribOptimiser(mBucketCount, false, 0.99);
+        CountsSigContribOptimiser sigOptim = new CountsSigContribOptimiser(mBucketCount, false, 0.99);
 
         double[] testGroupRatios = new double[mBucketCount];
         double[] testGroupNoise = new double[mBucketCount]; // unused

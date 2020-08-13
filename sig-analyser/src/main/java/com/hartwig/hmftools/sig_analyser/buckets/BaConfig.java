@@ -46,7 +46,7 @@ public class BaConfig
     public static final double PERMITTED_PROB_NOISE = 1e-5;
     public static final double MAX_NOISE_TO_SAMPLE_RATIO = 5; // per sample, the sum of potential (unallocated) bucket noise counts cannot exceeds this multiple of variant total
     public static double MAX_NOISE_ALLOC_PERCENT = 0.20; // per sample, the total which can be allocated to noise vs total variants
-    private static final String BA_MAX_NOISE_ALLOC_PERCENT = "ba_max_noise_pct";
+    public static final String BA_MAX_NOISE_ALLOC_PERCENT = "ba_max_noise_pct";
 
     public final boolean UseRatioRanges; // default false
     private static final  String BA_USE_RATIO_RANGES = "ba_use_ratio_ranges";

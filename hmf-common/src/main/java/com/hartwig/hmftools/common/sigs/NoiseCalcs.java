@@ -20,7 +20,7 @@ public class NoiseCalcs
 
     public static int calcRangeValue(final Map<Integer,Integer> rangeMap, int value)
     {
-        return calcRangeValue(rangeMap, value);
+        return calcRangeValue(rangeMap, value, POISSON_DEFAULT_PROBABILITY, POISSON_RANGE_DEFAULT_MIN_VALUE, true);
     }
 
     public static int calcRangeValue(final Map<Integer,Integer> rangeMap, int value, double requiredProb, int minValue, boolean findLower)

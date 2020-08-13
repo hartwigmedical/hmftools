@@ -13,9 +13,13 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_IDS;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIGNATURES_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleMatrixCounts;
 
@@ -33,6 +37,7 @@ import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
 import com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader;
 
 import org.apache.commons.cli.CommandLine;
@@ -47,15 +52,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class SampleFitter
 {
-    // config
-    private static final String SIGNATURES_FILE = "signatures_file";
-    private static final String SAMPLE_IDS = "sample";
-    
     private final String mSampleIdsConfig;
     private final List<String> mSampleIdList;
     private final String mSnvCountsFile;
     private final String mSignaturesFile;
     private final String mOutputDir;
+    private final String mOutputId;
 
     private SigMatrix mSampleCountsMatrix;
     private final List<String> mSignatureNames;
@@ -78,6 +80,7 @@ public class SampleFitter
         mSignatures = null;
 
         mOutputDir = parseOutputDir(cmd);
+        mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mFitWriter = null;
         mDbAccess = createDatabaseAccess(cmd);
     }
@@ -146,7 +149,10 @@ public class SampleFitter
         SigSnvLoader snvLoader = new SigSnvLoader(null, mSampleIdList);
         snvLoader.loadData(mDbAccess);
 
-        final String filename = mSampleIdList.size() == 1 ? mSampleIdList.get(0) + ".sig.snv_counts.csv" : "SIG_SNV_COUNTS.csv";
+        final String filename = mSampleIdList.size() == 1 ?
+                formOutputFilename(mOutputDir, mOutputId, mSampleIdList.get(0) + ".sig.snv_counts")
+                : formOutputFilename(mOutputDir, mOutputId, "sig_snv_counts");
+
         snvLoader.writeSampleCounts(mOutputDir + filename);
 
         mSampleCountsMatrix = snvLoader.getSampleBucketCounts();
@@ -239,7 +245,7 @@ public class SampleFitter
         if(mSampleIdList.size() <= 1)
             return;
 
-        final String filename = mOutputDir + "SIG_SNV_FIT.csv";
+        final String filename = formOutputFilename(mOutputDir, mOutputId, "sig_snv_fit");
 
         try
         {
@@ -282,11 +288,7 @@ public class SampleFitter
     public static void main(@NotNull final String[] args) throws ParseException
     {
         Options options = new Options();
-        options.addOption(SAMPLE_IDS, true, "Either a single sampleId or a file with a list");
-        options.addOption(SAMPLE_COUNTS_FILE, true, "Path to the main input file");
-        options.addOption(SIGNATURES_FILE, true, "Signature definitions");
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        CommonUtils.addCmdLineArgs(options);
         addDatabaseCmdLineArgs(options);
 
         final CommandLineParser parser = new DefaultParser();

@@ -14,7 +14,9 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -29,6 +31,7 @@ import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -57,7 +60,6 @@ public class CosineSimAnalyser
 
     private BufferedWriter mWriter;
 
-    private static final String SAMPLE_IDS = "samples";
     private static final String CSS_THRESHOLD = "css_threshold";
     private static final String USE_ELEVATED = "use_elevated";
     private static final String REF_COUNTS_FILE = "ref_counts_file";
@@ -218,7 +220,7 @@ public class CosineSimAnalyser
         {
             if(mWriter == null)
             {
-                mWriter = createBufferedWriter(mOutputDir + "SIG_CSS_RESULTS.csv", false);
+                mWriter = createBufferedWriter(formOutputFilename(mOutputDir, null, "sig_css_results"), false);
 
                 mWriter.write("SampleId1,SampleId2,CSS");
                 mWriter.newLine();
@@ -236,13 +238,10 @@ public class CosineSimAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         Options options = new Options();
-        options.addOption(SAMPLE_COUNTS_FILE, true, "Sample bucket counts");
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
-        options.addOption(SAMPLE_IDS, true, "Optional - list of sampleIds, separated by ';");
+        CommonUtils.addCmdLineArgs(options);
         options.addOption(CSS_THRESHOLD, true, "Optional - min CSS to log (default = 0.8)");
         options.addOption(USE_ELEVATED, false, "Optional - only include elevated counts in comparison");
         options.addOption(REF_COUNTS_FILE, true, "Optional - min CSS to log (default = 0.8)");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);

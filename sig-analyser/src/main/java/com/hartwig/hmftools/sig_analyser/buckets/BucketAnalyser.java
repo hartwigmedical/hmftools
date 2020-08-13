@@ -68,7 +68,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.sig_analyser.common.CssRoutines;
 import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
@@ -315,7 +314,7 @@ public class BucketAnalyser
 
             sample.setSampleName(mDataCollection.getFieldNames().get(sampleId));
 
-            final List<String> extSampleData = getSampleExtData(sample.getSampleName());
+            final List<String> extSampleData = getSampleExtData(sample.name());
             if(extSampleData != null)
             {
                 sample.setCancerType(extSampleData.get(CANCER_TYPE_COL_INDEX));
@@ -323,11 +322,11 @@ public class BucketAnalyser
             }
             else
             {
-                SIG_LOGGER.error("sample({}) cannot find external data", sample.getSampleName());
+                SIG_LOGGER.error("sample({}) cannot find external data", sample.name());
                 mHasErrors = true;
             }
 
-            if(!mConfig.SpecificCancer.isEmpty() && !sample.getCancerType().equals(mConfig.SpecificCancer))
+            if(!mConfig.SpecificCancer.isEmpty() && !sample.cancerType().equals(mConfig.SpecificCancer))
             {
                 sample.setExcluded(true);
             }
@@ -849,7 +848,7 @@ public class BucketAnalyser
 
         int maxCandidateGroups = MAX_CANDIDATE_GROUPS;
 
-        SigContribOptimiser sigContribOptimiser = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
+        CountsSigContribOptimiser sigContribOptimiser = new CountsSigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
 
         int exceededOnSoloAlloc = 0;
         int exceededOnUnalloc = 0;
@@ -894,16 +893,6 @@ public class BucketAnalyser
 
                 if(sample.isExcluded())
                     continue;
-
-                // mConfig.logSample(sampleId);
-
-                /*
-                if(mConfig.logSample(sampleId) && bucketGroup.getId() == 194)
-                {
-                    SIG_LOGGER.debug("spec sample");
-                }
-                */
-
 
                 double reqAllocPercent = minAllocPercent(sample, false);
                 boolean exceedsMinAllocPerc = false;
@@ -1234,7 +1223,7 @@ public class BucketAnalyser
         // now allocate samples to this top group
         topBucketGroup.clearSamples();
 
-        SigContribOptimiser sigContribOptimiser = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
+        SampleSigContribOptimiser sigContribOptimiser = new SampleSigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
         List<BucketGroup> sampleGroupList = Lists.newArrayList();
 
         List<Integer> skippedSamples = Lists.newArrayList();
@@ -1578,7 +1567,7 @@ public class BucketAnalyser
                 BucketGroup bucketGroup = new BucketGroup(++mNextBucketId);
                 bucketGroup.addInitialSample(sample.Id);
                 bucketGroup.addBuckets(bucketIds);
-                bucketGroup.setTag(sample.getSampleName());
+                bucketGroup.setTag(sample.name());
 
                 double[] sampleCounts = new double[mBucketCount];
                 for(Integer bucket : bucketIds)
@@ -2023,7 +2012,7 @@ public class BucketAnalyser
 
         double reqAllocPercent = MIN_GROUP_ALLOC_PERCENT_LOWER;
 
-        SigContribOptimiser sigContribOptimiser = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
+        SampleSigContribOptimiser sigContribOptimiser = new SampleSigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
 
         if(mConfig.UseBackgroundCounts)
         {
@@ -2219,7 +2208,7 @@ public class BucketAnalyser
         }
     }
 
-    private boolean fitSampleWithGroups(SigContribOptimiser sigContribOptim, SampleData sample, final List<BucketGroup> bucketGroups,
+    private boolean fitSampleWithGroups(SampleSigContribOptimiser sigContribOptim, SampleData sample, final List<BucketGroup> bucketGroups,
             double prevAllocPerc, double reqAllocPerc, boolean removeAllocsOnFail, final List<BucketGroup> prevBucketGroups)
     {
         int groupCount = bucketGroups.size();
@@ -2991,7 +2980,7 @@ public class BucketAnalyser
 
         for (final SampleData sample : mSampleData)
         {
-            final String cancerType = sample.getCancerType();
+            final String cancerType = sample.cancerType();
             List<Integer> samplesList = mCancerSamplesMap.get(cancerType);
 
             if (samplesList == null)
@@ -3158,7 +3147,7 @@ public class BucketAnalyser
 
                 final List<Integer> sampleBuckets = sample.getElevatedBuckets();
 
-                writer.write(String.format("%d,%s,%s", sample.Id, sample.getSampleName(), sample.getCancerType()));
+                writer.write(String.format("%d,%s,%s", sample.Id, sample.name(), sample.cancerType()));
 
                 double bgTotal = sumVector(mBackgroundSigDiscovery.getBackgroundCounts().getCol(sample.Id));
 
@@ -3272,7 +3261,7 @@ public class BucketAnalyser
                     }
 
                     writer.write(String.format("%d,%s,%s,%.0f,%.3f,%d,Assigned",
-                            sample.Id, sample.getSampleName(), sample.getCancerType(), sampleTotal, allocPerc, bucketGroup.getId()));
+                            sample.Id, sample.name(), sample.cancerType(), sampleTotal, allocPerc, bucketGroup.getId()));
 
                     writer.write(String.format(",%.0f,%.3f,%.3f,%.3f,%.0f,%.3f,%.3f,%.3f",
                             potentialTotal, potentialTotal/sampleTotal, potentialGrossScore, potentialNetScore,
@@ -3294,7 +3283,7 @@ public class BucketAnalyser
                         continue;
 
                     writer.write(String.format("%d,%s,%s,%.0f,%.3f,%d,Unassigned",
-                            sample.Id, sample.getSampleName(), sample.getCancerType(), sampleTotal, allocPerc, bucketGroup.getId()));
+                            sample.Id, sample.name(), sample.cancerType(), sampleTotal, allocPerc, bucketGroup.getId()));
 
                     writer.write(String.format(",%.0f,%.3f,%.3f,%.3f,0,0,0,0",
                             potentialTotal, potentialTotal / sampleTotal, bucketGroup.calcSampleFitScore(potentialAllocs, potentialTotal, true),
@@ -3426,7 +3415,7 @@ public class BucketAnalyser
                 {
                     final SampleData sample = mSampleData.get(sampleIds.get(samIndex));
 
-                    writer.write(String.format("%d,%s", bgIndex, sample.getSampleName()));
+                    writer.write(String.format("%d,%s", bgIndex, sample.name()));
 
                     final double[] sampleCounts = sampleCountsList.get(samIndex);
 
@@ -3471,7 +3460,7 @@ public class BucketAnalyser
                     double sampleAllocTotal = sampleAllocTotals.get(samIndex);
 
                     writer.write(String.format("%d,%s,%s,%.1f,%.3f",
-                            bgIndex + 1, bucketGroup.getId(), sample.getSampleName(), sampleAllocTotal, sampleAllocTotal/sample.getElevatedCount()));
+                            bgIndex + 1, bucketGroup.getId(), sample.name(), sampleAllocTotal, sampleAllocTotal/sample.getElevatedCount()));
 
                     writer.newLine();
                 }
@@ -3487,11 +3476,11 @@ public class BucketAnalyser
                     continue;
 
                 writer.write(String.format("%d,%s,%s,%.1f,%.3f",
-                        unallocatedId, "Unalloc", sample.getSampleName(), sample.getUnallocatedCount(), sample.getUnallocPercent()));
+                        unallocatedId, "Unalloc", sample.name(), sample.getUnallocatedCount(), sample.getUnallocPercent()));
                 writer.newLine();
 
                 writer.write(String.format("%d,%s,%s,%.1f,%.3f",
-                        excessId, "Excess", sample.getSampleName(), sample.getAllocNoise(), sample.getNoiseOfTotal()));
+                        excessId, "Excess", sample.name(), sample.getAllocNoise(), sample.getNoiseOfTotal()));
                 writer.newLine();
             }
 
