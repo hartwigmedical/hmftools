@@ -116,17 +116,35 @@ public class CosineSimAnalyser
             final String sampleId1 = mSampleIds.get(i);
             final double[] sampleCounts1 = mSampleCounts.getCol(mSampleCountsIndex.get(sampleId1));
 
-            for(int j = i + 1; j < mSampleIds.size(); ++j)
+            if(mReferenceSampleCounts == null)
             {
-                final String sampleId2 = mSampleIds.get(j);
-                final double[] sampleCounts2 = mSampleCounts.getCol(mSampleCountsIndex.get(sampleId2));
-
-                double css = mUseElevated ?
-                        calcElevatedCountsCss(sampleCounts1, sampleCounts2) : calcCosineSim(sampleCounts1, sampleCounts2);
-
-                if(css >= mCssThreshold)
+                for(int j = i + 1; j < mSampleIds.size(); ++j)
                 {
-                    writeCssResults(sampleId1, sampleId2, css);
+                    final String sampleId2 = mSampleIds.get(j);
+                    final double[] sampleCounts2 = mSampleCounts.getCol(mSampleCountsIndex.get(sampleId2));
+
+                    double css = mUseElevated ?
+                            calcElevatedCountsCss(sampleCounts1, sampleCounts2) : calcCosineSim(sampleCounts1, sampleCounts2);
+
+                    if(css >= mCssThreshold)
+                    {
+                        writeCssResults(sampleId1, sampleId2, css);
+                    }
+                }
+            }
+            else
+            {
+                for(int j = 0; j < mRefNames.size(); ++j)
+                {
+                    final String refName = mRefNames.get(j);
+                    final double[] refCounts = mReferenceSampleCounts.getCol(j);
+
+                    double css = calcCosineSim(sampleCounts1, refCounts);
+
+                    if(css >= mCssThreshold)
+                    {
+                        writeCssResults(sampleId1, refName, css);
+                    }
                 }
             }
 
@@ -175,7 +193,7 @@ public class CosineSimAnalyser
 
         if(maxPermittedValue == null)
         {
-            int permittedRange = calcPoissonRangeGivenProb(expectedValue, POISSON_DEFAULT_PROBABILITY, 0, false);
+            int permittedRange = calcPoissonRangeGivenProb(expectedValue, 0.0001, 0, false);
             maxPermittedValue = expectedValue + permittedRange;
             mRangeMap.put(expectedValue, maxPermittedValue);
         }
