@@ -763,7 +763,7 @@ public class BucketAnalyser
                     noiseCountsTotal += permElevRangeData[j][i];
                 }
 
-                double sampleNoiseTotal = calcPoissonRangeGivenProb((int) round(mSampleTotals[i]), PERMITTED_PROB_NOISE, 10);
+                double sampleNoiseTotal = calcPoissonRangeGivenProb((int) round(mSampleTotals[i]), PERMITTED_PROB_NOISE, 10, true);
 
                 if (noiseCountsTotal > MAX_NOISE_TO_SAMPLE_RATIO * sampleNoiseTotal)
                 {

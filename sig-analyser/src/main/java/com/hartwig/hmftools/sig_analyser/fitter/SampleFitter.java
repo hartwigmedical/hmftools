@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleLis
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleMatrixCounts;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -63,6 +62,9 @@ public class SampleFitter
     private SigMatrix mSignatures;
     private DatabaseAccess mDbAccess;
     private BufferedWriter mFitWriter;
+
+    private static final double MIN_ALLOCATION = 1;
+    private static final double MIN_ALLOCATION_PERC = 0.005;
 
     public SampleFitter(final CommandLine cmd)
     {
@@ -191,6 +193,10 @@ public class SampleFitter
             double sigAlloc = sigAllocs[s];
             double allocPerc = sigAlloc / sampleTotal;
             allocTotal += sigAlloc;
+
+            // avoid storing tiny or zero sig allocations
+            if(sigAlloc < MIN_ALLOCATION || allocPerc < MIN_ALLOCATION_PERC)
+                continue;
 
             final String sigName = mSignatureNames.get(s);
 

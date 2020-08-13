@@ -15,26 +15,42 @@ public class PoissonNoiseTest
     {
         double probability = 0.0001;
 
-        int range = calcPoissonRangeGivenProb(10, probability, 10);
+        int range = calcPoissonRangeGivenProb(10, probability, 10, true);
         assertEquals(10, range);
 
-        range = calcPoissonRangeGivenProb(20, probability, 10);
+        range = calcPoissonRangeGivenProb(20, probability, 10, true);
         assertEquals(15, range);
 
-        range = calcPoissonRangeGivenProb(100, probability, 10);
+        range = calcPoissonRangeGivenProb(100, probability, 10, true);
         assertEquals(36, range);
 
-        range = calcPoissonRangeGivenProb(1000, probability, 10);
+        range = calcPoissonRangeGivenProb(1000, probability, 10, true);
         assertEquals(116, range);
 
-        range = calcPoissonRangeGivenProb(10000, probability, 10);
+        range = calcPoissonRangeGivenProb(10000, probability, 10, true);
         assertEquals(370, range);
 
-        range = calcPoissonRangeGivenProb(100000, probability, 10);
+        range = calcPoissonRangeGivenProb(100000, probability, 10, true);
         assertEquals(1170, range);
 
-        range = calcPoissonRangeGivenProb(1000000, probability, 10);
+        range = calcPoissonRangeGivenProb(1000000, probability, 10, true);
         assertEquals(3700, range);
+
+        // now test finding the upper value
+        range = calcPoissonRangeGivenProb(1, probability, 0, false);
+        assertEquals(5, range);
+
+        range = calcPoissonRangeGivenProb(2, probability, 0, false);
+        assertEquals(7, range);
+
+        range = calcPoissonRangeGivenProb(5, probability, 0, false);
+        assertEquals(10, range);
+
+        range = calcPoissonRangeGivenProb(10, probability, 0, false);
+        assertEquals(14, range);
+
+        range = calcPoissonRangeGivenProb(100, probability, 0, false);
+        assertEquals(40, range);
     }
 
     /*

@@ -23,12 +23,12 @@ public class NoiseCalcs
         return calcRangeValue(rangeMap, value);
     }
 
-    public static int calcRangeValue(final Map<Integer,Integer> rangeMap, int value, double requiredProb, int minValue)
+    public static int calcRangeValue(final Map<Integer,Integer> rangeMap, int value, double requiredProb, int minValue, boolean findLower)
     {
         Integer rangeVal = rangeMap.get(value);
         if (rangeVal == null)
         {
-            rangeVal = calcPoissonRangeGivenProb(value, requiredProb, minValue);
+            rangeVal = calcPoissonRangeGivenProb(value, requiredProb, minValue, findLower);
             rangeMap.put(value, rangeVal);
         }
 
@@ -37,10 +37,10 @@ public class NoiseCalcs
 
     public static int calcPoissonRangeGivenProb(int value)
     {
-        return calcPoissonRangeGivenProb(value, POISSON_DEFAULT_PROBABILITY, POISSON_RANGE_DEFAULT_MIN_VALUE);
+        return calcPoissonRangeGivenProb(value, POISSON_DEFAULT_PROBABILITY, POISSON_RANGE_DEFAULT_MIN_VALUE, true);
     }
 
-    public static int calcPoissonRangeGivenProb(int value, double requiredProb, int minValue)
+    public static int calcPoissonRangeGivenProb(int value, double requiredProb, int minValue, boolean findLower)
     {
         // calculates a range around a given value where the probability of falling within that range is within the specified probability
         // the range is calculated using the lower value, which gives a more conservative estimation since the probabilities are not
@@ -55,11 +55,25 @@ public class NoiseCalcs
         int iterations = 0;
 
         double initRange = 3.7 / sqrt(value); // works for requiredProb = 1e-4
-        int testValue = (int)max(round(value * (1 - initRange)), 0);
-        int testValueUpper = (int)max(round(value * (1 - initRange * 0.5)), 0);
-        int testValueLower = (int)max(round(value * (1 - initRange * 2)), 0);
 
-        double currentProb = poisson.cumulativeProbability(testValue);
+        int testValue;
+        int testValueUpper;
+        int testValueLower;
+
+        if(findLower)
+        {
+            testValue = (int)max(round(value * (1 - initRange)), 0);
+            testValueUpper = (int)max(round(value * (1 - initRange * 0.5)), 0);
+            testValueLower = (int)max(round(value * (1 - initRange * 2)), 0);
+        }
+        else
+        {
+            testValue = (int)round(value * (1 + initRange));
+            testValueUpper = (int)round(value * (1 + initRange * 2));
+            testValueLower = (int)round(value * (1 + initRange * 0.5));
+        }
+
+        double currentProb = findLower ? poisson.cumulativeProbability(testValue) : 1 - poisson.cumulativeProbability(testValue - 1);
         double probDiff = 0;
 
         while(iterations < maxIterations)
@@ -69,8 +83,8 @@ public class NoiseCalcs
             if(probDiff < 0.1)
                 break;
 
-            // if prob is too high, need to lower the test value
-            if(currentProb > requiredProb)
+            // if prob is too high, need to move the test value away from the expected value
+            if((currentProb > requiredProb) == findLower)
             {
                 if(testValue <= testValueLower + 1)
                     break;
@@ -87,7 +101,7 @@ public class NoiseCalcs
                 testValue = (int)round((testValue + testValueUpper) * 0.5);
             }
 
-            currentProb = poisson.cumulativeProbability(testValue);
+            currentProb = findLower ? poisson.cumulativeProbability(testValue) : 1 - poisson.cumulativeProbability(testValue - 1);
             ++iterations;
         }
 
@@ -97,6 +111,6 @@ public class NoiseCalcs
                     value, testValue, currentProb, probDiff));
         }
 
-        return value - testValue;
+        return abs(value - testValue);
     }
 }
