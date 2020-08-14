@@ -41,7 +41,7 @@ class DndsMutationTest {
         val list = mutableListOf(
                 missense, frameshift, inframe, nonsense, splice, synonymous, worstInframe, worstFrameshift, canonicalInframe, unknown)
         list.shuffle()
-        list.sortWith(DndsMutationComparator(false))
+        list.sortWith(DndsMutationComparator {x -> x.isKnownOncoDriver})
 
         assertEquals(Impact.INFRAME, list[0].impact)
         assertEquals(Impact.INFRAME, list[1].impact)
@@ -59,7 +59,7 @@ class DndsMutationTest {
     fun testHotspotBiallelicSorting() {
         val list = mutableListOf(inframe, hotspotFrameshift, biallelicNonsense)
         list.shuffle()
-        list.sortWith(DndsMutationComparator(true))
+        list.sortWith(DndsMutationComparator{x -> x.isKnownTsgDriver})
 
         assertEquals(Impact.FRAMESHIFT, list[0].impact)
         assertEquals(Impact.NONSENSE, list[1].impact)

@@ -58,7 +58,6 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         }
 
         val oncoLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, oncoGeneMutations)
-        val tsgLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, tsgGeneMutations)
 //        val tsgBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.biallelicLoad, dndsCv, tsgGeneMutations)
 //        val tsgNonBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.nonBiallelicLoad, dndsCv, tsgGeneMutations)
 
@@ -67,9 +66,10 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
             println(oncoGeneMutation)
         }
 
-        for (tsgGeneMutation in tsgLikelihood) {
-            println(tsgGeneMutation)
-        }
+//        val tsgLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, tsgGeneMutations)
+//        for (tsgGeneMutation in tsgLikelihood) {
+//            println(tsgGeneMutation)
+//        }
 
     }
 

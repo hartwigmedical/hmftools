@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.paddle.dnds
 
-class DndsMutationComparator(private val includeBiallelicInSort: Boolean) : Comparator<DndsMutation> {
+class DndsMutationComparator(private val knownFunction: (DndsMutation) -> Boolean) : Comparator<DndsMutation> {
     override fun compare(o1: DndsMutation, o2: DndsMutation): Int {
         fun Boolean.toInt() = if (this) 1 else 0
 
@@ -8,8 +8,10 @@ class DndsMutationComparator(private val includeBiallelicInSort: Boolean) : Comp
             return o2.isHotspot.toInt() - o1.isHotspot.toInt()
         }
 
-        if (includeBiallelicInSort && o1.isBiallelic.xor(o2.isBiallelic)) {
-            return o2.isBiallelic.toInt() - o1.isBiallelic.toInt()
+        val o1Known = knownFunction(o1)
+        val o2Known = knownFunction(o2)
+        if (o1Known.xor(o2Known)) {
+            return o2Known.toInt() - o1Known.toInt()
         }
 
         return o1.impact.ordinal - o2.impact.ordinal

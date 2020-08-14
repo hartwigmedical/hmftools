@@ -21,6 +21,8 @@ data class DndsMutation(
 
     val impact = impact(dndsImpact, canonicalCodingEffect, worstCodingEffect)
     val isBiallelic = biallelic && impact != Impact.MISSENSE
+    val isKnownOncoDriver = isHotspot || impact == Impact.INFRAME && repeatCount < 8
+    val isKnownTsgDriver =  isHotspot || isBiallelic
 
     fun impact(dndsImpact: String, canonicalCodingEffect: String, worstCodingEffect: String): Impact {
         if (dndsImpact == "no-SNV" || dndsImpact == "NA") {

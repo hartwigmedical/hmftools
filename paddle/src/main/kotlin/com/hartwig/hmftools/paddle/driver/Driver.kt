@@ -26,11 +26,19 @@ data class Likelihood(private val cohortSize: Int, private val tumorMutationalLo
 
 
         return "(known=${geneVariants.known}, unknown=${geneVariants.unknown}, expectedDrivers=$expectedDrivers)"
+//        return "(driverLikelihood=$driverLikelihood, geneUnknownDrivers=${geneUnknownDrivers}, genePassengers=$genePassengers)"
 //        return "(lle=$driverLikelihood, pDriver=$pUnknownVariantIsDriver, expPassenger=$expectedPassengerRate)"
     }
 }
 
-data class LikelihoodGene(val gene: Gene, val missense: Likelihood, val nonsense: Likelihood, val splice: Likelihood, val indel: Likelihood) {
+data class LikelihoodGene(
+        val gene: Gene,
+        val synonymous: Int,
+        val redundant: Int,
+        val missense: Likelihood,
+        val nonsense: Likelihood,
+        val splice: Likelihood,
+        val indel: Likelihood) {
     companion object {
 
         operator fun invoke(cohortSize: Int, tumorMutationalLoad: TumorMutationalLoad, dndsMap: Map<Gene, DndsCvGene>, mutationsMap: Map<Gene, MutationsGene>): Map<Gene, LikelihoodGene> {
@@ -54,7 +62,7 @@ data class LikelihoodGene(val gene: Gene, val missense: Likelihood, val nonsense
             val splice = Likelihood(cohortSize, tumorMutationalLoad.snv, dnds.splice, mutations.splice)
             val indel = Likelihood(cohortSize, tumorMutationalLoad.indel, dnds.indel, mutations.frameshift + mutations.inframe)
 
-            return LikelihoodGene(dnds.gene, missense, nonsense, splice, indel)
+            return LikelihoodGene(mutations.gene, mutations.synonymous, mutations.redundant, missense, nonsense, splice, indel)
         }
     }
 }

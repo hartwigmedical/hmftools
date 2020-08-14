@@ -43,8 +43,8 @@ data class MutationsGene(
     companion object {
         val logger = LogManager.getLogger(this::class.java)
 
-        private val tsgComparator = DndsMutationComparator(true)
-        private val oncoComparator = DndsMutationComparator(false)
+        private val tsgComparator = DndsMutationComparator { x -> x.isKnownOncoDriver }
+        private val oncoComparator = DndsMutationComparator { x -> x.isKnownTsgDriver }
         private val emptyCount = Mutations(0, 0)
         private val empty = MutationsGene("empty", 0, 0, emptyCount, emptyCount, emptyCount, emptyCount, emptyCount)
 
@@ -67,7 +67,7 @@ data class MutationsGene(
 
             val worst = filteredAndSorted[0]
             val redundant = filteredAndSorted.size - 1
-            val isKnown = worst.isHotspot || (worst.impact == Impact.INFRAME && worst.repeatCount < 8)
+            val isKnown = worst.isKnownOncoDriver
             val isUnknown = !isKnown
             val result = empty.copy(gene = gene, synonymous = synonymous, redundant = redundant)
             return result.add(worst.impact, isKnown.toInt(), isUnknown.toInt())
@@ -83,7 +83,7 @@ data class MutationsGene(
             }
 
             val worst = filteredAndSorted[0]
-            val isKnown = worst.isHotspot || (worst.isBiallelic && worst.impact != Impact.MISSENSE)
+            val isKnown = worst.isKnownTsgDriver
             val isUnknown = !isKnown
             val isMultiHit = !isKnown && filteredAndSorted.size > 1
             val redundant = filteredAndSorted.size - 1 - isMultiHit.toInt()
