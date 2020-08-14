@@ -1,16 +1,48 @@
 package com.hartwig.hmftools.paddle.driver
 
+import com.hartwig.hmftools.paddle.Gene
 import com.hartwig.hmftools.paddle.dnds.DndsCv
+import com.hartwig.hmftools.paddle.dnds.DndsCvGene
+import com.hartwig.hmftools.paddle.mutation.Mutations
+import com.hartwig.hmftools.paddle.mutation.MutationsGene
 
 
-data class GeneVariants(val known: Int, val unknown: Double) {
-    val total = known + unknown
-}
-
-data class DriverLikelihood(private val dndsRate: DndsCv, private val geneVariants: GeneVariants) {
+data class Likelihood(private val dndsRate: DndsCv, private val geneVariants: Mutations) {
     val expectedDrivers = dndsRate.expectedDrivers(geneVariants.total)
     val driverLikelihood = ((expectedDrivers - geneVariants.known) / geneVariants.unknown).coerceIn(0.0, 1.0)
     val geneUnknownDrivers = geneVariants.unknown * driverLikelihood
     val genePassengers = geneVariants.unknown - geneUnknownDrivers
 
+    override fun toString(): String {
+        return "(expectedDrivers=$expectedDrivers, driverLikelihood=$driverLikelihood, geneUnknownDrivers=$geneUnknownDrivers, genePassengers=$genePassengers)"
+    }
+}
+
+data class LikelihoodGene(val gene: Gene, val missense: Likelihood, val nonsense: Likelihood, val splice: Likelihood, val indel: Likelihood) {
+    companion object {
+
+        operator fun invoke(dndsMap: Map<Gene, DndsCvGene>, mutationsMap: Map<Gene, MutationsGene>): Map<Gene, LikelihoodGene> {
+            val result = mutableMapOf<Gene, LikelihoodGene>()
+
+            for (entry in dndsMap.entries) {
+                val dnds = entry.value
+                mutationsMap[entry.key]?.let { result.put(entry.key, invoke(dnds, it)) }
+            }
+
+            return result
+        }
+
+        operator fun invoke(dnds: DndsCvGene, mutations: MutationsGene): LikelihoodGene {
+            if (mutations.gene != dnds.gene) {
+                throw IllegalArgumentException("Unable to combine results from difference genes: ${mutations.gene} & ${dnds.gene}")
+            }
+
+            val missense = Likelihood(dnds.missense, mutations.missense)
+            val nonsense = Likelihood(dnds.nonsense, mutations.nonsense)
+            val splice = Likelihood(dnds.splice, mutations.splice)
+            val indel = Likelihood(dnds.indel, mutations.frameshift.combine(mutations.inframe))
+
+            return LikelihoodGene(dnds.gene, missense, nonsense, splice, indel)
+        }
+    }
 }

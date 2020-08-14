@@ -1,38 +1,61 @@
-package com.hartwig.hmftools.paddle.gene
+package com.hartwig.hmftools.paddle.mutation
 
+import com.hartwig.hmftools.paddle.Impact
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
 import com.hartwig.hmftools.paddle.dnds.DndsMutationComparator
-import com.hartwig.hmftools.paddle.dnds.Impact
 import org.apache.logging.log4j.LogManager
 
-data class GeneMutationSummary(
-        val gene: String,
-        val synonymous: Int,
-        val redundant: Int,
-        val knownMissense: Int, val unknownMissense: Int,
-        val knownNonsense: Int, val unknownNonsense: Int,
-        val knownSplice: Int, val unknownSplice: Int,
-        val knownInframe: Int, val unknownInframe: Int,
-        val knownFrameshift: Int, val unknownFrameshift: Int) {
+data class Mutations(val known: Int, val unknown: Int) {
+    val total = known + unknown
+
+    fun combine(other: Mutations): Mutations {
+        return Mutations(known + other.known, unknown + other.unknown)
+    }
+}
+
+data class MutationsGene(
+        val gene: String, val synonymous: Int, val redundant: Int,
+        val missense: Mutations, val nonsense: Mutations, val splice: Mutations, val inframe: Mutations, val frameshift: Mutations) {
+
+
+    fun add(impact: Impact, known: Int, unknown: Int): MutationsGene {
+        return when (impact) {
+            Impact.MISSENSE -> copy(missense = missense.combine(Mutations(known, unknown)))
+            Impact.NONSENSE -> copy(nonsense = nonsense.combine(Mutations(known, unknown)))
+            Impact.SPLICE -> copy(splice = splice.combine(Mutations(known, unknown)))
+            Impact.INFRAME -> copy(inframe = inframe.combine(Mutations(known, unknown)))
+            Impact.FRAMESHIFT -> copy(frameshift = frameshift.combine(Mutations(known, unknown)))
+            else -> throw IllegalStateException("Unexpected impact: $impact")
+        }
+    }
+
+    fun combine(count: MutationsGene): MutationsGene {
+        if (gene != count.gene) {
+            throw IllegalArgumentException("Incompatible genes: $gene != ${count.gene}")
+        }
+
+        return MutationsGene(gene, synonymous + count.synonymous, redundant + count.redundant,
+                missense.combine(count.missense), nonsense.combine(count.nonsense), splice.combine(count.splice), inframe.combine(count.inframe), frameshift.combine(count.frameshift)
+        )
+    }
 
     companion object {
-
         val logger = LogManager.getLogger(this::class.java)
 
         private val tsgComparator = DndsMutationComparator(true)
         private val oncoComparator = DndsMutationComparator(false)
+        private val emptyCount = Mutations(0, 0)
+        private val empty = MutationsGene("empty", 0, 0, emptyCount, emptyCount, emptyCount, emptyCount, emptyCount)
 
-        private val empty = GeneMutationSummary("empty", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-        fun oncoGeneMutations(mutations: List<DndsMutation>): List<GeneMutationSummary> {
+        fun oncoGeneMutations(mutations: List<DndsMutation>): List<MutationsGene> {
             return summary(mutations, this::oncoSampleSummary)
         }
 
-        fun tsgGeneMutations(mutations: List<DndsMutation>): List<GeneMutationSummary> {
+        fun tsgGeneMutations(mutations: List<DndsMutation>): List<MutationsGene> {
             return summary(mutations, this::tsgSampleSummary)
         }
 
-        private fun oncoSampleSummary(gene: String, sampleMutations: List<DndsMutation>): GeneMutationSummary {
+        private fun oncoSampleSummary(gene: String, sampleMutations: List<DndsMutation>): MutationsGene {
             fun Boolean.toInt() = if (this) 1 else 0
             val synonymous = sampleMutations.filter { x -> x.impact == Impact.SYNONYMOUS }.count()
 
@@ -49,7 +72,7 @@ data class GeneMutationSummary(
             return result.add(worst.impact, isKnown.toInt(), isUnknown.toInt())
         }
 
-        private fun tsgSampleSummary(gene: String, sampleMutations: List<DndsMutation>): GeneMutationSummary {
+        private fun tsgSampleSummary(gene: String, sampleMutations: List<DndsMutation>): MutationsGene {
             fun Boolean.toInt() = if (this) 1 else 0
 
             val synonymous = sampleMutations.filter { x -> x.impact == Impact.SYNONYMOUS }.count()
@@ -74,8 +97,8 @@ data class GeneMutationSummary(
             return result
         }
 
-        private fun summary(mutations: List<DndsMutation>, sampleSummary: (String, List<DndsMutation>) -> GeneMutationSummary): List<GeneMutationSummary> {
-            val result = mutableListOf<GeneMutationSummary>()
+        private fun summary(mutations: List<DndsMutation>, sampleSummary: (String, List<DndsMutation>) -> MutationsGene): List<MutationsGene> {
+            val result = mutableListOf<MutationsGene>()
             for (geneMutations in mutations.sortedPartition { x -> x.gene }) {
                 val gene = geneMutations[0].gene
                 result.add(geneSummary(gene, geneMutations, sampleSummary))
@@ -84,12 +107,12 @@ data class GeneMutationSummary(
             return result
         }
 
-        private fun geneSummary(gene: String, geneMutations: List<DndsMutation>, sampleSummary: (String, List<DndsMutation>) -> GeneMutationSummary): GeneMutationSummary {
+        private fun geneSummary(gene: String, geneMutations: List<DndsMutation>, sampleSummary: (String, List<DndsMutation>) -> MutationsGene): MutationsGene {
             var result = empty.copy(gene = gene)
 
             for (sampleMutations in geneMutations.sortedPartition { x -> x.sample }) {
                 val sample = sampleMutations[0].sample
-                result = result.add(sampleSummary(gene, sampleMutations))
+                result = result.combine(sampleSummary(gene, sampleMutations))
             }
 
             return result
@@ -120,29 +143,4 @@ data class GeneMutationSummary(
         }
     }
 
-    fun add(impact: Impact, known: Int, unknown: Int): GeneMutationSummary {
-        return when (impact) {
-            Impact.MISSENSE -> copy( synonymous = synonymous, redundant = redundant, knownMissense = known, unknownMissense = unknown)
-            Impact.INFRAME -> copy(synonymous = synonymous, redundant = redundant, knownInframe = known, unknownInframe = unknown)
-            Impact.SPLICE -> copy( synonymous = synonymous, redundant = redundant, knownSplice = known, unknownSplice = unknown)
-            Impact.NONSENSE -> copy(synonymous = synonymous, redundant = redundant, knownNonsense = known, unknownNonsense = unknown)
-            Impact.FRAMESHIFT -> copy( synonymous = synonymous, redundant = redundant, knownFrameshift = known, unknownFrameshift = unknown)
-            else -> throw IllegalStateException("Unexpected impact: ${impact}")
-        }
-    }
-
-    fun add(count: GeneMutationSummary): GeneMutationSummary {
-        if (gene != count.gene) {
-            throw IllegalArgumentException("Incompatible genes: $gene != ${count.gene}")
-        }
-
-        return GeneMutationSummary(gene,
-                synonymous + count.synonymous,
-                redundant + count.redundant,
-                knownMissense + count.knownMissense, unknownMissense + count.unknownMissense,
-                knownNonsense + count.knownNonsense, unknownNonsense + count.unknownNonsense,
-                knownSplice + count.knownSplice, unknownSplice + count.unknownSplice,
-                knownInframe + count.knownInframe, unknownInframe + count.unknownInframe,
-                knownFrameshift + count.knownFrameshift, unknownFrameshift + count.unknownFrameshift)
-    }
 }

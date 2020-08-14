@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.paddle.dnds
 
-import com.hartwig.hmftools.paddle.gene.Gene
+import com.hartwig.hmftools.paddle.Gene
+import com.hartwig.hmftools.paddle.Impact
 import java.io.File
 import java.nio.file.Files
 

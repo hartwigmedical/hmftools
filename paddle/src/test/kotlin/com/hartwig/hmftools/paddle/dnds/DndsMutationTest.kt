@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.paddle.dnds
 
+import com.hartwig.hmftools.paddle.Impact
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 

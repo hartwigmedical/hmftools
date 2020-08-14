@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.paddle.dnds
 
-import com.hartwig.hmftools.paddle.gene.Gene
+import com.hartwig.hmftools.paddle.Gene
 import java.io.File
 import java.nio.file.Files
 
 data class DndsCv(val n: Int, val wCv: Double) {
-
-    fun expectedDrivers(variantCount: Double): Double {
+    fun expectedDrivers(variantCount: Int): Double {
         return variantCount * probability(n, wCv)
     }
 
@@ -19,18 +18,18 @@ data class DndsCv(val n: Int, val wCv: Double) {
     }
 }
 
-data class DndsGene(val gene: Gene, val nSynonymous: Int,
-                    val missense: DndsCv, val nonsense: DndsCv, val splice: DndsCv, val indel: DndsCv) {
+data class DndsCvGene(val gene: Gene, val nSynonymous: Int,
+                      val missense: DndsCv, val nonsense: DndsCv, val splice: DndsCv, val indel: DndsCv) {
 
     companion object {
-        fun fromFile(file: String): List<DndsGene> {
+        fun fromFile(file: String): List<DndsCvGene> {
             return Files.readAllLines(File(file).toPath()).drop(1).map { fromString(it) }
         }
 
-        private fun fromString(line: String): DndsGene {
+        private fun fromString(line: String): DndsCvGene {
             val lineArray = line.split("\t")
 
-            return DndsGene(lineArray[0], lineArray[1].toInt(),
+            return DndsCvGene(lineArray[0], lineArray[1].toInt(),
                     DndsCv(lineArray[2].toInt(), lineArray[6].toDouble()),
                     DndsCv(lineArray[3].toInt(), lineArray[7].toDouble()),
                     DndsCv(lineArray[4].toInt(), lineArray[8].toDouble()),
