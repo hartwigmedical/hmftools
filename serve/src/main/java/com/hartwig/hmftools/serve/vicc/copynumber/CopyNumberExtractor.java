@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.vicc.copynumber;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
