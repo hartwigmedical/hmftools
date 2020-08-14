@@ -16,6 +16,8 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("PROMOTER METHYLATION");
         FEATURE_KEYWORDS_TO_IGNORE.add("PROMOTER DEMETHYLATION");
         FEATURE_KEYWORDS_TO_IGNORE.add("Promoter Hypermethylation");
+        FEATURE_KEYWORDS_TO_IGNORE.add("METHYLATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("Hypermethylation");
 
         // We cannot determine epigenetic silencing with WGS/WTS
         FEATURE_KEYWORDS_TO_IGNORE.add("Epigenetic Silencing");
@@ -30,6 +32,10 @@ public final class FeatureIgnoreUtil {
         // Copy number variation is too vague.
         FEATURE_KEYWORDS_TO_IGNORE.add("COPY NUMBER VARIATION");
         FEATURE_KEYWORDS_TO_IGNORE.add("3' EXON DELETION"); //TODO determine to which event?
+        FEATURE_KEYWORDS_TO_IGNORE.add("EXPRESSION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("WILDTYPE");
+        FEATURE_KEYWORDS_TO_IGNORE.add("wild-type");
+
 
     }
 
