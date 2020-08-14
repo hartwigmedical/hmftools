@@ -130,7 +130,7 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
-- Upcoming
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.4)
   - Fix bug when trying to use non-default parameter values
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.3)
   - Fixed bug to allow output VCF name to be relative path
