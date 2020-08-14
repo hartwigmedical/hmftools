@@ -35,7 +35,7 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("EXPRESSION");
         FEATURE_KEYWORDS_TO_IGNORE.add("WILDTYPE");
         FEATURE_KEYWORDS_TO_IGNORE.add("wild-type");
-
+        FEATURE_KEYWORDS_TO_IGNORE.add("wildtype");
 
     }
 

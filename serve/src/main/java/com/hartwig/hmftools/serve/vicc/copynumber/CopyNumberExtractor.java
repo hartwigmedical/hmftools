@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.vicc.copynumber;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,7 +58,7 @@ public class CopyNumberExtractor {
     }
 
     private boolean isAmplification(@NotNull Feature feature) {
-        String eventKeyAmplification = extractKeyAmplificationDeletion(feature.name());
+        String eventKeyAmplification = extractKeyAmplificationDeletion(feature);
         if (eventKeyAmplification.equals("Amplification")) {
             return true;
         } else {
@@ -66,7 +67,7 @@ public class CopyNumberExtractor {
     }
 
     private boolean isDeletion(@NotNull Feature feature) {
-        String eventKeyDeletion = extractKeyAmplificationDeletion(feature.name());
+        String eventKeyDeletion = extractKeyAmplificationDeletion(feature);
 
         if (eventKeyDeletion.equals("Deletion")) {
             return true;
@@ -75,15 +76,16 @@ public class CopyNumberExtractor {
         }
     }
 
-    private String extractKeyAmplificationDeletion(@NotNull String featureName) {
+    private String extractKeyAmplificationDeletion(@NotNull Feature feature) {
         //TODO: fix combi events
+        String featureName = feature.name();
         if (featureName.contains(" ")) {
-            featureName = featureName.split(" ", 2)[1].replaceAll("\\s+", "");
+            featureName = featureName.split(" ",2)[1];
         }
 
-        if (AMPLIFICATIONS.contains(featureName)) {
+        if (AMPLIFICATIONS.contains(featureName) || AMPLIFICATIONS.contains(feature.biomarkerType())) {
             return "Amplification";
-        } else if (DELETIONS.contains(featureName)) {
+        } else if (DELETIONS.contains(featureName) || DELETIONS.contains(feature.biomarkerType())) {
             return "Deletion";
         } else {
             return Strings.EMPTY;
