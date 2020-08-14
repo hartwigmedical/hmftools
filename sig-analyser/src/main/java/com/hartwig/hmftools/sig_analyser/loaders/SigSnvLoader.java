@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -24,7 +25,7 @@ public class SigSnvLoader
     private final Map<String,Integer> mBucketStringToIndex;
     private SigMatrix mSampleBucketCounts;
 
-    private PositionFrequencies mPositionFrequencies;
+    private final List<PositionFrequencies> mPositionFrequencies;
 
     private static final int SNV_BUCKET_COUNT = 96;
 
@@ -38,12 +39,12 @@ public class SigSnvLoader
         mBucketStringToIndex = Maps.newHashMap();
         buildBucketMap();
 
-        mPositionFrequencies = null;
+        mPositionFrequencies = Lists.newArrayList();
     }
 
-    public void initialisePositionFrequencies(final String outputDir, final int bucketSize)
+    public void initialisePositionFrequencies(final String outputDir, final List<Integer> bucketSizes)
     {
-        mPositionFrequencies = new PositionFrequencies(outputDir, bucketSize);
+        bucketSizes.forEach(x -> mPositionFrequencies.add(new PositionFrequencies(outputDir, x)));
     }
 
     public SigMatrix getSampleBucketCounts() { return mSampleBucketCounts; }
@@ -102,15 +103,14 @@ public class SigSnvLoader
 
             processSampleVariants(sampleId, variants, sampleIndex);
 
-            if(mPositionFrequencies != null)
+            for(PositionFrequencies positionFrequencies : mPositionFrequencies)
             {
-                mPositionFrequencies.writeResults(sampleId);
-                mPositionFrequencies.clear();
+                positionFrequencies.writeResults(sampleId);
+                positionFrequencies.clear();
             }
         }
 
-        if(mPositionFrequencies != null)
-            mPositionFrequencies.close();
+        mPositionFrequencies.forEach(x -> x.close());
     }
 
     public void writeSampleCounts(final String filename)
@@ -181,8 +181,10 @@ public class SigSnvLoader
             if(mFilters != null && !mFilters.passesFilters(variant))
                 continue;
 
-            if(mPositionFrequencies != null)
-                mPositionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
+            for(PositionFrequencies positionFrequencies : mPositionFrequencies)
+            {
+                positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
+            }
 
             // convert base change to standard set and the context accordingly
             String baseChange;
@@ -236,34 +238,4 @@ public class SigSnvLoader
         return String.format("MissingBucket_%d", index);
     }
 
-        /*
-    @NotNull
-    public List<SomaticSnv> readPartialSnvInfo(@NotNull String sample) {
-        List<SomaticSnv> variants = Lists.newArrayList();
-
-        Result<Record> result =
-                : context.select()
-                .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.SAMPLEID.eq(sample))
-                .and(SOMATICVARIANT.TYPE.eq(VariantType.SNP.toString())
-                        .and)
-                .fetch();
-
-        for (Record record : result) {
-
-            variants.add(ImmutableSomaticVariantImpl.builder()
-                    .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
-                    .position(record.getValue(SOMATICVARIANT.POSITION))
-                    .filter(record.getValue(SOMATICVARIANT.FILTER))
-                    .type(VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)))
-                    .ref(record.getValue(SOMATICVARIANT.REF))
-                    .alt(record.getValue(SOMATICVARIANT.ALT))
-                    .variantCopyNumber(record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER))
-                    .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
-                    .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
-                    .build());
-        }
-        return variants;
-    }
-    */
 }

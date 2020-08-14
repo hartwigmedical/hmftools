@@ -54,8 +54,8 @@ public class SigDataLoader
             {
                 SigSnvLoader snvLoader = new SigSnvLoader(config.Filters, config.SampleIds);
 
-                if(config.WritePositionBuckets)
-                    snvLoader.initialisePositionFrequencies(config.OutputDir, config.PositionBucketSize);
+                if(!config.PositionBucketSizes.isEmpty())
+                    snvLoader.initialisePositionFrequencies(config.OutputDir, config.PositionBucketSizes);
 
                 snvLoader.loadData(dbAccess);
 

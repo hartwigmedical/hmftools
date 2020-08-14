@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
@@ -9,6 +11,9 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class PositionFrequencies
 {
@@ -16,11 +21,12 @@ public class PositionFrequencies
     private final BufferedWriter mWriter;
     private final int mBucketSize;
 
+
     public PositionFrequencies(final String outputDir, final int bucketSize)
     {
         mBucketSize = bucketSize;
         mChrPosBucketFrequencies = Maps.newHashMap();
-        mWriter = initialiseWriter(outputDir);
+        mWriter = initialiseWriter(outputDir, mBucketSize);
     }
 
     public void addPosition(final String chromosome, int position)
@@ -52,11 +58,12 @@ public class PositionFrequencies
         closeBufferedWriter(mWriter);
     }
 
-    private static BufferedWriter initialiseWriter(final String outputDir)
+    private static BufferedWriter initialiseWriter(final String outputDir, int bucketSize)
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(outputDir + "snv_position_freq.csv", false);
+            final String outputFile = String.format("%ssnv_position_freq_%d.csv", outputDir, bucketSize);
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write("SampleId,Chromosome,Position,Count");
             writer.newLine();
@@ -89,6 +96,5 @@ public class PositionFrequencies
             SIG_LOGGER.error("failed to write position frequency results: {}", e.toString());
         }
     }
-
 
 }

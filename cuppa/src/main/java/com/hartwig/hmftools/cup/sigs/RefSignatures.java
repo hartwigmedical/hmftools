@@ -49,6 +49,11 @@ public class RefSignatures
 
     public void buildRefDataSets()
     {
+        buildRefSignatureData();
+    }
+
+    private void buildRefSignatureData()
+    {
         for(Map.Entry<String,Map<String,List<Double>>> entry : mCancerSigContribs.entrySet())
         {
             final String cancerType = entry.getKey();
@@ -113,8 +118,6 @@ public class RefSignatures
 
             final String header = fileData.get(0);
             fileData.remove(0);
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
 
             for(final String line : fileData)
             {

@@ -19,11 +19,13 @@ public class RefDataConfig
     public final String RefSampleTraitsFile;
     public final String RefSampleSvDataFile;
     public final String RefSigContribsFile;
+    public final String RefSnvPositionDataFile;
 
     // config strings
     public static final String REF_SAMPLE_TRAITS_FILE = "ref_sample_traits_file";
     public static final String REF_SIG_CONTRIBS_FILE = "ref_sig_contribs_file";
     public static final String REF_SV_DATA_FILE = "ref_sv_data_file";
+    public static final String REF_SNV_POS_DATA_FILE = "ref_snv_pos_file";
 
     public static final String DB_FILE_DELIM = "\t";
 
@@ -33,6 +35,7 @@ public class RefDataConfig
         RefSampleTraitsFile = cmd.getOptionValue(REF_SAMPLE_TRAITS_FILE, "");
         RefSigContribsFile = cmd.getOptionValue(REF_SIG_CONTRIBS_FILE, "");
         RefSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
+        RefSnvPositionDataFile = cmd.getOptionValue(REF_SNV_POS_DATA_FILE, "");
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -43,6 +46,7 @@ public class RefDataConfig
         options.addOption(REF_SAMPLE_TRAITS_FILE, true, "Ref sample traits data file");
         options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref signature contirbutions data file");
         options.addOption(REF_SV_DATA_FILE, true, "Ref sample SV data file");
+        options.addOption(REF_SNV_POS_DATA_FILE, true, "Ref sample SNV position bucket data file");
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
