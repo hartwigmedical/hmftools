@@ -17,12 +17,8 @@ public class GeneLevelEventExtractor {
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
-            "overexpression",
-            "over exp",
             "pos",
             "positive",
-            "amp over exp",
-            "OVEREXPRESSION",
             "Gain Of Function Variant",
             "Stop Lost", "Missense Variant");
 
@@ -30,11 +26,8 @@ public class GeneLevelEventExtractor {
             "inact mut",
             "loss",
             "biallelic inactivation",
-            "undexpression",
-            "dec exp",
             "negative",
             "is_deletion",
-            "UNDEREXPRESSION",
             "Loss Of Function Variant",
             "Start Lost", "Loss Of Heterozygosity");
 

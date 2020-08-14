@@ -34,9 +34,17 @@ public class CopyNumberExtractor {
     @NotNull
     private final Set<String> uniqueDels = Sets.newHashSet();
 
-    private static final Set<String> AMPLIFICATIONS = Sets.newHashSet("Amplification", "amplification", "AMPLIFICATION", "amp");
+    private static final Set<String> AMPLIFICATIONS = Sets.newHashSet("Amplification",
+            "amplification",
+            "AMPLIFICATION",
+            "amp",
+            "overexpression",
+            "over exp",
+            "amp over exp",
+            "OVEREXPRESSION");
 
-    private static final Set<String> DELETIONS = Sets.newHashSet("Deletion", "deletion", "DELETION", "del");
+    private static final Set<String> DELETIONS =
+            Sets.newHashSet("Deletion", "deletion", "DELETION", "del", "undexpression", "dec exp", "UNDEREXPRESSION");
 
     @NotNull
     public Set<String> uniqueAmps() {
@@ -48,9 +56,8 @@ public class CopyNumberExtractor {
         return uniqueDels;
     }
 
-
     private boolean isAmplification(@NotNull Feature feature) {
-        String eventKeyAmplification = extractKeyAmplificationDeletion(feature.name());
+        String eventKeyAmplification = extractKeyAmplificationDeletion(feature);
         if (eventKeyAmplification.equals("Amplification")) {
             return true;
         } else {
@@ -59,7 +66,7 @@ public class CopyNumberExtractor {
     }
 
     private boolean isDeletion(@NotNull Feature feature) {
-        String eventKeyDeletion = extractKeyAmplificationDeletion(feature.name());
+        String eventKeyDeletion = extractKeyAmplificationDeletion(feature);
 
         if (eventKeyDeletion.equals("Deletion")) {
             return true;
@@ -68,17 +75,18 @@ public class CopyNumberExtractor {
         }
     }
 
-    private String extractKeyAmplificationDeletion(@NotNull String featureName) {
+    private String extractKeyAmplificationDeletion(@NotNull Feature feature) {
         //TODO: fix combi events
+        String featureName = feature.name();
         if (featureName.contains(" ")) {
-            featureName = featureName.split(" ", 2)[1].replaceAll("\\s+","");
+            featureName = featureName.split(" ",2)[1];
         }
 
-        if (AMPLIFICATIONS.contains(featureName)) {
+        if (AMPLIFICATIONS.contains(featureName) || AMPLIFICATIONS.contains(feature.biomarkerType())) {
             return "Amplification";
-        } else if (DELETIONS.contains(featureName)) {
+        } else if (DELETIONS.contains(featureName) || DELETIONS.contains(feature.biomarkerType())) {
             return "Deletion";
-        }else {
+        } else {
             return Strings.EMPTY;
         }
     }
@@ -87,7 +95,7 @@ public class CopyNumberExtractor {
     public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
 
-        for (Feature feature: viccEntry.features()) {
+        for (Feature feature : viccEntry.features()) {
             if (isAmplification(feature)) {
                 ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", viccEntry.source().display()));
                 uniqueAmps.add(feature.geneSymbol());
