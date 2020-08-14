@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.paddle.dnds
 
+import com.hartwig.hmftools.paddle.gene.Gene
 import java.io.File
 import java.nio.file.Files
 
 data class DndsCv(
-        val gene: String, val nSynonymous: Int,
+        val gene: Gene, val nSynonymous: Int,
         val nMissense: Int, val nNonsense: Int, val nSplice: Int, val nIndel: Int,
         val wMissenseCv: Double, val wNonsenseCv: Double, val wSpliceCv: Double, val wIndelCv: Double) {
 

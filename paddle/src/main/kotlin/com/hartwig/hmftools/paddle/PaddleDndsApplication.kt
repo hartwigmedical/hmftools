@@ -2,7 +2,7 @@ package com.hartwig.hmftools.paddle
 
 import com.hartwig.hmftools.paddle.dnds.DndsCv
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
-import com.hartwig.hmftools.paddle.dnds.GeneMutation
+import com.hartwig.hmftools.paddle.gene.GeneMutationSummary
 import org.apache.logging.log4j.LogManager
 
 fun main(args: Array<String>) {
@@ -29,14 +29,29 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
 
         logger.info("Loading mutations: $mutationsFile")
         val dndsMutations = DndsMutation.fromFile(mutationsFile)
+//        val dndsMutations = DndsMutation.fromFile(mutationsFile).filter { x -> x.impact == Impact.MISSENSE || x.impact == Impact.INFRAME || x.impact == Impact.SYNONYMOUS}
+//        val dndsMutations = DndsMutation.fromFile(mutationsFile).filter { x -> x.impact == Impact.MISSENSE || x.impact == Impact.INFRAME }
+//        val other = dndsMutations.filter { x -> x.impact != Impact.MISSENSE && x.impact != Impact.INFRAME }.sortedBy { x -> x.sample }
+
 
         logger.info("Loading dNdScv values: $dndsCVFile")
-        val dndsCv = DndsCv.fromFile(dndsCVFile)
+        val dndsCv = DndsCv.fromFile(dndsCVFile).associateBy { x -> x.gene }
 
-        logger.info("Calculating onco gene mutation counts")
-        val oncoGeneMutations = GeneMutation.oncoGeneMutations(dndsMutations)
+        logger.info("Calculating gene mutation summary")
+        val oncoGeneMutations = GeneMutationSummary.oncoGeneMutations(dndsMutations).associateBy { x -> x.gene }
+        val tsgGeneMutations = GeneMutationSummary.tsgGeneMutations(dndsMutations).associateBy { x -> x.gene }
 
-        println("Sdf")
+
+
+
+
+        for (oncoGeneMutation in oncoGeneMutations) {
+            println(oncoGeneMutation)
+        }
+
+        for (tsgGeneMutation in tsgGeneMutations) {
+            println(tsgGeneMutation)
+        }
 
     }
 
