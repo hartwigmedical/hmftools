@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
@@ -267,7 +267,8 @@ public class SampleFitter
         {
             if(isSingleSample)
             {
-                SignatureAllocationFile.write(SignatureAllocationFile.generateFilename(mOutputDir, sampleId), sigAllocations);
+                final String fileId = mOutputId != null ? sampleId + "." + mOutputId : sampleId;
+                SignatureAllocationFile.write(SignatureAllocationFile.generateFilename(mOutputDir, fileId), sigAllocations);
             }
             else
             {

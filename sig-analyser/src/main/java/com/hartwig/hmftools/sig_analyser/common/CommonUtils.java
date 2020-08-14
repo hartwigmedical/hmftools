@@ -7,6 +7,9 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcAbsDiffs;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcLinearLeastSquares;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_DECIMAL;
+import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
+import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 
@@ -28,7 +31,7 @@ import org.apache.logging.log4j.Logger;
 
 public class CommonUtils
 {
-    public static final String SAMPLE_IDS = "samples";
+    public static final String SAMPLE_IDS = "sample";
     public static final String SAMPLE_COUNTS_FILE = "sample_counts_file";
     public static final String SIGNATURES_FILE = "signatures_file";
     public static final String LOG_DEBUG = "log_debug";
@@ -65,16 +68,11 @@ public class CommonUtils
 
     public static SigMatrix loadSampleMatrixCounts(final String filename, final List<String> sampleIds)
     {
-        final GenericDataCollection scCollection = GenericDataLoader.loadFile(filename);
-        boolean stripBucketName = scCollection.getFieldNames().get(0).equals("BucketName");
+        final GenericDataCollection scCollection = GenericDataLoader.loadFile(
+                filename, GD_TYPE_DECIMAL, DEFAULT_DELIM, Lists.newArrayList("BucketName"));
 
         if(sampleIds != null)
-        {
             sampleIds.addAll(scCollection.getFieldNames());
-
-            if(stripBucketName)
-                sampleIds.remove(0);
-        }
 
         return DataUtils.createMatrixFromListData(scCollection.getData());
     }

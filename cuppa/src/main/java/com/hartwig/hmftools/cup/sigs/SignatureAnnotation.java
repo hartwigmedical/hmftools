@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.sigs;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
@@ -101,14 +102,6 @@ public class SignatureAnnotation
         return (int)sumVector(sampleCounts);
     }
 
-    public void processCohort()
-    {
-        for(SampleData sample : mSampleDataCache.SampleDataList)
-        {
-            processSample(sample);
-        }
-    }
-
     public List<SampleResult> processSample(final SampleData sample)
     {
         final List<SampleResult> results = Lists.newArrayList();
@@ -154,10 +147,9 @@ public class SignatureAnnotation
             final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
 
             double cssWeight = pow(2, -100 * (1 - css));
-            double weightedCss = css * cssWeight;
 
-            // no longer normalised by cancer cohort size
-            // int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
+            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
+            double weightedCss = css * cssWeight / sqrt(cancerTypeCount);
 
             Double total = cancerCssTotals.get(refCancerType);
 

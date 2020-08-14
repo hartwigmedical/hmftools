@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
 
 import java.util.Arrays;
@@ -28,7 +29,6 @@ public class DataLoaderConfig
     public final boolean WritePositionBuckets;
     public final int PositionBucketSize;
 
-    private static final String SAMPLE_IDS = "sample_ids";
     private static final String APPLY_SAMPLE_QC = "apply_sample_qc";
     private static final String SUBCLONAL_MIN = "subclonal_min";
     private static final String SUBCLONAL_MAX = "subclonal_max";

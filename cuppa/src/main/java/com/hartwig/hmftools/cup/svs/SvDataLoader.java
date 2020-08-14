@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.svs.SvDataType.LINE;
-import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_EVENT_SIZE;
+import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_COMPLEX_SIZE;
 import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DEL_20KB_1MB;
 import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_100KB_5MB;
 import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_32B_200B;
@@ -95,14 +95,16 @@ public class SvDataLoader
                     .mapToInt(x -> x.endPosition() - x.startPosition())
                     .filter(x -> x >= 1e5 && x <= 5e6).count();
 
-            int maxEventSize = clusterList.stream().mapToInt(x -> x.clusterCount()).max().orElse(0);
+            int maxEventSize = clusterList.stream()
+                    .filter(x -> !x.subType().equals("LINE"))
+                    .mapToInt(x -> x.clusterCount()).max().orElse(0);
 
             SvData svData = new SvData(sampleId);
             svData.setCount(LINE, lineCount);
             svData.setCount(SIMPLE_DEL_20KB_1MB, shortDels);
             svData.setCount(SIMPLE_DUP_32B_200B, shortDups);
             svData.setCount(SIMPLE_DUP_100KB_5MB, longDups);
-            svData.setCount(MAX_EVENT_SIZE, maxEventSize);
+            svData.setCount(MAX_COMPLEX_SIZE, maxEventSize);
             svData.setCount(TELOMERIC_SGL, telomericSgls);
 
             sampleSvData.put(sampleId, svData);

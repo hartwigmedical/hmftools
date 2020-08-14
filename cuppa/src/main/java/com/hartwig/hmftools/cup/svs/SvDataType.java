@@ -6,7 +6,7 @@ public enum SvDataType
     SIMPLE_DEL_20KB_1MB,
     SIMPLE_DUP_32B_200B,
     SIMPLE_DUP_100KB_5MB,
-    MAX_EVENT_SIZE,
+    MAX_COMPLEX_SIZE,
     TELOMERIC_SGL;
 
     public static int typeIndex(final SvDataType type)
@@ -17,7 +17,7 @@ public enum SvDataType
             case SIMPLE_DEL_20KB_1MB: return 1;
             case SIMPLE_DUP_32B_200B: return 2;
             case SIMPLE_DUP_100KB_5MB: return 3;
-            case MAX_EVENT_SIZE: return 4;
+            case MAX_COMPLEX_SIZE: return 4;
             case TELOMERIC_SGL: return 5;
             default: return -1;
         }

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
@@ -47,6 +48,7 @@ public class CosineSimAnalyser
 {
     // config
     private final String mOutputDir;
+    private final String mOutputId;
 
     private final SigMatrix mSampleCounts;
     private final List<String> mSampleIds;
@@ -71,6 +73,7 @@ public class CosineSimAnalyser
     public CosineSimAnalyser(final CommandLine cmd)
     {
         mOutputDir = parseOutputDir(cmd);
+        mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
 
         mSampleCountsIndex = Maps.newHashMap();
 
@@ -220,9 +223,13 @@ public class CosineSimAnalyser
         {
             if(mWriter == null)
             {
-                mWriter = createBufferedWriter(formOutputFilename(mOutputDir, null, "sig_css_results"), false);
+                mWriter = createBufferedWriter(formOutputFilename(mOutputDir, mOutputId, "sig_css"), false);
 
-                mWriter.write("SampleId1,SampleId2,CSS");
+                if(mRefNames.isEmpty())
+                    mWriter.write("SampleId1,SampleId2,CSS");
+                else
+                    mWriter.write("SampleId,RefName,CSS");
+
                 mWriter.newLine();
             }
 

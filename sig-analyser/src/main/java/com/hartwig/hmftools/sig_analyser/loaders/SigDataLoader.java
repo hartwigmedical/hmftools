@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sig_analyser.loaders;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
 
 import java.sql.SQLException;
 
@@ -58,8 +59,8 @@ public class SigDataLoader
 
                 snvLoader.loadData(dbAccess);
 
-                final String filename = config.OutputDir +
-                        (config.OutputFileId != null ? config.OutputFileId + "_sample_counts.csv" : "sample_counts.csv");
+                final String fileId = config.SampleIds.size() == 1 ? config.SampleIds.get(0) + "." + "sample_counts" : "sample_counts";
+                final String filename = formOutputFilename(config.OutputDir, config.OutputFileId, fileId);
 
                 snvLoader.writeSampleCounts(filename);
             }
