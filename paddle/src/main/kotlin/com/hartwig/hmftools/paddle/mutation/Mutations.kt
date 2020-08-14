@@ -8,7 +8,7 @@ import org.apache.logging.log4j.LogManager
 data class Mutations(val known: Int, val unknown: Int) {
     val total = known + unknown
 
-    fun combine(other: Mutations): Mutations {
+    operator fun plus(other: Mutations): Mutations {
         return Mutations(known + other.known, unknown + other.unknown)
     }
 }
@@ -19,23 +19,24 @@ data class MutationsGene(
 
 
     fun add(impact: Impact, known: Int, unknown: Int): MutationsGene {
+        val additional = Mutations(known, unknown)
         return when (impact) {
-            Impact.MISSENSE -> copy(missense = missense.combine(Mutations(known, unknown)))
-            Impact.NONSENSE -> copy(nonsense = nonsense.combine(Mutations(known, unknown)))
-            Impact.SPLICE -> copy(splice = splice.combine(Mutations(known, unknown)))
-            Impact.INFRAME -> copy(inframe = inframe.combine(Mutations(known, unknown)))
-            Impact.FRAMESHIFT -> copy(frameshift = frameshift.combine(Mutations(known, unknown)))
+            Impact.MISSENSE -> copy(missense = missense + additional)
+            Impact.NONSENSE -> copy(nonsense = nonsense + additional)
+            Impact.SPLICE -> copy(splice = splice + additional)
+            Impact.INFRAME -> copy(inframe = inframe + additional)
+            Impact.FRAMESHIFT -> copy(frameshift = frameshift + additional)
             else -> throw IllegalStateException("Unexpected impact: $impact")
         }
     }
 
-    fun combine(count: MutationsGene): MutationsGene {
+    operator fun plus(count: MutationsGene): MutationsGene {
         if (gene != count.gene) {
             throw IllegalArgumentException("Incompatible genes: $gene != ${count.gene}")
         }
 
         return MutationsGene(gene, synonymous + count.synonymous, redundant + count.redundant,
-                missense.combine(count.missense), nonsense.combine(count.nonsense), splice.combine(count.splice), inframe.combine(count.inframe), frameshift.combine(count.frameshift)
+                missense + count.missense, nonsense + count.nonsense, splice + count.splice, inframe + count.inframe, frameshift + count.frameshift
         )
     }
 
@@ -112,7 +113,7 @@ data class MutationsGene(
 
             for (sampleMutations in geneMutations.sortedPartition { x -> x.sample }) {
                 val sample = sampleMutations[0].sample
-                result = result.combine(sampleSummary(gene, sampleMutations))
+                result += sampleSummary(gene, sampleMutations)
             }
 
             return result
