@@ -6,10 +6,17 @@ import java.nio.file.Files
 
 data class DndsMutation(
         val sample: String,
-        val contig: String, val position: Int, val ref: String, val alt: String,
-        val worstCodingEffect: String, val canonicalCodingEffect: String,
-        val repeatCount: Int, private val biallelic: Boolean, val isHotspot: Boolean,
-        val gene: Gene, val dndsImpact: String) {
+        val contig: String,
+        val position: Int,
+        val ref: String,
+        val alt: String,
+        val worstCodingEffect: String,
+        val canonicalCodingEffect: String,
+        val repeatCount: Int,
+        private val biallelic: Boolean,
+        val isHotspot: Boolean,
+        val gene: Gene,
+        val dndsImpact: String) {
 
     val impact = impact(dndsImpact, canonicalCodingEffect, worstCodingEffect)
     val isBiallelic = biallelic && impact != Impact.MISSENSE
@@ -31,7 +38,7 @@ data class DndsMutation(
             return Impact.UNKNOWN
         }
 
-        return when(dndsImpact) {
+        return when (dndsImpact) {
             "Missense" -> Impact.MISSENSE
             "Nonsense" -> Impact.NONSENSE
             "Stop_loss" -> Impact.NONSENSE
@@ -43,7 +50,7 @@ data class DndsMutation(
 
     companion object {
         fun fromFile(file: String): List<DndsMutation> {
-            return Files.readAllLines(File(file).toPath()).filter {x -> !x.startsWith("sample")} .map { fromString(it) }
+            return Files.readAllLines(File(file).toPath()).filter { x -> !x.startsWith("sample") }.map { fromString(it) }
         }
 
         fun fromString(line: String): DndsMutation {

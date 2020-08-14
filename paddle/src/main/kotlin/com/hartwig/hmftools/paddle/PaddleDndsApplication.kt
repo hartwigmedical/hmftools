@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.paddle
 
-import com.hartwig.hmftools.paddle.dnds.DndsCv
+import com.hartwig.hmftools.paddle.dnds.DndsGene
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
 import com.hartwig.hmftools.paddle.gene.GeneMutationSummary
 import org.apache.logging.log4j.LogManager
@@ -35,7 +35,7 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
 
 
         logger.info("Loading dNdScv values: $dndsCVFile")
-        val dndsCv = DndsCv.fromFile(dndsCVFile).associateBy { x -> x.gene }
+        val dndsCv = DndsGene.fromFile(dndsCVFile).associateBy { x -> x.gene }
 
         logger.info("Calculating gene mutation summary")
         val oncoGeneMutations = GeneMutationSummary.oncoGeneMutations(dndsMutations).associateBy { x -> x.gene }
