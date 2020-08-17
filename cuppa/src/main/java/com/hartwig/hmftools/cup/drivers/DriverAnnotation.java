@@ -47,14 +47,6 @@ public class DriverAnnotation
         loadSampleDrivers();
     }
 
-    public void processCohort()
-    {
-        if(!mValidData)
-            return;
-
-        mSampleDataCache.SampleDataList.forEach(x -> processSample(x));
-    }
-
     public final List<SampleResult> processSample(final SampleData sample)
     {
         final List<SampleResult> results = Lists.newArrayList();
