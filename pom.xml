@@ -240,6 +240,11 @@
                 <artifactId>amber</artifactId>
                 <version>${amber.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>paddle</artifactId>
+                <version>${paddle.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.github.samtools</groupId>

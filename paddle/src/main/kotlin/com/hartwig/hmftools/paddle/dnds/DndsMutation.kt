@@ -5,6 +5,9 @@ import com.hartwig.hmftools.paddle.Impact
 import java.io.File
 import java.nio.file.Files
 
+private val EXCLUDE_HOTSPOT = setOf( Impact.SYNONYMOUS, Impact.UNKNOWN)
+private val EXCLUDE_BIALLELIC = setOf(Impact.MISSENSE, Impact.SYNONYMOUS, Impact.UNKNOWN)
+
 data class DndsMutation(
         val sample: String,
         val contig: String,
@@ -15,12 +18,15 @@ data class DndsMutation(
         val canonicalCodingEffect: String,
         val repeatCount: Int,
         private val biallelic: Boolean,
-        val isHotspot: Boolean,
+        private val hotspot: Boolean,
         val gene: Gene,
         val dndsImpact: String) {
 
+
+
     val impact = impact(dndsImpact, canonicalCodingEffect, worstCodingEffect)
-    val isBiallelic = biallelic && impact != Impact.MISSENSE
+    val isBiallelic = biallelic && impact !in EXCLUDE_BIALLELIC
+    val isHotspot = hotspot && impact !in EXCLUDE_HOTSPOT
     val isKnownOncoDriver = isHotspot || impact == Impact.INFRAME && repeatCount < 8
     val isKnownTsgDriver =  isHotspot || isBiallelic
 

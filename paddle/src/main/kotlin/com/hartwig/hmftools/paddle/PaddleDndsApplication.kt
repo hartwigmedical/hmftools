@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.paddle
 
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier
 import com.hartwig.hmftools.paddle.cohort.TumorMutationalLoad
 import com.hartwig.hmftools.paddle.cohort.TumorMutationalLoadSample
 import com.hartwig.hmftools.paddle.dnds.DndsCvGene
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
-import com.hartwig.hmftools.paddle.driver.LikelihoodGene
+import com.hartwig.hmftools.paddle.likelihood.LikelihoodGene
 import com.hartwig.hmftools.paddle.mutation.MutationsGene
 import org.apache.logging.log4j.LogManager
 
@@ -29,14 +30,14 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
 
         val cohortFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfTMB.tsv"
         val dndsCVFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfRefCDSCv.tsv"
-        val mutationsFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/DndsMutations.AR.tsv"
+        val mutationsFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/DndsMutations.tsv"
 
         logger.info("Loading cohort: $cohortFile")
         val (cohortSize, cohortLoad) = loadCohort(cohortFile)
 
         logger.info("Loading mutations: $mutationsFile")
-//        val dndsMutations = DndsMutation.fromFile(mutationsFile)
-        val dndsMutations = DndsMutation.fromFile(mutationsFile).filter { x -> x.impact == Impact.MISSENSE || x.impact == Impact.INFRAME || x.impact == Impact.SYNONYMOUS}
+        val dndsMutations = DndsMutation.fromFile(mutationsFile).filter { it.gene == "ACVR1" }
+//        val dndsMutations = DndsMutation.fromFile(mutationsFile).filter { x -> x.impact == Impact.MISSENSE || x.impact == Impact.INFRAME || x.impact == Impact.SYNONYMOUS}
 //        val dndsMutations = DndsMutation.fromFile(mutationsFile).filter { x -> x.impact == Impact.MISSENSE || x.impact == Impact.INFRAME }
 //        val other = dndsMutations.filter { x -> x.impact != Impact.MISSENSE && x.impact != Impact.INFRAME }.sortedBy { x -> x.sample }
 
@@ -57,7 +58,11 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
             logger.warn("Dnds values missing for gene $gene")
         }
 
+        val oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keys
+        val file = "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodOnco.AR.tsv"
         val oncoLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, oncoGeneMutations)
+        LikelihoodGene.writeFile(file, oncoLikelihood.values.filter { oncoGenes.contains(it.gene) })
+
 //        val tsgBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.biallelicLoad, dndsCv, tsgGeneMutations)
 //        val tsgNonBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.nonBiallelicLoad, dndsCv, tsgGeneMutations)
 
@@ -65,6 +70,8 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         for (oncoGeneMutation in oncoLikelihood) {
             println(oncoGeneMutation)
         }
+
+        //
 
 //        val tsgLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, tsgGeneMutations)
 //        for (tsgGeneMutation in tsgLikelihood) {
