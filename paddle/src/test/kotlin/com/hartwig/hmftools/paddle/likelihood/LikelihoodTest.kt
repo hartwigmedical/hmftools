@@ -32,12 +32,12 @@ class LikelihoodTest {
         assertEquals(72.78686, victim.expectedDrivers, epsilon)
         assertEquals(0.4964476, victim.driverLikelihood, epsilon)
 
-        assertEquals(29.78686, victim.unknownDrivers, epsilon)
-        assertEquals(30.21314, victim.unknownPassengers, epsilon)
-        assertEquals(mutations.unknown.toDouble(), victim.unknownDrivers + victim.unknownPassengers, epsilon)
+        assertEquals(29.78686, victim.vusDrivers, epsilon)
+        assertEquals(30.21314, victim.passengers, epsilon)
+        assertEquals(mutations.unknown.toDouble(), victim.vusDrivers + victim.passengers, epsilon)
 
-        assertEquals(8.45257, victim.expDriversPerSample * 1e3, epsilon)
-        assertEquals(3.35983, victim.expPassengersPerLoad * 1e7, epsilon)
+        assertEquals(8.45257, victim.vusDriversPerSample * 1e3, epsilon)
+        assertEquals(3.35983, victim.passengersPerMutation * 1e7, epsilon)
     }
 
 }
