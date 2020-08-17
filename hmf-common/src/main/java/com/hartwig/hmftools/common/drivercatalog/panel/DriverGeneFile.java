@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -14,6 +15,14 @@ import org.jetbrains.annotations.NotNull;
 public class DriverGeneFile {
 
     private static final String DELIMITER = "\t";
+
+    public static List<DriverGene> read(@NotNull final String filename) throws IOException {
+        return Files.readAllLines(new File(filename).toPath())
+                .stream()
+                .filter(x -> !x.startsWith("gene"))
+                .map(DriverGeneFile::fromString)
+                .collect(Collectors.toList());
+    }
 
     @NotNull
     private static String header() {
@@ -45,7 +54,7 @@ public class DriverGeneFile {
     }
 
     @NotNull
-    private static DriverGene fromString(@NotNull final String line) {
+    public static DriverGene fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder()
                 .gene(values[0])
