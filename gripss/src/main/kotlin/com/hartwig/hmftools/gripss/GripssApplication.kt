@@ -51,7 +51,6 @@ fun main(args: Array<String>) {
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
     companion object {
         const val PON_ADDITIONAL_DISTANCE = 1
-
         val logger = LogManager.getLogger(this::class.java)
         val version = VersionInfo("gripss.version")
     }
@@ -61,8 +60,6 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private val dictionary = fileReader.fileHeader.sequenceDictionary
     private val fileWriter = GripssVCF(config.outputVcf, dictionary)
     private val refGenome = IndexedFastaSequenceFile(File(config.refGenome))
-
-
 
     override fun run() {
         val inputHeader = fileReader.fileHeader!!

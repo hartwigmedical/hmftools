@@ -78,7 +78,7 @@ data class GripssConfig(
         }
 
         @Throws(IOException::class)
-        private fun requiredFile(cmd: CommandLine, argument: String): String {
+        internal fun requiredFile(cmd: CommandLine, argument: String): String {
             val result = cmd.getOptionValue(argument)
             if (!File(result).exists()) {
                 throw IOException("Unable to read file $result")
@@ -87,7 +87,7 @@ data class GripssConfig(
             return result
         }
 
-        private fun requiredOption(argument: String, description: String): Option {
+        internal fun requiredOption(argument: String, description: String): Option {
             val result = Option(argument, true, description)
             result.isRequired = true
             return result
