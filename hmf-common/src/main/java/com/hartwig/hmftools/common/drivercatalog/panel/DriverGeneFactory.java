@@ -14,21 +14,24 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class DriverGeneFactory {
 
     @NotNull
     private static DriverGene create(@NotNull final String gene) {
+        boolean reportPromoterHotspots = gene.equals("TERT");
         return ImmutableDriverGene.builder()
                 .gene(gene)
-                .deletionBand(null)
-                .reportMissense(true)
-                .reportTruncation(false)
+                .deletionBand(Strings.EMPTY)
+                .reportMissenseAndInframe(true)
+                .reportNonsenseAndFrameshift(false)
                 .reportSplice(false)
-                .reportDisruption(false)
+                .reportDeletionAndDisruption(false)
                 .reportAmplification(false)
-                .favorMultiHitAndBiallelic(false)
+                .reportPromoterHotspots(reportPromoterHotspots)
+                .likelihoodType(DriverLikelihoodType.NA)
                 .build();
     }
 
@@ -56,20 +59,29 @@ public class DriverGeneFactory {
         final Set<String> oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
         for (String gene : oncoGenes) {
             DriverGene driver = all.computeIfAbsent(gene, DriverGeneFactory::create);
-            DriverGene updated = ImmutableDriverGene.builder().from(driver).reportMissense(true).reportAmplification(true).build();
+            DriverGene updated = ImmutableDriverGene.builder()
+                    .from(driver)
+                    .reportMissenseAndInframe(true)
+                    .reportAmplification(true)
+                    .likelihoodType(DriverLikelihoodType.ONCO)
+                    .build();
             all.put(gene, updated);
         }
 
         final Set<String> tsGenes = DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet();
         for (String gene : tsGenes) {
+            if (all.containsKey(gene)) {
+                throw new IllegalArgumentException(gene + " already processed as onco gene.");
+            }
+
             DriverGene driver = all.computeIfAbsent(gene, DriverGeneFactory::create);
             DriverGene updated = ImmutableDriverGene.builder()
                     .from(driver)
-                    .reportMissense(true)
-                    .reportTruncation(true)
+                    .reportMissenseAndInframe(true)
+                    .reportNonsenseAndFrameshift(true)
                     .reportSplice(true)
-                    .reportDisruption(true)
-                    .favorMultiHitAndBiallelic(true)
+                    .reportDeletionAndDisruption(true)
+                    .likelihoodType(DriverLikelihoodType.TSG)
                     .build();
             all.put(gene, updated);
         }
@@ -85,8 +97,8 @@ public class DriverGeneFactory {
             DriverGene driver = all.computeIfAbsent(entry.getKey(), DriverGeneFactory::create);
             DriverGene updated = ImmutableDriverGene.builder()
                     .from(driver)
-                    .reportDisruption(true)
-                    .deletionBand(entry.getValue().equals("NA") ? null : entry.getValue())
+                    .reportDeletionAndDisruption(true)
+                    .deletionBand(entry.getValue().equals("NA") ? Strings.EMPTY : entry.getValue())
                     .build();
             all.put(entry.getKey(), updated);
         }
