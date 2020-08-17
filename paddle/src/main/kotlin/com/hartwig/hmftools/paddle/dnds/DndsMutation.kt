@@ -17,7 +17,7 @@ data class DndsMutation(
         val worstCodingEffect: String,
         val canonicalCodingEffect: String,
         val repeatCount: Int,
-        private val biallelic: Boolean,
+        val biallelic: Boolean,
         private val hotspot: Boolean,
         val gene: Gene,
         val dndsImpact: String) {

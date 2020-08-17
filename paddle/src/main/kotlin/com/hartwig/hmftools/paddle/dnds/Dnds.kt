@@ -26,6 +26,10 @@ data class DndsCvGene(val gene: Gene, val nSynonymous: Int,
             return Files.readAllLines(File(file).toPath()).drop(1).map { fromString(it) }
         }
 
+        fun fromFileNoIndel(file: String): List<DndsCvGene> {
+            return Files.readAllLines(File(file).toPath()).drop(1).map { fromStringNoIndel(it) }
+        }
+
         private fun fromString(line: String): DndsCvGene {
             val lineArray = line.split("\t")
 
@@ -35,5 +39,16 @@ data class DndsCvGene(val gene: Gene, val nSynonymous: Int,
                     DndsCv(lineArray[4].toInt(), lineArray[8].toDouble()),
                     DndsCv(lineArray[5].toInt(), lineArray[9].toDouble()))
         }
+
+        private fun fromStringNoIndel(line: String): DndsCvGene {
+            val lineArray = line.split("\t")
+
+            return DndsCvGene(lineArray[0], lineArray[1].toInt(),
+                    DndsCv(lineArray[2].toInt(), lineArray[5].toDouble()),
+                    DndsCv(lineArray[3].toInt(), lineArray[6].toDouble()),
+                    DndsCv(lineArray[4].toInt(), lineArray[7].toDouble()),
+                    DndsCv(0, 0.0))
+        }
+
     }
 }
