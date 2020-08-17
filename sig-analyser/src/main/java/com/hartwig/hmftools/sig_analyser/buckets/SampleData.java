@@ -480,7 +480,7 @@ public class SampleData
 
                 if(mUnallocBucketCounts[i] == 0 && maxUnallocBucketNoise == 0)
                 {
-                    // neither unallocated actuals counts nor unallocated noise
+                    // neither unallocated actuals counts nor unallocated noise can be used
                     if(expectFullAllocation & counts[i] > 0.01)
                     {
                         LOGGER.warn("sample({}) cannot alloc bucket({}) - no unalloc count or noise", Id, i);

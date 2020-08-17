@@ -27,6 +27,8 @@ public class BaSampleFitter
     private final double mMinSigPercent;
     private final double mNoiseProbability;
 
+    private final SampleSigContribOptimiser mSigContribOptimiser;
+
     private static double DEFAULT_MIN_SIG_PERCENT = 0.01;
     private static final String MIN_SIG_PERCENT = "min_sig_percent";
 
@@ -53,6 +55,8 @@ public class BaSampleFitter
 
         // set the max of a sample's total which can be allocated to noise, effecively setting a cap on
         MAX_NOISE_ALLOC_PERCENT = Double.parseDouble(cmd.getOptionValue(BA_MAX_NOISE_ALLOC_PERCENT, String.valueOf(MAX_NOISE_ALLOC_PERCENT)));
+
+        mSigContribOptimiser = new SampleSigContribOptimiser(signatures.Rows, false, 1.0);
     }
 
     public final SigMatrix getContributions() { return mContrbutions; }
@@ -81,7 +85,6 @@ public class BaSampleFitter
             allBuckets.add(b);
         }
 
-        final SampleSigContribOptimiser sigContribOptimiser = new SampleSigContribOptimiser(bucketCount, false, 1.0);
         final List<double[]> ratiosCollection = Lists.newArrayList();
         final List<Integer> sigIds = Lists.newArrayList();
 
@@ -134,13 +137,13 @@ public class BaSampleFitter
                 sigIds.add(i);
             }
 
-            sigContribOptimiser.initialise(sample, ratiosCollection, mMinSigPercent, 1);
-            sigContribOptimiser.setSigIds(sigIds);
-            // sigContribOptimiser.setLogVerbose(mConfig.logSample(sample.Id));
+            mSigContribOptimiser.initialise(sample, ratiosCollection, mMinSigPercent, 1);
+            mSigContribOptimiser.setSigIds(sigIds);
+            // mSigContribOptimiser.setLogVerbose(mConfig.logSample(sample.Id));
 
             // LOGGER.debug("sample({}) fitting with {} sigs", sample.Id, sigIds.size());
 
-            boolean validCalc = sigContribOptimiser.fitToSample();
+            boolean validCalc = mSigContribOptimiser.fitToSample();
 
             if (!validCalc)
             {
@@ -149,7 +152,7 @@ public class BaSampleFitter
             }
 
             // if all ok, allocate each contribution to the sample
-            double[] sigContribs = sigContribOptimiser.getContribs();
+            double[] sigContribs = mSigContribOptimiser.getContribs();
 
             for(int j = 0; j < sigIds.size(); ++j)
             {

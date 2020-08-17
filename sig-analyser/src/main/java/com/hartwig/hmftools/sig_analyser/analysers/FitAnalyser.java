@@ -89,17 +89,30 @@ public class FitAnalyser
         Arrays.stream(fitMethods).map(x -> FitMethod.valueOf(x)).forEach(x -> mFitMethods.add(x));
 
         final GenericDataCollection scCollection = GenericDataLoader.loadFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE));
-        mSampleCounts = DataUtils.createMatrixFromListData(scCollection.getData());
-        mSampleCounts.cacheTranspose();
 
         if(cmd.hasOption(SAMPLE_IDS))
         {
             mSampleIds = Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";", -1)).collect(Collectors.toList());
+
+            SigMatrix allCounts = DataUtils.createMatrixFromListData(scCollection.getData());
+            mSampleCounts = new SigMatrix(allCounts.Rows, mSampleIds.size());
+
+            for(int i = 0; i < mSampleIds.size(); ++i)
+            {
+                for(int j = 0; j < scCollection.getFieldNames().size(); ++j)
+                {
+                    if(scCollection.getFieldNames().get(j).equals(mSampleIds.get(i)))
+                        mSampleCounts.setCol(i, allCounts.getCol(j));
+                }
+            }
         }
         else
         {
+            mSampleCounts = DataUtils.createMatrixFromListData(scCollection.getData());
             mSampleIds = scCollection.getFieldNames();
         }
+
+        mSampleCounts.cacheTranspose();
 
         final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(cmd.getOptionValue(SIGNATURES_FILE));
         mSigNames = sigsCollection.getFieldNames();
