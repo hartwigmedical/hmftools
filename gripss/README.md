@@ -1,4 +1,4 @@
-# GRIDSS Post Somatic Script (GRIPSS)
+# GRIDSS Post Somatic Software (GRIPSS)
 
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
 GRIPSS processes the GRIDSS output and produces a somatic vcf.
@@ -130,6 +130,8 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.4)
+  - Fix bug when trying to use non-default parameter values
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.3)
   - Fixed bug to allow output VCF name to be relative path
   - Fixed bug handling contigs with colons eg HLA-A*23:01:01

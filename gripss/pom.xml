@@ -11,7 +11,7 @@
     <artifactId>gripss</artifactId>
     <packaging>jar</packaging>
     <version>${gripss.version}</version>
-    <name>HMF Tools - GRIDSS Post-process Software Suite</name>
+    <name>HMF Tools - GRIPSS</name>
 
     <dependencies>
         <dependency>

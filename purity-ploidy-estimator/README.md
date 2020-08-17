@@ -800,7 +800,7 @@ It is possible to load the PURPLE enriched structural variants into the database
 
 ```
 java -cp purple.jar com.hartwig.hmftools.patientdb.LoadStructuralVariants \ 
-    -tumor COLO829T \
+    -sample COLO829T \
     -structural_vcf /path/to/COLO829/COLO829T.purple.sv.vcf.gz \
     -db_user purple_writer -db_pass purple_writer_password \
     -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
@@ -822,11 +822,19 @@ It is possible to load the PURPLE enriched somatic variants into the database wi
 
 ```
 java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleSomaticVariants \ 
-    -tumor COLO829T \
+    -sample COLO829T \
     -purple_dir /path/to/COLO829/purple \
     -somatic_vcf /path/to/COLO829/COLO829T.purple.somatic.vcf.gz \
     -db_user purple_writer -db_pass purple_writer_password \
     -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
+```
+
+Note that if the somatic variants also contain a reference or an rna sample (or both) these can be loaded by supplying the optional arguments `reference` and `rna` respectively, eg:
+
+```
+java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleSomaticVariants \ 
+    -sample COLO829T -reference COLO829R -rna COLO829RNA \
+    ...
 ```
 
 The somatic variant VCF produced by PURPLE is only an intermediary step in the HMF pipeline, thus there are a couple of caveats to be aware of when loading this file:
