@@ -53,7 +53,8 @@ public class PositionFreqBuilder
     private static final String SAMPLE_DATA_FILE = "sample_data_file";
     private static final String POSITION_BUCKET_SIZE = "position_bucket_size";
     private static final String POSITION_DATA_FILE = "position_data_file";
-    private static final String MAX_SAMPLE_COUNT = "max_sample_count";
+    public static final String MAX_SAMPLE_COUNT = "max_sample_count";
+    public static final int DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT_= 20000;
 
     public PositionFreqBuilder(final CommandLine cmd)
     {
@@ -63,7 +64,7 @@ public class PositionFreqBuilder
         mCancerSampleList = Maps.newHashMap();
 
         mBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE));
-        mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, "20000"));
+        mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT_)));
         mPositionCacheSize = 0;
         mOutputDir = parseOutputDir(cmd);
 
@@ -280,7 +281,7 @@ public class PositionFreqBuilder
     {
         try
         {
-            final String filename = mOutputDir + "cancer_refg_pos_freq_counts.csv";
+            final String filename = mOutputDir + "cancer_ref_pos_freq_counts.csv";
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             final Map<String,double[]> cancerPosCounts = Maps.newHashMap();

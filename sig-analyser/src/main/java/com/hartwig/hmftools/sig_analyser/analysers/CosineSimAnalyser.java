@@ -7,10 +7,12 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.POISSON_DEFAULT_PROBABILITY;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
@@ -18,9 +20,13 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
+import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT_;
+import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.MAX_SAMPLE_COUNT;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +58,7 @@ public class CosineSimAnalyser
 
     private final SigMatrix mSampleCounts;
     private final List<String> mSampleIds;
+    private final Map<String,String> mSampleCancerTypes;
     private final Map<String,Integer> mSampleCountsIndex;
     private final double mCssThreshold;
     private final boolean mUseElevated;
@@ -59,12 +66,14 @@ public class CosineSimAnalyser
 
     private final SigMatrix mReferenceSampleCounts;
     private final List<String> mRefNames;
+    private int mMaxSampleCount;
 
     private BufferedWriter mWriter;
 
     private static final String CSS_THRESHOLD = "css_threshold";
     private static final String USE_ELEVATED = "use_elevated";
     private static final String REF_COUNTS_FILE = "ref_counts_file";
+    private static final String SAMPLE_REF_FILE = "sample_ref_file";
 
     private static final int MIN_ELEVATED_BUCKETS = 10;
     private static final double ELEVATED_BUCKET_PROBABILITY = 0.1;
@@ -91,18 +100,29 @@ public class CosineSimAnalyser
             mSampleCountsIndex.put(sampleId, s);
         }
 
+        mSampleCancerTypes = Maps.newHashMap();
+        mSampleIds = Lists.newArrayList();
+        mMaxSampleCount = 0;
+
         if(cmd.hasOption(SAMPLE_IDS))
         {
-            mSampleIds = Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";", -1)).collect(Collectors.toList());
+            mSampleIds.addAll(Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";", -1)).collect(Collectors.toList()));
+        }
+        else if(cmd.hasOption(SAMPLE_REF_FILE))
+        {
+            loadSampleRefDataFile(cmd.getOptionValue(SAMPLE_REF_FILE));
+            mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT_)));
         }
         else
         {
-            mSampleIds = collection.getFieldNames();
+            mSampleIds.addAll(collection.getFieldNames());
         }
 
         mRefNames = Lists.newArrayList();
         if(cmd.hasOption(REF_COUNTS_FILE))
         {
+            SIG_LOGGER.info("loading reference data from file({})", cmd.getOptionValue(REF_COUNTS_FILE));
+
             final GenericDataCollection refCollection = GenericDataLoader.loadFile(cmd.getOptionValue(REF_COUNTS_FILE));
             mReferenceSampleCounts = DataUtils.createMatrixFromListData(refCollection.getData());
             mReferenceSampleCounts.cacheTranspose();
@@ -116,14 +136,52 @@ public class CosineSimAnalyser
         mWriter = null;
     }
 
+    private void loadSampleRefDataFile(final String filename)
+    {
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            final String header = fileData.get(0);
+            fileData.remove(0);
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+
+            for(final String line : fileData)
+            {
+                final String[] items = line.split(",", -1);
+                final String sampleId = items[fieldsIndexMap.get("SampleId")];
+                final String cancerType = items[fieldsIndexMap.get("CancerType")];
+                mSampleIds.add(sampleId);
+                mSampleCancerTypes.put(sampleId, cancerType);
+            }
+
+            SIG_LOGGER.info("loaded {} samples from file({})", filename);
+        }
+        catch (IOException e)
+        {
+            SIG_LOGGER.error("failed to read sample data file({}): {}", filename, e.toString());
+        }
+    }
+
     public void run()
     {
+        if(mReferenceSampleCounts != null && mReferenceSampleCounts.Rows != mSampleCounts.Rows)
+        {
+            SIG_LOGGER.error("sampleCounts buckets({}) refCounts buckets({}) mismatch", mReferenceSampleCounts.Rows, mSampleCounts.Rows);
+            return;
+        }
+
         SIG_LOGGER.info("running CSS comparison for {} samples", mSampleIds.size());
 
         for(int i = 0; i < mSampleIds.size(); ++i)
         {
-            final String sampleId1 = mSampleIds.get(i);
-            final double[] sampleCounts1 = mSampleCounts.getCol(mSampleCountsIndex.get(sampleId1));
+            final String sampleId = mSampleIds.get(i);
+
+            if(mSampleCountsIndex.get(sampleId) == null)
+                continue;
+
+            final double[] sampleCounts = mSampleCounts.getCol(mSampleCountsIndex.get(sampleId));
 
             if(mReferenceSampleCounts == null)
             {
@@ -133,26 +191,47 @@ public class CosineSimAnalyser
                     final double[] sampleCounts2 = mSampleCounts.getCol(mSampleCountsIndex.get(sampleId2));
 
                     double css = mUseElevated ?
-                            calcElevatedCountsCss(sampleCounts1, sampleCounts2) : calcCosineSim(sampleCounts1, sampleCounts2);
+                            calcElevatedCountsCss(sampleCounts, sampleCounts2) : calcCosineSim(sampleCounts, sampleCounts2);
 
                     if(css >= mCssThreshold)
                     {
-                        writeCssResults(sampleId1, sampleId2, css);
+                        writeCssResults(sampleId, sampleId2, css);
                     }
                 }
             }
             else
             {
+                double sampleTotal = sumVector(sampleCounts);
+                final String sampleCancerType = mSampleCancerTypes.get(sampleId);
+
                 for(int j = 0; j < mRefNames.size(); ++j)
                 {
                     final String refName = mRefNames.get(j);
                     final double[] refCounts = mReferenceSampleCounts.getCol(j);
 
-                    double css = calcCosineSim(sampleCounts1, refCounts);
+                    double css;
+
+                    if(sampleCancerType != null && refName.equals(sampleCancerType))
+                    {
+                        double[] adjustedRefCounts = new double[refCounts.length];
+                        copyVector(refCounts, adjustedRefCounts);
+                        double sampleMultiplier = sampleTotal > mMaxSampleCount ? mMaxSampleCount / sampleTotal : 1;
+
+                        for(int b = 0; b < refCounts.length; ++b)
+                        {
+                            adjustedRefCounts[b] = max(adjustedRefCounts[b] - (sampleCounts[b] * sampleMultiplier), 0);
+                        }
+
+                        css = calcCosineSim(sampleCounts, adjustedRefCounts);
+                    }
+                    else
+                    {
+                        css = calcCosineSim(sampleCounts, refCounts);
+                    }
 
                     if(css >= mCssThreshold)
                     {
-                        writeCssResults(sampleId1, refName, css);
+                        writeCssResults(sampleId, refName, css);
                     }
                 }
             }
@@ -249,6 +328,8 @@ public class CosineSimAnalyser
         options.addOption(CSS_THRESHOLD, true, "Optional - min CSS to log (default = 0.8)");
         options.addOption(USE_ELEVATED, false, "Optional - only include elevated counts in comparison");
         options.addOption(REF_COUNTS_FILE, true, "Optional - min CSS to log (default = 0.8)");
+        options.addOption(SAMPLE_REF_FILE, true, "Optional - sample to ref-type mapping file");
+        options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count for position frequencies, default = 20K");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
