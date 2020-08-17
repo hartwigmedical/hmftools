@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.ratioRange;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -503,7 +504,7 @@ public class SampleData
                 double requiredNoiseAlloc = counts[i] - actualAlloc;
                 double actualNoiseAlloc = min(requiredNoiseAlloc, maxUnallocBucketNoise);
 
-                if(actualAlloc + actualNoiseAlloc < counts[i])
+                if(Doubles.lessThan(actualAlloc + actualNoiseAlloc, counts[i]))
                 {
                     // may be an issue if more was requested than could be allocated
                     if(expectFullAllocation && greaterThan(actualAlloc + actualNoiseAlloc, counts[i]))
@@ -511,6 +512,7 @@ public class SampleData
                         LOGGER.warn(String.format("sample(%s) reducing bucket(%d) since requested(%.3f) < unalloc(%.3f) + noise(%.3f)",
                                 Id, i, counts[i], actualAlloc, actualNoiseAlloc));
                     }
+
                     counts[i] = actualAlloc + actualNoiseAlloc;
                 }
 
