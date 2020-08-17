@@ -13,14 +13,17 @@ import java.nio.file.Files
 
 data class Likelihood(private val cohortSize: Int, private val tumorMutationalLoad: Int, private val dndsRate: DndsCv, private val mutations: Mutations) {
     val expectedDrivers = dndsRate.expectedDrivers(mutations.total)
-    val driverLikelihood = if (mutations.total > 0) ((expectedDrivers - mutations.known) / mutations.unknown).coerceIn(0.0, 1.0) else 0.0
-    val unknownDrivers = mutations.unknown * driverLikelihood
-    val unknownPassengers = mutations.unknown - unknownDrivers
-    val expDriversPerSample = unknownDrivers / cohortSize
-    val expPassengersPerLoad = unknownPassengers / tumorMutationalLoad
+
+    val vusDrivers = (expectedDrivers - mutations.known).coerceAtLeast(0.0)
+    val vusDriversPerSample = vusDrivers / cohortSize
+
+    val passengers = mutations.unknown - vusDrivers
+    val passengersPerMutation = passengers / tumorMutationalLoad
+
+    val driverLikelihood = if (mutations.total > 0) ((expectedDrivers - mutations.known) / mutations.unknown).coerceIn(0.0, 1.0) else 0.0 //TODO: REMOVE
 
     override fun toString(): String {
-        return "$driverLikelihood\t$expDriversPerSample\t$expPassengersPerLoad"
+        return "$driverLikelihood\t$vusDriversPerSample\t$passengersPerMutation"
     }
 }
 
