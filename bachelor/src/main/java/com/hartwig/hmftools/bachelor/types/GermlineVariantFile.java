@@ -122,7 +122,7 @@ public class GermlineVariantFile
     @NotNull
     private static GermlineVariant fromString(@NotNull final String data)
     {
-        String[] values = data.split(DELIMITER);
+        String[] values = data.split(DELIMITER, -1);
 
         int index = 0;
 
