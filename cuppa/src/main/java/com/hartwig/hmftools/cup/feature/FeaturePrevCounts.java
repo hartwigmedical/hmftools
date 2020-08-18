@@ -1,13 +1,13 @@
-package com.hartwig.hmftools.cup.drivers;
+package com.hartwig.hmftools.cup.feature;
 
-public class DriverPrevCounts
+public class FeaturePrevCounts
 {
     public double PositiveTotal;
     public double NegitiveTotal;
     public double MaxPrevalence;
     public double MinPrevalence;
 
-    public DriverPrevCounts()
+    public FeaturePrevCounts()
     {
         PositiveTotal = 0;
         NegitiveTotal = 0;

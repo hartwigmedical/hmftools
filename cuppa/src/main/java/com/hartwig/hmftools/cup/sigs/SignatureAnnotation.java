@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_COUNT_CSS;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_POS_FREQ_CSS;
@@ -117,7 +118,7 @@ public class SignatureAnnotation
 
         if(sampleCountsIndex == null)
         {
-            CUP_LOGGER.error("sample({}) has no SNV data", sampleId);
+            CUP_LOGGER.info("sample({}) has no SNV data", sampleId);
             return 0;
         }
 
@@ -133,17 +134,23 @@ public class SignatureAnnotation
 
         if(sampleCountsIndex == null)
         {
-            CUP_LOGGER.error("sample({}) has no SNV data", sample.Id);
+            CUP_LOGGER.info("sample({}) has no SNV data", sample.Id);
             return results;
         }
 
         final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
         int snvTotal = (int)sumVector(sampleCounts);
 
-        addCssResults(sample, sampleCounts, results);
-        addPosFreqCssResults(sample, results);
+        if(mConfig.runCategory(CLASSIFIER))
+        {
+            addCssResults(sample, sampleCounts, results);
+            addPosFreqCssResults(sample, results);
+        }
 
-        addSigContributionResults(sample, snvTotal, results);
+        if(mConfig.runCategory(SNV_SIG))
+        {
+            addSigContributionResults(sample, snvTotal, results);
+        }
 
         return results;
     }
@@ -199,7 +206,7 @@ public class SignatureAnnotation
 
         if(sampleCountsIndex == null)
         {
-            CUP_LOGGER.error("sample({}) has no SNV pos-freq data", sample.Id);
+            CUP_LOGGER.info("sample({}) has no SNV pos-freq data", sample.Id);
             return;
         }
 
@@ -223,7 +230,7 @@ public class SignatureAnnotation
             if(css < SNV_POS_FREQ_CSS_THRESHOLD)
                 continue;
 
-            double cssWeight = pow(2, -100 * (1 - css));
+            double cssWeight = pow(10, -100 * (1 - css));
 
             double weightedCss = css * cssWeight;
 

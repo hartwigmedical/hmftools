@@ -5,8 +5,12 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
-import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -21,20 +25,22 @@ public class SampleAnalyserConfig
     public final String RefSnvCountsFile;
     public final String RefSvPercFile;
     public final String RefSigContribData;
-    public final String RefDriverPrevFile;
+    public final String RefFeaturePrevFile;
     public final String RefTraitPercFile;
     public final String RefTraitRateFile;
     public final String RefSnvPosFreqFile;
 
     // sample data, if not sourced from the database
     public final String SampleDataFile;
-    public final String SampleDriversFile;
+    public final String SampleFeatureFile;
     public final String SampleTraitsFile;
     public final String SampleSnvCountsFile;
     public final String SampleSnvPosFreqFile;
     public final String SampleSigContribFile;
     public final String SampleSvFile;
     public final boolean AdjustSnvPosFreqCounts;
+
+    public final List<CategoryType> Categories; // to run, all if empty
 
     // database access
     public final DatabaseAccess DbAccess;
@@ -43,9 +49,10 @@ public class SampleAnalyserConfig
     public final String OutputFileId;
 
     // config strings
+    public static final String CATEGORIES = "categories";
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
-    private static final String SAMPLE_DRIVERS_FILE = "sample_drivers_file";
+    private static final String SAMPLE_FEAT_FILE = "sample_feature_file";
     private static final String SAMPLE_TRAITS_FILE = "sample_traits_file";
     private static final String SAMPLE_SNV_COUNTS_FILE = "sample_snv_counts_file";
     private static final String SAMPLE_SNV_POS_FREQ_FILE = "sample_snv_pos_freq_file";
@@ -55,7 +62,7 @@ public class SampleAnalyserConfig
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
     private static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
     private static final String REF_SIG_CONTRIB_FILE = "ref_sig_contrib_file";
-    private static final String REF_DRIVER_PREV_FILE = "ref_driver_prev_file";
+    private static final String REF_FEAT_PREV_FILE = "ref_feature_prev_file";
     private static final String REF_TRAIT_PERC_FILE = "ref_trait_perc_file";
     private static final String REF_TRAIT_RATE_FILE = "ref_trait_rate_file";
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
@@ -73,9 +80,19 @@ public class SampleAnalyserConfig
 
     public SampleAnalyserConfig(final CommandLine cmd)
     {
+        Categories = Lists.newArrayList();
+
+        if(cmd.hasOption(CATEGORIES))
+        {
+            Categories.addAll(Arrays.stream(cmd.getOptionValue(CATEGORIES)
+                    .split(SUBSET_DELIM, -1))
+                    .map(x -> CategoryType.valueOf(x))
+                    .collect(Collectors.toList()));
+        }
+
         SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
         SampleTraitsFile = cmd.getOptionValue(SAMPLE_TRAITS_FILE, "");
-        SampleDriversFile = cmd.getOptionValue(SAMPLE_DRIVERS_FILE, "");
+        SampleFeatureFile = cmd.getOptionValue(SAMPLE_FEAT_FILE, "");
         SampleSnvCountsFile = cmd.getOptionValue(SAMPLE_SNV_COUNTS_FILE, "");
         SampleSnvPosFreqFile = cmd.getOptionValue(SAMPLE_SNV_POS_FREQ_FILE, "");
         SampleSigContribFile = cmd.getOptionValue(SAMPLE_SIG_CONTRIB_FILE, "");
@@ -84,7 +101,7 @@ public class SampleAnalyserConfig
         RefSampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
         RefSigContribData = cmd.getOptionValue(REF_SIG_CONTRIB_FILE, "");
-        RefDriverPrevFile = cmd.getOptionValue(REF_DRIVER_PREV_FILE, "");
+        RefFeaturePrevFile = cmd.getOptionValue(REF_FEAT_PREV_FILE, "");
         RefTraitPercFile = cmd.getOptionValue(REF_TRAIT_PERC_FILE, "");
         RefSvPercFile = cmd.getOptionValue(REF_SV_PERC_FILE, "");
         RefTraitRateFile = cmd.getOptionValue(REF_TRAIT_RATE_FILE, "");
@@ -102,6 +119,11 @@ public class SampleAnalyserConfig
         return !OutputDir.isEmpty();
     }
 
+    public boolean runCategory(final CategoryType type)
+    {
+        return Categories.isEmpty() || Categories.contains(type);
+    }
+
     public String formOutputFilename(final String fileId)
     {
         String outputFile = OutputDir + "CUP";
@@ -114,11 +136,12 @@ public class SampleAnalyserConfig
 
     public static void addCmdLineArgs(Options options)
     {
+        options.addOption(CATEGORIES, true, "Optional: list of categories to run classifications, separated by ';' (default=all)");
         options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
         options.addOption(SAMPLE_DATA_FILE, true, "Sample data file");
         options.addOption(SAMPLE_SNV_COUNTS_FILE, true, "Sample SNV counts");
         options.addOption(SAMPLE_SNV_POS_FREQ_FILE, true, "Sample SNV position frequence counts");
-        options.addOption(SAMPLE_DRIVERS_FILE, true, "Sample drivers");
+        options.addOption(SAMPLE_FEAT_FILE, true, "Sample drivers");
         options.addOption(SAMPLE_TRAITS_FILE, true, "Sample traits");
         options.addOption(SAMPLE_SV_FILE, true, "Sample SV data");
         options.addOption(SAMPLE_SIG_CONTRIB_FILE, true, "Sample signature contributions");
@@ -126,7 +149,7 @@ public class SampleAnalyserConfig
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Reference SNV sample counts");
         options.addOption(REF_SIG_CONTRIB_FILE, true, "SNV signatures");
-        options.addOption(REF_DRIVER_PREV_FILE, true, "Reference driver prevalence");
+        options.addOption(REF_FEAT_PREV_FILE, true, "Reference driver prevalence");
         options.addOption(REF_SV_PERC_FILE, true, "Reference SV percentiles file");
         options.addOption(REF_TRAIT_PERC_FILE, true, "Reference traits percentiles file");
         options.addOption(REF_TRAIT_RATE_FILE, true, "Reference traits rates file");

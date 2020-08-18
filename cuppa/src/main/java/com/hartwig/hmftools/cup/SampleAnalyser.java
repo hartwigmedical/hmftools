@@ -16,7 +16,7 @@ import java.util.Map;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
-import com.hartwig.hmftools.cup.drivers.DriverAnnotation;
+import com.hartwig.hmftools.cup.feature.FeatureAnnotation;
 import com.hartwig.hmftools.cup.sample.SampleTraits;
 import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
 import com.hartwig.hmftools.cup.svs.SvAnnotation;
@@ -36,7 +36,7 @@ public class SampleAnalyser
 
     private final SampleDataCache mSampleDataCache;
 
-    private final DriverAnnotation mDrivers;
+    private final FeatureAnnotation mDrivers;
     private final SignatureAnnotation mSnvSignatures;
     private final SampleTraits mSampleTraits;
     private final SvAnnotation mSvAnnotation;
@@ -52,7 +52,7 @@ public class SampleAnalyser
         loadSampleData(cmd);
 
         mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataCache);
-        mDrivers = new DriverAnnotation(mConfig, mSampleDataCache);
+        mDrivers = new FeatureAnnotation(mConfig, mSampleDataCache);
         mSampleTraits = new SampleTraits(mConfig, mSampleDataCache, mSnvSignatures);
         mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
 

@@ -71,41 +71,47 @@ public class SampleTraits
         if(sampleTraits == null)
             return results;
 
-        for(Map.Entry<SampleTraitType,Map<String,Double>> entry : mRefTraitRates.entrySet())
+        if(mConfig.runCategory(SAMPLE_CLASS))
         {
-            final SampleTraitType traitType = entry.getKey();
-            Map<String,Double> cancerRates = entry.getValue();
-
-            // reverse the prevalence for MALE since gender is currently IsFemale
-            if(traitType == GENDER && sampleTraits.GenderType != Gender.FEMALE)
+            for(Map.Entry<SampleTraitType, Map<String, Double>> entry : mRefTraitRates.entrySet())
             {
-                Map<String, Double> oppGenderRates = Maps.newHashMap();
-                cancerRates.entrySet().forEach(x -> oppGenderRates.put(x.getKey(), 1 - x.getValue()));
-                cancerRates = oppGenderRates;
+                final SampleTraitType traitType = entry.getKey();
+                Map<String, Double> cancerRates = entry.getValue();
+
+                // reverse the prevalence for MALE since gender is currently IsFemale
+                if(traitType == GENDER && sampleTraits.GenderType != Gender.FEMALE)
+                {
+                    Map<String, Double> oppGenderRates = Maps.newHashMap();
+                    cancerRates.entrySet().forEach(x -> oppGenderRates.put(x.getKey(), 1 - x.getValue()));
+                    cancerRates = oppGenderRates;
+                }
+
+                SampleResult result = new SampleResult(
+                        sample.Id, SAMPLE_CLASS, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
+
+                results.add(result);
             }
-
-            SampleResult result = new SampleResult(
-                    sample.Id, SAMPLE_CLASS, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
-
-            results.add(result);
         }
 
-        for(Map.Entry<SampleTraitType,Map<String,double[]>> entry : mRefTraitPercentiles.entrySet())
+        if(mConfig.runCategory(SAMPLE_TRAIT))
         {
-            final SampleTraitType traitType = entry.getKey();
-            double traitValue = sampleTraits.getDoubleValue(traitType);
-
-            final Map<String,Double> cancerTypeValues = Maps.newHashMap();
-
-            for(Map.Entry<String,double[]> cancerPercentiles : entry.getValue().entrySet())
+            for(Map.Entry<SampleTraitType, Map<String, double[]>> entry : mRefTraitPercentiles.entrySet())
             {
-                final String cancerType = cancerPercentiles.getKey();
-                double percentile = getPercentile(cancerPercentiles.getValue(), traitValue, true);
-                cancerTypeValues.put(cancerType, percentile);
-            }
+                final SampleTraitType traitType = entry.getKey();
+                double traitValue = sampleTraits.getDoubleValue(traitType);
 
-            SampleResult result = new SampleResult(sample.Id, SAMPLE_TRAIT, traitType.toString(), traitValue, cancerTypeValues);
-            results.add(result);
+                final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+
+                for(Map.Entry<String, double[]> cancerPercentiles : entry.getValue().entrySet())
+                {
+                    final String cancerType = cancerPercentiles.getKey();
+                    double percentile = getPercentile(cancerPercentiles.getValue(), traitValue, true);
+                    cancerTypeValues.put(cancerType, percentile);
+                }
+
+                SampleResult result = new SampleResult(sample.Id, SAMPLE_TRAIT, traitType.toString(), traitValue, cancerTypeValues);
+                results.add(result);
+            }
         }
 
         return results;

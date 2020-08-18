@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.drivers;
+package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.max;
 
@@ -6,9 +6,9 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_LIKELIHOOD_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_MIN_PREVALENCE;
 import static com.hartwig.hmftools.cup.common.CupConstants.FUSION_MIN_PREVALENCE;
-import static com.hartwig.hmftools.cup.drivers.DriverType.DRIVER;
-import static com.hartwig.hmftools.cup.drivers.ViralInsertionType.OTHER;
-import static com.hartwig.hmftools.cup.drivers.ViralInsertionType.fromVirusName;
+import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
+import static com.hartwig.hmftools.cup.feature.ViralInsertionType.OTHER;
+import static com.hartwig.hmftools.cup.feature.ViralInsertionType.fromVirusName;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,11 +22,10 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Viralinsertion;
 
-public class DriverDataLoader
+public class FeatureDataLoader
 {
-    public static void loadDriversFromCohortFile(final String filename, final Map<String,List<SampleDriverData>> sampleDrivers)
+    public static void loadDriversFromCohortFile(final String filename, final Map<String,List<SampleFeatureData>> sampleDrivers)
     {
         if(filename == null)
             return;
@@ -40,11 +39,11 @@ public class DriverDataLoader
 
             for(final String line : fileData)
             {
-                final SampleDriverData driverData = SampleDriverData.from(line);
+                final SampleFeatureData driverData = SampleFeatureData.from(line);
 
                 if(driverData != null)
                 {
-                    List<SampleDriverData> drivers = sampleDrivers.get(driverData.SampleId);
+                    List<SampleFeatureData> drivers = sampleDrivers.get(driverData.SampleId);
 
                     if(drivers == null)
                     {
@@ -64,7 +63,7 @@ public class DriverDataLoader
     }
 
     public static void loadDriversFromDatabase(
-            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,List<SampleDriverData>> sampleDrivers)
+            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,List<SampleFeatureData>> sampleDrivers)
     {
         if(dbAccess == null)
             return;
@@ -74,9 +73,9 @@ public class DriverDataLoader
             final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
             if(drivers != null)
             {
-                final List<SampleDriverData> driverDataList = drivers.stream()
+                final List<SampleFeatureData> driverDataList = drivers.stream()
                         .filter(x -> x.driverLikelihood() >= DRIVER_LIKELIHOOD_THRESHOLD)
-                        .map(x -> new SampleDriverData(sampleId, x.gene(), DRIVER, x.driverLikelihood()))
+                        .map(x -> new SampleFeatureData(sampleId, x.gene(), DRIVER, x.driverLikelihood()))
                         .collect(Collectors.toList());
 
                 sampleDrivers.put(sampleId, driverDataList);
@@ -86,9 +85,9 @@ public class DriverDataLoader
 
             if(fusions != null)
             {
-                final List<SampleDriverData> fusionDataList = fusions.stream()
+                final List<SampleFeatureData> fusionDataList = fusions.stream()
                         .filter(x -> x.reported())
-                        .map(x -> new SampleDriverData(sampleId, x.name(), DriverType.FUSION, 1))
+                        .map(x -> new SampleFeatureData(sampleId, x.name(), FeatureType.FUSION, 1))
                         .collect(Collectors.toList());
 
                 sampleDrivers.put(sampleId, fusionDataList);
@@ -98,8 +97,8 @@ public class DriverDataLoader
 
             if(viralInserts != null)
             {
-                final List<SampleDriverData> viralInsertDataList = viralInserts.stream()
-                        .map(x -> new SampleDriverData(sampleId, fromVirusName(x.VirusName).toString(), DriverType.VIRUS, 1))
+                final List<SampleFeatureData> viralInsertDataList = viralInserts.stream()
+                        .map(x -> new SampleFeatureData(sampleId, fromVirusName(x.VirusName).toString(), FeatureType.VIRUS, 1))
                         .filter(x -> !x.Gene.equals(OTHER.toString()))
                         .collect(Collectors.toList());
 
@@ -109,8 +108,8 @@ public class DriverDataLoader
     }
 
     public static void loadRefPrevalenceData(
-            final String filename, final Map<String,DriverPrevCounts> genePrevalenceTotals,
-            final Map<String,List<DriverPrevData>> cancerDriverPrevalence)
+            final String filename, final Map<String,FeaturePrevCounts> genePrevalenceTotals,
+            final Map<String,List<FeaturePrevData>> cancerDriverPrevalence)
     {
         if(filename == null || filename.isEmpty())
             return;
@@ -119,28 +118,27 @@ public class DriverDataLoader
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
 
-            final String header = fileData.get(0);
             fileData.remove(0);
 
             for(final String line : fileData)
             {
-                final DriverPrevData prevData = DriverPrevData.from(line);
+                final FeaturePrevData prevData = FeaturePrevData.from(line);
 
                 if(prevData == null)
                     continue;
 
-                DriverPrevCounts genePrevTotals = genePrevalenceTotals.get(prevData.Gene);
+                FeaturePrevCounts genePrevTotals = genePrevalenceTotals.get(prevData.Gene);
 
                 if(genePrevTotals == null)
                 {
-                    genePrevTotals = new DriverPrevCounts();
+                    genePrevTotals = new FeaturePrevCounts();
                     genePrevalenceTotals.put(prevData.Gene, genePrevTotals);
-                    genePrevTotals.MinPrevalence = prevData.Type == DRIVER ? DRIVER_MIN_PREVALENCE : FUSION_MIN_PREVALENCE;
+                    // genePrevTotals.MinPrevalence = prevData.Type == DRIVER ? DRIVER_MIN_PREVALENCE : FUSION_MIN_PREVALENCE;
                 }
 
                 genePrevTotals.MaxPrevalence = max(genePrevTotals.MaxPrevalence, prevData.Prevalence);
 
-                final List<DriverPrevData> dataList = cancerDriverPrevalence.get(prevData.CancerType);
+                final List<FeaturePrevData> dataList = cancerDriverPrevalence.get(prevData.CancerType);
                 if(dataList == null)
                 {
                     cancerDriverPrevalence.put(prevData.CancerType, Lists.newArrayList(prevData));

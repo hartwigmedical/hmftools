@@ -12,4 +12,7 @@ public class CupConstants
     public final static double DRIVER_MIN_PREVALENCE = 0.01;
     public final static double FUSION_MIN_PREVALENCE = 0.002;
 
+    public final static double DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.15;
+    public final static double FUSION_ZERO_PREVALENCE_ALLOCATION = 0.03;
+
 }

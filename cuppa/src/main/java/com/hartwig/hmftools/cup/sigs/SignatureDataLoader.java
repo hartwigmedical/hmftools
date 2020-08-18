@@ -26,6 +26,9 @@ public class SignatureDataLoader
 {
     public static SigMatrix loadSampleCountsFromCohortFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
+        if(filename.isEmpty())
+            return null;
+
         SigMatrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"));
         sampleCounts.cacheTranspose();
 
@@ -34,6 +37,9 @@ public class SignatureDataLoader
 
     public static SigMatrix loadSamplePosFreqFromCohortFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
+        if(filename.isEmpty())
+            return null;
+
         SigMatrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, null);
         sampleCounts.cacheTranspose();
 
@@ -109,6 +115,9 @@ public class SignatureDataLoader
 
     public static SigMatrix loadRefSampleCounts(final String filename, final List<String> refSampleNames)
     {
+        if(filename.isEmpty())
+            return null;
+
         SigMatrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames);
         refSampleCounts.cacheTranspose();
         return refSampleCounts;
@@ -116,6 +125,9 @@ public class SignatureDataLoader
 
     public static SigMatrix loadRefSnvPosFrequences(final String filename, final List<String> refCancerTypes)
     {
+        if(filename.isEmpty())
+            return null;
+
         SigMatrix refSnvPosFrequences = loadMatrixDataFile(filename, refCancerTypes);
         refSnvPosFrequences.cacheTranspose();
         return refSnvPosFrequences;
