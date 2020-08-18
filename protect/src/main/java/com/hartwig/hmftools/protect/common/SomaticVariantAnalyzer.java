@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.SomaticVariantDrivers;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -37,12 +38,12 @@ public class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
-            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull DriverGeneView driverGeneView) throws IOException {
+            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull DriverGenePanel driverGenePanel) throws IOException {
 
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGeneView)).collect(Collectors.toList());
+        List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGenePanel)).collect(Collectors.toList());
 
         SomaticVariantDrivers drivers = new SomaticVariantDrivers();
         variants.forEach(drivers::add);
@@ -67,18 +68,18 @@ public class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    private static Predicate<SomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
+    private static Predicate<SomaticVariant> includeFilter(@NotNull DriverGenePanel driverGenePanel) {
         return variant -> {
             if (variant.isFiltered()) {
                 return false;
             }
 
-            if (driverGeneView.oncoDriverGenes().contains(variant.gene()) || driverGeneView.tsgDriverGenes().contains(variant.gene())) {
+            if (driverGenePanel.oncoGenes().contains(variant.gene()) || driverGenePanel.tsGenes().contains(variant.gene())) {
                 if (variant.isHotspot()) {
                     return true;
                 }
 
-                DriverCategory category = driverGeneView.category(variant.gene());
+                DriverCategory category = driverGenePanel.category(variant.gene());
                 if (category == null) {
                     throw new IllegalStateException("Driver category not known for driver gene: " + variant.gene());
                 }
