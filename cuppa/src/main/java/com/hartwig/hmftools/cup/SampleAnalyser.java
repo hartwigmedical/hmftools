@@ -79,6 +79,7 @@ public class SampleAnalyser
         {
             final SampleData specificSample = mSampleDataCache.SpecificSample;
 
+            CUP_LOGGER.info("sample({}) running CUP analysis", specificSample.Id);
             processSample(specificSample);
         }
         else
@@ -86,6 +87,8 @@ public class SampleAnalyser
             int sampleCount = 0;
             for(SampleData sample : mSampleDataCache.SampleDataList)
             {
+                CUP_LOGGER.debug("sample({}) running CUP analysis", sample.Id);
+
                 processSample(sample);
                 ++sampleCount;
 

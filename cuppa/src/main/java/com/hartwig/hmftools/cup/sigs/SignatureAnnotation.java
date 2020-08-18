@@ -249,7 +249,7 @@ public class SignatureAnnotation
             cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
         }
 
-        results.add(new SampleResult(sample.Id, CLASSIFIER, ClassifierType.displayString(SNV_POS_FREQ_CSS), String.format("%.6f", totalCss), cancerCssTotals));
+        results.add(new SampleResult(sample.Id, CLASSIFIER, ClassifierType.displayString(SNV_POS_FREQ_CSS), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
     private double[] adjustRefPosFreqCounts(final double[] refPosFreqs, final double[] sampleCounts, final double sampleTotal)
