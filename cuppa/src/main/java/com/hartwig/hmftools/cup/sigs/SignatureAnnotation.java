@@ -55,7 +55,6 @@ public class SignatureAnnotation
 
     private SigMatrix mSamplePosFrequencies;
     private final Map<String,Integer> mSamplePosFreqIndex;
-    private boolean mAdjustRefPosFreqCounts;
 
     private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
@@ -79,7 +78,6 @@ public class SignatureAnnotation
 
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSnvPosFrequencies = loadRefSnvPosFrequences(mConfig.RefSnvPosFreqFile, mRefSnvPosFreqCancerTypes);
-        mAdjustRefPosFreqCounts = false;
 
         loadSampleCounts();
         loadSigContributions();
@@ -91,9 +89,6 @@ public class SignatureAnnotation
         {
             mSampleCounts = loadSampleCountsFromCohortFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
             mSamplePosFrequencies = loadSamplePosFreqFromCohortFile(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
-
-            if(mSamplePosFreqIndex.size() == mSampleDataCache.RefSampleCancerTypeMap.size())
-                mAdjustRefPosFreqCounts = true;
         }
         else if(mConfig.DbAccess != null)
         {
@@ -220,7 +215,7 @@ public class SignatureAnnotation
             final String refCancerType = mRefSnvPosFreqCancerTypes.get(i);
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
-            final double[] refPosFreqs = mAdjustRefPosFreqCounts && matchesCancerType ?
+            final double[] refPosFreqs = mConfig.AdjustSnvPosFreqCounts && matchesCancerType ?
                     adjustRefPosFreqCounts(mRefSnvPosFrequencies.getCol(i), sampleCounts, sampleTotal) : mRefSnvPosFrequencies.getCol(i);
 
             double css = calcCosineSim(sampleCounts, refPosFreqs);

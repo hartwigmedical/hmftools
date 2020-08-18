@@ -34,6 +34,7 @@ public class SampleAnalyserConfig
     public final String SampleSnvPosFreqFile;
     public final String SampleSigContribFile;
     public final String SampleSvFile;
+    public final boolean AdjustSnvPosFreqCounts;
 
     // database access
     public final DatabaseAccess DbAccess;
@@ -59,6 +60,7 @@ public class SampleAnalyserConfig
     private static final String REF_TRAIT_RATE_FILE = "ref_trait_rate_file";
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
     private static final String REF_SNV_POS_FREQ_FILE = "ref_snv_pos_freq_file";
+    private static final String ADJUST_SNV_POS_FREQ_COUNTS = "adjust_snv_pos_freq_counts";
 
     public static final String OUTPUT_FILE_ID = "output_file_id";
     public static final String LOG_DEBUG = "log_debug";
@@ -87,6 +89,7 @@ public class SampleAnalyserConfig
         RefSvPercFile = cmd.getOptionValue(REF_SV_PERC_FILE, "");
         RefTraitRateFile = cmd.getOptionValue(REF_TRAIT_RATE_FILE, "");
         RefSnvPosFreqFile = cmd.getOptionValue(REF_SNV_POS_FREQ_FILE, "");
+        AdjustSnvPosFreqCounts = cmd.hasOption(ADJUST_SNV_POS_FREQ_COUNTS);
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
@@ -128,6 +131,7 @@ public class SampleAnalyserConfig
         options.addOption(REF_TRAIT_PERC_FILE, true, "Reference traits percentiles file");
         options.addOption(REF_TRAIT_RATE_FILE, true, "Reference traits rates file");
         options.addOption(REF_SNV_POS_FREQ_FILE, true, "Reference SNV positino frequency file");
+        options.addOption(ADJUST_SNV_POS_FREQ_COUNTS, false, "Reference SNV positino frequency file");
 
         addDatabaseCmdLineArgs(options);
 
