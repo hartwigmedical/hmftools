@@ -11,20 +11,23 @@ public interface DriverGene extends Comparable<DriverGene> {
     @NotNull
     String gene();
 
-    @Nullable
+    @NotNull
     String deletionBand();
 
-    boolean reportMissense();
+    boolean reportMissenseAndInframe();
 
-    boolean reportTruncation();
+    boolean reportNonsenseAndFrameshift();
 
     boolean reportSplice();
 
-    boolean reportDisruption();
+    boolean reportDeletionAndDisruption();
 
     boolean reportAmplification();
 
-    boolean favorMultiHitAndBiallelic();
+    boolean reportPromoterHotspots();
+
+    @NotNull
+    DriverLikelihoodType likelihoodType();
 
     @Override
     default int compareTo(@NotNull final DriverGene o) {

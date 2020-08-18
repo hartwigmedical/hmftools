@@ -2,9 +2,38 @@ package com.hartwig.hmftools.paddle.dnds
 
 import com.hartwig.hmftools.paddle.Impact
 import junit.framework.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Test
 
 class DndsMutationTest {
+
+    companion object {
+
+        val GENE = "AR"
+
+        fun dndsMutation(gene: String, hotspot: Boolean, biallelic: Boolean, repeatCount: Int, impact: Impact): DndsMutation {
+            val biallelicString = if (biallelic) "1" else "0"
+            val hotspotString = if (hotspot) "HOTSPOT" else "NON_HOTSPOT"
+            val dndImpactString = when (impact) {
+                Impact.INFRAME, Impact.FRAMESHIFT -> "no-SNV"
+                Impact.MISSENSE -> "Missense"
+                Impact.SPLICE -> "Essential_Splice"
+                Impact.NONSENSE -> "Nonsense"
+                Impact.SYNONYMOUS -> "Synonymous"
+                Impact.UNKNOWN -> "NA"
+            }
+
+            val canonicalCodingEffectString = when (impact) {
+                Impact.INFRAME -> "MISSENSE"
+                Impact.FRAMESHIFT -> "NONSENSE_OR_FRAMESHIFT"
+                else -> "NA"
+            }
+
+            val result = DndsMutation.fromString("SAMPLE\tX\t66766353\tT\tTGGTGGCGGC\t${canonicalCodingEffectString}\t${canonicalCodingEffectString}\t${repeatCount}\t${biallelicString}\t${hotspotString}\t${gene}\t${dndImpactString}")
+            Assert.assertEquals(impact, result.impact)
+            return result
+        }
+    }
 
     private val inframe = DndsMutation.fromString("SAMPLE\tX\t66766353\tT\tTGGTGGCGGC\tMISSENSE\tMISSENSE\t2\t0\tNON_HOTSPOT\tAR\tno-SNV")
     private val worstInframe = DndsMutation.fromString("SAMPLE\t19\t45853980\tGG\tAA\tMISSENSE\tNONE\t2\t0\tNON_HOTSPOT\tKLC3\tno-SNV")
@@ -41,7 +70,7 @@ class DndsMutationTest {
         val list = mutableListOf(
                 missense, frameshift, inframe, nonsense, splice, synonymous, worstInframe, worstFrameshift, canonicalInframe, unknown)
         list.shuffle()
-        list.sortWith(DndsMutationComparator {x -> x.isKnownOncoDriver})
+        list.sortWith(DndsMutationComparator { x -> x.isKnownOncoDriver })
 
         assertEquals(Impact.INFRAME, list[0].impact)
         assertEquals(Impact.INFRAME, list[1].impact)
@@ -59,7 +88,7 @@ class DndsMutationTest {
     fun testHotspotBiallelicSorting() {
         val list = mutableListOf(inframe, hotspotFrameshift, biallelicNonsense)
         list.shuffle()
-        list.sortWith(DndsMutationComparator{x -> x.isKnownTsgDriver})
+        list.sortWith(DndsMutationComparator { x -> x.isKnownTsgDriver })
 
         assertEquals(Impact.FRAMESHIFT, list[0].impact)
         assertEquals(Impact.NONSENSE, list[1].impact)
@@ -67,6 +96,44 @@ class DndsMutationTest {
 
     }
 
+    @Test
+    fun testIsHotspot() {
+        Assert.assertFalse(dndsMutation(GENE, true, false, 0, Impact.SYNONYMOUS).isHotspot)
+        Assert.assertFalse(dndsMutation(GENE, true, false, 0, Impact.UNKNOWN).isHotspot)
+
+        Assert.assertTrue(dndsMutation(GENE, true, false, 0, Impact.MISSENSE).isHotspot)
+        Assert.assertTrue(dndsMutation(GENE, true, false, 0, Impact.NONSENSE).isHotspot)
+        Assert.assertTrue(dndsMutation(GENE, true, false, 0, Impact.SPLICE).isHotspot)
+        Assert.assertTrue(dndsMutation(GENE, true, false, 0, Impact.INFRAME).isHotspot)
+        Assert.assertTrue(dndsMutation(GENE, true, false, 0, Impact.FRAMESHIFT).isHotspot)
+    }
+
+    @Test
+    fun testIsBiallelic() {
+        Assert.assertFalse(dndsMutation(GENE, false, true, 0, Impact.MISSENSE).isBiallelic)
+        Assert.assertFalse(dndsMutation(GENE, false, true, 0, Impact.SYNONYMOUS).isBiallelic)
+        Assert.assertFalse(dndsMutation(GENE, false, true, 0, Impact.UNKNOWN).isBiallelic)
+
+        Assert.assertTrue(dndsMutation(GENE, false, true, 0, Impact.NONSENSE).isBiallelic)
+        Assert.assertTrue(dndsMutation(GENE, false, true, 0, Impact.SPLICE).isBiallelic)
+        Assert.assertTrue(dndsMutation(GENE, false, true, 0, Impact.INFRAME).isBiallelic)
+        Assert.assertTrue(dndsMutation(GENE, false, true, 0, Impact.FRAMESHIFT).isBiallelic)
+    }
+
+    @Test
+    fun testKnownTsg() {
+        Assert.assertFalse(dndsMutation(GENE, false, false, 0, Impact.INFRAME).isKnownTsgDriver)
+        Assert.assertTrue(dndsMutation(GENE, true, false, 0, Impact.INFRAME).isKnownTsgDriver)
+        Assert.assertTrue(dndsMutation(GENE, true, true, 0, Impact.INFRAME).isKnownTsgDriver)
+    }
+
+    @Test
+    fun testKnownOnco() {
+        Assert.assertFalse(dndsMutation(GENE, false, true, 8, Impact.INFRAME).isKnownOncoDriver)
+        Assert.assertTrue(dndsMutation(GENE, true, false, 8, Impact.INFRAME).isKnownOncoDriver)
+        Assert.assertTrue(dndsMutation(GENE, false, false, 7, Impact.INFRAME).isKnownOncoDriver)
+        Assert.assertFalse(dndsMutation(GENE, false, false, 7, Impact.FRAMESHIFT).isKnownOncoDriver)
+    }
 
 
 }

@@ -54,7 +54,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.sage.SageHotspotApplication</mainClass>
+                            <mainClass>com.hartwig.hmftools.sage.SageApplication</mainClass>
                         </manifest>
                     </archive>
 

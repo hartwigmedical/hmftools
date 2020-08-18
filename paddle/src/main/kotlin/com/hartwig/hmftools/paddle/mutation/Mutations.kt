@@ -56,7 +56,7 @@ data class MutationsGene(
             return summary(mutations, this::tsgSampleSummary)
         }
 
-        private fun oncoSampleSummary(gene: String, sampleMutations: List<DndsMutation>): MutationsGene {
+        internal fun oncoSampleSummary(gene: String, sampleMutations: List<DndsMutation>): MutationsGene {
             fun Boolean.toInt() = if (this) 1 else 0
             val synonymous = sampleMutations.filter { x -> x.impact == Impact.SYNONYMOUS }.count()
 
@@ -73,7 +73,7 @@ data class MutationsGene(
             return result.add(worst.impact, isKnown.toInt(), isUnknown.toInt())
         }
 
-        private fun tsgSampleSummary(gene: String, sampleMutations: List<DndsMutation>): MutationsGene {
+        internal fun tsgSampleSummary(gene: String, sampleMutations: List<DndsMutation>): MutationsGene {
             fun Boolean.toInt() = if (this) 1 else 0
 
             val synonymous = sampleMutations.filter { x -> x.impact == Impact.SYNONYMOUS }.count()
@@ -92,7 +92,7 @@ data class MutationsGene(
             result = result.add(worst.impact, isKnown.toInt(), isUnknown.toInt())
             if (isMultiHit) {
                 val secondWorst = filteredAndSorted[1]
-                result.add(secondWorst.impact, 0, 1)
+                result = result.add(secondWorst.impact, 0, 1)
             }
 
             return result

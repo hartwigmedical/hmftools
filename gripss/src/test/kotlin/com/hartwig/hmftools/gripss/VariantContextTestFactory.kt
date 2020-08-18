@@ -44,6 +44,8 @@ object VariantContextTestFactory {
 
     fun VariantContext.toSv(): StructuralVariantContext = StructuralVariantContext(this)
 
+    fun VariantContext.toTumorOnlySv(): StructuralVariantContext = StructuralVariantContext(this, -1, 1)
+
     fun VariantContext.cipos(cipos: Pair<Int, Int>, cirpos: Pair<Int, Int>): VariantContext {
         val builder = VariantContextBuilder(this)
         builder.attribute(CIPOS, listOf(-abs(cipos.first), abs(cipos.second)))

@@ -35,6 +35,11 @@ Argument | Default | Description
 reference | first sample in VCF header| Name of reference sample in VCF header
 tumor | second sample in VCF header|Name of tumor sample in VCF header
 
+## Tumor-only mode
+If there is only one sample in the supplied VCF then all filters that require the normal sample are de-activated. This includes
+`minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`, `discordantPairSupport`
+ 
+
 # Algorithm
 
 There are 5 steps in GRIPSS described in detail below:
@@ -130,6 +135,8 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- Upcoming
+  - Tumor only support
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.4)
   - Fix bug when trying to use non-default parameter values
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.3)

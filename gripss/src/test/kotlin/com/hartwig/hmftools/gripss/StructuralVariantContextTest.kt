@@ -6,10 +6,10 @@ import com.hartwig.hmftools.gripss.VariantContextTestFactory.fragmentSupport
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.setAttribute
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.splitReads
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.toSv
+import com.hartwig.hmftools.gripss.VariantContextTestFactory.toTumorOnlySv
 import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.VariantContext
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -59,21 +59,26 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportRelativeFilter() {
-        assertTrue(sgl().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03, contigComparator))
-        assertFalse(sgl().setViralSequenceAlignment().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03, contigComparator))
+        fun assertFilter(expected: Boolean, context: VariantContext, maxNormalRelativeSupport: Double) =
+                assertNormalFilter(expected, context) { x -> x.normalSupportRelativeFilter(maxNormalRelativeSupport, contigComparator)}
 
-        assertTrue(bnd().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03, contigComparator))
-        assertTrue(bnd().setViralSequenceAlignment().fragmentSupport(3, 9).toSv().normalSupportRelativeFilter(0.03, contigComparator))
+        assertFilter(true, sgl().fragmentSupport(3, 9), 0.03)
+        assertFilter(false, sgl().setViralSequenceAlignment().fragmentSupport(3, 9), 0.03)
 
-        assertFalse(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.03, contigComparator))
-        assertTrue(sgl().fragmentSupport(3, 100).toSv().normalSupportRelativeFilter(0.0299, contigComparator))
+        assertFilter(true, bnd().fragmentSupport(3, 9), 0.03)
+        assertFilter(true, bnd().setViralSequenceAlignment().fragmentSupport(3, 9), 0.03)
+
+        assertFilter(false, sgl().fragmentSupport(3, 100), 0.03)
+        assertFilter(true, sgl().fragmentSupport(3, 100), 0.0299)
     }
 
     @Test
     fun testNormalSupportAbsoluteFilter() {
-        assertTrue(sgl().fragmentSupport(4, 0).toSv().normalSupportAbsoluteFilter(3))
-        assertFalse(sgl().fragmentSupport(3, 0).toSv().normalSupportAbsoluteFilter(3))
-        assertTrue(sgl().fragmentSupport(3, 0).toSv().normalSupportAbsoluteFilter(2))
+        fun assertFilter(expected: Boolean, context: VariantContext, maxNormalAbsoluteSupport: Int) = assertNormalFilter(expected, context) { x -> x.normalSupportAbsoluteFilter(maxNormalAbsoluteSupport)}
+
+        assertFilter(true, sgl().fragmentSupport(4, 0), 3)
+        assertFilter(false, sgl().fragmentSupport(3, 0), 3)
+        assertFilter(true, sgl().fragmentSupport(3, 0), 2)
     }
 
     @Test
@@ -187,13 +192,15 @@ class StructuralVariantContextTest {
 
     @Test
     fun testLongDPSupport() {
-        assertFalse(sgl().toSv().discordantPairSupportFilter())
-        assertFalse(shortDel().toSv().discordantPairSupportFilter())
-        assertTrue(bnd().toSv().discordantPairSupportFilter())
-        assertFalse(bnd().addGenotypeAttribute("RP", 1, 0).toSv().discordantPairSupportFilter())
-        assertFalse(bnd().addGenotypeAttribute("RP", 0, 1).toSv().discordantPairSupportFilter())
-        assertFalse(bnd().addGenotypeAttribute("ASRP", 1, 0).toSv().discordantPairSupportFilter())
-        assertFalse(bnd().addGenotypeAttribute("ASRP", 0, 1).toSv().discordantPairSupportFilter())
+        fun assertFilter(expected: Boolean, context: VariantContext) = assertNormalFilter(expected, context) { x -> x.discordantPairSupportFilter()}
+
+        assertFilter(false, sgl())
+        assertFilter(false, shortDel())
+        assertFilter(true, bnd())
+        assertFilter(false, bnd().addGenotypeAttribute("RP", 1, 0))
+        assertFilter(false, bnd().addGenotypeAttribute("RP", 0, 1))
+        assertFilter(false, bnd().addGenotypeAttribute("ASRP", 1, 0))
+        assertFilter(false, bnd().addGenotypeAttribute("ASRP", 0, 1))
     }
 
     @Test
@@ -207,11 +214,13 @@ class StructuralVariantContextTest {
 
     @Test
     fun testShortSRNormalFilter() {
+        fun assertFilter(expected: Boolean, context: VariantContext) = assertNormalFilter(expected, context) { x -> x.shortSplitReadNormalFilter()}
+
         val bnd = bnd().splitReads(1, 0).toSv()
         assertFalse(bnd.shortSplitReadNormalFilter())
 
-        assertFalse(shortDel().splitReads(0, 1).toSv().shortSplitReadNormalFilter())
-        assertTrue(shortDel().splitReads(1, 1).toSv().shortSplitReadNormalFilter())
+        assertFilter(false, shortDel().splitReads(0, 1))
+        assertFilter(true, shortDel().splitReads(1, 1))
     }
 
     @Test
@@ -278,4 +287,8 @@ class StructuralVariantContextTest {
         return this.setAttribute("BEALN", bealn)
     }
 
+    private fun assertNormalFilter(expected: Boolean, context: VariantContext, filter: (StructuralVariantContext) -> Boolean) {
+        assertEquals(expected, filter(context.toSv()))
+        assertFalse(filter(context.toTumorOnlySv()))
+    }
 }

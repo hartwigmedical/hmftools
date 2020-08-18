@@ -1,33 +1,29 @@
-package com.hartwig.hmftools.paddle.driver
+package com.hartwig.hmftools.paddle.likelihood
 
+import com.google.common.collect.Lists
 import com.hartwig.hmftools.paddle.Gene
 import com.hartwig.hmftools.paddle.cohort.TumorMutationalLoad
 import com.hartwig.hmftools.paddle.dnds.DndsCv
 import com.hartwig.hmftools.paddle.dnds.DndsCvGene
 import com.hartwig.hmftools.paddle.mutation.Mutations
 import com.hartwig.hmftools.paddle.mutation.MutationsGene
+import java.io.File
+import java.nio.file.Files
 
 
-data class Likelihood(private val cohortSize: Int, private val tumorMutationalLoad: Int, private val dndsRate: DndsCv, private val geneVariants: Mutations) {
-    val expectedDrivers = dndsRate.expectedDrivers(geneVariants.total)
-    val driverLikelihood = ((expectedDrivers - geneVariants.known) / geneVariants.unknown).coerceIn(0.0, 1.0)
-    val geneUnknownDrivers = geneVariants.unknown * driverLikelihood
-    val genePassengers = geneVariants.unknown - geneUnknownDrivers
-    val pUnknownVariantIsDriver = geneUnknownDrivers / cohortSize
-    val expectedPassengerRate = genePassengers / tumorMutationalLoad
+data class Likelihood(private val cohortSize: Int, private val tumorMutationalLoad: Int, private val dndsRate: DndsCv, private val mutations: Mutations) {
+    val expectedDrivers = dndsRate.expectedDrivers(mutations.total)
+
+    val vusDrivers = (expectedDrivers - mutations.known).coerceAtLeast(0.0)
+    val vusDriversPerSample = vusDrivers / cohortSize
+
+    val passengers = mutations.unknown - vusDrivers
+    val passengersPerMutation = passengers / tumorMutationalLoad
+
+    val driverLikelihood = if (mutations.total > 0) ((expectedDrivers - mutations.known) / mutations.unknown).coerceIn(0.0, 1.0) else 0.0 //TODO: REMOVE
 
     override fun toString(): String {
-
-        //  gene  impact   knownDrivers unknownDrivers expectedDrivers driverLikelihood gene_drivers gene_non_drivers
-        //  <chr> <chr>           <dbl>          <dbl>           <dbl>            <dbl>        <dbl>            <dbl>
-        //1 AR    Inframe            12             17             0              0              0               17
-        //2 AR    Missense           43             60            72.8            0.496         29.8             30.2
-
-
-
-        return "(known=${geneVariants.known}, unknown=${geneVariants.unknown}, expectedDrivers=$expectedDrivers)"
-//        return "(driverLikelihood=$driverLikelihood, geneUnknownDrivers=${geneUnknownDrivers}, genePassengers=$genePassengers)"
-//        return "(lle=$driverLikelihood, pDriver=$pUnknownVariantIsDriver, expPassenger=$expectedPassengerRate)"
+        return "$driverLikelihood\t$vusDriversPerSample\t$passengersPerMutation"
     }
 }
 
@@ -64,5 +60,25 @@ data class LikelihoodGene(
 
             return LikelihoodGene(mutations.gene, mutations.synonymous, mutations.redundant, missense, nonsense, splice, indel)
         }
+
+        fun writeFile(filename: String, likelihoods: Collection<LikelihoodGene>) {
+            Files.write(File(filename).toPath(), toLines(likelihoods))
+        }
+
+        private fun headerString(prefix: String): String {
+            return "${prefix}DriverLikelihood\t${prefix}ExpDriversPerSample\t${prefix}ExpPassengersPerLoad"
+        }
+
+        private fun toLines(likelihoods: Collection<LikelihoodGene>): List<String> {
+            val lines: MutableList<String> = Lists.newArrayList()
+            lines.add("gene\t${headerString("missense")}\t${headerString("nonsense")}\t${headerString("splice")}\t${headerString("indel")}")
+            likelihoods.sortedBy { x -> x.gene }.map { it.toString() }.forEach { e: String -> lines.add(e) }
+            return lines
+        }
     }
+
+    override fun toString(): String {
+        return "$gene\t$missense\t$nonsense\t$splice\t$indel"
+    }
+
 }
