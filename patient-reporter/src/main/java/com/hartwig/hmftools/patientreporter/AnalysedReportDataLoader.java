@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneViewFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
@@ -30,7 +29,6 @@ final class AnalysedReportDataLoader {
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)
                 .driverGenePanel(genePanel)
-                .driverGeneView(DriverGeneViewFactory.create())
                 .actionabilityAnalyzer(actionabilityAnalyzer)
                 .germlineReportingModel(germlineReportingModel)
                 .summaryModel(summaryModel)

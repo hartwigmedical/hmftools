@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -25,12 +25,12 @@ public class SomaticVariantAnalyzerTest {
     private static final CodingEffect MISSENSE = CodingEffect.MISSENSE;
     private static final CodingEffect SYNONYMOUS = CodingEffect.SYNONYMOUS;
 
-    private static final String RIGHT_GENE = "RIGHT";
-    private static final String WRONG_GENE = "WRONG";
+    private static final String RIGHT_GENE = "AR";
+    private static final String WRONG_GENE = "KRAS";
 
     @Test
     public void onlyReportsAndCountsRelevantVariants() {
-        DriverGeneView driverGeneView = PatientReporterTestFactory.createTestDriverGeneView(RIGHT_GENE, "AnyGene");
+        DriverGenePanel driverGenePanel = PatientReporterTestFactory.createTestDriverGenePanel(RIGHT_GENE, "PTEN");
 
         List<SomaticVariant> variants =
                 Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
@@ -44,7 +44,7 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, driverGeneView, Collections.emptyList());
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, driverGenePanel, Collections.emptyList());
 
         // Report the missense variant on RIGHT_GENE plus the synonymous hotspot.
         assertEquals(2, analysis.variantsToReport().size());

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
 import org.immutables.value.Value;
@@ -17,9 +16,6 @@ public abstract class AnalysedReportData implements ReportData {
 
     @NotNull
     public abstract DriverGenePanel driverGenePanel();
-
-    @NotNull
-    public abstract DriverGeneView driverGeneView();
 
     @NotNull
     public abstract ActionabilityAnalyzer actionabilityAnalyzer();
