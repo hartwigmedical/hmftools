@@ -9,8 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
-import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
+import com.hartwig.hmftools.common.drivercatalog.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -39,9 +38,9 @@ public final class SomaticVariantAnalyzer {
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) {
         List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGenePanel)).collect(Collectors.toList());
 
-        List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(OncoDrivers.drivers(variants, exomeGeneCopyNumbers));
-        driverCatalog.addAll(TsgDrivers.drivers(variants, exomeGeneCopyNumbers));
+        SomaticVariantDrivers drivers = new SomaticVariantDrivers(driverGenePanel);
+        variants.forEach(drivers::add);
+        List<DriverCatalog> driverCatalog = drivers.build(exomeGeneCopyNumbers);
 
         // Check that we miss no driver genes.
         for (DriverCatalog driver : driverCatalog) {

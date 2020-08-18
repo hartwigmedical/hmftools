@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -36,20 +37,29 @@ public class SomaticVariantDrivers {
         tsgPredicate = TsgDrivers.tsgVariant(tsgLikelihood.keySet());
     }
 
+    public SomaticVariantDrivers(@NotNull final DriverGenePanel panel) {
+        tsgLikelihood = panel.tsgLikelihood();
+        oncoLikelihood = panel.oncoLikelihood();
+        oncoPredicate = OncoDrivers.oncoVariant(panel.oncoGenes());
+        tsgPredicate = TsgDrivers.tsgVariant(panel.tsGenes());
+    }
+
     public void add(@NotNull final SomaticVariant variant) {
-        variantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
-        if (variant.biallelic()) {
-            variantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
-        } else {
-            variantTypeCountsNonBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
-        }
+        if (!variant.isFiltered()) {
+            variantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
+            if (variant.biallelic()) {
+                variantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
+            } else {
+                variantTypeCountsNonBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
+            }
 
-        if (oncoPredicate.test(variant)) {
-            oncoVariants.add(variant);
-        }
+            if (oncoPredicate.test(variant)) {
+                oncoVariants.add(variant);
+            }
 
-        if (tsgPredicate.test(variant)) {
-            tsgVariants.add(variant);
+            if (tsgPredicate.test(variant)) {
+                tsgVariants.add(variant);
+            }
         }
     }
 

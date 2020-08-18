@@ -10,14 +10,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
-import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
+import com.hartwig.hmftools.common.drivercatalog.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,9 +44,9 @@ public class SomaticVariantAnalyzer {
 
         List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGeneView)).collect(Collectors.toList());
 
-        List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(OncoDrivers.drivers(variants, exomeGeneCopyNumbers));
-        driverCatalog.addAll(TsgDrivers.drivers(variants, exomeGeneCopyNumbers));
+        SomaticVariantDrivers drivers = new SomaticVariantDrivers();
+        variants.forEach(drivers::add);
+        List<DriverCatalog> driverCatalog = drivers.build(exomeGeneCopyNumbers);
 
         // Check that we miss no drivers
         for (DriverCatalog driver : driverCatalog) {

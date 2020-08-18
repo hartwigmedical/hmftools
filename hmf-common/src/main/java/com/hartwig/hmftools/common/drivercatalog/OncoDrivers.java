@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.variantTypeCount;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,7 +7,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -28,13 +25,6 @@ public final class OncoDrivers {
     static final int MAX_REPEAT_COUNT = 7;
 
     private OncoDrivers() {
-    }
-
-    @NotNull
-    public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants,
-            @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
-        return drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants, geneCopyNumbers, variantTypeCounts);
     }
 
     @NotNull
