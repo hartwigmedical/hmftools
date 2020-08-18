@@ -1,15 +1,10 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
@@ -30,38 +25,6 @@ public class CNADrivers {
     private final Set<String> deletionTargets;
     @NotNull
     private final Map<String, String> deletionBandMap;
-
-    @NotNull
-    private static Set<String> amplificationTargets() {
-        final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/AmplificationTargets.tsv");
-        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
-    }
-
-    @NotNull
-    private static Map<String, String> deletionTargets() {
-        final Map<String, String> result = Maps.newHashMap();
-        final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/DeletionTargets.tsv");
-        new BufferedReader(new InputStreamReader(inputStream)).lines().forEach(line -> {
-            final String[] values = line.split("\t");
-            result.put(values[0], values[1]);
-        });
-
-        return result;
-    }
-
-    public CNADrivers() {
-        this.oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
-        this.tsGenes = DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet();
-
-        Map<String, String> rawMap = deletionTargets();
-        this.deletionTargets = rawMap.keySet();
-        this.deletionBandMap = rawMap.entrySet()
-                .stream()
-                .filter(x -> !x.getValue().equals("NA"))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        this.amplificationTargets = amplificationTargets();
-    }
 
     public CNADrivers(DriverGenePanel panel) {
         this.oncoGenes = panel.oncoGenes();
