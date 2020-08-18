@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
@@ -19,13 +21,14 @@ public class HmfExonPanelBedTest {
 
     @Test
     public void testReverseTranscript() {
+        final DriverGenePanel genePanel = new DriverGenePanelFactory().create();
         final HmfTranscriptRegion transcript = HmfGenePanelSupplier.allGenesMap37().get("TP53");
         HmfExonRegion firstExon = transcript.exome().get(0);
         HmfExonRegion secondExon = transcript.exome().get(1);
         HmfExonRegion thirdExon = transcript.exome().get(2);
         HmfExonRegion finalCodingExon = transcript.exome().get(transcript.exome().size() - 2);
 
-        List<GenomeRegion> regions = HmfExonPanelBed.createRegions(Lists.newArrayList(transcript, transcript));
+        List<GenomeRegion> regions = HmfExonPanelBed.createRegions(genePanel, Lists.newArrayList(transcript, transcript));
 
         assertRegion(regions.get(0), transcript.codingStart(), firstExon.end() + 2);
         assertRegion(regions.get(1), secondExon.start() - 5, secondExon.start() - 5);

@@ -5,14 +5,14 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -24,21 +24,22 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
 import com.hartwig.hmftools.common.fusion.ReportableDisruption;
 import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.fusion.Transcript;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.DbPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
@@ -58,10 +59,13 @@ public class DisruptionFinder
 
     public DisruptionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache, final String outputDir)
     {
+        //TODO: Make this configurable
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+
         mGeneTransCache = geneTransCache;
         mDisruptionGeneIds = Sets.newHashSet();
 
-        initialiseTsgDriverGenes();
+        initialiseTsgDriverGenes(genePanel.tsGenes());
 
         mDisruptions = Lists.newArrayList();
         mRemovedDisruptions = Maps.newHashMap();
@@ -70,9 +74,9 @@ public class DisruptionFinder
         mWriter = null;
     }
 
-    private void initialiseTsgDriverGenes()
+    private void initialiseTsgDriverGenes(Set<String> tsGenes)
     {
-        for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
+        for (String gene : tsGenes)
         {
             final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(gene);
 

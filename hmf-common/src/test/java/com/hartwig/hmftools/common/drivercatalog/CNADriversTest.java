@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
@@ -74,14 +73,14 @@ public class CNADriversTest {
 
     @NotNull
     private static Set<String> amplificationTargets() {
-        final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/AmplificationTargets.tsv");
+        final InputStream inputStream = CNADriversTest.class.getResourceAsStream("/cna/AmplificationTargets.tsv");
         return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
     }
 
     @NotNull
     private static Map<String, String> deletionTargets() {
         final Map<String, String> result = Maps.newHashMap();
-        final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/DeletionTargets.tsv");
+        final InputStream inputStream = CNADriversTest.class.getResourceAsStream("/cna/DeletionTargets.tsv");
         new BufferedReader(new InputStreamReader(inputStream)).lines().forEach(line -> {
             final String[] values = line.split("\t");
             result.put(values[0], values[1]);

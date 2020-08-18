@@ -65,7 +65,8 @@ public class DriverGeneAnnotator
     public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTranscriptCollection,
             final LinxConfig config, final CnDataLoader cnDataLoader)
     {
-        DriverGenePanel genePanel = new DriverGenePanelFactory().create(); //TODO: Make this configurable
+        //TODO: Make this configurable
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
 
         mDbAccess = dbAccess;
         mGeneTransCache = geneTranscriptCollection;

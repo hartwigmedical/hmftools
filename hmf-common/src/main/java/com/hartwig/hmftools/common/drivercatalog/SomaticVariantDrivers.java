@@ -8,7 +8,6 @@ import java.util.function.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -29,13 +28,6 @@ public class SomaticVariantDrivers {
 
     private final Predicate<SomaticVariant> oncoPredicate;
     private final Predicate<SomaticVariant> tsgPredicate;
-
-    public SomaticVariantDrivers() {
-        tsgLikelihood = DndsDriverGeneLikelihoodSupplier.tsgLikelihood();
-        oncoLikelihood = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
-        oncoPredicate = OncoDrivers.oncoVariant(oncoLikelihood.keySet());
-        tsgPredicate = TsgDrivers.tsgVariant(tsgLikelihood.keySet());
-    }
 
     public SomaticVariantDrivers(@NotNull final DriverGenePanel panel) {
         tsgLikelihood = panel.tsgLikelihood();

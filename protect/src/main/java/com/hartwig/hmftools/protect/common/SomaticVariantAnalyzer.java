@@ -45,7 +45,7 @@ public class SomaticVariantAnalyzer {
 
         List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGenePanel)).collect(Collectors.toList());
 
-        SomaticVariantDrivers drivers = new SomaticVariantDrivers();
+        SomaticVariantDrivers drivers = new SomaticVariantDrivers(driverGenePanel);
         variants.forEach(drivers::add);
         List<DriverCatalog> driverCatalog = drivers.build(exomeGeneCopyNumbers);
 

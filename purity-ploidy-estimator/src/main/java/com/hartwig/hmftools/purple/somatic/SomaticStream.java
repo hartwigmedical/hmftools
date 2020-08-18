@@ -55,6 +55,7 @@ public class SomaticStream {
     private final DriverGenePanel genePanel;
 
     public SomaticStream(final ConfigSupplier configSupplier) {
+        this.genePanel = configSupplier.driverCatalogConfig().genePanel();
         this.somaticConfig = configSupplier.somaticConfig();
         this.commonConfig = configSupplier.commonConfig();
         this.driverCatalogConfig = configSupplier.driverCatalogConfig();
@@ -64,12 +65,12 @@ public class SomaticStream {
         this.refGenomeData = configSupplier.refGenomeConfig();
         this.tumorMutationalLoad = new TumorMutationalLoad();
         this.microsatelliteIndels = new MicrosatelliteIndels();
-        this.drivers = new SomaticVariantDrivers();
+        this.drivers = new SomaticVariantDrivers(genePanel);
         this.somaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
         this.rChartData = new RChartData(commonConfig.outputDirectory(), commonConfig.tumorSample());
         this.transcripts =
                 configSupplier.refGenomeConfig().isHg38() ? CanonicalTranscriptFactory.create38() : CanonicalTranscriptFactory.create37();
-        this.genePanel = configSupplier.driverCatalogConfig().genePanel();
+
     }
 
     public double microsatelliteIndelsPerMb() {
