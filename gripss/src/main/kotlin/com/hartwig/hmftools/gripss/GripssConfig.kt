@@ -33,6 +33,26 @@ data class GripssConfig(
         val tumor: String,
         val filterConfig: GripssFilterConfig) {
 
+    fun sampleOrdinals(sampleNames: List<String>): Pair<Int, Int> {
+        val tumorOrdinal = sampleOrdinal(sampleNames.size - 1, tumor, sampleNames)
+        val normalOrdinal = sampleOrdinal(sampleNames.size - 2, reference, sampleNames)
+
+        if (tumorOrdinal == normalOrdinal) {
+            throw ParseException("Tumor and reference must be different")
+        }
+        return Pair(normalOrdinal, tumorOrdinal)
+    }
+
+    private fun sampleOrdinal(default: Int, sample: String, allSamples: List<String>): Int {
+        if (sample.isNotEmpty()) {
+            val ordinal = allSamples.indexOf(sample)
+            if (ordinal < 0) {
+                throw IllegalArgumentException("Unable to locate sample $sample in supplied VCF")
+            }
+        }
+        return default
+    }
+
     companion object {
         fun createOptions(): Options {
             val options = Options()

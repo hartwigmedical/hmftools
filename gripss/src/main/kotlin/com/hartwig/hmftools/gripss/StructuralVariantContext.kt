@@ -27,7 +27,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     private val remoteConfidenceInterval = context.remoteConfidenceInterval()
-    private val normalGenotype = context.getGenotype(normalOrdinal)
+    private val normalGenotype = if (normalOrdinal != -1) context.getGenotype(normalOrdinal) else null
     private val tumorGenotype = context.getGenotype(tumorOrdinal)
 
     val contig = context.contig!!
@@ -313,10 +313,18 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun shortSplitReadNormalFilter(): Boolean {
+        if (normalGenotype == null) {
+            return false
+        }
+
         return isShort && normalGenotype.splitRead() > 0
     }
 
     fun discordantPairSupportFilter(): Boolean {
+        if (normalGenotype == null) {
+            return false
+        }
+
         return !isSingle && !isShort
                 && normalGenotype.readPairs() == 0
                 && normalGenotype.assemblyReadPairs() == 0
@@ -345,6 +353,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun normalCoverageFilter(minNormalCoverage: Int): Boolean {
+        if (normalGenotype == null) {
+            return false
+        }
+
         val supportingFragments = normalGenotype.fragmentSupport(isSingle)
         val ref = normalGenotype.refSupportRead()
         val refPair = normalGenotype.refSupportReadPair()
@@ -353,6 +365,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun normalSupportAbsoluteFilter(maxNormalAbsoluteSupport: Int): Boolean {
+        if (normalGenotype == null) {
+            return false
+        }
+
         val normalSupport = normalGenotype.fragmentSupport(isSingle)
         return normalSupport > maxNormalAbsoluteSupport
     }
@@ -362,7 +378,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun normalSupportRelativeFilter(maxNormalRelativeSupport: Double, comparator: ContigComparator): Boolean {
-        if (isSingle && context.hasViralSequenceAlignment(comparator)) {
+        if (normalGenotype == null || isSingle && context.hasViralSequenceAlignment(comparator)) {
             return false
         }
 

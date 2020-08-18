@@ -71,8 +71,13 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val contigComparator = ContigComparator(dictionary)
 
         val sampleNames =  inputHeader.genotypeSamples!!
-        val sampleOrdinals = sampleOrdinals(sampleNames);
-        logger.info("Using ${sampleNames[sampleOrdinals.first]} as reference, ${sampleNames[sampleOrdinals.second]} as tumor")
+        val sampleOrdinals = config.sampleOrdinals(sampleNames);
+        logger.info("Using ${sampleNames[sampleOrdinals.second]} as tumor sample")
+        if (sampleOrdinals.first != -1) {
+            logger.info("Using ${sampleNames[sampleOrdinals.first]} as reference sample")
+        } else {
+            logger.info("Running in tumor-only mode")
+        }
 
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
         val hotspotStore = LocationStore(contigComparator, listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
@@ -129,22 +134,6 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
             val filters = finalFilters.filters(variant.vcfId, variant.mateId)
             fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
         }
-    }
-
-    private fun sampleOrdinals(sampleNames: List<String>): Pair<Int, Int> {
-        val normalOrdinal = if (config.reference.isEmpty()) 0 else sampleNames.indexOf(config.reference)
-        if (normalOrdinal < 0) {
-            throw IllegalArgumentException("Unable to locate sample ${config.reference} in supplied VCF")
-        }
-        val tumorOrdinal = if (config.tumor.isEmpty()) 1 else sampleNames.indexOf(config.tumor)
-        if (tumorOrdinal < 0) {
-            throw IllegalArgumentException("Unable to locate sample ${config.tumor} in supplied VCF")
-        }
-
-        if (tumorOrdinal == normalOrdinal) {
-            throw ParseException("Tumor and reference must be different")
-        }
-        return Pair(normalOrdinal, tumorOrdinal)
     }
 
     private fun hotspotFilter(hotspotStore: LocationStore): (StructuralVariantContext) -> Boolean {
