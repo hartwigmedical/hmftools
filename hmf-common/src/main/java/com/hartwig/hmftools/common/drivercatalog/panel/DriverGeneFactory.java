@@ -20,18 +20,18 @@ import org.jetbrains.annotations.NotNull;
 public class DriverGeneFactory {
 
     @NotNull
-    private static DriverGene create(@NotNull final String gene) {
+    private static DriverGene create(@NotNull final String gene, @NotNull final DriverLikelihoodType type) {
         boolean reportPromoterHotspots = gene.equals("TERT");
         return ImmutableDriverGene.builder()
                 .gene(gene)
                 .deletionBand(Strings.EMPTY)
-                .reportMissenseAndInframe(true)
+                .reportMissenseAndInframe(false)
                 .reportNonsenseAndFrameshift(false)
                 .reportSplice(false)
                 .reportDeletionAndDisruption(false)
                 .reportAmplification(false)
                 .reportPromoterHotspots(reportPromoterHotspots)
-                .likelihoodType(DriverLikelihoodType.NA)
+                .likelihoodType(type)
                 .build();
     }
 
@@ -58,7 +58,7 @@ public class DriverGeneFactory {
         final Map<String, DriverGene> all = Maps.newHashMap();
         final Set<String> oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
         for (String gene : oncoGenes) {
-            DriverGene driver = all.computeIfAbsent(gene, DriverGeneFactory::create);
+            DriverGene driver = all.computeIfAbsent(gene, x -> create(x, DriverLikelihoodType.ONCO));
             DriverGene updated = ImmutableDriverGene.builder()
                     .from(driver)
                     .reportMissenseAndInframe(true)
@@ -74,7 +74,7 @@ public class DriverGeneFactory {
                 throw new IllegalArgumentException(gene + " already processed as onco gene.");
             }
 
-            DriverGene driver = all.computeIfAbsent(gene, DriverGeneFactory::create);
+            DriverGene driver = all.computeIfAbsent(gene, x -> create(x, DriverLikelihoodType.TSG));
             DriverGene updated = ImmutableDriverGene.builder()
                     .from(driver)
                     .reportMissenseAndInframe(true)
@@ -87,14 +87,14 @@ public class DriverGeneFactory {
         }
 
         for (String gene : amplificationTargets()) {
-            DriverGene driver = all.computeIfAbsent(gene, DriverGeneFactory::create);
+            DriverGene driver = all.computeIfAbsent(gene, x -> create(x, DriverLikelihoodType.ONCO));
             DriverGene updated = ImmutableDriverGene.builder().from(driver).reportAmplification(true).build();
             all.put(gene, updated);
         }
 
         Map<String, String> deletionTargets = deletionTargets();
         for (Map.Entry<String, String> entry : deletionTargets.entrySet()) {
-            DriverGene driver = all.computeIfAbsent(entry.getKey(), DriverGeneFactory::create);
+            DriverGene driver = all.computeIfAbsent(entry.getKey(), x -> create(x, DriverLikelihoodType.TSG));
             DriverGene updated = ImmutableDriverGene.builder()
                     .from(driver)
                     .reportDeletionAndDisruption(true)
