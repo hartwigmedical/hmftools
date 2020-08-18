@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -24,9 +24,10 @@ public class CanonicalAnnotation {
     @NotNull
     private final Map<String, String> canonicalTranscriptGeneMap;
 
-    public CanonicalAnnotation(@NotNull final List<CanonicalTranscript> transcripts) {
-        this.driverCatalogGenes = Sets.newHashSet(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
-        this.driverCatalogGenes.addAll(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet());
+    public CanonicalAnnotation(@NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts) {
+        this.driverCatalogGenes = Sets.newHashSet();
+        this.driverCatalogGenes.addAll(genePanel.tsGenes());
+        this.driverCatalogGenes.addAll(genePanel.oncoGenes());
 
         // The p14Arf transcript for CDKN2A is included in our canonical transcript map.
         // We need to filter it out since this map assumes only "real" canonical transcripts.

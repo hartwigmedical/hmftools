@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
@@ -20,8 +21,8 @@ public class SnpEffSummaryFactory {
 
     private final CanonicalAnnotation canonicalAnnotationFactory;
 
-    public SnpEffSummaryFactory(@NotNull final List<CanonicalTranscript> transcripts) {
-        this.canonicalAnnotationFactory = new CanonicalAnnotation(transcripts);
+    public SnpEffSummaryFactory(@NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts) {
+        this.canonicalAnnotationFactory = new CanonicalAnnotation(genePanel, transcripts);
     }
 
     @NotNull

@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.SomaticVariantDrivers;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -51,6 +52,7 @@ public class SomaticStream {
     private final SomaticVariantFactory somaticVariantFactory;
     private final RChartData rChartData;
     private final List<CanonicalTranscript> transcripts;
+    private final DriverGenePanel genePanel;
 
     public SomaticStream(final ConfigSupplier configSupplier) {
         this.somaticConfig = configSupplier.somaticConfig();
@@ -67,6 +69,7 @@ public class SomaticStream {
         this.rChartData = new RChartData(commonConfig.outputDirectory(), commonConfig.tumorSample());
         this.transcripts =
                 configSupplier.refGenomeConfig().isHg38() ? CanonicalTranscriptFactory.create38() : CanonicalTranscriptFactory.create37();
+        this.genePanel = configSupplier.driverCatalogConfig().genePanel();
     }
 
     public double microsatelliteIndelsPerMb() {
@@ -126,6 +129,7 @@ public class SomaticStream {
                         commonConfig.tumorSample(),
                         indexedFastaSequenceFile,
                         purityAdjuster,
+                        genePanel,
                         copyNumbers,
                         fittedRegions,
                         somaticPeaks,

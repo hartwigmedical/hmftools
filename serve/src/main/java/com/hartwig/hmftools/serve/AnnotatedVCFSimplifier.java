@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -32,7 +35,11 @@ public class AnnotatedVCFSimplifier {
     }
 
     public void run(@NotNull String annotatedInputVcf) throws IOException {
-        CanonicalAnnotation factory = new CanonicalAnnotation(CanonicalTranscriptFactory.create37());
+
+        // TODO: Add HG38 and custom gene panel support?
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+        List<CanonicalTranscript> canonicalTranscripts = CanonicalTranscriptFactory.create37();
+        CanonicalAnnotation factory = new CanonicalAnnotation(genePanel, canonicalTranscripts);
 
         LOGGER.info("Loading variants from '{}'", annotatedInputVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedInputVcf, new VCFCodec(), false);

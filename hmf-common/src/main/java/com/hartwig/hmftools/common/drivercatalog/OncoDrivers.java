@@ -20,7 +20,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class OncoDrivers {
+final class OncoDrivers {
 
     static final int MAX_REPEAT_COUNT = 7;
 
