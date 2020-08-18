@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,11 +30,6 @@ public class CNADrivers {
     private final Set<String> deletionTargets;
     @NotNull
     private final Map<String, String> deletionBandMap;
-
-    @NotNull
-    public static Set<String> reportableGeneDeletions() {
-        return deletionTargets().keySet();
-    }
 
     @NotNull
     private static Set<String> amplificationTargets() {
@@ -65,6 +61,14 @@ public class CNADrivers {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         this.amplificationTargets = amplificationTargets();
+    }
+
+    public CNADrivers(DriverGenePanel panel) {
+        this.oncoGenes = panel.oncoGenes();
+        this.tsGenes = panel.tsGenes();
+        this.deletionTargets = panel.deletionTargets();
+        this.deletionBandMap = panel.deletionBandMap();
+        this.amplificationTargets = panel.amplificationTargets();
     }
 
     @NotNull

@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
@@ -18,8 +19,8 @@ final class ExtractReportableGainsAndLosses {
     }
 
     @NotNull
-    static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<GeneCopyNumber> geneCopyNumbers, double ploidy) {
-        CNADrivers copyNumberDriverModel = new CNADrivers();
+    static List<ReportableGainLoss> toReportableGainsAndLosses( @NotNull DriverGenePanel genePanel, @NotNull List<GeneCopyNumber> geneCopyNumbers, double ploidy) {
+        CNADrivers copyNumberDriverModel = new CNADrivers(genePanel);
         List<DriverCatalog> drivers = Lists.newArrayList();
         drivers.addAll(copyNumberDriverModel.amplifications(ploidy, geneCopyNumbers));
         drivers.addAll(copyNumberDriverModel.deletions(geneCopyNumbers));

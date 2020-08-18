@@ -180,7 +180,7 @@ class AnalysedPatientReporter {
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        return PurpleAnalyzer.run(purityContext, purpleQC, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation);
+        return PurpleAnalyzer.run(purityContext, purpleQC, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation, reportData.driverGenePanel());
     }
 
     @NotNull

@@ -22,6 +22,8 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -236,8 +238,10 @@ public class PurityPloidyEstimateApplication   {
 
             final List<DriverCatalog> driverCatalog = Lists.newArrayList();
             if (configSupplier.driverCatalogConfig().enabled()) {
+                final DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+
                 LOGGER.info("Generating driver catalog");
-                final CNADrivers cnaDrivers = new CNADrivers();
+                final CNADrivers cnaDrivers = new CNADrivers(genePanel);
                 driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
                 driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
                 driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
