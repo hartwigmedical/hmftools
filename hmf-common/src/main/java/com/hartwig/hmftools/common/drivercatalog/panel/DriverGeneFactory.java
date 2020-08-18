@@ -87,14 +87,14 @@ public class DriverGeneFactory {
         }
 
         for (String gene : amplificationTargets()) {
-            DriverGene driver = all.computeIfAbsent(gene, x -> create(x, DriverLikelihoodType.ONCO));
+            DriverGene driver = all.computeIfAbsent(gene, x -> create(x, DriverLikelihoodType.NA));
             DriverGene updated = ImmutableDriverGene.builder().from(driver).reportAmplification(true).build();
             all.put(gene, updated);
         }
 
         Map<String, String> deletionTargets = deletionTargets();
         for (Map.Entry<String, String> entry : deletionTargets.entrySet()) {
-            DriverGene driver = all.computeIfAbsent(entry.getKey(), x -> create(x, DriverLikelihoodType.TSG));
+            DriverGene driver = all.computeIfAbsent(entry.getKey(), x -> create(x, DriverLikelihoodType.NA));
             DriverGene updated = ImmutableDriverGene.builder()
                     .from(driver)
                     .reportDeletionAndDisruption(true)
