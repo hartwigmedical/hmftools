@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.common;
 public class CupConstants
 {
     public final static double SNV_CSS_THRESHOLD = 0.8;
+    public final static double SNV_POS_FREQ_CSS_THRESHOLD = 0.2;
 
     public final static double DRIVER_LIKELIHOOD_THRESHOLD = 0.5;
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cup.sigs;
 
+import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_DECIMAL;
 import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
@@ -25,20 +26,19 @@ public class SignatureDataLoader
 {
     public static SigMatrix loadSampleCountsFromCohortFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
-        final GenericDataCollection collection = GenericDataLoader.loadFile(filename, GD_TYPE_DECIMAL, DEFAULT_DELIM, Lists.newArrayList("BucketName"));
-
-        for(int s = 0; s < collection.getFieldNames().size(); ++s)
-        {
-            final String sampleId = collection.getFieldNames().get(s);
-            sampleCountsIndex.put(sampleId, s);
-        }
-
-        SigMatrix sampleCounts = DataUtils.createMatrixFromListData(collection.getData());
+        SigMatrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"));
         sampleCounts.cacheTranspose();
 
         return sampleCounts;
     }
 
+    public static SigMatrix loadSamplePosFreqFromCohortFile(final String filename, final Map<String,Integer> sampleCountsIndex)
+    {
+        SigMatrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, null);
+        sampleCounts.cacheTranspose();
+
+        return sampleCounts;
+    }
 
     public static void loadSigContribsFromDatabase(
             final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,Map<String,Double>> sampleSigContributions)
@@ -109,14 +109,15 @@ public class SignatureDataLoader
 
     public static SigMatrix loadRefSampleCounts(final String filename, final List<String> refSampleNames)
     {
-        final GenericDataCollection collection = GenericDataLoader.loadFile(filename);
-
-        refSampleNames.addAll(collection.getFieldNames());
-        SigMatrix refSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
+        SigMatrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames);
         refSampleCounts.cacheTranspose();
-
         return refSampleCounts;
     }
 
-
+    public static SigMatrix loadRefSnvPosFrequences(final String filename, final List<String> refCancerTypes)
+    {
+        SigMatrix refSnvPosFrequences = loadMatrixDataFile(filename, refCancerTypes);
+        refSnvPosFrequences.cacheTranspose();
+        return refSnvPosFrequences;
+    }
 }

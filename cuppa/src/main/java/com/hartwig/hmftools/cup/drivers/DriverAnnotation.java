@@ -2,7 +2,8 @@ package com.hartwig.hmftools.cup.drivers;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.CategoryType.DRIVER;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
 import static com.hartwig.hmftools.cup.drivers.DriverDataLoader.loadDriversFromCohortFile;
 import static com.hartwig.hmftools.cup.drivers.DriverDataLoader.loadDriversFromDatabase;
 import static com.hartwig.hmftools.cup.drivers.DriverDataLoader.loadRefPrevalenceData;
@@ -15,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -83,7 +85,7 @@ public class DriverAnnotation
                 cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.Prevalence : 0);
             }
 
-            SampleResult result = new SampleResult(sample.Id, DRIVER, driverData.Type.toString(), driverData.Gene, cancerTypeValues);
+            SampleResult result = new SampleResult(sample.Id, FEATURE, driverData.Type.toString(), driverData.Gene, cancerTypeValues);
             results.add(result);
         }
     }
@@ -131,7 +133,7 @@ public class DriverAnnotation
             cancerTypeValues.put(entry.getKey(), probability);
         }
 
-        SampleResult result = new SampleResult(sample.Id, CLASSIFIER, "DRIVER", geneNames, cancerTypeValues);
+        SampleResult result = new SampleResult(sample.Id, CLASSIFIER, ClassifierType.displayString(FEATURE_PREVALENCE), geneNames, cancerTypeValues);
         results.add(result);
     }
 

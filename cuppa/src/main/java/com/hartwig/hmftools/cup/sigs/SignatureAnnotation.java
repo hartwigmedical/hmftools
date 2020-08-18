@@ -1,19 +1,26 @@
 package com.hartwig.hmftools.cup.sigs;
 
+import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_COUNT_CSS;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_POS_FREQ_CSS;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSigContribPercentiles;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSnvPosFrequences;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSampleCountsFromCohortFile;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSamplePosFreqFromCohortFile;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromDatabase;
 
@@ -24,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -37,9 +45,19 @@ public class SignatureAnnotation
     private final List<String> mRefSampleNames;
     private final Map<String,Map<String,double[]>> mRefCancerSigContribPercentiles;
 
+    private SigMatrix mRefSnvPosFrequencies;
+    private final List<String> mRefSnvPosFreqCancerTypes;
+
     private SigMatrix mSampleCounts;
     private final Map<String,Integer> mSampleCountsIndex;
+
     private final Map<String,Map<String,Double>> mSampleSigContributions;
+
+    private SigMatrix mSamplePosFrequencies;
+    private final Map<String,Integer> mSamplePosFreqIndex;
+    private boolean mAdjustRefPosFreqCounts;
+
+    private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
     public SignatureAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
@@ -47,8 +65,10 @@ public class SignatureAnnotation
         mSampleDataCache = sampleDataCache;
 
         mSampleCounts = null;
+        mRefSnvPosFrequencies = null;
         mSampleSigContributions = Maps.newHashMap();
         mSampleCountsIndex = Maps.newHashMap();
+        mSamplePosFreqIndex = Maps.newHashMap();
 
         mRefSampleCounts = null;
         mRefSampleNames = Lists.newArrayList();
@@ -56,6 +76,10 @@ public class SignatureAnnotation
 
         loadRefSigContribPercentiles(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames);
+
+        mRefSnvPosFreqCancerTypes = Lists.newArrayList();
+        mRefSnvPosFrequencies = loadRefSnvPosFrequences(mConfig.RefSnvPosFreqFile, mRefSnvPosFreqCancerTypes);
+        mAdjustRefPosFreqCounts = false;
 
         loadSampleCounts();
         loadSigContributions();
@@ -66,6 +90,10 @@ public class SignatureAnnotation
         if(!mConfig.SampleSnvCountsFile.isEmpty())
         {
             mSampleCounts = loadSampleCountsFromCohortFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
+            mSamplePosFrequencies = loadSamplePosFreqFromCohortFile(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
+
+            if(mSamplePosFreqIndex.size() == mSampleDataCache.RefSampleCancerTypeMap.size())
+                mAdjustRefPosFreqCounts = true;
         }
         else if(mConfig.DbAccess != null)
         {
@@ -118,6 +146,7 @@ public class SignatureAnnotation
         int snvTotal = (int)sumVector(sampleCounts);
 
         addCssResults(sample, sampleCounts, results);
+        addPosFreqCssResults(sample, results);
 
         addSigContributionResults(sample, snvTotal, results);
 
@@ -166,7 +195,73 @@ public class SignatureAnnotation
             cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
         }
 
-        results.add(new SampleResult(sample.Id, CLASSIFIER, "CSS", String.format("%.6f", totalCss), cancerCssTotals));
+        results.add(new SampleResult(sample.Id, CLASSIFIER, ClassifierType.displayString(SNV_COUNT_CSS), String.format("%.6f", totalCss), cancerCssTotals));
+    }
+
+    private void addPosFreqCssResults(final SampleData sample, final List<SampleResult> results)
+    {
+        Integer sampleCountsIndex = mSamplePosFreqIndex.get(sample.Id);
+
+        if(sampleCountsIndex == null)
+        {
+            CUP_LOGGER.error("sample({}) has no SNV pos-freq data", sample.Id);
+            return;
+        }
+
+        final double[] sampleCounts = mSamplePosFrequencies.getCol(sampleCountsIndex);
+        double sampleTotal = sumVector(sampleCounts);
+
+        int refCancerCount = mRefSnvPosFrequencies.Cols;
+
+        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
+
+        for(int i = 0; i < refCancerCount; ++i)
+        {
+            final String refCancerType = mRefSnvPosFreqCancerTypes.get(i);
+            boolean matchesCancerType = sample.CancerType.equals(refCancerType);
+
+            final double[] refPosFreqs = mAdjustRefPosFreqCounts && matchesCancerType ?
+                    adjustRefPosFreqCounts(mRefSnvPosFrequencies.getCol(i), sampleCounts, sampleTotal) : mRefSnvPosFrequencies.getCol(i);
+
+            double css = calcCosineSim(sampleCounts, refPosFreqs);
+
+            if(css < SNV_POS_FREQ_CSS_THRESHOLD)
+                continue;
+
+            double cssWeight = pow(2, -100 * (1 - css));
+
+            double weightedCss = css * cssWeight;
+
+            Double total = cancerCssTotals.get(refCancerType);
+
+            if(total == null)
+                cancerCssTotals.put(refCancerType, weightedCss);
+            else
+                cancerCssTotals.put(refCancerType, total + weightedCss);
+        }
+
+        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
+
+        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        {
+            cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
+        }
+
+        results.add(new SampleResult(sample.Id, CLASSIFIER, ClassifierType.displayString(SNV_POS_FREQ_CSS), String.format("%.6f", totalCss), cancerCssTotals));
+    }
+
+    private double[] adjustRefPosFreqCounts(final double[] refPosFreqs, final double[] sampleCounts, final double sampleTotal)
+    {
+        double adjustMultiplier = sampleTotal > SNV_POS_FREQ_SNV_TOTAL_THRESHOLD ? SNV_POS_FREQ_SNV_TOTAL_THRESHOLD / sampleTotal : 1;
+
+        double[] adjustedCounts = new double[refPosFreqs.length];
+
+        for(int b = 0; b < refPosFreqs.length; ++b)
+        {
+            adjustedCounts[b] = max(refPosFreqs[b] - (sampleCounts[b] * adjustMultiplier), 0);
+        }
+
+        return adjustedCounts;
     }
 
     private static final List<String> REPORTABLE_SIGS =
