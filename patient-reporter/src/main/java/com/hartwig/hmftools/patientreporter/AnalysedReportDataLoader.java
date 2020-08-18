@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientreporter;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneViewFactory;
@@ -23,9 +25,11 @@ final class AnalysedReportDataLoader {
 
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create(); //TODO: Support specifying this file!
 
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)
+                .driverGenePanel(genePanel)
                 .driverGeneView(DriverGeneViewFactory.create())
                 .actionabilityAnalyzer(actionabilityAnalyzer)
                 .germlineReportingModel(germlineReportingModel)
