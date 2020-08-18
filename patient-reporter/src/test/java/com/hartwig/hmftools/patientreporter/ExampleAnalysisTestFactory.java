@@ -65,9 +65,9 @@ public final class ExampleAnalysisTestFactory {
     public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
             @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary, boolean reportGermline) {
         double averageTumorPloidy = 3.1;
-        int tumorMutationalLoad = 180;
-        double tumorMutationalBurden = 13.6;
-        double microsatelliteIndelsPerMb = 0.11;
+        int tumorMutationalLoad = 190;
+        double tumorMutationalBurden = 13.7;
+        double microsatelliteIndelsPerMb = 0.12;
         double chordHrdValue = 0D;
 
         ReportData reportData = testReportData();
