@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
@@ -152,7 +153,7 @@ public class BaReporter
     public void loadReferenceSigs(final String filename, boolean usingRefSigs)
     {
         GenericDataCollection dataCollection = GenericDataLoader.loadFile(filename);
-        mReferenceSigs = DataUtils.createMatrixFromListData(dataCollection.getData());
+        mReferenceSigs = createMatrixFromListData(dataCollection.getData());
         mReferenceSigs.cacheTranspose();
         mUsingRefSigs = usingRefSigs;
     }

@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
+import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
@@ -31,9 +31,6 @@ import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
-import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.utils.GenericDataLoader;
-import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -113,9 +110,7 @@ public class SampleFitter
             return false;
         }
 
-        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(mSignaturesFile);
-        mSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
-        mSignatureNames.addAll(sigsCollection.getFieldNames());
+        mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames);
 
         if(mSnvCountsFile != null)
         {

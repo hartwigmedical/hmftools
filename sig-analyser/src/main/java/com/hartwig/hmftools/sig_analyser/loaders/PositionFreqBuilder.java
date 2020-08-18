@@ -54,7 +54,7 @@ public class PositionFreqBuilder
     private static final String POSITION_BUCKET_SIZE = "position_bucket_size";
     private static final String POSITION_DATA_FILE = "position_data_file";
     public static final String MAX_SAMPLE_COUNT = "max_sample_count";
-    public static final int DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT_= 20000;
+    public static final int DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 
     public PositionFreqBuilder(final CommandLine cmd)
     {
@@ -64,7 +64,7 @@ public class PositionFreqBuilder
         mCancerSampleList = Maps.newHashMap();
 
         mBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE));
-        mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT_)));
+        mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
         mPositionCacheSize = 0;
         mOutputDir = parseOutputDir(cmd);
 

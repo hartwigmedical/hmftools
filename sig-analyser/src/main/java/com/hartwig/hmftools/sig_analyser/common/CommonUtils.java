@@ -6,6 +6,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcAbsDiffs;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcLinearLeastSquares;
+import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
+import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_DECIMAL;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
@@ -68,13 +70,7 @@ public class CommonUtils
 
     public static SigMatrix loadSampleMatrixCounts(final String filename, final List<String> sampleIds)
     {
-        final GenericDataCollection scCollection = GenericDataLoader.loadFile(
-                filename, GD_TYPE_DECIMAL, DEFAULT_DELIM, Lists.newArrayList("BucketName"));
-
-        if(sampleIds != null)
-            sampleIds.addAll(scCollection.getFieldNames());
-
-        return DataUtils.createMatrixFromListData(scCollection.getData());
+        return loadMatrixDataFile(filename, sampleIds, Lists.newArrayList("BucketName"));
     }
 
     public static List<Integer> getCombinedList(final List<Integer> list1, final List<Integer> list2)

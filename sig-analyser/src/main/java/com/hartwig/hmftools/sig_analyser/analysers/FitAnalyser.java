@@ -4,11 +4,12 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcRangeValue;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
+import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.sigs.SigUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -32,13 +33,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
-import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
 import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
 import com.hartwig.hmftools.sig_analyser.fitter.FitMethod;
@@ -88,35 +86,35 @@ public class FitAnalyser
         final String[] fitMethods = cmd.getOptionValue(FIT_METHODS).split(";", -1);
         Arrays.stream(fitMethods).map(x -> FitMethod.valueOf(x)).forEach(x -> mFitMethods.add(x));
 
-        final GenericDataCollection scCollection = GenericDataLoader.loadFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE));
+        mSampleIds = Lists.newArrayList();
 
         if(cmd.hasOption(SAMPLE_IDS))
         {
-            mSampleIds = Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";", -1)).collect(Collectors.toList());
+            mSampleIds.addAll(Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";", -1)).collect(Collectors.toList()));
 
-            SigMatrix allCounts = DataUtils.createMatrixFromListData(scCollection.getData());
+            final List<String> sampleIds = Lists.newArrayList();
+            SigMatrix allCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), sampleIds);
+
             mSampleCounts = new SigMatrix(allCounts.Rows, mSampleIds.size());
 
             for(int i = 0; i < mSampleIds.size(); ++i)
             {
-                for(int j = 0; j < scCollection.getFieldNames().size(); ++j)
+                for(int j = 0; j < sampleIds.size(); ++j)
                 {
-                    if(scCollection.getFieldNames().get(j).equals(mSampleIds.get(i)))
+                    if(sampleIds.get(j).equals(mSampleIds.get(i)))
                         mSampleCounts.setCol(i, allCounts.getCol(j));
                 }
             }
         }
         else
         {
-            mSampleCounts = DataUtils.createMatrixFromListData(scCollection.getData());
-            mSampleIds = scCollection.getFieldNames();
+            mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleIds);
         }
 
         mSampleCounts.cacheTranspose();
 
-        final GenericDataCollection sigsCollection = GenericDataLoader.loadFile(cmd.getOptionValue(SIGNATURES_FILE));
-        mSigNames = sigsCollection.getFieldNames();
-        mSignatures = DataUtils.createMatrixFromListData(sigsCollection.getData());
+        mSigNames = Lists.newArrayList();
+        mSignatures = loadMatrixDataFile(cmd.getOptionValue(SIGNATURES_FILE), mSigNames);
         mSignatures.cacheTranspose();
 
         mNoiseRangeMap = Maps.newHashMap();

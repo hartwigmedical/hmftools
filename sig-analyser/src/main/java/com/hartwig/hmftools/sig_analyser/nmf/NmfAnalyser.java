@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sig_analyser.nmf;
 
 import static java.lang.Integer.max;
 
+import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
+import static com.hartwig.hmftools.common.sigs.SigUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
@@ -10,7 +12,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_I
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.extractNonZeros;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class NmfAnalyser
 
         mPerfCounter.start("DataLoad");
 
-        mSampleCountsMatrix = DataUtils.createMatrixFromListData(mDataCollection.getData());
+        mSampleCountsMatrix = createMatrixFromListData(mDataCollection.getData());
         mSampleCountsMatrix = extractNonZeros(mSampleCountsMatrix);
         mSampleCountsMatrix.cacheTranspose();
 
@@ -89,7 +90,7 @@ public class NmfAnalyser
         if(!mConfig.RefSigFilename.isEmpty())
         {
             GenericDataCollection dataCollection = GenericDataLoader.loadFile(mConfig.RefSigFilename);
-            mReferenceSigs = DataUtils.createMatrixFromListData(dataCollection.getData());
+            mReferenceSigs = createMatrixFromListData(dataCollection.getData());
             mReferenceSigs.cacheTranspose();
 
             if(mConfig.UseRefSigs)
@@ -99,7 +100,7 @@ public class NmfAnalyser
         if(!mConfig.RefContribFilename.isEmpty())
         {
             GenericDataCollection dataCollection = GenericDataLoader.loadFile(mConfig.RefContribFilename);
-            mReferenceContribs = DataUtils.createMatrixFromListData(dataCollection.getData());
+            mReferenceContribs = createMatrixFromListData(dataCollection.getData());
             mReferenceContribs.cacheTranspose();
 
             if(!mConfig.FitRestrictToContribs)

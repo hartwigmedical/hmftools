@@ -6,6 +6,8 @@ import static java.lang.Math.log;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
+import static com.hartwig.hmftools.common.sigs.SigUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
@@ -16,7 +18,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandom;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandomLarge;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.extractNonZeros;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.sim.SimSigFactors.SIG_FACTOR_CSV_ITEM_COUNT;
 
 import java.io.BufferedReader;
@@ -109,7 +110,7 @@ public class SampleSimulator
 
         mRandom = mConfig.SeedRandom ? new Random(123456) : new Random();
 
-        mInputSignatures = DataUtils.createMatrixFromListData(mDataCollection.getData());
+        mInputSignatures = createMatrixFromListData(mDataCollection.getData());
 
         loadSignatureFactors(mConfig.SigFactorsFilename);
 

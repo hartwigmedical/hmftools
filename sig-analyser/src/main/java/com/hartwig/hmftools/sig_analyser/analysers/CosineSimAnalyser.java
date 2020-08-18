@@ -5,11 +5,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
-import static com.hartwig.hmftools.common.sigs.NoiseCalcs.POISSON_DEFAULT_PROBABILITY;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
+import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -20,7 +19,7 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
-import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT_;
+import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.MAX_SAMPLE_COUNT;
 
 import java.io.BufferedWriter;
@@ -34,10 +33,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
-import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
 
 import org.apache.commons.cli.CommandLine;
@@ -45,7 +41,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
@@ -90,15 +85,8 @@ public class CosineSimAnalyser
         mUseElevated = cmd.hasOption(USE_ELEVATED);
         mRangeMap = Maps.newHashMap();
 
-        final GenericDataCollection collection = GenericDataLoader.loadFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE));
-        mSampleCounts = DataUtils.createMatrixFromListData(collection.getData());
+        mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleCountsIndex, null);
         mSampleCounts.cacheTranspose();
-
-        for(int s = 0; s < collection.getFieldNames().size(); ++s)
-        {
-            final String sampleId = collection.getFieldNames().get(s);
-            mSampleCountsIndex.put(sampleId, s);
-        }
 
         mSampleCancerTypes = Maps.newHashMap();
         mSampleIds = Lists.newArrayList();
@@ -111,11 +99,11 @@ public class CosineSimAnalyser
         else if(cmd.hasOption(SAMPLE_REF_FILE))
         {
             loadSampleRefDataFile(cmd.getOptionValue(SAMPLE_REF_FILE));
-            mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT_)));
+            mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
         }
         else
         {
-            mSampleIds.addAll(collection.getFieldNames());
+            mSampleIds.addAll(mSampleCountsIndex.keySet());
         }
 
         mRefNames = Lists.newArrayList();
@@ -123,10 +111,8 @@ public class CosineSimAnalyser
         {
             SIG_LOGGER.info("loading reference data from file({})", cmd.getOptionValue(REF_COUNTS_FILE));
 
-            final GenericDataCollection refCollection = GenericDataLoader.loadFile(cmd.getOptionValue(REF_COUNTS_FILE));
-            mReferenceSampleCounts = DataUtils.createMatrixFromListData(refCollection.getData());
+            mReferenceSampleCounts = loadMatrixDataFile(cmd.getOptionValue(REF_COUNTS_FILE), mRefNames);
             mReferenceSampleCounts.cacheTranspose();
-            mRefNames.addAll(refCollection.getFieldNames());
         }
         else
         {

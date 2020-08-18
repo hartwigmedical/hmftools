@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcRangeValue;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
+import static com.hartwig.hmftools.common.sigs.SigUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.addVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
@@ -54,7 +56,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getMatchingLi
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.redimension;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_REF_SIG_FILE;
 
 import java.io.BufferedWriter;
@@ -190,7 +191,7 @@ public class BucketAnalyser
         // initialise sample counts and related totals
         mDataCollection = collection;
 
-        mSampleCounts = DataUtils.createMatrixFromListData(mDataCollection.getData());
+        mSampleCounts = createMatrixFromListData(mDataCollection.getData());
         mSampleCounts.cacheTranspose();
         mSampleCount = mSampleCounts.Cols;
         mBucketCount = mSampleCounts.Rows;
@@ -254,7 +255,7 @@ public class BucketAnalyser
         if(cmd.hasOption(BA_PREDEFINED_SIGS))
         {
             GenericDataCollection dataCollection = GenericDataLoader.loadFile(cmd.getOptionValue(BA_PREDEFINED_SIGS));
-            mPredefinedSigs = DataUtils.createMatrixFromListData(dataCollection.getData());
+            mPredefinedSigs = createMatrixFromListData(dataCollection.getData());
             mPredefinedSigs.cacheTranspose();
             mFinalFitOnly = (mConfig.ApplyPredefinedSigCount == mPredefinedSigs.Cols && mConfig.RunCount == 0);
         }
