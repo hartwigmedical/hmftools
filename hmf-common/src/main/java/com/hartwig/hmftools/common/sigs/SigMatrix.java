@@ -447,43 +447,4 @@ public class SigMatrix
         return newMatrix;
     }
 
-    public static void writeMatrixData(
-            final BufferedWriter writer, final List<String> headers, final SigMatrix matrix, boolean asInt) throws IOException
-    {
-        if(headers != null)
-        {
-            int i = 0;
-            for (; i < headers.size() - 1; ++i)
-            {
-                writer.write(String.format("%s,", headers.get(i)));
-            }
-            writer.write(String.format("%s", headers.get(i)));
-
-            writer.newLine();
-        }
-
-        final double[][] sigData = matrix.getData();
-
-        for(int i = 0; i < matrix.Rows; ++i)
-        {
-            for(int j = 0; j < matrix.Cols; ++j)
-            {
-                if(asInt)
-                    writer.write(String.format("%.0f", sigData[i][j]));
-                else
-                    writer.write(String.format("%.6f", sigData[i][j]));
-
-                if(j < matrix.Cols-1)
-                    writer.write(String.format(",", sigData[i][j]));
-            }
-
-            writer.newLine();
-        }
-
-    }
-
-    public static void writeMatrixData(final BufferedWriter writer, final SigMatrix matrix, boolean asInt) throws IOException
-    {
-        writeMatrixData(writer, null, matrix, asInt);
-    }
 }

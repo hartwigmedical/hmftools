@@ -116,30 +116,6 @@ public class DataUtils {
         return k - 1;
     }
 
-    public static SigMatrix createMatrixFromListData(final List<List<Double>> dataSet)
-    {
-        if(dataSet.isEmpty())
-            return null;
-
-        int rows = dataSet.size();
-        int cols = dataSet.get(0).size();
-
-        // create and populate the matrix
-        SigMatrix matrix = new SigMatrix(rows, cols);
-
-        double[][] matrixData = matrix.getData();
-
-        for(int i = 0; i < rows; ++i)
-        {
-            for (int j = 0; j < cols; ++j)
-            {
-                matrixData[i][j] = dataSet.get(i).get(j);
-            }
-        }
-
-        return matrix;
-    }
-
     public static void initRandom(SigMatrix matrix, double min, double max, final Random rnGenerator)
     {
         // uniform random in range
