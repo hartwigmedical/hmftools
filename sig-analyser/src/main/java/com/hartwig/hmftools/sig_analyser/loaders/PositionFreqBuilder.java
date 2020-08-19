@@ -50,11 +50,12 @@ public class PositionFreqBuilder
     private final Map<String,List<String>> mCancerSampleList;
     private final Map<String,int[]> mSamplePositionFrequencies;
 
-    private static final String SAMPLE_DATA_FILE = "sample_data_file";
-    private static final String POSITION_BUCKET_SIZE = "position_bucket_size";
-    private static final String POSITION_DATA_FILE = "position_data_file";
+    public static final String POSITION_BUCKET_SIZE = "position_bucket_size";
     public static final String MAX_SAMPLE_COUNT = "max_sample_count";
     public static final int DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT = 20000;
+
+    private static final String SAMPLE_DATA_FILE = "sample_data_file";
+    private static final String POSITION_DATA_FILE = "position_data_file";
 
     public PositionFreqBuilder(final CommandLine cmd)
     {
@@ -75,6 +76,23 @@ public class PositionFreqBuilder
         mSamplePosCountsFile = cmd.getOptionValue(POSITION_DATA_FILE);
     }
 
+    public PositionFreqBuilder(final String outputDir, int positionBucketSize, int maxSampleCount)
+    {
+        mChromosomeLengths = Maps.newHashMap();
+        mChromosomePosIndex = Maps.newHashMap();
+        mSamplePositionFrequencies = Maps.newHashMap();
+
+        mBucketSize = positionBucketSize;
+        mMaxSampleCount = maxSampleCount;
+        mPositionCacheSize = 0;
+        mOutputDir = outputDir;
+
+        initialisePositionCache();
+
+        mCancerSampleList = null;
+        mSamplePosCountsFile = null;
+    }
+
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SAMPLE_DATA_FILE, true, "File with sampleIds and cancer types");
@@ -87,7 +105,7 @@ public class PositionFreqBuilder
 
     public void run()
     {
-        if(mBucketSize <= 0 || mPositionCacheSize <= 0 || mCancerSampleList.isEmpty())
+        if(mBucketSize <= 0 || mPositionCacheSize <= 0 || mCancerSampleList.isEmpty() || mSamplePosCountsFile == null)
         {
             SIG_LOGGER.error("failed to initialise");
             return;
@@ -112,6 +130,48 @@ public class PositionFreqBuilder
         writeCancerRefData();
 
         SIG_LOGGER.info("position frequencies data sets complete");
+    }
+
+    public void writeSampleCounts(final String sampleId, final Map<String,Map<Integer,Integer>> chrPositionCounts)
+    {
+        SIG_LOGGER.info("sample({}) writing position frequencies data", sampleId);
+
+        try
+        {
+            final String filename = mOutputDir + sampleId + ".sig.pos_freq_counts.csv";
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(sampleId);
+            writer.newLine();
+
+            final int[] bucketFrequencies = new int[mPositionCacheSize];
+
+            for(Map.Entry<String,Map<Integer,Integer>> chrEntry : chrPositionCounts.entrySet())
+            {
+                final String chromosome = chrEntry.getKey();
+
+                for(Map.Entry<Integer, Integer> entry : chrEntry.getValue().entrySet())
+                {
+                    int position = entry.getKey();
+                    int frequency = entry.getValue();
+
+                    int posBucketIndex = getBucketIndex(chromosome, position);
+                    bucketFrequencies[posBucketIndex] = frequency;
+                }
+            }
+
+            for(int b = 0; b < mPositionCacheSize; ++b)
+            {
+                writer.write(String.format("%d", bucketFrequencies[b]));
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            SIG_LOGGER.error("failed to write sample pos data output: {}", e.toString());
+        }
     }
 
     private void initialisePositionCache()
@@ -154,6 +214,9 @@ public class PositionFreqBuilder
 
     private void loadSampleData(final String filename)
     {
+        if(filename == null || filename.isEmpty())
+            return;
+
         try
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());

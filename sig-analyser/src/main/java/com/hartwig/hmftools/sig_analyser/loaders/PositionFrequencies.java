@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
@@ -11,16 +9,12 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class PositionFrequencies
 {
-    private final Map<String, Map<Integer,Integer>> mChrPosBucketFrequencies;
+    private final Map<String,Map<Integer,Integer>> mChrPosBucketFrequencies;
     private final BufferedWriter mWriter;
     private final int mBucketSize;
-
 
     public PositionFrequencies(final String outputDir, final int bucketSize)
     {
@@ -28,6 +22,8 @@ public class PositionFrequencies
         mChrPosBucketFrequencies = Maps.newHashMap();
         mWriter = initialiseWriter(outputDir, mBucketSize);
     }
+
+    public final Map<String,Map<Integer,Integer>> getChrPosBucketFrequencies() { return mChrPosBucketFrequencies; }
 
     public void addPosition(final String chromosome, int position)
     {
@@ -60,6 +56,9 @@ public class PositionFrequencies
 
     private static BufferedWriter initialiseWriter(final String outputDir, int bucketSize)
     {
+        if(outputDir == null || outputDir.isEmpty())
+            return null;
+
         try
         {
             final String outputFile = String.format("%ssnv_position_freq_%d.csv", outputDir, bucketSize);

@@ -47,6 +47,8 @@ public class SigSnvLoader
         bucketSizes.forEach(x -> mPositionFrequencies.add(new PositionFrequencies(outputDir, x)));
     }
 
+    public final List<PositionFrequencies> getPositionFrequencies() { return mPositionFrequencies; }
+
     public SigMatrix getSampleBucketCounts() { return mSampleBucketCounts; }
 
     private void buildBucketMap()
@@ -88,7 +90,7 @@ public class SigSnvLoader
         }
     }
 
-    public void loadData(final DatabaseAccess dbAccess)
+    public void loadData(final DatabaseAccess dbAccess, boolean writePosFreqData)
     {
         mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
@@ -103,14 +105,18 @@ public class SigSnvLoader
 
             processSampleVariants(sampleId, variants, sampleIndex);
 
-            for(PositionFrequencies positionFrequencies : mPositionFrequencies)
+            if(writePosFreqData)
             {
-                positionFrequencies.writeResults(sampleId);
-                positionFrequencies.clear();
+                for(PositionFrequencies positionFrequencies : mPositionFrequencies)
+                {
+                    positionFrequencies.writeResults(sampleId);
+                    positionFrequencies.clear();
+                }
             }
         }
 
-        mPositionFrequencies.forEach(x -> x.close());
+        if(writePosFreqData)
+            mPositionFrequencies.forEach(x -> x.close());
     }
 
     public void writeSampleCounts(final String filename)

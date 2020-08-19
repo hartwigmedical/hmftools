@@ -22,11 +22,15 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleMatrixCounts;
+import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
+import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.MAX_SAMPLE_COUNT;
+import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.POSITION_BUCKET_SIZE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
@@ -35,6 +39,8 @@ import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
+import com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder;
+import com.hartwig.hmftools.sig_analyser.loaders.PositionFrequencies;
 import com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader;
 
 import org.apache.commons.cli.CommandLine;
@@ -42,7 +48,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
@@ -59,6 +64,10 @@ public class SampleFitter
     private SigMatrix mSampleCountsMatrix;
     private final List<String> mSignatureNames;
     private SigMatrix mSignatures;
+
+    private final int mPositionBucketSize;
+    private final int mMaxSampleCount;
+
     private DatabaseAccess mDbAccess;
     private BufferedWriter mFitWriter;
 
@@ -80,6 +89,9 @@ public class SampleFitter
         mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mFitWriter = null;
         mDbAccess = createDatabaseAccess(cmd);
+
+        mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
+        mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
     }
 
     public void run()
@@ -142,13 +154,28 @@ public class SampleFitter
             return;
 
         SigSnvLoader snvLoader = new SigSnvLoader(null, mSampleIdList);
-        snvLoader.loadData(mDbAccess);
+
+        if(mPositionBucketSize > 0)
+        {
+            snvLoader.initialisePositionFrequencies(null, Lists.newArrayList(mPositionBucketSize));
+        }
+
+        snvLoader.loadData(mDbAccess, false);
 
         final String filename = mSampleIdList.size() == 1 ?
                 formOutputFilename(mOutputDir, mOutputId, mSampleIdList.get(0) + ".sig.snv_counts")
                 : formOutputFilename(mOutputDir, mOutputId, "sig_snv_counts");
 
-        snvLoader.writeSampleCounts(mOutputDir + filename);
+        snvLoader.writeSampleCounts(filename);
+
+        if(mPositionBucketSize > 0 && mSampleIdList.size() == 1)
+        {
+            PositionFreqBuilder posFreqBuilder =
+                    new PositionFreqBuilder(mOutputDir, mPositionBucketSize, mMaxSampleCount);
+
+            final PositionFrequencies samplePosFrequencies = snvLoader.getPositionFrequencies().get(0);
+            posFreqBuilder.writeSampleCounts(mSampleIdList.get(0), samplePosFrequencies.getChrPosBucketFrequencies());
+        }
 
         mSampleCountsMatrix = snvLoader.getSampleBucketCounts();
     }
@@ -286,6 +313,8 @@ public class SampleFitter
         Options options = new Options();
         CommonUtils.addCmdLineArgs(options);
         addDatabaseCmdLineArgs(options);
+        options.addOption(POSITION_BUCKET_SIZE, true, "Position bucket size");
+        options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count, default = 20K");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
