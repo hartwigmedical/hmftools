@@ -71,7 +71,7 @@
         <sage.version>2.2</sage.version>
         <strelka-post-process.version>1.6</strelka-post-process.version>
         <health-checker.version>3.1</health-checker.version>
-        <patient-reporter.version>7.13</patient-reporter.version>
+        <patient-reporter.version>7.14</patient-reporter.version>
         <patient-db.version>3.45</patient-db.version>
         <gripss.version>1.5</gripss.version>
         <paddle.version>0.1</paddle.version>
