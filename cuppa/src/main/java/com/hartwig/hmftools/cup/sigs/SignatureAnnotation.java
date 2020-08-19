@@ -36,6 +36,7 @@ import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
+import com.sun.org.apache.regexp.internal.RE;
 
 public class SignatureAnnotation
 {
@@ -294,10 +295,11 @@ public class SignatureAnnotation
             return;
         }
 
-        for(Map.Entry<String,Double> entry : sampleSigContribs.entrySet())
+        // report on every one of the designated set
+
+        for(final String sigName : REPORTABLE_SIGS)
         {
-            final String sigName = entry.getKey();
-            double sampleSigContrib = entry.getValue();
+            double sampleSigContrib = sampleSigContribs.containsKey(sigName) ? sampleSigContribs.get(sigName) : 0;
 
             // report the AID/APOBEC sigs 2 & 13 together
             if(sigName.equalsIgnoreCase(SIG_NAME_2))
@@ -310,9 +312,6 @@ public class SignatureAnnotation
             {
                 continue;
             }
-
-            if(!REPORTABLE_SIGS.stream().anyMatch(x -> sigName.equalsIgnoreCase(x)))
-                continue;
 
             for(Map.Entry<String,Map<String,double[]>> cancerContribs : mRefCancerSigContribPercentiles.entrySet())
             {
