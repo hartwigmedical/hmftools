@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage;
 import java.io.File;
 import java.util.List;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.sage.SagePostProcessVCF;
@@ -66,7 +68,8 @@ public class SagePostProcessApplication implements AutoCloseable {
         this.fileReader = new VCFFileReader(new File(inputVCF), false);
         List<CanonicalTranscript> canonicalTranscripts =
                 assembly.equals(HG19) ? CanonicalTranscriptFactory.create37() : CanonicalTranscriptFactory.create38();
-        this.fileWriter = new SagePostProcessVCF(outputVCF, canonicalTranscripts);
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+        this.fileWriter = new SagePostProcessVCF(outputVCF, genePanel, canonicalTranscripts);
     }
 
     private void run() {

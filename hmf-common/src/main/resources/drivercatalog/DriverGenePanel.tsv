@@ -1,22 +1,22 @@
 gene	deletionBand	reportMissenseAndInframe	reportNonsenseAndFrameshift	reportSplice	reportDeletionAndDisruption	reportAmplification	reportPromoterHotspots	likelihoodType
 ABCB1		true	true	true	true	false	false	TSG
 ABL1		true	false	false	false	true	false	ONCO
-AC093642.5	q telomere	true	false	false	true	false	false	NA
+AC093642.5	q telomere	false	false	false	true	false	false	NA
 ACVR1		true	false	false	false	true	false	ONCO
 ACVR1B		true	true	true	true	false	false	TSG
 ACVR2A		true	true	true	true	false	false	TSG
-ADAM30		true	false	false	false	true	false	NA
-AGBL4		true	false	false	true	false	false	NA
-AIM1		true	false	false	false	true	false	NA
+ADAM30		false	false	false	false	true	false	NA
+AGBL4		false	false	false	true	false	false	NA
+AIM1		false	false	false	false	true	false	NA
 AJUBA		true	true	true	true	false	false	TSG
 AKT1		true	false	false	false	true	false	ONCO
 ALB		true	false	false	false	true	false	ONCO
 ALK		true	false	false	false	true	false	ONCO
-AMBRA1		true	false	false	true	false	false	NA
+AMBRA1		false	false	false	true	false	false	NA
 AMER1		true	true	true	true	false	false	TSG
-ANK1		true	false	false	false	true	false	NA
-ANKRD11		true	false	false	true	false	false	NA
-AP001464.4	q centromere	true	false	false	true	false	false	NA
+ANK1		false	false	false	false	true	false	NA
+ANKRD11		false	false	false	true	false	false	NA
+AP001464.4	q centromere	false	false	false	true	false	false	NA
 APC		true	true	true	true	false	false	TSG
 AR		true	false	false	false	true	false	ONCO
 ARAF		true	false	false	false	true	false	ONCO
@@ -26,8 +26,8 @@ ARID1B		true	true	true	true	false	false	TSG
 ARID2		true	true	true	true	false	false	TSG
 ARID5B		true	false	false	false	true	false	ONCO
 ASXL1		true	true	true	true	false	false	TSG
-ASXL2		true	false	false	true	false	false	NA
-ATG7		true	false	false	true	false	false	NA
+ASXL2		false	false	false	true	false	false	NA
+ATG7		false	false	false	true	false	false	NA
 ATM		true	true	true	true	false	false	TSG
 ATP1A1		true	true	true	true	false	false	TSG
 ATP2B3		true	true	true	true	false	false	TSG
@@ -50,7 +50,7 @@ BRCA2		true	true	true	true	false	false	TSG
 BRD7		true	true	true	true	false	false	TSG
 BRIP1		true	true	true	true	false	false	TSG
 BTK		true	true	true	true	false	false	TSG
-C21orf91		true	false	false	true	false	false	NA
+C21orf91		false	false	false	true	false	false	NA
 CACNA1D		true	false	false	false	true	false	ONCO
 CALR		true	false	false	false	true	false	ONCO
 CARD11		true	false	false	false	true	false	ONCO
@@ -60,10 +60,10 @@ CBFB		true	true	true	true	false	false	TSG
 CBL		true	false	false	false	true	false	ONCO
 CBLB		true	true	true	true	false	false	TSG
 CCND1		true	false	false	false	true	false	ONCO
-CCND2		true	false	false	false	true	false	NA
-CCNE1		true	false	false	false	true	false	NA
-CCSER1		true	false	false	true	false	false	NA
-CD44		true	false	false	false	true	false	NA
+CCND2		false	false	false	false	true	false	NA
+CCNE1		false	false	false	false	true	false	NA
+CCSER1		false	false	false	true	false	false	NA
+CD44		false	false	false	false	true	false	NA
 CD58		true	true	true	true	false	false	TSG
 CD79A		true	false	false	false	true	false	ONCO
 CD79B		true	false	false	false	true	false	ONCO
@@ -77,9 +77,9 @@ CDKN1A		true	true	true	true	false	false	TSG
 CDKN1B		true	true	true	true	false	false	TSG
 CDKN2A		true	true	true	true	false	false	TSG
 CDKN2C		true	true	true	true	false	false	TSG
-CDX2		true	false	false	false	true	false	NA
+CDX2		false	false	false	false	true	false	NA
 CEBPA		true	true	true	true	false	false	TSG
-CHD1		true	false	false	true	false	false	NA
+CHD1		false	false	false	true	false	false	NA
 CHD4		true	false	false	false	true	false	ONCO
 CHEK1		true	true	true	true	false	false	TSG
 CHEK2		true	true	true	true	false	false	TSG
@@ -91,7 +91,7 @@ CRLF2		true	false	false	false	true	false	ONCO
 CSF1		true	true	true	true	false	false	TSG
 CSF1R		true	false	false	false	true	false	ONCO
 CSF3R		true	false	false	false	true	false	ONCO
-CSMD1		true	false	false	true	false	false	NA
+CSMD1		false	false	false	true	false	false	NA
 CTCF		true	true	true	true	false	false	TSG
 CTNNA1		true	true	true	true	false	false	TSG
 CTNNB1		true	false	false	true	true	false	ONCO
@@ -102,18 +102,18 @@ CYLD		true	true	true	true	false	false	TSG
 DAXX		true	true	true	true	false	false	TSG
 DDR2		true	false	false	false	true	false	ONCO
 DDX3X		true	true	true	true	false	false	TSG
-DEPDC5		true	false	false	true	false	false	NA
+DEPDC5		false	false	false	true	false	false	NA
 DGCR8		true	false	false	false	true	false	ONCO
-DIAPH2		true	false	false	true	false	false	NA
+DIAPH2		false	false	false	true	false	false	NA
 DICER1		true	true	true	true	false	false	TSG
-DLG2		true	false	false	true	false	false	NA
-DMD		true	false	false	true	false	false	NA
+DLG2		false	false	false	true	false	false	NA
+DMD		false	false	false	true	false	false	NA
 DNM2		true	true	true	true	false	false	TSG
 DNMT3A		true	true	true	true	false	false	TSG
-DOCK8	p telomere	true	false	false	true	false	false	NA
+DOCK8	p telomere	false	false	false	true	false	false	NA
 DPYD		true	true	true	true	false	false	TSG
 DROSHA		true	true	true	true	false	false	TSG
-DUX4L7	q telomere	true	false	false	true	false	false	NA
+DUX4L7	q telomere	false	false	false	true	false	false	NA
 EEF1A1		true	false	false	false	true	false	ONCO
 EGFR		true	false	false	false	true	false	ONCO
 EIF1AX		true	false	false	false	true	false	ONCO
@@ -131,20 +131,20 @@ ERG		true	false	false	false	true	false	ONCO
 ESR1		true	false	false	false	true	false	ONCO
 ETNK1		true	true	true	true	false	false	TSG
 ETS2		true	true	true	true	false	false	TSG
-EYS		true	false	false	true	false	false	NA
+EYS		false	false	false	true	false	false	NA
 EZH2		true	false	false	false	true	false	ONCO
 FANCL		true	false	false	false	true	false	ONCO
 FAT1		true	true	true	true	false	false	TSG
 FAT4		true	true	true	true	false	false	TSG
-FBXL17		true	false	false	true	false	false	NA
+FBXL17		false	false	false	true	false	false	NA
 FBXO11		true	true	true	true	false	false	TSG
 FBXW7		true	true	true	true	false	false	TSG
-FGF3		true	false	false	false	true	false	NA
+FGF3		false	false	false	false	true	false	NA
 FGFR1		true	false	false	false	true	false	ONCO
 FGFR2		true	false	false	false	true	false	ONCO
 FGFR3		true	false	false	false	true	false	ONCO
 FGFR4		true	false	false	false	true	false	ONCO
-FHIT		true	false	false	true	false	false	NA
+FHIT		false	false	false	true	false	false	NA
 FLT1		true	true	true	true	false	false	TSG
 FLT3		true	false	false	false	true	false	ONCO
 FLT4		true	false	false	false	true	false	ONCO
@@ -153,8 +153,8 @@ FOSL2		true	true	true	true	false	false	TSG
 FOXA1		true	false	false	false	true	false	ONCO
 FOXA2		true	false	false	false	true	false	ONCO
 FOXL2		true	false	false	false	true	false	ONCO
-FOXO3		true	false	false	true	false	false	NA
-FOXP1		true	false	false	true	false	false	NA
+FOXO3		false	false	false	true	false	false	NA
+FOXP1		false	false	false	true	false	false	NA
 FOXQ1		true	true	true	true	false	false	TSG
 FUBP1		true	false	false	false	true	false	ONCO
 G6PD		true	true	true	true	false	false	TSG
@@ -162,12 +162,12 @@ GAGE12J		true	false	false	false	true	false	ONCO
 GATA1		true	true	true	true	false	false	TSG
 GATA2		true	false	false	false	true	false	ONCO
 GATA3		true	true	true	true	false	false	TSG
-GATA6		true	false	false	false	true	false	NA
-GMDS		true	false	false	true	false	false	NA
+GATA6		false	false	false	false	true	false	NA
+GMDS		false	false	false	true	false	false	NA
 GNA11		true	false	false	false	true	false	ONCO
 GNAQ		true	false	false	false	true	false	ONCO
 GNAS		true	false	false	false	true	false	ONCO
-GPHN		true	false	false	true	false	false	NA
+GPHN		false	false	false	true	false	false	NA
 GPS2		true	true	true	true	false	false	TSG
 GRIN2A		true	true	true	true	false	false	TSG
 GSK3B		true	false	false	false	true	false	ONCO
@@ -175,7 +175,7 @@ GSTP1		true	true	true	true	false	false	TSG
 GTF2I		true	false	false	false	true	false	ONCO
 H3F3A		true	false	false	false	true	false	ONCO
 H3F3B		true	false	false	false	true	false	ONCO
-HDHD1		true	false	false	true	false	false	NA
+HDHD1		false	false	false	true	false	false	NA
 HIF1A		true	false	false	false	true	false	ONCO
 HIST1H1C		true	false	false	false	true	false	ONCO
 HIST1H3B		true	false	false	false	true	false	ONCO
@@ -189,18 +189,18 @@ HOXC13		true	true	true	true	false	false	TSG
 HRAS		true	false	false	false	true	false	ONCO
 IDH1		true	false	false	false	true	false	ONCO
 IDH2		true	false	false	false	true	false	ONCO
-IGF1R		true	false	false	false	true	false	NA
+IGF1R		false	false	false	false	true	false	NA
 IGLL5		true	false	false	true	true	false	ONCO
 IKBKB		true	false	false	false	true	false	ONCO
 IKZF1		true	true	true	true	false	false	TSG
-IL1RAPL1		true	false	false	true	false	false	NA
+IL1RAPL1		false	false	false	true	false	false	NA
 IL6ST		true	false	false	true	true	false	ONCO
 IL7R		true	false	false	false	true	false	ONCO
-IMMP2L		true	false	false	true	false	false	NA
-IRF2		true	false	false	true	false	false	NA
-IRS2		true	false	false	false	true	false	NA
-ITGA9		true	false	false	true	false	false	NA
-ITGAV		true	false	false	true	false	false	NA
+IMMP2L		false	false	false	true	false	false	NA
+IRF2		false	false	false	true	false	false	NA
+IRS2		false	false	false	false	true	false	NA
+ITGA9		false	false	false	true	false	false	NA
+ITGAV		false	false	false	true	false	false	NA
 JAK1		true	true	true	true	false	false	TSG
 JAK2		true	false	false	true	true	false	ONCO
 JAK3		true	false	false	false	true	false	ONCO
@@ -222,14 +222,14 @@ KRAS		true	false	false	false	true	false	ONCO
 KRT5		true	true	true	true	false	false	TSG
 KRTAP5-5		true	true	true	true	false	false	TSG
 LATS2		true	true	true	true	false	false	TSG
-LINC00290		true	false	false	true	false	false	NA
-LINC01001	p telomere	true	false	false	true	false	false	NA
-LMBRD2		true	false	false	false	true	false	NA
-LRP1B		true	false	false	true	false	false	NA
-LRRN3		true	false	false	true	false	false	NA
-LSAMP		true	false	false	true	false	false	NA
+LINC00290		false	false	false	true	false	false	NA
+LINC01001	p telomere	false	false	false	true	false	false	NA
+LMBRD2		false	false	false	false	true	false	NA
+LRP1B		false	false	false	true	false	false	NA
+LRRN3		false	false	false	true	false	false	NA
+LSAMP		false	false	false	true	false	false	NA
 LZTR1		true	true	true	true	false	false	TSG
-MACROD2		true	false	false	true	false	false	NA
+MACROD2		false	false	false	true	false	false	NA
 MAP2K1		true	false	false	false	true	false	ONCO
 MAP2K2		true	false	false	false	true	false	ONCO
 MAP2K4		true	true	true	true	false	false	TSG
@@ -237,20 +237,20 @@ MAP2K7		true	true	true	true	false	false	TSG
 MAP3K1		true	true	true	true	false	false	TSG
 MAP3K13		true	false	false	false	true	false	ONCO
 MAX		true	true	true	true	false	false	TSG
-MCL1		true	false	false	false	true	false	NA
-MDM2		true	false	false	false	true	false	NA
-MDM4		true	false	false	false	true	false	NA
-MECOM		true	false	false	false	true	false	NA
+MCL1		false	false	false	false	true	false	NA
+MDM2		false	false	false	false	true	false	NA
+MDM4		false	false	false	false	true	false	NA
+MECOM		false	false	false	false	true	false	NA
 MED12		true	true	true	true	false	false	TSG
-MEGF6		true	false	false	true	false	false	NA
+MEGF6		false	false	false	true	false	false	NA
 MEN1		true	true	true	true	false	false	TSG
 MET		true	false	false	false	true	false	ONCO
 MGA		true	true	true	true	false	false	TSG
 MGMT		true	true	true	true	false	false	TSG
-MIPOL1		true	false	false	true	false	false	NA
+MIPOL1		false	false	false	true	false	false	NA
 MLH1		true	true	true	true	false	false	TSG
 MLK4		true	true	true	true	false	false	TSG
-MLLT4		true	false	false	true	false	false	NA
+MLLT4		false	false	false	true	false	false	NA
 MPL		true	false	false	false	true	false	ONCO
 MSH2		true	true	true	true	false	false	TSG
 MSH6		true	true	true	true	false	false	TSG
@@ -258,15 +258,15 @@ MST1R		true	true	true	true	false	false	TSG
 MTHFR		true	true	true	true	false	false	TSG
 MTOR		true	false	false	false	true	false	ONCO
 MUC6		true	false	false	false	true	false	ONCO
-MYC		true	false	false	false	true	false	NA
-MYCL		true	false	false	false	true	false	NA
-MYCN		true	false	false	false	true	false	NA
+MYC		false	false	false	false	true	false	NA
+MYCL		false	false	false	false	true	false	NA
+MYCN		false	false	false	false	true	false	NA
 MYD88		true	false	false	false	true	false	ONCO
 MYOD1		true	false	false	false	true	false	ONCO
-NAALADL2		true	false	false	true	false	false	NA
+NAALADL2		false	false	false	true	false	false	NA
 NCOA2		true	false	false	false	true	false	ONCO
 NCOR1		true	true	true	true	false	false	TSG
-NEGR1		true	false	false	true	false	false	NA
+NEGR1		false	false	false	true	false	false	NA
 NF1		true	true	true	true	false	false	TSG
 NF2		true	true	true	true	false	false	TSG
 NFE2L2		true	false	false	false	true	false	ONCO
@@ -283,18 +283,18 @@ NTRK1		true	false	false	false	true	false	ONCO
 NTRK2		true	false	false	false	true	false	ONCO
 NTRK3		true	false	false	false	true	false	ONCO
 OR11H1		true	false	false	false	true	false	ONCO
-OR4A5	p centromere	true	false	false	true	false	false	NA
-OR4F21	p telomere	true	false	false	true	false	false	NA
+OR4A5	p centromere	false	false	false	true	false	false	NA
+OR4F21	p telomere	false	false	false	true	false	false	NA
 OR4N2		true	true	true	true	false	false	TSG
-PABPC1		true	false	false	false	true	false	NA
+PABPC1		false	false	false	false	true	false	NA
 PALB2		true	true	true	true	false	false	TSG
-PARD3		true	false	false	true	false	false	NA
-PARD3B		true	false	false	true	false	false	NA
-PARD6G	q telomere	true	false	false	true	false	false	NA
-PARK2		true	false	false	true	false	false	NA
+PARD3		false	false	false	true	false	false	NA
+PARD3B		false	false	false	true	false	false	NA
+PARD6G	q telomere	false	false	false	true	false	false	NA
+PARK2		false	false	false	true	false	false	NA
 PAX5		true	false	false	false	true	false	ONCO
 PBRM1		true	true	true	true	false	false	TSG
-PDE4D		true	false	false	true	false	false	NA
+PDE4D		false	false	false	true	false	false	NA
 PDGFRA		true	false	false	false	true	false	ONCO
 PDGFRB		true	false	false	false	true	false	ONCO
 PDYN		true	false	false	false	true	false	ONCO
@@ -305,7 +305,7 @@ PIK3R1		true	true	true	true	false	false	TSG
 PIK3R4		true	true	true	true	false	false	TSG
 PIM1		true	false	false	false	true	false	ONCO
 PLCG1		true	false	false	false	true	false	ONCO
-PLXNB2		true	false	false	true	false	false	NA
+PLXNB2		false	false	false	true	false	false	NA
 PML		true	true	true	true	false	false	TSG
 PMS2		true	true	true	true	false	false	TSG
 POLE		true	true	true	true	false	false	TSG
@@ -314,7 +314,7 @@ PPM1D		true	false	false	false	true	false	ONCO
 PPP1R15A		true	false	false	false	true	false	ONCO
 PPP2R1A		true	true	true	true	false	false	TSG
 PPP2R2A		true	true	true	true	false	false	TSG
-PPP2R3B	p telomere	true	false	false	true	false	false	NA
+PPP2R3B	p telomere	false	false	false	true	false	false	NA
 PPP6C		true	true	true	true	false	false	TSG
 PRDM1		true	true	true	true	false	false	TSG
 PREX2		true	false	false	false	true	false	ONCO
@@ -327,8 +327,8 @@ PTK6		true	true	true	true	false	false	TSG
 PTPN11		true	false	false	false	true	false	ONCO
 PTPN13		true	true	true	true	false	false	TSG
 PTPRB		true	true	true	true	false	false	TSG
-PTPRD		true	false	false	true	false	false	NA
-PTPRN2		true	false	false	true	false	false	NA
+PTPRD		false	false	false	true	false	false	NA
+PTPRN2		false	false	false	true	false	false	NA
 RAC1		true	false	false	false	true	false	ONCO
 RACGAP1		true	true	true	true	false	false	TSG
 RAD21		true	false	false	false	true	false	ONCO
@@ -345,24 +345,24 @@ RBM10		true	true	true	true	false	false	TSG
 RET		true	false	false	false	true	false	ONCO
 RHOA		true	false	false	false	true	false	ONCO
 RHOB		true	true	true	true	false	false	TSG
-RNF111		true	false	false	true	false	false	NA
+RNF111		false	false	false	true	false	false	NA
 RNF43		true	true	true	true	false	false	TSG
 ROS1		true	false	false	false	true	false	ONCO
-RP11-417J8.3	q centromere	true	false	false	true	false	false	NA
+RP11-417J8.3	q centromere	false	false	false	true	false	false	NA
 RPL10		true	true	true	true	false	false	TSG
 RPL22		true	true	true	true	false	false	TSG
 RPL5		true	true	true	true	false	false	TSG
 RPS6KA3		true	true	true	true	false	false	TSG
-RSF1		true	false	false	false	true	false	NA
+RSF1		false	false	false	false	true	false	NA
 RUNX1		true	true	true	true	false	false	TSG
 RXRA		true	true	true	true	false	false	TSG
-RYR1		true	false	false	false	true	false	NA
-SAV1		true	false	false	true	false	false	NA
-SEMG2		true	false	false	false	true	false	NA
+RYR1		false	false	false	false	true	false	NA
+SAV1		false	false	false	true	false	false	NA
+SEMG2		false	false	false	false	true	false	NA
 SETBP1		true	false	false	false	true	false	ONCO
 SETD2		true	true	true	true	false	false	TSG
 SF3B1		true	false	false	false	true	false	ONCO
-SGCZ		true	false	false	true	false	false	NA
+SGCZ		false	false	false	true	false	false	NA
 SH2B3		true	true	true	true	false	false	TSG
 SIX1		true	true	true	true	false	false	TSG
 SIX2		true	true	true	true	false	false	TSG
@@ -370,7 +370,7 @@ SLCO1B1		true	false	false	false	true	false	ONCO
 SMAD2		true	true	true	true	false	false	TSG
 SMAD3		true	true	true	true	false	false	TSG
 SMAD4		true	true	true	true	false	false	TSG
-SMARCA1		true	false	false	true	false	false	NA
+SMARCA1		false	false	false	true	false	false	NA
 SMARCA4		true	true	true	true	false	false	TSG
 SMARCB1		true	true	true	true	false	false	TSG
 SMARCD1		true	true	true	true	false	false	TSG
@@ -378,9 +378,9 @@ SMC3		true	false	false	false	true	false	ONCO
 SMO		true	false	false	false	true	false	ONCO
 SMTNL2		true	false	false	false	true	false	ONCO
 SOCS1		true	true	true	true	false	false	TSG
-SOX4		true	false	false	false	true	false	NA
+SOX4		false	false	false	false	true	false	NA
 SOX9		true	true	true	true	false	false	TSG
-SPATA31A7	q centromere	true	false	false	true	false	false	NA
+SPATA31A7	q centromere	false	false	false	true	false	false	NA
 SPEN		true	true	true	true	false	false	TSG
 SPOP		true	false	false	false	true	false	ONCO
 SPRED1		true	true	true	true	false	false	TSG
@@ -391,23 +391,23 @@ STAG2		true	true	true	true	false	false	TSG
 STAT3		true	false	false	false	true	false	ONCO
 STAT5B		true	true	true	true	false	false	TSG
 STK11		true	true	true	true	false	false	TSG
-STS		true	false	false	true	false	false	NA
+STS		false	false	false	true	false	false	NA
 SUFU		true	true	true	true	false	false	TSG
 TBL1XR1		true	true	true	true	false	false	TSG
 TBX3		true	true	true	true	false	false	TSG
 TCF12		true	true	true	true	false	false	TSG
 TCF7L2		true	true	true	true	false	false	TSG
-TENM1		true	false	false	true	false	false	NA
+TENM1		false	false	false	true	false	false	NA
 TERT		true	false	false	false	true	true	ONCO
 TET2		true	true	true	true	false	false	TSG
 TG		true	false	false	false	true	false	ONCO
 TGFBR2		true	true	true	true	false	false	TSG
 TGIF1		true	true	true	true	false	false	TSG
 TMEM30A		true	true	true	true	false	false	TSG
-TMPRSS2		true	false	false	true	false	false	NA
+TMPRSS2		false	false	false	true	false	false	NA
 TNFAIP3		true	true	true	true	false	false	TSG
 TNFRSF14		true	true	true	true	false	false	TSG
-TOP1		true	false	false	false	true	false	NA
+TOP1		false	false	false	false	true	false	NA
 TOP2A		true	false	false	false	true	false	ONCO
 TP53		true	true	true	true	false	false	TSG
 TP63		true	true	true	true	false	false	TSG
@@ -421,19 +421,19 @@ TYMS		true	false	false	false	true	false	ONCO
 U2AF1		true	false	false	false	true	false	ONCO
 UBR5		true	true	true	true	false	false	TSG
 UGT1A1		true	false	false	false	true	false	ONCO
-USP22		true	false	false	true	false	false	NA
+USP22		false	false	false	true	false	false	NA
 USP28		true	true	true	true	false	false	TSG
-USP32		true	false	false	false	true	false	NA
+USP32		false	false	false	false	true	false	NA
 USP8		true	false	false	false	true	false	ONCO
-VEGFA		true	false	false	false	true	false	NA
+VEGFA		false	false	false	false	true	false	NA
 VHL		true	true	true	true	false	false	TSG
 WEE1		true	false	false	false	true	false	ONCO
 WT1		true	false	false	false	true	false	ONCO
-WWC3		true	false	false	true	false	false	NA
-WWOX		true	false	false	true	false	false	NA
+WWC3		false	false	false	true	false	false	NA
+WWOX		false	false	false	true	false	false	NA
 XPO1		true	false	false	false	true	false	ONCO
 XRCC1		true	false	false	false	true	false	ONCO
-ZBTB10		true	false	false	false	true	false	NA
+ZBTB10		false	false	false	false	true	false	NA
 ZBTB20		true	true	true	true	false	false	TSG
 ZBTB7B		true	true	true	true	false	false	TSG
 ZFHX3		true	true	true	true	false	false	TSG
@@ -441,11 +441,11 @@ ZFP36L1		true	true	true	true	false	false	TSG
 ZFP36L2		true	true	true	true	false	false	TSG
 ZFX		true	true	true	true	false	false	TSG
 ZIM3		true	false	false	false	true	false	ONCO
-ZMIZ1		true	false	false	false	true	false	NA
+ZMIZ1		false	false	false	false	true	false	NA
 ZMYM3		true	true	true	true	false	false	TSG
-ZNF217		true	false	false	false	true	false	NA
-ZNF521		true	false	false	true	false	false	NA
-ZNF703		true	false	false	false	true	false	NA
+ZNF217		false	false	false	false	true	false	NA
+ZNF521		false	false	false	true	false	false	NA
+ZNF703		false	false	false	false	true	false	NA
 ZNF750		true	true	true	true	false	false	TSG
 ZNRF3		true	true	true	true	false	false	TSG
 ZRSR2		true	true	true	true	false	false	TSG

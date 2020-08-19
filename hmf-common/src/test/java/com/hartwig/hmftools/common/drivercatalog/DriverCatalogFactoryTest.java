@@ -6,9 +6,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,8 +23,9 @@ public class DriverCatalogFactoryTest {
 
     @Before
     public void setup() {
-        onco = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
-        tsg = DndsDriverGeneLikelihoodSupplier.tsgLikelihood();
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+        onco = genePanel.oncoLikelihood();
+        tsg = genePanel.tsgLikelihood();
     }
 
     @Test

@@ -11,8 +11,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -21,14 +24,11 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.protect.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.common.BachelorFile;
 import com.hartwig.hmftools.protect.common.CopyNumberAnalysis;
 import com.hartwig.hmftools.protect.common.CopyNumberAnalyzer;
-import com.hartwig.hmftools.protect.common.DriverGeneView;
-import com.hartwig.hmftools.protect.common.DriverGeneViewFactory;
 import com.hartwig.hmftools.protect.common.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.protect.common.GenomicData;
 import com.hartwig.hmftools.protect.common.GermlineReportingFile;
@@ -148,13 +148,15 @@ public class ProtectActionability {
         double purity = purityContext.bestFit().purity();
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
 
+        DriverGenePanel driverGenePanel = new DriverGenePanelFactory().create(); //TODO: Make configurable
+
         // Gene Fusion reportable
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
         // Copy Number all + reportable
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGainLoss> reportableGainsAndLosses =
-                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, purityContext.bestFit().ploidy());
+                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverGenePanel, geneCopyNumbers, purityContext.bestFit().ploidy());
 
         // Germline variants
         List<GermlineVariant> germlineVariant =
@@ -162,13 +164,13 @@ public class ProtectActionability {
         LOGGER.info("Loaded {} PASS germline variants from {}", germlineVariant.size(), germlineVariantVcf);
 
         // only reportable variants
-        CopyNumberAnalysis copyNumberAnalysis = CopyNumberAnalyzer.analyzeCopyNumbers(purplePurityTsv, purpleQCTsv, purpleGeneCnvTsv);
+        CopyNumberAnalysis copyNumberAnalysis = CopyNumberAnalyzer.analyzeCopyNumbers(purplePurityTsv, purpleQCTsv, purpleGeneCnvTsv, driverGenePanel);
         //
-        DriverGeneView driverGeneView = DriverGeneViewFactory.create();
+
         SomaticVariantAnalysis somaticVariantAnalysis = SomaticVariantAnalyzer.analyzeSomaticVariants(tumorSampleId,
                 somaticVariantVcf,
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
-                driverGeneView);
+                driverGenePanel);
         ChordAnalysis chordAnalysis = ChordFileReader.read(chordTxt);
         final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
 
@@ -177,14 +179,14 @@ public class ProtectActionability {
                 copyNumberAnalysis,
                 somaticVariantAnalysis,
                 chordAnalysis,
-                driverGeneView,
+                driverGenePanel,
                 lims,
                 germlineReportingModel);
 
         ReportableVariantAnalysis reportableVariantsAnalysis =
                 GenomicData.somaticAndGermlineVariantsTogether(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        driverGeneView,
+                        driverGenePanel,
                         germlineVariantsToReport,
                         germlineReportingModel,
                         lims.germlineReportingChoice(tumorBarcodeId));

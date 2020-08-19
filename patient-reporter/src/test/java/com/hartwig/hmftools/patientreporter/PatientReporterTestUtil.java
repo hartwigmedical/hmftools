@@ -6,13 +6,14 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneViewFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
@@ -50,10 +51,11 @@ public final class PatientReporterTestUtil {
         try {
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
+            DriverGenePanel panel = new DriverGenePanelFactory().create();
 
             return ImmutableAnalysedReportData.builder()
                     .from(testReportData())
-                    .driverGeneView(DriverGeneViewFactory.create())
+                    .driverGenePanel(panel)
                     .actionabilityAnalyzer(testActionabilityAnalyzer())
                     .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)

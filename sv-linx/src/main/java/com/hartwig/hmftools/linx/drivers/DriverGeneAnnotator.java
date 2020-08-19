@@ -21,6 +21,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
@@ -36,9 +38,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class DriverGeneAnnotator
 {
@@ -66,6 +65,9 @@ public class DriverGeneAnnotator
     public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTranscriptCollection,
             final LinxConfig config, final CnDataLoader cnDataLoader)
     {
+        //TODO: Make this configurable
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+
         mDbAccess = dbAccess;
         mGeneTransCache = geneTranscriptCollection;
         mConfig = config;
@@ -79,7 +81,7 @@ public class DriverGeneAnnotator
 
         mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
-        mDelDrivers = new DeletionDrivers(mDataCache);
+        mDelDrivers = new DeletionDrivers(genePanel, mDataCache);
 
         mVisWriter = null;
 

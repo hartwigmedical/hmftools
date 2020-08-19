@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
@@ -12,6 +13,11 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverLikelihoodType;
+import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
@@ -25,8 +31,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.purple.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
-import com.hartwig.hmftools.patientreporter.variants.driver.ImmutableDriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
 
@@ -35,8 +39,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PatientReporterTestFactory {
 
-    private static final String ONCOGENE = "ONCO";
-    private static final String TSG = "TSG";
+    public static final String ONCOGENE = "AR";
+    public static final String TSG = "PTEN";
 
     private PatientReporterTestFactory() {
     }
@@ -186,8 +190,10 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static DriverGeneView createTestDriverGeneView(@NotNull String oncogene, @NotNull String tsg) {
-        return ImmutableDriverGeneView.builder().addOncoDriverGenes(oncogene).addTsgDriverGenes(tsg).build();
+    public static DriverGenePanel createTestDriverGenePanel(@NotNull String oncogene, @NotNull String tsg) {
+        DriverGene oncoGene = createTestDriverGene(oncogene, DriverLikelihoodType.ONCO);
+        DriverGene tsgGene = createTestDriverGene(tsg, DriverLikelihoodType.TSG);
+        return new DriverGenePanelFactory().create(Lists.newArrayList(oncoGene, tsgGene));
     }
 
     @NotNull
@@ -209,6 +215,21 @@ public final class PatientReporterTestFactory {
                 .biallelic(false)
                 .minCopyNumber(0)
                 .maxCopyNumber(0)
+                .build();
+    }
+
+    @NotNull
+    private static DriverGene createTestDriverGene(@NotNull final String gene, @NotNull final DriverLikelihoodType type) {
+        return ImmutableDriverGene.builder()
+                .gene(gene)
+                .deletionBand(Strings.EMPTY)
+                .reportMissenseAndInframe(true)
+                .reportNonsenseAndFrameshift(false)
+                .reportSplice(false)
+                .reportDeletionAndDisruption(false)
+                .reportAmplification(false)
+                .reportPromoterHotspots(false)
+                .likelihoodType(type)
                 .build();
     }
 }

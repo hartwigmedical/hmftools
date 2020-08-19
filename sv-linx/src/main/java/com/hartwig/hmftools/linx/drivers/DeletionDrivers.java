@@ -25,8 +25,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
@@ -40,12 +40,12 @@ public class DeletionDrivers
     private final DriverDataCache mDataCache;
     private final List<String> mReportableDelGeneIds;
 
-    public DeletionDrivers(final DriverDataCache dataCache)
+    public DeletionDrivers(final DriverGenePanel genePanel, final DriverDataCache dataCache)
     {
         mDataCache = dataCache;
         mReportableDelGeneIds = Lists.newArrayList();
 
-        Set<String> reportableDelGenes = CNADrivers.reportableGeneDeletions();
+        Set<String> reportableDelGenes = genePanel.deletionTargets();
 
         for(String geneName : reportableDelGenes)
         {

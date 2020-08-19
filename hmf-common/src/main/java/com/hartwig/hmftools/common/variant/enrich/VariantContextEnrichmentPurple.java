@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -29,15 +30,16 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
 
     public VariantContextEnrichmentPurple(boolean hotspotEnabled, double clonalityMaxPloidy, double clonalityBinWidth,
             @NotNull final String purpleVersion, @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
-            @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<FittedRegion> fittedRegions, @NotNull final List<PeakModel> peakModel, @NotNull final String hotspots,
-            @NotNull final List<CanonicalTranscript> transcripts, @NotNull final Consumer<VariantContext> consumer) throws IOException {
+            @NotNull final PurityAdjuster purityAdjuster, @NotNull final DriverGenePanel genePanel,
+            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions,
+            @NotNull final List<PeakModel> peakModel, @NotNull final String hotspots, @NotNull final List<CanonicalTranscript> transcripts,
+            @NotNull final Consumer<VariantContext> consumer) throws IOException {
         subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityMaxPloidy, clonalityBinWidth, peakModel, consumer);
         purityEnrichment =
                 new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, subclonalLikelihoodEnrichment);
         kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
         somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
-        snpEffEnrichment = new SnpEffEnrichment(transcripts, somaticRefContextEnrichment);
+        snpEffEnrichment = new SnpEffEnrichment(genePanel, transcripts, somaticRefContextEnrichment);
         if (hotspotEnabled) {
             hotspotEnrichment = new VariantHotspotEnrichment(readFromVCF(hotspots), snpEffEnrichment);
         } else {

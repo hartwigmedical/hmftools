@@ -13,7 +13,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
@@ -30,12 +31,14 @@ final class HmfExonPanelBed {
 
     @SuppressWarnings("WeakerAccess")
     public static void write19File(@NotNull final String filename) throws IOException {
-        writeBedFile(filename, Strings.EMPTY, createRegions(HmfGenePanelSupplier.allGeneList37()));
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+        writeBedFile(filename, Strings.EMPTY, createRegions(genePanel, HmfGenePanelSupplier.allGeneList37()));
     }
 
     @SuppressWarnings("WeakerAccess")
     public static void write38File(@NotNull final String filename) throws IOException {
-        writeBedFile(filename, "chr", createRegions(HmfGenePanelSupplier.allGeneList38()));
+        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+        writeBedFile(filename, "chr", createRegions(genePanel, HmfGenePanelSupplier.allGeneList38()));
     }
 
     private static void writeBedFile(@NotNull final String filename, @NotNull final String prefix,
@@ -45,10 +48,10 @@ final class HmfExonPanelBed {
     }
 
     @NotNull
-    static List<GenomeRegion> createRegions(@NotNull final List<HmfTranscriptRegion> regions) {
+    static List<GenomeRegion> createRegions(@NotNull final DriverGenePanel genePanel, @NotNull final List<HmfTranscriptRegion> regions) {
         final Set<String> actionableGenes = Sets.newHashSet();
-        actionableGenes.addAll(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet());
-        actionableGenes.addAll(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
+        actionableGenes.addAll(genePanel.oncoGenes());
+        actionableGenes.addAll(genePanel.tsGenes());
 
         final Map<String, GenomeRegions> regionsMap = Maps.newHashMap();
 

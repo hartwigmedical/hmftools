@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.sage;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.enrich.SnpEffEnrichment;
 
@@ -18,10 +19,10 @@ public class SagePostProcessVCF implements AutoCloseable, Consumer<VariantContex
     private final SnpEffEnrichment snpEffEnrichment;
     final List<CanonicalTranscript> transcripts;
 
-    public SagePostProcessVCF(@NotNull final String outputVCF, final List<CanonicalTranscript> transcripts) {
+    public SagePostProcessVCF(@NotNull final String outputVCF, @NotNull final DriverGenePanel genePanel, final List<CanonicalTranscript> transcripts) {
         writer = new VariantContextWriterBuilder().setOutputFile(outputVCF).build();
         this.transcripts = transcripts;
-        this.snpEffEnrichment = new SnpEffEnrichment(transcripts, writer::add);
+        this.snpEffEnrichment = new SnpEffEnrichment(genePanel, transcripts, writer::add);
     }
 
     public void writeHeader(@NotNull final VCFHeader header) {

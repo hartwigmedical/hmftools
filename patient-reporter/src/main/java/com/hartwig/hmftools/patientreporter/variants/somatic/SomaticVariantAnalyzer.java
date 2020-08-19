@@ -9,12 +9,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
-import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
+import com.hartwig.hmftools.common.drivercatalog.SomaticVariantDrivers;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,13 +34,13 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static SomaticVariantAnalysis run(@NotNull List<SomaticVariant> variants, @NotNull DriverGeneView driverGeneView,
+    public static SomaticVariantAnalysis run(@NotNull List<SomaticVariant> variants, @NotNull DriverGenePanel driverGenePanel,
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) {
-        List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGeneView)).collect(Collectors.toList());
+        List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGenePanel)).collect(Collectors.toList());
 
-        List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(OncoDrivers.drivers(variants, exomeGeneCopyNumbers));
-        driverCatalog.addAll(TsgDrivers.drivers(variants, exomeGeneCopyNumbers));
+        SomaticVariantDrivers drivers = new SomaticVariantDrivers(driverGenePanel);
+        variants.forEach(drivers::add);
+        List<DriverCatalog> driverCatalog = drivers.build(exomeGeneCopyNumbers);
 
         // Check that we miss no driver genes.
         for (DriverCatalog driver : driverCatalog) {
@@ -60,18 +59,18 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    private static Predicate<SomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
+    private static Predicate<SomaticVariant> includeFilter(@NotNull DriverGenePanel driverGenePanel) {
         return variant -> {
             if (variant.isFiltered()) {
                 return false;
             }
 
-            if (driverGeneView.oncoDriverGenes().contains(variant.gene()) || driverGeneView.tsgDriverGenes().contains(variant.gene())) {
+            if (driverGenePanel.oncoGenes().contains(variant.gene()) || driverGenePanel.tsGenes().contains(variant.gene())) {
                 if (variant.isHotspot()) {
                     return true;
                 }
 
-                DriverCategory category = driverGeneView.category(variant.gene());
+                DriverCategory category = driverGenePanel.category(variant.gene());
                 if (category == null) {
                     throw new IllegalStateException("Driver category not known for driver gene: " + variant.gene());
                 }

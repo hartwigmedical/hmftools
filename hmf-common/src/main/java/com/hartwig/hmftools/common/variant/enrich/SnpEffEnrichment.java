@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant.enrich;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
@@ -23,9 +24,10 @@ public class SnpEffEnrichment implements VariantContextEnrichment {
     private final Consumer<VariantContext> consumer;
     private final SnpEffSummaryFactory snpEffSummaryFactory;
 
-    public SnpEffEnrichment(@NotNull final List<CanonicalTranscript> transcripts, @NotNull final Consumer<VariantContext> consumer) {
+    public SnpEffEnrichment(@NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts,
+            @NotNull final Consumer<VariantContext> consumer) {
         this.consumer = consumer;
-        this.snpEffSummaryFactory = new SnpEffSummaryFactory(transcripts);
+        this.snpEffSummaryFactory = new SnpEffSummaryFactory(genePanel, transcripts);
     }
 
     @Override

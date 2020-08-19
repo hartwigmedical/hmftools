@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.variantTypeCount;
-
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -25,25 +22,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class TsgDrivers {
+final class TsgDrivers {
 
     private TsgDrivers() {
-    }
-
-    @NotNull
-    public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants,
-            @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-
-        final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
-        final Map<VariantType, Long> variantTypeCountsBiallelic = variantTypeCount(SomaticVariant::biallelic, variants);
-        final Map<VariantType, Long> variantTypeCountsNonBiallelic = variantTypeCount(x -> !x.biallelic(), variants);
-
-        return drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(),
-                variants,
-                geneCopyNumbers,
-                variantTypeCounts,
-                variantTypeCountsBiallelic,
-                variantTypeCountsNonBiallelic);
     }
 
     @NotNull

@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.patientreporter.variants.germline;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.ONCOGENE;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.TSG;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestDriverGeneView;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestDriverGenePanel;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestGermlineGenesReporting;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestGermlineVariantBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestSomaticVariantBuilder;
@@ -12,21 +14,18 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariantExtended;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class FilterGermlineVariantsTest {
 
-    private static final String ONCOGENE = "ONCO";
-    private static final String TSG = "TSG";
-
-    private static final DriverGeneView TEST_DRIVER_GENE_VIEW = createTestDriverGeneView(ONCOGENE, TSG);
+    private static final DriverGenePanel TEST_DRIVER_GENE_PANEL = createTestDriverGenePanel(ONCOGENE, TSG);
 
     @Test
     public void checkForGermlineGenesReportedONCO() {
@@ -38,7 +37,7 @@ public class FilterGermlineVariantsTest {
         List<ReportableGermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
         List<ReportableGermlineVariantExtended> filteredGermlineVariantMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariants,
-                TEST_DRIVER_GENE_VIEW,
+                TEST_DRIVER_GENE_PANEL,
                 germlineReportingModel,
                 geneCopyNumbers,
                 somaticVariants,
@@ -61,7 +60,7 @@ public class FilterGermlineVariantsTest {
 
         List<ReportableGermlineVariantExtended> filteredGermlineVariantAllMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsMatch,
-                TEST_DRIVER_GENE_VIEW,
+                TEST_DRIVER_GENE_PANEL,
                 germlineReportingModel,
                 geneCopyNumbersMatch,
                 variantsMatch,
@@ -70,61 +69,61 @@ public class FilterGermlineVariantsTest {
 
         List<ReportableGermlineVariantExtended> filteredGermlineVariantNonMatchBiallelic =
                 FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsNonMatch,
-                        TEST_DRIVER_GENE_VIEW,
+                        TEST_DRIVER_GENE_PANEL,
                         germlineReportingModel,
                         geneCopyNumbersMatch,
                         variantsMatch,
                         ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantNonMatchBiallelic.size()); // match copy number and variant
 
-        List<ReportableGermlineVariantExtended> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsMatch,
-                TEST_DRIVER_GENE_VIEW,
-                germlineReportingModel,
-                geneCopyNumbersMatch,
-                variantsNonMatch,
-                ChordStatus.HRP);
+        List<ReportableGermlineVariantExtended> filteredGermlineVariantNonMatchVariant =
+                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsMatch,
+                        TEST_DRIVER_GENE_PANEL,
+                        germlineReportingModel,
+                        geneCopyNumbersMatch,
+                        variantsNonMatch,
+                        ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantNonMatchVariant.size()); // match biallelic and copy number
 
-        List<ReportableGermlineVariantExtended> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsMatch,
-                TEST_DRIVER_GENE_VIEW,
-                germlineReportingModel,
-                geneCopyNumbersNonMatch,
-                variantsMatch,
-                ChordStatus.HRP);
+        List<ReportableGermlineVariantExtended> filteredGermlineVariantNonMatchCopy =
+                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsMatch,
+                        TEST_DRIVER_GENE_PANEL,
+                        germlineReportingModel,
+                        geneCopyNumbersNonMatch,
+                        variantsMatch,
+                        ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantNonMatchCopy.size()); // match biallelic and variant
 
         List<ReportableGermlineVariantExtended> filteredGermlineVariantNonMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsNonMatch,
-                TEST_DRIVER_GENE_VIEW,
+                TEST_DRIVER_GENE_PANEL,
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsNonMatch,
                 ChordStatus.HRP);
         assertEquals(0, filteredGermlineVariantNonMatch.size()); // all option failed
 
-        List<ReportableGermlineVariantExtended> filteredGermlineVariantOptionBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsMatch,
-                TEST_DRIVER_GENE_VIEW,
-                germlineReportingModel,
-                geneCopyNumbersNonMatch,
-                variantsNonMatch,
-                ChordStatus.HRP);
+        List<ReportableGermlineVariantExtended> filteredGermlineVariantOptionBiallelic =
+                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsMatch,
+                        TEST_DRIVER_GENE_PANEL,
+                        germlineReportingModel,
+                        geneCopyNumbersNonMatch,
+                        variantsNonMatch,
+                        ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantOptionBiallelic.size()); // only match biallelic
 
-        List<ReportableGermlineVariantExtended> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatch,
-                TEST_DRIVER_GENE_VIEW,
-                germlineReportingModel,
-                geneCopyNumbersNonMatch,
-                variantsMatch,
-                ChordStatus.HRP);
+        List<ReportableGermlineVariantExtended> filteredGermlineVariantOptionVariant =
+                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsNonMatch,
+                        TEST_DRIVER_GENE_PANEL,
+                        germlineReportingModel,
+                        geneCopyNumbersNonMatch,
+                        variantsMatch,
+                        ChordStatus.HRP);
         assertEquals(1, filteredGermlineVariantOptionVariant.size()); // only match variant
 
         List<ReportableGermlineVariantExtended> filteredGermlineVariantOptionCopyNumberPartialLoss =
                 FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsNonMatch,
-                        TEST_DRIVER_GENE_VIEW,
+                        TEST_DRIVER_GENE_PANEL,
                         germlineReportingModel,
                         geneCopyNumbersMatch,
                         variantsNonMatch,
@@ -133,7 +132,7 @@ public class FilterGermlineVariantsTest {
 
         List<ReportableGermlineVariantExtended> filteredGermlineVariantOptionCopyNumberHRD =
                 FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsNonMatch,
-                        TEST_DRIVER_GENE_VIEW,
+                        TEST_DRIVER_GENE_PANEL,
                         germlineReportingModel,
                         geneCopyNumbersNonMatch,
                         variantsNonMatch,
@@ -148,8 +147,7 @@ public class FilterGermlineVariantsTest {
 
     @NotNull
     private static List<ReportableGermlineVariant> createTestGermlineVariantsTSGGene(boolean biallelic, double adjustedCopyNumber) {
-        return Lists.newArrayList(createTestGermlineVariantBuilder()
-                .gene(TSG)
+        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(TSG)
                 .biallelic(biallelic)
                 .adjustedCopyNumber(adjustedCopyNumber)
                 .build());

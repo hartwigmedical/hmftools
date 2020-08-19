@@ -65,9 +65,9 @@ public final class ExampleAnalysisTestFactory {
     public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
             @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary, boolean reportGermline) {
         double averageTumorPloidy = 3.1;
-        int tumorMutationalLoad = 180;
-        double tumorMutationalBurden = 13.6;
-        double microsatelliteIndelsPerMb = 0.11;
+        int tumorMutationalLoad = 190;
+        double tumorMutationalBurden = 13.7;
+        double microsatelliteIndelsPerMb = 0.12;
         double chordHrdValue = 0D;
 
         ReportData reportData = testReportData();
@@ -512,8 +512,8 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("7:140453136")
-                .alleleReadCount(154)
-                .totalReadCount(227)
+                .alleleReadCount(150)
+                .totalReadCount(221)
                 .allelePloidy(4.0842)
                 .totalPloidy(6.0)
                 .hotspot(Hotspot.HOTSPOT)
@@ -534,8 +534,8 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticist(reportGermlineVariant)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
-                .alleleReadCount(95)
-                .totalReadCount(103)
+                .alleleReadCount(99)
+                .totalReadCount(99)
                 .allelePloidy(1.854083)
                 .totalPloidy(1.99)
                 .hotspot(Hotspot.NEAR_HOTSPOT)
@@ -556,8 +556,8 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("5:1295228")
-                .alleleReadCount(49)
-                .totalReadCount(64)
+                .alleleReadCount(56)
+                .totalReadCount(65)
                 .allelePloidy(1.5468)
                 .totalPloidy(2.0)
                 .hotspot(Hotspot.HOTSPOT)
@@ -578,8 +578,8 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("2:198266779")
-                .alleleReadCount(76)
-                .totalReadCount(115)
+                .alleleReadCount(74)
+                .totalReadCount(111)
                 .allelePloidy(2.009206)
                 .totalPloidy(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
@@ -600,8 +600,8 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
-                .alleleReadCount(52)
-                .totalReadCount(119)
+                .alleleReadCount(47)
+                .totalReadCount(112)
                 .allelePloidy(1.748016)
                 .totalPloidy(3.98)
                 .hotspot(Hotspot.NON_HOTSPOT)

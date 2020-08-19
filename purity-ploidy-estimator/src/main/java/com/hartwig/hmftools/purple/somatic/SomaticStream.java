@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.SomaticVariantDrivers;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -51,8 +52,10 @@ public class SomaticStream {
     private final SomaticVariantFactory somaticVariantFactory;
     private final RChartData rChartData;
     private final List<CanonicalTranscript> transcripts;
+    private final DriverGenePanel genePanel;
 
     public SomaticStream(final ConfigSupplier configSupplier) {
+        this.genePanel = configSupplier.driverCatalogConfig().genePanel();
         this.somaticConfig = configSupplier.somaticConfig();
         this.commonConfig = configSupplier.commonConfig();
         this.driverCatalogConfig = configSupplier.driverCatalogConfig();
@@ -62,11 +65,12 @@ public class SomaticStream {
         this.refGenomeData = configSupplier.refGenomeConfig();
         this.tumorMutationalLoad = new TumorMutationalLoad();
         this.microsatelliteIndels = new MicrosatelliteIndels();
-        this.drivers = new SomaticVariantDrivers();
+        this.drivers = new SomaticVariantDrivers(genePanel);
         this.somaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
         this.rChartData = new RChartData(commonConfig.outputDirectory(), commonConfig.tumorSample());
         this.transcripts =
                 configSupplier.refGenomeConfig().isHg38() ? CanonicalTranscriptFactory.create38() : CanonicalTranscriptFactory.create37();
+
     }
 
     public double microsatelliteIndelsPerMb() {
@@ -126,6 +130,7 @@ public class SomaticStream {
                         commonConfig.tumorSample(),
                         indexedFastaSequenceFile,
                         purityAdjuster,
+                        genePanel,
                         copyNumbers,
                         fittedRegions,
                         somaticPeaks,

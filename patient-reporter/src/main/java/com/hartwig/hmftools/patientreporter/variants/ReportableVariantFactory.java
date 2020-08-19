@@ -5,11 +5,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,12 +22,12 @@ final class ReportableVariantFactory {
 
     @NotNull
     static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGenePanel driverGenePanel,
             @NotNull List<ReportableGermlineVariantExtended> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
-            DriverCategory category = driverGeneView.category(variant.gene());
+            DriverCategory category = driverGenePanel.category(variant.gene());
             assert category != null;
 
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
@@ -48,7 +48,7 @@ final class ReportableVariantFactory {
         }
 
         for (ReportableGermlineVariantExtended germlineVariant : germlineVariantsToReport) {
-            DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
+            DriverCategory category = driverGenePanel.category(germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
             double adjustedDriverLikelihood = germlineVariant.driverLikelihood();
             if (catalog != null) {
