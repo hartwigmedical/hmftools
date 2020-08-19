@@ -11,6 +11,7 @@ public class CupConstants
     public final static String CANCER_TYPE_PROSTATE = "Prostate";
     public final static String CANCER_TYPE_OVARY = "Ovary";
     public final static String CANCER_TYPE_UTERUS = "Uterus";
+    public final static String CANCER_TYPE_PAN = "ALL";
 
     public final static double DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.10;
     public final static double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.02;

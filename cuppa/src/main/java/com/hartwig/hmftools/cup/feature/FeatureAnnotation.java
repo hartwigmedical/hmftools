@@ -8,10 +8,12 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENCE_ALLOCATION;
 import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromDatabase;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefCancerFeatureAvg;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefPrevalenceData;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
@@ -41,7 +43,8 @@ public class FeatureAnnotation
     private final SampleDataCache mSampleDataCache;
     private boolean mValidData;
 
-    private final Map<String, FeaturePrevCounts> mGenePrevalenceTotals;
+    private final Map<String,FeaturePrevCounts> mGenePrevalenceTotals;
+    private final Map<String,Double> mCancerFeatureAvg;
 
     public FeatureAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
@@ -49,6 +52,7 @@ public class FeatureAnnotation
         mSampleFeatures = Maps.newHashMap();
         mCancerFeaturePrevalence = Maps.newHashMap();
         mGenePrevalenceTotals = Maps.newHashMap();
+        mCancerFeatureAvg = Maps.newHashMap();
         mSampleDataCache = sampleDataCache;
         mValidData = false;
 
@@ -57,6 +61,7 @@ public class FeatureAnnotation
 
         mValidData = true;
         loadRefPrevalenceData(config.RefFeaturePrevFile, mGenePrevalenceTotals, mCancerFeaturePrevalence);
+        loadRefCancerFeatureAvg(config.RefFeatureAvgFile, mCancerFeatureAvg);
         formGenePrevalenceTotals();
         loadSampleFeatures();
     }
@@ -167,6 +172,18 @@ public class FeatureAnnotation
         return newFeatures;
     }
 
+    private double getFeaturesPerSampleRatio(final String cancerType)
+    {
+        // penalises cancer types with more features (typically drivers) per sample
+        Double panCancerAvg = mCancerFeatureAvg.get(CANCER_TYPE_PAN);
+        Double cancerAvg = mCancerFeatureAvg.get(cancerType);
+
+        if(panCancerAvg != null && cancerAvg != null && panCancerAvg > 0 && cancerAvg > 0)
+            return panCancerAvg / cancerAvg;
+
+        return 1;
+    }
+
     private void calcCancerTypeProbability(
             final SampleData sample, final List<SampleFeatureData> allSampleFeatures, final List<SampleResult> results)
     {
@@ -237,6 +254,8 @@ public class FeatureAnnotation
 
                 probabilityTotal *= pow(driverPrevValue, maxLikelihood) / genePrevTotal;
             }
+
+            probabilityTotal *= getFeaturesPerSampleRatio(cancerType);
 
             cancerProbTotals.put(cancerType, probabilityTotal);
             allCancerProbTotal += probabilityTotal;

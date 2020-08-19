@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.feature;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE;
@@ -172,6 +173,29 @@ public class FeatureDataLoader
         }
     }
 
+    public static void loadRefCancerFeatureAvg(final String filename, final Map<String,Double> cancerFeatureAvgs)
+    {
+        if(filename == null || filename.isEmpty())
+            return;
 
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            fileData.remove(0);
+
+            for(final String line : fileData)
+            {
+                final String[] items = line.split(DATA_DELIM);
+                final String cancerType = items[0];
+                double average = Double.parseDouble(items[1]);
+                cancerFeatureAvgs.put(cancerType, average);
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read feature averages data file({}): {}", filename, e.toString());
+        }
+    }
 
 }

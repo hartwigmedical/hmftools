@@ -139,7 +139,6 @@ public class SignatureAnnotation
         }
 
         final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
-        int snvTotal = (int)sumVector(sampleCounts);
 
         if(mConfig.runCategory(CLASSIFIER))
         {
@@ -149,7 +148,7 @@ public class SignatureAnnotation
 
         if(mConfig.runCategory(SNV_SIG))
         {
-            addSigContributionResults(sample, snvTotal, results);
+            addSigContributionResults(sample, results);
         }
 
         return results;
@@ -285,7 +284,7 @@ public class SignatureAnnotation
     private static final String SIG_NAME_2 = "Sig2";
     private static final String SIG_NAME_13 = "Sig13";
 
-    private void addSigContributionResults(final SampleData sample, int snvTotal, final List<SampleResult> results)
+    private void addSigContributionResults(final SampleData sample, final List<SampleResult> results)
     {
         final Map<String,Double> sampleSigContribs = mSampleSigContributions.get(sample.Id);
 
