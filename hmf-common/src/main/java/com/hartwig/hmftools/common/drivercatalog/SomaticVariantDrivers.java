@@ -4,12 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -19,24 +17,22 @@ import org.jetbrains.annotations.NotNull;
 
 public class SomaticVariantDrivers {
 
+    private final DriverGenePanel genePanel;
+
     private final List<SomaticVariant> tsgVariants = Lists.newArrayList();
     private final List<SomaticVariant> oncoVariants = Lists.newArrayList();
     private final Map<VariantType, Long> variantTypeCounts = Maps.newHashMap();
     private final Map<VariantType, Long> variantTypeCountsBiallelic = Maps.newHashMap();
     private final Map<VariantType, Long> variantTypeCountsNonBiallelic = Maps.newHashMap();
     private final Map<String, DndsDriverGeneLikelihood> tsgLikelihood;
-    private final Map<String, DndsDriverImpactLikelihood> oncoLikelihood;
 
     private final Predicate<SomaticVariant> oncoPredicate;
     private final Predicate<SomaticVariant> tsgPredicate;
 
     public SomaticVariantDrivers(@NotNull final DriverGenePanel panel) {
+        this.genePanel = panel;
         tsgLikelihood = panel.tsgLikelihood();
-        oncoLikelihood = panel.oncoLikelihood()
-                .values()
-                .stream()
-                .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, DndsDriverGeneLikelihood::missense));
-        oncoPredicate = OncoDrivers.oncoVariant(panel.oncoGenes());
+        oncoPredicate = new OncoPredicate(panel);
         tsgPredicate = TsgDrivers.tsgVariant(panel.tsGenes());
     }
 
@@ -61,9 +57,11 @@ public class SomaticVariantDrivers {
 
     @NotNull
     public List<DriverCatalog> build(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+        final OncoDrivers oncoDrivers = new OncoDrivers(genePanel);
+
 
         final List<DriverCatalog> result = Lists.newArrayList();
-        result.addAll(OncoDrivers.drivers(oncoLikelihood, oncoVariants, geneCopyNumbers, variantTypeCounts));
+        result.addAll(oncoDrivers.drivers(oncoVariants, geneCopyNumbers, variantTypeCounts));
         result.addAll(TsgDrivers.drivers(tsgLikelihood,
                 tsgVariants,
                 geneCopyNumbers,

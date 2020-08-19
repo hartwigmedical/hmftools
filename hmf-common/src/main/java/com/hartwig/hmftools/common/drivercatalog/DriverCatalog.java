@@ -28,6 +28,7 @@ public interface DriverCatalog {
 
     double driverLikelihood();
 
+    @Deprecated
     double dndsLikelihood();
 
     long missense();

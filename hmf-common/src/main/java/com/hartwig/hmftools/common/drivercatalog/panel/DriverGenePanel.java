@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,6 +14,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DriverGenePanel {
+
+    @NotNull
+    public abstract List<DriverGene> driverGenes();
 
     @NotNull
     public abstract Map<String, DndsDriverGeneLikelihood> tsgLikelihood();
