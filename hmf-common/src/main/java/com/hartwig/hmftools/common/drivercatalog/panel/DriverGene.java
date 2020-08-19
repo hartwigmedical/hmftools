@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,13 +26,17 @@ public interface DriverGene extends Comparable<DriverGene> {
 
     boolean reportAmplification();
 
-    boolean reportPromoterHotspots();
+    boolean reportHotspot();
 
     @NotNull
-    DriverLikelihoodType likelihoodType();
+    DriverCategory likelihoodType();
 
     @Override
     default int compareTo(@NotNull final DriverGene o) {
         return gene().compareTo(o.gene());
+    }
+
+    default boolean reportVariant() {
+        return reportMissenseAndInframe() || reportNonsenseAndFrameshift() || reportSplice() || reportHotspot();
     }
 }

@@ -24,12 +24,12 @@ final class OncoDrivers {
 
     static final int MAX_REPEAT_COUNT = 7;
 
-    private final OncoPredicate oncoPredicate;
+    private final ReportablePredicate reportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene;
 
     public OncoDrivers(DriverGenePanel genePanel) {
         likelihoodsByGene = genePanel.oncoLikelihood();
-        oncoPredicate = new OncoPredicate(genePanel);
+        reportablePredicate = new ReportablePredicate(DriverCategory.ONCO, genePanel);
     }
 
     @NotNull
@@ -61,7 +61,7 @@ final class OncoDrivers {
 
     @NotNull
     private Map<String, List<SomaticVariant>> oncogenicVariantsByGene(@NotNull final List<SomaticVariant> variants) {
-        return variants.stream().filter(oncoPredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
+        return variants.stream().filter(reportablePredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
     @NotNull

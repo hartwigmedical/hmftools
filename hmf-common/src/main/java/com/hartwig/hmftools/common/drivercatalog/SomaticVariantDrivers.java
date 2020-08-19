@@ -32,8 +32,8 @@ public class SomaticVariantDrivers {
     public SomaticVariantDrivers(@NotNull final DriverGenePanel panel) {
         this.genePanel = panel;
         tsgLikelihood = panel.tsgLikelihood();
-        oncoPredicate = new OncoPredicate(panel);
-        tsgPredicate = TsgDrivers.tsgVariant(panel.tsGenes());
+        oncoPredicate = new ReportablePredicate(DriverCategory.ONCO, panel);
+        tsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel);
     }
 
     public void add(@NotNull final SomaticVariant variant) {

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 
@@ -32,12 +33,12 @@ public class DriverGenePanelFactory {
     public DriverGenePanel create(final List<DriverGene> genes) {
 
         final Set<String> tsGenes = genes.stream()
-                .filter(x -> x.likelihoodType().equals(DriverLikelihoodType.TSG))
+                .filter(x -> x.likelihoodType().equals(DriverCategory.TSG) && x.reportVariant())
                 .map(DriverGene::gene)
                 .collect(Collectors.toSet());
 
         final Set<String> oncoGenes = genes.stream()
-                .filter(x -> x.likelihoodType().equals(DriverLikelihoodType.ONCO))
+                .filter(x -> x.likelihoodType().equals(DriverCategory.ONCO) && x.reportVariant())
                 .map(DriverGene::gene)
                 .collect(Collectors.toSet());
 

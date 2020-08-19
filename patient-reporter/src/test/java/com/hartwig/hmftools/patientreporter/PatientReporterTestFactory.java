@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverLikelihoodType;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
@@ -191,8 +190,8 @@ public final class PatientReporterTestFactory {
 
     @NotNull
     public static DriverGenePanel createTestDriverGenePanel(@NotNull String oncogene, @NotNull String tsg) {
-        DriverGene oncoGene = createTestDriverGene(oncogene, DriverLikelihoodType.ONCO);
-        DriverGene tsgGene = createTestDriverGene(tsg, DriverLikelihoodType.TSG);
+        DriverGene oncoGene = createTestDriverGene(oncogene, DriverCategory.ONCO);
+        DriverGene tsgGene = createTestDriverGene(tsg, DriverCategory.TSG);
         return new DriverGenePanelFactory().create(Lists.newArrayList(oncoGene, tsgGene));
     }
 
@@ -219,7 +218,7 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    private static DriverGene createTestDriverGene(@NotNull final String gene, @NotNull final DriverLikelihoodType type) {
+    private static DriverGene createTestDriverGene(@NotNull final String gene, @NotNull final DriverCategory type) {
         return ImmutableDriverGene.builder()
                 .gene(gene)
                 .deletionBand(Strings.EMPTY)
@@ -228,7 +227,7 @@ public final class PatientReporterTestFactory {
                 .reportSplice(false)
                 .reportDeletionAndDisruption(false)
                 .reportAmplification(false)
-                .reportPromoterHotspots(false)
+                .reportHotspot(false)
                 .likelihoodType(type)
                 .build();
     }

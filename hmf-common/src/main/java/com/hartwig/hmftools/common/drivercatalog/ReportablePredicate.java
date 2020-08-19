@@ -6,20 +6,18 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverLikelihoodType;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class OncoPredicate implements Predicate<SomaticVariant> {
+public class ReportablePredicate implements Predicate<SomaticVariant> {
 
-    static final int MAX_REPEAT_COUNT = 7; //TODO: INVESTIGATE THIS
     private final Map<String, DriverGene> driverGeneMap;
 
-    public OncoPredicate(@NotNull final DriverGenePanel driverGenePanel) {
+    public ReportablePredicate(@NotNull final DriverCategory type, @NotNull final DriverGenePanel driverGenePanel) {
         this.driverGeneMap = driverGenePanel.driverGenes()
                 .stream()
-                .filter(x -> x.likelihoodType().equals(DriverLikelihoodType.ONCO))
+                .filter(x -> x.likelihoodType().equals(type) && x.reportVariant())
                 .collect(Collectors.toMap(DriverGene::gene, x -> x));
     }
 
@@ -30,8 +28,7 @@ public class OncoPredicate implements Predicate<SomaticVariant> {
             return false;
         }
 
-        //TODO: DOUBLE CHECK THIS
-        if (variant.isHotspot()) { //) && driverGene.reportPromoterHotspots()) {
+        if (variant.isHotspot() && driverGene.reportHotspot()) {
             return true;
         }
 
