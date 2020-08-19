@@ -60,7 +60,18 @@ public class PercentilesTest
         values = new double[] { 0.0, 0.0, 0.0, 4.0, 5.0, 6.0 };
         percentileValues = buildPercentiles(values);
 
-        assertEquals(0.4, getPercentile(percentileValues, 0), 0.01);
+        assertEquals(0.2, getPercentile(percentileValues, 0), 0.01);
+
+        // same value higher up
+        values = new double[] { 1, 2, 3, 4, 4, 4, 4, 4, 5, 6, 7 };
+        percentileValues = buildPercentiles(values);
+
+        assertEquals(0.5, getPercentile(percentileValues, 4), 0.01);
+
+        values = new double[] { 1, 2, 3, 4, 5, 6, 7, 7, 7, 7, 7 };
+        percentileValues = buildPercentiles(values);
+
+        assertEquals(0.8, getPercentile(percentileValues, 7), 0.01);
     }
 
 }

@@ -23,7 +23,15 @@ public class Percentiles
             return INVALID_VALUE;
 
         if(value < percentileValues[0])
-            return 0;
+        {
+            // report values below the lowest value as a negative inverse fraction
+            if(percentileValues[0] == 0 || !useMaxMultiple)
+                return 0;
+            else if(value == 0)
+                return -100;
+            else
+                return -percentileValues[0] / value;
+        }
         else if(value > percentileValues[percentileValues.length - 1])
         {
             if(useMaxMultiple)
@@ -35,14 +43,30 @@ public class Percentiles
             return (percentileValues.length - 1) * 0.01;
         }
 
+        int sameValueStart = -1;
+        int sameValueEnd = 0;
         for(int i = 0; i < percentileValues.length - 1; ++i)
         {
-            // where successive percentile values are the same (eg zeros for the first X percentiles), report the highest
-            if(percentileValues[i] ==  percentileValues[i + 1])
-                continue;
+            // where successive percentile values are the same (eg zeros for the first X percentiles), report the median percentile
+            if(value == percentileValues[i] && percentileValues[i] == percentileValues[i + 1])
+            {
+                if(sameValueStart == -1)
+                    sameValueStart =  i;
+
+                sameValueEnd = i + 1;
+
+                if(i < percentileValues.length - 2)
+                    continue;
+            }
 
             if(value >= percentileValues[i] && value <= percentileValues[i + 1])
             {
+                if(value > percentileValues[i] && value == percentileValues[i + 1] && i < percentileValues.length - 2)
+                    continue;
+
+                if(value == percentileValues[i] && sameValueStart >= 0 && sameValueStart < sameValueEnd)
+                    return (0.5 * sameValueStart + 0.5 * sameValueEnd) * 0.01;
+
                 if(percentileValues[i + 1] == percentileValues[i])
                     return i * 0.01;
 
