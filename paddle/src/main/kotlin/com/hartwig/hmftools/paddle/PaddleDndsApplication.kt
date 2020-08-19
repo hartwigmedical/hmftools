@@ -89,10 +89,10 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         val tsgNoneBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.nonBiallelicLoad, dndsCvNonBiallelic, tsgNonBiallelicGeneMutations)
 
 
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/AllDndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/AllDndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/AllDndsDriverLikelihoodTsgBiallelic.tsv", tsgBiallelicLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/AllDndsDriverLikelihoodTsgNonBiallelic.tsv", tsgNoneBiallelicLikelihood.values)
+        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
+        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
+        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsgBiallelic.tsv", tsgBiallelicLikelihood.values)
+        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsgNonBiallelic.tsv", tsgNoneBiallelicLikelihood.values)
 
     }
 

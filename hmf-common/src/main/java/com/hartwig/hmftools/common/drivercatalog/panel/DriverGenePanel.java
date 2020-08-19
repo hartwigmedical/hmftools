@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +18,7 @@ public abstract class DriverGenePanel {
     public abstract Map<String, DndsDriverGeneLikelihood> tsgLikelihood();
 
     @NotNull
-    public abstract Map<String, DndsDriverImpactLikelihood> oncoLikelihood();
+    public abstract Map<String, DndsDriverGeneLikelihood> oncoLikelihood();
 
     @NotNull
     public abstract Set<String> amplificationTargets();

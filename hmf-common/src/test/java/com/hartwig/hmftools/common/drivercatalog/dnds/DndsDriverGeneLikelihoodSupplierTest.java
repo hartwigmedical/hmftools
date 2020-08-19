@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,17 +18,20 @@ public class DndsDriverGeneLikelihoodSupplierTest {
 
     @Before
     public void setup() {
-        onco = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
+        onco = DndsDriverGeneLikelihoodSupplier.oncoLikelihood()
+                .values()
+                .stream()
+                .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, DndsDriverGeneLikelihood::missense));
         tsg = DndsDriverGeneLikelihoodSupplier.tsgLikelihood();
     }
 
     @Test
     public void testReadOncoGenes() {
-        DndsDriverImpactLikelihood missense = onco.get("AKT1");
+        DndsDriverImpactLikelihood missense = onco.get("ABL1");
 
-        assertEquals(0.327, missense.dndsLikelihood(), 0.001);
-        assertEquals(0.002, missense.pDriver(), 0.001);
-        assertEquals(1e-07, missense.pVariantNonDriverFactor(), 1e-7);
+        assertEquals(0.0286, missense.dndsLikelihood(), 0.0001);
+        assertEquals(0.0002922, missense.pDriver(), 1e-7);
+        assertEquals(3.88883831596225e-07, missense.pVariantNonDriverFactor(), 1e-8);
     }
 
     @Test

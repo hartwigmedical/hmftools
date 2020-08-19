@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -31,7 +32,10 @@ public class SomaticVariantDrivers {
 
     public SomaticVariantDrivers(@NotNull final DriverGenePanel panel) {
         tsgLikelihood = panel.tsgLikelihood();
-        oncoLikelihood = panel.oncoLikelihood();
+        oncoLikelihood = panel.oncoLikelihood()
+                .values()
+                .stream()
+                .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, DndsDriverGeneLikelihood::missense));
         oncoPredicate = OncoDrivers.oncoVariant(panel.oncoGenes());
         tsgPredicate = TsgDrivers.tsgVariant(panel.tsGenes());
     }

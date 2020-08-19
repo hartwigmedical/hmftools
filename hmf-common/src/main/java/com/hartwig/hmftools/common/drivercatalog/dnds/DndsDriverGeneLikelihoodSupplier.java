@@ -32,9 +32,9 @@ public final class DndsDriverGeneLikelihoodSupplier {
     }
 
     @NotNull
-    public static Map<String, DndsDriverImpactLikelihood> oncoLikelihood(@NotNull final Set<String> tsGenes) {
-        Map<String, DndsDriverImpactLikelihood> filtered = Maps.newHashMap();
-        Map<String, DndsDriverImpactLikelihood> all = oncoLikelihood();
+    public static Map<String, DndsDriverGeneLikelihood> oncoLikelihood(@NotNull final Set<String> tsGenes) {
+        Map<String, DndsDriverGeneLikelihood> filtered = Maps.newHashMap();
+        Map<String, ModifiableDndsDriverGeneLikelihood> all = oncoLikelihood();
 
         for (String target : tsGenes) {
             if (!all.containsKey(target)) {
@@ -59,11 +59,11 @@ public final class DndsDriverGeneLikelihoodSupplier {
 
         for (ModifiableDndsDriverGeneLikelihood likelihood : standard.values()) {
             final String gene = likelihood.gene();
-            if (biallelic.keySet().contains(gene)) {
+            if (biallelic.containsKey(gene)) {
                 likelihood.setMissenseBiallelic(biallelic.get(gene));
             }
 
-            if (nonBiallelic.keySet().contains(gene)) {
+            if (nonBiallelic.containsKey(gene)) {
                 likelihood.setMissenseNonBiallelic(nonBiallelic.get(gene));
             }
 
@@ -74,8 +74,8 @@ public final class DndsDriverGeneLikelihoodSupplier {
     }
 
     @NotNull
-    public static Map<String, DndsDriverImpactLikelihood> oncoLikelihood() {
-        return fromSingleImpactInputStream(resource("/dnds/DndsDriverLikelihoodOnco.tsv"));
+    public static Map<String, ModifiableDndsDriverGeneLikelihood> oncoLikelihood() {
+        return fromMultiImpactInputStream(resource("/dnds/DndsDriverLikelihoodOnco.tsv"));
     }
 
     @NotNull

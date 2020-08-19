@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
@@ -24,7 +25,10 @@ public class DriverCatalogFactoryTest {
     @Before
     public void setup() {
         DriverGenePanel genePanel = new DriverGenePanelFactory().create();
-        onco = genePanel.oncoLikelihood();
+        onco = genePanel.oncoLikelihood()
+                .values()
+                .stream()
+                .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, DndsDriverGeneLikelihood::missense));
         tsg = genePanel.tsgLikelihood();
     }
 
