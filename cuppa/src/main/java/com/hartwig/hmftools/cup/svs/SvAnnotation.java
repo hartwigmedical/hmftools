@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.svs;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.common.ResultType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -65,7 +67,7 @@ public class SvAnnotation
                 cancerTypeValues.put(cancerType, percentile);
             }
 
-            SampleResult result = new SampleResult(sample.Id, SV, svDataType.toString(), svCount, cancerTypeValues);
+            SampleResult result = new SampleResult(sample.Id, SV, PERCENTILE, svDataType.toString(), svCount, cancerTypeValues);
             results.add(result);
         }
 
@@ -81,8 +83,6 @@ public class SvAnnotation
         else if(mConfig.DbAccess != null)
         {
             loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
-
         }
     }
-
 }

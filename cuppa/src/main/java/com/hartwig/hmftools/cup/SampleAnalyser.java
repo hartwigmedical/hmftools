@@ -7,12 +7,14 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SPECIFIC_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupCalcs.addPercentileClassifier;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -118,7 +120,7 @@ public class SampleAnalyser
 
             mSampleDataWriter = createBufferedWriter(outputFilename, false);
 
-            mSampleDataWriter.write("SampleId,CancerType,PrimaryLocation,CancerSubtype,Category,DataType,Value,RefCancerType,RefValue");
+            mSampleDataWriter.write("SampleId,CancerType,PrimaryLocation,CancerSubtype,Category,ResultType,DataType,Value,RefCancerType,RefValue");
             mSampleDataWriter.newLine();
         }
         catch(IOException e)
@@ -129,17 +131,23 @@ public class SampleAnalyser
 
     private void processSample(final SampleData sampleData)
     {
+        final List<SampleResult> allResults = Lists.newArrayList();
+
         final List<SampleResult> traitsResults = mSampleTraits.processSample(sampleData);
-        writeSampleData(sampleData, traitsResults);
+        allResults.addAll(traitsResults);
 
         final List<SampleResult> snvResults = mSnvSignatures.processSample(sampleData);
-        writeSampleData(sampleData, snvResults);
+        allResults.addAll(snvResults);
 
         final List<SampleResult> svResults = mSvAnnotation.processSample(sampleData);
-        writeSampleData(sampleData, svResults);
+        allResults.addAll(svResults);
 
         final List<SampleResult> driverResults = mDrivers.processSample(sampleData);
-        writeSampleData(sampleData, driverResults);
+        allResults.addAll(driverResults);
+
+        addPercentileClassifier(allResults);
+
+        writeSampleData(sampleData, allResults);
     }
 
     private void writeSampleData(final SampleData sampleData, final List<SampleResult> results)
@@ -151,9 +159,9 @@ public class SampleAnalyser
         {
             for(SampleResult result : results)
             {
-                final String sampleStr = String.format("%s,%s,%s,%s,%s,%s,%s",
+                final String sampleStr = String.format("%s,%s,%s,%s,%s,%s,%s,%s",
                         sampleData.Id, sampleData.CancerType, sampleData.OriginalCancerType, sampleData.CancerSubtype,
-                        result.Category, result.DataType, result.Value.toString());
+                        result.Category, result.ResultType, result.DataType, result.Value.toString());
 
                 for(Map.Entry<String,Double> cancerValues : result.CancerTypeValues.entrySet())
                 {

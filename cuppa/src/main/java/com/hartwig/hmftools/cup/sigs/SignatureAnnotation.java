@@ -7,16 +7,16 @@ import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_COUNT_CSS;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_POS_FREQ_CSS;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
+import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSigContribPercentiles;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSnvPosFrequences;
@@ -203,7 +203,9 @@ public class SignatureAnnotation
             cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
         }
 
-        results.add(new SampleResult(sample.Id, CLASSIFIER, ClassifierType.displayString(SNV_COUNT_CSS), String.format("%.6f", totalCss), cancerCssTotals));
+        results.add(new SampleResult(
+                sample.Id, CLASSIFIER, LIKELIHOOD,
+                ClassifierType.displayString(SNV_COUNT_CSS), String.format("%.6f", totalCss), cancerCssTotals));
     }
 
     private void addPosFreqCssResults(final SampleData sample, final List<SampleResult> results)
@@ -235,7 +237,7 @@ public class SignatureAnnotation
 
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
-            final double[] refPosFreqs = mConfig.AdjustSnvPosFreqCounts && matchesCancerType ?
+            final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
                     adjustRefPosFreqCounts(mRefSnvPosFrequencies.getCol(i), sampleCounts, sampleTotal) : mRefSnvPosFrequencies.getCol(i);
 
             double css = calcCosineSim(sampleCounts, refPosFreqs);
@@ -262,7 +264,9 @@ public class SignatureAnnotation
             cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
         }
 
-        results.add(new SampleResult(sample.Id, CLASSIFIER, ClassifierType.displayString(SNV_POS_FREQ_CSS), String.format("%.4g", totalCss), cancerCssTotals));
+        results.add(new SampleResult(
+                sample.Id, CLASSIFIER, LIKELIHOOD,
+                ClassifierType.displayString(SNV_POS_FREQ_CSS), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
     private double[] adjustRefPosFreqCounts(final double[] refPosFreqs, final double[] sampleCounts, final double sampleTotal)
@@ -328,7 +332,7 @@ public class SignatureAnnotation
                 double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true);
                 cancerResults.put(cancerType, percentile);
 
-                results.add(new SampleResult(sample.Id, SNV_SIG, sigName.toUpperCase(), round(sampleSigContrib), cancerResults));
+                results.add(new SampleResult(sample.Id, SNV_SIG, PERCENTILE, sigName.toUpperCase(), round(sampleSigContrib), cancerResults));
             }
         }
     }

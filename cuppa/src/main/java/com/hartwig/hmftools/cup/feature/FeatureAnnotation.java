@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENCE_ALLOCATION;
 import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
+import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
+import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefCancerFeatureAvg;
@@ -109,7 +111,7 @@ public class FeatureAnnotation
                 cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.Prevalence : 0);
             }
 
-            SampleResult result = new SampleResult(sample.Id, FEATURE, feature.Type.toString(), feature.Gene, cancerTypeValues);
+            SampleResult result = new SampleResult(sample.Id, FEATURE, PREVALENCE, feature.Type.toString(), feature.Gene, cancerTypeValues);
             results.add(result);
         }
     }
@@ -269,7 +271,7 @@ public class FeatureAnnotation
             cancerTypeValues.put(entry.getKey(), probability);
         }
 
-        SampleResult result = new SampleResult(sample.Id, CLASSIFIER, ClassifierType.displayString(FEATURE_PREVALENCE), geneNames, cancerTypeValues);
+        SampleResult result = new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.displayString(FEATURE_PREVALENCE), geneNames, cancerTypeValues);
         results.add(result);
     }
 

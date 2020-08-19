@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cup.sample;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_CLASS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
+import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromCohortFile;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
@@ -15,6 +17,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.common.ResultType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -95,7 +98,7 @@ public class SampleTraits
                 }
 
                 SampleResult result = new SampleResult(
-                        sample.Id, SAMPLE_CLASS, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
+                        sample.Id, SAMPLE_CLASS, PREVALENCE, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
 
                 results.add(result);
             }
@@ -117,7 +120,9 @@ public class SampleTraits
                     cancerTypeValues.put(cancerType, percentile);
                 }
 
-                SampleResult result = new SampleResult(sample.Id, SAMPLE_TRAIT, traitType.toString(), traitValue, cancerTypeValues);
+                SampleResult result = new SampleResult(
+                        sample.Id, SAMPLE_TRAIT, PERCENTILE, traitType.toString(), traitValue, cancerTypeValues);
+
                 results.add(result);
             }
         }
