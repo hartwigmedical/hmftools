@@ -7,7 +7,6 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -24,14 +23,12 @@ public class SomaticVariantDrivers {
     private final Map<VariantType, Long> variantTypeCounts = Maps.newHashMap();
     private final Map<VariantType, Long> variantTypeCountsBiallelic = Maps.newHashMap();
     private final Map<VariantType, Long> variantTypeCountsNonBiallelic = Maps.newHashMap();
-    private final Map<String, DndsDriverGeneLikelihood> tsgLikelihood;
 
     private final Predicate<SomaticVariant> oncoPredicate;
     private final Predicate<SomaticVariant> tsgPredicate;
 
     public SomaticVariantDrivers(@NotNull final DriverGenePanel panel) {
         this.genePanel = panel;
-        tsgLikelihood = panel.tsgLikelihood();
         oncoPredicate = new ReportablePredicate(DriverCategory.ONCO, panel);
         tsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel);
     }
@@ -58,12 +55,11 @@ public class SomaticVariantDrivers {
     @NotNull
     public List<DriverCatalog> build(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
         final OncoDrivers oncoDrivers = new OncoDrivers(genePanel);
-
+        final TsgDrivers tsgDrivers = new TsgDrivers(genePanel);
 
         final List<DriverCatalog> result = Lists.newArrayList();
         result.addAll(oncoDrivers.drivers(oncoVariants, geneCopyNumbers, variantTypeCounts));
-        result.addAll(TsgDrivers.drivers(tsgLikelihood,
-                tsgVariants,
+        result.addAll(tsgDrivers.drivers(tsgVariants,
                 geneCopyNumbers,
                 variantTypeCounts,
                 variantTypeCountsBiallelic,

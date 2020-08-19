@@ -8,7 +8,5 @@ public enum LikelihoodMethod
     DNDS,
     AMP,
     DEL,
-    PROMOTER,
-    NEAR_HOTSPOT, // TODO to be removed
     NONE
 }

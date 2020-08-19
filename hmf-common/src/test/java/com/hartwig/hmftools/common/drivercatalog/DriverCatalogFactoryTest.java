@@ -55,7 +55,7 @@ public class DriverCatalogFactoryTest {
         DndsDriverImpactLikelihood indelLikelihood =
                 ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(1).pDriver(0.01).pVariantNonDriverFactor(0).build();
         double value = DriverCatalogFactory.probabilityDriverVariant(1000, 1000, indelLikelihood, indelLikelihood);
-        assertEquals(1, value, EPSILON);
+        assertEquals(0, value, EPSILON);
     }
 
     @Test
@@ -84,7 +84,8 @@ public class DriverCatalogFactoryTest {
         DndsDriverImpactLikelihood missenseLikelihood =
                 ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(0.87).pDriver(0.01).pVariantNonDriverFactor(10e-8).build();
 
+        double expectedMissense = DriverCatalogFactory.probabilityDriverVariant(10000, missenseLikelihood);
         double value = DriverCatalogFactory.probabilityDriverVariant(10000, 1000, missenseLikelihood, indelLikelihood);
-        assertEquals(1, value, EPSILON);
+        assertEquals(expectedMissense, value, EPSILON);
     }
 }

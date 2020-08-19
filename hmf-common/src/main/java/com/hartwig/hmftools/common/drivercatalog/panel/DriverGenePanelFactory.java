@@ -53,6 +53,7 @@ public class DriverGenePanelFactory {
                 .collect(Collectors.toMap(DriverGene::gene, DriverGene::deletionBand));
 
         return ImmutableDriverGenePanel.builder()
+                .driverGenes(genes)
                 .tsgLikelihood(tsgLikelihood)
                 .oncoLikelihood(oncoLikelihood)
                 .amplificationTargets(amplificationTargets)

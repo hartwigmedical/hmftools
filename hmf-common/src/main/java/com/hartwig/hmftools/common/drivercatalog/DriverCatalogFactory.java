@@ -42,7 +42,7 @@ final class DriverCatalogFactory {
             @NotNull final DndsDriverImpactLikelihood likelihood) {
         double lambda = sampleSNVCount * likelihood.pVariantNonDriverFactor();
         if (Doubles.isZero(lambda)) {
-            return likelihood.dndsLikelihood();
+            return 0.0;
         }
 
         PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
