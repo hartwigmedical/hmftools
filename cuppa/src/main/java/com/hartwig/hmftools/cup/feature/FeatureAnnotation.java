@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cup.feature;
 
+import static java.lang.Math.max;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
@@ -187,10 +188,12 @@ public class FeatureAnnotation
                 continue;
             }
 
+            boolean adjustMatchingCancerPrev = sample.CancerType.equals(cancerType);
+
             final List<FeaturePrevData> driverPrevalences = entry.getValue();
 
             // only count at most one AMP or DEL per chromosome to avoid the effects of a single event impacting more than 1 gene
-            final List<SampleFeatureData> sampleFeatures = cullMultiChromosomalEvents(allSampleFeatures, cancerType);
+            final List<SampleFeatureData> sampleFeatures = allSampleFeatures; // cullMultiChromosomalEvents(allSampleFeatures, cancerType);
 
             final Set<String> genes = Sets.newHashSet();
             sampleFeatures.forEach(x -> genes.add(x.Gene));
@@ -211,8 +214,28 @@ public class FeatureAnnotation
                 final FeaturePrevData driverPrev = driverPrevalences.stream()
                         .filter(x -> x.Gene.equals(gene)).findFirst().orElse(null);
 
-                double driverPrevValue = driverPrev != null ? driverPrev.Prevalence : genePrevTotals.MinPrevalence;
-                probabilityTotal *= pow(driverPrevValue, maxLikelihood) / genePrevTotals.PositiveTotal;
+                double genePrevTotal = genePrevTotals.PositiveTotal;
+                double driverPrevValue;
+
+                if(driverPrev != null)
+                {
+                    driverPrevValue = driverPrev.Prevalence;
+
+                    if(adjustMatchingCancerPrev)
+                    {
+                        int cohortSize = mSampleDataCache.RefCancerSampleData.get(cancerType).size();
+                        double adjustedIncidence = driverPrevValue * cohortSize - maxLikelihood;
+                        double adjustedDriverPrevValue = cohortSize > 1 ? adjustedIncidence / (cohortSize - 1) : 0;
+                        genePrevTotal -= driverPrevValue - adjustedDriverPrevValue;
+                        driverPrevValue = adjustedDriverPrevValue;
+                    }
+                }
+                else
+                {
+                    driverPrevValue = genePrevTotals.MinPrevalence;
+                }
+
+                probabilityTotal *= pow(driverPrevValue, maxLikelihood) / genePrevTotal;
             }
 
             cancerProbTotals.put(cancerType, probabilityTotal);
@@ -254,7 +277,7 @@ public class FeatureAnnotation
             final String gene = geneEntry.getKey();
             final FeaturePrevCounts genePrevTotals = geneEntry.getValue();
 
-            int noPrevCancerCount = 0;
+            boolean hasNoPrevCancers = false;
             boolean isDriverType = false;
 
             for(Map.Entry<String,List<FeaturePrevData>> cancerEntry : mCancerFeaturePrevalence.entrySet())
@@ -264,21 +287,26 @@ public class FeatureAnnotation
 
                 if(featurePrevData != null)
                 {
+                    isDriverType = featurePrevData.Type == DRIVER;
+
+                    double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
+                    featurePrevData.Prevalence += noPrevValue;
                     genePrevTotals.PositiveTotal += featurePrevData.Prevalence;
                     genePrevTotals.NegitiveTotal += 1 - featurePrevData.Prevalence;
-                    isDriverType = featurePrevData.Type == DRIVER;
                 }
                 else
                 {
-                    ++noPrevCancerCount;
+                    hasNoPrevCancers = true;
                 }
             }
 
-            if(noPrevCancerCount > 0)
+            if(hasNoPrevCancers)
             {
                 double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
-                genePrevTotals.PositiveTotal += noPrevValue;
-                genePrevTotals.MinPrevalence = noPrevValue / noPrevCancerCount;
+                double noPrevAllocation = noPrevValue * cancerTypeCount;
+
+                genePrevTotals.PositiveTotal += noPrevAllocation;
+                genePrevTotals.MinPrevalence = noPrevValue;
             }
         }
     }

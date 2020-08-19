@@ -183,7 +183,7 @@ public class SignatureAnnotation
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            double cssWeight = pow(2, -100 * (1 - css));
+            double cssWeight = pow(8, -100 * (1 - css));
 
             int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
             double weightedCss = css * cssWeight / sqrt(cancerTypeCount);

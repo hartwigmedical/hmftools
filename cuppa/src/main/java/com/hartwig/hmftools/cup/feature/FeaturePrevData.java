@@ -7,7 +7,7 @@ public class FeaturePrevData
     public final String CancerType;
     public final String Gene;
     public final FeatureType Type;
-    public final double Prevalence;
+    public double Prevalence; // can be adjusted
 
     public FeaturePrevData(final String cancerType, final String gene, final FeatureType type, final double prevalence)
     {
