@@ -60,6 +60,14 @@ public class SampleTraits
             mSampleDataCache.SampleIds.forEach(x -> sampleSnvCounts.put(x, mSigAnnotation.getSampleSnvCount(x)));
             loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSnvCounts, mSampleTraitsData);
         }
+
+        for(SampleData sample : mSampleDataCache.SampleDataList)
+        {
+            final SampleTraitsData sampleTraits = mSampleTraitsData.get(sample.Id);
+
+            if(sampleTraits != null)
+                sample.setGender(sampleTraits.GenderType);
+        }
     }
 
     public List<SampleResult> processSample(final SampleData sample)

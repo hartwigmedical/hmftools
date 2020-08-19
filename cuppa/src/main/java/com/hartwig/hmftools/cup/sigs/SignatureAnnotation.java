@@ -168,14 +168,20 @@ public class SignatureAnnotation
             if(refSampleId.equals(sample.Id))
                 continue;
 
+            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
+
+            if(!sample.isCandidateCancerType(refCancerType))
+            {
+                cancerCssTotals.put(refCancerType, 0.0);
+                continue;
+            }
+
             final double[] otherSampleCounts = mRefSampleCounts.getCol(s);
 
             double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
             if(css < SNV_CSS_THRESHOLD)
                 continue;
-
-            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
 
             double cssWeight = pow(2, -100 * (1 - css));
 
@@ -220,6 +226,13 @@ public class SignatureAnnotation
         for(int i = 0; i < refCancerCount; ++i)
         {
             final String refCancerType = mRefSnvPosFreqCancerTypes.get(i);
+
+            if(!sample.isCandidateCancerType(refCancerType))
+            {
+                cancerCssTotals.put(refCancerType, 0.0);
+                continue;
+            }
+
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
             final double[] refPosFreqs = mConfig.AdjustSnvPosFreqCounts && matchesCancerType ?

@@ -63,6 +63,10 @@ public class SampleAnalyser
     {
         mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), cmd.getOptionValue(SAMPLE_DATA_FILE));
         mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
+
+        // mark any samples included in the ref data set so they can be excluded from self-comparison
+        mSampleDataCache.SampleDataList.stream()
+                .filter(x -> mSampleDataCache.RefSampleCancerTypeMap.containsKey(x.Id)).forEach(x -> x.setRefSample());
     }
 
     public void run()

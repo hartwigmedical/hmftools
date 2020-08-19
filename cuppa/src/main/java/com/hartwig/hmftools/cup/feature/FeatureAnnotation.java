@@ -180,6 +180,13 @@ public class FeatureAnnotation
         for(Map.Entry<String, List<FeaturePrevData>> entry : mCancerFeaturePrevalence.entrySet())
         {
             final String cancerType = entry.getKey();
+
+            if(!sample.isCandidateCancerType(cancerType))
+            {
+                cancerProbTotals.put(cancerType, 0.0);
+                continue;
+            }
+
             final List<FeaturePrevData> driverPrevalences = entry.getValue();
 
             // only count at most one AMP or DEL per chromosome to avoid the effects of a single event impacting more than 1 gene
