@@ -73,9 +73,9 @@ final class DndsDriverGeneLikelihoodFile {
     @NotNull
     private static DndsDriverImpactLikelihood fromString(int offset, @NotNull final String[] values) {
         return ImmutableDndsDriverImpactLikelihood.builder()
-                .dndsLikelihood(Double.parseDouble(values[offset++]))
-                .pDriver(Double.parseDouble(values[offset++]))
-                .pVariantNonDriverFactor(Double.parseDouble(values[offset]))
+                .dndsLikelihood(0.0)
+                .driversPerSample(Double.parseDouble(values[offset++]))
+                .passengersPerMutation(Double.parseDouble(values[offset]))
                 .build();
     }
 
@@ -89,8 +89,8 @@ final class DndsDriverGeneLikelihoodFile {
                 .setMissense(missense)
                 .setMissenseBiallelic(missense)
                 .setMissenseNonBiallelic(missense)
-                .setNonsense(fromString(4, values))
-                .setSplice(fromString(7, values))
-                .setIndel(fromString(10, values));
+                .setNonsense(fromString(3, values))
+                .setSplice(fromString(5, values))
+                .setIndel(fromString(7, values));
     }
 }

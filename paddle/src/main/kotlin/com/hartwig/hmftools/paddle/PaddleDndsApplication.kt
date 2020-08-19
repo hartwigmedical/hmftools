@@ -53,18 +53,11 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         val (dndsCvBiallelic, dndsCvNonBiallelic) = splitDnds(dndsBiallelicCVFile, dndsNonBiallelicCVFile)
         val tsSplitGenes = dndsCvBiallelic.keys
 
-//        logger.info("Loading old data")
-//        val genePanel = DriverGenePanelFactory().create()
-//        val oncoGenes = genePanel.oncoGenes()
-//        val tsgGenes = genePanel.tsGenes()
-
         logger.info("Loading cohort: $cohortFile")
         val (cohortSize, cohortLoad) = loadCohort(cohortFile)
 
         logger.info("Loading mutations: $mutationsFile")
         val dndsMutations = DndsMutation.fromFile(mutationsFile)
-//        val oncoMutations = dndsMutations.filter { it.gene in oncoGenes }
-//        val tsgMutations = dndsMutations.filter { it.gene in tsgGenes }
         val tsgBiallelicMutations = dndsMutations.filter { it.gene in tsSplitGenes && it.biallelic }
         val tsgNonBiallelicMutations = dndsMutations.filter { it.gene in tsSplitGenes && !it.biallelic  }
 
@@ -88,11 +81,10 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         val tsgBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.biallelicLoad, dndsCvBiallelic, tsgBiallelicGeneMutations)
         val tsgNoneBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.nonBiallelicLoad, dndsCvNonBiallelic, tsgNonBiallelicGeneMutations)
 
-
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsgBiallelic.tsv", tsgBiallelicLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsgNonBiallelic.tsv", tsgNoneBiallelicLikelihood.values)
+        LikelihoodGene.writeFile(false, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
+        LikelihoodGene.writeFile(false, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
+        LikelihoodGene.writeFile(true, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsgBiallelic.tsv", tsgBiallelicLikelihood.values)
+        LikelihoodGene.writeFile(true, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsgNonBiallelic.tsv", tsgNoneBiallelicLikelihood.values)
 
     }
 

@@ -32,10 +32,10 @@ public class TsgDriversTest {
 
     @Before
     public void setup() {
-        DndsDriverImpactLikelihood missenseLikelihood = createLikelihood(0.872024711427939, 0.0166790589295988, 9.89844130535209e-08);
-        DndsDriverImpactLikelihood nonsenseLikelihood = createLikelihood(0.975537913457847, 0.00730132326080717, 7.40370091523547e-09);
-        DndsDriverImpactLikelihood spliceLikelihood = createLikelihood(1, 0.00540540540540541, 1e-9);
-        DndsDriverImpactLikelihood indelLikelihood = createLikelihood(1, 0.0137214137214137, 1e-9);
+        DndsDriverImpactLikelihood missenseLikelihood = createLikelihood(0.0166790589295988, 9.89844130535209e-08);
+        DndsDriverImpactLikelihood nonsenseLikelihood = createLikelihood(0.00730132326080717, 7.40370091523547e-09);
+        DndsDriverImpactLikelihood spliceLikelihood = createLikelihood(0.00540540540540541, 1e-9);
+        DndsDriverImpactLikelihood indelLikelihood = createLikelihood(0.0137214137214137, 1e-9);
         geneLikelihood = ImmutableDndsDriverGeneLikelihood.builder()
                 .gene("TP53")
                 .missense(missenseLikelihood)
@@ -111,11 +111,11 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    private static DndsDriverImpactLikelihood createLikelihood(double dndsLikelihood, double pDriver, double pVariantNonDriver) {
+    private static DndsDriverImpactLikelihood createLikelihood(double pDriver, double pVariantNonDriver) {
         return ImmutableDndsDriverImpactLikelihood.builder()
-                .dndsLikelihood(dndsLikelihood)
-                .pDriver(pDriver)
-                .pVariantNonDriverFactor(pVariantNonDriver)
+                .dndsLikelihood(0)
+                .driversPerSample(pDriver)
+                .passengersPerMutation(pVariantNonDriver)
                 .build();
     }
 

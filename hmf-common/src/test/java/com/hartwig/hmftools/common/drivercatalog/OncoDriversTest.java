@@ -104,8 +104,8 @@ public class OncoDriversTest {
     private static DndsDriverImpactLikelihood createLikelihood(double pDriver) {
         return ImmutableDndsDriverImpactLikelihood.builder()
                 .dndsLikelihood(UNADJUSTED_LIKELIHOOD)
-                .pDriver(pDriver)
-                .pVariantNonDriverFactor(PASSENGERS_PER_MUTATION)
+                .driversPerSample(pDriver)
+                .passengersPerMutation(PASSENGERS_PER_MUTATION)
                 .build();
     }
 

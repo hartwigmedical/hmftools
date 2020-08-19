@@ -23,7 +23,7 @@ data class Likelihood(private val cohortSize: Int, private val tumorMutationalLo
     val driverLikelihood = if (mutations.total > 0) ((expectedDrivers - mutations.known) / mutations.unknown).coerceIn(0.0, 1.0) else 0.0 //TODO: REMOVE
 
     override fun toString(): String {
-        return "$driverLikelihood\t$vusDriversPerSample\t$passengersPerMutation"
+        return "$vusDriversPerSample\t$passengersPerMutation"
     }
 }
 
@@ -61,24 +61,28 @@ data class LikelihoodGene(
             return LikelihoodGene(mutations.gene, mutations.synonymous, mutations.redundant, missense, nonsense, splice, indel)
         }
 
-        fun writeFile(filename: String, likelihoods: Collection<LikelihoodGene>) {
-            Files.write(File(filename).toPath(), toLines(likelihoods))
+        fun writeFile(missenseOnly: Boolean, filename: String, likelihoods: Collection<LikelihoodGene>) {
+            Files.write(File(filename).toPath(), toLines(missenseOnly, likelihoods))
         }
 
-        private fun headerString(prefix: String): String {
-            return "${prefix}DriverLikelihood\t${prefix}ExpDriversPerSample\t${prefix}ExpPassengersPerLoad"
-        }
 
-        private fun toLines(likelihoods: Collection<LikelihoodGene>): List<String> {
+        private fun toLines(missenseOnly: Boolean, likelihoods: Collection<LikelihoodGene>): List<String> {
             val lines: MutableList<String> = Lists.newArrayList()
-            lines.add("gene\t${headerString("missense")}\t${headerString("nonsense")}\t${headerString("splice")}\t${headerString("indel")}")
-            likelihoods.sortedBy { x -> x.gene }.map { it.toString() }.forEach { e: String -> lines.add(e) }
+            lines.add(headerString(missenseOnly))
+            likelihoods.sortedBy { x -> x.gene }.map { it.toString(missenseOnly) }.forEach { e: String -> lines.add(e) }
             return lines
         }
+
+        private fun headerString(missenseOnly: Boolean): String {
+            fun headerString(prefix: String): String {
+                return "${prefix}VusDriversPerSample\t${prefix}PassengersPerMutation"
+            }
+            val missenseHeader = "gene\t${headerString("missense")}"
+            return if (missenseOnly) missenseHeader else "$missenseHeader\t${headerString("nonsense")}\t${headerString("splice")}\t${headerString("indel")}"
+        }
     }
 
-    override fun toString(): String {
-        return "$gene\t$missense\t$nonsense\t$splice\t$indel"
+    private fun toString(missenseOnly: Boolean): String {
+        return if (missenseOnly) "$gene\t$missense" else "$gene\t$missense\t$nonsense\t$splice\t$indel"
     }
-
 }

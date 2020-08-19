@@ -40,7 +40,7 @@ final class DriverCatalogFactory {
 
     private static double probabilityDriverVariantSameImpact(int count, long sampleSNVCount,
             @NotNull final DndsDriverImpactLikelihood likelihood) {
-        double lambda = sampleSNVCount * likelihood.pVariantNonDriverFactor();
+        double lambda = sampleSNVCount * likelihood.passengersPerMutation();
         if (Doubles.isZero(lambda)) {
             return 0.0;
         }
@@ -48,7 +48,7 @@ final class DriverCatalogFactory {
         PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
 
         double pVariantNonDriver = 1 - poissonDistribution.cumulativeProbability(count);
-        return likelihood.pDriver() / (likelihood.pDriver() + pVariantNonDriver * (1 - likelihood.pDriver()));
+        return likelihood.driversPerSample() / (likelihood.driversPerSample() + pVariantNonDriver * (1 - likelihood.driversPerSample()));
     }
 
     static double probabilityDriverVariant(long firstVariantTypeCount, long secondVariantTypeCount,
@@ -57,14 +57,14 @@ final class DriverCatalogFactory {
             return probabilityDriverVariantSameImpact(1, firstVariantTypeCount, firstLikelihood);
         }
 
-        double lambda1 = firstVariantTypeCount * firstLikelihood.pVariantNonDriverFactor();
-        double lambda2 = secondVariantTypeCount * secondLikelihood.pVariantNonDriverFactor();
+        double lambda1 = firstVariantTypeCount * firstLikelihood.passengersPerMutation();
+        double lambda2 = secondVariantTypeCount * secondLikelihood.passengersPerMutation();
         if (Doubles.isZero(lambda1) || Doubles.isZero(lambda2)) {
             return Math.max(probabilityDriverVariant(firstVariantTypeCount, firstLikelihood),
                     probabilityDriverVariant(secondVariantTypeCount, secondLikelihood));
         }
 
-        final double pDriver = Math.max(firstLikelihood.pDriver(), secondLikelihood.pDriver());
+        final double pDriver = Math.max(firstLikelihood.driversPerSample(), secondLikelihood.driversPerSample());
         final double pVariantNonDriver1 = 1 - new PoissonDistribution(lambda1).cumulativeProbability(0);
         final double pVariantNonDriver2 = 1 - new PoissonDistribution(lambda2).cumulativeProbability(0);
         final double pVariantNonDriver = pVariantNonDriver1 * pVariantNonDriver2;

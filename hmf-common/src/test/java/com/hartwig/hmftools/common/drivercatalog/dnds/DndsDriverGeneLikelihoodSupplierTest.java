@@ -29,9 +29,8 @@ public class DndsDriverGeneLikelihoodSupplierTest {
     public void testReadOncoGenes() {
         DndsDriverImpactLikelihood missense = onco.get("ABL1");
 
-        assertEquals(0.0286, missense.dndsLikelihood(), 0.0001);
-        assertEquals(0.0002922, missense.pDriver(), 1e-7);
-        assertEquals(3.88883831596225e-07, missense.pVariantNonDriverFactor(), 1e-8);
+        assertEquals(0.0002922, missense.driversPerSample(), 1e-7);
+        assertEquals(3.88883831596225e-07, missense.passengersPerMutation(), 1e-8);
     }
 
     @Test
@@ -40,9 +39,8 @@ public class DndsDriverGeneLikelihoodSupplierTest {
         DndsDriverImpactLikelihood missense = gene.missense();
 
         assertEquals("ACVR1B", gene.gene());
-        assertEquals(0.408, missense.dndsLikelihood(), 0.001);
-        assertEquals(0.003, missense.pDriver(), 0.001);
-        assertEquals(2e-07, missense.pVariantNonDriverFactor(), 1e-7);
+        assertEquals(0.003, missense.driversPerSample(), 0.001);
+        assertEquals(2e-07, missense.passengersPerMutation(), 1e-7);
     }
 
     @Test

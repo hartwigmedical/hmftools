@@ -42,7 +42,8 @@ public abstract class DndsDriverGeneLikelihood {
             case NONSENSE:
                 return nonsense();
             case MISSENSE:
-                return biallelic ? missenseBiallelic() : missenseNonBiallelic();
+                return missense();
+//                return biallelic ? missenseBiallelic() : missenseNonBiallelic();
             case INFRAME:
             case FRAMESHIFT:
                 return indel();
