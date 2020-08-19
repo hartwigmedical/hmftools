@@ -35,8 +35,6 @@ public class AnnotatedVCFSimplifier {
     }
 
     public void run(@NotNull String annotatedInputVcf) throws IOException {
-
-        // TODO: Add HG38 and custom gene panel support?
         DriverGenePanel genePanel = new DriverGenePanelFactory().create();
         List<CanonicalTranscript> canonicalTranscripts = CanonicalTranscriptFactory.create37();
         CanonicalAnnotation factory = new CanonicalAnnotation(genePanel, canonicalTranscripts);
@@ -57,6 +55,20 @@ public class AnnotatedVCFSimplifier {
                     .add(canonical.map(SnpEffAnnotation::consequenceString).orElse(Strings.EMPTY))
                     .add(canonical.map(SnpEffAnnotation::hgvsCoding).orElse(Strings.EMPTY))
                     .add(canonical.map(SnpEffAnnotation::hgvsProtein).orElse(Strings.EMPTY));
+
+            Object feature = variant.getAttribute("feature");
+            if (feature != null) {
+                joiner.add(feature.toString());
+            }
+
+            List<String> sources = variant.getAttributeAsStringList("sources", Strings.EMPTY);
+            if (!sources.isEmpty()) {
+                StringJoiner sourceJoiner = new StringJoiner(",");
+                for (String source : sources) {
+                    sourceJoiner.add(source);
+                }
+                joiner.add(sourceJoiner.toString());
+            }
 
             System.out.println(joiner.toString());
         }
