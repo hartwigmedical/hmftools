@@ -63,7 +63,7 @@ public class SampleTraitsDataLoader
                 }
 
                 final ChordAnalysis chordAnalysis = dbAccess.readChordAnalysis(sampleId);
-                double chordHrd = chordAnalysis.hrdValue();
+                double chordHrd = chordAnalysis != null ? chordAnalysis.hrdValue() : 0;
 
                 Integer snvCount = sampleSnvCounts.get(sampleId);
                 SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, snvCount != null ? snvCount : 0, chordHrd);

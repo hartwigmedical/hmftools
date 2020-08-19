@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENCE_ALLOCATION;
-import static com.hartwig.hmftools.cup.common.CupConstants.FUSION_ZERO_PREVALENCE_ALLOCATION;
+import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefPrevalenceData;
@@ -51,7 +51,7 @@ public class FeatureAnnotation
         mSampleDataCache = sampleDataCache;
         mValidData = false;
 
-        if(config.RefFeaturePrevFile.isEmpty() || config.SampleFeatureFile.isEmpty())
+        if(config.RefFeaturePrevFile.isEmpty())
             return;
 
         mValidData = true;
@@ -206,7 +206,6 @@ public class FeatureAnnotation
 
                 double driverPrevValue = driverPrev != null ? driverPrev.Prevalence : genePrevTotals.MinPrevalence;
                 probabilityTotal *= pow(driverPrevValue, maxLikelihood) / genePrevTotals.PositiveTotal;
-                // probabilityTotal *= driverPrevValue * maxLikelihood / genePrevTotals.PositiveTotal;
             }
 
             cancerProbTotals.put(cancerType, probabilityTotal);
@@ -225,7 +224,6 @@ public class FeatureAnnotation
         results.add(result);
     }
 
-
     private void loadSampleFeatures()
     {
         if(!mConfig.SampleFeatureFile.isEmpty())
@@ -240,6 +238,10 @@ public class FeatureAnnotation
 
     private void formGenePrevalenceTotals()
     {
+        int cancerTypeCount = mCancerFeaturePrevalence.size();
+        double noDriverPrevalence = DRIVER_ZERO_PREVALENCE_ALLOCATION / cancerTypeCount;
+        double noNonDriverPrevalence = NON_DRIVER_ZERO_PREVALENCE_ALLOCATION / cancerTypeCount;
+
         for(Map.Entry<String,FeaturePrevCounts> geneEntry : mGenePrevalenceTotals.entrySet())
         {
             final String gene = geneEntry.getKey();
@@ -263,19 +265,11 @@ public class FeatureAnnotation
                 {
                     ++noPrevCancerCount;
                 }
-
-                /*
-                else
-                {
-                    genePrevTotals.PositiveTotal += genePrevTotals.MinPrevalence;
-                    genePrevTotals.NegitiveTotal += 1 - genePrevTotals.MinPrevalence;
-                }
-                */
             }
 
             if(noPrevCancerCount > 0)
             {
-                double noPrevValue = isDriverType ? DRIVER_ZERO_PREVALENCE_ALLOCATION : FUSION_ZERO_PREVALENCE_ALLOCATION;
+                double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
                 genePrevTotals.PositiveTotal += noPrevValue;
                 genePrevTotals.MinPrevalence = noPrevValue / noPrevCancerCount;
             }

@@ -87,7 +87,7 @@ public class SampleAnalyser
             int sampleCount = 0;
             for(SampleData sample : mSampleDataCache.SampleDataList)
             {
-                CUP_LOGGER.debug("sample({}) running CUP analysis", sample.Id);
+                // CUP_LOGGER.debug("sample({}) running CUP analysis", sample.Id);
 
                 processSample(sample);
                 ++sampleCount;
