@@ -27,7 +27,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SvDataLoader
 {
-    public static void loadSvDataFromCohortFile(final String filename, final Map<String,SvData> sampleSvData)
+    public static boolean loadSvDataFromCohortFile(final String filename, final Map<String,SvData> sampleSvData)
     {
         try
         {
@@ -47,14 +47,17 @@ public class SvDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read SV data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
-    public static void loadSvDataFromDatabase(
+    public static boolean loadSvDataFromDatabase(
             final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,SvData> sampleSvData)
     {
         if(dbAccess == null)
-            return;
+            return false;
 
         for(final String sampleId : sampleIds)
         {
@@ -109,9 +112,11 @@ public class SvDataLoader
 
             sampleSvData.put(sampleId, svData);
         }
+
+        return true;
     }
 
-    public static void loadRefPercentileData(final String filename, final Map<SvDataType,Map<String,double[]>> refSvTypePercentiles)
+    public static boolean loadRefPercentileData(final String filename, final Map<SvDataType,Map<String,double[]>> refSvTypePercentiles)
     {
         try
         {
@@ -151,7 +156,10 @@ public class SvDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read SV perc data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
 }

@@ -43,7 +43,7 @@ public class FeatureAnnotation
     private final Map<String,List<SampleFeatureData>> mSampleFeatures;
     private final Map<String,List<FeaturePrevData>> mCancerFeaturePrevalence;
     private final SampleDataCache mSampleDataCache;
-    private boolean mValidData;
+    private boolean mIsValid;
 
     private final Map<String,FeaturePrevCounts> mGenePrevalenceTotals;
     private final Map<String,Double> mCancerFeatureAvg;
@@ -56,23 +56,26 @@ public class FeatureAnnotation
         mGenePrevalenceTotals = Maps.newHashMap();
         mCancerFeatureAvg = Maps.newHashMap();
         mSampleDataCache = sampleDataCache;
-        mValidData = false;
+        mIsValid = true;
 
         if(config.RefFeaturePrevFile.isEmpty())
             return;
 
-        mValidData = true;
-        loadRefPrevalenceData(config.RefFeaturePrevFile, mGenePrevalenceTotals, mCancerFeaturePrevalence);
-        loadRefCancerFeatureAvg(config.RefFeatureAvgFile, mCancerFeatureAvg);
+        mIsValid = true;
+
+        mIsValid &= loadRefPrevalenceData(config.RefFeaturePrevFile, mGenePrevalenceTotals, mCancerFeaturePrevalence);
+        mIsValid &= loadRefCancerFeatureAvg(config.RefFeatureAvgFile, mCancerFeatureAvg);
         formGenePrevalenceTotals();
-        loadSampleFeatures();
+        mIsValid &= loadSampleFeatures();
     }
+
+    public boolean isValid() { return mIsValid; }
 
     public final List<SampleResult> processSample(final SampleData sample)
     {
         final List<SampleResult> results = Lists.newArrayList();
 
-        if(!mValidData)
+        if(!mIsValid)
             return results;
 
         final List<SampleFeatureData> sampleFeatures = mSampleFeatures.get(sample.Id);
@@ -275,16 +278,20 @@ public class FeatureAnnotation
         results.add(result);
     }
 
-    private void loadSampleFeatures()
+    private boolean loadSampleFeatures()
     {
         if(!mConfig.SampleFeatureFile.isEmpty())
         {
-            loadDriversFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures);
+            if(!loadDriversFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures))
+                return false;
         }
         else if(mConfig.DbAccess != null)
         {
-            loadDriversFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures);
+            if(!loadDriversFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures))
+                return false;
         }
+
+        return true;
     }
 
     private void formGenePrevalenceTotals()

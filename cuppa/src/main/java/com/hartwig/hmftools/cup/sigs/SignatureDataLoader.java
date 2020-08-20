@@ -46,11 +46,11 @@ public class SignatureDataLoader
         return sampleCounts;
     }
 
-    public static void loadSigContribsFromDatabase(
+    public static boolean loadSigContribsFromDatabase(
             final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,Map<String,Double>> sampleSigContributions)
     {
         if(dbAccess == null)
-            return;
+            return false;
 
         for(final String sampleId : sampleIds)
         {
@@ -69,9 +69,11 @@ public class SignatureDataLoader
                 sigContribs.put(sigAllocation.signature(), sigAllocation.allocation());
             }
         }
+
+        return true;
     }
 
-    public static void loadSigContribsFromCohortFile(final String filename, final Map<String,Map<String,Double>> sampleSigContributions)
+    public static boolean loadSigContribsFromCohortFile(final String filename, final Map<String,Map<String,Double>> sampleSigContributions)
     {
         try
         {
@@ -102,15 +104,18 @@ public class SignatureDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sig contribution data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
-    public static void loadRefSigContribPercentiles(final String filename, final Map<String,Map<String,double[]>> refCancerSigContribPercentiles)
+    public static boolean loadRefSigContribPercentiles(final String filename, final Map<String,Map<String,double[]>> refCancerSigContribPercentiles)
     {
         if(filename.isEmpty())
-            return;
+            return true;
 
-        populateRefSigContributions(filename, refCancerSigContribPercentiles);
+        return populateRefSigContributions(filename, refCancerSigContribPercentiles);
     }
 
     public static SigMatrix loadRefSampleCounts(final String filename, final List<String> refSampleNames)

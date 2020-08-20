@@ -20,10 +20,10 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SampleTraitsDataLoader
 {
-    public static void loadTraitsFromCohortFile(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
+    public static boolean loadTraitsFromCohortFile(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
     {
         if(filename == null)
-            return;
+            return false;
 
         try
         {
@@ -42,15 +42,18 @@ public class SampleTraitsDataLoader
         } catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample traits data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
-    public static void loadTraitsFromDatabase(
+    public static boolean loadTraitsFromDatabase(
             final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,Integer> sampleSnvCounts,
             final Map<String,SampleTraitsData> sampleTraitsData)
     {
         if(dbAccess == null)
-            return;
+            return false;
 
         {
             for(final String sampleId : sampleIds)
@@ -59,7 +62,7 @@ public class SampleTraitsDataLoader
                 if(purityContext == null)
                 {
                     CUP_LOGGER.warn("sample({}) missing purity data", sampleId);
-                    continue;
+                    return false;
                 }
 
                 final ChordAnalysis chordAnalysis = dbAccess.readChordAnalysis(sampleId);
@@ -70,9 +73,11 @@ public class SampleTraitsDataLoader
                 sampleTraitsData.put(traitsData.SampleId, traitsData);
             }
         }
+
+        return true;
     }
 
-    public static void loadRefPercentileData(final String filename, final Map<SampleTraitType,Map<String,double[]>> refTraitPercentiles)
+    public static boolean loadRefPercentileData(final String filename, final Map<SampleTraitType,Map<String,double[]>> refTraitPercentiles)
     {
         try
         {
@@ -112,10 +117,13 @@ public class SampleTraitsDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample traits perc data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
-    public static void loadRefRateData(final String filename, final Map<SampleTraitType,Map<String,Double>> refTraitRates)
+    public static boolean loadRefRateData(final String filename, final Map<SampleTraitType,Map<String,Double>> refTraitRates)
     {
         // CancerType,IsFemale,WGD,SampleCount,GenderFemalePerc,WGDPerc
         try
@@ -152,7 +160,10 @@ public class SampleTraitsDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample traits rate data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
 }

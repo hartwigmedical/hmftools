@@ -36,7 +36,6 @@ import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
-import com.sun.org.apache.regexp.internal.RE;
 
 public class SignatureAnnotation
 {
@@ -58,6 +57,8 @@ public class SignatureAnnotation
     private SigMatrix mSamplePosFrequencies;
     private final Map<String,Integer> mSamplePosFreqIndex;
 
+    private boolean mIsValid;
+
     private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
     public SignatureAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
@@ -75,15 +76,22 @@ public class SignatureAnnotation
         mRefSampleNames = Lists.newArrayList();
         mRefCancerSigContribPercentiles = Maps.newHashMap();
 
+        mIsValid = true;
+
         loadRefSigContribPercentiles(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames);
 
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSnvPosFrequencies = loadRefSnvPosFrequences(mConfig.RefSnvPosFreqFile, mRefSnvPosFreqCancerTypes);
 
-        loadSampleCounts();
-        loadSigContributions();
+        if(mRefSampleCounts == null || mRefSnvPosFrequencies == null)
+            mIsValid = false;
+
+        mIsValid &= loadSampleCounts();
+        mIsValid &= loadSigContributions();
     }
+
+    public boolean isValid() { return mIsValid; }
 
     private boolean loadSampleCounts()
     {
@@ -91,6 +99,9 @@ public class SignatureAnnotation
         {
             mSampleCounts = loadSampleCountsFromCohortFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
             mSamplePosFrequencies = loadSamplePosFreqFromCohortFile(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
+
+            if(mSampleCounts == null || mSamplePosFrequencies == null)
+                return false;
         }
         else if(mConfig.DbAccess != null)
         {
@@ -101,16 +112,20 @@ public class SignatureAnnotation
         return true;
     }
 
-    private void loadSigContributions()
+    private boolean loadSigContributions()
     {
         if(!mConfig.SampleSigContribFile.isEmpty())
         {
-            loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
+            if(!loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions))
+                return false;
         }
         else if(mConfig.DbAccess != null)
         {
-            loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions);
+            if(!loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions))
+                return false;
         }
+
+        return true;
     }
 
     public int getSampleSnvCount(final String sampleId)
@@ -200,7 +215,8 @@ public class SignatureAnnotation
 
         for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
         {
-            cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
+            double prob = totalCss > 0 ? entry.getValue() / totalCss : 0;
+            cancerCssTotals.put(entry.getKey(), prob);
         }
 
         results.add(new SampleResult(

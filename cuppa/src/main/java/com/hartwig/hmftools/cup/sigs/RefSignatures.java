@@ -165,7 +165,7 @@ public class RefSignatures
         }
     }
 
-    public static void populateRefSigContributions(final String filename, final Map<String,Map<String,double[]>> cancerSigContribsMap)
+    public static boolean populateRefSigContributions(final String filename, final Map<String,Map<String,double[]>> cancerSigContribsMap)
     {
         try
         {
@@ -205,7 +205,10 @@ public class RefSignatures
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sig contrib percentile data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
 }

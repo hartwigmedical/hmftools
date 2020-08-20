@@ -36,7 +36,7 @@ public class CupCalcs
         // Prediction = PRODUCT(PercenitleContribution) / SUM[PRODUCT(PercenitleContribution)]
     }
 
-    public static void addPercentileClassifier(final List<SampleResult> results)
+    public static void addPercentileClassifier(final SampleData sample, final List<SampleResult> results)
     {
         if(results.isEmpty())
             return;
@@ -51,6 +51,13 @@ public class CupCalcs
             for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
             {
                 final String cancerType = entry.getKey();
+
+                if(!sample.isCandidateCancerType(cancerType))
+                {
+                    cancerPercentileCalcs.put(cancerType, 0.0);
+                    continue;
+                }
+
                 double percentile = entry.getValue();
                 double percentileWeight = calcPercentileWeight(percentile);
 

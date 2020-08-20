@@ -36,6 +36,8 @@ public class SampleTraits
     private final Map<SampleTraitType,Map<String,double[]>> mRefTraitPercentiles;
     private final Map<SampleTraitType,Map<String,Double>> mRefTraitRates;
 
+    private boolean mIsValid;
+
     public SampleTraits(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache, final SignatureAnnotation sigAnnotation)
     {
         mConfig = config;
@@ -45,23 +47,29 @@ public class SampleTraits
         mSampleTraitsData = Maps.newHashMap();
         mRefTraitPercentiles = Maps.newHashMap();
         mRefTraitRates = Maps.newHashMap();
+        mIsValid = true;
 
-        loadRefPercentileData(mConfig.RefTraitPercFile, mRefTraitPercentiles);
-        loadRefRateData(mConfig.RefTraitRateFile, mRefTraitRates);
-        loadSampleTraitsData();
+        mIsValid &= loadRefPercentileData(mConfig.RefTraitPercFile, mRefTraitPercentiles);
+        mIsValid &= loadRefRateData(mConfig.RefTraitRateFile, mRefTraitRates);
+        mIsValid &= loadSampleTraitsData();
     }
 
-    private void loadSampleTraitsData()
+    public boolean isValid() { return mIsValid; }
+
+    private boolean loadSampleTraitsData()
     {
         if(!mConfig.SampleTraitsFile.isEmpty())
         {
-            loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData);
+            if(!loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData))
+                return false;
         }
         else if(mConfig.DbAccess != null)
         {
             final Map<String,Integer> sampleSnvCounts = Maps.newHashMap();
             mSampleDataCache.SampleIds.forEach(x -> sampleSnvCounts.put(x, mSigAnnotation.getSampleSnvCount(x)));
-            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSnvCounts, mSampleTraitsData);
+
+            if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSnvCounts, mSampleTraitsData))
+                return false;
         }
 
         for(SampleData sample : mSampleDataCache.SampleDataList)
@@ -71,6 +79,8 @@ public class SampleTraits
             if(sampleTraits != null)
                 sample.setGender(sampleTraits.GenderType);
         }
+
+        return true;
     }
 
     public List<SampleResult> processSample(final SampleData sample)
@@ -80,7 +90,10 @@ public class SampleTraits
         final SampleTraitsData sampleTraits = mSampleTraitsData.get(sample.Id);
 
         if(sampleTraits == null)
+        {
+            mIsValid = false;
             return results;
+        }
 
         if(mConfig.runCategory(SAMPLE_CLASS))
         {

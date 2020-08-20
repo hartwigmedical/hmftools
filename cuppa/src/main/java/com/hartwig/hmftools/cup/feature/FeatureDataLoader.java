@@ -28,10 +28,10 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class FeatureDataLoader
 {
-    public static void loadDriversFromCohortFile(final String filename, final Map<String,List<SampleFeatureData>> sampleDrivers)
+    public static boolean loadDriversFromCohortFile(final String filename, final Map<String,List<SampleFeatureData>> sampleDrivers)
     {
         if(filename == null)
-            return;
+            return true;
 
         try
         {
@@ -62,14 +62,17 @@ public class FeatureDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample driver data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
-    public static void loadDriversFromDatabase(
+    public static boolean loadDriversFromDatabase(
             final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,List<SampleFeatureData>> sampleDrivers)
     {
         if(dbAccess == null)
-            return;
+            return false;
 
         for(final String sampleId : sampleIds)
         {
@@ -123,14 +126,16 @@ public class FeatureDataLoader
 
             sampleDrivers.put(sampleId, featuresList);
         }
+
+        return true;
     }
 
-    public static void loadRefPrevalenceData(
+    public static boolean loadRefPrevalenceData(
             final String filename, final Map<String,FeaturePrevCounts> genePrevalenceTotals,
             final Map<String,List<FeaturePrevData>> cancerDriverPrevalence)
     {
         if(filename == null || filename.isEmpty())
-            return;
+            return false;
 
         try
         {
@@ -170,13 +175,16 @@ public class FeatureDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read driver prevalence data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
-    public static void loadRefCancerFeatureAvg(final String filename, final Map<String,Double> cancerFeatureAvgs)
+    public static boolean loadRefCancerFeatureAvg(final String filename, final Map<String,Double> cancerFeatureAvgs)
     {
         if(filename == null || filename.isEmpty())
-            return;
+            return false;
 
         try
         {
@@ -195,7 +203,10 @@ public class FeatureDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read feature averages data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
 }

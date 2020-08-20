@@ -29,6 +29,8 @@ public class SvAnnotation
 
     private final Map<SvDataType,Map<String,double[]>> mRefSvTypePercentiles;
 
+    private boolean mIsValid;
+
     public SvAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
@@ -36,10 +38,13 @@ public class SvAnnotation
 
         mSampleSvData = Maps.newHashMap();
         mRefSvTypePercentiles = Maps.newHashMap();
+        mIsValid = true;
 
-        loadRefPercentileData(mConfig.RefSvPercFile, mRefSvTypePercentiles);
-        loadSampleSvData();
+        mIsValid &= loadRefPercentileData(mConfig.RefSvPercFile, mRefSvTypePercentiles);
+        mIsValid &= loadSampleSvData();
     }
+
+    public boolean isValid() { return mIsValid; }
 
     public List<SampleResult> processSample(final SampleData sample)
     {
@@ -74,15 +79,19 @@ public class SvAnnotation
         return results;
     }
 
-    private void loadSampleSvData()
+    private boolean loadSampleSvData()
     {
         if(!mConfig.SampleSvFile.isEmpty())
         {
-            loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData);
+            if(!loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData))
+                return false;
         }
         else if(mConfig.DbAccess != null)
         {
-            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
+            if(!loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData))
+                return false;
         }
+
+        return true;
     }
 }

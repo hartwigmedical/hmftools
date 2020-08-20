@@ -38,7 +38,7 @@ public class SampleAnalyser
 
     private final SampleDataCache mSampleDataCache;
 
-    private final FeatureAnnotation mDrivers;
+    private final FeatureAnnotation mFeatures;
     private final SignatureAnnotation mSnvSignatures;
     private final SampleTraits mSampleTraits;
     private final SvAnnotation mSvAnnotation;
@@ -54,7 +54,7 @@ public class SampleAnalyser
         loadSampleData(cmd);
 
         mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataCache);
-        mDrivers = new FeatureAnnotation(mConfig, mSampleDataCache);
+        mFeatures = new FeatureAnnotation(mConfig, mSampleDataCache);
         mSampleTraits = new SampleTraits(mConfig, mSampleDataCache, mSnvSignatures);
         mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
 
@@ -79,6 +79,9 @@ public class SampleAnalyser
             return;
         }
 
+        if(!checkAnnotators())
+            return;
+
         initialiseOutputFiles();
 
         if(mSampleDataCache.SpecificSample != null)
@@ -96,6 +99,10 @@ public class SampleAnalyser
                 // CUP_LOGGER.debug("sample({}) running CUP analysis", sample.Id);
 
                 processSample(sample);
+
+                if(!checkAnnotators())
+                    break;
+
                 ++sampleCount;
 
                 if((sampleCount % 100) == 0)
@@ -108,6 +115,18 @@ public class SampleAnalyser
         closeBufferedWriter(mSampleDataWriter);
 
         CUP_LOGGER.info("CUP analysis complete");
+    }
+
+    private boolean checkAnnotators()
+    {
+        if(!mSvAnnotation.isValid() || !mFeatures.isValid() || !mSnvSignatures.isValid() || !mSampleTraits.isValid())
+        {
+            CUP_LOGGER.error("invalid init: traits({}) sigs({}) SVs({}) features({})",
+                    mSampleTraits.isValid(), mSnvSignatures.isValid(), mSvAnnotation.isValid(), mFeatures.isValid());
+            return false;
+        }
+
+        return true;
     }
 
     private void initialiseOutputFiles()
@@ -129,25 +148,25 @@ public class SampleAnalyser
         }
     }
 
-    private void processSample(final SampleData sampleData)
+    private void processSample(final SampleData sample)
     {
         final List<SampleResult> allResults = Lists.newArrayList();
 
-        final List<SampleResult> traitsResults = mSampleTraits.processSample(sampleData);
+        final List<SampleResult> traitsResults = mSampleTraits.processSample(sample);
         allResults.addAll(traitsResults);
 
-        final List<SampleResult> snvResults = mSnvSignatures.processSample(sampleData);
+        final List<SampleResult> snvResults = mSnvSignatures.processSample(sample);
         allResults.addAll(snvResults);
 
-        final List<SampleResult> svResults = mSvAnnotation.processSample(sampleData);
+        final List<SampleResult> svResults = mSvAnnotation.processSample(sample);
         allResults.addAll(svResults);
 
-        final List<SampleResult> driverResults = mDrivers.processSample(sampleData);
+        final List<SampleResult> driverResults = mFeatures.processSample(sample);
         allResults.addAll(driverResults);
 
-        addPercentileClassifier(allResults);
+        addPercentileClassifier(sample, allResults);
 
-        writeSampleData(sampleData, allResults);
+        writeSampleData(sample, allResults);
     }
 
     private void writeSampleData(final SampleData sampleData, final List<SampleResult> results)
