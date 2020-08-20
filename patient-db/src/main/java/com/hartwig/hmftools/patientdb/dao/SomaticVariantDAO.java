@@ -10,6 +10,8 @@ import java.util.Optional;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
+import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsVariant;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -36,6 +38,39 @@ class SomaticVariantDAO {
 
     SomaticVariantDAO(@NotNull final DSLContext context) {
         this.context = context;
+    }
+
+    @NotNull
+    public List<DndsVariant> readDndsVariants(@NotNull String sample) {
+        List<DndsVariant> variants = Lists.newArrayList();
+
+        Result<Record> result = context.select()
+                .from(SOMATICVARIANT)
+                .where(SOMATICVARIANT.SAMPLEID.eq(sample))
+                .and(SOMATICVARIANT.FILTER.eq("PASS"))
+                .and(SOMATICVARIANT.GENE.ne(""))
+                .fetch();
+
+        for (Record record : result) {
+            variants.add(ImmutableDndsVariant.builder()
+                    .sampleId(record.getValue(SOMATICVARIANT.SAMPLEID))
+                    .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
+                    .position(record.getValue(SOMATICVARIANT.POSITION))
+                    .ref(record.getValue(SOMATICVARIANT.REF))
+                    .alt(record.getValue(SOMATICVARIANT.ALT))
+                    .gene(record.getValue(SOMATICVARIANT.GENE))
+                    .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
+                            ? CodingEffect.UNDEFINED
+                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
+                    .canonicalCodingEffect(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
+                            ? CodingEffect.UNDEFINED
+                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
+                    .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
+                    .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
+                    .hotspot(VariantTier.fromString(record.getValue(SOMATICVARIANT.TIER)) == VariantTier.HOTSPOT)
+                    .build());
+        }
+        return variants;
     }
 
     @NotNull

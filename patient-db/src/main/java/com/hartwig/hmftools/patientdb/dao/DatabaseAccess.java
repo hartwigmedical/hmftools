@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
@@ -223,6 +224,11 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     public List<String> readSomaticVariantSampleList() {
         return somaticVariantDAO.getSamplesList();
+    }
+
+    @NotNull
+    public List<DndsVariant> readDndsVariants(@NotNull String sample) {
+        return somaticVariantDAO.readDndsVariants(sample);
     }
 
     @NotNull
