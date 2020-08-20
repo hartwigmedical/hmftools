@@ -25,13 +25,13 @@ final class DndsDriverGeneLikelihoodFile {
     }
 
     @NotNull
-    static Map<String, ModifiableDndsDriverGeneLikelihood> fromMultiImpactInputStream(@NotNull final InputStream genomeInputStream) {
+    static Map<String, DndsDriverGeneLikelihood> fromMultiImpactInputStream(@NotNull final InputStream genomeInputStream) {
         return fromMultiImpactLine(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static Map<String, ModifiableDndsDriverGeneLikelihood> fromMultiImpactLine(@NotNull final List<String> lines) {
-        Map<String, ModifiableDndsDriverGeneLikelihood> result = Maps.newHashMap();
+    private static Map<String, DndsDriverGeneLikelihood> fromMultiImpactLine(@NotNull final List<String> lines) {
+        Map<String, DndsDriverGeneLikelihood> result = Maps.newHashMap();
         int i = 0;
         for (String line : lines) {
             i++;
@@ -87,8 +87,6 @@ final class DndsDriverGeneLikelihoodFile {
         return ModifiableDndsDriverGeneLikelihood.create()
                 .setGene(values[0])
                 .setMissense(missense)
-                .setMissenseBiallelic(missense)
-                .setMissenseNonBiallelic(missense)
                 .setNonsense(fromString(3, values))
                 .setSplice(fromString(5, values))
                 .setIndel(fromString(7, values));

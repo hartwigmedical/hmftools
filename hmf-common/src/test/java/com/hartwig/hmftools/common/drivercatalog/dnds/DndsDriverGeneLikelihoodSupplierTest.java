@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.common.drivercatalog.dnds;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,17 +40,4 @@ public class DndsDriverGeneLikelihoodSupplierTest {
         assertEquals(2e-07, missense.passengersPerMutation(), 1e-7);
     }
 
-    @Test
-    public void testBiallelic() {
-        DndsDriverGeneLikelihood apc = tsg.get("APC");
-        assertTrue(apc.useBiallelic());
-        assertNotEquals(apc.missense(), apc.missenseBiallelic());
-        assertNotEquals(apc.missense(), apc.missenseNonBiallelic());
-        assertNotEquals(apc.missenseBiallelic(), apc.missenseNonBiallelic());
-
-        DndsDriverGeneLikelihood sox9 = tsg.get("SOX9");
-        assertFalse(sox9.useBiallelic());
-        assertEquals(sox9.missense(), sox9.missenseBiallelic());
-        assertEquals(sox9.missense(), sox9.missenseNonBiallelic());
-    }
 }

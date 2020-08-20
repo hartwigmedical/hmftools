@@ -22,7 +22,6 @@ public class SomaticVariantDrivers {
     private final List<SomaticVariant> oncoVariants = Lists.newArrayList();
     private final Map<VariantType, Long> variantTypeCounts = Maps.newHashMap();
     private final Map<VariantType, Long> variantTypeCountsBiallelic = Maps.newHashMap();
-    private final Map<VariantType, Long> variantTypeCountsNonBiallelic = Maps.newHashMap();
 
     private final Predicate<SomaticVariant> oncoPredicate;
     private final Predicate<SomaticVariant> tsgPredicate;
@@ -38,8 +37,6 @@ public class SomaticVariantDrivers {
             variantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
             if (variant.biallelic()) {
                 variantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
-            } else {
-                variantTypeCountsNonBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
             }
 
             if (oncoPredicate.test(variant)) {
@@ -59,11 +56,7 @@ public class SomaticVariantDrivers {
 
         final List<DriverCatalog> result = Lists.newArrayList();
         result.addAll(oncoDrivers.drivers(oncoVariants, geneCopyNumbers, variantTypeCounts));
-        result.addAll(tsgDrivers.drivers(tsgVariants,
-                geneCopyNumbers,
-                variantTypeCounts,
-                variantTypeCountsBiallelic,
-                variantTypeCountsNonBiallelic));
+        result.addAll(tsgDrivers.drivers(tsgVariants, geneCopyNumbers, variantTypeCounts, variantTypeCountsBiallelic));
 
         return result;
     }

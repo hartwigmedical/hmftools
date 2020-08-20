@@ -18,12 +18,6 @@ public abstract class DndsDriverGeneLikelihood {
     public abstract DndsDriverImpactLikelihood missense();
 
     @NotNull
-    public abstract DndsDriverImpactLikelihood missenseBiallelic();
-
-    @NotNull
-    public abstract DndsDriverImpactLikelihood missenseNonBiallelic();
-
-    @NotNull
     public abstract DndsDriverImpactLikelihood nonsense();
 
     @NotNull
@@ -32,18 +26,13 @@ public abstract class DndsDriverGeneLikelihood {
     @NotNull
     public abstract DndsDriverImpactLikelihood indel();
 
-    public boolean useBiallelic() {
-        return !missense().equals(missenseBiallelic());
-    }
-
     @NotNull
-    public DndsDriverImpactLikelihood select(boolean biallelic, DriverImpact impact) {
+    public DndsDriverImpactLikelihood select(DriverImpact impact) {
         switch (impact) {
             case NONSENSE:
                 return nonsense();
             case MISSENSE:
                 return missense();
-//                return biallelic ? missenseBiallelic() : missenseNonBiallelic();
             case INFRAME:
             case FRAMESHIFT:
                 return indel();

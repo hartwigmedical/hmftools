@@ -104,7 +104,7 @@ final class OncoDrivers {
         double driverLikelihood = 0;
         for (SomaticVariant variant : geneVariants) {
             final DriverImpact impact = DriverImpact.select(variant);
-            final DndsDriverImpactLikelihood likelihood = geneLikelihood.select(false, impact);
+            final DndsDriverImpactLikelihood likelihood = geneLikelihood.select(impact);
             final long sampleVariantCount =
                     impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME ? sampleIndelCount : sampleSNVCount;
             driverLikelihood = Math.max(driverLikelihood, probabilityDriverVariant(sampleVariantCount, likelihood));

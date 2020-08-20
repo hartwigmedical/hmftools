@@ -132,8 +132,6 @@ public class OncoDriversTest {
         return ModifiableDndsDriverGeneLikelihood.create()
                 .setGene("Gene")
                 .setMissense(missenseLikelihood)
-                .setMissenseBiallelic(missenseLikelihood)
-                .setMissenseNonBiallelic(missenseLikelihood)
                 .setNonsense(createLikelihood(nonsense))
                 .setSplice(createLikelihood(splice))
                 .setIndel(createLikelihood(indel));
