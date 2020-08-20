@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SPECIFIC_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CupCalcs.addPercentileClassifier;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -163,8 +162,6 @@ public class SampleAnalyser
 
         final List<SampleResult> driverResults = mFeatures.processSample(sample);
         allResults.addAll(driverResults);
-
-        addPercentileClassifier(sample, allResults);
 
         writeSampleData(sample, allResults);
     }
