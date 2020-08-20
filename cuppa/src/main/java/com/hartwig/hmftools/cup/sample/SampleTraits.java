@@ -3,9 +3,13 @@ package com.hartwig.hmftools.cup.sample;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_CLASS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
+import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
+import static com.hartwig.hmftools.cup.sample.SampleTraitType.SNV_COUNT;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromCohortFile;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefPercentileData;
@@ -22,6 +26,8 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
+import com.hartwig.hmftools.cup.svs.SvData;
+import com.hartwig.hmftools.cup.svs.SvDataType;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -139,6 +145,17 @@ public class SampleTraits
                 results.add(result);
             }
         }
+
+        int snvCount = sampleTraits.SnvCount;
+        int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+
+        final Map<String,double[]> cancerPercentiles = mRefTraitPercentiles.get(SNV_COUNT);
+
+        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(cancerPercentiles, snvCount, cancerTypeCount, true);
+        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, "SNV_COUNT_LOW", snvCount, cancerPrevsLow));
+
+        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(cancerPercentiles, snvCount, cancerTypeCount, false);
+        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, "SNV_COUNT_HIGH", snvCount, cancerPrevsHigh));
 
         return results;
     }
