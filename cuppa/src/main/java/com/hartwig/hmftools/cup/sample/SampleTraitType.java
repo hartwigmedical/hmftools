@@ -6,7 +6,6 @@ public enum SampleTraitType
     WGD,
     PURITY,
     PLOIDY,
-    SNV_COUNT,
     MS_INDELS_TMB,
     CHORD_HRD
 }

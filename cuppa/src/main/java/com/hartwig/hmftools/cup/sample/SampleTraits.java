@@ -3,13 +3,10 @@ package com.hartwig.hmftools.cup.sample;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_CLASS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
-import static com.hartwig.hmftools.cup.common.CategoryType.SV;
-import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
-import static com.hartwig.hmftools.cup.sample.SampleTraitType.SNV_COUNT;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromCohortFile;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefPercentileData;
@@ -21,13 +18,9 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
-import com.hartwig.hmftools.cup.common.ResultType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
-import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
-import com.hartwig.hmftools.cup.svs.SvData;
-import com.hartwig.hmftools.cup.svs.SvDataType;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -35,7 +28,6 @@ public class SampleTraits
 {
     private final SampleAnalyserConfig mConfig;
     private final SampleDataCache mSampleDataCache;
-    private final SignatureAnnotation mSigAnnotation;
 
     private final Map<String,SampleTraitsData> mSampleTraitsData;
 
@@ -44,11 +36,10 @@ public class SampleTraits
 
     private boolean mIsValid;
 
-    public SampleTraits(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache, final SignatureAnnotation sigAnnotation)
+    public SampleTraits(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
-        mSigAnnotation = sigAnnotation;
 
         mSampleTraitsData = Maps.newHashMap();
         mRefTraitPercentiles = Maps.newHashMap();
@@ -71,10 +62,7 @@ public class SampleTraits
         }
         else if(mConfig.DbAccess != null)
         {
-            final Map<String,Integer> sampleSnvCounts = Maps.newHashMap();
-            mSampleDataCache.SampleIds.forEach(x -> sampleSnvCounts.put(x, mSigAnnotation.getSampleSnvCount(x)));
-
-            if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSnvCounts, mSampleTraitsData))
+            if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleTraitsData))
                 return false;
         }
 
@@ -145,17 +133,6 @@ public class SampleTraits
                 results.add(result);
             }
         }
-
-        int snvCount = sampleTraits.SnvCount;
-        int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-
-        final Map<String,double[]> cancerPercentiles = mRefTraitPercentiles.get(SNV_COUNT);
-
-        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(cancerPercentiles, snvCount, cancerTypeCount, true);
-        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, "SNV_COUNT_LOW", snvCount, cancerPrevsLow));
-
-        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(cancerPercentiles, snvCount, cancerTypeCount, false);
-        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, "SNV_COUNT_HIGH", snvCount, cancerPrevsHigh));
 
         return results;
     }

@@ -13,12 +13,13 @@ import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_COUNT_CSS;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_POS_FREQ_CSS;
+import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSigContribPercentiles;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSnvPosFrequences;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSampleCountsFromCohortFile;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSamplePosFreqFromCohortFile;
@@ -45,6 +46,7 @@ public class SignatureAnnotation
     private SigMatrix mRefSampleCounts;
     private final List<String> mRefSampleNames;
     private final Map<String,Map<String,double[]>> mRefCancerSigContribPercentiles;
+    private final Map<String,double[]> mRefCancerSnvCountPercentiles;
 
     private SigMatrix mRefSnvPosFrequencies;
     private final List<String> mRefSnvPosFreqCancerTypes;
@@ -75,10 +77,11 @@ public class SignatureAnnotation
         mRefSampleCounts = null;
         mRefSampleNames = Lists.newArrayList();
         mRefCancerSigContribPercentiles = Maps.newHashMap();
+        mRefCancerSnvCountPercentiles = Maps.newHashMap();
 
         mIsValid = true;
 
-        loadRefSigContribPercentiles(mConfig.RefSigContribData, mRefCancerSigContribPercentiles);
+        loadRefSignaturePercentileData(mConfig.RefSigContribData, mRefCancerSigContribPercentiles, mRefCancerSnvCountPercentiles);
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames);
 
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
@@ -162,9 +165,35 @@ public class SignatureAnnotation
             addPosFreqCssResults(sample, results);
         }
 
+        int snvCount = (int)sumVector(sampleCounts);
+
         if(mConfig.runCategory(SNV_SIG))
         {
             addSigContributionResults(sample, results);
+
+            // add a percentile result
+
+            final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+
+            for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
+            {
+                final String cancerType = cancerPercentiles.getKey();
+                double percentile = getPercentile(cancerPercentiles.getValue(), snvCount, true);
+                cancerTypeValues.put(cancerType, percentile);
+            }
+
+            SampleResult result = new SampleResult(
+                    sample.Id, SNV_SIG, PERCENTILE, "SNV_COUNT", snvCount, cancerTypeValues);
+
+            results.add(result);
+
+            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+
+            final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvCount, cancerTypeCount, true);
+            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_LOW", snvCount, cancerPrevsLow));
+
+            final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvCount, cancerTypeCount, false);
+            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_HIGH", snvCount, cancerPrevsHigh));
         }
 
         return results;

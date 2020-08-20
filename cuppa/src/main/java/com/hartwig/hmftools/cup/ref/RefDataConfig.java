@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
+import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SNV_COUNTS_FILE;
 
 import java.io.File;
 
@@ -20,6 +21,7 @@ public class RefDataConfig
     public final String RefSampleSvDataFile;
     public final String RefSigContribsFile;
     public final String RefSnvPositionDataFile;
+    public final String RefSnvCountsFile;
 
     // config strings
     public static final String REF_SAMPLE_TRAITS_FILE = "ref_sample_traits_file";
@@ -36,6 +38,7 @@ public class RefDataConfig
         RefSigContribsFile = cmd.getOptionValue(REF_SIG_CONTRIBS_FILE, "");
         RefSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
         RefSnvPositionDataFile = cmd.getOptionValue(REF_SNV_POS_DATA_FILE, "");
+        RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -47,6 +50,7 @@ public class RefDataConfig
         options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref signature contirbutions data file");
         options.addOption(REF_SV_DATA_FILE, true, "Ref sample SV data file");
         options.addOption(REF_SNV_POS_DATA_FILE, true, "Ref sample SNV position bucket data file");
+        options.addOption(REF_SNV_COUNTS_FILE, true, "Ref sample SNV position bucket data file");
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");

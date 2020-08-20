@@ -55,7 +55,7 @@ public class SampleAnalyser
 
         mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataCache);
         mFeatures = new FeatureAnnotation(mConfig, mSampleDataCache);
-        mSampleTraits = new SampleTraits(mConfig, mSampleDataCache, mSnvSignatures);
+        mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
         mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
 
         mSampleDataWriter = null;

@@ -3,10 +3,12 @@ package com.hartwig.hmftools.cup.sigs;
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.sigs.Percentiles.buildPercentiles;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -17,6 +19,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
@@ -26,8 +29,15 @@ public class RefSignatures
     private final SampleDataCache mSampleDataCache;
 
     private final Map<String,Map<String,List<Double>>> mCancerSigContribs;
+    private final Map<String,List<Double>> mCancerSnvCounts;
+
+    private final List<String> mSampleNames;
+    private final SigMatrix mSampleCounts;
 
     private BufferedWriter mRefDataWriter;
+
+    public static final String REF_SIG_TYPE_CONTRIB = "SigContrib";
+    public static final String REF_SIG_TYPE_SNV_COUNT = "SnvCount";
 
     public RefSignatures(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
@@ -35,19 +45,18 @@ public class RefSignatures
         mSampleDataCache = sampleDataCache;
 
         mCancerSigContribs = Maps.newHashMap();
+        mCancerSnvCounts = Maps.newHashMap();
+
         mRefDataWriter = null;
 
         initialiseRefDataWriter();
 
         loadRefSigContributions(mConfig.RefSigContribsFile);
+        mSampleNames = Lists.newArrayList();
+        mSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mSampleNames);
     }
 
     public void buildRefDataSets()
-    {
-        buildRefSignatureData();
-    }
-
-    private void buildRefSignatureData()
     {
         for(Map.Entry<String,Map<String,List<Double>>> entry : mCancerSigContribs.entrySet())
         {
@@ -61,6 +70,40 @@ public class RefSignatures
             }
         }
 
+        for(int i = 0; i < mSampleNames.size(); ++i)
+        {
+            double sampleTotal = sumVector(mSampleCounts.getCol(i));
+            final String sampleId = mSampleNames.get(i);
+            final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
+
+            List<Double> sampleCounts = mCancerSnvCounts.get(cancerType);
+            if(sampleCounts == null)
+            {
+                mCancerSnvCounts.put(cancerType, Lists.newArrayList(sampleTotal));
+            }
+            else
+            {
+                int index = 0;
+                while(index < sampleCounts.size())
+                {
+                    if(sampleTotal < sampleCounts.get(index))
+                        break;
+
+                    ++index;
+                }
+
+                sampleCounts.add(index, sampleTotal);
+            }
+        }
+
+        for(Map.Entry<String,List<Double>> entry : mCancerSnvCounts.entrySet())
+        {
+            final String cancerType = entry.getKey();
+
+            final double[] percentiles = buildPercentiles(convertList(entry.getValue()));
+            writeRefSnvCountData(cancerType, percentiles);
+        }
+
         closeBufferedWriter(mRefDataWriter);
     }
     
@@ -71,7 +114,7 @@ public class RefSignatures
             final String filename = mConfig.OutputDir + "cup_ref_sig_percentiles.csv";
             mRefDataWriter = createBufferedWriter(filename, false);
 
-            mRefDataWriter.write("CancerType,SigName");
+            mRefDataWriter.write("CancerType,DataType");
 
             for(int i = 0; i < PERCENTILE_COUNT; ++i)
             {
@@ -82,7 +125,7 @@ public class RefSignatures
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to write sample traits ref data output: {}", e.toString());
+            CUP_LOGGER.error("failed to write signatures ref data output: {}", e.toString());
         }
     }
 
@@ -101,7 +144,26 @@ public class RefSignatures
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to write sample traits ref data output: {}", e.toString());
+            CUP_LOGGER.error("failed to write signatures ref data output: {}", e.toString());
+        }
+    }
+
+    private void writeRefSnvCountData(final String cancerType, final double[] percentileValues)
+    {
+        try
+        {
+            mRefDataWriter.write(String.format("%s,%s", cancerType, REF_SIG_TYPE_SNV_COUNT));
+
+            for(int i = 0; i < percentileValues.length; ++i)
+            {
+                mRefDataWriter.write(String.format(",%.0f", percentileValues[i]));
+            }
+
+            mRefDataWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write signatures ref data output: {}", e.toString());
         }
     }
 
@@ -161,11 +223,12 @@ public class RefSignatures
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read driver prevalence data file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to read sig contribution data file({}): {}", filename, e.toString());
         }
     }
 
-    public static boolean populateRefSigContributions(final String filename, final Map<String,Map<String,double[]>> cancerSigContribsMap)
+    public static boolean populateRefPercentileData(
+            final String filename, final Map<String,Map<String,double[]>> cancerSigContribs, final Map<String,double[]> cancerSnvCounts)
     {
         try
         {
@@ -176,10 +239,11 @@ public class RefSignatures
 
             for(final String line : fileData)
             {
-                // SampleId,SigName,SigContrib,SigPercent
+                // SampleId,DataType,Pct_0.00 etc
                 final String[] items = line.split(DATA_DELIM, -1);
                 String cancerType = items[0];
-                String sigName = items[1];
+
+                String dataType = items[1];
 
                 double[] percentileData = new double[PERCENTILE_COUNT];
 
@@ -191,15 +255,24 @@ public class RefSignatures
                     percentileData[i - startIndex] = value;
                 }
 
-                Map<String,double[]> sigContribsMap = cancerSigContribsMap.get(cancerType);
-
-                if(sigContribsMap == null)
+                if(dataType.equals(REF_SIG_TYPE_SNV_COUNT))
                 {
-                    sigContribsMap = Maps.newHashMap();
-                    cancerSigContribsMap.put(cancerType, sigContribsMap);
+                    cancerSnvCounts.put(cancerType, percentileData);
                 }
+                else
+                {
+                    String sigName = dataType;
 
-                sigContribsMap.put(sigName, percentileData);
+                    Map<String, double[]> sigContribsMap = cancerSigContribs.get(cancerType);
+
+                    if(sigContribsMap == null)
+                    {
+                        sigContribsMap = Maps.newHashMap();
+                        cancerSigContribs.put(cancerType, sigContribsMap);
+                    }
+
+                    sigContribsMap.put(sigName, percentileData);
+                }
             }
         }
         catch (IOException e)

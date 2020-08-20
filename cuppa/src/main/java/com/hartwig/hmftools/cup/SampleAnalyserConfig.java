@@ -60,7 +60,7 @@ public class SampleAnalyserConfig
     private static final String SAMPLE_SV_FILE = "sample_sv_file";
 
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
-    private static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
+    public static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
     private static final String REF_SIG_CONTRIB_FILE = "ref_sig_contrib_file";
     private static final String REF_FEAT_PREV_FILE = "ref_feature_prev_file";
     private static final String REF_TRAIT_PERC_FILE = "ref_trait_perc_file";

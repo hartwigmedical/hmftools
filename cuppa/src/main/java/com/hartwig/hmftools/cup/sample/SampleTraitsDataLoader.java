@@ -49,8 +49,7 @@ public class SampleTraitsDataLoader
     }
 
     public static boolean loadTraitsFromDatabase(
-            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,Integer> sampleSnvCounts,
-            final Map<String,SampleTraitsData> sampleTraitsData)
+            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,SampleTraitsData> sampleTraitsData)
     {
         if(dbAccess == null)
             return false;
@@ -68,8 +67,7 @@ public class SampleTraitsDataLoader
                 final ChordAnalysis chordAnalysis = dbAccess.readChordAnalysis(sampleId);
                 double chordHrd = chordAnalysis != null ? chordAnalysis.hrdValue() : 0;
 
-                Integer snvCount = sampleSnvCounts.get(sampleId);
-                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, snvCount != null ? snvCount : 0, chordHrd);
+                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, chordHrd);
                 sampleTraitsData.put(traitsData.SampleId, traitsData);
             }
         }

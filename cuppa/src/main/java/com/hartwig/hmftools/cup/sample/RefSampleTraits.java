@@ -58,9 +58,6 @@ public class RefSampleTraits
             final List<Double> ploidyValues = traitsData.stream().map(x -> x.Ploidy).collect(Collectors.toList());
             writeRefDataType(cancerType, SampleTraitType.PLOIDY, createPercentileData(ploidyValues));
 
-            final List<Double> snvTmbValues = traitsData.stream().map(x -> (double)x.SnvCount).collect(Collectors.toList());
-            writeRefDataType(cancerType, SampleTraitType.SNV_COUNT, createPercentileData(snvTmbValues));
-
             final List<Double> msIndelTmbValues = traitsData.stream().map(x -> x.IndelsMbPerMb).collect(Collectors.toList());
             writeRefDataType(cancerType, SampleTraitType.MS_INDELS_TMB, createPercentileData(msIndelTmbValues));
 
