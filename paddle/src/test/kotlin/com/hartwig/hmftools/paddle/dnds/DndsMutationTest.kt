@@ -97,6 +97,17 @@ class DndsMutationTest {
     }
 
     @Test
+    fun testSortByHotspot() {
+        val nonsenseHotspot = dndsMutation(GENE, true, false, 0, Impact.NONSENSE)
+        val inframe = dndsMutation(GENE, false, false, 0, Impact.INFRAME)
+        val list = mutableListOf(inframe, nonsenseHotspot)
+        list.shuffle()
+        list.sortWith(DndsMutationComparator { x -> x.isKnownOncoDriver })
+        assertEquals(Impact.NONSENSE, list[0].impact)
+        assertEquals(Impact.INFRAME, list[1].impact)
+    }
+
+    @Test
     fun testIsHotspot() {
         Assert.assertFalse(dndsMutation(GENE, true, false, 0, Impact.SYNONYMOUS).isHotspot)
         Assert.assertFalse(dndsMutation(GENE, true, false, 0, Impact.UNKNOWN).isHotspot)
