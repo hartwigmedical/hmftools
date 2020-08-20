@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
@@ -284,8 +285,12 @@ public class DatabaseAccess implements AutoCloseable {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
+    public void writeAmberMapping(@NotNull String sample, List<AmberMapping> mapping) {
+        amberDAO.writeMapping(sample, mapping);
+    }
+
     public void writeAmberPatients(@NotNull String sample, List<AmberPatient> mapping) {
-        amberDAO.writePatients(sample, mapping);
+        amberDAO.writePatients(mapping);
     }
 
     public void writeAmberSample(@NotNull AmberSample identity) {
@@ -298,12 +303,21 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
+    public List<AmberMapping> readAmberMappings() {
+        return amberDAO.readMapping();
+    }
+
+    @NotNull
     public List<AmberPatient> readAmberPatients() {
         return amberDAO.readPatients();
     }
 
     public void truncateAmberPatients() {
         amberDAO.truncatePatients();
+    }
+
+    public void truncateAmberMappings() {
+        amberDAO.truncateMappings();
     }
 
     public void writeAmberBAF(@NotNull String sampleId, @NotNull List<AmberBAF> amber) {

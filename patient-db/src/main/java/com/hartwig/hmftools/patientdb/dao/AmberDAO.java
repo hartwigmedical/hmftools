@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBER;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERMAPPING;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERPATIENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERSAMPLE;
 
@@ -12,10 +13,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
+import com.hartwig.hmftools.common.amber.ImmutableAmberMapping;
 import com.hartwig.hmftools.common.amber.ImmutableAmberPatient;
 import com.hartwig.hmftools.common.amber.ImmutableAmberSample;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -23,8 +25,9 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep3;
 import org.jooq.InsertValuesStep5;
-import org.jooq.InsertValuesStep7;
+import org.jooq.InsertValuesStep6;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -47,6 +50,10 @@ class AmberDAO {
         context.delete(AMBERPATIENT).execute();
     }
 
+    void truncateMappings() {
+        context.delete(AMBERMAPPING).execute();
+    }
+
     @NotNull
     List<AmberPatient> readPatients() {
         final List<AmberPatient> result = Lists.newArrayList();
@@ -54,10 +61,7 @@ class AmberDAO {
         for (Record record : queryResult) {
             result.add(ImmutableAmberPatient.builder()
                     .patientId(record.get(AMBERPATIENT.PATIENTID))
-                    .sample(record.get(AMBERPATIENT.FIRSTSAMPLEID))
-                    .otherSample(record.get(AMBERPATIENT.SECONDSAMPLEID))
-                    .matches(record.get(AMBERPATIENT.MATCHES))
-                    .sites(record.get(AMBERPATIENT.SITES))
+                    .sample(record.get(AMBERPATIENT.SAMPLEID))
                     .build());
         }
 
@@ -82,41 +86,60 @@ class AmberDAO {
         return result;
     }
 
-    void writePatients(String sample, List<AmberPatient> mapping) {
-        if (mapping.isEmpty()) {
+    void writePatients(List<AmberPatient> patients) {
+        if (patients.isEmpty()) {
             return;
         }
 
-        final Set<Integer> patientIds = mapping.stream().map(AmberPatient::patientId).collect(Collectors.toSet());
-        if (patientIds.size() != 1) {
-            throw new IllegalArgumentException("Only one patient id permitted");
-        }
+        final Set<String> samples = patients.stream().map(AmberPatient::sample).collect(Collectors.toSet());
 
-        Set<String> samples = Sets.newHashSet(sample);
-        mapping.forEach(x -> {
-            samples.add(x.sample());
-            samples.add(x.otherSample());
-        });
-
-        context.delete(AMBERPATIENT).where(AMBERPATIENT.FIRSTSAMPLEID.in(samples)).execute();
-        context.delete(AMBERPATIENT).where(AMBERPATIENT.SECONDSAMPLEID.in(samples)).execute();
+        context.delete(AMBERPATIENT).where(AMBERPATIENT.SAMPLEID.in(samples)).execute();
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
+        InsertValuesStep3 inserter = context.insertInto(AMBERPATIENT, AMBERPATIENT.MODIFIED, AMBERPATIENT.PATIENTID, AMBERPATIENT.SAMPLEID);
 
-        InsertValuesStep7 inserter = context.insertInto(AMBERPATIENT,
-                AMBERPATIENT.MODIFIED,
-                AMBERPATIENT.PATIENTID,
-                AMBERPATIENT.FIRSTSAMPLEID,
-                AMBERPATIENT.SECONDSAMPLEID,
-                AMBERPATIENT.MATCHES,
-                AMBERPATIENT.SITES,
-                AMBERPATIENT.LIKELIHOOD);
+        for (AmberPatient amberPatient : patients) {
+            inserter.values(timestamp, amberPatient.patientId(), amberPatient.sample());
+        }
 
-        for (AmberPatient amberPatient : mapping) {
+        inserter.execute();
+
+    }
+
+    List<AmberMapping> readMapping() {
+        final List<AmberMapping> result = Lists.newArrayList();
+        final Result<Record> queryResult = context.select().from(AMBERMAPPING).fetch();
+
+        for (Record record : queryResult) {
+            result.add(ImmutableAmberMapping.builder()
+                    .firstSample(record.get(AMBERMAPPING.FIRSTSAMPLEID))
+                    .secondSample(record.get(AMBERMAPPING.SECONDSAMPLEID))
+                    .matches(record.get(AMBERMAPPING.MATCHES))
+                    .sites(record.get(AMBERMAPPING.SITES))
+                    .build());
+        }
+
+        return result;
+    }
+
+    void writeMapping(String sample, List<AmberMapping> mapping) {
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+
+        context.delete(AMBERMAPPING).where(AMBERMAPPING.FIRSTSAMPLEID.eq(sample)).execute();
+        context.delete(AMBERMAPPING).where(AMBERMAPPING.SECONDSAMPLEID.eq(sample)).execute();
+
+        InsertValuesStep6 inserter = context.insertInto(AMBERMAPPING,
+                AMBERMAPPING.MODIFIED,
+                AMBERMAPPING.FIRSTSAMPLEID,
+                AMBERMAPPING.SECONDSAMPLEID,
+                AMBERMAPPING.MATCHES,
+                AMBERMAPPING.SITES,
+                AMBERMAPPING.LIKELIHOOD);
+
+        for (AmberMapping amberPatient : mapping) {
             inserter.values(timestamp,
-                    amberPatient.patientId(),
-                    amberPatient.sample(),
-                    amberPatient.otherSample(),
+                    amberPatient.firstSample(),
+                    amberPatient.secondSample(),
                     amberPatient.matches(),
                     amberPatient.sites(),
                     amberPatient.likelihood());

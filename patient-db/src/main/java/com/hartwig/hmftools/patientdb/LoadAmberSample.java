@@ -6,10 +6,13 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.common.amber.AmberMapping;
+import com.hartwig.hmftools.common.amber.AmberMappingFactory;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberPatientFactory;
 import com.hartwig.hmftools.common.amber.AmberSample;
@@ -27,6 +30,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -73,23 +77,35 @@ public class LoadAmberSample {
                     new AmberSampleFactory(DEFAULT_MIN_DEPTH, DEFAULT_MIN_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
             final AmberSample sample = amberSampleFactory.fromBaseDepth(tumorSample, baseDepths);
 
-            LOGGER.info("Loading existing sample data");
-            final List<AmberSample> allSamples = dbAccess.readAmberSamples();
+            processSample(sample, dbAccess);
 
-            LOGGER.info("Loading existing patient data");
-            final List<AmberPatient> allPatients = dbAccess.readAmberPatients();
-
-            LOGGER.info("Finding matches");
-            List<AmberPatient> updatedPatients = AmberPatientFactory.create(0.9, sample, allSamples, allPatients);
-
-            LOGGER.info("Writing amber snp data");
-            dbAccess.writeAmberSample(sample);
-
-            LOGGER.info("Writing match data");
-            dbAccess.writeAmberPatients(tumorSample, updatedPatients);
         }
 
         LOGGER.info("Complete");
+    }
+
+    public static void processSample(final AmberSample sample, final DatabaseAccess dbAccess) {
+        LOGGER.info("Comparing with existing samples");
+        final List<AmberSample> allSamples = dbAccess.readAmberSamples();
+        final List<AmberMapping> sampleMappings = Lists.newArrayList();
+        for (AmberSample other : allSamples) {
+            if (!other.sampleId().equals(sample.sampleId())) {
+                final AmberMapping mapping = AmberMappingFactory.create(sample, other);
+                if (mapping.likelihood() > 0.8) {
+                    sampleMappings.add(mapping);
+                }
+            }
+        }
+
+        LOGGER.info("Sample {} matched with {} other samples", sample.sampleId(), sampleMappings.size());
+        final List<AmberPatient> existingPatients = dbAccess.readAmberPatients();
+        final AmberPatientFactory amberPatientFactory = new AmberPatientFactory(existingPatients, sampleMappings);
+        final AmberPatient patient = amberPatientFactory.createPatient(sample);
+
+        LOGGER.info("Writing data");
+        dbAccess.writeAmberSample(sample);
+        dbAccess.writeAmberMapping(sample.sampleId(), sampleMappings);
+        dbAccess.writeAmberPatients(sample.sampleId(), Collections.singletonList(patient));
     }
 
     @NotNull

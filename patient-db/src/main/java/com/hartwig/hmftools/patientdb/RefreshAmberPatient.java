@@ -5,7 +5,10 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.amber.AmberMapping;
+import com.hartwig.hmftools.common.amber.AmberMappingFactory;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberPatientFactory;
 import com.hartwig.hmftools.common.amber.AmberSample;
@@ -15,6 +18,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -29,17 +33,32 @@ public class RefreshAmberPatient {
 
         try (final DatabaseAccess dbAccess = databaseAccess(cmd)) {
 
-            LOGGER.info("Truncating AMBER patients");
+            LOGGER.info("Truncating AMBER mappings and patients");
             dbAccess.truncateAmberPatients();
+            dbAccess.truncateAmberMappings();
 
+            LOGGER.info("Reading sample data");
             final List<AmberSample> allSamples = dbAccess.readAmberSamples();
+            final List<AmberMapping> allMappings = Lists.newArrayList();
+
             for (int i = 0; i < allSamples.size(); i++) {
-                final AmberSample sample = allSamples.get(i);
-                LOGGER.info("Processing " + (i + 1) + " of " + allSamples.size() + ": " + sample.sampleId());
-                final List<AmberPatient> allPatients = dbAccess.readAmberPatients();
-                final List<AmberPatient> updatedPatients = AmberPatientFactory.create(0.9, sample, allSamples, allPatients);
-                dbAccess.writeAmberPatients(sample.sampleId(), updatedPatients);
+                final AmberSample victim = allSamples.get(i);
+
+                LOGGER.info("Processing " + (i + 1) + " of " + allSamples.size() + ": " + victim.sampleId());
+                for (int j = i + 1; j < allSamples.size(); j++) {
+                    final AmberMapping match = AmberMappingFactory.create(victim, allSamples.get(j));
+                    if (match.likelihood() > 0.8) {
+                        allMappings.add(match);
+                    }
+                }
             }
+
+            final AmberPatientFactory patientFactory = new AmberPatientFactory(Lists.newArrayList(), allMappings);
+            final List<AmberPatient> patients = allSamples.stream().map(patientFactory::createPatient).collect(Collectors.toList());
+
+            LOGGER.info("Writing mapping data");
+            dbAccess.writeAmberMapping("dummy", allMappings);
+            dbAccess.writeAmberPatients("dummy", patients);
 
         }
 
