@@ -72,5 +72,4 @@ public class CanonicalAnnotation {
 
         return transcriptId;
     }
-
 }

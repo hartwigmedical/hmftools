@@ -25,8 +25,11 @@ public class TransvarTestApplication {
 
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
-        extractAndPrintHotspots(transvar, "EGFR", null, "I744_K745insKIPVAI");
-        extractAndPrintHotspots(transvar, "EGFR", null, "I740_K745dup");
+        String gene = "APC";
+        String transcript = null;
+        String proteinImpact = "Q1303*";
+
+        extractAndPrintHotspots(transvar, gene, transcript, proteinImpact);
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,
