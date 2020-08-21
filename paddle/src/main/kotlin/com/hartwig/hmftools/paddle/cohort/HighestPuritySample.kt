@@ -38,6 +38,15 @@ data class HighestPuritySample(val patientId: Int, val sampleId: String, val pur
             return result.values.sortedBy { x -> x.patientId }
         }
 
+        fun readFile(file: String): List<HighestPuritySample> {
+            return Files.readAllLines(File(file).toPath()).drop(1).map { fromString(it) }
+        }
+
+        private fun fromString(line: String): HighestPuritySample {
+            val lineArray = line.split("\t")
+            return HighestPuritySample(lineArray[0].toInt(), lineArray[1], lineArray[2].toDouble())
+        }
+
         fun writeFile(filename: String, patients: Collection<HighestPuritySample>) {
             Files.write(File(filename).toPath(), toLines(patients))
         }
