@@ -89,8 +89,6 @@ public class SvAnnotation
         results.add(calcPrevalenceResult(sample, svData, LINE, false));
         results.add(calcPrevalenceResult(sample, svData, TELOMERIC_SGL, false));
         results.add(calcPrevalenceResult(sample, svData, SIMPLE_DUP_32B_200B, false));
-        results.add(calcPrevalenceResult(sample, svData, SIMPLE_DUP_100KB_5MB, false));
-        results.add(calcPrevalenceResult(sample, svData, SIMPLE_DEL_20KB_1MB, false));
         results.add(calcPrevalenceResult(sample, svData, MAX_COMPLEX_SIZE, false));
 
         return results;

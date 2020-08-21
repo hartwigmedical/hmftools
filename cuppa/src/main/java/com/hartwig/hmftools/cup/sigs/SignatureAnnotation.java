@@ -250,7 +250,7 @@ public class SignatureAnnotation
 
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD,
-                ClassifierType.displayString(SNV_COUNT_CSS), String.format("%.6f", totalCss), cancerCssTotals));
+                ClassifierType.displayString(SNV_COUNT_CSS), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
     private void addPosFreqCssResults(final SampleData sample, final List<SampleResult> results)
