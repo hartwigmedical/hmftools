@@ -244,7 +244,7 @@ MECOM		false	false	false	false	true	false	ONCO
 MED12		true	true	true	true	false	true	TSG
 MEGF6		false	false	false	true	false	false	TSG
 MEN1		true	true	true	true	false	true	TSG
-MET		true	false	false	false	true	true	ONCO
+MET		true	false	true	false	true	true	ONCO	Oncogene with known pathogenic splice (15735036, 16397241, 19096300)
 MGA		true	true	true	true	false	true	TSG
 MGMT		true	true	true	true	false	true	TSG
 MIPOL1		false	false	false	true	false	false	TSG
@@ -283,7 +283,6 @@ NTRK1		true	false	false	false	true	true	ONCO
 NTRK2		true	false	false	false	true	true	ONCO
 NTRK3		true	false	false	false	true	true	ONCO
 OR11H1		true	false	false	false	true	true	ONCO
-OR4A5	p centromere	false	false	false	true	false	false	TSG
 OR4F21	p telomere	false	false	false	true	false	false	TSG
 OR4N2		true	true	true	true	false	true	TSG
 PABPC1		false	false	false	false	true	false	ONCO
@@ -310,7 +309,7 @@ PML		true	true	true	true	false	true	TSG
 PMS2		true	true	true	true	false	true	TSG
 POLE		true	true	true	true	false	true	TSG
 POT1		true	true	true	true	false	true	TSG
-PPM1D		true	false	false	false	true	true	ONCO
+PPM1D		true	true	false	false	true	true	ONCO	Oncogene with known pathogenic truncations (25742468, 24880341, 23907125)
 PPP1R15A		true	false	false	false	true	true	ONCO
 PPP2R1A		true	true	true	true	false	true	TSG
 PPP2R2A		true	true	true	true	false	true	TSG
@@ -382,7 +381,7 @@ SOX4		false	false	false	false	true	false	ONCO
 SOX9		true	true	true	true	false	true	TSG
 SPATA31A7	q centromere	false	false	false	true	false	false	TSG
 SPEN		true	true	true	true	false	true	TSG
-SPOP		true	false	false	false	true	true	ONCO
+SPOP		true	true	true	true	true	true	ONCO	Classifed as Oncogene by HMF algo, but generally held to be a TSG
 SPRED1		true	true	true	true	false	true	TSG
 SPTAN1		true	true	true	true	false	true	TSG
 SRC		true	false	false	false	true	true	ONCO
@@ -449,3 +448,5 @@ ZNF703		false	false	false	false	true	false	ONCO
 ZNF750		true	true	true	true	false	true	TSG
 ZNRF3		true	true	true	true	false	true	TSG
 ZRSR2		true	true	true	true	false	true	TSG
+CD274		false	false	false	false	true	false	ONCO	Manually added for amplifications only
+CCND3		false	false	false	false	true	false	ONCO	Manually added for amplifications only
