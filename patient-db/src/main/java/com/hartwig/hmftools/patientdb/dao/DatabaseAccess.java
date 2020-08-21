@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -134,21 +135,18 @@ public class DatabaseAccess implements AutoCloseable {
         clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
     }
 
-    public static void addDatabaseCmdLineArgs(final Options options)
-    {
+    public static void addDatabaseCmdLineArgs(final Options options) {
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");
         options.addOption(DB_URL, true, "Database url");
     }
 
-    public static boolean hasDatabaseConfig(@NotNull final CommandLine cmd)
-    {
+    public static boolean hasDatabaseConfig(@NotNull final CommandLine cmd) {
         return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER) && cmd.hasOption(DB_PASS);
     }
 
     @NotNull
-    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
-    {
+    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);
@@ -157,17 +155,14 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @Nullable
-    public static DatabaseAccess createDatabaseAccess(@NotNull final CommandLine cmd)
-    {
-        if(!hasDatabaseConfig(cmd))
+    public static DatabaseAccess createDatabaseAccess(@NotNull final CommandLine cmd) {
+        if (!hasDatabaseConfig(cmd)) {
             return null;
-
-        try
-        {
-            return databaseAccess(cmd);
         }
-        catch (SQLException e)
-        {
+
+        try {
+            return databaseAccess(cmd);
+        } catch (SQLException e) {
             LOGGER.error("DB connection failed: {}", e.toString());
             return null;
         }
@@ -202,7 +197,7 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public  List<SamplePurity> readSamplePurityPassingQC(double minPurity) {
+    public List<SamplePurity> readSamplePurityPassingQC(double minPurity) {
         return purityDAO.readPassingQC(minPurity);
     }
 
@@ -227,8 +222,12 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<DndsVariant> readDndsVariants(@NotNull String sample) {
-        return somaticVariantDAO.readDndsVariants(sample);
+    public List<DndsVariant> readDndsVariants(int maxRepeatCount, @NotNull String sample) {
+        return somaticVariantDAO.readDndsVariants(maxRepeatCount, sample);
+    }
+
+    public DndsMutationalLoad readDndsMutationLoad(@NotNull String sample) {
+        return somaticVariantDAO.readDndsLoad(sample);
     }
 
     @NotNull

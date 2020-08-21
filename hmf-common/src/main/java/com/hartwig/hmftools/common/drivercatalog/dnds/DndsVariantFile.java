@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.drivercatalog.dnds;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -22,7 +24,15 @@ public class DndsVariantFile {
     }
 
     public static void write(@NotNull final String filename, @NotNull final List<DndsVariant> variants) throws IOException {
-        Files.write(new File(filename).toPath(), toLines(variants));
+        Files.write(new File(filename).toPath(), toLines(true, variants));
+    }
+
+    public static void writeHeader(@NotNull final String filename) throws IOException {
+        Files.write(new File(filename).toPath(), Collections.singletonList(header()));
+    }
+
+    public static void append(@NotNull final String filename, @NotNull final List<DndsVariant> variants) throws IOException {
+        Files.write(new File(filename).toPath(), toLines(false, variants), StandardOpenOption.APPEND);
     }
 
     @NotNull
@@ -31,9 +41,11 @@ public class DndsVariantFile {
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<DndsVariant> variants) {
+    private static List<String> toLines(boolean header, @NotNull final List<DndsVariant> variants) {
         final List<String> lines = Lists.newArrayList();
-        lines.add(header());
+        if (header) {
+            lines.add(header());
+        }
         variants.stream().map(DndsVariantFile::toString).forEach(lines::add);
         return lines;
     }
