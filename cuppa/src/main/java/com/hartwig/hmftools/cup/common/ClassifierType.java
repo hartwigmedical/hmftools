@@ -4,7 +4,8 @@ public enum ClassifierType
 {
     SNV_COUNT_CSS,
     SNV_POS_FREQ_CSS,
-    FEATURE_PREVALENCE;
+    FEATURE_PREVALENCE,
+    COMBINED;
 
     public static String displayString(final ClassifierType type)
     {
@@ -13,6 +14,7 @@ public enum ClassifierType
             case SNV_COUNT_CSS: return "SNV_COUNT_CSS";
             case SNV_POS_FREQ_CSS: return "GEN_POS_CSS";
             case FEATURE_PREVALENCE: return "FEATURE_PREV";
+            case COMBINED: return COMBINED.toString();
             default: return "UNKNOWN";
         }
     }

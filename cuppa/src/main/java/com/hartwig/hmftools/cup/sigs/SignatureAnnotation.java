@@ -15,8 +15,10 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_COUNT_CSS;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_POS_FREQ_CSS;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
@@ -213,7 +215,7 @@ public class SignatureAnnotation
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            double cssWeight = pow(8, -100 * (1 - css));
+            double cssWeight = pow(SNV_CSS_DIFF_EXPONENT, -100 * (1 - css));
 
             double otherSnvTotal = sumVector(otherSampleCounts);
             double mutLoadWeight = min(otherSnvTotal, snvTotal) / max(otherSnvTotal, snvTotal);
@@ -279,7 +281,7 @@ public class SignatureAnnotation
             if(css < SNV_POS_FREQ_CSS_THRESHOLD)
                 continue;
 
-            double cssWeight = pow(10, -100 * (1 - css));
+            double cssWeight = pow(SNV_POS_FREQ_DIFF_EXPONENT, -100 * (1 - css));
 
             double weightedCss = css * cssWeight;
 

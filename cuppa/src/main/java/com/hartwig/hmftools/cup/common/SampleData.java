@@ -63,7 +63,6 @@ public class SampleData
             if(mGenderType != Gender.FEMALE)
                 return false;
         }
-
         if(cancerType.contains(CANCER_TYPE_PROSTATE))
         {
             if(mGenderType == Gender.FEMALE)

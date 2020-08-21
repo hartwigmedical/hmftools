@@ -266,18 +266,6 @@ public class FeatureAnnotation
             allCancerProbTotal += probabilityTotal;
         }
 
-        /*
-        final Map<String,Double> cancerTypeValues = Maps.newHashMap();
-
-        for(Map.Entry<String,Double> entry : cancerProbTotals.entrySet())
-        {
-            double probability = entry.getValue() / allCancerProbTotal;
-            cancerTypeValues.put(entry.getKey(), probability);
-        }
-
-        // SampleResult result = new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.displayString(FEATURE_PREVALENCE), geneNames, cancerTypeValues);
-        */
-
         SampleResult result = new SampleResult(
                 sample.Id, FEATURE, LIKELIHOOD, ClassifierType.displayString(FEATURE_PREVALENCE), geneNames, cancerProbTotals);
 

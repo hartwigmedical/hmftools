@@ -4,5 +4,5 @@ public enum ResultType
 {
     PERCENTILE,
     PREVALENCE,
-    LIKELIHOOD
+    LIKELIHOOD;
 }

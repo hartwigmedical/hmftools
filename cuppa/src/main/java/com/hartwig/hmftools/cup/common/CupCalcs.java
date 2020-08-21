@@ -4,8 +4,15 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
+import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
+import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
+import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 
@@ -56,6 +63,85 @@ public class CupCalcs
         }
 
         return cancerPrevalences;
+    }
+
+    public static SampleResult calcCombinedFeatureResult(final SampleData sample, final List<SampleResult> allResults)
+    {
+        final Map<String,Double> cancerPrevalenceValues = Maps.newHashMap();
+
+        final List<SampleResult> prevalenceResults = allResults.stream()
+                .filter(x -> x.ResultType == LIKELIHOOD)
+                .filter(x -> x.Category != CLASSIFIER)
+                .collect(Collectors.toList());
+
+        for(final SampleResult result : prevalenceResults)
+        {
+            for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
+            {
+                final String cancerType = entry.getKey();
+                double prevalence = entry.getValue();
+
+                Double prevTotal = cancerPrevalenceValues.get(cancerType);
+
+                if(prevTotal == null)
+                    cancerPrevalenceValues.put(cancerType, prevalence);
+                else
+                    cancerPrevalenceValues.put(cancerType, prevTotal * prevalence);
+            }
+        }
+
+        double totalPrevalence = cancerPrevalenceValues.values().stream().mapToDouble(x -> x).sum();
+
+        if(totalPrevalence == 0)
+            return null;
+
+        final Map<String,Double> cancerTypeValues = Maps.newHashMap();
+
+        for(Map.Entry<String,Double> entry : cancerPrevalenceValues.entrySet())
+        {
+            double probability = entry.getValue() / totalPrevalence;
+            cancerTypeValues.put(entry.getKey(), probability);
+        }
+
+        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.displayString(FEATURE_PREVALENCE), "", cancerTypeValues);
+    }
+
+    public static SampleResult calcClassifierScoreResult(final SampleData sample, final List<SampleResult> results)
+    {
+        final List<SampleResult> classifierResults = results.stream()
+                .filter(x -> x.Category == CLASSIFIER)
+                .collect(Collectors.toList());
+
+        final Map<String,Double> cancerTypeValues = Maps.newHashMap();
+
+        for(final SampleResult result : classifierResults)
+        {
+            for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
+            {
+                final String cancerType = entry.getKey();
+                double probability = max(entry.getValue(), MIN_CLASSIFIER_SCORE);
+
+                Double probTotal = cancerTypeValues.get(cancerType);
+
+                if(probTotal == null)
+                    cancerTypeValues.put(cancerType, probability);
+                else
+                    cancerTypeValues.put(cancerType, probTotal * probability);
+            }
+        }
+
+        double totalProbability = cancerTypeValues.values().stream().mapToDouble(x -> x).sum();
+
+        if(totalProbability == 0)
+            return null;
+
+        for(Map.Entry<String,Double> entry : cancerTypeValues.entrySet())
+        {
+            double probability = entry.getValue() / totalProbability;
+            cancerTypeValues.put(entry.getKey(), probability);
+        }
+
+        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.displayString(COMBINED), "", cancerTypeValues);
     }
 
 }

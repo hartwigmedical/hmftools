@@ -5,6 +5,11 @@ public class CupConstants
     public final static double SNV_CSS_THRESHOLD = 0.01;
     public final static double SNV_POS_FREQ_CSS_THRESHOLD = 0.01;
 
+    public final static double SNV_CSS_DIFF_EXPONENT = 8;
+    public final static double SNV_POS_FREQ_DIFF_EXPONENT = 10;
+
+    public static final double MIN_CLASSIFIER_SCORE = 0.02;
+
     public final static String CANCER_TYPE_UNKNOWN = "Unknown";
 
     // cancer types with gender-exclusions
