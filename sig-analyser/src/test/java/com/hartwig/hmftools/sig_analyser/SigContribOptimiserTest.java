@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
 import com.hartwig.hmftools.sig_analyser.buckets.SampleSigContribOptimiser;
+import com.hartwig.hmftools.sig_analyser.fitter.ConstrainedFitter;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -24,6 +25,65 @@ public class SigContribOptimiserTest
 {
     @Test
     public void testSampleFit1()
+    {
+        Configurator.setRootLevel(Level.DEBUG);
+
+        int bucketCount = 5;
+        int sigCount = 3;
+
+        List<double[]> ratiosCollection = Lists.newArrayList();
+
+        double[] sig1 = { 0.3, 0.3, 0.05, 0.25, 0.1 };
+        ratiosCollection.add(sig1);
+
+        double[] sig2 = { 0.20, 0.10, 0.25, 0.05, 0.40 };
+        ratiosCollection.add(sig2);
+
+        double[] sig3 = { 0.0, 0.60, 0.1, 0.1, 0.2 };
+        ratiosCollection.add(sig3);
+
+        // the answer is 60, 40, 20
+
+        double[] actualContribs = {60, 40, 20};
+        double[] counts = new double[bucketCount];
+
+        for (int j = 0; j < sigCount; ++j)
+        {
+            final double[] sigRatios = ratiosCollection.get(j);
+
+            for(int i = 0; i < bucketCount; ++i)
+            {
+                counts[i] += actualContribs[j] * sigRatios[i];
+            }
+        }
+
+        ConstrainedFitter fitter = new ConstrainedFitter(bucketCount);
+        fitter.setParameters(0, null, true, 1.0);
+        boolean calcOk = fitter.fitCounts(ratiosCollection, counts, null);
+
+        assertTrue(calcOk);
+
+        final double[] finalContribs = fitter.getContribs();
+
+        // validation that fitted counts are below the actuals + noise
+        for (int i = 0; i < bucketCount; ++i)
+        {
+            double fittedCount = 0;
+
+            for (int j = 0; j < sigCount; ++j)
+            {
+                final double[] sigRatios = ratiosCollection.get(j);
+                fittedCount += sigRatios[i] * finalContribs[j];
+            }
+
+            assertTrue(lessOrEqual(fittedCount, counts[i]));
+        }
+
+        // assertEquals(1, fitter.getAllocPerc(), 0.01);
+    }
+
+    @Test
+    public void testSampleFit_Old1()
     {
         Configurator.setRootLevel(Level.DEBUG);
 
