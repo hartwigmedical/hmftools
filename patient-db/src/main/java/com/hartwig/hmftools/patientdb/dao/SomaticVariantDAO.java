@@ -115,7 +115,7 @@ class SomaticVariantDAO {
                             : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
                     .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
                     .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
-                    .hotspot(VariantTier.fromString(record.getValue(SOMATICVARIANT.TIER)) == VariantTier.HOTSPOT)
+                    .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)).equals(Hotspot.HOTSPOT))
                     .build());
         }
         return variants;
