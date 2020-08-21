@@ -69,10 +69,13 @@ public class SampleFitter
     private final int mMaxSampleCount;
 
     private DatabaseAccess mDbAccess;
+    private boolean mUploadToDb;
     private BufferedWriter mFitWriter;
 
     private static final double MIN_ALLOCATION = 1;
     private static final double MIN_ALLOCATION_PERC = 0.005;
+
+    private static final String UPLOAD_TO_DB = "upload_to_db";
 
     public SampleFitter(final CommandLine cmd)
     {
@@ -89,6 +92,7 @@ public class SampleFitter
         mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mFitWriter = null;
         mDbAccess = createDatabaseAccess(cmd);
+        mUploadToDb = Boolean.parseBoolean(cmd.getOptionValue(UPLOAD_TO_DB, "true"));
 
         mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
         mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
@@ -240,6 +244,10 @@ public class SampleFitter
         final SigResiduals residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
         double residualsUnalloc = residuals.Total - residuals.Excess;
 
+        SIG_LOGGER.debug(String.format("sample(%s) alloc(%s perc=%.3f of total=%s) residuals(%.3f total=%s excess=%s)",
+                sampleId, sizeToStr(allocTotal), allocTotal/sampleTotal, sizeToStr(sampleTotal),
+                residuals.Percent, sizeToStr(residuals.Total), sizeToStr(residuals.Excess)));
+
         sigAllocations.add(ImmutableSignatureAllocation.builder()
                 .signature(SIG_UNALLOCATED)
                 .allocation(round(residualsUnalloc,1))
@@ -254,12 +262,11 @@ public class SampleFitter
 
         writeSigAllocations(sampleId, sigAllocations);
 
-        if(mDbAccess != null)
+        if(mDbAccess != null && mUploadToDb)
+        {
+            SIG_LOGGER.info("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
             mDbAccess.writeSignatures(sampleId, sigAllocations);
-
-        SIG_LOGGER.debug(String.format("sample(%s) alloc(%s perc=%.3f of total=%s) residuals(%.3f total=%s excess=%s)",
-                sampleId, sizeToStr(allocTotal), allocTotal/sampleTotal, sizeToStr(sampleTotal),
-                residuals.Percent, sizeToStr(residuals.Total), sizeToStr(residuals.Excess)));
+        }
     }
 
     private void initialiseOutputFiles()
@@ -315,6 +322,7 @@ public class SampleFitter
         addDatabaseCmdLineArgs(options);
         options.addOption(POSITION_BUCKET_SIZE, true, "Position bucket size");
         options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count, default = 20K");
+        options.addOption(UPLOAD_TO_DB, true, "Upload results to database (default: true)");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
