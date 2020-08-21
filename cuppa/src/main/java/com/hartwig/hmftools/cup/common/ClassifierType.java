@@ -2,21 +2,8 @@ package com.hartwig.hmftools.cup.common;
 
 public enum ClassifierType
 {
-    SNV_COUNT_CSS,
-    SNV_POS_FREQ_CSS,
+    SNV_96_PAIRWISE_SIMILARITY,
+    GENOMIC_POSITION_SIMILARITY,
     FEATURE_PREVALENCE,
     COMBINED;
-
-    public static String displayString(final ClassifierType type)
-    {
-        switch(type)
-        {
-            case SNV_COUNT_CSS: return "SNV_COUNT_CSS";
-            case SNV_POS_FREQ_CSS: return "GEN_POS_CSS";
-            case FEATURE_PREVALENCE: return "FEATURE_PREV";
-            case COMBINED: return COMBINED.toString();
-            default: return "UNKNOWN";
-        }
-    }
-
 }

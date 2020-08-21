@@ -12,8 +12,8 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_COUNT_CSS;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_POS_FREQ_CSS;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
@@ -240,8 +240,7 @@ public class SignatureAnnotation
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD,
-                ClassifierType.displayString(SNV_COUNT_CSS), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
     private void addPosFreqCssResults(final SampleData sample, final List<SampleResult> results)
@@ -301,8 +300,7 @@ public class SignatureAnnotation
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD,
-                ClassifierType.displayString(SNV_POS_FREQ_CSS), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
     private double[] adjustRefPosFreqCounts(final double[] refPosFreqs, final double[] sampleCounts, final double sampleTotal)

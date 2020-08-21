@@ -98,8 +98,15 @@ public class FeatureAnnotation
 
     private void addDriverPrevalence(final SampleData sample, final List<SampleFeatureData> sampleFeatures, final List<SampleResult> results)
     {
+        final Set<String> processedFeatures = Sets.newHashSet();
+
         for(final SampleFeatureData feature : sampleFeatures)
         {
+            if(processedFeatures.contains(feature.Gene))
+                continue;
+
+            processedFeatures.add(feature.Gene);
+
             final Map<String,Double> cancerTypeValues = Maps.newHashMap();
 
             for(Map.Entry<String,List<FeaturePrevData>> entry : mCancerFeaturePrevalence.entrySet())
@@ -267,7 +274,7 @@ public class FeatureAnnotation
         }
 
         SampleResult result = new SampleResult(
-                sample.Id, FEATURE, LIKELIHOOD, ClassifierType.displayString(FEATURE_PREVALENCE), geneNames, cancerProbTotals);
+                sample.Id, FEATURE, LIKELIHOOD, FEATURE_PREVALENCE.toString(), geneNames, cancerProbTotals);
 
         results.add(result);
     }

@@ -103,7 +103,10 @@ public class CupCalcs
             cancerTypeValues.put(entry.getKey(), probability);
         }
 
-        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.displayString(FEATURE_PREVALENCE), "", cancerTypeValues);
+        // remove the contributing prevalence likelihood results
+        prevalenceResults.forEach(x -> allResults.remove(x));
+
+        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, FEATURE_PREVALENCE.toString(), "", cancerTypeValues);
     }
 
     public static SampleResult calcClassifierScoreResult(final SampleData sample, final List<SampleResult> results)
@@ -141,7 +144,7 @@ public class CupCalcs
             cancerTypeValues.put(entry.getKey(), probability);
         }
 
-        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.displayString(COMBINED), "", cancerTypeValues);
+        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, COMBINED.toString(), "", cancerTypeValues);
     }
 
 }
