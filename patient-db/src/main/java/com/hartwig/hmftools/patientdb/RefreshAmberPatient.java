@@ -58,7 +58,7 @@ public class RefreshAmberPatient {
 
             LOGGER.info("Writing mapping data");
             dbAccess.writeAmberMapping("dummy", allMappings);
-            dbAccess.writeAmberPatients("dummy", patients);
+            dbAccess.writeAmberPatients(patients);
 
         }
 

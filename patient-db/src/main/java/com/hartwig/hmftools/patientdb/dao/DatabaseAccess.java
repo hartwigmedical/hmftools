@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
@@ -300,7 +299,7 @@ public class DatabaseAccess implements AutoCloseable {
         amberDAO.writeMapping(sample, mapping);
     }
 
-    public void writeAmberPatients(@NotNull String sample, List<AmberPatient> mapping) {
+    public void writeAmberPatients(List<AmberPatient> mapping) {
         amberDAO.writePatients(mapping);
     }
 
@@ -329,10 +328,6 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void truncateAmberMappings() {
         amberDAO.truncateMappings();
-    }
-
-    public void writeAmberBAF(@NotNull String sampleId, @NotNull List<AmberBAF> amber) {
-        amberDAO.write(sampleId, amber);
     }
 
     public SomaticVariantStreamWriter somaticVariantWriter(@NotNull final String sampleId) {

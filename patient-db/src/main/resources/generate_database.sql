@@ -318,18 +318,6 @@ CREATE TABLE somaticVariant
     INDEX(gene)
 );
 
-DROP TABLE IF EXISTS amber;
-CREATE TABLE amber
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
-    position int not null,
-    heterozygous BOOLEAN NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
-);
-
 DROP TABLE IF EXISTS purity;
 CREATE TABLE purity
 (   id int NOT NULL AUTO_INCREMENT,

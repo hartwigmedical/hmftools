@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERMAPPING;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERPATIENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERSAMPLE;
@@ -12,21 +10,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.amber.ImmutableAmberMapping;
 import com.hartwig.hmftools.common.amber.ImmutableAmberPatient;
 import com.hartwig.hmftools.common.amber.ImmutableAmberSample;
-import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep3;
-import org.jooq.InsertValuesStep5;
 import org.jooq.InsertValuesStep6;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
@@ -39,11 +33,6 @@ class AmberDAO {
 
     AmberDAO(@NotNull final DSLContext context) {
         this.context = context;
-    }
-
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
-            @NotNull AmberBAF variant) {
-        inserter.values(sample, variant.chromosome(), variant.position(), Doubles.greaterThan(variant.normalBAF(), 0), timestamp);
     }
 
     void truncatePatients() {
@@ -272,19 +261,11 @@ class AmberDAO {
         inserter.execute();
     }
 
-    void write(@NotNull String sample, @NotNull List<AmberBAF> variants) {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
-        deleteAmberRecordsForSample(sample);
-
-        for (List<AmberBAF> splitRegions : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep5 inserter =
-                    context.insertInto(AMBER, AMBER.SAMPLEID, AMBER.CHROMOSOME, AMBER.POSITION, AMBER.HETEROZYGOUS, AMBER.MODIFIED);
-            splitRegions.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
-            inserter.execute();
-        }
-    }
 
     void deleteAmberRecordsForSample(@NotNull String sample) {
-        context.delete(AMBER).where(AMBER.SAMPLEID.eq(sample)).execute();
+        context.delete(AMBERPATIENT).where(AMBERPATIENT.SAMPLEID.eq(sample)).execute();
+        context.delete(AMBERMAPPING).where(AMBERMAPPING.FIRSTSAMPLEID.eq(sample)).execute();
+        context.delete(AMBERMAPPING).where(AMBERMAPPING.SECONDSAMPLEID.eq(sample)).execute();
+        context.delete(AMBERSAMPLE).where(AMBERSAMPLE.SAMPLEID.eq(sample)).execute();
     }
 }
