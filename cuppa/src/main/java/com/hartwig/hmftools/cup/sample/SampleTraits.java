@@ -3,10 +3,13 @@ package com.hartwig.hmftools.cup.sample;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_CLASS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
+import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
+import static com.hartwig.hmftools.cup.sample.SampleTraitType.MS_INDELS_TMB;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromCohortFile;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefPercentileData;
@@ -132,6 +135,17 @@ public class SampleTraits
 
                 results.add(result);
             }
+
+            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+
+            final Map<String,double[]> indelPercentiles = mRefTraitPercentiles.get(MS_INDELS_TMB);
+            double indelMb = sampleTraits.IndelsMbPerMb;
+
+            final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, true);
+            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, MS_INDELS_TMB + "_LOW", indelMb, cancerPrevsLow));
+
+            final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, false);
+            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, MS_INDELS_TMB + "_HIGH", indelMb, cancerPrevsHigh));
         }
 
         return results;

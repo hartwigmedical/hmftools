@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup.sigs;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
@@ -131,20 +132,6 @@ public class SignatureAnnotation
         return true;
     }
 
-    public int getSampleSnvCount(final String sampleId)
-    {
-        Integer sampleCountsIndex = mSampleCountsIndex.get(sampleId);
-
-        if(sampleCountsIndex == null)
-        {
-            CUP_LOGGER.info("sample({}) has no SNV data", sampleId);
-            return 0;
-        }
-
-        final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
-        return (int)sumVector(sampleCounts);
-    }
-
     public List<SampleResult> processSample(final SampleData sample)
     {
         final List<SampleResult> results = Lists.newArrayList();
@@ -158,14 +145,13 @@ public class SignatureAnnotation
         }
 
         final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
+        int snvTotal = (int)sumVector(sampleCounts);
 
         if(mConfig.runCategory(CLASSIFIER))
         {
-            addCssResults(sample, sampleCounts, results);
+            addCssResults(sample, sampleCounts, snvTotal, results);
             addPosFreqCssResults(sample, results);
         }
-
-        int snvCount = (int)sumVector(sampleCounts);
 
         if(mConfig.runCategory(SNV_SIG))
         {
@@ -178,28 +164,28 @@ public class SignatureAnnotation
             for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
             {
                 final String cancerType = cancerPercentiles.getKey();
-                double percentile = getPercentile(cancerPercentiles.getValue(), snvCount, true);
+                double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
                 cancerTypeValues.put(cancerType, percentile);
             }
 
             SampleResult result = new SampleResult(
-                    sample.Id, SNV_SIG, PERCENTILE, "SNV_COUNT", snvCount, cancerTypeValues);
+                    sample.Id, SNV_SIG, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
 
             results.add(result);
 
             int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
 
-            final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvCount, cancerTypeCount, true);
-            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_LOW", snvCount, cancerPrevsLow));
+            final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvTotal, cancerTypeCount, true);
+            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_LOW", snvTotal, cancerPrevsLow));
 
-            final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvCount, cancerTypeCount, false);
-            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_HIGH", snvCount, cancerPrevsHigh));
+            final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvTotal, cancerTypeCount, false);
+            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
         }
 
         return results;
     }
 
-    private void addCssResults(final SampleData sample, final double[] sampleCounts, final List<SampleResult> results)
+    private void addCssResults(final SampleData sample, final double[] sampleCounts, int snvTotal, final List<SampleResult> results)
     {
         int refSampleCount = mRefSampleCounts.Cols;
 
@@ -229,8 +215,11 @@ public class SignatureAnnotation
 
             double cssWeight = pow(8, -100 * (1 - css));
 
+            double otherSnvTotal = sumVector(otherSampleCounts);
+            double mutLoadWeight = min(otherSnvTotal, snvTotal) / max(otherSnvTotal, snvTotal);
+
             int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
-            double weightedCss = css * cssWeight / sqrt(cancerTypeCount);
+            double weightedCss = css * cssWeight * mutLoadWeight / sqrt(cancerTypeCount);
 
             Double total = cancerCssTotals.get(refCancerType);
 
@@ -259,7 +248,7 @@ public class SignatureAnnotation
 
         if(sampleCountsIndex == null)
         {
-            CUP_LOGGER.info("sample({}) has no SNV pos-freq data", sample.Id);
+            CUP_LOGGER.debug("sample({}) has no SNV pos-freq data", sample.Id);
             return;
         }
 
