@@ -77,9 +77,7 @@ chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (de
 Argument  | Description
 ---|---
 log_reportable_fusion | only log reportable fusions
-fusion_pairs_csv | Known fusion pairs - specify FiveGene,ThreeGene by name 
-promiscuous_five_csv | Promiscuous 5' gene - specify gene name only
-promiscuous_three_csv |  Promiscuous 3' gene - specify gene name only 
+known_fusion_file | Known fusion reference data - known pairs, promiscuous 5' and 3' genes, IG regions and exon DELs & DUPs 
 fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
 restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
 

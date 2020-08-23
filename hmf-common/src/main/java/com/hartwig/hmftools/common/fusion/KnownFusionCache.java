@@ -33,14 +33,7 @@ public class KnownFusionCache
     private final List<KnownFusionData> mData;
     private final Map<KnownFusionType,List<KnownFusionData>> mDataByType;
 
-    // new-style combined input file
     public static final String KNOWN_FUSIONS_FILE = "known_fusion_file";
-
-    // old-style file names
-    public static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
-    public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
-    public static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
-
     private static final String FILE_DELIMITER = ",";
 
     private static final Logger LOGGER = LogManager.getLogger(KnownFusionCache.class);
@@ -130,37 +123,6 @@ public class KnownFusionCache
         {
             if(!loadFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE)))
                 return false;
-        }
-        else if(cmd.hasOption(PROMISCUOUS_THREE_CSV) || cmd.hasOption(PROMISCUOUS_FIVE_CSV) || cmd.hasOption(FUSION_PAIRS_CSV))
-        {
-            try
-            {
-                if(cmd.hasOption(PROMISCUOUS_THREE_CSV))
-                {
-                    final String threeGenesFile = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
-                    loadOldStyleFiles(threeGenesFile, PROMISCUOUS_3);
-                    LOGGER.info("loaded {} 3-prime promiscous genes from file: {}", mDataByType.get(PROMISCUOUS_3).size(), threeGenesFile);
-                }
-
-                if(cmd.hasOption(PROMISCUOUS_FIVE_CSV))
-                {
-                    final String fiveGenesFile = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
-                    loadOldStyleFiles(fiveGenesFile, PROMISCUOUS_5);
-                    LOGGER.info("loaded {} 5-prime promiscous genes from file: {}", mDataByType.get(PROMISCUOUS_5).size(), fiveGenesFile);
-                }
-
-                if(cmd.hasOption(FUSION_PAIRS_CSV))
-                {
-                    final String knownPairsFile = cmd.getOptionValue(FUSION_PAIRS_CSV);
-                    loadOldStyleFiles(knownPairsFile, KNOWN_PAIR);
-                    LOGGER.info("loaded {} known fusion gene-pairs from file: {}", mDataByType.get(KNOWN_PAIR).size(), knownPairsFile);
-                }
-            }
-            catch (IOException e)
-            {
-                LOGGER.warn("failed to load known fusion data: {}", e.toString());
-                return false;
-            }
         }
 
         StringJoiner refDataStr = new StringJoiner(", ");

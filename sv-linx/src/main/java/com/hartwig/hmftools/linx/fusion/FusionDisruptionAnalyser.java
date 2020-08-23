@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
@@ -155,9 +152,7 @@ public class FusionDisruptionAnalyser
 
     public static boolean validConfig(final CommandLine cmd)
     {
-        return(configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, REF_GENOME_FILE)
-                && configPathValid(cmd, FUSION_PAIRS_CSV) && configPathValid(cmd, KNOWN_FUSIONS_FILE)
-                && configPathValid(cmd, PROMISCUOUS_FIVE_CSV) && configPathValid(cmd, PROMISCUOUS_THREE_CSV));
+        return configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, REF_GENOME_FILE) && configPathValid(cmd, KNOWN_FUSIONS_FILE);
     }
 
 

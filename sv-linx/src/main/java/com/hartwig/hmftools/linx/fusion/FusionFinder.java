@@ -1,11 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
@@ -16,21 +12,14 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_FIVE_CSV;
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
-import static com.hartwig.hmftools.linx.fusion.FusionReportability.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportableFusion;
 
 import java.util.List;
@@ -45,7 +34,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
-import com.hartwig.hmftools.common.fusion.TranscriptCodingType;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 
 import org.apache.commons.cli.CommandLine;
@@ -93,9 +81,6 @@ public class FusionFinder
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(KNOWN_FUSIONS_FILE, true, "Known fusion file");
-        options.addOption(FUSION_PAIRS_CSV, true, "Known gene fusion pairs");
-        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Promiscuous 5' genes");
-        options.addOption(PROMISCUOUS_THREE_CSV, true, "Promiscuous 3' genes");
     }
 
     public final KnownFusionCache getKnownFusionCache() { return mKnownFusionCache; }
