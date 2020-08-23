@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
+import static org.jooq.impl.DSL.count;
+
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +12,10 @@ import java.util.Optional;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
+import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsMutationalLoad;
+import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsVariant;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -27,6 +33,7 @@ import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Record1;
+import org.jooq.Record3;
 import org.jooq.Result;
 
 class SomaticVariantDAO {
@@ -36,6 +43,82 @@ class SomaticVariantDAO {
 
     SomaticVariantDAO(@NotNull final DSLContext context) {
         this.context = context;
+    }
+
+    public DndsMutationalLoad readDndsLoad(@NotNull String sample) {
+        Result<Record3<Byte, String, Integer>> result = context.select(SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.TYPE, count())
+                .from(SOMATICVARIANT)
+                .where(SOMATICVARIANT.SAMPLEID.eq(sample))
+                .and(SOMATICVARIANT.TYPE.in(VariantType.INDEL.toString(), VariantType.SNP.toString()))
+                .and(SOMATICVARIANT.FILTER.eq("PASS"))
+                .groupBy(SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.TYPE)
+                .fetch();
+
+        int snvBiallelic = 0;
+        int snvNonBiallelic = 0;
+        int indelBiallelic = 0;
+        int indelNonBiallelic = 0;
+
+        for (Record3<Byte, String, Integer> record : result) {
+            boolean isBiallelic = byteToBoolean(record.value1());
+            VariantType type = VariantType.valueOf(record.value2());
+            int count = record.value3();
+            if (isBiallelic && type == VariantType.INDEL) {
+                indelBiallelic = count;
+            }
+            if (isBiallelic && type == VariantType.SNP) {
+                snvBiallelic = count;
+            }
+            if (!isBiallelic && type == VariantType.INDEL) {
+                indelNonBiallelic = count;
+            }
+            if (!isBiallelic && type == VariantType.SNP) {
+                snvNonBiallelic = count;
+            }
+        }
+
+        return ImmutableDndsMutationalLoad.builder()
+                .sampleId(sample)
+                .indelBiallelic(indelBiallelic)
+                .indelNonBiallelic(indelNonBiallelic)
+                .snvBiallelic(snvBiallelic)
+                .snvNonBiallelic(snvNonBiallelic)
+                .build();
+    }
+
+    @NotNull
+    public List<DndsVariant> readDndsVariants(int maxRepeatCount, @NotNull String sample) {
+        List<DndsVariant> variants = Lists.newArrayList();
+
+        Result<Record> result = context.select()
+                .from(SOMATICVARIANT)
+                .where(SOMATICVARIANT.SAMPLEID.eq(sample))
+                .and(SOMATICVARIANT.FILTER.eq("PASS"))
+                .and(SOMATICVARIANT.GENE.ne(""))
+                .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(maxRepeatCount))
+                .and(SOMATICVARIANT.TYPE.in(VariantType.INDEL.toString(), VariantType.SNP.toString()))
+                .fetch();
+
+        for (Record record : result) {
+            variants.add(ImmutableDndsVariant.builder()
+                    .sampleId(record.getValue(SOMATICVARIANT.SAMPLEID))
+                    .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
+                    .position(record.getValue(SOMATICVARIANT.POSITION))
+                    .ref(record.getValue(SOMATICVARIANT.REF))
+                    .alt(record.getValue(SOMATICVARIANT.ALT))
+                    .gene(record.getValue(SOMATICVARIANT.GENE))
+                    .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
+                            ? CodingEffect.UNDEFINED
+                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
+                    .canonicalCodingEffect(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
+                            ? CodingEffect.UNDEFINED
+                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
+                    .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
+                    .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
+                    .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)).equals(Hotspot.HOTSPOT))
+                    .build());
+        }
+        return variants;
     }
 
     @NotNull

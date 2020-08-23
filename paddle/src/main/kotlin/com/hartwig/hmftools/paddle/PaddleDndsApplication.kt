@@ -44,35 +44,20 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
     override fun run() {
         val cohortFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfTMB.tsv"
         val dndsCVFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfRefCDSCv.tsv"
-        val dndsBiallelicCVFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfRefCDSCvBiallelic.tsv"
-        val dndsNonBiallelicCVFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfRefCDSCvNonBiallelic.tsv"
         val mutationsFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/DndsMutations.tsv"
 
         logger.info("Loading dNdScv values: $dndsCVFile")
         val dndsCv = DndsCvGene.fromFile(dndsCVFile).associateBy { x -> x.gene }
-        val (dndsCvBiallelic, dndsCvNonBiallelic) = splitDnds(dndsBiallelicCVFile, dndsNonBiallelicCVFile)
-        val tsSplitGenes = dndsCvBiallelic.keys
-
-//        logger.info("Loading old data")
-//        val genePanel = DriverGenePanelFactory().create()
-//        val oncoGenes = genePanel.oncoGenes()
-//        val tsgGenes = genePanel.tsGenes()
 
         logger.info("Loading cohort: $cohortFile")
         val (cohortSize, cohortLoad) = loadCohort(cohortFile)
 
         logger.info("Loading mutations: $mutationsFile")
         val dndsMutations = DndsMutation.fromFile(mutationsFile)
-//        val oncoMutations = dndsMutations.filter { it.gene in oncoGenes }
-//        val tsgMutations = dndsMutations.filter { it.gene in tsgGenes }
-        val tsgBiallelicMutations = dndsMutations.filter { it.gene in tsSplitGenes && it.biallelic }
-        val tsgNonBiallelicMutations = dndsMutations.filter { it.gene in tsSplitGenes && !it.biallelic  }
 
         logger.info("Calculating gene mutation summary")
         val oncoGeneMutations = MutationsGene.oncoGeneMutations(dndsMutations).associateBy { x -> x.gene }
         val tsgGeneMutations = MutationsGene.tsgGeneMutations(dndsMutations).associateBy { x -> x.gene }
-        val tsgBiallelicGeneMutations = MutationsGene.tsgGeneMutations(tsgBiallelicMutations).associateBy { x -> x.gene }
-        val tsgNonBiallelicGeneMutations = MutationsGene.tsgGeneMutations(tsgNonBiallelicMutations).associateBy { x -> x.gene }
 
 //        // Log any missing genes from dNdS
 //        val dndsGenes = dndsCv.keys
@@ -85,14 +70,9 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
 
         val oncoLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, oncoGeneMutations)
         val tsgLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, tsgGeneMutations)
-        val tsgBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.biallelicLoad, dndsCvBiallelic, tsgBiallelicGeneMutations)
-        val tsgNoneBiallelicLikelihood = LikelihoodGene(cohortSize, cohortLoad.nonBiallelicLoad, dndsCvNonBiallelic, tsgNonBiallelicGeneMutations)
 
-
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/AllDndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/AllDndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/AllDndsDriverLikelihoodTsgBiallelic.tsv", tsgBiallelicLikelihood.values)
-        LikelihoodGene.writeFile("/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/AllDndsDriverLikelihoodTsgNonBiallelic.tsv", tsgNoneBiallelicLikelihood.values)
+        LikelihoodGene.writeFile(false, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
+        LikelihoodGene.writeFile(false, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
 
     }
 

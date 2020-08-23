@@ -6,9 +6,18 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface AmberPatient {
+public interface AmberMapping {
 
-    int patientId();
+    String firstSample();
 
-    String sample();
+    String secondSample();
+
+    int matches();
+
+    int sites();
+
+    default double likelihood() {
+        return matches() / (double) sites();
+    }
+
 }

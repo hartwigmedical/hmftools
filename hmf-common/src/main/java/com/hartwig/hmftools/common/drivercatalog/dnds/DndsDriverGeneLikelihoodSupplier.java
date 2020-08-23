@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.drivercatalog.dnds;
 
 import static com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodFile.fromMultiImpactInputStream;
-import static com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodFile.fromSingleImpactInputStream;
 
 import java.io.InputStream;
 import java.util.Map;
@@ -32,9 +31,9 @@ public final class DndsDriverGeneLikelihoodSupplier {
     }
 
     @NotNull
-    public static Map<String, DndsDriverImpactLikelihood> oncoLikelihood(@NotNull final Set<String> tsGenes) {
-        Map<String, DndsDriverImpactLikelihood> filtered = Maps.newHashMap();
-        Map<String, DndsDriverImpactLikelihood> all = oncoLikelihood();
+    public static Map<String, DndsDriverGeneLikelihood> oncoLikelihood(@NotNull final Set<String> tsGenes) {
+        Map<String, DndsDriverGeneLikelihood> filtered = Maps.newHashMap();
+        Map<String, DndsDriverGeneLikelihood> all = oncoLikelihood();
 
         for (String target : tsGenes) {
             if (!all.containsKey(target)) {
@@ -48,34 +47,12 @@ public final class DndsDriverGeneLikelihoodSupplier {
 
     @NotNull
     public static Map<String, DndsDriverGeneLikelihood> tsgLikelihood() {
-        final Map<String, DndsDriverGeneLikelihood> result = Maps.newHashMap();
-
-        final Map<String, ModifiableDndsDriverGeneLikelihood> standard =
-                fromMultiImpactInputStream(resource("/dnds/DndsDriverLikelihoodTsg.tsv"));
-        final Map<String, DndsDriverImpactLikelihood> biallelic =
-                fromSingleImpactInputStream(resource("/dnds/DndsDriverLikelihoodTsgBiallelic.tsv"));
-        final Map<String, DndsDriverImpactLikelihood> nonBiallelic =
-                fromSingleImpactInputStream(resource("/dnds/DndsDriverLikelihoodTsgNonBiallelic.tsv"));
-
-        for (ModifiableDndsDriverGeneLikelihood likelihood : standard.values()) {
-            final String gene = likelihood.gene();
-            if (biallelic.keySet().contains(gene)) {
-                likelihood.setMissenseBiallelic(biallelic.get(gene));
-            }
-
-            if (nonBiallelic.keySet().contains(gene)) {
-                likelihood.setMissenseNonBiallelic(nonBiallelic.get(gene));
-            }
-
-            result.put(gene, likelihood);
-        }
-
-        return result;
+        return fromMultiImpactInputStream(resource("/dnds/DndsDriverLikelihoodTsg.tsv"));
     }
 
     @NotNull
-    public static Map<String, DndsDriverImpactLikelihood> oncoLikelihood() {
-        return fromSingleImpactInputStream(resource("/dnds/DndsDriverLikelihoodOnco.tsv"));
+    public static Map<String, DndsDriverGeneLikelihood> oncoLikelihood() {
+        return fromMultiImpactInputStream(resource("/dnds/DndsDriverLikelihoodOnco.tsv"));
     }
 
     @NotNull

@@ -2,17 +2,9 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
@@ -45,52 +37,6 @@ public class CNADriversTest {
         assertEquals("q telomere", drivers.get(0).chromosomeBand());
         assertEquals("band", drivers.get(1).chromosomeBand());
     }
-
-    @Test
-    public void testAmpTargets() {
-        Set<String> oldTargets = amplificationTargets();
-        Set<String> newTargets = genePanel.amplificationTargets();
-        assertEquals(oldTargets.size(), newTargets.size());
-        assertEquals(0, Sets.difference(oldTargets, newTargets).size());
-    }
-
-    @Test
-    public void testDelTargets() {
-        Set<String> oldTargets = deletionTargets().keySet();
-        Set<String> newTargets = genePanel.deletionTargets();
-        assertEquals(oldTargets.size(), newTargets.size());
-        assertEquals(0, Sets.difference(oldTargets, newTargets).size());
-    }
-
-    @Test
-    public void testDelBandTargets() {
-        Map<String, String> oldTargets = deletionTargets();
-        Map<String, String> newTargets = genePanel.deletionBandMap();
-        for (Map.Entry<String, String> entry : newTargets.entrySet()) {
-            assertEquals(oldTargets.get(entry.getKey()), entry.getValue());
-        }
-    }
-
-    @NotNull
-    private static Set<String> amplificationTargets() {
-        final InputStream inputStream = CNADriversTest.class.getResourceAsStream("/cna/AmplificationTargets.tsv");
-        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
-    }
-
-    @NotNull
-    private static Map<String, String> deletionTargets() {
-        final Map<String, String> result = Maps.newHashMap();
-        final InputStream inputStream = CNADriversTest.class.getResourceAsStream("/cna/DeletionTargets.tsv");
-        new BufferedReader(new InputStreamReader(inputStream)).lines().forEach(line -> {
-            final String[] values = line.split("\t");
-            result.put(values[0], values[1]);
-        });
-
-        return result;
-    }
-
-
-
 
     @NotNull
     private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene) {

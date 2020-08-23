@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.dnds;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,12 +18,6 @@ public abstract class DndsDriverGeneLikelihood {
     public abstract DndsDriverImpactLikelihood missense();
 
     @NotNull
-    public abstract DndsDriverImpactLikelihood missenseBiallelic();
-
-    @NotNull
-    public abstract DndsDriverImpactLikelihood missenseNonBiallelic();
-
-    @NotNull
     public abstract DndsDriverImpactLikelihood nonsense();
 
     @NotNull
@@ -30,7 +26,21 @@ public abstract class DndsDriverGeneLikelihood {
     @NotNull
     public abstract DndsDriverImpactLikelihood indel();
 
-    public boolean useBiallelic() {
-        return !missense().equals(missenseBiallelic());
+    @NotNull
+    public DndsDriverImpactLikelihood select(DriverImpact impact) {
+        switch (impact) {
+            case NONSENSE:
+                return nonsense();
+            case MISSENSE:
+                return missense();
+            case INFRAME:
+            case FRAMESHIFT:
+                return indel();
+            case SPLICE:
+                return splice();
+            default:
+                throw new IllegalArgumentException();
+        }
     }
+
 }

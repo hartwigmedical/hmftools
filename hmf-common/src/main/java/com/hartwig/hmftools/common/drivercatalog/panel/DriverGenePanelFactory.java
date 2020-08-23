@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,17 +33,17 @@ public class DriverGenePanelFactory {
     public DriverGenePanel create(final List<DriverGene> genes) {
 
         final Set<String> tsGenes = genes.stream()
-                .filter(x -> x.likelihoodType().equals(DriverLikelihoodType.TSG))
+                .filter(x -> x.likelihoodType().equals(DriverCategory.TSG) && x.reportVariant())
                 .map(DriverGene::gene)
                 .collect(Collectors.toSet());
 
         final Set<String> oncoGenes = genes.stream()
-                .filter(x -> x.likelihoodType().equals(DriverLikelihoodType.ONCO))
+                .filter(x -> x.likelihoodType().equals(DriverCategory.ONCO) && x.reportVariant())
                 .map(DriverGene::gene)
                 .collect(Collectors.toSet());
 
         Map<String, DndsDriverGeneLikelihood> tsgLikelihood = DndsDriverGeneLikelihoodSupplier.tsgLikelihood(tsGenes);
-        Map<String, DndsDriverImpactLikelihood> oncoLikelihood = DndsDriverGeneLikelihoodSupplier.oncoLikelihood(oncoGenes);
+        Map<String, DndsDriverGeneLikelihood> oncoLikelihood = DndsDriverGeneLikelihoodSupplier.oncoLikelihood(oncoGenes);
         Set<String> amplificationTargets =
                 genes.stream().filter(DriverGene::reportAmplification).map(DriverGene::gene).collect(Collectors.toSet());
         Set<String> deletionTargets =
@@ -53,6 +53,7 @@ public class DriverGenePanelFactory {
                 .collect(Collectors.toMap(DriverGene::gene, DriverGene::deletionBand));
 
         return ImmutableDriverGenePanel.builder()
+                .driverGenes(genes)
                 .tsgLikelihood(tsgLikelihood)
                 .oncoLikelihood(oncoLikelihood)
                 .amplificationTargets(amplificationTargets)

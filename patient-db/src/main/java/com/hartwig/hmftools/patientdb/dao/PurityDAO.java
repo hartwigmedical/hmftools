@@ -16,7 +16,9 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
+import com.hartwig.hmftools.common.purple.purity.ImmutableSamplePurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.SamplePurity;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -35,6 +37,27 @@ class PurityDAO {
 
     PurityDAO(@NotNull final DSLContext context) {
         this.context = context;
+    }
+
+    @NotNull
+    List<SamplePurity> readPassingQC(double minPurity) {
+        List<SamplePurity> sampleIds = Lists.newArrayList();
+
+        Result<Record> result = context.select()
+                .from(PURITY)
+                .where(PURITY.PURITY_.ge(minPurity))
+                .and(PURITY.STATUS.ne(NO_TUMOR.toString()))
+                .and(PURITY.QCSTATUS.eq("PASS"))
+                .fetch();
+
+        for (Record record : result) {
+            sampleIds.add(ImmutableSamplePurity.builder()
+                    .sampleId(record.getValue(PURITY.SAMPLEID))
+                    .purity(record.getValue(PURITY.PURITY_))
+                    .build());
+        }
+
+        return sampleIds;
     }
 
     @Nullable

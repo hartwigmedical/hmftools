@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.common.purple.purity;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,9 +6,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface AmberPatient {
+public interface SamplePurity {
 
-    int patientId();
+    String sampleId();
 
-    String sample();
+    double purity();
 }

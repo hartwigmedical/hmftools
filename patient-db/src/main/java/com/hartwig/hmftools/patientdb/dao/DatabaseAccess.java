@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
@@ -22,6 +24,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.SamplePurity;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -131,21 +134,18 @@ public class DatabaseAccess implements AutoCloseable {
         clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
     }
 
-    public static void addDatabaseCmdLineArgs(final Options options)
-    {
+    public static void addDatabaseCmdLineArgs(final Options options) {
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");
         options.addOption(DB_URL, true, "Database url");
     }
 
-    public static boolean hasDatabaseConfig(@NotNull final CommandLine cmd)
-    {
+    public static boolean hasDatabaseConfig(@NotNull final CommandLine cmd) {
         return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER) && cmd.hasOption(DB_PASS);
     }
 
     @NotNull
-    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
-    {
+    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);
@@ -154,17 +154,14 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @Nullable
-    public static DatabaseAccess createDatabaseAccess(@NotNull final CommandLine cmd)
-    {
-        if(!hasDatabaseConfig(cmd))
+    public static DatabaseAccess createDatabaseAccess(@NotNull final CommandLine cmd) {
+        if (!hasDatabaseConfig(cmd)) {
             return null;
-
-        try
-        {
-            return databaseAccess(cmd);
         }
-        catch (SQLException e)
-        {
+
+        try {
+            return databaseAccess(cmd);
+        } catch (SQLException e) {
             LOGGER.error("DB connection failed: {}", e.toString());
             return null;
         }
@@ -198,6 +195,11 @@ public class DatabaseAccess implements AutoCloseable {
         return purityDAO.getSamplesPassingQC(minPurity);
     }
 
+    @NotNull
+    public List<SamplePurity> readSamplePurityPassingQC(double minPurity) {
+        return purityDAO.readPassingQC(minPurity);
+    }
+
     @Nullable
     public PurityContext readPurityContext(@NotNull String sampleId) {
         return purityDAO.readPurityContext(sampleId);
@@ -216,6 +218,15 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     public List<String> readSomaticVariantSampleList() {
         return somaticVariantDAO.getSamplesList();
+    }
+
+    @NotNull
+    public List<DndsVariant> readDndsVariants(int maxRepeatCount, @NotNull String sample) {
+        return somaticVariantDAO.readDndsVariants(maxRepeatCount, sample);
+    }
+
+    public DndsMutationalLoad readDndsMutationLoad(@NotNull String sample) {
+        return somaticVariantDAO.readDndsLoad(sample);
     }
 
     @NotNull
@@ -284,8 +295,12 @@ public class DatabaseAccess implements AutoCloseable {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
-    public void writeAmberPatients(@NotNull String sample, List<AmberPatient> mapping) {
-        amberDAO.writePatients(sample, mapping);
+    public void writeAmberMapping(@NotNull String sample, List<AmberMapping> mapping) {
+        amberDAO.writeMapping(sample, mapping);
+    }
+
+    public void writeAmberPatients(List<AmberPatient> mapping) {
+        amberDAO.writePatients(mapping);
     }
 
     public void writeAmberSample(@NotNull AmberSample identity) {
@@ -298,6 +313,11 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
+    public List<AmberMapping> readAmberMappings() {
+        return amberDAO.readMapping();
+    }
+
+    @NotNull
     public List<AmberPatient> readAmberPatients() {
         return amberDAO.readPatients();
     }
@@ -306,8 +326,8 @@ public class DatabaseAccess implements AutoCloseable {
         amberDAO.truncatePatients();
     }
 
-    public void writeAmberBAF(@NotNull String sampleId, @NotNull List<AmberBAF> amber) {
-        amberDAO.write(sampleId, amber);
+    public void truncateAmberMappings() {
+        amberDAO.truncateMappings();
     }
 
     public SomaticVariantStreamWriter somaticVariantWriter(@NotNull final String sampleId) {

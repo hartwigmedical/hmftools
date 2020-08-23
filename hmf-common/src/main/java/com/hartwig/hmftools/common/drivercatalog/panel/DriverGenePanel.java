@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,10 +16,13 @@ import org.jetbrains.annotations.Nullable;
 public abstract class DriverGenePanel {
 
     @NotNull
+    public abstract List<DriverGene> driverGenes();
+
+    @NotNull
     public abstract Map<String, DndsDriverGeneLikelihood> tsgLikelihood();
 
     @NotNull
-    public abstract Map<String, DndsDriverImpactLikelihood> oncoLikelihood();
+    public abstract Map<String, DndsDriverGeneLikelihood> oncoLikelihood();
 
     @NotNull
     public abstract Set<String> amplificationTargets();

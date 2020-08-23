@@ -11,8 +11,8 @@ import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.IOException
 
-const val INPUT = "in"
-const val OUTPUT = "out"
+const val INPUT = "input_vcf"
+const val OUTPUT = "output_vcf"
 
 fun main(args: Array<String>) {
 
@@ -62,7 +62,7 @@ class GripssHardFilterApplication(val input: String, val output: String) : Runna
         fileWriter.writeHeader(fileHeader)
         for (context in fileReader) {
             if (context.isOkayFilter()) {
-                fileWriter.add(context)
+                fileWriter.add(context.maintainLinkedBy())
             }
         }
     }
@@ -72,6 +72,18 @@ class GripssHardFilterApplication(val input: String, val output: String) : Runna
         fileWriter.close()
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
 
+    }
+
+    private fun VariantContext.maintainLinkedBy(): VariantContext {
+        setDotToEmpty(LOCAL_LINKED_BY)
+        setDotToEmpty(REMOTE_LINKED_BY)
+        return this
+    }
+
+    private fun VariantContext.setDotToEmpty(attribute: String) {
+        if (this.commonInfo.hasAttribute(attribute) && this.commonInfo.getAttribute(attribute) == ".") {
+            this.commonInfo.putAttribute(attribute, "", true)
+        }
     }
 
     private fun VariantContext.isOkayFilter(): Boolean {

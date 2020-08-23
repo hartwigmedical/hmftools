@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.common.drivercatalog.dnds;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,11 +6,15 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface AmberSample {
-    byte DO_NOT_MATCH = (byte) 0;
+public interface DndsMutationalLoad {
 
     String sampleId();
 
-    byte[] entries();
+    int snvBiallelic();
 
+    int snvNonBiallelic();
+
+    int indelBiallelic();
+
+    int indelNonBiallelic();
 }

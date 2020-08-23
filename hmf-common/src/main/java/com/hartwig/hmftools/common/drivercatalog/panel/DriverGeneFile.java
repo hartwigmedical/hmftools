@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -48,7 +49,7 @@ public class DriverGeneFile {
                 .add(String.valueOf(gene.reportSplice()))
                 .add(String.valueOf(gene.reportDeletionAndDisruption()))
                 .add(String.valueOf(gene.reportAmplification()))
-                .add(String.valueOf(gene.reportPromoterHotspots()))
+                .add(String.valueOf(gene.reportHotspot()))
                 .add(String.valueOf(gene.likelihoodType()))
                 .toString();
     }
@@ -64,8 +65,8 @@ public class DriverGeneFile {
                 .reportSplice(Boolean.parseBoolean(values[4]))
                 .reportDeletionAndDisruption(Boolean.parseBoolean(values[5]))
                 .reportAmplification(Boolean.parseBoolean(values[6]))
-                .reportPromoterHotspots(Boolean.parseBoolean(values[7]))
-                .likelihoodType(DriverLikelihoodType.valueOf(values[8]));
+                .reportHotspot(Boolean.parseBoolean(values[7]))
+                .likelihoodType(DriverCategory.valueOf(values[8]));
         return builder.build();
     }
 
