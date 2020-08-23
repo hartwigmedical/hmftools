@@ -59,7 +59,7 @@
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
         <bam-slicer.version>1.5</bam-slicer.version>
-        <bachelor.version>1.10</bachelor.version>
+        <bachelor.version>1.11</bachelor.version>
         <sv-linx.version>1.10</sv-linx.version>
         <sig-analyser.version>1.0</sig-analyser.version>
         <cuppa.version>1.0</cuppa.version>
