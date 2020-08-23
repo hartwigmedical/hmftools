@@ -140,6 +140,11 @@ public class ConstrainedFitter
         return true;
     }
 
+    private void allocateByCost()
+    {
+        // allocate to the smallest ratios first up to their maximum
+    }
+
     private void initialAllocation()
     {
         // add each signature up to its maximum

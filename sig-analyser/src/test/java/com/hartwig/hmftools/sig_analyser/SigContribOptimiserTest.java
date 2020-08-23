@@ -23,6 +23,7 @@ import org.junit.Test;
 
 public class SigContribOptimiserTest
 {
+    @Ignore
     @Test
     public void testSampleFit1()
     {
@@ -57,6 +58,21 @@ public class SigContribOptimiserTest
             }
         }
 
+        {
+            SigMatrix sigs = new SigMatrix(bucketCount, sigCount);
+            sigs.setCol(0, sig1);
+            sigs.setCol(1, sig2);
+            sigs.setCol(2, sig3);
+
+            LeastSquaresFit lsqFit = new LeastSquaresFit(bucketCount, sigCount);
+            lsqFit.initialise(sigs.getData(), counts);
+
+            lsqFit.solve();
+            final double[] sigAllocs = lsqFit.getContribs();
+            assertEquals(40, sigAllocs[0], 0.001);
+        }
+
+
         ConstrainedFitter fitter = new ConstrainedFitter(bucketCount);
         fitter.setParameters(0, null, true, 1.0);
         boolean calcOk = fitter.fitCounts(ratiosCollection, counts, null);
@@ -82,6 +98,7 @@ public class SigContribOptimiserTest
         // assertEquals(1, fitter.getAllocPerc(), 0.01);
     }
 
+    @Ignore
     @Test
     public void testSampleFit_Old1()
     {
