@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.drivercatalog.panel;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
@@ -25,10 +27,19 @@ public abstract class DriverGenePanel {
     public abstract Map<String, DndsDriverGeneLikelihood> oncoLikelihood();
 
     @NotNull
-    public abstract Set<String> amplificationTargets();
+    public Set<String> amplificationTargets() {
+        return targets(DriverGene::reportAmplification);
+    }
 
     @NotNull
-    public abstract Set<String> deletionTargets();
+    public Set<String> deletionTargets() {
+        return targets(DriverGene::reportDeletion);
+    }
+
+    @NotNull
+    public Set<String> disruptionTargets() {
+        return targets(DriverGene::reportDisruption);
+    }
 
     @NotNull
     public abstract Map<String, String> deletionBandMap();
@@ -51,6 +62,10 @@ public abstract class DriverGenePanel {
             return DriverCategory.TSG;
         }
         return null;
+    }
+
+    private Set<String> targets(Predicate<DriverGene> filter) {
+        return driverGenes().stream().filter(filter).map(DriverGene::gene).collect(Collectors.toSet());
     }
 
 }

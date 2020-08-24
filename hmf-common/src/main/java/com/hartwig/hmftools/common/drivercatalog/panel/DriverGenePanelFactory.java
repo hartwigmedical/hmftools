@@ -50,20 +50,14 @@ public class DriverGenePanelFactory {
 
         Map<String, DndsDriverGeneLikelihood> tsgLikelihood = DndsDriverGeneLikelihoodSupplier.tsgLikelihood(tsGenes);
         Map<String, DndsDriverGeneLikelihood> oncoLikelihood = DndsDriverGeneLikelihoodSupplier.oncoLikelihood(oncoGenes);
-        Set<String> amplificationTargets =
-                genes.stream().filter(DriverGene::reportAmplification).map(DriverGene::gene).collect(Collectors.toSet());
-        Set<String> deletionTargets =
-                genes.stream().filter(DriverGene::reportDeletionAndDisruption).map(DriverGene::gene).collect(Collectors.toSet());
         Map<String, String> deletionBandMap = genes.stream()
-                .filter(x -> x.reportDeletionAndDisruption() && !x.deletionBand().isEmpty())
+                .filter(x -> x.reportDeletion() && !x.deletionBand().isEmpty())
                 .collect(Collectors.toMap(DriverGene::gene, DriverGene::deletionBand));
 
         return ImmutableDriverGenePanel.builder()
                 .driverGenes(genes)
                 .tsgLikelihood(tsgLikelihood)
                 .oncoLikelihood(oncoLikelihood)
-                .amplificationTargets(amplificationTargets)
-                .deletionTargets(deletionTargets)
                 .deletionBandMap(deletionBandMap)
                 .build();
     }
