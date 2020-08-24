@@ -147,8 +147,8 @@ REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference.
 The REFERENCE.amber.snp.vcf.gz contains some 1000 SNP points that can be used to identify if a new sample belongs to an existing patient. 
 This is particularly important when doing cohort analysis as multiple samples from the same patient can skew results.
 
-To enable patient matching a database is required with two tables, AmberSample and AmberPatient. 
-Scripts to generate these tables are available [here](../patient-db/src/main/resources/patches/amber3.3_to_3.4_migration.sql).   
+To enable patient matching a database is required with three tables, AmberSample, AmberMapping and AmberPatient. 
+Scripts to generate these tables are available [here](../patient-db/src/main/resources/patches/amber3.4_to_3.5_migration.sql).   
 
 Each sample is loaded into AmberSample with the `LoadAmberSample` application which downsamples the REFERENCE.amber.snp.vcf.gz file to 100 loci and describes each locus as:
 - 1: Homozygous ref
@@ -156,15 +156,13 @@ Each sample is loaded into AmberSample with the `LoadAmberSample` application wh
 - 3: Homozygous alt
 - 0: Other (including insufficient depth (<10))
 
-The sample is compared with all other AmberSample entries and if there is a match (>=90% of sites match), an entry is added to the AmberPatient table. 
-
-All samples from the same patient are given a shared patientId. 
-Please note that this identifier *is not fixed* and should not be used as a key, it can and may change when a sample is loaded. 
+The sample is compared to all other AmberSample entries and if there is a match (>=90% of sites match), an entry is added to the AmberMapping table. 
+The sample is assigned either a new patient id or an existing one (if it matches an existing sample) and the amberPatient table is updated.
 
 A sample can be loaded with the following command:
 
 ```
-java -cp amber.jar com.hartwig.hmftools.patientdb.LoadAmberSample \
+java -cp amber.jar com.hartwig.hmftools.patientdb.LoadAmberData \
     -sample TUMOR \
     -amber_snp_vcf /path/to/REFERENCE.amber.snp.vcf.gz \
     -snpcheck_vcf /path/to/GermlineHetPon.hg19.snpcheck.vcf.gz \
@@ -177,21 +175,23 @@ The GermlineHetPon.hg19.snpcheck.vcf.gz (and hg38 equivalent) are available to d
 
 An example query to check if a sample is one of many for a patient is:
 ```
-SELECT *
-FROM amberPatient 
-WHERE firstSampleId = 'TUMOR' or secondSampleId = 'TUMOR';
+SELECT * FROM amberPatient WHERE patientId IN 
+(SELECT patientId FROM amberPatient WHERE sampleId = 'SAMPLE');
 ```
 
 The following query shows all patients with multiple samples:
 ```
 SELECT patientId, count(*) AS sampleCount, GROUP_CONCAT(sampleId ORDER BY sampleId SEPARATOR ' ') AS samples
-FROM (SELECT DISTINCT patientId,  sampleId  FROM (SELECT patientId, firstSampleId AS sampleId FROM amberPatient UNION SELECT patientId, secondSampleId AS sampleId FROM amberPatient) a ORDER BY sampleId ASC) b
+FROM amberPatient
 GROUP BY patientId
-ORDER BY 2 DESC;
+HAVING sampleCount > 1
+ORDER BY sampleCount desc;
 ```
 
  
 # Version History and Download Links
+- [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.3)
+  - Updated patient matching logic [Database patch required](../patient-db/src/main/resources/patches/amber3.4_to_3.5_migration.sql).
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.3)
   - Fixed bug where SNPCHECK loci were not written to REFERENCE.amber.snp.vcf.gz where read depth = 0
   - Added AmberSample and AmberPatient DB tables. [Database patch required](../patient-db/src/main/resources/patches/amber3.3_to_3.4_migration.sql).

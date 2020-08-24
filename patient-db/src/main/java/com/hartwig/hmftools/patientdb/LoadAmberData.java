@@ -48,7 +48,6 @@ public class LoadAmberData {
     private static final String SAMPLE = "sample";
     private static final String AMBER_SNP_VCF = "amber_snp_vcf";
     private static final String SNPCHECK_VCF = "snpcheck_vcf";
-    private static final String BED_FILE = "bed";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createBasicOptions();
@@ -115,7 +114,6 @@ public class LoadAmberData {
         options.addOption(AMBER_SNP_VCF, true, "Path to the amber snp vcf");
         options.addOption(SNPCHECK_VCF, true, "Path to the downsampled snp check vcf");
         addDatabaseCmdLineArgs(options);
-        options.addOption(BED_FILE, true, "Location of bed file");
         return options;
     }
 
