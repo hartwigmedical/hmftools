@@ -121,11 +121,11 @@ public class KnownFusionCache
 
     public boolean loadFromFile(@NotNull final CommandLine cmd)
     {
-        if(cmd.hasOption(KNOWN_FUSIONS_FILE))
-        {
-            if(!loadFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE)))
-                return false;
-        }
+        if(!cmd.hasOption(KNOWN_FUSIONS_FILE))
+            return true;
+
+        if(!loadFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE)))
+            return false;
 
         StringJoiner refDataStr = new StringJoiner(", ");
 

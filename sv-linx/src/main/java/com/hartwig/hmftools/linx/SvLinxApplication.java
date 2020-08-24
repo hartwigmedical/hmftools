@@ -23,8 +23,12 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -134,21 +138,45 @@ public class SvLinxApplication
 
         AmpliconCompare ampliconCompare = cmd.hasOption(AMPLICON_DATA_FILE) ? new AmpliconCompare(config.OutputDataPath, cmd) : null;
 
-        boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
+        boolean selectiveGeneLoading = (samplesList.size() == 1 && !checkDrivers);
         boolean applyPromotorDistance = checkFusions;
         boolean purgeInvalidTranscripts = true;
 
-        EnsemblDataCache ensemblDataCache = null;
+        final EnsemblDataCache ensemblDataCache = cmd.hasOption(GENE_TRANSCRIPTS_DIR) ?
+                new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION) : null;
 
-        if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
+        if(ensemblDataCache != null)
         {
-            ensemblDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION);
             ensemblDataCache.setRequiredData(true, checkFusions, checkFusions, !checkFusions);
 
-            if(!ensemblDataCache.load(selectiveGeneLoading))
+            if(!selectiveGeneLoading)
             {
-                LNX_LOGGER.error("Ensembl data cache load failed, exiting");
-                return;
+                boolean ensemblLoadOk = false;
+
+                if(!checkFusions && checkDrivers)
+                {
+                    DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+
+                    ensemblLoadOk = ensemblDataCache.load(true);
+
+                    if(ensemblLoadOk)
+                    {
+                        final List<String> geneIds = genePanel.driverGenes().stream()
+                                .map(x -> ensemblDataCache.getGeneDataByName(x.gene()).GeneId).collect(Collectors.toList());
+
+                        ensemblLoadOk &= ensemblDataCache.loadTranscriptData(geneIds);
+                    }
+                }
+                else
+                {
+                    ensemblLoadOk = ensemblDataCache.load(false);
+                }
+
+                if(!ensemblLoadOk)
+                {
+                    LNX_LOGGER.error("Ensembl data cache load failed, exiting");
+                    return;
+                }
             }
 
             sampleAnalyser.setGeneCollection(ensemblDataCache);

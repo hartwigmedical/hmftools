@@ -232,8 +232,7 @@ public class SampleAnalyser
     }
 
     public static void setSvGeneData(
-            final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache,
-            boolean applyPromotorDistance, boolean selectiveLoading)
+            final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache, boolean applyPromotorDistance, boolean selectiveLoading)
     {
         int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
