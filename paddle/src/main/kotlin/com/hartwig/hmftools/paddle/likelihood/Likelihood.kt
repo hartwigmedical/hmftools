@@ -2,7 +2,7 @@ package com.hartwig.hmftools.paddle.likelihood
 
 import com.google.common.collect.Lists
 import com.hartwig.hmftools.paddle.Gene
-import com.hartwig.hmftools.paddle.cohort.TumorMutationalLoad
+import com.hartwig.hmftools.paddle.cohort.CohortLoad
 import com.hartwig.hmftools.paddle.dnds.DndsCv
 import com.hartwig.hmftools.paddle.dnds.DndsCvGene
 import com.hartwig.hmftools.paddle.mutation.Mutations
@@ -20,8 +20,6 @@ data class Likelihood(private val cohortSize: Int, private val tumorMutationalLo
     val passengers = mutations.unknown - vusDrivers
     val passengersPerMutation = passengers / tumorMutationalLoad
 
-    val driverLikelihood = if (mutations.total > 0) ((expectedDrivers - mutations.known) / mutations.unknown).coerceIn(0.0, 1.0) else 0.0 //TODO: REMOVE
-
     override fun toString(): String {
         return "$vusDriversPerSample\t$passengersPerMutation"
     }
@@ -37,26 +35,26 @@ data class LikelihoodGene(
         val indel: Likelihood) {
     companion object {
 
-        operator fun invoke(cohortSize: Int, tumorMutationalLoad: TumorMutationalLoad, dndsMap: Map<Gene, DndsCvGene>, mutationsMap: Map<Gene, MutationsGene>): Map<Gene, LikelihoodGene> {
+        operator fun invoke(load: CohortLoad, dndsMap: Map<Gene, DndsCvGene>, mutationsMap: Map<Gene, MutationsGene>): Map<Gene, LikelihoodGene> {
             val result = mutableMapOf<Gene, LikelihoodGene>()
 
             for (entry in dndsMap.entries) {
                 val dnds = entry.value
-                mutationsMap[entry.key]?.let { result.put(entry.key, invoke(cohortSize, tumorMutationalLoad, dnds, it)) }
+                mutationsMap[entry.key]?.let { result.put(entry.key, invoke(load, dnds, it)) }
             }
 
             return result
         }
 
-        operator fun invoke(cohortSize: Int, tumorMutationalLoad: TumorMutationalLoad, dnds: DndsCvGene, mutations: MutationsGene): LikelihoodGene {
+        operator fun invoke(load: CohortLoad, dnds: DndsCvGene, mutations: MutationsGene): LikelihoodGene {
             if (mutations.gene != dnds.gene) {
                 throw IllegalArgumentException("Unable to combine results from difference genes: ${mutations.gene} & ${dnds.gene}")
             }
 
-            val missense = Likelihood(cohortSize, tumorMutationalLoad.snv, dnds.missense, mutations.missense)
-            val nonsense = Likelihood(cohortSize, tumorMutationalLoad.snv, dnds.nonsense, mutations.nonsense)
-            val splice = Likelihood(cohortSize, tumorMutationalLoad.snv, dnds.splice, mutations.splice)
-            val indel = Likelihood(cohortSize, tumorMutationalLoad.indel, dnds.indel, mutations.frameshift + mutations.inframe)
+            val missense = Likelihood(load.cohortSize, load.snv, dnds.missense, mutations.missense)
+            val nonsense = Likelihood(load.cohortSize, load.snv, dnds.nonsense, mutations.nonsense)
+            val splice = Likelihood(load.cohortSize, load.snv, dnds.splice, mutations.splice)
+            val indel = Likelihood(load.cohortSize, load.indel, dnds.indel, mutations.frameshift + mutations.inframe)
 
             return LikelihoodGene(mutations.gene, mutations.synonymous, mutations.redundant, missense, nonsense, splice, indel)
         }

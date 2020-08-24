@@ -17,7 +17,7 @@ class LikelihoodTest {
         val dndsAR = DndsCv(0, 0.9687)
         val mutations = Mutations(0, 0)
         val victim = Likelihood(cohortSize, tumorMutationalLoad, dndsAR, mutations)
-        assertEquals(0.0, victim.driverLikelihood, epsilon)
+        assertEquals(0.0, victim.vusDriversPerSample, epsilon)
     }
 
     @Test
@@ -30,7 +30,6 @@ class LikelihoodTest {
         val victim = Likelihood(cohortSize, tumorMutationalLoad, dndsAR, mutations)
 
         assertEquals(72.78686, victim.expectedDrivers, epsilon)
-        assertEquals(0.4964476, victim.driverLikelihood, epsilon)
 
         assertEquals(29.78686, victim.vusDrivers, epsilon)
         assertEquals(30.21314, victim.passengers, epsilon)

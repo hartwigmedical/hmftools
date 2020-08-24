@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.paddle
 
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoadFile
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariantFile
 import com.hartwig.hmftools.paddle.cohort.HighestPuritySample
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
@@ -44,37 +45,31 @@ class PaddleExonicVariantsApplication(cmd: CommandLine) : AutoCloseable, Runnabl
     private val dbAccess = DatabaseAccess.databaseAccess(cmd)
 
     override fun run() {
-        val hpcFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/highestPurityCohort.tsv"
-        val exonicSomaticsFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfMutations.tsv"
+        val cohortFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/highestPurityCohort.tsv"
+        val cohortMutationalLoadFile = "/Users/jon/hmf/analysis/dnds/somatics/MutationalLoad.tsv"
         fun somaticFilename(x:String) = "/Users/jon/hmf/analysis/dnds/somatics/${x}.exonic.somatics.tsv"
 
-        val highestPurityCohort = HighestPuritySample.readFile(hpcFile).take(10)
-        for (sample in highestPurityCohort) {
-            val somaticFilename =  somaticFilename(sample.sampleId)
-            val somaticFile = File(somaticFilename)
-            if (somaticFile.exists()) {
-                logger.info("Skipping ${sample.sampleId}")
-            } else {
-                logger.info("Processing ${sample.sampleId}")
-                val exonicSomatics = dbAccess.readDndsVariants(MAX_REPEAT_COUNT, sample.sampleId)
-                DndsVariantFile.write(somaticFilename, exonicSomatics)
 
-                val mutationalLoad = dbAccess.readDndsMutationLoad(sample.sampleId)
-                println("Sdf")
-            }
+        if (!File(cohortMutationalLoadFile).exists()) {
+            DndsMutationalLoadFile.writeHeader(cohortMutationalLoadFile)
         }
+        val oldCohortMutationalLoad = DndsMutationalLoadFile.read(cohortMutationalLoadFile).associateBy { x -> x.sampleId() }
 
-        logger.info("Combining exonics")
-        DndsVariantFile.writeHeader(exonicSomaticsFile)
+        val highestPurityCohort = HighestPuritySample.readFile(cohortFile).take(10)
         for (sample in highestPurityCohort) {
             val somaticFilename =  somaticFilename(sample.sampleId)
             val somaticFile = File(somaticFilename)
             if (!somaticFile.exists()) {
-                throw IllegalStateException("Missing sample ${sample.sampleId}")
+                logger.info("Processing ${sample.sampleId}")
+                val exonicSomatics = dbAccess.readDndsVariants(MAX_REPEAT_COUNT, sample.sampleId)
+                DndsVariantFile.write(somaticFilename, exonicSomatics)
             }
-            DndsVariantFile.append(exonicSomaticsFile, DndsVariantFile.read(somaticFilename))
-        }
 
+            if (!oldCohortMutationalLoad.containsKey(sample.sampleId)) {
+                val sampleMutationalLoad = dbAccess.readDndsMutationLoad(sample.sampleId)
+                DndsMutationalLoadFile.append(cohortMutationalLoadFile, listOf(sampleMutationalLoad))
+            }
+        }
     }
 
     override fun close() {
