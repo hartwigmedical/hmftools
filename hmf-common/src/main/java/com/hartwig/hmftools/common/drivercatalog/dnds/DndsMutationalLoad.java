@@ -14,7 +14,15 @@ public interface DndsMutationalLoad {
 
     int snvNonBiallelic();
 
+    default int snvTotal() {
+        return snvBiallelic() + snvNonBiallelic();
+    }
+
     int indelBiallelic();
 
     int indelNonBiallelic();
+
+    default int indelTotal() {
+        return indelBiallelic() + indelNonBiallelic();
+    }
 }

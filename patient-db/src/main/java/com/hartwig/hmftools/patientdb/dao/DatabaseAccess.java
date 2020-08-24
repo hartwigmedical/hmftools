@@ -225,6 +225,7 @@ public class DatabaseAccess implements AutoCloseable {
         return somaticVariantDAO.readDndsVariants(maxRepeatCount, sample);
     }
 
+    @NotNull
     public DndsMutationalLoad readDndsMutationLoad(@NotNull String sample) {
         return somaticVariantDAO.readDndsLoad(sample);
     }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.paddle
 
-import com.hartwig.hmftools.paddle.cohort.TumorMutationalLoadSample
+import com.hartwig.hmftools.paddle.cohort.CohortLoad
 import com.hartwig.hmftools.paddle.dnds.DndsCvGene
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
 import com.hartwig.hmftools.paddle.likelihood.LikelihoodGene
@@ -34,7 +34,7 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         val dndsCv = DndsCvGene.fromFile(dndsCVFile).associateBy { x -> x.gene }
 
         logger.info("Loading cohort: $cohortFile")
-        val (cohortSize, cohortLoad) = loadCohort(cohortFile)
+        val cohortLoad = CohortLoad.fromFile(cohortFile)
 
         logger.info("Loading mutations: $mutationsFile")
         val dndsMutations = DndsMutation.fromFile(mutationsFile)
@@ -43,19 +43,14 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         val oncoGeneMutations = MutationsGene.oncoGeneMutations(dndsMutations).associateBy { x -> x.gene }
         val tsgGeneMutations = MutationsGene.tsgGeneMutations(dndsMutations).associateBy { x -> x.gene }
 
-        val oncoLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, oncoGeneMutations)
-        val tsgLikelihood = LikelihoodGene(cohortSize, cohortLoad.totalLoad, dndsCv, tsgGeneMutations)
+        val oncoLikelihood = LikelihoodGene(cohortLoad, dndsCv, oncoGeneMutations)
+        val tsgLikelihood = LikelihoodGene(cohortLoad, dndsCv, tsgGeneMutations)
 
         LikelihoodGene.writeFile(false, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
         LikelihoodGene.writeFile(false, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
-
     }
 
-    private fun loadCohort(cohortFile: String): Pair<Int, TumorMutationalLoadSample> {
-        val sampleLoads =  TumorMutationalLoadSample.fromFile(cohortFile)
-        val combinedLoad = sampleLoads.reduce {x, y -> x + y}
-        return Pair(sampleLoads.size, combinedLoad)
-    }
+
 
     override fun close() {
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")

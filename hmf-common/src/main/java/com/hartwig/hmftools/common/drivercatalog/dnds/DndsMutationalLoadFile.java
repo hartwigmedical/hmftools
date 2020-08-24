@@ -29,8 +29,8 @@ public class DndsMutationalLoadFile {
         Files.write(new File(filename).toPath(), Collections.singletonList(header()));
     }
 
-    public static void append(@NotNull final String filename, @NotNull final List<DndsMutationalLoad> variants) throws IOException {
-        Files.write(new File(filename).toPath(), toLines(false, variants), StandardOpenOption.APPEND);
+    public static void append(@NotNull final String filename, @NotNull final List<DndsMutationalLoad> load) throws IOException {
+        Files.write(new File(filename).toPath(), toLines(false, load), StandardOpenOption.APPEND);
     }
 
     @NotNull
