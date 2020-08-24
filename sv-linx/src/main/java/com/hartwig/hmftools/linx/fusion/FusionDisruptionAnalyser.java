@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
@@ -38,6 +39,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
@@ -223,6 +225,11 @@ public class FusionDisruptionAnalyser
         if(cmdLineArgs.hasOption(CHECK_FUSIONS) && !mFusionFinder.hasValidConfigData())
             mValidState = false;
 
+        cacheSpecialFusionGenes();
+    }
+
+    public void cacheSpecialFusionGenes()
+    {
         for(final KnownFusionData igDownstreamGene : mFusionFinder.getKnownFusionCache().getDataByType(IG_KNOWN_PAIR))
         {
             if(igDownstreamGene.igDownstreamDistance() > 0)
@@ -231,6 +238,25 @@ public class FusionDisruptionAnalyser
                 if(geneData != null)
                 {
                     mGeneDataCache.getDownstreamGeneAnnotations().put(geneData, igDownstreamGene.igDownstreamDistance());
+                }
+            }
+        }
+
+        for(final KnownFusionData altMappingGene : mFusionFinder.getKnownFusionCache().getDataByType(KNOWN_PAIR_UNMAPPABLE_3))
+        {
+            final String geneName = altMappingGene.ThreeGene;
+
+            final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(geneName);
+
+            if(geneData != null)
+            {
+                if(mGeneDataCache.getAlternativeGeneData().stream().anyMatch(x -> x.GeneId.equals(geneData.GeneId)))
+                    continue;
+
+                for(final SvRegion altRegion : altMappingGene.getThreeGeneAltRegions())
+                {
+                    mGeneDataCache.getAlternativeGeneData().add(new EnsemblGeneData(
+                            geneData.GeneId, geneData.GeneName, altRegion.Chromosome, geneData.Strand, altRegion.start(), altRegion.end(), ""));
                 }
             }
         }

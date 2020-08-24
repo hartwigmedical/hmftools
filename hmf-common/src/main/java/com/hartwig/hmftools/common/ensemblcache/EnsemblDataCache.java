@@ -13,10 +13,14 @@ import static com.hartwig.hmftools.common.fusion.Transcript.TOTAL_CODING_BASES;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -43,7 +47,7 @@ public class EnsemblDataCache
     private boolean mCanonicalTranscriptsOnly;
 
     private final Map<EnsemblGeneData,Integer> mDownstreamGeneAnnotations;
-
+    private final List<EnsemblGeneData> mAlternativeGeneData;
     private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
@@ -62,6 +66,7 @@ public class EnsemblDataCache
         mRequireSplicePositions = false;
         mCanonicalTranscriptsOnly = false;
         mDownstreamGeneAnnotations = Maps.newHashMap();
+        mAlternativeGeneData = Lists.newArrayList();
     }
 
     public void setRestrictedGeneIdList(final List<String> geneIds)
@@ -71,6 +76,7 @@ public class EnsemblDataCache
     }
 
     public final Map<EnsemblGeneData,Integer> getDownstreamGeneAnnotations() { return mDownstreamGeneAnnotations; }
+    public final List<EnsemblGeneData> getAlternativeGeneData() { return mAlternativeGeneData; }
 
     public void setRequiredData(boolean exons, boolean proteinDomains, boolean splicePositions, boolean canonicalOnly)
     {
@@ -226,6 +232,51 @@ public class EnsemblDataCache
             }
 
             geneAnnotations.add(currentGene);
+        }
+
+        final List<EnsemblGeneData> altMappingGenes = mAlternativeGeneData.stream()
+                .filter(x -> x.Chromosome.equals(chromosome))
+                .filter(x -> positionWithin(position, x.GeneStart, x.GeneEnd))
+                .collect(Collectors.toList());
+
+        for(final EnsemblGeneData altGeneData : altMappingGenes)
+        {
+            final List<TranscriptData> transcriptDataList = mTranscriptDataMap.get(altGeneData.GeneId);
+
+            if (transcriptDataList == null || transcriptDataList.isEmpty())
+                continue;
+
+            final TranscriptData trans = transcriptDataList.stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
+
+            GeneAnnotation geneAnnotation = new GeneAnnotation(svId, isStart, altGeneData.GeneName, altGeneData.GeneId,
+                    altGeneData.Strand, altGeneData.KaryotypeBand);
+
+            geneAnnotation.setGeneData(altGeneData);
+
+            byte downstreamOrient = altGeneData.Strand == POS_ORIENT ? NEG_ORIENT : POS_ORIENT;
+            geneAnnotation.setPositionalData(chromosome, position, downstreamOrient);
+
+            if(trans != null)
+            {
+                int totalCodingBases = 0;
+                int codingBases = 0;
+                if(trans.CodingStart != null && trans.CodingEnd != null)
+                {
+                    int[] codingData = Transcript.calcCodingBases(trans.CodingStart, trans.CodingEnd, trans.exons(), position);
+                    totalCodingBases = codingData[TOTAL_CODING_BASES];
+                }
+
+                final Transcript altGeneTrans = new Transcript(
+                        geneAnnotation, trans.TransId, trans.TransName, 1, -1, 1,
+                        -1, codingBases, totalCodingBases, trans.exons().size(), true,
+                        trans.TransStart, trans.TransEnd, trans.CodingStart, trans.CodingEnd);
+
+                altGeneTrans.setBioType(trans.BioType);
+
+                geneAnnotation.addTranscript(altGeneTrans);
+            }
+
+            geneAnnotations.add(geneAnnotation);
         }
 
         return geneAnnotations;

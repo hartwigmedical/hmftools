@@ -281,7 +281,6 @@ public class SampleAnalyser
                         final List<GeneAnnotation> mappingGenes = ensemblDataCache.findGeneAnnotationsBySv(
                                 var.id(), isStart, mapping.Chromosome, mapping.Position, mapping.Orientation, upstreamDistance);
 
-                        mappingGenes.forEach(x -> x.setPositionalData(mapping.Chromosome, mapping.Position, mapping.Orientation));
                         mappingGenes.forEach(x -> x.setType(var.type()));
 
                         genesList.addAll(mappingGenes);

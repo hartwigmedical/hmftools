@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
@@ -33,6 +34,8 @@ public class KnownFusionCache
     private final List<KnownFusionData> mData;
     private final Map<KnownFusionType,List<KnownFusionData>> mDataByType;
 
+    private final List<KnownFusionData> mIgRegionData;
+
     public static final String KNOWN_FUSIONS_FILE = "known_fusion_file";
     private static final String FILE_DELIMITER = ",";
 
@@ -42,6 +45,7 @@ public class KnownFusionCache
     {
         mData = Lists.newArrayList();
         mDataByType = Maps.newHashMap();
+        mIgRegionData = Lists.newArrayList();
 
         // initialise to avoid having to check for null
         Arrays.stream(KnownFusionType.values()).filter(x -> x != NONE).forEach(x -> mDataByType.put(x, Lists.newArrayList()));
@@ -55,11 +59,27 @@ public class KnownFusionCache
         return mDataByType.get(KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
     }
 
+    public boolean hasKnownUnmappable3Fusion(final String fiveGene, final String threeGene)
+    {
+        return mDataByType.get(KNOWN_PAIR_UNMAPPABLE_3).stream().anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
+    }
+
     public boolean matchesKnownFusionGene(final GeneAnnotation gene)
     {
-        return mDataByType.get(KNOWN_PAIR).stream()
-                .anyMatch(x -> (gene.isUpstream() && x.FiveGene.equals(gene.GeneName))
-                        || (!gene.isUpstream() && x.ThreeGene.equals(gene.GeneName)));
+        if(mDataByType.get(KNOWN_PAIR).stream()
+            .anyMatch(x -> (gene.isUpstream() && x.FiveGene.equals(gene.GeneName))
+                    || (!gene.isUpstream() && x.ThreeGene.equals(gene.GeneName))))
+        {
+            return true;
+        }
+
+        if(mDataByType.get(KNOWN_PAIR_UNMAPPABLE_3).stream()
+                .anyMatch(x -> !gene.isUpstream() && x.ThreeGene.equals(gene.GeneName)))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public boolean hasPromiscuousFiveGene(final String gene)
@@ -91,30 +111,12 @@ public class KnownFusionCache
 
     public boolean withinIgRegion(final String chromosome, int position)
     {
-        if(mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.withinIgRegion(chromosome, position)))
-        {
-            return true;
-        }
-        else if(mDataByType.get(IG_PROMISCUOUS).stream().anyMatch(x -> x.withinIgRegion(chromosome, position)))
-        {
-            return true;
-        }
-
-        return false;
+        return mIgRegionData.stream().anyMatch(x -> x.withinIgRegion(chromosome, position));
     }
 
     public boolean matchesIgGene(final String chromosome, int position, byte orientation)
     {
-        if(mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.matchesIgGene(chromosome, position, orientation)))
-        {
-            return true;
-        }
-        else if(mDataByType.get(IG_PROMISCUOUS).stream().anyMatch(x -> x.matchesIgGene(chromosome, position, orientation)))
-        {
-            return true;
-        }
-
-        return false;
+        return mIgRegionData.stream().anyMatch(x -> x.matchesIgGene(chromosome, position, orientation));
     }
 
     public boolean loadFromFile(@NotNull final CommandLine cmd)
@@ -143,6 +145,9 @@ public class KnownFusionCache
     {
         mData.add(data);
         mDataByType.get(data.Type).add(data);
+
+        if(data.igRegion() != null)
+            mIgRegionData.add(data);
     }
 
     private boolean loadFile(final String filename)
@@ -184,45 +189,4 @@ public class KnownFusionCache
 
         return true;
     }
-
-    private void loadOldStyleFiles(final String filename, final KnownFusionType type) throws IOException
-    {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            LOGGER.error("file({}) not found", filename);
-            throw new IOException();
-        }
-
-        final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-        if(!fileContents.isEmpty())
-        {
-            // assumes a header row
-            fileContents.remove(0);
-        }
-
-        for (String data : fileContents)
-        {
-            if(type == KNOWN_PAIR)
-            {
-                final String[] genes = data.split(FILE_DELIMITER);
-                if(genes.length != 2)
-                {
-                    LOGGER.error("file({}) invalid known-pair data: {}", filename, data);
-                    continue;
-                }
-
-                addData(new KnownFusionData(KNOWN_PAIR, genes[0], genes[1], "", "", ""));
-            }
-            else if(type == PROMISCUOUS_5)
-            {
-                addData(new KnownFusionData(PROMISCUOUS_5, data, "", "", "", ""));
-            }
-            else if(type == PROMISCUOUS_3)
-            {
-                addData(new KnownFusionData(PROMISCUOUS_3, "", data, "", "", ""));
-            }
-        }
-    }
-
 }

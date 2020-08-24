@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -21,6 +22,7 @@ import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_2;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_3;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.TRANS_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTestGenes;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTestTranscripts;
@@ -403,9 +405,127 @@ public class SpecialFusionsTest
         fusion = tester.FusionAnalyser.getFusions().get(0);
         assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
         assertEquals(sgl2.id(), fusion.downstreamTrans().gene().id());
-
-
     }
 
+    @Test
+    public void testKnownUnmappableFusions()
+    {
+        LinxTester tester = new LinxTester();
 
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        tester.initialiseFusions(geneTransCache);
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        String igGeneName = "IGH";
+        String igGeneId = "ENSG0IGH";
+        String CHR_4 = "4";
+
+        byte strand = POS_STRAND;
+
+        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        geneList.add(createEnsemblGeneData(igGeneId, igGeneName, CHR_4, strand, 100, 1500));
+
+        addGeneData(geneTransCache, CHR_4, geneList);
+
+        List<TranscriptData> transDataList = Lists.newArrayList();
+
+        int transId = 1;
+
+        int[] exonStarts = generateExonStarts(100, 7, 100, 100);
+        int[] exonPhases = new int[]{-1, -1, 1, 1, 1, 1, -1};
+
+        TranscriptData transData = createTransExons(igGeneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        transDataList.add(transData);
+
+        addTransExonData(geneTransCache, igGeneId, transDataList);
+
+        final String igRegionStr = String.format("%d;%s;%d;%d;%d", POS_STRAND, CHR_4, 50, 2000, 0);
+
+        // set known fusion gene for the SGL breakend
+        final String threeAltMapping = String.format("ALT;1;20000;25000;ALT;GS;50000;60000");
+
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
+                .addData(new KnownFusionData(KNOWN_PAIR_UNMAPPABLE_3, GENE_NAME_1, GENE_NAME_3, "", "", threeAltMapping));
+
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
+                .addData(new KnownFusionData(KNOWN_PAIR_UNMAPPABLE_3, igGeneName, GENE_NAME_3, "", "",
+                        String.format("%s;%s", igRegionStr, threeAltMapping)));
+
+        tester.FusionAnalyser.cacheSpecialFusionGenes();
+
+        int varId = 1;
+        SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
+        sgl1.getSglMappings().add(new SglMapping(CHR_1, 21000, NEG_ORIENT, "", 1));
+
+        tester.AllVariants.add(sgl1);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
+
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
+                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+
+        GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
+        assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
+        assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
+        assertTrue(fusion.reportable());
+        assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
+
+        // try again but to an alternate mapping location
+
+        tester.clearClustersAndSVs();
+        sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
+        sgl1.getSglMappings().add(new SglMapping("GS", 55000, NEG_ORIENT, "", 1));
+
+        tester.AllVariants.add(sgl1);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
+
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
+                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+
+        fusion = tester.FusionAnalyser.getFusions().get(0);
+        assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
+        assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
+        assertTrue(fusion.reportable());
+        assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
+
+        // test again but using an IG region for the 5' gene
+        tester.clearClustersAndSVs();
+        sgl1 = createSgl(varId++, CHR_4, 1000, POS_ORIENT);
+        sgl1.getSglMappings().add(new SglMapping("GS", 55000, NEG_ORIENT, "", 1));
+
+        tester.AllVariants.add(sgl1);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
+
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
+                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+
+        fusion = tester.FusionAnalyser.getFusions().get(0);
+        assertTrue(fusion.reportable());
+        assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
+        assertEquals(igGeneName, fusion.upstreamTrans().geneName());
+        assertEquals(GENE_NAME_3, fusion.downstreamTrans().geneName());
+    }
 }

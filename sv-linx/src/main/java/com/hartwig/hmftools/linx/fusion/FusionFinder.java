@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
@@ -15,8 +16,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
@@ -130,6 +129,7 @@ public class FusionFinder
                 final GeneAnnotation downGene = !startUpstream ? startGene : endGene;
 
                 boolean knownPair = mKnownFusionCache.hasKnownFusion(upGene.GeneName, downGene.GeneName);
+                boolean knownUnmappable3Pair = mKnownFusionCache.hasKnownUnmappable3Fusion(upGene.GeneName, downGene.GeneName);
 
                 for(final Transcript upstreamTrans : upGene.transcripts())
                 {
@@ -141,13 +141,23 @@ public class FusionFinder
 
                     for(final Transcript downstreamTrans : downGene.transcripts())
                     {
-                        if(!isValidDownstreamTranscript(downstreamTrans))
-                        {
-                            logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid down trans");
-                            continue;
-                        }
+                        GeneFusion geneFusion;
 
-                        GeneFusion geneFusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair);
+                        if(knownUnmappable3Pair)
+                        {
+                            // no further conditions
+                            geneFusion = new GeneFusion(upstreamTrans, downstreamTrans, true);
+                        }
+                        else
+                        {
+                            if(!isValidDownstreamTranscript(downstreamTrans))
+                            {
+                                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid down trans");
+                                continue;
+                            }
+
+                            geneFusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair);
+                        }
 
                         if(geneFusion == null)
                             continue;
@@ -475,15 +485,27 @@ public class FusionFinder
         }
         else
         {
-            knownFusionData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
+            knownFusionData = mKnownFusionCache.getDataByType(KNOWN_PAIR_UNMAPPABLE_3).stream()
+                    .filter(x -> x.ThreeGene.equals(downGene.GeneName))
                     .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
                     .findFirst().orElse(null);
 
-            // check within the promiscuous region bounds
-            if(knownFusionData == null)
-                return;
+            if(knownFusionData != null)
+            {
+                knownType = KNOWN_PAIR_UNMAPPABLE_3;
+            }
+            else
+            {
+                knownFusionData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
+                        .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
+                        .findFirst().orElse(null);
 
-            knownType = IG_PROMISCUOUS;
+                // check within the promiscuous region bounds
+                if(knownFusionData == null)
+                    return;
+
+                knownType = IG_PROMISCUOUS;
+            }
         }
 
         final Transcript upTrans = generateIgTranscript(igGene, knownFusionData);
@@ -505,7 +527,7 @@ public class FusionFinder
                 gene, 0, String.format("@%s", knownFusionData.FiveGene),
                 -1,-1, 1, -1,
                 0, 0,   0, false,
-                knownFusionData.igRegion()[SE_START], knownFusionData.igRegion()[SE_END], null, null);
+                knownFusionData.igRegion().start(), knownFusionData.igRegion().end(), null, null);
 
         transcript.setCodingType(ENHANCER);
         transcript.setRegionType(TranscriptRegionType.IG);
@@ -662,6 +684,11 @@ public class FusionFinder
         if(mKnownFusionCache.hasKnownFusion(upGene, downGene))
         {
             geneFusion.setKnownType(KNOWN_PAIR);
+            return;
+        }
+        else if(mKnownFusionCache.hasKnownUnmappable3Fusion(upGene, downGene))
+        {
+            geneFusion.setKnownType(KNOWN_PAIR_UNMAPPABLE_3);
             return;
         }
 

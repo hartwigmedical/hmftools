@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
@@ -179,7 +180,7 @@ public class FusionReportability
 
     public static boolean allowExonSkipping(final KnownFusionType type)
     {
-        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS);
+        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS || type == KNOWN_PAIR_UNMAPPABLE_3);
     }
 
 }
