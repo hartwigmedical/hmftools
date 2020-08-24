@@ -33,11 +33,8 @@ public class RefreshAmberPatient {
 
         try (final DatabaseAccess dbAccess = databaseAccess(cmd)) {
 
-            LOGGER.info("Truncating AMBER mappings and patients");
-            dbAccess.truncateAmberPatients();
-            dbAccess.truncateAmberMappings();
-
             LOGGER.info("Reading sample data");
+            final List<AmberPatient> previousPatients = dbAccess.readAmberPatients();
             final List<AmberSample> allSamples = dbAccess.readAmberSamples();
             final List<AmberMapping> allMappings = Lists.newArrayList();
 
@@ -53,13 +50,16 @@ public class RefreshAmberPatient {
                 }
             }
 
-            final AmberPatientFactory patientFactory = new AmberPatientFactory(Lists.newArrayList(), allMappings);
+            final AmberPatientFactory patientFactory = new AmberPatientFactory(previousPatients, allMappings);
             final List<AmberPatient> patients = allSamples.stream().map(patientFactory::createPatient).collect(Collectors.toList());
+
+            LOGGER.info("Truncating AMBER mappings and patients");
+            dbAccess.truncateAmberPatients();
+            dbAccess.truncateAmberMappings();
 
             LOGGER.info("Writing mapping data");
             dbAccess.writeAmberMapping("dummy", allMappings);
             dbAccess.writeAmberPatients(patients);
-
         }
 
         LOGGER.info("Complete");
