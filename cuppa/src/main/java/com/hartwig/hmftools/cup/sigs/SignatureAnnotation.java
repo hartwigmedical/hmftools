@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
@@ -83,6 +84,8 @@ public class SignatureAnnotation
         mRefCancerSnvCountPercentiles = Maps.newHashMap();
 
         mIsValid = true;
+
+        populateReportableSignatures();
 
         loadRefSignaturePercentileData(mConfig.RefSigContribData, mRefCancerSigContribPercentiles, mRefCancerSnvCountPercentiles);
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames);
@@ -171,7 +174,7 @@ public class SignatureAnnotation
             }
 
             SampleResult result = new SampleResult(
-                    sample.Id, SNV_SIG, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
+                    sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
 
             results.add(result);
 
@@ -317,11 +320,29 @@ public class SignatureAnnotation
         return adjustedCounts;
     }
 
-    private static final List<String> REPORTABLE_SIGS =
-            Lists.newArrayList("Sig1", "Sig2", "Sig4", "Sig6", "Sig7", "Sig10", "Sig11", "Sig13", "Sig17");
+    private static final Map<String,String> REPORTABLE_SIGS = Maps.newHashMap();
+
+    private static void populateReportableSignatures()
+    {
+        REPORTABLE_SIGS.put("Sig1", "SIG_1");
+        REPORTABLE_SIGS.put("Sig2", "SIG_2_13_AID_APOBEC");
+        REPORTABLE_SIGS.put("Sig4", "SIG_4_SMOKING");
+        REPORTABLE_SIGS.put("Sig6", "SIG_6_MMR");
+        REPORTABLE_SIGS.put("Sig7", "SIG_7_UV");
+        REPORTABLE_SIGS.put("Sig10", "SIG_10_POLE");
+        REPORTABLE_SIGS.put("Sig11", "SIG_11");
+        REPORTABLE_SIGS.put("Sig17", "SIG_17");
+
+    }
 
     private static final String SIG_NAME_2 = "Sig2";
     private static final String SIG_NAME_13 = "Sig13";
+
+    private static final String signatureDisplayName(final String sigName)
+    {
+        final String displayName = REPORTABLE_SIGS.get(sigName);
+        return displayName != null ? displayName : "UNKNOWN";
+    }
 
     private void addSigContributionResults(final SampleData sample, final List<SampleResult> results)
     {
@@ -335,7 +356,7 @@ public class SignatureAnnotation
 
         // report on every one of the designated set
 
-        for(final String sigName : REPORTABLE_SIGS)
+        for(final String sigName : REPORTABLE_SIGS.keySet())
         {
             double sampleSigContrib = sampleSigContribs.containsKey(sigName) ? sampleSigContribs.get(sigName) : 0;
 
@@ -366,7 +387,7 @@ public class SignatureAnnotation
                 double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true);
                 cancerResults.put(cancerType, percentile);
 
-                results.add(new SampleResult(sample.Id, SNV_SIG, PERCENTILE, sigName.toUpperCase(), round(sampleSigContrib), cancerResults));
+                results.add(new SampleResult(sample.Id, SNV_SIG, PERCENTILE, signatureDisplayName(sigName), round(sampleSigContrib), cancerResults));
             }
         }
     }

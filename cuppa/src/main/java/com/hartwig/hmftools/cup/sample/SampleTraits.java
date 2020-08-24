@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
-import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_CLASS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
@@ -10,6 +9,7 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.MS_INDELS_TMB;
+import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromCohortFile;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefPercentileData;
@@ -21,6 +21,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -92,15 +93,18 @@ public class SampleTraits
             return results;
         }
 
-        if(mConfig.runCategory(SAMPLE_CLASS))
+        for(Map.Entry<SampleTraitType, Map<String, Double>> entry : mRefTraitRates.entrySet())
         {
-            for(Map.Entry<SampleTraitType, Map<String, Double>> entry : mRefTraitRates.entrySet())
-            {
-                final SampleTraitType traitType = entry.getKey();
-                Map<String, Double> cancerRates = entry.getValue();
+            final SampleTraitType traitType = entry.getKey();
+            Map<String, Double> cancerRates = entry.getValue();
 
-                // reverse the prevalence for MALE since gender is currently IsFemale
-                if(traitType == GENDER && sampleTraits.GenderType != Gender.FEMALE)
+            // reverse the prevalence for MALE since gender is currently IsFemale
+            if(traitType == GENDER)
+            {
+                if(!mConfig.runCategory(CategoryType.GENDER))
+                    continue;
+
+                if(sampleTraits.GenderType != Gender.FEMALE)
                 {
                     Map<String, Double> oppGenderRates = Maps.newHashMap();
                     cancerRates.entrySet().forEach(x -> oppGenderRates.put(x.getKey(), 1 - x.getValue()));
@@ -108,7 +112,18 @@ public class SampleTraits
                 }
 
                 SampleResult result = new SampleResult(
-                        sample.Id, SAMPLE_CLASS, PREVALENCE, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
+                        sample.Id, CategoryType.GENDER, PREVALENCE, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
+
+                results.add(result);
+            }
+            else if(traitType == WGD)
+            {
+                if(!mConfig.runCategory(SAMPLE_TRAIT))
+                    continue;
+
+
+                SampleResult result = new SampleResult(
+                        sample.Id, SAMPLE_TRAIT, PREVALENCE, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
 
                 results.add(result);
             }
@@ -142,10 +157,10 @@ public class SampleTraits
             double indelMb = sampleTraits.IndelsMbPerMb;
 
             final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, true);
-            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, MS_INDELS_TMB + "_LOW", indelMb, cancerPrevsLow));
+            results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_LOW", indelMb, cancerPrevsLow));
 
             final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, false);
-            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, MS_INDELS_TMB + "_HIGH", indelMb, cancerPrevsHigh));
+            results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_HIGH", indelMb, cancerPrevsHigh));
         }
 
         return results;
