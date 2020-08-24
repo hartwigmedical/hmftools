@@ -25,7 +25,6 @@ class HighestPuritySampleTest {
 
         val highestPurityCohort = HighestPuritySample.highestPurityCohort(purities, patients)
         assertEquals(1, highestPurityCohort.size)
-        assertEquals(patientId, highestPurityCohort[0].patientId)
         assertEquals(sampleId1, highestPurityCohort[0].sampleId)
         assertEquals(0.9, highestPurityCohort[0].purity)
     }

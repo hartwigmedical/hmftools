@@ -7,10 +7,10 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import java.io.File
 import java.nio.file.Files
 
-data class HighestPuritySample(val patientId: Int, val sampleId: String, val purity: Double) {
+data class HighestPuritySample(val sampleId: String, val purity: Double) {
 
     override fun toString(): String {
-        return "$patientId\t$sampleId\t$purity"
+        return "$sampleId\t$purity"
     }
 
     companion object {
@@ -31,11 +31,11 @@ data class HighestPuritySample(val patientId: Int, val sampleId: String, val pur
                 val sampleId = purity.sampleId()
                 if (patients.containsKey(sampleId)) {
                     val patientId = patients[sampleId]!!.patientId()
-                    result.put(patientId, HighestPuritySample(patientId, sampleId, purity.purity()))
+                    result.put(patientId, HighestPuritySample(sampleId, purity.purity()))
                 }
             }
 
-            return result.values.sortedBy { x -> x.patientId }
+            return result.values.sortedBy { x -> x.sampleId }
         }
 
         fun readFile(file: String): List<HighestPuritySample> {
@@ -44,7 +44,7 @@ data class HighestPuritySample(val patientId: Int, val sampleId: String, val pur
 
         private fun fromString(line: String): HighestPuritySample {
             val lineArray = line.split("\t")
-            return HighestPuritySample(lineArray[0].toInt(), lineArray[1], lineArray[2].toDouble())
+            return HighestPuritySample(lineArray[0], lineArray[1].toDouble())
         }
 
         fun writeFile(filename: String, patients: Collection<HighestPuritySample>) {
@@ -53,7 +53,7 @@ data class HighestPuritySample(val patientId: Int, val sampleId: String, val pur
 
         private fun toLines(patients: Collection<HighestPuritySample>): List<String> {
             val lines: MutableList<String> = Lists.newArrayList()
-            lines.add("patientId\tsampleId\tpurity")
+            lines.add("sampleId\tpurity")
             patients.map { it.toString() }.forEach { e: String -> lines.add(e) }
             return lines
         }
