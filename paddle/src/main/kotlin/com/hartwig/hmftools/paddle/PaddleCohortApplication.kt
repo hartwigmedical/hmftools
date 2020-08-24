@@ -1,17 +1,25 @@
 package com.hartwig.hmftools.paddle
 
+import com.hartwig.hmftools.common.cli.Configs
+import com.hartwig.hmftools.paddle.PaddleCohortApplication.Companion.MIN_PURITY
+import com.hartwig.hmftools.paddle.PaddleCohortApplication.Companion.MIN_PURITY_DEFAULT
+import com.hartwig.hmftools.paddle.PaddleCohortApplication.Companion.OUT
+import com.hartwig.hmftools.paddle.PaddleCohortApplication.Companion.logger
 import com.hartwig.hmftools.paddle.cohort.HighestPuritySample
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
-import org.apache.commons.cli.CommandLine
-import org.apache.commons.cli.DefaultParser
-import org.apache.commons.cli.Options
-import org.apache.commons.cli.ParseException
+import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 
 fun main(args: Array<String>) {
-
     fun createBasicOptions(): Options {
         val options = Options()
+        val outOption = Option(OUT, true, "Path to output")
+        outOption.isRequired = true
+        options.addOption(outOption)
+
+        val minPurityOptino = Option(MIN_PURITY, true, "Min purity [$MIN_PURITY_DEFAULT]")
+        options.addOption(minPurityOptino)
+
         DatabaseAccess.addDatabaseCmdLineArgs(options)
         return options
     }
@@ -20,12 +28,14 @@ fun main(args: Array<String>) {
     fun createCommandLine(args: Array<String>, options: Options): CommandLine {
         return DefaultParser().parse(options, args)
     }
-
+    val options = createBasicOptions()
     try {
-        val options = createBasicOptions()
         val cmd = createCommandLine(args, options)
-
         PaddleCohortApplication(cmd).use { x -> x.run() }
+    } catch (e: ParseException) {
+        logger.warn(e)
+        val formatter = HelpFormatter()
+        formatter.printHelp("PaddleCohort", options)
     } catch (e: Exception) {
         println(e)
     }
@@ -34,16 +44,21 @@ fun main(args: Array<String>) {
 class PaddleCohortApplication(cmd: CommandLine) : AutoCloseable, Runnable {
 
     companion object {
+        const val OUT = "out"
+        const val MIN_PURITY = "min_purity"
+        const val MIN_PURITY_DEFAULT = 0.2
         val logger = LogManager.getLogger(this::class.java)
     }
 
+    private val minPurity = Configs.defaultDoubleValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT)
+    private val outputFile = cmd.getOptionValue(OUT)
     private val startTime = System.currentTimeMillis()
     private val dbAccess = DatabaseAccess.databaseAccess(cmd)
 
-
     override fun run() {
-        val highestPurityCohort = HighestPuritySample.highestPurityCohort(0.2, dbAccess)
-        HighestPuritySample.writeFile("/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/highestPurityCohort.tsv", highestPurityCohort)
+        logger.info("Writing to $outputFile")
+        val highestPurityCohort = HighestPuritySample.highestPurityCohort(minPurity, dbAccess)
+        HighestPuritySample.writeFile(outputFile, highestPurityCohort)
     }
 
     override fun close() {
