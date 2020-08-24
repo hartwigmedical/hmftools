@@ -190,9 +190,9 @@ ORDER BY sampleCount desc;
 
  
 # Version History and Download Links
-- [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.3)
+- [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.5)
   - Updated patient matching logic [Database patch required](../patient-db/src/main/resources/patches/amber3.4_to_3.5_migration.sql).
-- [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.3)
+- [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.4)
   - Fixed bug where SNPCHECK loci were not written to REFERENCE.amber.snp.vcf.gz where read depth = 0
   - Added AmberSample and AmberPatient DB tables. [Database patch required](../patient-db/src/main/resources/patches/amber3.3_to_3.4_migration.sql).
   - Added patient matching functionality
