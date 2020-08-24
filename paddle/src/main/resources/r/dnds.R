@@ -1,3 +1,5 @@
+path = "/Users/jon/hmf/analysis/dnds/somatics"
+
 library(GenomicRanges)
 library(dplyr)
 library(tidyr)
@@ -15,7 +17,7 @@ refdb="/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/r/HmfRefCDS.RData
 load(refdb)
 
 
-files = list.files("/Users/jon/hmf/analysis/dnds/somatics/", full.names = T, pattern = "exonic.somatics.tsv")[1:1000]
+files = list.files(path, full.names = T, pattern = "exonic.somatics.tsv")
 allSomatics = data.frame(stringsAsFactors = F)
 for (file in files) {
   somatics = read.table(file = file, sep = "\t", header = T, stringsAsFactors = F)
@@ -26,9 +28,7 @@ for (file in files) {
 rm(somatics)
 rm(exonicSomatics)
 
-#save(allSomatics, file = "/Users/jon/hmf/analysis/dnds/somatics/allSomatics.RData")
-
-
+############### Dnds Results
 newgenes = sapply(RefCDS, function(x) x$gene_name) # New list of genes
 oldgenes = sapply(strsplit(newgenes,split=":"), function(x) x[1])
 cv = covs[oldgenes,]
@@ -37,11 +37,13 @@ kc = newgenes[oldgenes %in% known_cancergenes]
 
 output = dndscv(allSomatics, refdb=refdb, kc=kc, cv=cv, stop_loss_is_nonsense = TRUE)
 HmfRefCDSCv <- output$sel_cv
-write.table(file = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfRefCDSCv.new.tsv", HmfRefCDSCv, quote = F, row.names = F, sep = "\t")
+write.table(file = paste0(path, file = "/HmfRefCDSCv.tsv"), HmfRefCDSCv, quote = F, row.names = F, sep = "\t")
 
+############### Dnds Mutations
+unfilteredSomatics = allSomatics %>% select(sample, chr = chromosome, pos = position, ref, alt, worstCodingEffect, canonicalCodingEffect, repeatCount, biallelic, hotspot)
+unfilteredOutput = dndscv(unfilteredSomatics, refdb=refdb, kc=kc, cv=cv, stop_loss_is_nonsense = TRUE, max_muts_per_gene_per_sample = 30000000, max_coding_muts_per_sample = 30000000)
+dndsUnfilteredAnnotatedMutations = unfilteredOutput$annotmuts
 
-
-dndsFilteredAnnotatedMutations = output$annotmuts
-
-head(allSomatics)
-
+names(dndsUnfilteredAnnotatedMutations) <- c("sample", "chr","pos", "ref", "mut", "worstCodingEffect", "canonicalCodingEffect", "repeatCount", "biallelic", "hotspot", "geneind", "gene", "ref_cod", "mut_cod", "strand", "ref3_cod", "mut3_cod", "aachange", "ntchange","impact",  "pid")
+dndsUnfilteredAnnotatedMutations = dndsUnfilteredAnnotatedMutations %>% select(sample, chr, pos, ref, mut, worstCodingEffect, canonicalCodingEffect, repeatCount, biallelic, hotspot, gene, impact)
+write.table(dndsUnfilteredAnnotatedMutations, file = paste0(path, "/DndsMutations.tsv"), quote = F, row.names = F, sep = "\t")

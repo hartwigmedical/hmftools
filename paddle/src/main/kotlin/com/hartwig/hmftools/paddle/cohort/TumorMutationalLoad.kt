@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.paddle.cohort
 
-import java.io.File
-import java.nio.file.Files
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoadFile
 
-data class TumorMutationalLoad(val indel: Int, val mnv: Int, val snv: Int) {
+data class TumorMutationalLoad(val indel: Int, val snv: Int) {
     operator fun plus(other: TumorMutationalLoad): TumorMutationalLoad {
-        return TumorMutationalLoad(indel + other.indel, mnv + other.mnv, snv + other.snv)
+        return TumorMutationalLoad(indel + other.indel, snv + other.snv)
     }
 }
 
@@ -13,16 +13,22 @@ data class TumorMutationalLoadSample(val sample: String, val biallelicLoad: Tumo
 
     companion object {
         fun fromFile(file: String): List<TumorMutationalLoadSample> {
-            return Files.readAllLines(File(file).toPath()).drop(1).map { fromString(it) }
+            return DndsMutationalLoadFile.read(file).map { TumorMutationalLoadSample(it) }
         }
 
-        private fun fromString(line: String): TumorMutationalLoadSample {
-            val lineArray = line.split("\t")
+        operator fun invoke(load: DndsMutationalLoad): TumorMutationalLoadSample {
+            val biallelicLoad = TumorMutationalLoad(load.indelBiallelic(), load.snvBiallelic())
+            val nonBiallelicLoad = TumorMutationalLoad(load.indelNonBiallelic(), load.snvNonBiallelic())
+            val totalLoad = TumorMutationalLoad(load.indelTotal(), load.snvTotal())
 
-            val biallelicLoad = TumorMutationalLoad(lineArray[1].toInt(), lineArray[2].toInt(), lineArray[3].toInt())
-            val nonBiallelicLoad = TumorMutationalLoad(lineArray[4].toInt(), lineArray[5].toInt(), lineArray[6].toInt())
-            return TumorMutationalLoadSample(lineArray[0], biallelicLoad, nonBiallelicLoad, biallelicLoad + nonBiallelicLoad)
+            return TumorMutationalLoadSample(load.sampleId(), biallelicLoad, nonBiallelicLoad, totalLoad)
         }
+
+
+    }
+
+    operator fun plus(other: TumorMutationalLoadSample): TumorMutationalLoadSample {
+        return TumorMutationalLoadSample("Total", biallelicLoad + other.biallelicLoad, nonBiallelicLoad + other.nonBiallelicLoad, totalLoad + other.totalLoad)
     }
 
 }
