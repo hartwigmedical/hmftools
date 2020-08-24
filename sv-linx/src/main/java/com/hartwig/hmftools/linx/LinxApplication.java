@@ -3,19 +3,17 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
-import static com.hartwig.hmftools.linx.LinxConfig.DRIVERS_CHECK;
+import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
-import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
-import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromGermlineVcf;
-import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
-import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
-import static com.hartwig.hmftools.linx.ext_compare.AmpliconCompare.AMPLICON_DATA_FILE;
-import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_DATA_DIR;
+import static com.hartwig.hmftools.linx.LinxDataLoader.VCF_FILE;
+import static com.hartwig.hmftools.linx.LinxDataLoader.loadSvDataFromGermlineVcf;
+import static com.hartwig.hmftools.linx.LinxDataLoader.loadSvDataFromSvFile;
+import static com.hartwig.hmftools.linx.LinxDataLoader.loadSvDataFromVcf;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -23,7 +21,6 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -52,8 +49,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-
-public class SvLinxApplication
+public class LinxApplication
 {
     private static final String FILTER_QC_PASS = "filter_qc_pass";
 
@@ -128,15 +124,10 @@ public class SvLinxApplication
         sampleAnalyser.setCnDataLoader(cnDataLoader);
 
         DriverGeneAnnotator driverGeneAnnotator = null;
-        boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
+        boolean checkDrivers = cmd.hasOption(CHECK_DRIVERS);
 
         FusionDisruptionAnalyser fusionAnalyser = null;
         boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
-
-        ChainFinderCompare chainFinderCompare = cmd.hasOption(CHAIN_FINDER_DATA_DIR) ?
-                new ChainFinderCompare(config.OutputDataPath, cmd) : null;
-
-        AmpliconCompare ampliconCompare = cmd.hasOption(AMPLICON_DATA_FILE) ? new AmpliconCompare(config.OutputDataPath, cmd) : null;
 
         boolean selectiveGeneLoading = (samplesList.size() == 1 && !checkDrivers);
         boolean applyPromotorDistance = checkFusions;
@@ -155,6 +146,7 @@ public class SvLinxApplication
 
                 if(!checkFusions && checkDrivers)
                 {
+                    // only load a subset of genes
                     DriverGenePanel genePanel = new DriverGenePanelFactory().create();
 
                     ensemblLoadOk = ensemblDataCache.load(true);
@@ -279,16 +271,6 @@ public class SvLinxApplication
 
             prefCounter.stop();
 
-            if(chainFinderCompare != null)
-            {
-                chainFinderCompare.processSample(sampleId, svDataList, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
-            }
-
-            if(ampliconCompare != null)
-            {
-                ampliconCompare.processSample(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
-            }
-
             if(config.MaxSamples > 0 && count >= config.MaxSamples)
             {
                 LNX_LOGGER.info("exiting after max sample count {} reached", count);
@@ -308,12 +290,6 @@ public class SvLinxApplication
 
         if(driverGeneAnnotator != null)
             driverGeneAnnotator.close();
-
-        if(chainFinderCompare != null)
-            chainFinderCompare.close();
-
-        if(ampliconCompare != null)
-            ampliconCompare.close();
 
         if(config.isSingleSample())
         {
@@ -370,7 +346,7 @@ public class SvLinxApplication
     {
         final Options options = new Options();
         addDatabaseCmdLineArgs(options);
-        options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
+        options.addOption(CHECK_DRIVERS, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: Ensembl data cache directory");
         options.addOption(FILTER_QC_PASS, false, "Optional: If present will filter out QC-fail sample");
@@ -381,8 +357,6 @@ public class SvLinxApplication
         LinxConfig.addCmdLineArgs(options);
         FusionFinder.addCmdLineArgs(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);
-        ChainFinderCompare.addCmdLineArgs(options);
-        AmpliconCompare.addCmdLineArgs(options);
 
         return options;
     }

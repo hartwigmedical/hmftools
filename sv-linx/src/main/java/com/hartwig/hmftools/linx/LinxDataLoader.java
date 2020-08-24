@@ -48,9 +48,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class SvDataLoader
+public class LinxDataLoader
 {
-    private static final Logger LOGGER = LogManager.getLogger(SvDataLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger(LinxDataLoader.class);
 
     public static final String VCF_FILE = "sv_vcf";
 
