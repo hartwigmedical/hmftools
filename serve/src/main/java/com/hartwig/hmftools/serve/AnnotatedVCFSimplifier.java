@@ -30,12 +30,12 @@ public class AnnotatedVCFSimplifier {
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedVCFSimplifier.class);
 
     public static void main(String[] args) throws IOException {
-        String annotatedInputVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedInputVcf.vcf";
+        String annotatedInputVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots.vcf";
         new AnnotatedVCFSimplifier().run(annotatedInputVcf);
     }
 
     public void run(@NotNull String annotatedInputVcf) throws IOException {
-        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+        DriverGenePanel genePanel = DriverGenePanelFactory.empty();
         List<CanonicalTranscript> canonicalTranscripts = CanonicalTranscriptFactory.create37();
         CanonicalAnnotation factory = new CanonicalAnnotation(genePanel, canonicalTranscripts);
 

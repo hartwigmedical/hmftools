@@ -39,6 +39,12 @@ public final class ProteinAnnotationExtractor {
                         position + stringToLookFor.length());
             }
         }
+
+        // Cut out the trailing stop gained in case a stop gained is following on a frameshift
+        if (proteinAnnotation.endsWith("fs*")) {
+            proteinAnnotation = proteinAnnotation.substring(0, proteinAnnotation.length() - 1);
+        }
+
         return proteinAnnotation;
     }
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
@@ -17,6 +18,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class DriverGenePanelFactory {
 
+    @Deprecated
+    public DriverGenePanel create() {
+        return create(builtIn());
+    }
+
     @NotNull
     private static List<DriverGene> builtIn() {
         final InputStream inputStream = DriverGenePanel.class.getResourceAsStream("/drivercatalog/DriverGenePanel.tsv");
@@ -26,18 +32,19 @@ public class DriverGenePanelFactory {
                 .collect(Collectors.toList());
     }
 
-    @Deprecated
-    public DriverGenePanel create() {
-        return create(builtIn());
-    }
 
-    public DriverGenePanel empty() {
+    @NotNull
+    public static DriverGenePanel empty() {
         return create(Collections.emptyList());
     }
 
     @NotNull
-    public DriverGenePanel create(final List<DriverGene> genes) {
+    public static DriverGenePanel buildFromTsv(@NotNull String driverGenePanelFile) throws IOException {
+        return create(DriverGeneFile.read(driverGenePanelFile));
+    }
 
+    @NotNull
+    public static DriverGenePanel create(final List<DriverGene> genes) {
         final Set<String> tsGenes = genes.stream()
                 .filter(x -> x.likelihoodType().equals(DriverCategory.TSG) && x.reportVariant())
                 .map(DriverGene::gene)
@@ -50,22 +57,15 @@ public class DriverGenePanelFactory {
 
         Map<String, DndsDriverGeneLikelihood> tsgLikelihood = DndsDriverGeneLikelihoodSupplier.tsgLikelihood(tsGenes);
         Map<String, DndsDriverGeneLikelihood> oncoLikelihood = DndsDriverGeneLikelihoodSupplier.oncoLikelihood(oncoGenes);
-        Set<String> amplificationTargets =
-                genes.stream().filter(DriverGene::reportAmplification).map(DriverGene::gene).collect(Collectors.toSet());
-        Set<String> deletionTargets =
-                genes.stream().filter(DriverGene::reportDeletionAndDisruption).map(DriverGene::gene).collect(Collectors.toSet());
         Map<String, String> deletionBandMap = genes.stream()
-                .filter(x -> x.reportDeletionAndDisruption() && !x.deletionBand().isEmpty())
+                .filter(x -> x.reportDeletion() && !x.deletionBand().isEmpty())
                 .collect(Collectors.toMap(DriverGene::gene, DriverGene::deletionBand));
 
         return ImmutableDriverGenePanel.builder()
                 .driverGenes(genes)
                 .tsgLikelihood(tsgLikelihood)
                 .oncoLikelihood(oncoLikelihood)
-                .amplificationTargets(amplificationTargets)
-                .deletionTargets(deletionTargets)
                 .deletionBandMap(deletionBandMap)
                 .build();
     }
-
 }

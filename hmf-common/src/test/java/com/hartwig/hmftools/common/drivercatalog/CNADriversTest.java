@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
@@ -17,7 +17,7 @@ import org.junit.Test;
 
 public class CNADriversTest {
 
-    private final DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+    private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
 
     @Test
     public void testDeletionsInGermlineAsStillReportable() {

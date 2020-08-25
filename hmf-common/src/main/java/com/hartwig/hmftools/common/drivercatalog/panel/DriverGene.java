@@ -22,7 +22,9 @@ public interface DriverGene extends Comparable<DriverGene> {
 
     boolean reportSplice();
 
-    boolean reportDeletionAndDisruption();
+    boolean reportDeletion();
+
+    boolean reportDisruption();
 
     boolean reportAmplification();
 

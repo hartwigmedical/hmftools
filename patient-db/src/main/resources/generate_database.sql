@@ -276,8 +276,6 @@ CREATE TABLE somaticVariant
     alt varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
     genesEffected int not null,
-    cosmicId varchar(255) NOT NULL, #TODO: REMOVE
-    dbsnpId varchar(255) NOT NULL,  #TODO: REMOVE
     worstEffectTranscript varchar(255) NOT NULL,
     worstEffect varchar(255) NOT NULL,
     worstCodingEffect varchar(255) NOT NULL,
@@ -311,6 +309,7 @@ CREATE TABLE somaticVariant
     localRealignmentSet int,
     phasedInframeIndel int,
     qual double precision not null,
+    reported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),
@@ -985,6 +984,23 @@ CREATE TABLE amberSample
     site99 TINYINT NOT NULL,
     site100 TINYINT NOT NULL,
     PRIMARY KEY (sampleId)
+);
+
+DROP TABLE IF EXISTS driverGenePanel;
+CREATE TABLE driverGenePanel
+(
+    modified DATETIME NOT NULL,
+    gene varchar(255) NOT NULL,
+    deletionBand varchar(255) NOT NULL,
+    reportMissense BOOLEAN NOT NULL,
+    reportNonsense BOOLEAN NOT NULL,
+    reportSplice BOOLEAN NOT NULL,
+    reportDeletion BOOLEAN NOT NULL,
+    reportDisruption BOOLEAN NOT NULL,
+    reportAmplification BOOLEAN NOT NULL,
+    reportHotspot BOOLEAN NOT NULL,
+    likelihoodType varchar(255) NOT NULL,
+    PRIMARY KEY (gene)
 );
 
 SET FOREIGN_KEY_CHECKS = 1;

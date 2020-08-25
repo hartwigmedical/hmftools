@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarFrameshift;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
@@ -188,10 +189,10 @@ public class TransvarInterpreterTest {
     public void canConvertComplexDeletionInsertionsToHotspots() {
         TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
-                        .deletedBaseCount(3)
-                        .insertedSequence("GGG")
-                        .addCandidateAlternativeCodons("GGG")
-                        .addCandidateAlternativeCodons("CCC")
+                        .deletedBaseCount(6)
+                        .insertedSequence("AAT")
+                        .addCandidateAlternativeCodons("AAT")
+                        .addCandidateAlternativeCodons("GAT")
                         .build())
                 .build();
 
@@ -199,15 +200,15 @@ public class TransvarInterpreterTest {
 
         assertEquals(2, hotspots1.size());
 
-        assertHotspot(baseHotspot().position(2).ref("ATC").alt("GGG").build(), hotspots1.get(0));
-        assertHotspot(baseHotspot().position(2).ref("ATC").alt("CCC").build(), hotspots1.get(1));
+        assertHotspot(baseHotspot().position(2).ref("ATCG").alt("A").build(), hotspots1.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATCG").alt("G").build(), hotspots1.get(1));
 
         TransvarRecord twoAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
                         .deletedBaseCount(3)
-                        .insertedSequence("GGGTTT")
-                        .addCandidateAlternativeCodons("GGGTTT")
-                        .addCandidateAlternativeCodons("CCCAAA")
+                        .insertedSequence("AGGGTC")
+                        .addCandidateAlternativeCodons("AGGGTC")
+                        .addCandidateAlternativeCodons("ATTTTC")
                         .build())
                 .build();
 
@@ -215,7 +216,7 @@ public class TransvarInterpreterTest {
 
         assertEquals(1, hotspots2.size());
 
-        assertHotspot(baseHotspot().position(2).ref("ATC").alt("GGGTTT").build(), hotspots2.get(0));
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AGGG").build(), hotspots2.get(0));
     }
 
     @Test
@@ -234,7 +235,7 @@ public class TransvarInterpreterTest {
         assertEquals(2, hotspots1.size());
 
         assertHotspot(baseHotspot().position(2).ref("ATC").alt("TAA").build(), hotspots1.get(0));
-        assertHotspot(baseHotspot().position(2).ref("ATC").alt("CGC").build(), hotspots1.get(1));
+        assertHotspot(baseHotspot().position(2).ref("AT").alt("CG").build(), hotspots1.get(1));
     }
 
     @Test
@@ -247,6 +248,36 @@ public class TransvarInterpreterTest {
         assertEquals(1, hotspots.size());
 
         assertHotspot(baseHotspot().position(4).ref("C").alt("CGAT").build(), hotspots.get(0));
+    }
+
+    @Test
+    public void canConvertFrameshiftToHotspot() {
+        TransvarRecord record =
+                baseRecord().gdnaPosition(2).annotation(ImmutableTransvarFrameshift.builder().build()).build();
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
+
+        assertEquals(17, hotspots.size());
+        assertHotspot(baseHotspot().position(1).ref("G").alt("GG").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(1).ref("G").alt("GA").build(), hotspots.get(1));
+        assertHotspot(baseHotspot().position(1).ref("G").alt("GT").build(), hotspots.get(2));
+        assertHotspot(baseHotspot().position(1).ref("G").alt("GC").build(), hotspots.get(3));
+
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AG").build(), hotspots.get(4));
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AA").build(), hotspots.get(5));
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AT").build(), hotspots.get(6));
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AC").build(), hotspots.get(7));
+
+        assertHotspot(baseHotspot().position(3).ref("T").alt("TG").build(), hotspots.get(8));
+        assertHotspot(baseHotspot().position(3).ref("T").alt("TA").build(), hotspots.get(9));
+        assertHotspot(baseHotspot().position(3).ref("T").alt("TT").build(), hotspots.get(10));
+        assertHotspot(baseHotspot().position(3).ref("T").alt("TC").build(), hotspots.get(11));
+
+        assertHotspot(baseHotspot().position(1).ref("GA").alt("G").build(), hotspots.get(12));
+        assertHotspot(baseHotspot().position(2).ref("AT").alt("A").build(), hotspots.get(13));
+        assertHotspot(baseHotspot().position(3).ref("TC").alt("T").build(), hotspots.get(14));
+
+        assertHotspot(baseHotspot().position(1).ref("GAT").alt("G").build(), hotspots.get(15));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("A").build(), hotspots.get(16));
     }
 
     private static void assertHotspot(@NotNull VariantHotspot expectedHotspot, @NotNull VariantHotspot actualHotspot) {

@@ -13,10 +13,14 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DriverGeneFile {
+public final class DriverGeneFile {
 
     private static final String DELIMITER = "\t";
 
+    private DriverGeneFile() {
+    }
+
+    @NotNull
     public static List<DriverGene> read(@NotNull final String filename) throws IOException {
         return Files.readAllLines(new File(filename).toPath())
                 .stream()
@@ -33,7 +37,8 @@ public class DriverGeneFile {
                 .add("reportMissenseAndInframe")
                 .add("reportNonsenseAndFrameshift")
                 .add("reportSplice")
-                .add("reportDeletionAndDisruption")
+                .add("reportDeletion")
+                .add("reportDisruption")
                 .add("reportAmplification")
                 .add("reportPromoterHotspots")
                 .add("likelihoodType")
@@ -41,13 +46,14 @@ public class DriverGeneFile {
     }
 
     @NotNull
-    private static String toString(final DriverGene gene) {
+    private static String toString(@NotNull final DriverGene gene) {
         return new StringJoiner(DELIMITER).add(gene.gene())
                 .add(gene.deletionBand())
                 .add(String.valueOf(gene.reportMissenseAndInframe()))
                 .add(String.valueOf(gene.reportNonsenseAndFrameshift()))
                 .add(String.valueOf(gene.reportSplice()))
-                .add(String.valueOf(gene.reportDeletionAndDisruption()))
+                .add(String.valueOf(gene.reportDeletion()))
+                .add(String.valueOf(gene.reportDisruption()))
                 .add(String.valueOf(gene.reportAmplification()))
                 .add(String.valueOf(gene.reportHotspot()))
                 .add(String.valueOf(gene.likelihoodType()))
@@ -63,10 +69,11 @@ public class DriverGeneFile {
                 .reportMissenseAndInframe(Boolean.parseBoolean(values[2]))
                 .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[3]))
                 .reportSplice(Boolean.parseBoolean(values[4]))
-                .reportDeletionAndDisruption(Boolean.parseBoolean(values[5]))
-                .reportAmplification(Boolean.parseBoolean(values[6]))
-                .reportHotspot(Boolean.parseBoolean(values[7]))
-                .likelihoodType(DriverCategory.valueOf(values[8]));
+                .reportDeletion(Boolean.parseBoolean(values[5]))
+                .reportDisruption(Boolean.parseBoolean(values[6]))
+                .reportAmplification(Boolean.parseBoolean(values[7]))
+                .reportHotspot(Boolean.parseBoolean(values[8]))
+                .likelihoodType(DriverCategory.valueOf(values[9]));
         return builder.build();
     }
 
@@ -83,5 +90,4 @@ public class DriverGeneFile {
         Collections.sort(sorted);
         Files.write(new File(filename).toPath(), toLines(sorted));
     }
-
 }

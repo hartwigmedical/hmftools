@@ -11,6 +11,7 @@ import java.util.List;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarDuplication;
+import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarFrameshift;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
@@ -31,6 +32,8 @@ final class TransvarConverter {
     private static final int COORDINATES_COLUMN = 4;
     private static final int LOCATION_COLUMN = 5;
     private static final int MESSAGE_COLUMN = 6;
+
+    private static final String CSQN_FRAMESHIFT = "Frameshift";
 
     private static final String MSG_NO_VALID_TRANSCRIPT_FOUND = "no_valid_transcript_found";
     private static final String MSG_ERROR_INDICATION_PREFIX = "Error_";
@@ -79,8 +82,8 @@ final class TransvarConverter {
         // Remove "chr" from the chromosome
         recordBuilder.chromosome(chromosomeAndGDNA[0].substring(3));
 
-        // Remove "g." from the gdna annotation
-        String gdna = chromosomeAndGDNA[1].substring(2);
+        // Remove "g." from the gdna annotation, and also remove potential parentheses
+        String gdna = chromosomeAndGDNA[1].substring(2).replaceAll("[()]", "");
 
         if (gdna.contains(HGVS_RANGE_INDICATOR)) {
             String[] gdnaParts = gdna.split(HGVS_RANGE_INDICATOR);
@@ -90,6 +93,8 @@ final class TransvarConverter {
             TransvarAnnotation annotation;
             if (gdna.contains(HGVS_INSERTION) || gdna.contains(HGVS_DELETION)) {
                 annotation = annotationForInsertionDeletion(position, gdnaParts[1], messageField);
+            } else if (isFrameshift(messageField)) {
+                annotation = ImmutableTransvarFrameshift.builder().build();
             } else {
                 annotation = annotationForDuplication(position, gdnaParts[1]);
             }
@@ -205,6 +210,11 @@ final class TransvarConverter {
                 .build();
 
         return recordBuilder.gdnaPosition(Long.parseLong(gdnaPos.toString())).annotation(snvAnnotation).build();
+    }
+
+    private static boolean isFrameshift(@NotNull String messageField) {
+        String csqn = extractOptionalValueFromMessageField(messageField, "CSQN");
+        return csqn != null && csqn.equals(CSQN_FRAMESHIFT);
     }
 
     private static long extractLeftAlignedGDNAPositionFromMessageField(@NotNull String messageField) {

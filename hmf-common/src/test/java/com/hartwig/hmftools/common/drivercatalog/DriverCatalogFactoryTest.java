@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +24,7 @@ public class DriverCatalogFactoryTest {
 
     @Before
     public void setup() {
-        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+        DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
         onco = genePanel.oncoLikelihood()
                 .values()
                 .stream()

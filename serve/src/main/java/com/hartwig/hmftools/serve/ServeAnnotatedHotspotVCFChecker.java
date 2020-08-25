@@ -36,7 +36,7 @@ public class ServeAnnotatedHotspotVCFChecker {
     public static void main(String[] args) throws IOException {
         //        Configurator.setRootLevel(Level.DEBUG);
 
-        String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspotsVicc.vcf";
+        String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots.vcf";
         new ServeAnnotatedHotspotVCFChecker().run(annotatedHotspotVcf);
     }
 

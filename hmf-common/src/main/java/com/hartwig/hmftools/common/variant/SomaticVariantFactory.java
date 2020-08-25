@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MI
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
@@ -180,6 +181,7 @@ public class SomaticVariantFactory {
                 .subclonalLikelihood(context.getAttributeAsDouble(SubclonalLikelihoodEnrichment.SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
+                .reported(context.getAttributeAsBoolean(REPORTED_FLAG, false))
                 .biallelic(context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false));
 
         if (context.hasAttribute(SageMetaData.PHASED_INFRAME_INDEL)) {

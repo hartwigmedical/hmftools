@@ -22,47 +22,47 @@ public final class AminoAcidFunctions {
     private static final Map<String, String> TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER = Maps.newHashMap();
 
     static {
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Ala", "A");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Cys", "C");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Asp", "D");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Glu", "E");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Phe", "F");
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Ala", "A"); // Alanine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Cys", "C"); // Cysteine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Asp", "D"); // Aspartic Acid
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Glu", "E"); // Glutamic Acid
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Phe", "F"); // Phenylalanine
 
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("A", Sets.newHashSet("GCA", "GCC", "GCG", "GCT"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("C", Sets.newHashSet("TGC", "TGT"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("D", Sets.newHashSet("GAC", "GAT"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("E", Sets.newHashSet("GAA", "GAG"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("F", Sets.newHashSet("TTC", "TTT"));
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("A", Sets.newHashSet("GCA", "GCC", "GCG", "GCT")); // Ala
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("C", Sets.newHashSet("TGC", "TGT")); // Cys
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("D", Sets.newHashSet("GAC", "GAT")); // Asp
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("E", Sets.newHashSet("GAA", "GAG")); // Glu
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("F", Sets.newHashSet("TTC", "TTT")); // Phe
 
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Gly", "G");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("His", "H");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Ile", "I");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Lys", "K");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Leu", "L");
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Gly", "G"); // Glycine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("His", "H"); // Histidine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Ile", "I"); // Isoleucine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Lys", "K"); // Lysine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Leu", "L"); // Leucine
 
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("G", Sets.newHashSet("GGA", "GGC", "GGG", "GGT"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("H", Sets.newHashSet("CAC", "CAT"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("I", Sets.newHashSet("ATA", "ATC", "ATT"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("K", Sets.newHashSet("AAA", "AAG"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("L", Sets.newHashSet("TTA", "TTG", "CTA", "CTC", "CTG", "CTT"));
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("G", Sets.newHashSet("GGA", "GGC", "GGG", "GGT")); // Gly
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("H", Sets.newHashSet("CAC", "CAT")); // His
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("I", Sets.newHashSet("ATA", "ATC", "ATT")); // Ile
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("K", Sets.newHashSet("AAA", "AAG")); // Lys
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("L", Sets.newHashSet("TTA", "TTG", "CTA", "CTC", "CTG", "CTT")); // Leu
 
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Met", "M");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Asn", "N");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Pro", "P");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Gln", "Q");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Arg", "R");
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Met", "M"); // Methionine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Asn", "N"); // Asparagine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Pro", "P"); // Proline
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Gln", "Q"); // Glutamine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Arg", "R"); // Arginine
 
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("M", Sets.newHashSet("ATG"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("N", Sets.newHashSet("AAC", "AAT"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("P", Sets.newHashSet("CCA", "CCC", "CCG", "CCT"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("Q", Sets.newHashSet("CAA", "CAG"));
-        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("R", Sets.newHashSet("AGA", "AGG", "CGA", "CGC", "CGG", "CGT"));
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("M", Sets.newHashSet("ATG")); // Met
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("N", Sets.newHashSet("AAC", "AAT")); // Asn
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("P", Sets.newHashSet("CCA", "CCC", "CCG", "CCT")); // Pro
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("Q", Sets.newHashSet("CAA", "CAG")); // Gln
+        AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("R", Sets.newHashSet("AGA", "AGG", "CGA", "CGC", "CGG", "CGT")); // Arg
 
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Ser", "S");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Thr", "T");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Val", "V");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Trp", "W");
-        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Tyr", "Y");
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Ser", "S"); // Serine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Thr", "T"); // Threonine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Val", "V"); // Valine
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Trp", "W"); // Tryptophan
+        TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Tyr", "Y"); // Tyrosine
 
         AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("S", Sets.newHashSet("AGC", "AGT", "TCA", "TCC", "TCG", "TCT")); // Ser
         AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("T", Sets.newHashSet("ACA", "ACC", "ACG", "ACT")); // Thr

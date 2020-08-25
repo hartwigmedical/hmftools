@@ -148,15 +148,16 @@ public class ProtectActionability {
         double purity = purityContext.bestFit().purity();
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
 
-        DriverGenePanel driverGenePanel = new DriverGenePanelFactory().create(); //TODO: Make configurable
+        DriverGenePanel driverGenePanel = DriverGenePanelFactory.empty(); //TODO: Make configurable
 
         // Gene Fusion reportable
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
         // Copy Number all + reportable
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
-        List<ReportableGainLoss> reportableGainsAndLosses =
-                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverGenePanel, geneCopyNumbers, purityContext.bestFit().ploidy());
+        List<ReportableGainLoss> reportableGainsAndLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverGenePanel,
+                geneCopyNumbers,
+                purityContext.bestFit().ploidy());
 
         // Germline variants
         List<GermlineVariant> germlineVariant =
@@ -164,7 +165,8 @@ public class ProtectActionability {
         LOGGER.info("Loaded {} PASS germline variants from {}", germlineVariant.size(), germlineVariantVcf);
 
         // only reportable variants
-        CopyNumberAnalysis copyNumberAnalysis = CopyNumberAnalyzer.analyzeCopyNumbers(purplePurityTsv, purpleQCTsv, purpleGeneCnvTsv, driverGenePanel);
+        CopyNumberAnalysis copyNumberAnalysis =
+                CopyNumberAnalyzer.analyzeCopyNumbers(purplePurityTsv, purpleQCTsv, purpleGeneCnvTsv, driverGenePanel);
         //
 
         SomaticVariantAnalysis somaticVariantAnalysis = SomaticVariantAnalyzer.analyzeSomaticVariants(tumorSampleId,

@@ -74,7 +74,7 @@ public class ViccExtractorTestApplication {
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            generateHotspots = false; //for generate hostpots set to true
+            generateHotspots = true;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
             rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
             fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
@@ -182,33 +182,33 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (ampDelForFeature != null) {
-                     //   LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
+                        //   LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
                         featuresWithCopyNumberCount++;
                     }
 
                     if (fusionForFeature != null) {
-//                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
-//                                fusionForFeature.fusion(),
-//                                feature.geneSymbol(),
-//                                fusionForFeature.fusionEvent());
+                        //                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
+                        //                                fusionForFeature.fusion(),
+                        //                                feature.geneSymbol(),
+                        //                                fusionForFeature.fusionEvent());
                         featuresWithFusionCount++;
                     }
 
                     if (geneLevelEventForFeature != null) {
-//                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event as '{}'",
-//                                feature.name(),
-//                                feature.geneSymbol(),
-//                                geneLevelEventForFeature);
+                        //                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event as '{}'",
+                        //                                feature.name(),
+                        //                                feature.geneSymbol(),
+                        //                                geneLevelEventForFeature);
                         featuresWithGeneLevelEventCount++;
                     }
 
                     if (geneRangeForFeature != null) {
-//                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
+                        //                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
-//                        LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
+                        //                        LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
                         featuresWithSignatureCount++;
                     }
                 }
@@ -369,10 +369,10 @@ public class ViccExtractorTestApplication {
             String existingKey =
                     ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
             String newKey = ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), transcript, feature.proteinAnnotation());
-            //                        LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
-            //                                entry.source().display(),
-            //                                existingKey,
-            //                                newKey);
+            LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
+                    entry.source().display(),
+                    existingKey,
+                    newKey);
         }
     }
 }

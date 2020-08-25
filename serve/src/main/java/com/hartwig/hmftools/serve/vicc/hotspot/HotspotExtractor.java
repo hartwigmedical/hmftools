@@ -90,7 +90,7 @@ public class HotspotExtractor {
     static boolean isResolvableProteinAnnotation(@NotNull String feature) {
         try {
             if (isFrameshift(feature)) {
-                return false;
+                return true;
             } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
                 return isValidRangeMutation(feature);
             } else if (feature.contains(HGVS_DELETION + HGVS_INSERTION)) {

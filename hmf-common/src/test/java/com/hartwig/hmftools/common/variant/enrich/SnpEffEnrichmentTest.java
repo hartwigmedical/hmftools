@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -26,7 +26,7 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 public class SnpEffEnrichmentTest {
 
     private final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create37();
-    private final DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+    private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
     private VCFCodec codec;
     private SnpEffEnrichment victim;
     private List<VariantContext> capture;

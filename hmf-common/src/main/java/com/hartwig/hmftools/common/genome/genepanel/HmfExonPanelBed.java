@@ -30,14 +30,14 @@ final class HmfExonPanelBed {
     private static final String DELIMITER = "\t";
 
     @SuppressWarnings("WeakerAccess")
-    public static void write19File(@NotNull final String filename) throws IOException {
-        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+    public static void write19File(@NotNull final String filename, @NotNull final String genePanelFile) throws IOException {
+        DriverGenePanel genePanel = DriverGenePanelFactory.buildFromTsv(genePanelFile);
         writeBedFile(filename, Strings.EMPTY, createRegions(genePanel, HmfGenePanelSupplier.allGeneList37()));
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static void write38File(@NotNull final String filename) throws IOException {
-        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+    public static void write38File(@NotNull final String filename, @NotNull final String genePanelFile) throws IOException {
+        DriverGenePanel genePanel = DriverGenePanelFactory.buildFromTsv(genePanelFile);
         writeBedFile(filename, "chr", createRegions(genePanel, HmfGenePanelSupplier.allGeneList38()));
     }
 

@@ -32,7 +32,7 @@ public class SomaticVariantDrivers {
         tsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel);
     }
 
-    public void add(@NotNull final SomaticVariant variant) {
+    public boolean add(@NotNull final SomaticVariant variant) {
         if (!variant.isFiltered()) {
             variantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
             if (variant.biallelic()) {
@@ -41,12 +41,16 @@ public class SomaticVariantDrivers {
 
             if (oncoPredicate.test(variant)) {
                 oncoVariants.add(variant);
+                return true;
             }
 
             if (tsgPredicate.test(variant)) {
                 tsgVariants.add(variant);
+                return true;
             }
         }
+
+        return false;
     }
 
     @NotNull
