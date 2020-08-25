@@ -188,10 +188,10 @@ public class TransvarInterpreterTest {
     public void canConvertComplexDeletionInsertionsToHotspots() {
         TransvarRecord oneAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
-                        .deletedBaseCount(3)
-                        .insertedSequence("GGG")
-                        .addCandidateAlternativeCodons("GGG")
-                        .addCandidateAlternativeCodons("CCC")
+                        .deletedBaseCount(6)
+                        .insertedSequence("AAT")
+                        .addCandidateAlternativeCodons("AAT")
+                        .addCandidateAlternativeCodons("GAT")
                         .build())
                 .build();
 
@@ -199,15 +199,15 @@ public class TransvarInterpreterTest {
 
         assertEquals(2, hotspots1.size());
 
-        assertHotspot(baseHotspot().position(2).ref("ATC").alt("GGG").build(), hotspots1.get(0));
-        assertHotspot(baseHotspot().position(2).ref("ATC").alt("CCC").build(), hotspots1.get(1));
+        assertHotspot(baseHotspot().position(2).ref("ATCG").alt("A").build(), hotspots1.get(0));
+        assertHotspot(baseHotspot().position(2).ref("ATCG").alt("G").build(), hotspots1.get(1));
 
         TransvarRecord twoAminoAcidInsert = baseRecord().gdnaPosition(2)
                 .annotation(ImmutableTransvarComplexInsertDelete.builder()
                         .deletedBaseCount(3)
-                        .insertedSequence("GGGTTT")
-                        .addCandidateAlternativeCodons("GGGTTT")
-                        .addCandidateAlternativeCodons("CCCAAA")
+                        .insertedSequence("AGGGTC")
+                        .addCandidateAlternativeCodons("AGGGTC")
+                        .addCandidateAlternativeCodons("ATTTTC")
                         .build())
                 .build();
 
@@ -215,7 +215,7 @@ public class TransvarInterpreterTest {
 
         assertEquals(1, hotspots2.size());
 
-        assertHotspot(baseHotspot().position(2).ref("ATC").alt("GGGTTT").build(), hotspots2.get(0));
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AGGG").build(), hotspots2.get(0));
     }
 
     @Test

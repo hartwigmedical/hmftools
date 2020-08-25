@@ -173,7 +173,7 @@ class TransvarInterpreter {
                     ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position).ref(deletedBases);
 
             String insertedBases = insDel.insertedSequence();
-            hotspots.add(hotspotBuilder.alt(insertedBases).build());
+            hotspots.add(reduceComplexityForComplexInsDel(hotspotBuilder.alt(insertedBases).build()));
             // For now we only add alternative sequences for insertions of one AA
             if (insertedBases.length() == 3) {
                 for (String candidateAlternativeCodon : insDel.candidateAlternativeCodons()) {
@@ -181,7 +181,7 @@ class TransvarInterpreter {
                     String strandAdjustedAlternativeSequence =
                             strand == Strand.FORWARD ? candidateAlternativeCodon : reverseAndFlip(candidateAlternativeCodon);
                     if (!strandAdjustedAlternativeSequence.equals(insertedBases)) {
-                        hotspots.add(hotspotBuilder.alt(strandAdjustedAlternativeSequence).build());
+                        hotspots.add(reduceComplexityForComplexInsDel(hotspotBuilder.alt(strandAdjustedAlternativeSequence).build()));
                     }
                 }
             }
@@ -189,6 +189,25 @@ class TransvarInterpreter {
             LOGGER.debug("Complex insert/delete spanning multiple exons. Ignoring {}", record);
         }
         return hotspots;
+    }
+
+    @NotNull
+    private static VariantHotspot reduceComplexityForComplexInsDel(@NotNull VariantHotspot complexInsDel) {
+        assert complexInsDel.ref().length() > 1 && complexInsDel.alt().length() > 1;
+
+        String simplifiedRef = complexInsDel.ref();
+        String simplifiedAlt = complexInsDel.alt();
+        while (simplifiedRef.length() > 1 && simplifiedAlt.length() > 1 && simplifiedRef.charAt(simplifiedRef.length() - 1) == simplifiedAlt
+                .charAt(simplifiedAlt.length() - 1)) {
+            simplifiedRef = simplifiedRef.substring(0, simplifiedRef.length() - 1);
+            simplifiedAlt = simplifiedAlt.substring(0, simplifiedAlt.length() - 1);
+        }
+        return ImmutableVariantHotspotImpl.builder()
+                .chromosome(complexInsDel.chromosome())
+                .position(complexInsDel.position())
+                .ref(simplifiedRef)
+                .alt(simplifiedAlt)
+                .build();
     }
 
     private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarSnvMnv snvMnv, @NotNull Strand strand) {
