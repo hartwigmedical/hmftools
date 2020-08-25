@@ -43,4 +43,10 @@ public class HotspotAnnotation {
     public String proteinAnnotation() {
         return proteinAnnotation;
     }
+
+    @Override
+    public String toString() {
+        return "HotspotAnnotation{" + "sources=" + sources + ", gene='" + gene + '\'' + ", transcript='" + transcript + '\''
+                + ", proteinAnnotation='" + proteinAnnotation + '\'' + '}';
+    }
 }

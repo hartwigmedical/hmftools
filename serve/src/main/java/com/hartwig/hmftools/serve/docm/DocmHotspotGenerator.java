@@ -155,17 +155,17 @@ public class DocmHotspotGenerator {
         for (Map.Entry<DocmEntry, List<VariantHotspot>> entry : hotspotsPerEntry.entrySet()) {
             DocmEntry docmEntry = entry.getKey();
             for (VariantHotspot hotspot : entry.getValue()) {
-                HotspotAnnotation annotation = convertedMap.get(hotspot);
-                if (annotation != null) {
-                    LOGGER.warn("Annotation already found previously: {}", annotation);
-                } else {
-                    annotation = new HotspotAnnotation(Sets.newHashSet("docm"),
-                            docmEntry.gene(),
-                            docmEntry.transcript(),
-                            docmEntry.proteinAnnotation());
-                }
+                HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet("docm"),
+                        docmEntry.gene(),
+                        docmEntry.transcript(),
+                        docmEntry.proteinAnnotation());
 
-                convertedMap.put(hotspot, annotation);
+                HotspotAnnotation currentAnnotation = convertedMap.get(hotspot);
+                if (currentAnnotation != null) {
+                    LOGGER.warn("Annotation '{}' already found previously: '{}'", newAnnotation, currentAnnotation);
+                } else {
+                    convertedMap.put(hotspot, newAnnotation);
+                }
             }
         }
 
