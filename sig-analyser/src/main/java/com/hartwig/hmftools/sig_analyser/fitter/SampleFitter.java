@@ -68,7 +68,8 @@ public class SampleFitter
     private final int mPositionBucketSize;
     private final int mMaxSampleCount;
 
-    private DatabaseAccess mDbAccess;
+    private final DatabaseAccess mDbAccess;
+    private final SigSnvLoader mSnvLoader;
     private boolean mUploadToDb;
     private BufferedWriter mFitWriter;
 
@@ -96,6 +97,11 @@ public class SampleFitter
 
         mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
         mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
+
+        mSnvLoader = new SigSnvLoader(null);
+
+        if(mPositionBucketSize > 0)
+            mSnvLoader.initialisePositionFrequencies(null, Lists.newArrayList(mPositionBucketSize));
     }
 
     public void run()
@@ -134,6 +140,12 @@ public class SampleFitter
         }
         else
         {
+            if(mDbAccess == null)
+            {
+                SIG_LOGGER.error("missing DB connection when no sample counts file configured");
+                return false;
+            }
+
             // load from file or delimitered list
             if(mSampleIdsConfig.contains(".csv"))
             {
@@ -144,51 +156,17 @@ public class SampleFitter
             {
                 mSampleIdList.add(mSampleIdsConfig);
             }
-
-            loadSnvCountsData();
         }
 
         initialiseOutputFiles();
         return true;
     }
 
-    private void loadSnvCountsData()
-    {
-        if(mDbAccess == null)
-            return;
-
-        SigSnvLoader snvLoader = new SigSnvLoader(null, mSampleIdList);
-
-        if(mPositionBucketSize > 0)
-        {
-            snvLoader.initialisePositionFrequencies(null, Lists.newArrayList(mPositionBucketSize));
-        }
-
-        snvLoader.loadData(mDbAccess, false);
-
-        final String filename = mSampleIdList.size() == 1 ?
-                formOutputFilename(mOutputDir, mOutputId, mSampleIdList.get(0) + ".sig.snv_counts")
-                : formOutputFilename(mOutputDir, mOutputId, "sig_snv_counts");
-
-        snvLoader.writeSampleCounts(filename);
-
-        if(mPositionBucketSize > 0 && mSampleIdList.size() == 1)
-        {
-            PositionFreqBuilder posFreqBuilder =
-                    new PositionFreqBuilder(mOutputDir, mPositionBucketSize, mMaxSampleCount);
-
-            final PositionFrequencies samplePosFrequencies = snvLoader.getPositionFrequencies().get(0);
-            posFreqBuilder.writeSampleCounts(mSampleIdList.get(0), samplePosFrequencies.getChrPosBucketFrequencies());
-        }
-
-        mSampleCountsMatrix = snvLoader.getSampleBucketCounts();
-    }
-
     private void performFit()
     {
-        int sampleCount = mSampleCountsMatrix.Cols;
+        int sampleCount = mSampleIdList.size();
         int sigCount = mSignatures.Cols;
-        
+
         final SigMatrix sampleContribs = new SigMatrix(sigCount, sampleCount);
 
         SIG_LOGGER.info("fitting sample({}) with {} signatures", sampleCount, sigCount);
@@ -197,7 +175,8 @@ public class SampleFitter
 
         for(int i = 0; i < sampleCount; ++i)
         {
-            final double[] sampleCounts = mSampleCountsMatrix.getCol(i);
+            final String sampleId = mSampleIdList.get(i);
+            final double[] sampleCounts = getSampleCounts(sampleId, i);
 
             double sampleTotal = sumVector(sampleCounts);
 
@@ -210,8 +189,36 @@ public class SampleFitter
             final double[] sigAllocs = lsqFit.getContribs();
             sampleContribs.setCol(i, sigAllocs);
 
-            processSampleResults(mSampleIdList.get(i), sampleCounts, sampleTotal, sigAllocs);
+            processSampleResults(sampleId, sampleCounts, sampleTotal, sigAllocs);
         }
+    }
+
+    private final double[] getSampleCounts(final String sampleId, int sampleIndex)
+    {
+        if(mSampleCountsMatrix != null)
+            return mSampleCountsMatrix.getCol(sampleIndex);
+
+        mSnvLoader.setSampleIds(Lists.newArrayList(sampleId));
+
+        mSnvLoader.loadData(mDbAccess, false);
+
+        if(mSampleIdList.size() == 1)
+        {
+            final String filename = formOutputFilename(mOutputDir, mOutputId, sampleId + ".sig.snv_counts");
+
+            mSnvLoader.writeSampleCounts(filename);
+
+            if(mPositionBucketSize > 0)
+            {
+                PositionFreqBuilder posFreqBuilder =
+                        new PositionFreqBuilder(mOutputDir, mPositionBucketSize, mMaxSampleCount);
+
+                final PositionFrequencies samplePosFrequencies = mSnvLoader.getPositionFrequencies().get(0);
+                posFreqBuilder.writeSampleCounts(sampleId, samplePosFrequencies.getChrPosBucketFrequencies());
+            }
+        }
+
+        return mSnvLoader.getSampleBucketCounts().getCol(0);
     }
 
     private void processSampleResults(final String sampleId, final double[] sampleCounts, double sampleTotal, final double[] sigAllocs)

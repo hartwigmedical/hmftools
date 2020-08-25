@@ -52,7 +52,8 @@ public class SigDataLoader
 
             if(cmd.hasOption(LOAD_SNVS))
             {
-                SigSnvLoader snvLoader = new SigSnvLoader(config.Filters, config.SampleIds);
+                SigSnvLoader snvLoader = new SigSnvLoader(config.Filters);
+                snvLoader.setSampleIds(config.SampleIds);
 
                 if(!config.PositionBucketSizes.isEmpty())
                     snvLoader.initialisePositionFrequencies(config.OutputDir, config.PositionBucketSizes);

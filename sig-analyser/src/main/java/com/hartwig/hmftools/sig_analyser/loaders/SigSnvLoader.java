@@ -31,10 +31,10 @@ public class SigSnvLoader
 
     private static final Logger LOGGER = LogManager.getLogger(SigSnvLoader.class);
 
-    public SigSnvLoader(final VariantFilters filters, final List<String> sampleIds)
+    public SigSnvLoader(final VariantFilters filters)
     {
         mFilters = filters;
-        mSampleIds = sampleIds;
+        mSampleIds = Lists.newArrayList();
 
         mBucketStringToIndex = Maps.newHashMap();
         buildBucketMap();
@@ -42,8 +42,15 @@ public class SigSnvLoader
         mPositionFrequencies = Lists.newArrayList();
     }
 
+    public void setSampleIds(final List<String> sampleIds)
+    {
+        mSampleIds.clear();
+        mSampleIds.addAll(sampleIds);
+    }
+
     public void initialisePositionFrequencies(final String outputDir, final List<Integer> bucketSizes)
     {
+        mPositionFrequencies.clear();
         bucketSizes.forEach(x -> mPositionFrequencies.add(new PositionFrequencies(outputDir, x)));
     }
 
@@ -94,7 +101,7 @@ public class SigSnvLoader
     {
         mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
-        LOGGER.info("retrieving SNV data for {} samples", mSampleIds.size());
+        LOGGER.debug("retrieving SNV data for {} samples", mSampleIds.size());
 
         for(int sampleIndex = 0; sampleIndex < mSampleIds.size(); ++sampleIndex)
         {
