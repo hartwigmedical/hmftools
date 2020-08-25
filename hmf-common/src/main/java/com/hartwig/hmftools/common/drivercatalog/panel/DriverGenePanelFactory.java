@@ -18,6 +18,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class DriverGenePanelFactory {
 
+    @Deprecated
+    public DriverGenePanel create() {
+        return create(builtIn());
+    }
+
     @NotNull
     private static List<DriverGene> builtIn() {
         final InputStream inputStream = DriverGenePanel.class.getResourceAsStream("/drivercatalog/DriverGenePanel.tsv");
@@ -27,11 +32,8 @@ public class DriverGenePanelFactory {
                 .collect(Collectors.toList());
     }
 
-    @Deprecated
-    public DriverGenePanel create() {
-        return create(builtIn());
-    }
 
+    @NotNull
     public static DriverGenePanel empty() {
         return create(Collections.emptyList());
     }
@@ -43,7 +45,6 @@ public class DriverGenePanelFactory {
 
     @NotNull
     public static DriverGenePanel create(final List<DriverGene> genes) {
-
         final Set<String> tsGenes = genes.stream()
                 .filter(x -> x.likelihoodType().equals(DriverCategory.TSG) && x.reportVariant())
                 .map(DriverGene::gene)
@@ -67,5 +68,4 @@ public class DriverGenePanelFactory {
                 .deletionBandMap(deletionBandMap)
                 .build();
     }
-
 }
