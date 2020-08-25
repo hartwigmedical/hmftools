@@ -190,6 +190,11 @@ public class SampleFitter
             sampleContribs.setCol(i, sigAllocs);
 
             processSampleResults(sampleId, sampleCounts, sampleTotal, sigAllocs);
+
+            if(i > 0 && (i % 100) == 0)
+            {
+                SIG_LOGGER.info("processed {} samples", i);
+            }
         }
     }
 

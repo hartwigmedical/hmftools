@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -108,7 +109,7 @@ public class SigSnvLoader
             String sampleId = mSampleIds.get(sampleIndex);
             final List<SomaticVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
 
-            LOGGER.info("sample({}:{}) processing {} variants", sampleIndex, sampleId, variants.size());
+            LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
 
             processSampleVariants(sampleId, variants, sampleIndex);
 
@@ -120,6 +121,12 @@ public class SigSnvLoader
                     positionFrequencies.clear();
                 }
             }
+
+            if(sampleIndex > 0 && (sampleIndex % 100) == 0)
+            {
+                SIG_LOGGER.info("processed {} samples", sampleIndex);
+            }
+
         }
 
         if(writePosFreqData)
