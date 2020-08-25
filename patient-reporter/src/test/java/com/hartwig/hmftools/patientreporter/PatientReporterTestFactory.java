@@ -96,6 +96,7 @@ public final class PatientReporterTestFactory {
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .recovered(false)
+                .reported(false)
                 .adjustedCopyNumber(0)
                 .adjustedVAF(0)
                 .minorAlleleCopyNumber(0)

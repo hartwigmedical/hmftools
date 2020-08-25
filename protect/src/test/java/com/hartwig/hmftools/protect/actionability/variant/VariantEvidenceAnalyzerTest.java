@@ -101,6 +101,7 @@ public class VariantEvidenceAnalyzerTest {
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .recovered(false)
+                .reported(false)
                 .adjustedCopyNumber(0D)
                 .adjustedVAF(0D)
                 .minorAlleleCopyNumber(0D)

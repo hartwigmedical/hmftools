@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED;
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED_FLAG;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,7 +114,7 @@ public class SomaticStream {
                     tumorMutationalLoad.accept(somatic);
                     boolean reported = drivers.add(somatic);
                     if (reported) {
-                        x.getCommonInfo().putAttribute(REPORTED, true);
+                        x.getCommonInfo().putAttribute(REPORTED_FLAG, true);
                     }
                 });
 

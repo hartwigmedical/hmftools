@@ -58,6 +58,8 @@ public interface SomaticVariant extends Variant {
 
     boolean biallelic();
 
+    boolean reported();
+
     @NotNull
     GermlineStatus germlineStatus();
 

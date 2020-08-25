@@ -9,7 +9,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SomaticVariantHeader {
 
-    public static final String REPORTED = "REPORTED";
+    public static final String REPORTED_FLAG = "REPORTED";
     public static final String PURPLE_AF_INFO = "PURPLE_AF";
     public static final String PURPLE_CN_INFO = "PURPLE_CN";
     public static final String PURPLE_BIALLELIC_FLAG = "BIALLELIC";
@@ -38,7 +38,7 @@ public class SomaticVariantHeader {
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1,  VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_GERMLINE_INFO, 1, VCFHeaderLineType.String, PURPLE_GERMLINE_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
 
         return template;
     }

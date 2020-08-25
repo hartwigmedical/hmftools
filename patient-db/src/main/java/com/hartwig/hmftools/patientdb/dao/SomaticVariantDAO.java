@@ -175,6 +175,7 @@ class SomaticVariantDAO {
                     .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
                     .variantCopyNumber(record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER))
                     .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
+                    .reported(byteToBoolean(record.getValue(SOMATICVARIANT.REPORTED)))
                     .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
                     .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
                     .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
@@ -226,8 +227,7 @@ class SomaticVariantDAO {
                 SOMATICVARIANT.ALT,
                 SOMATICVARIANT.GENE,
                 SOMATICVARIANT.GENESEFFECTED,
-                SOMATICVARIANT.COSMICID,
-                SOMATICVARIANT.DBSNPID,
+                SOMATICVARIANT.REPORTED,
                 SOMATICVARIANT.WORSTEFFECT,
                 SOMATICVARIANT.WORSTCODINGEFFECT,
                 SOMATICVARIANT.WORSTEFFECTTRANSCRIPT,
@@ -277,8 +277,7 @@ class SomaticVariantDAO {
                 variant.alt(),
                 variant.gene(),
                 variant.genesAffected(),
-                Strings.EMPTY,
-                Strings.EMPTY,
+                variant.reported(),
                 variant.worstEffect(),
                 variant.worstCodingEffect() != CodingEffect.UNDEFINED ? variant.worstCodingEffect() : Strings.EMPTY,
                 variant.worstEffectTranscript(),

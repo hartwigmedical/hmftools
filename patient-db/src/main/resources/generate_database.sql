@@ -276,8 +276,6 @@ CREATE TABLE somaticVariant
     alt varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
     genesEffected int not null,
-    cosmicId varchar(255) NOT NULL, #TODO: REMOVE
-    dbsnpId varchar(255) NOT NULL,  #TODO: REMOVE
     worstEffectTranscript varchar(255) NOT NULL,
     worstEffect varchar(255) NOT NULL,
     worstCodingEffect varchar(255) NOT NULL,
@@ -311,6 +309,7 @@ CREATE TABLE somaticVariant
     localRealignmentSet int,
     phasedInframeIndel int,
     qual double precision not null,
+    reported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),
