@@ -64,8 +64,8 @@ public abstract class DriverGenePanel {
         return null;
     }
 
+    @NotNull
     private Set<String> targets(Predicate<DriverGene> filter) {
         return driverGenes().stream().filter(filter).map(DriverGene::gene).collect(Collectors.toSet());
     }
-
 }

@@ -13,10 +13,14 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DriverGeneFile {
+public final class DriverGeneFile {
 
     private static final String DELIMITER = "\t";
 
+    private DriverGeneFile() {
+    }
+
+    @NotNull
     public static List<DriverGene> read(@NotNull final String filename) throws IOException {
         return Files.readAllLines(new File(filename).toPath())
                 .stream()
@@ -42,7 +46,7 @@ public class DriverGeneFile {
     }
 
     @NotNull
-    private static String toString(final DriverGene gene) {
+    private static String toString(@NotNull final DriverGene gene) {
         return new StringJoiner(DELIMITER).add(gene.gene())
                 .add(gene.deletionBand())
                 .add(String.valueOf(gene.reportMissenseAndInframe()))
@@ -86,5 +90,4 @@ public class DriverGeneFile {
         Collections.sort(sorted);
         Files.write(new File(filename).toPath(), toLines(sorted));
     }
-
 }
