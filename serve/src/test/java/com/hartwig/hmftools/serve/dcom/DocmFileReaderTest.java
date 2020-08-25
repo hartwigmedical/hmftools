@@ -9,13 +9,13 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class DcomFileReaderTest {
+public class DocmFileReaderTest {
 
     private static final String EXAMPLE_TSV = Resources.getResource("dcom/example.tsv").getPath();
 
     @Test
     public void canReadDcomInputFile() throws IOException {
-        List<DcomEntry> entries = DcomFileReader.readDcomFile(EXAMPLE_TSV);
+        List<DocmEntry> entries = DocmFileReader.readDcomFile(EXAMPLE_TSV);
 
         assertEquals(2, entries.size());
 

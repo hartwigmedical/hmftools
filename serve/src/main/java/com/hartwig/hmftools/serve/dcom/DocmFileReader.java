@@ -9,29 +9,29 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DcomFileReader {
+public final class DocmFileReader {
 
     private static final String DELIMITER = "\t";
 
-    private DcomFileReader() {
+    private DocmFileReader() {
     }
 
     @NotNull
-    public static List<DcomEntry> readDcomFile(@NotNull String fileName) throws IOException {
+    public static List<DocmEntry> readDcomFile(@NotNull String fileName) throws IOException {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
     @NotNull
-    private static List<DcomEntry> fromLines(@NotNull List<String> lines) {
-        return lines.stream().skip(1).map(DcomFileReader::fromLine).collect(toList());
+    private static List<DocmEntry> fromLines(@NotNull List<String> lines) {
+        return lines.stream().skip(1).map(DocmFileReader::fromLine).collect(toList());
     }
 
     @NotNull
-    private static DcomEntry fromLine(@NotNull String line) {
+    private static DocmEntry fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
 
         String hgvs = values[0];
         String transcript = hgvs.substring(0, hgvs.indexOf(":"));
-        return ImmutableDcomEntry.builder().transcript(transcript).gene(values[7]).proteinImpact(values[9]).build();
+        return ImmutableDocmEntry.builder().transcript(transcript).gene(values[7]).proteinImpact(values[9]).build();
     }
 }
