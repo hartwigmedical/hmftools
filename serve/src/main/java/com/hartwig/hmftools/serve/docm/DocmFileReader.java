@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.dcom;
+package com.hartwig.hmftools.serve.docm;
 
 import static java.util.stream.Collectors.toList;
 

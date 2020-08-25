@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.dcom;
+package com.hartwig.hmftools.serve.docm;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.dcom;
+package com.hartwig.hmftools.serve.docm;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class DocmFileReaderTest {
 
-    private static final String EXAMPLE_TSV = Resources.getResource("dcom/example.tsv").getPath();
+    private static final String EXAMPLE_TSV = Resources.getResource("docm/example.tsv").getPath();
 
     @Test
     public void canReadDcomInputFile() throws IOException {
