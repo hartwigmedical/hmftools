@@ -1002,6 +1002,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Added `REPORTED` flag to any variants that are eligible for the driver catalog
 - [2.45](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.45) 
   - Sunrise plot shows relative score
   - Minor cosmetic changes to plots

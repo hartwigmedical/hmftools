@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -110,7 +112,10 @@ public class SomaticStream {
         final Consumer<VariantContext> driverConsumer =
                 x -> somaticVariantFactory.createVariant(commonConfig.tumorSample(), x).ifPresent(somatic -> {
                     tumorMutationalLoad.accept(somatic);
-                    drivers.add(somatic);
+                    boolean reported = drivers.add(somatic);
+                    if (reported) {
+                        x.getCommonInfo().putAttribute(REPORTED, true);
+                    }
                 });
 
         if (enabled) {
@@ -121,7 +126,7 @@ public class SomaticStream {
                             .build()) {
 
                 final Consumer<VariantContext> consumer =
-                        microsatelliteIndels.andThen(writer::add).andThen(driverConsumer).andThen(rChartData);
+                        microsatelliteIndels.andThen(driverConsumer).andThen(writer::add).andThen(rChartData);
 
                 final VariantContextEnrichmentPurple enricher = new VariantContextEnrichmentPurple(driverCatalogConfig.enabled(),
                         somaticConfig.clonalityMaxPloidy(),
