@@ -27,7 +27,7 @@ public class TransvarTestApplication {
 
         String gene = "APC";
         String transcript = null;
-        String proteinImpact = "Q1303*";
+        String proteinImpact = "Q1303fs";
 
         extractAndPrintHotspots(transvar, gene, transcript, proteinImpact);
     }

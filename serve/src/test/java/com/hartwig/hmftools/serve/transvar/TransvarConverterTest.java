@@ -2,12 +2,14 @@ package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDuplication;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarFrameshift;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarSnvMnv;
@@ -253,6 +255,22 @@ public class TransvarConverterTest {
         TransvarDuplication duplication2 = (TransvarDuplication) record2.annotation();
 
         assertEquals(3, duplication2.duplicatedBaseCount());
+    }
+
+    @Test
+    public void canConvertFrameshiftToRecord() {
+        String line = "APC:p.Q1303fs\tENST00000457016 (protein_coding)\tAPC\t+\tchr5:g.(112175197_112175198)/c.(3907_3906)/p.Q1303fs\t"
+                + "inside_[cds_in_exon_16]\tCSQN=Frameshift;imprecise;aliases=ENSP00000413133;source=Ensembl";
+
+        TransvarRecord record = TransvarConverter.toTransvarRecord(line);
+
+        assertEquals("ENST00000457016", record.transcript());
+        assertEquals("5", record.chromosome());
+        assertEquals(112175197, record.gdnaPosition());
+        assertFalse(record.variantSpanMultipleExons());
+
+        TransvarFrameshift frameshift = (TransvarFrameshift) record.annotation();
+        assertNotNull(frameshift);
     }
 
     @Test
