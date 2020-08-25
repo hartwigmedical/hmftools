@@ -16,6 +16,6 @@ public abstract class DocmEntry {
     public abstract String transcript();
 
     @NotNull
-    public abstract String proteinImpact();
+    public abstract String proteinAnnotation();
 
 }

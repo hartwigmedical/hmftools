@@ -21,10 +21,10 @@ public class DocmFileReaderTest {
 
         assertEquals("MTOR", entries.get(0).gene());
         assertEquals("ENST00000361445", entries.get(0).transcript());
-        assertEquals("p.R2505P", entries.get(0).proteinImpact());
+        assertEquals("R2505P", entries.get(0).proteinAnnotation());
 
         assertEquals("BTK", entries.get(1).gene());
         assertEquals("ENST00000372880", entries.get(1).transcript());
-        assertEquals("p.E41K", entries.get(1).proteinImpact());
+        assertEquals("E41K", entries.get(1).proteinAnnotation());
     }
 }

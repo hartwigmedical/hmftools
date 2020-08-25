@@ -32,6 +32,6 @@ public final class DocmFileReader {
 
         String hgvs = values[0];
         String transcript = hgvs.substring(0, hgvs.indexOf(":"));
-        return ImmutableDocmEntry.builder().transcript(transcript).gene(values[7]).proteinImpact(values[9]).build();
+        return ImmutableDocmEntry.builder().transcript(transcript).gene(values[7]).proteinAnnotation(values[9].substring(2)).build();
     }
 }
