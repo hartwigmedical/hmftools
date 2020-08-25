@@ -986,4 +986,21 @@ CREATE TABLE amberSample
     PRIMARY KEY (sampleId)
 );
 
+DROP TABLE IF EXISTS driverGenePanel;
+CREATE TABLE driverGenePanel
+(
+    modified DATETIME NOT NULL,
+    gene varchar(255) NOT NULL,
+    deletionBand varchar(255) NOT NULL,
+    reportMissense BOOLEAN NOT NULL,
+    reportNonsense BOOLEAN NOT NULL,
+    reportSplice BOOLEAN NOT NULL,
+    reportDeletion BOOLEAN NOT NULL,
+    reportDisruption BOOLEAN NOT NULL,
+    reportAmplification BOOLEAN NOT NULL,
+    reportHotspot BOOLEAN NOT NULL,
+    likelihoodType varchar(255) NOT NULL,
+    PRIMARY KEY (gene)
+);
+
 SET FOREIGN_KEY_CHECKS = 1;

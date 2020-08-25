@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
@@ -104,6 +105,8 @@ public class DatabaseAccess implements AutoCloseable {
     private final ChordDAO chordDAO;
     @NotNull
     private final ClinicalEvidenceDAO clinicalEvidenceDAO;
+    @NotNull
+    private final DriverGenePanelDAO driverGenePanelDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
@@ -132,6 +135,7 @@ public class DatabaseAccess implements AutoCloseable {
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
         clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
+        driverGenePanelDAO = new DriverGenePanelDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(final Options options) {
@@ -418,6 +422,10 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeSampleClinicalData(@NotNull String patientIdentifier, boolean blacklisted, @NotNull List<SampleData> samples) {
         clinicalDAO.writeSampleClinicalData(patientIdentifier, blacklisted, samples);
+    }
+
+    public void writeGenePanel(DriverGenePanel panel) {
+        driverGenePanelDAO.writePanel(panel);
     }
 
     public void writeDrupEcrf(@NotNull EcrfModel model, @NotNull Set<String> sequencedPatients) {
