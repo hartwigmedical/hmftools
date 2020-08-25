@@ -170,10 +170,13 @@ Argument | Description
 ---|---
 driver_catalog |  Enables the driver catalog
 hotspots | VCF of hotspot locations. Mandatory if driver catalog enabled.
+driver_gene_panel | TSV of driver genes. Mandatory if driver catalog enabled.
 
 The hotspot VCF used by HMF (KnownHotspots.hg19.vcf.gz) is available to download from [HMFTools-Resources > Sage2](https://resources.hartwigmedicalfoundation.nl). 
 A HG38 equivalent is also available. The file is used to re-annotate all somatic variants with a HOTSPOT or NEAR_HOTSPOT flag if they are on or within 5 bases of a hotspot. 
 Hotspots are assigned a driver likelihood of 1. 
+
+The driver gene panel is also available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl)
 
 Note that generating the driver catalog for SNVs assumes that the VCF has been annotated with SNPEFF.
 
@@ -1002,8 +1005,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
-  - Added `REPORTED` flag to any variants that are eligible for the driver catalog
+- [2.46](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.46) 
+  - Configurable driver gene panel
+  - Added `REPORTED` flag to any variants that are eligible for the driver catalog. Requires [patch](../patient-db/src/main/resources/patches/patientdb3.45_to_3.46_migration.sql) to load to data base.
 - [2.45](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.45) 
   - Sunrise plot shows relative score
   - Minor cosmetic changes to plots
