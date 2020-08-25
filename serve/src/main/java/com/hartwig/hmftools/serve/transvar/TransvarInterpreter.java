@@ -12,6 +12,7 @@ import com.hartwig.hmftools.serve.transvar.datamodel.TransvarAnnotation;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarComplexInsertDelete;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDeletion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarDuplication;
+import com.hartwig.hmftools.serve.transvar.datamodel.TransvarFrameshift;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarSnvMnv;
@@ -26,6 +27,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 class TransvarInterpreter {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarInterpreter.class);
+
+    private static final List<String> BASES = Lists.newArrayList("G", "A", "T", "C");
 
     @NotNull
     private final IndexedFastaSequenceFile refGenome;
@@ -52,11 +55,51 @@ class TransvarInterpreter {
             return convertDeletionToHotspots(record, (TransvarDeletion) annotation);
         } else if (annotation instanceof TransvarComplexInsertDelete) {
             return convertComplexInsertDeleteToHotspots(record, (TransvarComplexInsertDelete) annotation, strand);
+        } else if (annotation instanceof TransvarFrameshift) {
+            return convertFrameshift(record, strand);
         } else {
             LOGGER.warn("Unrecognized annotation type in transvar record: '{}'. Skipping interpretation.",
                     annotation.getClass().toString());
             return Lists.newArrayList();
         }
+    }
+
+    @NotNull
+    private List<VariantHotspot> convertFrameshift(@NotNull TransvarRecord record, @NotNull Strand strand) {
+        // When considering reverse strand, we need to consider the 3 bases in front of position.
+        long position = strand == Strand.FORWARD ? record.gdnaPosition() : record.gdnaPosition() - 3;
+
+        List<VariantHotspot> hotspots = Lists.newArrayList();
+        ImmutableVariantHotspotImpl.Builder builder = ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome());
+
+        // Add 12 single base insertions
+        for (int i = 0; i < 3; i++) {
+            long pos = position + i - 1;
+            String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
+            builder.position(pos).ref(ref);
+
+            for (String base : BASES) {
+                hotspots.add(builder.alt(ref + base).build());
+            }
+        }
+
+        // Add the 3 single base deletes
+        for (int i = 0; i < 3; i++) {
+            long pos = position + i - 1;
+            String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos + 1).getBaseString();
+            String alt = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
+            hotspots.add(builder.position(pos).ref(ref).alt(alt).build());
+        }
+
+        // Add the 2 double base deletes
+        for (int i = 0; i < 2; i++) {
+            long pos = position + i - 1;
+            String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos + 2).getBaseString();
+            String alt = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
+            hotspots.add(builder.position(pos).ref(ref).alt(alt).build());
+        }
+
+        return hotspots;
     }
 
     @NotNull
