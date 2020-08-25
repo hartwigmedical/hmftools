@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
@@ -36,7 +37,12 @@ public class DriverGenePanelFactory {
     }
 
     @NotNull
-    public DriverGenePanel create(final List<DriverGene> genes) {
+    public static DriverGenePanel buildFromTsv(@NotNull String driverGenePanelFile) throws IOException {
+        return create(DriverGeneFile.read(driverGenePanelFile));
+    }
+
+    @NotNull
+    public static DriverGenePanel create(final List<DriverGene> genes) {
 
         final Set<String> tsGenes = genes.stream()
                 .filter(x -> x.likelihoodType().equals(DriverCategory.TSG) && x.reportVariant())

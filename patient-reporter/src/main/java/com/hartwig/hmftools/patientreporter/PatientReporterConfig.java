@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter;
 
+import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+
 import java.io.File;
 import java.nio.file.Files;
 
@@ -66,6 +69,7 @@ public interface PatientReporterConfig {
     @NotNull
     static Options createOptions() {
         Options options = new Options();
+        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which we are generating a report.");
         options.addOption(REF_SAMPLE_BARCODE,
                 true,
@@ -192,6 +196,9 @@ public interface PatientReporterConfig {
     @NotNull
     String sampleSummaryTsv();
 
+    @NotNull
+    String driverGenePanelTsv();
+
     @Nullable
     String comments();
 
@@ -262,6 +269,7 @@ public interface PatientReporterConfig {
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
+                .driverGenePanelTsv(nonOptionalFile(cmd, DRIVER_GENE_PANEL_OPTION))
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
                 .purplePurityTsv(purplePurityTsv)

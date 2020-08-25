@@ -2,10 +2,8 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -158,7 +156,8 @@ public class PatientReporterApplication {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.knowledgebaseDir(),
                 config.germlineGenesCsv(),
-                config.sampleSummaryTsv());
+                config.sampleSummaryTsv(),
+                config.driverGenePanelTsv());
     }
 
     @NotNull

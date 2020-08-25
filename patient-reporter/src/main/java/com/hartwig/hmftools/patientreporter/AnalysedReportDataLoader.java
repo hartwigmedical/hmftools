@@ -19,12 +19,12 @@ final class AnalysedReportDataLoader {
 
     @NotNull
     static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String knowledgebaseDir,
-            @NotNull String germlineGenesCsv, @NotNull String sampleSummaryTsv) throws IOException {
+            @NotNull String germlineGenesCsv, @NotNull String sampleSummaryTsv, @NotNull String driverGenePanelFile) throws IOException {
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
-        DriverGenePanel genePanel = new DriverGenePanelFactory().create(); //TODO: Support specifying this file!
+        DriverGenePanel genePanel = DriverGenePanelFactory.buildFromTsv(driverGenePanelFile);
 
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)
