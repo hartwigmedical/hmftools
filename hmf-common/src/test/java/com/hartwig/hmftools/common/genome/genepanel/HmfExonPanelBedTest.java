@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
@@ -21,7 +21,7 @@ public class HmfExonPanelBedTest {
 
     @Test
     public void testReverseTranscript() {
-        final DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+        final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
         final HmfTranscriptRegion transcript = HmfGenePanelSupplier.allGenesMap37().get("TP53");
         HmfExonRegion firstExon = transcript.exome().get(0);
         HmfExonRegion secondExon = transcript.exome().get(1);
@@ -50,7 +50,8 @@ public class HmfExonPanelBedTest {
     @Ignore
     public void write19() throws IOException {
         String filename = "/Users/jon/hmf/resources/ActionableCodingPanel.hg19.bed";
-        HmfExonPanelBed.write19File(filename);
+        String genePanel = "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/drivercatalog/DriverGenePanel.tsv";
+        HmfExonPanelBed.write19File(filename, genePanel);
         BEDFileLoader.fromBedFile(filename);
     }
 
@@ -58,7 +59,8 @@ public class HmfExonPanelBedTest {
     @Ignore
     public void write38() throws IOException {
         String filename = "/Users/jon/hmf/resources/ActionableCodingPanel.hg38.bed";
-        HmfExonPanelBed.write38File(filename);
+        String genePanel = "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/drivercatalog/DriverGenePanel.tsv";
+        HmfExonPanelBed.write38File(filename, genePanel);
         BEDFileLoader.fromBedFile(filename);
     }
 }

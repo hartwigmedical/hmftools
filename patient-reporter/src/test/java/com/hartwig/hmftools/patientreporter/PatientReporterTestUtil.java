@@ -51,7 +51,7 @@ public final class PatientReporterTestUtil {
         try {
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
-            DriverGenePanel panel = new DriverGenePanelFactory().create();
+            DriverGenePanel panel = DriverGenePanelFactory.empty();
 
             return ImmutableAnalysedReportData.builder()
                     .from(testReportData())

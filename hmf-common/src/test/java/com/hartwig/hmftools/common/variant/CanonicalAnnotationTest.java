@@ -9,7 +9,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
@@ -25,7 +25,7 @@ public class CanonicalAnnotationTest {
     private static final String CDKN2A = "ENST00000498124";
     private static final String CDKN2A_P14ARF = "ENST00000361570";
     private static final String CDKN2A_OTHER = "ENST00000000000";
-    private final DriverGenePanel genePanel = new DriverGenePanelFactory().create();
+    private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
     private final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create37();
 
     @Test

@@ -32,7 +32,7 @@ public class DriverGenePanelFactory {
         return create(builtIn());
     }
 
-    public DriverGenePanel empty() {
+    public static DriverGenePanel empty() {
         return create(Collections.emptyList());
     }
 
