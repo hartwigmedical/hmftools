@@ -87,7 +87,7 @@ public class HotspotExtractor {
     }
 
     @VisibleForTesting
-    static boolean isResolvableProteinAnnotation(@NotNull String feature) {
+    public static boolean isResolvableProteinAnnotation(@NotNull String feature) {
         try {
             if (isFrameshift(feature)) {
                 return true;
