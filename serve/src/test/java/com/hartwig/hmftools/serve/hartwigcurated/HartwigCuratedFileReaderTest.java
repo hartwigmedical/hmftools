@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.serve.hartwigcohort.HartwigCohortEntry;
-import com.hartwig.hmftools.serve.hartwigcohort.HartwigCohortFileReader;
 
 import org.junit.Test;
 
@@ -17,7 +15,7 @@ public class HartwigCuratedFileReaderTest {
 
     @Test
     public void canReadHartwigCohortFile() throws IOException {
-        List<HartwigCohortEntry> entries = HartwigCohortFileReader.readCohortFile(EXAMPLE_TSV);
+        List<HartwigCuratedEntry> entries = HartwigCuratedFileReader.readCuratedFile(EXAMPLE_TSV);
 
         assertEquals(2, entries.size());
 
