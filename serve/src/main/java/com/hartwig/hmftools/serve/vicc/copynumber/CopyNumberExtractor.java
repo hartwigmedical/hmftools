@@ -44,7 +44,7 @@ public class CopyNumberExtractor {
             "OVEREXPRESSION");
 
     private static final Set<String> DELETIONS =
-            Sets.newHashSet("Deletion", "deletion", "DELETION", "del", "undexpression", "dec exp", "UNDEREXPRESSION");
+            Sets.newHashSet("Deletion", "deletion", "DELETION", "del", "undexpression", "dec exp", "UNDEREXPRESSION", "loss");
 
     @NotNull
     public Set<String> uniqueAmps() {
