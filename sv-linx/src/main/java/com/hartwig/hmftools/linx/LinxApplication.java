@@ -124,7 +124,7 @@ public class LinxApplication
         sampleAnalyser.setCnDataLoader(cnDataLoader);
 
         DriverGeneAnnotator driverGeneAnnotator = null;
-        boolean checkDrivers = cmd.hasOption(CHECK_DRIVERS);
+        boolean checkDrivers = cmd.hasOption(CHECK_DRIVERS) && config.DriverGenes != null;
 
         FusionDisruptionAnalyser fusionAnalyser = null;
         boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
@@ -147,14 +147,14 @@ public class LinxApplication
                 if(!checkFusions && checkDrivers)
                 {
                     // only load a subset of genes
-                    DriverGenePanel genePanel = new DriverGenePanelFactory().create();
-
                     ensemblLoadOk = ensemblDataCache.load(true);
 
                     if(ensemblLoadOk)
                     {
-                        final List<String> geneIds = genePanel.driverGenes().stream()
-                                .map(x -> ensemblDataCache.getGeneDataByName(x.gene()).GeneId).collect(Collectors.toList());
+                        final List<String> geneIds = config.DriverGenes.stream()
+                                .map(x -> ensemblDataCache.getGeneDataByName(x.gene()))
+                                .filter(x -> x != null)
+                                .map(x -> x.GeneId).collect(Collectors.toList());
 
                         ensemblLoadOk &= ensemblDataCache.loadTranscriptData(geneIds);
                     }

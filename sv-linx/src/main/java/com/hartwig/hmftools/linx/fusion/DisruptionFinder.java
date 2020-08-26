@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -35,6 +36,7 @@ import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
 import com.hartwig.hmftools.common.fusion.ReportableDisruption;
 import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -47,7 +49,7 @@ import org.apache.commons.cli.CommandLine;
 public class DisruptionFinder
 {
     private final EnsemblDataCache mGeneTransCache;
-    private final Set<String> mDisruptionGeneIds;
+    private final List<String> mDisruptionGeneIds;
 
     private final List<Transcript> mDisruptions;
     private final Map<Transcript,String> mRemovedDisruptions; // cached for diagnostic purposes
@@ -57,34 +59,26 @@ public class DisruptionFinder
 
     public static final int MAX_NON_DISRUPTED_CHAIN_LENGTH = 5000;
 
-    public DisruptionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache, final String outputDir)
+    public DisruptionFinder(final LinxConfig config, final EnsemblDataCache geneTransCache)
     {
-        //TODO: Make this configurable
-        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
-
         mGeneTransCache = geneTransCache;
-        mDisruptionGeneIds = Sets.newHashSet();
-
-        initialiseTsgDriverGenes(genePanel.tsGenes());
+        mDisruptionGeneIds = disruptionGeneIds(config.DriverGenes, geneTransCache);
 
         mDisruptions = Lists.newArrayList();
         mRemovedDisruptions = Maps.newHashMap();
 
-        mOutputDir = outputDir;
+        mOutputDir = config.OutputDataPath;
         mWriter = null;
     }
 
-    private void initialiseTsgDriverGenes(Set<String> tsGenes)
+    public static final List<String> disruptionGeneIds(final List<DriverGene> driverGenes, final EnsemblDataCache geneTransCache)
     {
-        for (String gene : tsGenes)
-        {
-            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(gene);
-
-            if(geneData != null)
-            {
-                mDisruptionGeneIds.add(geneData.GeneId);
-            }
-        }
+        return driverGenes.stream()
+                .filter(x -> x.reportDisruption())
+                .map(x -> geneTransCache.getGeneDataByName(x.gene()))
+                .filter(x -> x != null)
+                .map(x -> x.GeneId)
+                .collect(Collectors.toList());
     }
 
     public final List<Transcript> getDisruptions() { return mDisruptions; }

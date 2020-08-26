@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExo
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createDriverGene;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
@@ -52,6 +53,8 @@ public class HomDisruptionsTest
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
+
+        tester.Config.DriverGenes.add(createDriverGene(geneName));
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
@@ -124,6 +127,8 @@ public class HomDisruptionsTest
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
+
+        tester.Config.DriverGenes.add(createDriverGene(geneName));
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
@@ -220,6 +225,8 @@ public class HomDisruptionsTest
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
+
+        tester.Config.DriverGenes.add(createDriverGene(geneName));
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 

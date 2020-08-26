@@ -40,20 +40,10 @@ public class DeletionDrivers
     private final DriverDataCache mDataCache;
     private final List<String> mReportableDelGeneIds;
 
-    public DeletionDrivers(final DriverGenePanel genePanel, final DriverDataCache dataCache)
+    public DeletionDrivers(final List<String> disruptionGeneIds, final DriverDataCache dataCache)
     {
         mDataCache = dataCache;
-        mReportableDelGeneIds = Lists.newArrayList();
-
-        Set<String> reportableDelGenes = genePanel.deletionTargets();
-
-        for(String geneName : reportableDelGenes)
-        {
-            final EnsemblGeneData geneData = mDataCache.GeneTransCache.getGeneDataByName(geneName);
-
-            if(geneData != null)
-                mReportableDelGeneIds.add(geneData.GeneId);
-        }
+        mReportableDelGeneIds = disruptionGeneIds;
     }
 
     public void annotateDeleteEvent(final DriverGeneData dgData)

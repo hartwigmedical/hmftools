@@ -109,7 +109,7 @@ public class FusionDisruptionAnalyser
         mGeneDataCache = ensemblDataCache;
         mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
         mFusionWriter = new FusionWriter(mOutputDir);
-        mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache, mOutputDir);
+        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache);
         mVisWriter = writer;
 
         mNeoEpitopeFinder = null;

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
+import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.disruptionGeneIds;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_DRIVER;
 
@@ -62,14 +63,11 @@ public class DriverGeneAnnotator
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private VisualiserWriter mVisWriter;
 
-    public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTranscriptCollection,
+    public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache,
             final LinxConfig config, final CnDataLoader cnDataLoader)
     {
-        //TODO: Make this configurable
-        DriverGenePanel genePanel = new DriverGenePanelFactory().create();
-
         mDbAccess = dbAccess;
-        mGeneTransCache = geneTranscriptCollection;
+        mGeneTransCache = geneTransCache;
         mConfig = config;
 
         mDriverOutputList = Lists.newArrayList();
@@ -81,7 +79,7 @@ public class DriverGeneAnnotator
 
         mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
-        mDelDrivers = new DeletionDrivers(genePanel, mDataCache);
+        mDelDrivers = new DeletionDrivers(disruptionGeneIds(config.DriverGenes, geneTransCache), mDataCache);
 
         mVisWriter = null;
 

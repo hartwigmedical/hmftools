@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.utils;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
@@ -10,6 +11,8 @@ import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIO
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
@@ -140,6 +143,22 @@ public class GeneTestUtils
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, GENE_ID_6, transDataList);
+    }
+
+    public static DriverGene createDriverGene(final String name)
+    {
+        return ImmutableDriverGene.builder()
+                .gene(name)
+                .deletionBand("")
+                .reportMissenseAndInframe(false)
+                .reportNonsenseAndFrameshift(false)
+                .reportSplice(false)
+                .reportDeletion(false)
+                .reportDisruption(true)
+                .reportAmplification(false)
+                .reportHotspot(false)
+                .likelihoodType(TSG)
+                .build();
     }
 
 }

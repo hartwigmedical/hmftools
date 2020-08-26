@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx;
 
+import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -19,6 +20,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cli.DriverGenePanelConfig;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 
@@ -51,6 +55,8 @@ public class LinxConfig
     public final LinxOutput Output;
 
     private final List<String> mSampleIds;
+
+    public final List<DriverGene> DriverGenes;
 
     // config options
     public static final String PURPLE_DATA_DIR = "purple_dir";
@@ -139,9 +145,28 @@ public class LinxConfig
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
 
+        DriverGenes = loadDriverGenes(cmd);
+
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
+    }
+
+    private final List<DriverGene> loadDriverGenes(final CommandLine cmd)
+    {
+        if(DriverGenePanelConfig.isConfigured(cmd))
+        {
+            try
+            {
+                return DriverGenePanelConfig.driverGenePanel(cmd).driverGenes();
+            }
+            catch (IOException e)
+            {
+                LNX_LOGGER.error("invalid driver gene panel file({})", cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
+            }
+        }
+
+        return Lists.newArrayList();
     }
 
     public final List<String> getSampleIds() { return mSampleIds; }
@@ -196,13 +221,14 @@ public class LinxConfig
         LogVerbose = false;
         Output = new LinxOutput();
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
+        DriverGenes = Lists.newArrayList();
     }
 
     public static boolean validConfig(final CommandLine cmd)
     {
         return configPathValid(cmd, OUTPUT_DIR) && configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SV_DATA_DIR)
             && configPathValid(cmd, FRAGILE_SITE_FILE) && configPathValid(cmd, KATAEGIS_FILE) && configPathValid(cmd, LINE_ELEMENT_FILE)
-            && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE)
+            && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE) && configPathValid(cmd, DRIVER_GENE_PANEL_OPTION)
             && configPathValid(cmd, VIRAL_HOSTS_FILE) && configPathValid(cmd, REPLICATION_ORIGINS_FILE) && configPathValid(cmd, INDEL_FILE)
             && FusionDisruptionAnalyser.validConfig(cmd);
     }
@@ -230,6 +256,7 @@ public class LinxConfig
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
         options.addOption(REF_GENOME_VERSION, true, "Ref genom version - accepts HG37 or HG38 (default = HG37)");
+        options.addOption(DRIVER_GENE_PANEL_OPTION, true, "Driver gene panel file");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
         options.addOption(VIRAL_HOSTS_FILE, true, "Viral hosts file");
