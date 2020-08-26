@@ -24,7 +24,7 @@ public class FusionExtractor {
     private static final Set<String> SEARCH_FUSION_PAIRS =
             Sets.newHashSet("Fusion", "Disruptive Inframe Deletion", "Gene Fusion", "EGFRvII");
     private static final Set<String> SEARCH_FUSION_PROMISCUOUS =
-            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION");
+            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "nonsense");
     private static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
     private static final Set<String> INTERNAL_FUSION = Sets.newHashSet("(Partial", "Exon Loss Variant", "Inframe Deletion", "is_deletion");
 
