@@ -32,7 +32,8 @@ public class GeneLevelEventExtractor {
             "Loss Of Heterozygosity",
             "TRUNCATING MUTATION",
             "Truncating Mutations",
-            "mutant", "mut");
+            "mutant",
+            "mut", "gene_only");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
@@ -59,12 +60,11 @@ public class GeneLevelEventExtractor {
         for (Feature feature : viccEntry.features()) {
 
             if (!HotspotExtractor.isResolvableProteinAnnotation(feature.proteinAnnotation())) {
-                if (GENE_LEVEL.contains(feature.biomarkerType()) || GENE_LEVEL.contains(feature.name())) {
+                if (GENE_LEVEL.contains(feature.biomarkerType()) || GENE_LEVEL.contains(feature.name())
+                        || GENE_LEVEL.contains(feature.provenanceRule())) {
                     geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
                 }
             }
-
-
 
             //            if (GENE_ACTIVATION.contains(feature.name()) || GENE_ACTIVATION.contains(feature.biomarkerType()) || GENE_ACTIVATION.contains(
             //                    feature.proteinAnnotation())) {
@@ -73,6 +73,7 @@ public class GeneLevelEventExtractor {
             //                    || GENE_INACTIVATION.contains(feature.provenanceRule()) || GENE_INACTIVATION.contains(feature.proteinAnnotation())) {
             //                geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
             //            }
-        } return geneLevelEventsPerFeature;
+        }
+        return geneLevelEventsPerFeature;
     }
 }
