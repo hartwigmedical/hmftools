@@ -146,10 +146,10 @@ public class GeneRangeExtractor {
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     }
                 } else {
-                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-                            transcriptIdVicc,
-                            canonicalTranscript.transcriptID(),
-                            feature);
+//                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+//                            transcriptIdVicc,
+//                            canonicalTranscript.transcriptID(),
+//                            feature);
                 }
 
             } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
@@ -181,10 +181,10 @@ public class GeneRangeExtractor {
                         LOGGER.warn("Multiple genomic regions known for event {}", feature);
                     }
                 } else {
-                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-                            transcriptIdVicc,
-                            canonicalTranscript.transcriptID(),
-                            feature);
+//                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+//                            transcriptIdVicc,
+//                            canonicalTranscript.transcriptID(),
+//                            feature);
                 }
 
             }
