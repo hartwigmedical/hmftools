@@ -256,28 +256,20 @@ public class TransvarInterpreterTest {
                 baseRecord().gdnaPosition(2).annotation(ImmutableTransvarFrameshift.builder().build()).build();
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
-        assertEquals(17, hotspots.size());
-        assertHotspot(baseHotspot().position(1).ref("G").alt("GG").build(), hotspots.get(0));
-        assertHotspot(baseHotspot().position(1).ref("G").alt("GA").build(), hotspots.get(1));
-        assertHotspot(baseHotspot().position(1).ref("G").alt("GT").build(), hotspots.get(2));
-        assertHotspot(baseHotspot().position(1).ref("G").alt("GC").build(), hotspots.get(3));
+        assertEquals(10, hotspots.size());
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AG").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AA").build(), hotspots.get(1));
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AT").build(), hotspots.get(2));
+        assertHotspot(baseHotspot().position(2).ref("A").alt("AC").build(), hotspots.get(3));
 
-        assertHotspot(baseHotspot().position(2).ref("A").alt("AG").build(), hotspots.get(4));
-        assertHotspot(baseHotspot().position(2).ref("A").alt("AA").build(), hotspots.get(5));
-        assertHotspot(baseHotspot().position(2).ref("A").alt("AT").build(), hotspots.get(6));
-        assertHotspot(baseHotspot().position(2).ref("A").alt("AC").build(), hotspots.get(7));
+        assertHotspot(baseHotspot().position(3).ref("T").alt("TG").build(), hotspots.get(4));
+        assertHotspot(baseHotspot().position(3).ref("T").alt("TA").build(), hotspots.get(5));
+        assertHotspot(baseHotspot().position(3).ref("T").alt("TT").build(), hotspots.get(6));
 
-        assertHotspot(baseHotspot().position(3).ref("T").alt("TG").build(), hotspots.get(8));
-        assertHotspot(baseHotspot().position(3).ref("T").alt("TA").build(), hotspots.get(9));
-        assertHotspot(baseHotspot().position(3).ref("T").alt("TT").build(), hotspots.get(10));
-        assertHotspot(baseHotspot().position(3).ref("T").alt("TC").build(), hotspots.get(11));
+        assertHotspot(baseHotspot().position(2).ref("AT").alt("A").build(), hotspots.get(7));
 
-        assertHotspot(baseHotspot().position(1).ref("GA").alt("G").build(), hotspots.get(12));
-        assertHotspot(baseHotspot().position(2).ref("AT").alt("A").build(), hotspots.get(13));
-        assertHotspot(baseHotspot().position(3).ref("TC").alt("T").build(), hotspots.get(14));
-
-        assertHotspot(baseHotspot().position(1).ref("GAT").alt("G").build(), hotspots.get(15));
-        assertHotspot(baseHotspot().position(2).ref("ATC").alt("A").build(), hotspots.get(16));
+        assertHotspot(baseHotspot().position(2).ref("ATC").alt("A").build(), hotspots.get(8));
+        assertHotspot(baseHotspot().position(3).ref("TCG").alt("T").build(), hotspots.get(9));
     }
 
     private static void assertHotspot(@NotNull VariantHotspot expectedHotspot, @NotNull VariantHotspot actualHotspot) {
