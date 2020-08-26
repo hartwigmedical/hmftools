@@ -32,8 +32,6 @@ public class GeneLevelEventExtractor {
             "TRUNCATING MUTATION",
             "Truncating Mutations");
 
-
-
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
             "pos",
