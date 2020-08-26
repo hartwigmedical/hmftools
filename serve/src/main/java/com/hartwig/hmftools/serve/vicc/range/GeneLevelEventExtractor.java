@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -30,7 +31,8 @@ public class GeneLevelEventExtractor {
             "Loss Of Function Variant",
             "Loss Of Heterozygosity",
             "TRUNCATING MUTATION",
-            "Truncating Mutations");
+            "Truncating Mutations",
+            "mutant", "mut");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
@@ -55,9 +57,14 @@ public class GeneLevelEventExtractor {
         Map<Feature, String> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (GENE_LEVEL.contains(feature.biomarkerType()) || GENE_LEVEL.contains(feature.name())) {
-                geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
+
+            if (!HotspotExtractor.isValidSingleCodonMutation(feature.proteinAnnotation())) {
+                if (GENE_LEVEL.contains(feature.biomarkerType()) || GENE_LEVEL.contains(feature.name())) {
+                    geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
+                }
             }
+
+
 
             //            if (GENE_ACTIVATION.contains(feature.name()) || GENE_ACTIVATION.contains(feature.biomarkerType()) || GENE_ACTIVATION.contains(
             //                    feature.proteinAnnotation())) {
@@ -66,7 +73,6 @@ public class GeneLevelEventExtractor {
             //                    || GENE_INACTIVATION.contains(feature.provenanceRule()) || GENE_INACTIVATION.contains(feature.proteinAnnotation())) {
             //                geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
             //            }
-        }
-        return geneLevelEventsPerFeature;
+        } return geneLevelEventsPerFeature;
     }
 }

@@ -141,7 +141,7 @@ public class HotspotExtractor {
         return isInteger(featureParts[0].substring(1)) && (3 * featureParts[1].length()) <= MAX_INFRAME_BASE_LENGTH;
     }
 
-    private static boolean isValidSingleCodonMutation(@NotNull String feature) {
+    public static boolean isValidSingleCodonMutation(@NotNull String feature) {
         if (feature.contains(HGVS_INSERTION)) {
             // Insertions are only allowed in a range, since we need to know where to insert the sequence exactly.
             return false;
