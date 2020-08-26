@@ -35,6 +35,8 @@ final class CurationFactory {
         // Below is a mutation followed by a frameshift. The FS should be in small letters.
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "M54IFS (c.162_166delGGAGG)"),
                 "M54Ifs (c.162_166delGGAGG)");
+        FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "EGFR", "ENST00000275493", "V769_770insASV"),
+                "V769_D770insASV");
 
         // The below variants don't exist
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "GNAS", "ENST00000371100", "T393C"));

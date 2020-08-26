@@ -329,23 +329,21 @@ public class ViccExtractorTestApplication {
                 for (VariantHotspot hotspot : featureResult.getValue()) {
                     HotspotAnnotation annotation = convertedMap.get(hotspot);
                     if (annotation != null) {
+                        Set<String> newSources = Sets.newHashSet(annotation.sources());
                         if (annotation.sources().contains(entry.source().display())) {
                             checkForDuplicateHotspotOnDifferentProteinAnnotation(entry, annotation, feature);
-
-                            // We try to override transcript in case we got a non-null one.
-                            String bestTranscript = annotation.transcript() == null ? entry.transcriptId() : annotation.transcript();
-                            annotation = new HotspotAnnotation(annotation.sources(),
-                                    annotation.gene(),
-                                    bestTranscript,
-                                    annotation.proteinAnnotation());
-
                         } else {
-                            Set<String> newSources = Sets.newHashSet(annotation.sources());
                             newSources.add(entry.source().display());
-                            String bestTranscript = annotation.transcript() == null ? entry.transcriptId() : annotation.transcript();
-                            annotation =
-                                    new HotspotAnnotation(newSources, annotation.gene(), bestTranscript, annotation.proteinAnnotation());
                         }
+
+                        // Check if we can update transcript. In case we do, keep the protein annotation consistent.
+                        String newTranscript = annotation.transcript();
+                        String newProteinAnnotation = annotation.proteinAnnotation();
+                        if (annotation.transcript() == null) {
+                            newTranscript = entry.transcriptId();
+                            newProteinAnnotation = feature.proteinAnnotation();
+                        }
+                        annotation = new HotspotAnnotation(newSources, annotation.gene(), newTranscript, newProteinAnnotation);
                     } else {
                         annotation = new HotspotAnnotation(Sets.newHashSet(entry.source().display()),
                                 feature.geneSymbol(),
@@ -369,7 +367,8 @@ public class ViccExtractorTestApplication {
             String existingKey =
                     ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
             String newKey = ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), transcript, feature.proteinAnnotation());
-            LOGGER.warn("Hotspot already exists for '{}' under a different annotation. " + "Existing key = '{}'. New key = '{}'",
+            LOGGER.warn(
+                    "Hotspot already exists when trying to add from '{}' under a different annotation. Existing key = '{}'. New key = '{}'",
                     entry.source().display(),
                     existingKey,
                     newKey);
