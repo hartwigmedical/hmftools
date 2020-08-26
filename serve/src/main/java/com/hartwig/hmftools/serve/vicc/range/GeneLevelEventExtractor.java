@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public class GeneLevelEventExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
+    // frameshift will be in event type hotspots
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
             "pos",
