@@ -58,7 +58,7 @@ public class GeneLevelEventExtractor {
 
         for (Feature feature : viccEntry.features()) {
 
-            if (!HotspotExtractor.isValidSingleCodonMutation(feature.proteinAnnotation())) {
+            if (!HotspotExtractor.isResolvableProteinAnnotation(feature.proteinAnnotation())) {
                 if (GENE_LEVEL.contains(feature.biomarkerType()) || GENE_LEVEL.contains(feature.name())) {
                     geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
                 }
