@@ -34,13 +34,13 @@ public final class DriverGeneFile {
         return new StringJoiner(DELIMITER, "", "").
                 add("gene")
                 .add("deletionBand")
-                .add("reportMissenseAndInframe")
-                .add("reportNonsenseAndFrameshift")
+                .add("reportMissense")
+                .add("reportNonsense")
                 .add("reportSplice")
                 .add("reportDeletion")
                 .add("reportDisruption")
                 .add("reportAmplification")
-                .add("reportPromoterHotspots")
+                .add("reportHotspot")
                 .add("likelihoodType")
                 .toString();
     }

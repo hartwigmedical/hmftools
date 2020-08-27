@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +15,12 @@ import org.junit.Test;
 public class AminoAcidFunctionsTest {
 
     private static final Set<String> STOP_CODONS = Sets.newHashSet("TGA", "TAA", "TAG");
+
+    @Test
+    public void canLookupAminoAcidForTrinucleotide() {
+        assertEquals("E", AminoAcidFunctions.findAminoAcidForTrinucleotide("GAA"));
+        assertNull(AminoAcidFunctions.findAminoAcidForTrinucleotide("TGA"));
+    }
 
     @Test
     public void allAminoAcidsAreFoundAndAreUnique() {

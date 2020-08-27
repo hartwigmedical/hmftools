@@ -34,8 +34,13 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("3' EXON DELETION"); //TODO determine to which event?
         FEATURE_KEYWORDS_TO_IGNORE.add("EXPRESSION");
         FEATURE_KEYWORDS_TO_IGNORE.add("WILDTYPE");
+        FEATURE_KEYWORDS_TO_IGNORE.add("WILD TYPE");
         FEATURE_KEYWORDS_TO_IGNORE.add("wild-type");
         FEATURE_KEYWORDS_TO_IGNORE.add("wildtype");
+        FEATURE_KEYWORDS_TO_IGNORE.add("SERUM LEVELS");
+
+        // exon number not exist in the using transcript
+        FEATURE_KEYWORDS_TO_IGNORE.add("NPM1 EXON 12 MUTATION");
 
     }
 
@@ -44,7 +49,7 @@ public final class FeatureIgnoreUtil {
 
     public static boolean canIgnore(@NotNull Feature feature) {
         for (String ignoreKeyword : FEATURE_KEYWORDS_TO_IGNORE) {
-            if (feature.name().contains(ignoreKeyword)) {
+            if (feature.name().contains(ignoreKeyword) || feature.description().contains(ignoreKeyword)) {
                 return true;
             }
         }

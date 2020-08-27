@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.genome.region.Strand;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class AminoAcidFunctions {
 
@@ -69,6 +70,22 @@ public final class AminoAcidFunctions {
         AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("V", Sets.newHashSet("GTA", "GTC", "GTG", "GTT")); // Val
         AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("W", Sets.newHashSet("TGG")); // Trp
         AMINO_ACID_TO_TRINUCLEOTIDES_MAP.put("Y", Sets.newHashSet("TAC", "TAT")); // Tyr
+    }
+
+    @Nullable
+    public static String findAminoAcidForTrinucleotide(@NotNull String trinucleotide) {
+        // This function assumes the trinucleotide is strand-corrected.
+        if (trinucleotide.length() != 3) {
+            LOGGER.warn("Cannot look up amino acids for non-trinucleotides: {}", trinucleotide);
+            return null;
+        }
+
+        for (Map.Entry<String, Set<String>> entrySet : AMINO_ACID_TO_TRINUCLEOTIDES_MAP.entrySet()) {
+            if (entrySet.getValue().contains(trinucleotide)) {
+                return entrySet.getKey();
+            }
+        }
+        return null;
     }
 
     @NotNull

@@ -87,7 +87,7 @@ public class HotspotExtractor {
     }
 
     @VisibleForTesting
-    static boolean isResolvableProteinAnnotation(@NotNull String feature) {
+    public static boolean isResolvableProteinAnnotation(@NotNull String feature) {
         try {
             if (isFrameshift(feature)) {
                 return true;
@@ -95,7 +95,10 @@ public class HotspotExtractor {
                 return isValidRangeMutation(feature);
             } else if (feature.contains(HGVS_DELETION + HGVS_INSERTION)) {
                 return isValidComplexDeletionInsertion(feature);
-            } else {
+            } else if (feature.startsWith("*")) {
+                return true; //TODO: DEV-1475: deal with stop lost for hotspots
+            }
+            else {
                 return isValidSingleCodonMutation(feature);
             }
         } catch (Exception exception) {

@@ -67,36 +67,90 @@ class TransvarInterpreter {
     @NotNull
     private List<VariantHotspot> convertFrameshift(@NotNull TransvarRecord record, @NotNull Strand strand) {
         // When considering reverse strand, we need to consider the 3 bases in front of position.
+        // TODO for reverse strand, should I reverse-and-flip or just reverse?
         long position = strand == Strand.FORWARD ? record.gdnaPosition() : record.gdnaPosition() - 3;
+        String referenceCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 3).getBaseString();
+        String refAminoAcid = AminoAcidFunctions.findAminoAcidForTrinucleotide(
+                strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon));
+
+        if (refAminoAcid == null) {
+            LOGGER.warn("Could not resolve a valid ref amino acid for '{}' based on reference codon {}. Skipping hotspot generation.",
+                    record,
+                    referenceCodon);
+            return Lists.newArrayList();
+        }
 
         List<VariantHotspot> hotspots = Lists.newArrayList();
         ImmutableVariantHotspotImpl.Builder builder = ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome());
 
-        // Add 12 single base insertions
+        // Add 12 single base insertions in case they don't lead to synonymous impact in the impacted codon
         for (int i = 0; i < 3; i++) {
-            long pos = position + i - 1;
+            long pos = position + i;
             String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
             builder.position(pos).ref(ref);
 
             for (String base : BASES) {
-                hotspots.add(builder.alt(ref + base).build());
+                String newRefCodon;
+                if (i == 0) {
+                    newRefCodon = base + refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 2).getBaseString();
+                } else if (i == 1) {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 1).getBaseString() + base
+                            + refGenome.getSubsequenceAt(record.chromosome(), position + 2, position + 2).getBaseString();
+                } else {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 2).getBaseString() + base;
+                }
+                String newAminoAcid = AminoAcidFunctions.findAminoAcidForTrinucleotide(
+                        strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+
+                if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
+                    hotspots.add(builder.alt(ref + base).build());
+                }
             }
         }
 
-        // Add the 3 single base deletes
+        // Add the 3 single base deletes in case they don't lead to synonymous impact in the impacted codon
         for (int i = 0; i < 3; i++) {
-            long pos = position + i - 1;
-            String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos + 1).getBaseString();
-            String alt = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
-            hotspots.add(builder.position(pos).ref(ref).alt(alt).build());
+            String newRefCodon;
+            if (i == 0) {
+                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 2, position + 4).getBaseString();
+            } else if (i == 1) {
+                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 1).getBaseString()
+                        + refGenome.getSubsequenceAt(record.chromosome(), position + 3, position + 4).getBaseString();
+            } else {
+                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 2).getBaseString()
+                        + refGenome.getSubsequenceAt(record.chromosome(), position + 4, position + 4).getBaseString();
+            }
+            String newAminoAcid =
+                    AminoAcidFunctions.findAminoAcidForTrinucleotide(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+
+            if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
+                long pos = position + i;
+                String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos + 1).getBaseString();
+                String alt = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
+
+                hotspots.add(builder.position(pos).ref(ref).alt(alt).build());
+            }
         }
 
-        // Add the 2 double base deletes
+        // Add the 2 double base deletes in case they don't lead to synonymous impact in the impacted codon
         for (int i = 0; i < 2; i++) {
-            long pos = position + i - 1;
-            String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos + 2).getBaseString();
-            String alt = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
-            hotspots.add(builder.position(pos).ref(ref).alt(alt).build());
+            String newRefCodon;
+            if (i == 0) {
+                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 3, position + 5).getBaseString();
+            } else {
+                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 1).getBaseString()
+                        + refGenome.getSubsequenceAt(record.chromosome(), position + 4, position + 5).getBaseString();
+            }
+            String newAminoAcid =
+                    AminoAcidFunctions.findAminoAcidForTrinucleotide(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+
+            if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
+                long pos = position + i;
+                String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos + 2).getBaseString();
+                String alt = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
+
+                hotspots.add(builder.position(pos).ref(ref).alt(alt).build());
+            }
         }
 
         return hotspots;
