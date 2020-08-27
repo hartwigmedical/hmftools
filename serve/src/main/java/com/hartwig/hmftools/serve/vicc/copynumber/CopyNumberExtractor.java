@@ -42,7 +42,7 @@ public class CopyNumberExtractor {
             "over exp",
             "amp over exp",
             "OVEREXPRESSION",
-            "Overexpression");
+            "Overexpression", "ITD");
 
     private static final Set<String> DELETIONS = Sets.newHashSet("Deletion",
             "deletion",

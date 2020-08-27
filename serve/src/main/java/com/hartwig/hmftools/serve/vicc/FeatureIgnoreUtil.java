@@ -58,6 +58,8 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("PROMOTER MUTATION");
         FEATURE_KEYWORDS_TO_IGNORE.add("Promoter Mutations");
         FEATURE_KEYWORDS_TO_IGNORE.add("SH2 DOMAIN MUTATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("TKD MUTATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("EGFR CTD");
 
         // exon number not exist in the using transcript
         FEATURE_KEYWORDS_TO_IGNORE.add("NPM1 EXON 12 MUTATION");
