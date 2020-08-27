@@ -53,7 +53,7 @@ public class CopyNumberExtractor {
             "UNDEREXPRESSION",
             "loss",
             "LOSS",
-            "DELETERIOUS MUTATION");
+            "DELETERIOUS MUTATION", "Copy Number Loss", "COPY-NEUTRAL LOSS OF HETEROZYGOSITY");
 
     @NotNull
     public Set<String> uniqueAmps() {

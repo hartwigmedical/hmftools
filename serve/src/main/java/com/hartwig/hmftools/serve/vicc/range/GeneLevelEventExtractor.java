@@ -35,7 +35,7 @@ public class GeneLevelEventExtractor {
             "mutant",
             "mut",
             "gene_only",
-            "ACTIVATING MUTATION", "FRAMESHIFT MUTATION", "FRAMESHIFT TRUNCATION");
+            "ACTIVATING MUTATION");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
