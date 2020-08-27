@@ -29,9 +29,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class KnowledgebaseGeneratorApplication {
+public class ServeGeneratorApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(KnowledgebaseGeneratorApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(ServeGeneratorApplication.class);
     private static final Set<String> PERMITTED_REF_GENOME_VERSIONS = Sets.newHashSet("hg19");
 
     private static final String VICC_JSON = "vicc_json";
@@ -43,7 +43,7 @@ public class KnowledgebaseGeneratorApplication {
 
     private static final String OUTPUT_DIR = "output_dir";
 
-    private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
+    private static final String VERSION = ServeGeneratorApplication.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws ParseException, IOException {
         LOGGER.info("Running Knowledgebase Generator v{}", VERSION);
