@@ -285,8 +285,8 @@ class TransvarInterpreter {
 
             String referenceCodon =
                     refGenome.getSubsequenceAt(record.chromosome(), postPriorToCodon + 1, postPriorToCodon + 3).getBaseString();
-            String refAminoAcid = AminoAcidFunctions.findAminoAcidForTrinucleotide(
-                    strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon));
+            String refAminoAcid =
+                    AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon));
 
             if (refAminoAcid == null) {
                 LOGGER.warn("Could not resolve a valid ref amino acid for '{}' based on reference codon {}. Skipping hotspot generation.",
@@ -334,8 +334,8 @@ class TransvarInterpreter {
                 } else {
                     newRefCodon = refBase1 + refBase2 + base;
                 }
-                String newAminoAcid = AminoAcidFunctions.findAminoAcidForTrinucleotide(
-                        strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+                String newAminoAcid =
+                        AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
 
                 if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
                     hotspots.add(builder.alt(ref + base).build());
@@ -376,7 +376,7 @@ class TransvarInterpreter {
                 }
             }
             String newAminoAcid =
-                    AminoAcidFunctions.findAminoAcidForTrinucleotide(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+                    AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
 
             if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
                 long pos = posPriorToCodon + i;
@@ -415,7 +415,7 @@ class TransvarInterpreter {
             }
 
             String newAminoAcid =
-                    AminoAcidFunctions.findAminoAcidForTrinucleotide(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+                    AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
 
             if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
                 long pos = posPriorToCodon + i;

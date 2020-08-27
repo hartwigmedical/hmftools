@@ -73,15 +73,14 @@ public final class AminoAcidFunctions {
     }
 
     @Nullable
-    public static String findAminoAcidForTrinucleotide(@NotNull String trinucleotide) {
-        // This function assumes the trinucleotide is strand-corrected.
-        if (trinucleotide.length() != 3) {
-            LOGGER.warn("Cannot look up amino acids for non-trinucleotides: {}", trinucleotide);
+    public static String findAminoAcidForCodon(@NotNull String codon) {
+        if (codon.length() != 3) {
+            LOGGER.warn("Cannot look up amino acids for non-codons: {}", codon);
             return null;
         }
 
         for (Map.Entry<String, Set<String>> entrySet : AMINO_ACID_TO_TRINUCLEOTIDES_MAP.entrySet()) {
-            if (entrySet.getValue().contains(trinucleotide)) {
+            if (entrySet.getValue().contains(codon)) {
                 return entrySet.getKey();
             }
         }
