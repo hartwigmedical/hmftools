@@ -25,7 +25,7 @@ public class HartwigCohortFileReaderTest {
         assertEquals("A", entries.get(0).alt());
         assertEquals("TERT", entries.get(0).gene());
         assertEquals("ENST00000310581", entries.get(0).transcript());
-        assertEquals("", entries.get(0).proteinAnnotation());
+        assertEquals("-", entries.get(0).proteinAnnotation());
 
         assertEquals("7", entries.get(1).chromosome());
         assertEquals(140453136, entries.get(1).position());
