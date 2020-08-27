@@ -67,7 +67,6 @@ class TransvarInterpreter {
     @NotNull
     private List<VariantHotspot> convertFrameshift(@NotNull TransvarRecord record, @NotNull Strand strand) {
         // When considering reverse strand, we need to consider the 3 bases in front of position.
-        // TODO for reverse strand, should I reverse-and-flip or just reverse?
         // TODO Remove frameshifts which cross exon boundaries.
 
         long position = strand == Strand.FORWARD ? record.gdnaPosition() : record.gdnaPosition() - 3;
@@ -87,19 +86,26 @@ class TransvarInterpreter {
 
         // Add 12 single base insertions in case they don't lead to synonymous impact in the impacted codon
         for (int i = 0; i < 3; i++) {
-            long pos = position + i;
+            // For reverse strand we need to move the position up by 1 for inserts
+            int strandCorrection = strand == Strand.FORWARD ? 0 : 1;
+            long pos = position + i + strandCorrection;
             String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
             builder.position(pos).ref(ref);
 
+            String refBase1 =
+                    refGenome.getSubsequenceAt(record.chromosome(), position + 1 + strandCorrection, position + 1 + strandCorrection)
+                            .getBaseString();
+            String refBase2 =
+                    refGenome.getSubsequenceAt(record.chromosome(), position + 2 + strandCorrection, position + 2 + strandCorrection)
+                            .getBaseString();
             for (String base : BASES) {
                 String newRefCodon;
                 if (i == 0) {
-                    newRefCodon = base + refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 2).getBaseString();
+                    newRefCodon = base + refBase1 + refBase2;
                 } else if (i == 1) {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 1).getBaseString() + base
-                            + refGenome.getSubsequenceAt(record.chromosome(), position + 2, position + 2).getBaseString();
+                    newRefCodon = refBase1 + base + refBase2;
                 } else {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 2).getBaseString() + base;
+                    newRefCodon = refBase1 + refBase2 + base;
                 }
                 String newAminoAcid = AminoAcidFunctions.findAminoAcidForTrinucleotide(
                         strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
@@ -113,14 +119,26 @@ class TransvarInterpreter {
         // Add the 3 single base deletes in case they don't lead to synonymous impact in the impacted codon
         for (int i = 0; i < 3; i++) {
             String newRefCodon;
-            if (i == 0) {
-                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 2, position + 4).getBaseString();
-            } else if (i == 1) {
-                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 1).getBaseString()
-                        + refGenome.getSubsequenceAt(record.chromosome(), position + 3, position + 4).getBaseString();
+            if (strand == Strand.FORWARD) {
+                if (i == 0) {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 2, position + 4).getBaseString();
+                } else if (i == 1) {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 1).getBaseString()
+                            + refGenome.getSubsequenceAt(record.chromosome(), position + 3, position + 4).getBaseString();
+                } else {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 2).getBaseString()
+                            + refGenome.getSubsequenceAt(record.chromosome(), position + 4, position + 4).getBaseString();
+                }
             } else {
-                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 2).getBaseString()
-                        + refGenome.getSubsequenceAt(record.chromosome(), position + 4, position + 4).getBaseString();
+                if (i == 0) {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString()
+                            + refGenome.getSubsequenceAt(record.chromosome(), position + 2, position + 3).getBaseString();
+                } else if (i == 1) {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position, position + 1).getBaseString()
+                            + refGenome.getSubsequenceAt(record.chromosome(), position + 3, position + 3).getBaseString();
+                } else {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position, position + 2).getBaseString();
+                }
             }
             String newAminoAcid =
                     AminoAcidFunctions.findAminoAcidForTrinucleotide(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
@@ -137,12 +155,22 @@ class TransvarInterpreter {
         // Add the 2 double base deletes in case they don't lead to synonymous impact in the impacted codon
         for (int i = 0; i < 2; i++) {
             String newRefCodon;
-            if (i == 0) {
-                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 3, position + 5).getBaseString();
+            if (strand == Strand.FORWARD) {
+                if (i == 0) {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 3, position + 5).getBaseString();
+                } else {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 1).getBaseString()
+                            + refGenome.getSubsequenceAt(record.chromosome(), position + 4, position + 5).getBaseString();
+                }
             } else {
-                newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 1).getBaseString()
-                        + refGenome.getSubsequenceAt(record.chromosome(), position + 4, position + 5).getBaseString();
+                if (i == 0) {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position - 1, position).getBaseString()
+                            + refGenome.getSubsequenceAt(record.chromosome(), position+3, position+3).getBaseString();
+                } else {
+                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), position -1, position + 1).getBaseString();
+                }
             }
+
             String newAminoAcid =
                     AminoAcidFunctions.findAminoAcidForTrinucleotide(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
 
