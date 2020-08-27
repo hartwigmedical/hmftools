@@ -25,11 +25,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -173,7 +172,8 @@ public class FragmentSizeCalcs
 
             mCurrentFragmentCount = 0;
             mCurrentGenes = overlappingGenes.get(0).GeneName;
-            List<GenomeRegion> regions = Lists.newArrayList(GenomeRegions.create(chromosome, mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]));
+
+            final List<SvRegion> regions = Lists.newArrayList(new SvRegion(chromosome, mCurrentGenesRange));
 
             ISF_LOGGER.trace("chromosome({}) gene({} index={}) fragCount({}) nextRegion({})",
                     chromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, regions.get(0).toString());

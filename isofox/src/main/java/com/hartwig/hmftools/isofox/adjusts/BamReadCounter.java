@@ -18,8 +18,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -109,7 +108,7 @@ public class BamReadCounter
             mCurrentGenes = overlappingGenes.get(0).GeneId;
             mCurrentGeneReadCount = 0;
 
-            List<GenomeRegion> regions = Lists.newArrayList(GenomeRegions.create(chromosome, mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]));
+            final List<SvRegion> regions = Lists.newArrayList(new SvRegion(chromosome, mCurrentGenesRange));
 
             mBamSlicer.slice(mSamReader, regions, this::processBamRead);
         }

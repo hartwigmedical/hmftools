@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.isofox.adjusts.BamReadCounter;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
@@ -432,28 +433,25 @@ public class ChromosomeGeneTask implements Callable
         }
 
         // start the read region at the previous gene collection's end if known
-        long regionStart;
-        long regionEnd;
+        int[] geneRegionPositions;
 
         if(mConfig.runFunction(FUSIONS))
         {
-            regionStart = geneCollection.getNonGenicPositions()[SE_START];
-            regionEnd = geneCollection.getNonGenicPositions()[SE_END];
+            geneRegionPositions = geneCollection.getNonGenicPositions();
         }
         else
         {
-            regionStart = geneCollection.regionBounds()[SE_START] - 100;
-            regionEnd = geneCollection.regionBounds()[SE_END] + 100;
+            geneRegionPositions = new int[] { geneCollection.regionBounds()[SE_START] - 100, geneCollection.regionBounds()[SE_END] + 100 };
         }
 
-        if(regionStart >= regionEnd)
+        if(geneRegionPositions[SE_START] >= geneRegionPositions[SE_END])
         {
             ISF_LOGGER.warn("invalid geneCollection({}) region({} -> {})",
-                    geneCollection.geneNames(), regionStart, regionEnd);
+                    geneCollection.geneNames(), geneRegionPositions[SE_START], geneRegionPositions[SE_END]);
             return;
         }
 
-        GenomeRegion geneRegion = GenomeRegions.create(geneCollection.chromosome(), regionStart, regionEnd);
+        final SvRegion geneRegion = new SvRegion(geneCollection.chromosome(), geneRegionPositions);
 
         mPerfCounters[PERF_READS].start();
         mBamFragmentAllocator.produceBamCounts(geneCollection, geneRegion);

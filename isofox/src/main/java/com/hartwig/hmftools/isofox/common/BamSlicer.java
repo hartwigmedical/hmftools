@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +31,7 @@ public class BamSlicer
 
     public void haltProcessing() { mConsumerHalt = true; }
 
-    public void slice(@NotNull final SamReader samReader, final List<GenomeRegion> regions, @NotNull final Consumer<SAMRecord> consumer)
+    public void slice(@NotNull final SamReader samReader, final List<SvRegion> regions, @NotNull final Consumer<SAMRecord> consumer)
     {
         mConsumerHalt = false;
 
@@ -89,20 +89,20 @@ public class BamSlicer
         return records;
     }
 
-    private static QueryInterval[] createIntervals(@NotNull final List<GenomeRegion> regions, @NotNull final SAMFileHeader header)
+    private static QueryInterval[] createIntervals(@NotNull final List<SvRegion> regions, @NotNull final SAMFileHeader header)
     {
         final QueryInterval[] queryIntervals = new QueryInterval[regions.size()];
 
         for (int i = 0; i < regions.size(); ++i)
         {
-            final GenomeRegion region = regions.get(i);
-            int sequenceIndex = header.getSequenceIndex(region.chromosome());
+            final SvRegion region = regions.get(i);
+            int sequenceIndex = header.getSequenceIndex(region.Chromosome);
 
             if (sequenceIndex < 0)
                 return null;
 
 
-            queryIntervals[i] = new QueryInterval(sequenceIndex, (int) region.start(), (int) region.end());
+            queryIntervals[i] = new QueryInterval(sequenceIndex, region.start(), region.end());
         }
 
         return queryIntervals;

@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
@@ -45,7 +44,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.DuplicateReadTracker;
@@ -180,7 +179,7 @@ public class BamFragmentAllocator
 
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
-    public void produceBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
+    public void produceBamCounts(final GeneCollection geneCollection, final SvRegion geneRegion)
     {
         clearCache();
 
@@ -192,8 +191,8 @@ public class BamFragmentAllocator
 
         // and width around the base depth region to pick up junctions outside the gene
         int[] baseDepthRange = new int[SE_PAIR];
-        baseDepthRange[SE_START] = max((int)genomeRegion.start(), geneCollection.regionBounds()[SE_START] - NON_GENIC_BASE_DEPTH_WIDTH);
-        baseDepthRange[SE_END] = min((int)genomeRegion.end(), geneCollection.regionBounds()[SE_END] + NON_GENIC_BASE_DEPTH_WIDTH);
+        baseDepthRange[SE_START] = max(geneRegion.start(), geneCollection.regionBounds()[SE_START] - NON_GENIC_BASE_DEPTH_WIDTH);
+        baseDepthRange[SE_END] = min(geneRegion.end(), geneCollection.regionBounds()[SE_END] + NON_GENIC_BASE_DEPTH_WIDTH);
         mBaseDepth.initialise(baseDepthRange);
 
         if(mRunFusions)
@@ -205,10 +204,10 @@ public class BamFragmentAllocator
             mRetainedIntronFinder.setGeneData(mCurrentGenes);
         }
 
-        mValidReadStartRegion[SE_START] = (int)genomeRegion.start();
-        mValidReadStartRegion[SE_END] = (int)genomeRegion.end();
+        mValidReadStartRegion[SE_START] = geneRegion.start();
+        mValidReadStartRegion[SE_END] = geneRegion.end();
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
+        mBamSlicer.slice(mSamReader, Lists.newArrayList(geneRegion), this::processSamRecord);
 
         if(mEnrichedGeneFragments > 0)
             processEnrichedGeneFragments();
