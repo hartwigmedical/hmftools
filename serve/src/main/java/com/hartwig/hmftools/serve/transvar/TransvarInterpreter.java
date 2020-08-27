@@ -68,6 +68,8 @@ class TransvarInterpreter {
     private List<VariantHotspot> convertFrameshift(@NotNull TransvarRecord record, @NotNull Strand strand) {
         // When considering reverse strand, we need to consider the 3 bases in front of position.
         // TODO for reverse strand, should I reverse-and-flip or just reverse?
+        // TODO Remove frameshifts which cross exon boundaries.
+
         long position = strand == Strand.FORWARD ? record.gdnaPosition() : record.gdnaPosition() - 3;
         String referenceCodon = refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + 3).getBaseString();
         String refAminoAcid = AminoAcidFunctions.findAminoAcidForTrinucleotide(
