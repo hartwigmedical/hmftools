@@ -41,10 +41,19 @@ public class CopyNumberExtractor {
             "overexpression",
             "over exp",
             "amp over exp",
-            "OVEREXPRESSION", "Overexpression");
+            "OVEREXPRESSION",
+            "Overexpression");
 
-    private static final Set<String> DELETIONS =
-            Sets.newHashSet("Deletion", "deletion", "DELETION", "del", "undexpression", "dec exp", "UNDEREXPRESSION", "loss", "LOSS");
+    private static final Set<String> DELETIONS = Sets.newHashSet("Deletion",
+            "deletion",
+            "DELETION",
+            "del",
+            "undexpression",
+            "dec exp",
+            "UNDEREXPRESSION",
+            "loss",
+            "LOSS",
+            "DELETERIOUS MUTATION");
 
     @NotNull
     public Set<String> uniqueAmps() {
@@ -79,7 +88,7 @@ public class CopyNumberExtractor {
         //TODO: fix combi events
         String featureName = feature.name();
         if (featureName.contains(" ")) {
-            featureName = featureName.split(" ",2)[1];
+            featureName = featureName.split(" ", 2)[1];
         }
 
         if (AMPLIFICATIONS.contains(featureName) || AMPLIFICATIONS.contains(feature.biomarkerType())) {
