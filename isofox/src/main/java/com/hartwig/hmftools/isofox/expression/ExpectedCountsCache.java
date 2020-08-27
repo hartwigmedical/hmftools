@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.expression;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.EXP_COUNT_LENGTH_HEADER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
@@ -96,7 +97,27 @@ public class ExpectedCountsCache
 
             if (line == null)
             {
-                ISF_LOGGER.error("empty calculated expected rates file({})", mConfig.ExpCountsFile);
+                ISF_LOGGER.error("empty calculated expected counts file({})", mConfig.ExpCountsFile);
+                return false;
+            }
+
+            String[] headerItems = line.split(DELIMITER, -1);
+
+            // extract the fragment lengths from the header if not already populated (in which case they must match)
+            int fileFragmentLengthCount = headerItems.length - 3;
+
+            if(mConfig.FragmentLengthData.size() == 0)
+            {
+                for(int i = 3; i < headerItems.length; ++i)
+                {
+                    int fragmentLength = Integer.parseInt(headerItems[i].replaceAll(EXP_COUNT_LENGTH_HEADER, ""));
+                    mConfig.FragmentLengthData.add(new int[] { fragmentLength, 0 } );
+                }
+            }
+            else if(mConfig.FragmentLengthData.size() != fileFragmentLengthCount)
+            {
+                ISF_LOGGER.error("expected counts file has {} fragment lengths vs configuredCount({})",
+                        fileFragmentLengthCount, mConfig.FragmentLengthData.size());
                 return false;
             }
 
@@ -106,7 +127,6 @@ public class ExpectedCountsCache
             int geneSetIdIndex = fieldsIndexMap.get("GeneSetId");
             int transNameIndex = fieldsIndexMap.get("TransId");
             int categoryIndex = fieldsIndexMap.get("Category");
-            int expectedColCount = categoryIndex + 1 + fragLengths;
 
             String currentGeneSetId = "";
             String currentTransGeneName = "";
@@ -116,13 +136,6 @@ public class ExpectedCountsCache
             while ((line = fileReader.readLine()) != null)
             {
                 String[] items = line.split(DELIMITER, -1);
-
-                if (items.length != expectedColCount)
-                {
-                    ISF_LOGGER.error("invalid exp count data length({}) vs expected({}): {}", items.length, expectedColCount, line);
-                    mGeneSetCategoryDataMap.clear();
-                    return false;
-                }
 
                 String geneSetId = items[geneSetIdIndex];
                 String transGeneName = items[transNameIndex];

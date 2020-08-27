@@ -26,8 +26,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 public abstract class SummaryStats
 {
-    public abstract String version();
-
     public abstract int totalFragments();
     public abstract int duplicateFragments();
     public abstract double splicedFragmentPerc();
@@ -52,8 +50,6 @@ public abstract class SummaryStats
             final int[] totalCounts, int enrichedGeneFragCount,
             double medianGCRatio, final List<int[]> fragmentLengths, int maxReadLength)
     {
-        final VersionInfo version = new VersionInfo("isofox.version");
-
         int totalFragments = totalCounts[typeAsInt(TOTAL)];
         int totalDuplicates = totalCounts[typeAsInt(DUPLICATE)];
         double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / (double)totalFragments : 0;
@@ -61,7 +57,6 @@ public abstract class SummaryStats
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
         return ImmutableSummaryStats.builder()
-                .version(version.version())
                 .totalFragments(totalFragments)
                 .duplicateFragments(totalDuplicates)
                 .splicedFragmentPerc(totalCounts[typeAsInt(TRANS_SUPPORTING)] / (double)totalFragments)
@@ -79,7 +74,7 @@ public abstract class SummaryStats
 
     public static String csvHeader()
     {
-        return "SampleId,Version,TotalFragments,DuplicateFragments"
+        return "SampleId,TotalFragments,DuplicateFragments"
                 + ",SplicedFragmentPerc,UnsplicedFragmentPerc,AltFragmentPerc,ChimericFragmentPerc"
                 + ",ReadLength,FragLength5th,FragLength50th,FragLength95th"
                 + ",EnrichedGenePercent,MedianGCRatio";
@@ -89,7 +84,6 @@ public abstract class SummaryStats
     {
         return new StringJoiner(DELIMITER)
                 .add(sampleId)
-                .add(version())
                 .add(String.valueOf(totalFragments()))
                 .add(String.valueOf(duplicateFragments()))
                 .add(String.format("%.3f", splicedFragmentPerc()))
@@ -111,7 +105,6 @@ public abstract class SummaryStats
         int index = 1;
 
         return ImmutableSummaryStats.builder()
-                .version(items[index++])
                 .totalFragments(Integer.parseInt(items[index++]))
                 .duplicateFragments(Integer.parseInt(items[index++]))
                 .splicedFragmentPerc(Double.parseDouble(items[index++]))

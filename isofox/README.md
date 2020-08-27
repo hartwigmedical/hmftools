@@ -352,7 +352,6 @@ Generated file: sample_id.isf.summary.csv
 
 Field | Description 
 ---|---
-Version | Version number
 TotalFragments | Count of total fragments (currently Isofox only counts genic fragments)
 DuplicateFragments | Count of fragments marked as duplicates
 SplicedFragmentPerc | % of total fragments supporting 1 or more known transcripts

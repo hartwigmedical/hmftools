@@ -670,6 +670,8 @@ public class ExpectedRatesGenerator
         mReadLength = min(mConfig.ReadLength, mCurrentFragSize);
     }
 
+    public static final String EXP_COUNT_LENGTH_HEADER = "Length_";
+
     public static BufferedWriter createWriter(final IsofoxConfig config)
     {
         try
@@ -693,7 +695,7 @@ public class ExpectedRatesGenerator
 
                 for(int[] fragLength : config.FragmentLengthData)
                 {
-                    writer.write(String.format(",Length_%d", fragLength[FL_LENGTH]));
+                    writer.write(String.format(",%s_%d", EXP_COUNT_LENGTH_HEADER, fragLength[FL_LENGTH]));
                 }
             }
             else
