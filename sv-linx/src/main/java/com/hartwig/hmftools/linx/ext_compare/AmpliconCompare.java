@@ -8,12 +8,14 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.MIN_AMP_PERCENT_VS_MAX;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.findAmplifyingClusters;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.DATA_DELIM;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.HIGH_SV_JCN_THRESHOLD;
+import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MAX_FOLDBACK_INV_LENGTH;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MIN_CLUSTER_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.extractSampleId;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
@@ -98,7 +100,7 @@ public class AmpliconCompare
         double maxCnChange = ampClusterCandidates.stream().mapToDouble(x -> x.NetCNChange).max().orElse(0);
         double maxJcn = ampClusterCandidates.stream().mapToDouble(x -> x.Cluster.getMaxJcn()).max().orElse(0);
 
-        final Set<SvCluster> matchingClusters = Sets.newHashSet();
+        final Set<DriverAmpData> matchingClusters = Sets.newHashSet();
 
         for(final DriverAmpData clusterAmpData : ampClusterCandidates)
         {
@@ -106,13 +108,21 @@ public class AmpliconCompare
             if(clusterAmpData.Cluster.getMaxJcn() < MIN_CLUSTER_JCN_THRESHOLD)
                 continue;
 
-            if(Doubles.equal(clusterAmpData.NetCNChange, maxCnChange) || Doubles.equal(clusterAmpData.Cluster.getMaxJcn(), maxJcn))
+            if(Doubles.equal(clusterAmpData.NetCNChange, maxCnChange)
+            || Doubles.equal(clusterAmpData.Cluster.getMaxJcn(), maxJcn)
+            || clusterAmpData.NetCNChange >= MIN_AMP_PERCENT_VS_MAX * maxCnChange)
             {
-                matchingClusters.add(clusterAmpData.Cluster);
-            }
-            else if(clusterAmpData.NetCNChange >= MIN_AMP_PERCENT_VS_MAX * maxCnChange)
-            {
-                matchingClusters.add(clusterAmpData.Cluster);
+                final DriverAmpData existingData = matchingClusters.stream().filter(x -> x.Cluster == clusterAmpData.Cluster).findFirst().orElse(null);
+
+                if(existingData == null)
+                {
+                    matchingClusters.add(clusterAmpData);
+                }
+                else if(existingData.NetCNChange < clusterAmpData.NetCNChange)
+                {
+                    matchingClusters.remove(existingData);
+                    matchingClusters.add(clusterAmpData);
+                }
             }
         }
 
@@ -136,7 +146,8 @@ public class AmpliconCompare
             mResultsWriter.write("SampleId,AmpClusterId,AmpType,AmpSVs,AmpHighSVs,AmpChromosomes");
             mResultsWriter.write(",AmpMaxCN,AmpMaxJCN,AmpFoldbackCN,AmpRegions,AmpWidth");
             mResultsWriter.write(",ClusterId,ClusterCount,ResolvedType,ClusterDesc,ClusterHasDM");
-            mResultsWriter.write(",ClusterHighSVs,ClusterChromosomes,ClusterMaxCN,ClusterMaxJCN,ClusterFoldbackJCN");
+            mResultsWriter.write(",ClusterHighSVs,ClusterChromosomes,ClusterMaxCN,ClusterMaxJCN,ClusterFoldbackJCN,ClusterShortInvJCN");
+            mResultsWriter.write(",ClusterAmpStartCN,ClusterAmpNetCNChange,ClusterAmpTraverseUp");
 
             mResultsWriter.newLine();
         }
@@ -146,7 +157,7 @@ public class AmpliconCompare
         }
     }
 
-    private void writeMatchData(final AmpliconData ampData, final SvCluster cluster, final Map<String,List<SvBreakend>> chrBreakendMap)
+    private void writeMatchData(final AmpliconData ampData, final DriverAmpData clusterAmpData, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         try
         {
@@ -159,12 +170,14 @@ public class AmpliconCompare
                     ampData.MaxCN, ampData.MaxJCN, ampData.FoldbackCN,
                     ampData.Regions.size(), ampData.Regions.stream().mapToLong(x -> x.baseLength()).sum()));
 
-            if(cluster != null)
+            if(clusterAmpData != null)
             {
+                final SvCluster cluster = clusterAmpData.Cluster;
                 int highJcnCount = 0;
                 double maxJcn = 0;
                 double maxCN = 0;
                 double foldbackJcn = 0;
+                double shortInvJcn = 0;
                 final List<String> chromosomes = Lists.newArrayList();
 
                 for(final SvVarData var : cluster.getSVs())
@@ -172,12 +185,15 @@ public class AmpliconCompare
                     maxCN = max(maxCN, max(var.copyNumber(true), var.copyNumber(false)));
                     maxJcn = max(maxJcn, var.jcn());
 
+                    if(var.type() == INV && var.length() <= MAX_FOLDBACK_INV_LENGTH)
+                        shortInvJcn += var.jcn();
+
                     if(var.isFoldback())
                     {
                         foldbackJcn += (var.isChainedFoldback() ? 0.5 : 1.0) * var.jcn();
                     }
 
-                    if(var.jcn() >= HIGH_SV_JCN_THRESHOLD)
+                    if(var.jcn() >= MIN_CLUSTER_JCN_THRESHOLD)
                     {
                         ++highJcnCount;
 
@@ -195,8 +211,11 @@ public class AmpliconCompare
                         cluster.id(), cluster.getSvCount(), cluster.getResolvedType(), cluster.getDesc(),
                         cluster.hasAnnotation(CLUSTER_ANNOT_DM)));
 
-                mResultsWriter.write(String.format(",%d,%s,%.1f,%.1f,%.1f",
-                        highJcnCount, highJcnChromosomes, maxCN, maxJcn, foldbackJcn));
+                mResultsWriter.write(String.format(",%d,%s,%.1f,%.1f,%.1f,%.1f",
+                        highJcnCount, highJcnChromosomes, maxCN, maxJcn, foldbackJcn, shortInvJcn));
+
+                mResultsWriter.write(String.format(",%.1f,%.1f,%s",
+                        clusterAmpData.StartCopyNumber, clusterAmpData.NetCNChange, clusterAmpData.TraverseUp));
             }
             else
             {

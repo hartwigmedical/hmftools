@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.ext_compare;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
@@ -64,6 +65,9 @@ public class AmpliconClusterMatch
                 final SvCluster cluster = breakend.getCluster();
 
                 if (cluster.hasLinkingLineElements() || processedClusters.contains(cluster))
+                    continue;
+
+                if(cluster.getSvCount() == 1 && cluster.getSV(0).type() == DEL) // explicitly disallow
                     continue;
 
                 processedClusters.add(cluster);
