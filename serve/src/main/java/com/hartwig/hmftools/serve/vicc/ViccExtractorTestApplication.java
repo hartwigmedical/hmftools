@@ -74,7 +74,7 @@ public class ViccExtractorTestApplication {
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            generateHotspots = false;
+            generateHotspots = true;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
             rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
             fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
