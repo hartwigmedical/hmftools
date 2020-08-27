@@ -33,10 +33,12 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("COPY NUMBER VARIATION");
         FEATURE_KEYWORDS_TO_IGNORE.add("3' EXON DELETION"); //TODO determine to which event?
         FEATURE_KEYWORDS_TO_IGNORE.add("EXPRESSION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("expression");
         FEATURE_KEYWORDS_TO_IGNORE.add("WILDTYPE");
         FEATURE_KEYWORDS_TO_IGNORE.add("WILD TYPE");
         FEATURE_KEYWORDS_TO_IGNORE.add("wild-type");
         FEATURE_KEYWORDS_TO_IGNORE.add("wildtype");
+        FEATURE_KEYWORDS_TO_IGNORE.add("Wildtype");
         FEATURE_KEYWORDS_TO_IGNORE.add("SERUM LEVELS");
 
         // exon number not exist in the using transcript

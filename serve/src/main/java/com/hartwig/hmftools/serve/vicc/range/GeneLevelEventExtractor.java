@@ -33,7 +33,9 @@ public class GeneLevelEventExtractor {
             "TRUNCATING MUTATION",
             "Truncating Mutations",
             "mutant",
-            "mut", "gene_only");
+            "mut",
+            "gene_only",
+            "ACTIVATING MUTATION");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
@@ -66,6 +68,11 @@ public class GeneLevelEventExtractor {
                 }
             }
 
+            //             else if (isValidSingleCodonRange(feature.proteinAnnotation())) {
+            //                LOGGER.info(feature.proteinAnnotation());
+            //                geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
+            //            }
+
             //            if (GENE_ACTIVATION.contains(feature.name()) || GENE_ACTIVATION.contains(feature.biomarkerType()) || GENE_ACTIVATION.contains(
             //                    feature.proteinAnnotation())) {
             //                geneLevelEventsPerFeature.put(feature, "gain of " + feature.geneSymbol());
@@ -76,4 +83,5 @@ public class GeneLevelEventExtractor {
         }
         return geneLevelEventsPerFeature;
     }
+
 }
