@@ -41,6 +41,24 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("Wildtype");
         FEATURE_KEYWORDS_TO_IGNORE.add("SERUM LEVELS");
 
+        FEATURE_KEYWORDS_TO_IGNORE.add("3' UTR MUTATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("3' UTR Polymorphism");
+        FEATURE_KEYWORDS_TO_IGNORE.add("5' TANDEM REPEAT");
+        FEATURE_KEYWORDS_TO_IGNORE.add("B2 DOMAIN MUTATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("CYTOPLASMIC MISLOCALIZATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("DNA binding domain deletions");
+        FEATURE_KEYWORDS_TO_IGNORE.add("DNA binding domain insertions");
+        FEATURE_KEYWORDS_TO_IGNORE.add("DNA binding domain missense mutations");
+        FEATURE_KEYWORDS_TO_IGNORE.add("DNA BINDING DOMAIN MUTATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("FLT3 internal tandem duplications");
+        FEATURE_KEYWORDS_TO_IGNORE.add("INTERNAL DUPLICATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("KINASE DOMAIN MUTATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("N-TERMINAL FRAME SHIFT");
+        FEATURE_KEYWORDS_TO_IGNORE.add("NUCLEAR TRANSLOCATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("PROMOTER MUTATION");
+        FEATURE_KEYWORDS_TO_IGNORE.add("Promoter Mutations");
+        FEATURE_KEYWORDS_TO_IGNORE.add("SH2 DOMAIN MUTATION");
+
         // exon number not exist in the using transcript
         FEATURE_KEYWORDS_TO_IGNORE.add("NPM1 EXON 12 MUTATION");
 
