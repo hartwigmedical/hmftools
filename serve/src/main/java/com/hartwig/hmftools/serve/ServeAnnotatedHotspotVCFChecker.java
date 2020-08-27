@@ -49,67 +49,65 @@ public class ServeAnnotatedHotspotVCFChecker {
         LOGGER.info("Loading hotspots from '{}'", annotatedVcfFilePath);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedVcfFilePath, new VCFCodec(), false);
         for (VariantContext variant : reader.iterator()) {
+            totalCount++;
             String[] featureParts = variant.getAttributeAsString("feature", Strings.EMPTY).split("\\|");
             String featureGene = featureParts[0];
             String featureTranscript = featureParts[1].equals("null") ? null : featureParts[1];
             String featureProteinAnnotation = featureParts[2];
-            if (!featureProteinAnnotation.endsWith("fs")) {
-                totalCount++;
 
-                List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
 
-                if (featureTranscript != null) {
-                    SnpEffAnnotation annotation = annotationForTranscript(annotations, featureTranscript);
+            if (featureTranscript != null) {
+                SnpEffAnnotation annotation = annotationForTranscript(annotations, featureTranscript);
 
-                    if (annotation != null) {
-                        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                        if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
-                            LOGGER.warn("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
+                if (annotation != null) {
+                    String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                    if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
+                        LOGGER.warn("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
+                                featureGene,
+                                featureTranscript,
+                                variant.getContig(),
+                                variant.getStart(),
+                                variant.getReference().getBaseString(),
+                                variant.getAlternateAllele(0).getBaseString(),
+                                featureProteinAnnotation,
+                                snpeffProteinAnnotation);
+                        diffCount++;
+                    } else {
+                        if (snpeffProteinAnnotation.equals(featureProteinAnnotation)) {
+                            LOGGER.debug("Identical match found on {} for '{}'", featureGene, featureProteinAnnotation);
+                        } else {
+                            whitelistedMatchCount++;
+                            LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
                                     featureGene,
-                                    featureTranscript,
-                                    variant.getContig(),
-                                    variant.getStart(),
-                                    variant.getReference().getBaseString(),
-                                    variant.getAlternateAllele(0).getBaseString(),
                                     featureProteinAnnotation,
                                     snpeffProteinAnnotation);
-                            diffCount++;
-                        } else {
-                            if (snpeffProteinAnnotation.equals(featureProteinAnnotation)) {
-                                LOGGER.debug("Identical match found on {} for '{}'", featureGene, featureProteinAnnotation);
-                            } else {
-                                whitelistedMatchCount++;
-                                LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
-                                        featureGene,
-                                        featureProteinAnnotation,
-                                        snpeffProteinAnnotation);
-                            }
-                            matchCount++;
                         }
-                    } else {
-                        LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", featureTranscript, featureGene);
-                        diffCount++;
+                        matchCount++;
                     }
                 } else {
-                    boolean matchFound = false;
-                    for (SnpEffAnnotation annotation : annotations) {
-                        if (annotation.isTranscriptFeature()) {
-                            String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                            if (isSameAnnotation(annotation.transcript(), featureProteinAnnotation, snpeffProteinAnnotation)) {
-                                matchFound = true;
-                            }
+                    LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", featureTranscript, featureGene);
+                    diffCount++;
+                }
+            } else {
+                boolean matchFound = false;
+                for (SnpEffAnnotation annotation : annotations) {
+                    if (annotation.isTranscriptFeature()) {
+                        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                        if (isSameAnnotation(annotation.transcript(), featureProteinAnnotation, snpeffProteinAnnotation)) {
+                            matchFound = true;
                         }
                     }
+                }
 
-                    if (matchFound) {
-                        LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", featureProteinAnnotation, featureGene);
-                        matchCount++;
-                    } else {
-                        LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
-                                featureProteinAnnotation,
-                                featureGene);
-                        diffCount++;
-                    }
+                if (matchFound) {
+                    LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", featureProteinAnnotation, featureGene);
+                    matchCount++;
+                } else {
+                    LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
+                            featureProteinAnnotation,
+                            featureGene);
+                    diffCount++;
                 }
             }
         }
@@ -302,14 +300,12 @@ public class ServeAnnotatedHotspotVCFChecker {
         return map;
     }
 
-
     @NotNull
     private static Map<String, List<String>> createEZH2Map() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.T678_R679delinsKK", Lists.newArrayList("p.TR678KK"));
         return map;
     }
-
 
     @NotNull
     private static String curateStartCodonAnnotation(@NotNull String serveAnnotation) {
