@@ -261,6 +261,9 @@ public class SampleAnalyser
                 }
             }
 
+            ensemblDataCache.getAlternativeGeneData().stream().filter(x -> !restrictedGeneIds.contains(x.GeneId))
+                    .forEach(x -> restrictedGeneIds.add(x.GeneId));
+
             ensemblDataCache.loadTranscriptData(restrictedGeneIds);
         }
 

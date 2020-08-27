@@ -61,10 +61,10 @@ check_fusions | discover and annotate gene fusions
 ### Reference files
 Argument  | Description
 ---|---
-fragile_site_file | list of known fragile sites - specify Chromosome,PosStart,PosEnd
-line_element_file | list of known LINE elements - specify Chromosome,PosStart,PosEnd
-replication_origins_file | Replication timing input - in BED format with replication timing as the 4th column
-viral_hosts_file | list of known viral hosts - Refseq_id,Virus_name
+fragile_site_file | List of known fragile sites - specify Chromosome,PosStart,PosEnd
+line_element_file | List of known LINE elements - specify Chromosome,PosStart,PosEnd
+replication_origins_file | Optional: Replication timing input - in BED format with replication timing as the 4th column
+viral_hosts_file | Optional: List of known viral hosts - Refseq_id,Virus_name
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
 ### Clustering
@@ -88,7 +88,7 @@ write_vis_data | write output to for generation of Circos clustering and chainin
 log_debug | logs in debug mode
 
 ### Example Usage
-Example command and arguments:
+Single sample - Load SVs and purple data from file, upload Linx results to database:
 
 ```
 java -jar sv-linx.jar 
@@ -104,8 +104,43 @@ java -jar sv-linx.jar
     -gene_transcripts_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
-    -write_vis_data 
+    -check_drivers
     -log_debug
+```
+
+Single sample - query SVs and purple data from database, upload Linx results to database:
+
+```
+java -jar sv-linx.jar 
+    -sample SAMPLE_ID 
+    -db_url [db_url] -db_user [username] -db_pass [password] 
+    -output_dir /path_to_sample_data/ 
+    -fragile_site_file fragile_sites.csv 
+    -line_element_file line_elements.csv 
+    -replication_origins_file heli_rep_origins.bed 
+    -viral_hosts_file viral_host_ref.csv 
+    -gene_transcripts_dir /path_to_ensembl_data_cache/ 
+    -check_fusions 
+    -known_fusion_file known_fusion_data.csv 
+    -check_drivers
+    -log_debug
+```
+
+Cohort analysis - run all samples by sampleId in provided file, query SVs and purple data from database.
+Write Linx results to cohort files, no uopload to database:
+
+```
+java -jar sv-linx.jar 
+    -sample cohort_sample_ids.csv
+    -db_url [db_url] -db_user [username] -db_pass [password] 
+    -output_dir /path_to_sample_data/ 
+    -fragile_site_file fragile_sites.csv 
+    -line_element_file line_elements.csv 
+    -gene_transcripts_dir /path_to_ensembl_data_cache/ 
+    -check_fusions 
+    -known_fusion_file known_fusion_data.csv 
+    -check_drivers
+    -write_all
 ```
 
 ### Generating cached Ensembl data files

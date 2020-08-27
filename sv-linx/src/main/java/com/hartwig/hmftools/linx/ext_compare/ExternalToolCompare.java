@@ -96,13 +96,10 @@ public class ExternalToolCompare
         {
             ensemblDataCache.setRequiredData(true, false, false, true);
 
-            if(!selectiveGeneLoading)
+            if(!ensemblDataCache.load(selectiveGeneLoading))
             {
-                if(!ensemblDataCache.load(false))
-                {
-                    LNX_LOGGER.error("Ensembl data cache load failed, exiting");
-                    return;
-                }
+                LNX_LOGGER.error("Ensembl data cache load failed, exiting");
+                return;
             }
 
             sampleAnalyser.setGeneCollection(ensemblDataCache);

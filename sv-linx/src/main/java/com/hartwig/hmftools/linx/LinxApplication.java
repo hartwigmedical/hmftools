@@ -140,13 +140,13 @@ public class LinxApplication
         {
             ensemblDataCache.setRequiredData(true, checkFusions, checkFusions, !checkFusions);
 
+            boolean ensemblLoadOk = false;
+
             if(!selectiveGeneLoading)
             {
-                boolean ensemblLoadOk = false;
-
                 if(!checkFusions && checkDrivers)
                 {
-                    // only load a subset of genes
+                    // only load transcripts for the driver gene panel
                     ensemblLoadOk = ensemblDataCache.load(true);
 
                     if(ensemblLoadOk)
@@ -163,12 +163,16 @@ public class LinxApplication
                 {
                     ensemblLoadOk = ensemblDataCache.load(false);
                 }
+            }
+            else
+            {
+                ensemblLoadOk = ensemblDataCache.load(true);
+            }
 
-                if(!ensemblLoadOk)
-                {
-                    LNX_LOGGER.error("Ensembl data cache load failed, exiting");
-                    return;
-                }
+            if(!ensemblLoadOk)
+            {
+                LNX_LOGGER.error("Ensembl data cache load failed, exiting");
+                return;
             }
 
             sampleAnalyser.setGeneCollection(ensemblDataCache);
