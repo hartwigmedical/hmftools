@@ -181,7 +181,6 @@ public class GeneRangeExtractor {
                 }
             } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
-                    LOGGER.info(canonicalTranscript);
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,
                     //                            feature.proteinAnnotation(),
@@ -200,7 +199,6 @@ public class GeneRangeExtractor {
                 }
             } else if (feature.name().contains("DEL") && GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
-                    LOGGER.info(canonicalTranscript);
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,
                     //                            feature.proteinAnnotation(),
@@ -217,10 +215,10 @@ public class GeneRangeExtractor {
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
-            } else if (feature.proteinAnnotation().contains("del") && feature.proteinAnnotation().contains("-")) {
+            } else if (feature.proteinAnnotation().contains("del") && feature.proteinAnnotation().contains("_")) {
                 String proteinAnnotation = feature.proteinAnnotation();
-                int start = Integer.valueOf(proteinAnnotation.split("-")[0].replaceAll("\\D+",""));
-                int end = Integer.valueOf(proteinAnnotation.split("-")[1].replaceAll("\\D+",""));
+                int start = Integer.valueOf(proteinAnnotation.split("_")[0].replaceAll("\\D+",""));
+                int end = Integer.valueOf(proteinAnnotation.split("_")[1].replaceAll("\\D+",""));
                 int  count = end -start;
 
                 if (count > 12) {
