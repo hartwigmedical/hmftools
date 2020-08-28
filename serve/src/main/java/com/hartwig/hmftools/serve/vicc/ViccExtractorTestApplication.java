@@ -71,7 +71,7 @@ public class ViccExtractorTestApplication {
         String hotspotVcf = null;
         String rangesTsv = null;
         String fusionTsv = null;
-        String eventMappingTsv = null;
+        String eventMappingTsv;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
@@ -85,6 +85,8 @@ public class ViccExtractorTestApplication {
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+            eventMappingTsv = System.getProperty("user.home") + "/hmf/tmp/eventMappingVicc.tsv";
+
             generateHotspots = false;
         }
 
@@ -188,6 +190,8 @@ public class ViccExtractorTestApplication {
                     if (hotspotsForFeature != null) {
                         featuresWithHotspotsCount++;
                         totalHotspotsCount += hotspotsForFeature.size();
+                        writer.write("Hotspot" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                + feature + "\n");
                     }
 
                     if (ampDelForFeature != null) {
@@ -201,11 +205,11 @@ public class ViccExtractorTestApplication {
                     if (fusionForFeature != null) {
                         writer.write(fusionForFeature.fusionEvent() + "\t" + fusionForFeature.fusion() + "\t" + feature.name() + "\t"
                                 + feature.biomarkerType() + "\t" + feature + "\n");
-
-                        //                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
-                        //                                fusionForFeature.fusion(),
-                        //                                feature.geneSymbol(),
-                        //                                fusionForFeature.fusionEvent());
+                        //
+                        //                                                LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
+                        //                                                        fusionForFeature.fusion(),
+                        //                                                        feature.geneSymbol(),
+                        //                                                        fusionForFeature.fusionEvent());
                         featuresWithFusionCount++;
                     }
 
@@ -250,7 +254,7 @@ public class ViccExtractorTestApplication {
                 writer.write("Ignore event" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                         + feature + "\n");
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-                LOGGER.debug(feature);
+                //LOGGER.debug(feature);
             }
         }
 
