@@ -15,13 +15,12 @@ The input for Isofox is mapped paired end reads (we use STAR for our aligner).
 
 
 ### A note on duplicates, highly expressed genes, raw and adjusted TPM
-
 We recommend to mark duplicates in your pipeline. They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.  
 
 We find that 6 genes in particular (RN7SL2,RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. Isofox excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.  For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.  We suggest to use the adjusted TPM for expression analysis.
 
 ### A note on alignment
-We use STAR as our aligner.    ISOFOX expects BAM output with chimeric reads in the BAm itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
+We use STAR as our aligner. ISOFOX expects BAM output with chimeric reads in the BAm itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
 
 The full list of non default pararmeters we use internally is:
 
@@ -48,9 +47,9 @@ Argument | Description
 ---|---
 sample | Name of sample, used to name output files
 output_dir | Directory for Isofox output files
-bam_file | Input BAM file, requires corresponding index file
+bam_file | Input BAM file - must be sorted, preferably with duplicates marked and requires a corresponding index file
 ref_genome | Reference genome fasta file
-gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
+gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation or access below.
 functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS'. Other values: FUSIONS, EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS.
 
 For instructions on how to generate the Ensembl data cache, see subsection below.
@@ -58,6 +57,7 @@ For instructions on how to generate the Ensembl data cache, see subsection below
 ### Optional
 Argument | Description
 ---|---
+ref_genome_version | HG37 (default) or HG38. Requires Ensembl reference files, BAM and ref genome to have the same version.
 gene_id_file | Restrict analysis to genes in file, format EnsemblGeneId,GeneName
 excluded_gene_id_file | Exclude genes in file, format EnsemblGeneId,GeneName
 enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes information below
@@ -87,7 +87,7 @@ Likewise if GC bias adjustments are to be applied (config: apply_gc_bias_adjust)
 java -jar isofox.jar 
     -functions EXPECTED_GC_COUNTS
     -output_dir /path_to_output_data/ 
-    -ref_genome /path_to_ref_files/ef-genome.fasta 
+    -ref_genome /path_to_ref_files/ref-genome.fasta 
     -gene_transcripts_dir /path_ensembl_data_cache_files/ 
     -read_length 76 
     -threads 10 

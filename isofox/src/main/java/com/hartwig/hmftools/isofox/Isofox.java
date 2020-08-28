@@ -84,7 +84,7 @@ public class Isofox
 
         mResultsWriter = new ResultsWriter(mConfig);
 
-        mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.HG37);
+        mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), config.RefGenVersion);
 
         if(!mConfig.RestrictedGeneIds.isEmpty())
         {

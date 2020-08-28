@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_PREFIX;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
@@ -26,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
 
@@ -34,6 +39,8 @@ import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class IsofoxConfig
@@ -96,6 +103,7 @@ public class IsofoxConfig
     public final boolean CanonicalTranscriptOnly;
     public final String BamFile;
     public final File RefGenomeFile;
+    public final RefGenomeVersion RefGenVersion;
     public RefGenomeInterface RefGenome;
     public final int GeneReadLimit;
     public int MaxFragmentLength;
@@ -207,6 +215,16 @@ public class IsofoxConfig
         else
         {
             RefGenome = null;
+        }
+
+        if(cmd.hasOption(REF_GENOME_VERSION))
+        {
+            RefGenVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION));
+        }
+        else
+        {
+            RefGenomeVersion refGenVersionOverride = checkRefGenomeVersion();
+            RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : HG37;
         }
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
@@ -397,6 +415,22 @@ public class IsofoxConfig
             return OutputDir + SampleId + ISOFOX_ID + fileId;
     }
 
+    private RefGenomeVersion checkRefGenomeVersion()
+    {
+        if(BamFile == null || !Files.exists(Paths.get(BamFile)) || RefGenomeFile == null)
+            return null;
+
+        final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(RefGenomeFile).open(new File(BamFile));
+
+        if(samReader == null)
+            return null;
+
+        if(samReader.getFileHeader().getSequenceDictionary().getSequences().stream().anyMatch(x -> x.getSequenceName().contains(CHR_PREFIX)))
+            return HG38;
+
+        return HG37;
+    }
+
     public IsofoxConfig()
     {
         SampleId = "TEST";
@@ -411,6 +445,7 @@ public class IsofoxConfig
         OutputDir = null;
         BamFile = null;
         RefGenomeFile = null;
+        RefGenVersion = HG37;
         RefGenome = new MockRefGenome();
         CanonicalTranscriptOnly = false;
         GeneReadLimit = 0;
@@ -461,6 +496,7 @@ public class IsofoxConfig
         options.addOption(LOG_LEVEL, true, "Logging: INFO(default), DEBUG or TRACE (verbose)");
         options.addOption(GENE_READ_LIMIT, true, "Per-gene limit on max reads processed (default=0, not applied)");
         options.addOption(REF_GENOME, true, "Ref genome file location");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts HG37 or HG38 (default = HG37)");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(DROP_DUPLICATES, false, "Include duplicate fragments in expression calculations");
         options.addOption(MARK_DUPLICATES, false, "Manually identify duplicate fragments");
