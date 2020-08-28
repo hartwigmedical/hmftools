@@ -251,7 +251,7 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    public void canConvertFrameshiftToHotspot() {
+    public void canConvertFrameshiftToHotspotOnForwardStrand() {
         TransvarRecord record =
                 baseRecord().gdnaPosition(2).annotation(ImmutableTransvarFrameshift.builder().build()).build();
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
@@ -270,6 +270,28 @@ public class TransvarInterpreterTest {
 
         assertHotspot(baseHotspot().position(2).ref("ATC").alt("A").build(), hotspots.get(8));
         assertHotspot(baseHotspot().position(3).ref("TCG").alt("T").build(), hotspots.get(9));
+    }
+
+    @Test
+    public void canConvertFrameshiftToHotspotOnReverseStrand() {
+        TransvarRecord record =
+                baseRecord().gdnaPosition(6).annotation(ImmutableTransvarFrameshift.builder().build()).build();
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
+
+        assertEquals(10, hotspots.size());
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GA").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GT").build(), hotspots.get(1));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GC").build(), hotspots.get(2));
+
+        assertHotspot(baseHotspot().position(6).ref("A").alt("AG").build(), hotspots.get(3));
+        assertHotspot(baseHotspot().position(6).ref("A").alt("AA").build(), hotspots.get(4));
+        assertHotspot(baseHotspot().position(6).ref("A").alt("AT").build(), hotspots.get(5));
+        assertHotspot(baseHotspot().position(6).ref("A").alt("AC").build(), hotspots.get(6));
+
+        assertHotspot(baseHotspot().position(5).ref("GA").alt("G").build(), hotspots.get(7));
+
+        assertHotspot(baseHotspot().position(3).ref("TCG").alt("T").build(), hotspots.get(8));
+        assertHotspot(baseHotspot().position(4).ref("CGA").alt("C").build(), hotspots.get(9));
     }
 
     private static void assertHotspot(@NotNull VariantHotspot expectedHotspot, @NotNull VariantHotspot actualHotspot) {

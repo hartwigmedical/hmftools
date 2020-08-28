@@ -18,8 +18,8 @@ public class AminoAcidFunctionsTest {
 
     @Test
     public void canLookupAminoAcidForTrinucleotide() {
-        assertEquals("E", AminoAcidFunctions.findAminoAcidForTrinucleotide("GAA"));
-        assertNull(AminoAcidFunctions.findAminoAcidForTrinucleotide("TGA"));
+        assertEquals("E", AminoAcidFunctions.findAminoAcidForCodon("GAA"));
+        assertNull(AminoAcidFunctions.findAminoAcidForCodon("TGA"));
     }
 
     @Test

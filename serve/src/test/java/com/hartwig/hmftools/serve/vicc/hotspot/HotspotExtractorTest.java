@@ -18,6 +18,9 @@ public class HotspotExtractorTest {
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("L755_T756delinsPP"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("D770delinsGY"));
         assertTrue(HotspotExtractor.isResolvableProteinAnnotation("G10dup"));
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("G10fs"));
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("G10fs*"));
+        assertTrue(HotspotExtractor.isResolvableProteinAnnotation("*10L"));
 
         // Just plain wrong protein annotations
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation(Strings.EMPTY));
@@ -28,9 +31,16 @@ public class HotspotExtractorTest {
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L"));
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L2"));
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("L20Pdel5"));
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("fs"));
 
         // Splice variants are ignored by hotspot extractor:
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("963_D1010splice"));
+
+        // Frameshifts which also change the codon in which the frame is shifted are ignored.
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("G20Pfs"));
+
+        // Frameshifts which are preceded by stop codon are ignored.
+        assertFalse(HotspotExtractor.isResolvableProteinAnnotation("G20*fs"));
 
         // Not a correctly formatted insert (position not clear)
         assertFalse(HotspotExtractor.isResolvableProteinAnnotation("T599insTT"));

@@ -90,15 +90,14 @@ public class HotspotExtractor {
     public static boolean isResolvableProteinAnnotation(@NotNull String feature) {
         try {
             if (isFrameshift(feature)) {
-                return true;
+                return isValidFrameshift(feature);
             } else if (feature.contains(HGVS_RANGE_INDICATOR)) {
                 return isValidRangeMutation(feature);
             } else if (feature.contains(HGVS_DELETION + HGVS_INSERTION)) {
                 return isValidComplexDeletionInsertion(feature);
             } else if (feature.startsWith("*")) {
                 return true; //TODO: DEV-1475: deal with stop lost for hotspots
-            }
-            else {
+            } else {
                 return isValidSingleCodonMutation(feature);
             }
         } catch (Exception exception) {
@@ -109,6 +108,15 @@ public class HotspotExtractor {
 
     private static boolean isFrameshift(@NotNull String feature) {
         return feature.endsWith(HGVS_FRAMESHIFT_SUFFIX) || feature.endsWith(HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED);
+    }
+
+    private static boolean isValidFrameshift(@NotNull String feature) {
+        int frameshiftPosition = feature.indexOf(HGVS_FRAMESHIFT_SUFFIX);
+        if (frameshiftPosition > 1) {
+            return isInteger(feature.substring(frameshiftPosition - 1, frameshiftPosition));
+        }
+
+        return false;
     }
 
     private static boolean isValidRangeMutation(@NotNull String feature) {

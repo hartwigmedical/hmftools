@@ -70,14 +70,17 @@ public class ViccExtractorTestApplication {
         String hotspotVcf = null;
         String rangesTsv = null;
         String fusionTsv = null;
+        String eventMappingTsv = null;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            generateHotspots = false;
+            generateHotspots = true;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsVicc.vcf";
-            rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.vcf";
-            fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.vcf";
+            rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.tsv";
+            fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.tsv";
+            eventMappingTsv = System.getProperty("user.home") + "/tmp/eventMappingVicc.tsv";
+
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
@@ -90,6 +93,7 @@ public class ViccExtractorTestApplication {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' as the ranges output TSV", rangesTsv);
         LOGGER.debug("Configured '{}' as the fusion output TSV", fusionTsv);
+        LOGGER.debug("Configured '{}' as the event mapping output TSV", eventMappingTsv);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
         List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
@@ -111,7 +115,7 @@ public class ViccExtractorTestApplication {
 
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
-        analyzeExtractionResults(resultsPerEntry);
+        analyzeExtractionResults(resultsPerEntry, eventMappingTsv);
 
         if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, resultsPerEntry);
@@ -150,7 +154,11 @@ public class ViccExtractorTestApplication {
         return curatedViccEntries;
     }
 
-    private static void analyzeExtractionResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    private static void analyzeExtractionResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
+            @NotNull String eventMappingTsv) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(eventMappingTsv));
+        writer.write("Mapped event" + "\t" + "name" + "\t" + "event" + "\t" + "feature" + "\n");
+
         List<Feature> featuresWithoutGenomicEvents = Lists.newArrayList();
         int totalFeatureCount = 0;
         int featuresWithHotspotsCount = 0;
@@ -182,11 +190,16 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (ampDelForFeature != null) {
+                        writer.write("Amp/Del" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+
                         //   LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
                         featuresWithCopyNumberCount++;
                     }
 
                     if (fusionForFeature != null) {
+                        writer.write(
+                                fusionForFeature.fusion() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+
                         //                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
                         //                                fusionForFeature.fusion(),
                         //                                feature.geneSymbol(),
@@ -195,6 +208,8 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (geneLevelEventForFeature != null) {
+                        writer.write("Gene_level" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+
                         //                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event as '{}'",
                         //                                feature.name(),
                         //                                feature.geneSymbol(),
@@ -203,11 +218,15 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (geneRangeForFeature != null) {
+                        writer.write("Gene_range" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+
                         //                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
+                        writer.write("Signature" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+
                         //                        LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
                         featuresWithSignatureCount++;
                     }
@@ -220,8 +239,9 @@ public class ViccExtractorTestApplication {
         LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
+                writer.write("Ignore event" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-               // LOGGER.debug(feature);
+                LOGGER.debug(feature);
             }
         }
 
@@ -232,6 +252,8 @@ public class ViccExtractorTestApplication {
         LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
         LOGGER.info(" Extracted {} gene ranges", featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
+
+        writer.close();
     }
 
     private static void writeFusion(@NotNull String fusionTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)

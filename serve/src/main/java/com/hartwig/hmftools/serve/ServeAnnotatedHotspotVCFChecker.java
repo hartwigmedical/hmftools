@@ -49,67 +49,65 @@ public class ServeAnnotatedHotspotVCFChecker {
         LOGGER.info("Loading hotspots from '{}'", annotatedVcfFilePath);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedVcfFilePath, new VCFCodec(), false);
         for (VariantContext variant : reader.iterator()) {
+            totalCount++;
             String[] featureParts = variant.getAttributeAsString("feature", Strings.EMPTY).split("\\|");
             String featureGene = featureParts[0];
             String featureTranscript = featureParts[1].equals("null") ? null : featureParts[1];
             String featureProteinAnnotation = featureParts[2];
-            if (!featureProteinAnnotation.endsWith("fs")) {
-                totalCount++;
 
-                List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
 
-                if (featureTranscript != null) {
-                    SnpEffAnnotation annotation = annotationForTranscript(annotations, featureTranscript);
+            if (featureTranscript != null) {
+                SnpEffAnnotation annotation = annotationForTranscript(annotations, featureTranscript);
 
-                    if (annotation != null) {
-                        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                        if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
-                            LOGGER.warn("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
+                if (annotation != null) {
+                    String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                    if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
+                        LOGGER.warn("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
+                                featureGene,
+                                featureTranscript,
+                                variant.getContig(),
+                                variant.getStart(),
+                                variant.getReference().getBaseString(),
+                                variant.getAlternateAllele(0).getBaseString(),
+                                featureProteinAnnotation,
+                                snpeffProteinAnnotation);
+                        diffCount++;
+                    } else {
+                        if (snpeffProteinAnnotation.equals(featureProteinAnnotation)) {
+                            LOGGER.debug("Identical match found on {} for '{}'", featureGene, featureProteinAnnotation);
+                        } else {
+                            whitelistedMatchCount++;
+                            LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
                                     featureGene,
-                                    featureTranscript,
-                                    variant.getContig(),
-                                    variant.getStart(),
-                                    variant.getReference().getBaseString(),
-                                    variant.getAlternateAllele(0).getBaseString(),
                                     featureProteinAnnotation,
                                     snpeffProteinAnnotation);
-                            diffCount++;
-                        } else {
-                            if (snpeffProteinAnnotation.equals(featureProteinAnnotation)) {
-                                LOGGER.debug("Identical match found on {} for '{}'", featureGene, featureProteinAnnotation);
-                            } else {
-                                whitelistedMatchCount++;
-                                LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
-                                        featureGene,
-                                        featureProteinAnnotation,
-                                        snpeffProteinAnnotation);
-                            }
-                            matchCount++;
                         }
-                    } else {
-                        LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", featureTranscript, featureGene);
-                        diffCount++;
+                        matchCount++;
                     }
                 } else {
-                    boolean matchFound = false;
-                    for (SnpEffAnnotation annotation : annotations) {
-                        if (annotation.isTranscriptFeature()) {
-                            String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                            if (isSameAnnotation(annotation.transcript(), featureProteinAnnotation, snpeffProteinAnnotation)) {
-                                matchFound = true;
-                            }
+                    LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", featureTranscript, featureGene);
+                    diffCount++;
+                }
+            } else {
+                boolean matchFound = false;
+                for (SnpEffAnnotation annotation : annotations) {
+                    if (annotation.isTranscriptFeature()) {
+                        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                        if (isSameAnnotation(annotation.transcript(), featureProteinAnnotation, snpeffProteinAnnotation)) {
+                            matchFound = true;
                         }
                     }
+                }
 
-                    if (matchFound) {
-                        LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", featureProteinAnnotation, featureGene);
-                        matchCount++;
-                    } else {
-                        LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
-                                featureProteinAnnotation,
-                                featureGene);
-                        diffCount++;
-                    }
+                if (matchFound) {
+                    LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", featureProteinAnnotation, featureGene);
+                    matchCount++;
+                } else {
+                    LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
+                            featureProteinAnnotation,
+                            featureGene);
+                    diffCount++;
                 }
             }
         }
@@ -193,6 +191,7 @@ public class ServeAnnotatedHotspotVCFChecker {
         serveToSnpEffMappings.put("ENST00000269571", createERBB2Map());
         serveToSnpEffMappings.put("ENST00000357654", createBRCA1Map());
         serveToSnpEffMappings.put("ENST00000377045", createARAFMap());
+        serveToSnpEffMappings.put("ENST00000460911", createEZH2Map()); // Note: This is not the canonical transcript for EZH2
 
         return serveToSnpEffMappings;
     }
@@ -200,6 +199,7 @@ public class ServeAnnotatedHotspotVCFChecker {
     @NotNull
     private static Map<String, List<String>> createPDGFRAMap() {
         Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.R841_D842delinsKI", Lists.newArrayList("p.RD841KI"));
         map.put("p.D842_I843delinsIM", Lists.newArrayList("p.DI842IM"));
         map.put("p.D842_H845del", Lists.newArrayList("p.I843_D846del"));
         return map;
@@ -224,13 +224,14 @@ public class ServeAnnotatedHotspotVCFChecker {
     @NotNull
     private static Map<String, List<String>> createEGFRMap() {
         Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.K745_E746insIPVAIK", Lists.newArrayList("p.I740_K745dup"));
         map.put("p.S768_V769insVAS", Lists.newArrayList("p.V769_D770insASV"));
         map.put("p.D770_N771insD", Lists.newArrayList("p.D770dup"));
         map.put("p.V769_D770insASV", Lists.newArrayList("p.A767_V769dup"));
-        map.put("p.V769_770insASV", Lists.newArrayList("p.A767_V769dup"));
         map.put("p.D770_N771insSVD", Lists.newArrayList("p.S768_D770dup"));
         map.put("p.D770_N771insNPG", Lists.newArrayList("p.P772_H773insGNP"));
         map.put("p.H773_V774insH", Lists.newArrayList("p.H773dup"));
+        map.put("p.H773_V774insNPH", Lists.newArrayList("p.N771_H773dup"));
         return map;
     }
 
@@ -296,6 +297,13 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createARAFMap() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.Q347_A348del", Lists.newArrayList("p.Q349_A350del"));
+        return map;
+    }
+
+    @NotNull
+    private static Map<String, List<String>> createEZH2Map() {
+        Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.T678_R679delinsKK", Lists.newArrayList("p.TR678KK"));
         return map;
     }
 
