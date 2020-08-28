@@ -42,7 +42,7 @@ public class CopyNumberExtractor {
             "over exp",
             "amp over exp",
             "OVEREXPRESSION",
-            "Overexpression", "ITD");
+            "Overexpression");
 
     private static final Set<String> DELETIONS = Sets.newHashSet("Deletion",
             "deletion",
@@ -53,7 +53,7 @@ public class CopyNumberExtractor {
             "UNDEREXPRESSION",
             "loss",
             "LOSS",
-            "DELETERIOUS MUTATION", "Copy Number Loss", "COPY-NEUTRAL LOSS OF HETEROZYGOSITY");
+            "DELETERIOUS MUTATION", "Copy Number Loss");
 
     @NotNull
     public Set<String> uniqueAmps() {
