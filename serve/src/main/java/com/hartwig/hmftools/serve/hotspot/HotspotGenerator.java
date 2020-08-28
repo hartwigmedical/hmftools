@@ -87,7 +87,9 @@ public class HotspotGenerator {
                 return isValidComplexDeletionInsertion(proteinAnnotation);
             } else if (proteinAnnotation.startsWith("*")) {
                 return true;
-            } else {
+            } else if (proteinAnnotation.equals("alteration")) {
+                return true;
+            }else {
                 return isValidSingleCodonMutation(proteinAnnotation);
             }
         } catch (Exception exception) {
