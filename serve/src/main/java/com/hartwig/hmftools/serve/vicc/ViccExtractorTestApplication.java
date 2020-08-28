@@ -190,6 +190,8 @@ public class ViccExtractorTestApplication {
                     if (hotspotsForFeature != null) {
                         featuresWithHotspotsCount++;
                         totalHotspotsCount += hotspotsForFeature.size();
+                        writer.write("Hotspot" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                + feature + "\n");
                     }
 
                     if (ampDelForFeature != null) {
