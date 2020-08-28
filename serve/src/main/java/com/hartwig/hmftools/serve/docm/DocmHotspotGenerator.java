@@ -15,8 +15,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.transvar.Transvar;
+import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
 import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
 
 import org.apache.logging.log4j.Level;
@@ -24,7 +23,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -66,22 +64,8 @@ public class DocmHotspotGenerator {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
-        ProteinResolver proteinResolver =
-                generateHotspots ? Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile) : new ProteinResolver() {
-                    @NotNull
-                    @Override
-                    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull final String gene,
-                            @Nullable final String specificTranscript, @NotNull final String proteinAnnotation) {
-                        return Lists.newArrayList();
-                    }
-
-                    @NotNull
-                    @Override
-                    public Set<String> unresolvedProteinAnnotations() {
-                        return Sets.newHashSet();
-                    }
-                };
-
+        HotspotGenerator hotspotGenerator =
+                generateHotspots ? HotspotGenerator.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotGenerator.dummy();
         List<DocmEntry> entries = DocmFileReader.readDcomFile(docmInputTsv);
         LOGGER.info("Read {} DoCM entries from {}", entries.size(), docmInputTsv);
 
@@ -90,7 +74,7 @@ public class DocmHotspotGenerator {
             LOGGER.debug("Generating hotspots for {}",
                     ProteinKeyFormatter.toProteinKey(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
             hotspotsPerEntry.put(entry,
-                    proteinResolver.extractHotspotsFromProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
+                    hotspotGenerator.generateHotspots(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
         }
 
         if (generateHotspots) {
