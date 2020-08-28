@@ -52,8 +52,7 @@ public class CopyNumberExtractor {
             "dec exp",
             "UNDEREXPRESSION",
             "loss",
-            "LOSS",
-            "DELETERIOUS MUTATION", "Copy Number Loss");
+            "LOSS", "Copy Number Loss");
 
     @NotNull
     public Set<String> uniqueAmps() {

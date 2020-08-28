@@ -21,8 +21,12 @@ public class FusionExtractor {
     private final Set<String> uniqueFusionsPair = Sets.newHashSet();
     @NotNull
     private final Set<String> uniqueFusionsPromiscuous = Sets.newHashSet();
-    private static final Set<String> SEARCH_FUSION_PAIRS =
-            Sets.newHashSet("Fusion", "Disruptive Inframe Deletion", "Gene Fusion", "EGFR-KDD", "Transcript Regulatory Region Fusion");
+    private static final Set<String> SEARCH_FUSION_PAIRS = Sets.newHashSet("Fusion",
+            "Disruptive Inframe Deletion",
+            "Gene Fusion",
+            "EGFR-KDD",
+            "Transcript Regulatory Region Fusion",
+            "FGFR3 - BAIAP2L1 Fusion", "p61BRAF-V600E");
     private static final Set<String> SEARCH_FUSION_PROMISCUOUS =
             Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "nonsense", "FUSIONS");
     private static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
@@ -70,7 +74,9 @@ public class FusionExtractor {
                 return FusionEvent.FUSION_PAIR;
             } else if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
                 return FusionEvent.FUSION_PAIR;
-            } else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
+            } else if (SEARCH_FUSION_PAIRS.contains(feature.name())) {
+                return FusionEvent.FUSION_PAIR;
+            }else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
                 if (feature.name().contains("-")) {
                     return FusionEvent.FUSION_PAIR;
                 } else {

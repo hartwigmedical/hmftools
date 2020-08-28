@@ -119,6 +119,7 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("UGT1A1*60");
         FEATURE_KEYWORDS_TO_IGNORE.add("V1075Yfs*2");
         FEATURE_KEYWORDS_TO_IGNORE.add("V2288FS*1");
+        FEATURE_KEYWORDS_TO_IGNORE.add("TGFBR1*6A");
 
 
         // exon number not exist in the using transcript

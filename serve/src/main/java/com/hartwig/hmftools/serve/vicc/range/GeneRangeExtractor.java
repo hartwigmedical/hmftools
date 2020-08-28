@@ -25,7 +25,8 @@ public class GeneRangeExtractor {
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
     private static final Set<String> GENE_EXON = Sets.newHashSet("exon");
-    private static final Set<String> GENE_MULTIPLE_CODONS = Sets.newHashSet("nonsense", "(V600)");
+    private static final Set<String> GENE_MULTIPLE_CODONS =
+            Sets.newHashSet("nonsense", "(V600)", "splice_region_variant", "Splice Donor Variant");
 
     public GeneRangeExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
@@ -154,7 +155,7 @@ public class GeneRangeExtractor {
 
             } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
                     .substring(feature.proteinAnnotation().length() - 1)
-                    .equals("X") || GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
+                    .equals("X") && GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
                     geneRangesPerFeature = determineRanges(viccEntry,
                             feature,
@@ -171,6 +172,25 @@ public class GeneRangeExtractor {
                             geneRangeAnnotation,
                             geneRangesPerFeature,
                             canonicalTranscript);
+                }
+            } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
+                if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
+                    LOGGER.info(canonicalTranscript);
+                    //                    geneRangesPerFeature = determineRanges(viccEntry,
+                    //                            feature,
+                    //                            feature.proteinAnnotation(),
+                    //                            geneRangeAnnotation,
+                    //                            geneRangesPerFeature,
+                    //                            canonicalTranscript);
+
+                    geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                            .gene(Strings.EMPTY)
+                            .start(0)
+                            .end(0)
+                            .chromosome(Strings.EMPTY)
+                            .event(Strings.EMPTY)
+                            .build());
+                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
             }
         }
