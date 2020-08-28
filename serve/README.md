@@ -17,7 +17,7 @@ SERVE supports the ingestion of the following knowledgebases:
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
  a database of approved compassionate use programs in the Netherlands
  - HMF Cohort - a database of recurring mutations that we deem pathogenic based on their recurrence rate.
- - HMF Curated - a database of known driver mutations curated from literature by the Hartwig team.
+ - HMF Curated - a database of known driver mutations curated by the Hartwig team.
   
 Do note that SERVE does not provide the actual data that is input to the algorithm, but only provides support for its ingestion.
 While SERVE itself is open-source, the sources that can be ingested have their own licensing and up to the users to make sure 
