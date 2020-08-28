@@ -85,7 +85,7 @@ public class ViccExtractorTestApplication {
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            eventMappingTsv = System.getProperty("user.home") + "/tmp/eventMappingVicc.tsv";
+            eventMappingTsv = System.getProperty("user.home") + "/hmf/tmp/eventMappingVicc.tsv";
 
             generateHotspots = false;
         }
