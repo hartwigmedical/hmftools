@@ -83,13 +83,7 @@ public class HotspotGenerator {
                 return isValidRangeMutation(proteinAnnotation);
             } else if (proteinAnnotation.contains(HGVS_DELETION + HGVS_INSERTION)) {
                 return isValidComplexDeletionInsertion(proteinAnnotation);
-            } else if (proteinAnnotation.contains(HGVS_DELETION)) {
-                return true;
-            } else if (proteinAnnotation.contains(HGVS_INSERTION)) {
-                return true;
             } else if (proteinAnnotation.startsWith("*")) {
-                return true;
-            } else if (proteinAnnotation.equals("alteration")) {
                 return true;
             } else {
                 return isValidSingleCodonMutation(proteinAnnotation);
@@ -135,9 +129,7 @@ public class HotspotGenerator {
             long start = Long.parseLong(annotationStartPart.substring(1));
             long end = Long.parseLong(annotationEndPart.substring(1, indexOfEvent));
             return 3 * (1 + end - start) <= MAX_INFRAME_BASE_LENGTH;
-        } else if (proteinAnnotation.equals("L485_P490>Y")) {
-            return true;
-        }  else {
+        } else {
             return false;
         }
     }

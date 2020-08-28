@@ -26,9 +26,6 @@ public class HotspotExtractor {
         for (Feature feature : viccEntry.features()) {
             String proteinAnnotation = feature.proteinAnnotation();
             if (HotspotGenerator.isResolvableProteinAnnotation(proteinAnnotation)) {
-                if (proteinAnnotation.equals("S257delinsK") || proteinAnnotation.equals("*214W")) {
-                    int x = 1;
-                }
                 allHotspotsPerFeature.put(feature,
                         hotspotGenerator.generateHotspots(feature.geneSymbol(), viccEntry.transcriptId(), proteinAnnotation));
             }

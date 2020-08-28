@@ -100,7 +100,6 @@ public final class FeatureIgnoreUtil {
 
         // exon number not exist in the using transcript
         FEATURE_KEYWORDS_TO_IGNORE.add("NPM1 EXON 12 MUTATION");
-
     }
 
     private FeatureIgnoreUtil() {

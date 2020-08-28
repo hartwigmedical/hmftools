@@ -72,25 +72,10 @@ public final class ViccExtractor {
                             .build());
         }
 
-        LOGGER.info("unique known amps '{}'", copyNumberExtractor.uniqueAmps().size());
-        //        for (String amps: copyNumberExtractor.uniqueAmps()) {
-        //            LOGGER.info(amps);
-        //        }
-
-        LOGGER.info("unique known dels '{}'", copyNumberExtractor.uniqueDels().size());
-        //        for (String dels: copyNumberExtractor.uniqueDels()) {
-        //            LOGGER.info(dels);
-        //        }
-
-        LOGGER.info("unique known fusion pairs '{}'", fusionExtractor.uniqueFusionsPair().size());
-        // for (String knownFusionsPairs : fusionExtractor.uniqueFusionsPair()) {
-        //   LOGGER.info(knownFusionsPairs);
-        // }
-
-        LOGGER.info("unique known fusion promiscuous '{}'", fusionExtractor.uniqueFusionsPromiscuous().size());
-        //for (String knownFusionPromiscuous : fusionExtractor.uniqueFusionsPromiscuous()) {
-        //   LOGGER.info(knownFusionPromiscuous);
-        //}
+        LOGGER.info("Unique known amps:'{}'", copyNumberExtractor.uniqueAmps().size());
+        LOGGER.info("Unique known dels: '{}'", copyNumberExtractor.uniqueDels().size());
+        LOGGER.info("Unique known fusion pairs: '{}'", fusionExtractor.uniqueFusionsPair().size());
+        LOGGER.info("Unique known fusion promiscuous '{}'", fusionExtractor.uniqueFusionsPromiscuous().size());
 
         return extractionResultsPerEntry;
     }
