@@ -19,10 +19,6 @@ final class DndsDriverGeneLikelihoodFile {
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "gene";
 
-    @NotNull
-    static Map<String, DndsDriverImpactLikelihood> fromSingleImpactInputStream(@NotNull final InputStream genomeInputStream) {
-        return fromSingleImpactLine(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
-    }
 
     @NotNull
     static Map<String, DndsDriverGeneLikelihood> fromMultiImpactInputStream(@NotNull final InputStream genomeInputStream) {
@@ -39,27 +35,6 @@ final class DndsDriverGeneLikelihoodFile {
                 if (!line.startsWith(HEADER_PREFIX)) {
                     final ModifiableDndsDriverGeneLikelihood entry = fromString(line);
                     result.put(entry.gene(), entry);
-                }
-            } catch (RuntimeException e) {
-                LOGGER.info("Unable to parse line {}: {}", i, line);
-                throw e;
-            }
-        }
-
-        return result;
-    }
-
-    @NotNull
-    private static Map<String, DndsDriverImpactLikelihood> fromSingleImpactLine(@NotNull final List<String> lines) {
-        Map<String, DndsDriverImpactLikelihood> result = Maps.newHashMap();
-        int i = 0;
-        for (String line : lines) {
-            i++;
-            try {
-                if (!line.startsWith(HEADER_PREFIX)) {
-                    String[] values = line.split(DELIMITER);
-                    final DndsDriverImpactLikelihood entry = fromString(1, values);
-                    result.put(values[0], entry);
                 }
             } catch (RuntimeException e) {
                 LOGGER.info("Unable to parse line {}: {}", i, line);
