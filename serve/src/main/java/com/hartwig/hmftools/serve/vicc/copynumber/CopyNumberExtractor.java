@@ -86,7 +86,7 @@ public class CopyNumberExtractor {
     private String extractKeyAmplificationDeletion(@NotNull Feature feature) {
         //TODO: fix combi events
         String featureName = feature.name();
-        if (featureName.contains(" ")) {
+        if (featureName.contains(" ") && !featureName.equals("Copy Number Loss")) {
             featureName = featureName.split(" ", 2)[1];
         }
 

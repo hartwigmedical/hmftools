@@ -79,6 +79,7 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("CASP8L");
         FEATURE_KEYWORDS_TO_IGNORE.add("INTRON 6 MUTATION");
         FEATURE_KEYWORDS_TO_IGNORE.add("SNP309");
+        FEATURE_KEYWORDS_TO_IGNORE.add("S34Y/F");
 
         FEATURE_KEYWORDS_TO_IGNORE.add("RS11623866");
         FEATURE_KEYWORDS_TO_IGNORE.add("RS16906252");
@@ -97,7 +98,7 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("rs681673");
         FEATURE_KEYWORDS_TO_IGNORE.add("RS751402");
 
-        // TODO: KODO add mapping + interpretation
+        // TODO: KODO/LS add mapping + interpretation
         FEATURE_KEYWORDS_TO_IGNORE.add("E13FS*3");
         FEATURE_KEYWORDS_TO_IGNORE.add("E55RfsTer11 (c.163delG)");
         FEATURE_KEYWORDS_TO_IGNORE.add("F1088*fs");
@@ -120,6 +121,12 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("V1075Yfs*2");
         FEATURE_KEYWORDS_TO_IGNORE.add("V2288FS*1");
         FEATURE_KEYWORDS_TO_IGNORE.add("TGFBR1*6A");
+        FEATURE_KEYWORDS_TO_IGNORE.add("M774INSAYVM"); //not correct annotated Y772_A775DUP ERBB2
+        FEATURE_KEYWORDS_TO_IGNORE.add("T574insTQLPYD");
+        FEATURE_KEYWORDS_TO_IGNORE.add("T148HFSX9");
+        FEATURE_KEYWORDS_TO_IGNORE.add("E2014K + E2419K");
+        FEATURE_KEYWORDS_TO_IGNORE.add("V600E+V600M");
+        FEATURE_KEYWORDS_TO_IGNORE.add("DI842-843VM");
 
 
         // exon number not exist in the using transcript
@@ -132,8 +139,12 @@ public final class FeatureIgnoreUtil {
 
     public static boolean canIgnore(@NotNull Feature feature) {
         for (String ignoreKeyword : FEATURE_KEYWORDS_TO_IGNORE) {
-            if (feature.name().contains(ignoreKeyword) || feature.description().contains(ignoreKeyword)) {
+            if (feature.name().contains(ignoreKeyword)) {
                 return true;
+            } else if (feature.description() != null){
+                if (feature.description().contains(ignoreKeyword)) {
+                    return true;
+                }
             }
         }
 

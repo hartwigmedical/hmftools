@@ -24,9 +24,9 @@ public class GeneRangeExtractor {
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
-    private static final Set<String> GENE_EXON = Sets.newHashSet("exon");
+    private static final Set<String> GENE_EXON = Sets.newHashSet("exon", "Exon Variant");
     private static final Set<String> GENE_MULTIPLE_CODONS =
-            Sets.newHashSet("nonsense", "(V600)", "splice_region_variant", "Splice Donor Variant");
+            Sets.newHashSet("nonsense", "(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
 
     public GeneRangeExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
@@ -60,6 +60,10 @@ public class GeneRangeExtractor {
             String event = Strings.EMPTY;
             if (feature.name().toLowerCase().contains("exon")) {
                 event = "exon";
+            } else if (feature.biomarkerType() != null) {
+                if (feature.biomarkerType().equals("Exon Variant")) {
+                    event = "exon";
+                }
             }
 
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
@@ -102,6 +106,8 @@ public class GeneRangeExtractor {
 
                         if (exons.equals("mutation")) {
                             exons = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
+                        } else if (exons.equals("EX")) {
+                            exons = feature.name().split(" ")[2].split(" ")[0];
                         }
                         int startExon =
                                 Integer.valueOf(exons.split("-")[0]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
@@ -175,7 +181,6 @@ public class GeneRangeExtractor {
                 }
             } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
-                    LOGGER.info(canonicalTranscript);
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,
                     //                            feature.proteinAnnotation(),
@@ -183,6 +188,40 @@ public class GeneRangeExtractor {
                     //                            geneRangesPerFeature,
                     //                            canonicalTranscript);
 
+                    geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                            .gene(Strings.EMPTY)
+                            .start(0)
+                            .end(0)
+                            .chromosome(Strings.EMPTY)
+                            .event(Strings.EMPTY)
+                            .build());
+                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                }
+            } else if (feature.name().contains("DEL") && GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
+                if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
+                    //                    geneRangesPerFeature = determineRanges(viccEntry,
+                    //                            feature,
+                    //                            feature.proteinAnnotation(),
+                    //                            geneRangeAnnotation,
+                    //                            geneRangesPerFeature,
+                    //                            canonicalTranscript);
+
+                    geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                            .gene(Strings.EMPTY)
+                            .start(0)
+                            .end(0)
+                            .chromosome(Strings.EMPTY)
+                            .event(Strings.EMPTY)
+                            .build());
+                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                }
+            } else if (feature.proteinAnnotation().contains("del") && feature.proteinAnnotation().contains("_")) {
+                String proteinAnnotation = feature.proteinAnnotation();
+                int start = Integer.valueOf(proteinAnnotation.split("_")[0].replaceAll("\\D+",""));
+                int end = Integer.valueOf(proteinAnnotation.split("_")[1].replaceAll("\\D+",""));
+                int  count = end -start;
+
+                if (count > 12) {
                     geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
                             .gene(Strings.EMPTY)
                             .start(0)
