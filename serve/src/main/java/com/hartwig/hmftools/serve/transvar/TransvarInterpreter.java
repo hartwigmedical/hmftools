@@ -56,7 +56,7 @@ class TransvarInterpreter {
         } else if (annotation instanceof TransvarComplexInsertDelete) {
             return convertComplexInsertDeleteToHotspots(record, (TransvarComplexInsertDelete) annotation, strand);
         } else if (annotation instanceof TransvarFrameshift) {
-            return convertFrameshiftToHotspots(record, strand);
+            return convertFrameshiftToHotspots(record, (TransvarFrameshift) annotation, strand);
         } else {
             LOGGER.warn("Unrecognized annotation type in transvar record: '{}'. Skipping interpretation.",
                     annotation.getClass().toString());
@@ -278,13 +278,17 @@ class TransvarInterpreter {
     }
 
     @NotNull
-    private List<VariantHotspot> convertFrameshiftToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
+    private List<VariantHotspot> convertFrameshiftToHotspots(@NotNull TransvarRecord record, @NotNull TransvarFrameshift frameshift,
+            @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         if (!record.variantSpanMultipleExons()) {
-            long postPriorToCodon = strand == Strand.FORWARD ? record.gdnaPosition() : record.gdnaPosition() - 3;
-
+            long posPriorToCodon = strand == Strand.FORWARD ? record.gdnaPosition() : record.gdnaPosition() - 3;
+            // For frameshifts in start codons, transvar generates the start of the start codon rather than position prior.
+            if (frameshift.isFrameshiftInsideStartCodon()) {
+                posPriorToCodon = strand == Strand.FORWARD ? posPriorToCodon - 1 : posPriorToCodon + 1;
+            }
             String referenceCodon =
-                    refGenome.getSubsequenceAt(record.chromosome(), postPriorToCodon + 1, postPriorToCodon + 3).getBaseString();
+                    refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 3).getBaseString();
             String refAminoAcid =
                     AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon));
 
@@ -295,9 +299,9 @@ class TransvarInterpreter {
                 return Lists.newArrayList();
             }
 
-            hotspots.addAll(generateSingleBaseInserts(record, postPriorToCodon, strand, refAminoAcid));
-            hotspots.addAll(generateSingleBaseDeletes(record, postPriorToCodon, strand, refAminoAcid));
-            hotspots.addAll(generateDoubleBaseDeletes(record, postPriorToCodon, strand, refAminoAcid));
+            hotspots.addAll(generateSingleBaseInserts(record, posPriorToCodon, strand, refAminoAcid));
+            hotspots.addAll(generateSingleBaseDeletes(record, posPriorToCodon, strand, refAminoAcid));
+            hotspots.addAll(generateDoubleBaseDeletes(record, posPriorToCodon, strand, refAminoAcid));
         } else {
             LOGGER.debug("Frameshift spanning multiple exons. Ignoring '{}'", record);
         }

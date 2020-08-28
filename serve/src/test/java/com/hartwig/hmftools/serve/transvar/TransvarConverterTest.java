@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.transvar;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -270,7 +269,20 @@ public class TransvarConverterTest {
         assertFalse(record.variantSpanMultipleExons());
 
         TransvarFrameshift frameshift = (TransvarFrameshift) record.annotation();
-        assertNotNull(frameshift);
+        assertFalse(frameshift.isFrameshiftInsideStartCodon());
+
+        String lineInStartCodon = "VHL:p.M1fs\tENST00000256474 (protein_coding)\tVHL\t+\tchr3:g.(10183532_10191646)/c.(1_0)/p.M1fs\t" + ""
+                + "inside_[cds_in_exon_1]\tCSQN=Frameshift;imprecise;aliases=ENSP00000256474;source=Ensembl";
+
+        TransvarRecord recordInStartCodon = TransvarConverter.toTransvarRecord(lineInStartCodon);
+
+        assertEquals("ENST00000256474", recordInStartCodon.transcript());
+        assertEquals("3", recordInStartCodon.chromosome());
+        assertEquals(10183532, recordInStartCodon.gdnaPosition());
+        assertFalse(recordInStartCodon.variantSpanMultipleExons());
+
+        TransvarFrameshift frameshiftInStartCodon = (TransvarFrameshift) recordInStartCodon.annotation();
+        assertTrue(frameshiftInStartCodon.isFrameshiftInsideStartCodon());
     }
 
     @Test

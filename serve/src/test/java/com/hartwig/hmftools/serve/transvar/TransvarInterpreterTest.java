@@ -252,8 +252,9 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertFrameshiftToHotspotOnForwardStrand() {
-        TransvarRecord record =
-                baseRecord().gdnaPosition(2).annotation(ImmutableTransvarFrameshift.builder().build()).build();
+        TransvarRecord record = baseRecord().gdnaPosition(2)
+                .annotation(ImmutableTransvarFrameshift.builder().isFrameshiftInsideStartCodon(false).build())
+                .build();
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(10, hotspots.size());
@@ -274,8 +275,9 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertFrameshiftToHotspotOnReverseStrand() {
-        TransvarRecord record =
-                baseRecord().gdnaPosition(6).annotation(ImmutableTransvarFrameshift.builder().build()).build();
+        TransvarRecord record = baseRecord().gdnaPosition(6)
+                .annotation(ImmutableTransvarFrameshift.builder().isFrameshiftInsideStartCodon(false).build())
+                .build();
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
 
         assertEquals(10, hotspots.size());
