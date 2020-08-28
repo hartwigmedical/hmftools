@@ -250,7 +250,6 @@ public class ViccExtractorTestApplication {
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-                LOGGER.debug(feature);
             } else {
                 writer.write("Ignore_event" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                         + feature + "\n");
