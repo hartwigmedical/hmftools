@@ -157,7 +157,7 @@ public class ViccExtractorTestApplication {
     private static void analyzeExtractionResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
             @NotNull String eventMappingTsv) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(eventMappingTsv));
-        writer.write("Mapped event" + "\t" + "name" + "\t" + "event" + "\t" + "feature" + "\n");
+        writer.write("Mapped event" + "\t" + "Gene" + "\t" + "Name" + "\t" + "Event" + "\t" + "Feature" + "\n");
 
         List<Feature> featuresWithoutGenomicEvents = Lists.newArrayList();
         int totalFeatureCount = 0;
@@ -190,15 +190,16 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (ampDelForFeature != null) {
-                        writer.write("Amp/Del" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+                        writer.write("Amp/Del" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                + feature + "\n");
 
                         //   LOGGER.debug("Feature '{}' in '{}' interpreted as amp/del", feature.name(), feature.geneSymbol());
                         featuresWithCopyNumberCount++;
                     }
 
                     if (fusionForFeature != null) {
-                        writer.write(
-                                fusionForFeature.fusion() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+                        writer.write(fusionForFeature.fusionEvent() + "\t" + fusionForFeature.fusion() + "\t" + feature.name() + "\t"
+                                + feature.biomarkerType() + "\t" + feature + "\n");
 
                         //                        LOGGER.debug("Feature '{}' in '{}' interpreted as ''{}",
                         //                                fusionForFeature.fusion(),
@@ -208,7 +209,9 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (geneLevelEventForFeature != null) {
-                        writer.write("Gene_level" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+                        writer.write(
+                                "Gene_level" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                        + feature + "\n");
 
                         //                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene level event as '{}'",
                         //                                feature.name(),
@@ -218,14 +221,18 @@ public class ViccExtractorTestApplication {
                     }
 
                     if (geneRangeForFeature != null) {
-                        writer.write("Gene_range" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+                        writer.write(
+                                "Gene_range" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                        + feature + "\n");
 
                         //                        LOGGER.debug("Feature '{}' in '{}' interpreted as gene range event", feature.name(), feature.geneSymbol());
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
-                        writer.write("Signature" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+                        writer.write(
+                                "Signature" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                        + feature + "\n");
 
                         //                        LOGGER.debug("Feature '{}' in '{}' interpreted as signature event", feature.name(), feature.geneSymbol());
                         featuresWithSignatureCount++;
@@ -239,7 +246,8 @@ public class ViccExtractorTestApplication {
         LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
-                writer.write("Ignore event" + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t" + feature + "\n");
+                writer.write("Ignore event" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                        + feature + "\n");
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
                 LOGGER.debug(feature);
             }
