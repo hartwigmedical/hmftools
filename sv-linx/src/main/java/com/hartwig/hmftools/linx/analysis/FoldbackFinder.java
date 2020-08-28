@@ -30,9 +30,11 @@ public class FoldbackFinder
         markFoldbacks(chrBreakendMap, false);
     }
 
-    public static void markFoldbacks(final Map<String, List<SvBreakend>> chrBreakendMap, boolean recheckChainedSVs)
+    public static boolean markFoldbacks(final Map<String, List<SvBreakend>> chrBreakendMap, boolean recheckChainedSVs)
     {
-        // find all valid consective breakends formed either from a single SV or a chained set
+        boolean foundAnyFoldback = false;
+
+        // find all valid consecutive breakends formed either from a single SV or a chained set
         for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
@@ -121,8 +123,13 @@ public class FoldbackFinder
                 {
                     checkReplicatedBreakendFoldback(breakend);
                 }
+
+                if(foldbackFound)
+                    foundAnyFoldback = true;
             }
         }
+
+        return foundAnyFoldback;
     }
 
     private static boolean checkFoldbackBreakends(SvBreakend beStart, SvBreakend beEnd)

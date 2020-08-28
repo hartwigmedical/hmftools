@@ -54,7 +54,7 @@ public class ComplexClustering
 
     public void setCopyNumberAnalyser(CnDataLoader cnAnalyser) { mCopyNumberData = cnAnalyser; }
 
-    public void applyRules(final String sampleId)
+    public void applyRules(final String sampleId, boolean foldbacksOnly)
     {
         mSampleId = sampleId;
 
@@ -103,7 +103,7 @@ public class ComplexClustering
 
                     canMergeClusters = canMergeClustersOnFoldbacks(cluster1, cluster2);
 
-                    if(!canMergeClusters)
+                    if(!canMergeClusters && !foldbacksOnly)
                         canMergeClusters = canMergeClustersOnCommonArms(cluster1, cluster2);
 
                     if(!canMergeClusters)
@@ -122,14 +122,17 @@ public class ComplexClustering
                 ++index1;
             }
 
-            if(mergeBreakendStraddledClusters(complexClusters))
-                foundMerges = true;
+            if(!foldbacksOnly)
+            {
+                if(mergeBreakendStraddledClusters(complexClusters))
+                    foundMerges = true;
 
-            if(mergeFacingJcnLinkedClusters(complexClusters))
-                foundMerges = true;
+                if(mergeFacingJcnLinkedClusters(complexClusters))
+                    foundMerges = true;
 
-            if(mergeSingleSatelliteRepeats(complexClusters))
-                foundMerges = true;
+                if(mergeSingleSatelliteRepeats(complexClusters))
+                    foundMerges = true;
+            }
 
             ++iterations;
 
@@ -158,7 +161,7 @@ public class ComplexClustering
                 {
                     boolean v1Start = isStart(be1);
 
-                    if (be1 == SE_END && var1.type() != BND)
+                    if (be1 == SE_END && var1.isSglBreakend())
                         continue;
 
                     if (var1.getFoldbackBreakend(v1Start) == null)
@@ -170,7 +173,7 @@ public class ComplexClustering
                         {
                             boolean v2Start = isStart(be2);
 
-                            if (be2 == SE_END && var2.type() != BND)
+                            if (be2 == SE_END && var2.isSglBreakend())
                                 continue;
 
                             if (var2.getFoldbackBreakend(v2Start) == null)

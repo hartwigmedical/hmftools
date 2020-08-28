@@ -201,7 +201,7 @@ public class ClusterAnalyser {
         mClusters.forEach(x -> x.markSubclonal());
 
         mPcClustering.resume();
-        mComplexClustering.applyRules(mSampleId);
+        mComplexClustering.applyRules(mSampleId, false);
         mSimpleClustering.mergeLongDelDupClusters(mClusters);
         mPcClustering.stop();
 
@@ -222,7 +222,10 @@ public class ClusterAnalyser {
         // final clean-up and analysis
 
         // re-check foldbacks amongst newly formed chains and then DM status
-        FoldbackFinder.markFoldbacks(mState.getChrBreakendMap(), true);
+        if(FoldbackFinder.markFoldbacks(mState.getChrBreakendMap(), true))
+        {
+            mComplexClustering.applyRules(mSampleId, true);
+        }
 
         for(SvCluster cluster : mClusters)
         {
