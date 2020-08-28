@@ -41,5 +41,4 @@ public interface AllelicDepth {
         }
         return totalReadCount;
     }
-
 }

@@ -10,7 +10,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
-public class DriverGenePanelConfig {
+public final class DriverGenePanelConfig {
 
     public static final String DRIVER_GENE_PANEL_OPTION = "driver_gene_panel";
     public static final String DRIVER_GENE_PANEL_OPTION_DESC = "Path to driver gene panel";
@@ -29,5 +29,4 @@ public class DriverGenePanelConfig {
     public static DriverGenePanel driverGenePanel(@NotNull final CommandLine cmd) throws IOException {
         return DriverGenePanelFactory.buildFromTsv(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
     }
-
 }
