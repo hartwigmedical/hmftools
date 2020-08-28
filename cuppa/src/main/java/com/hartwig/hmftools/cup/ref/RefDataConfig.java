@@ -22,12 +22,14 @@ public class RefDataConfig
     public final String RefSigContribsFile;
     public final String RefSnvPositionDataFile;
     public final String RefSnvCountsFile;
+    public final String RefRnaGeneExpFile;
 
     // config strings
     public static final String REF_SAMPLE_TRAITS_FILE = "ref_sample_traits_file";
     public static final String REF_SIG_CONTRIBS_FILE = "ref_sig_contribs_file";
     public static final String REF_SV_DATA_FILE = "ref_sv_data_file";
     public static final String REF_SNV_POS_DATA_FILE = "ref_snv_pos_file";
+    public static final String REF_RNA_GENE_EXP_DATA_FILE = "ref_rna_gene_exp_file";
 
     public static final String DB_FILE_DELIM = "\t";
 
@@ -39,6 +41,7 @@ public class RefDataConfig
         RefSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
         RefSnvPositionDataFile = cmd.getOptionValue(REF_SNV_POS_DATA_FILE, "");
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
+        RefRnaGeneExpFile = cmd.getOptionValue(REF_RNA_GENE_EXP_DATA_FILE, "");
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -51,6 +54,7 @@ public class RefDataConfig
         options.addOption(REF_SV_DATA_FILE, true, "Ref sample SV data file");
         options.addOption(REF_SNV_POS_DATA_FILE, true, "Ref sample SNV position bucket data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref sample SNV position bucket data file");
+        options.addOption(REF_RNA_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");

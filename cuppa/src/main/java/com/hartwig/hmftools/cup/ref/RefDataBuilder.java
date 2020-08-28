@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
 
 import com.hartwig.hmftools.cup.common.SampleDataCache;
+import com.hartwig.hmftools.cup.rna.RefRnaExpression;
 import com.hartwig.hmftools.cup.sample.RefSampleTraits;
 import com.hartwig.hmftools.cup.sigs.RefSignatures;
 import com.hartwig.hmftools.cup.svs.RefSvAnnotation;
@@ -27,6 +28,7 @@ public class RefDataBuilder
     private final RefSampleTraits mSampleTraits;
     private final RefSignatures mSignatures;
     private final RefSvAnnotation mSvAnnotation;
+    private final RefRnaExpression mRnaExpression;
 
     public RefDataBuilder(final CommandLine cmd)
     {
@@ -38,6 +40,7 @@ public class RefDataBuilder
         mSampleTraits = new RefSampleTraits(mConfig, mSampleDataCache);
         mSignatures = new RefSignatures(mConfig, mSampleDataCache);
         mSvAnnotation = new RefSvAnnotation(mConfig, mSampleDataCache);
+        mRnaExpression = new RefRnaExpression(mConfig, mSampleDataCache);
     }
 
     private void loadSampleData(final CommandLine cmd)
@@ -52,6 +55,7 @@ public class RefDataBuilder
         mSampleTraits.buildRefDataSets();
         mSignatures.buildRefDataSets();
         mSvAnnotation.buildRefDataSets();
+        mRnaExpression.buildRefDataSets();
 
         CUP_LOGGER.info("CUP ref data building complete");
     }

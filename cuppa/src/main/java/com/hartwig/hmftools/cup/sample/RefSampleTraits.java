@@ -39,14 +39,17 @@ public class RefSampleTraits
 
         mCancerTraitsData = Maps.newHashMap();
         mRefDataWriter = null;
-
-        initialiseRefDataWriter();
-
-        loadRefPurityData(mConfig.RefSampleTraitsFile);
     }
 
     public void buildRefDataSets()
     {
+        if(mConfig.RefSampleTraitsFile.isEmpty())
+            return;
+
+        initialiseRefDataWriter();
+
+        loadRefPurityData(mConfig.RefSampleTraitsFile);
+
         for(Map.Entry<String,List<SampleTraitsData>> entry : mCancerTraitsData.entrySet())
         {
             final String cancerType = entry.getKey();

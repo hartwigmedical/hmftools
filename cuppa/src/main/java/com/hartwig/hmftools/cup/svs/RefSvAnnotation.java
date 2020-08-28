@@ -30,36 +30,64 @@ public class RefSvAnnotation
 
     private final Map<String,List<SvData>> mCancerSvData;
 
-    private BufferedWriter mRefDataWriter;
-
     public RefSvAnnotation(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
         mCancerSvData = Maps.newHashMap();
-        mRefDataWriter = null;
-
-        initialiseRefDataWriter();
-
-        loadRefSvData(mConfig.RefSampleSvDataFile);
     }
 
     public void buildRefDataSets()
     {
-        for(Map.Entry<String,List<SvData>> entry : mCancerSvData.entrySet())
+        if(mConfig.RefSampleSvDataFile.isEmpty())
+            return;
+
+        loadRefSvData(mConfig.RefSampleSvDataFile);
+
+        try
         {
-            final String cancerType = entry.getKey();
-            final List<SvData> svDataList = entry.getValue();
+            final String filename = mConfig.OutputDir + "cup_ref_sv_percentiles.csv";
+            BufferedWriter writer = createBufferedWriter(filename, false);
 
-            for(SvDataType dataType : SvDataType.values())
+            writer.write("CancerType,SvDataType");
+
+            for(int i = 0; i < PERCENTILE_COUNT; ++i)
             {
-                final List<Double> values = svDataList.stream().map(x -> (double)x.getCount(dataType)).collect(Collectors.toList());
-                writeRefDataType(cancerType, dataType, createPercentileData(values));
+                writer.write(String.format(",Pct_%.2f", i * 0.01));
             }
-        }
 
-        closeBufferedWriter(mRefDataWriter);
+            writer.newLine();
+
+            for(Map.Entry<String,List<SvData>> entry : mCancerSvData.entrySet())
+            {
+                final String cancerType = entry.getKey();
+                final List<SvData> svDataList = entry.getValue();
+
+                for(SvDataType dataType : SvDataType.values())
+                {
+                    final List<Double> values = svDataList.stream().map(x -> (double)x.getCount(dataType)).collect(Collectors.toList());
+                    // writeRefDataType(cancerType, dataType, createPercentileData(values));
+
+                    writer.write(String.format("%s,%s", cancerType, dataType));
+
+                    final double[] percentileValues = createPercentileData(values);
+
+                    for(int i = 0; i < percentileValues.length; ++i)
+                    {
+                        writer.write(String.format(",%.6f", percentileValues[i]));
+                    }
+
+                    writer.newLine();
+                }
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref sample SV data output: {}", e.toString());
+        }
     }
 
     private double[] createPercentileData(final List<Double> values)
@@ -74,47 +102,6 @@ public class RefSvAnnotation
         }
 
         return buildPercentiles(sortedValues);
-    }
-
-    private void initialiseRefDataWriter()
-    {
-        try
-        {
-            final String filename = mConfig.OutputDir + "cup_ref_sv_percentiles.csv";
-            mRefDataWriter = createBufferedWriter(filename, false);
-
-            mRefDataWriter.write("CancerType,SvDataType");
-
-            for(int i = 0; i < PERCENTILE_COUNT; ++i)
-            {
-                mRefDataWriter.write(String.format(",Pct_%.2f", i * 0.01));
-            }
-
-            mRefDataWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write ref sample sv data output: {}", e.toString());
-        }
-    }
-
-    private void writeRefDataType(final String cancerType, final SvDataType svDataType, final double[] percentileValues)
-    {
-        try
-        {
-            mRefDataWriter.write(String.format("%s,%s", cancerType, svDataType));
-
-            for(int i = 0; i < percentileValues.length; ++i)
-            {
-                mRefDataWriter.write(String.format(",%.6f", percentileValues[i]));
-            }
-
-            mRefDataWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write ref sample sv data output: {}", e.toString());
-        }
     }
 
     private void loadRefSvData(final String filename)
@@ -152,7 +139,7 @@ public class RefSvAnnotation
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read ref sv data file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to read ref SV data file({}): {}", filename, e.toString());
         }
     }
 

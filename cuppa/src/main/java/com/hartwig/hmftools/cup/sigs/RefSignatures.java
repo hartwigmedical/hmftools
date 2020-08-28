@@ -49,8 +49,6 @@ public class RefSignatures
 
         mRefDataWriter = null;
 
-        initialiseRefDataWriter();
-
         loadRefSigContributions(mConfig.RefSigContribsFile);
         mSampleNames = Lists.newArrayList();
         mSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mSampleNames);
@@ -58,6 +56,11 @@ public class RefSignatures
 
     public void buildRefDataSets()
     {
+        if(mConfig.RefSigContribsFile.isEmpty() && mConfig.RefSnvCountsFile.isEmpty())
+            return;
+
+        initialiseRefDataWriter();
+
         for(Map.Entry<String,Map<String,List<Double>>> entry : mCancerSigContribs.entrySet())
         {
             final String cancerType = entry.getKey();
@@ -169,6 +172,9 @@ public class RefSignatures
 
     private void loadRefSigContributions(final String filename)
     {
+        if(filename.isEmpty())
+            return;
+
         try
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
@@ -283,5 +289,4 @@ public class RefSignatures
 
         return true;
     }
-
 }
