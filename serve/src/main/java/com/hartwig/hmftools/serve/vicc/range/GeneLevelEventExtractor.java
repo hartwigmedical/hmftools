@@ -40,7 +40,7 @@ public class GeneLevelEventExtractor {
             "feature_truncation",
             "FRAMESHIFT TRUNCATION",
             "FRAMESHIFT MUTATION",
-            "SPLICE VARIANT 7", "Splice", "DNMT3B7", "LCS6-variant");
+            "SPLICE VARIANT 7", "Splice", "DNMT3B7", "LCS6-variant", "AR-V7", "ARv567es");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",

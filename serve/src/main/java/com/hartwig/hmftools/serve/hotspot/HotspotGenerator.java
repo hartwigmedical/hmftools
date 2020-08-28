@@ -64,9 +64,7 @@ public class HotspotGenerator {
     public List<VariantHotspot> generateHotspots(@NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) {
         if (isResolvableProteinAnnotation(proteinAnnotation)) {
-            return proteinResolver.extractHotspotsFromProteinAnnotation(gene,
-                    specificTranscript,
-                    proteinAnnotation);
+            return proteinResolver.extractHotspotsFromProteinAnnotation(gene, specificTranscript, proteinAnnotation);
         }
 
         return Lists.newArrayList();
@@ -85,11 +83,15 @@ public class HotspotGenerator {
                 return isValidRangeMutation(proteinAnnotation);
             } else if (proteinAnnotation.contains(HGVS_DELETION + HGVS_INSERTION)) {
                 return isValidComplexDeletionInsertion(proteinAnnotation);
+            } else if (proteinAnnotation.contains(HGVS_DELETION)) {
+                return true;
+            } else if (proteinAnnotation.contains(HGVS_INSERTION)) {
+                return true;
             } else if (proteinAnnotation.startsWith("*")) {
                 return true;
             } else if (proteinAnnotation.equals("alteration")) {
                 return true;
-            }else {
+            } else {
                 return isValidSingleCodonMutation(proteinAnnotation);
             }
         } catch (Exception exception) {
@@ -118,8 +120,8 @@ public class HotspotGenerator {
         String[] annotationParts = proteinAnnotation.split(HGVS_RANGE_INDICATOR);
         String annotationStartPart = annotationParts[0];
         String annotationEndPart = annotationParts[1];
-        if (annotationEndPart.contains(HGVS_INSERTION) || annotationEndPart.contains(HGVS_DUPLICATION)
-                || annotationEndPart.contains(HGVS_DELETION)) {
+        if (annotationEndPart.contains(HGVS_INSERTION) || annotationEndPart.contains(HGVS_DUPLICATION) || annotationEndPart.contains(
+                HGVS_DELETION)) {
             int indexOfEvent;
             // Keep in mind that 'del' always comes prior to 'ins' in situations of complex inframes.
             if (annotationEndPart.contains(HGVS_DELETION)) {

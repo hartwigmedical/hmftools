@@ -79,6 +79,7 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("CASP8L");
         FEATURE_KEYWORDS_TO_IGNORE.add("INTRON 6 MUTATION");
         FEATURE_KEYWORDS_TO_IGNORE.add("SNP309");
+        FEATURE_KEYWORDS_TO_IGNORE.add("S34Y/F");
 
         FEATURE_KEYWORDS_TO_IGNORE.add("RS11623866");
         FEATURE_KEYWORDS_TO_IGNORE.add("RS16906252");
@@ -120,6 +121,9 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("V1075Yfs*2");
         FEATURE_KEYWORDS_TO_IGNORE.add("V2288FS*1");
         FEATURE_KEYWORDS_TO_IGNORE.add("TGFBR1*6A");
+        FEATURE_KEYWORDS_TO_IGNORE.add("M774INSAYVM"); //not correct annotated Y772_A775DUP ERBB2
+        FEATURE_KEYWORDS_TO_IGNORE.add("T574insTQLPYD");
+        FEATURE_KEYWORDS_TO_IGNORE.add("T148HFSX9");
 
 
         // exon number not exist in the using transcript
