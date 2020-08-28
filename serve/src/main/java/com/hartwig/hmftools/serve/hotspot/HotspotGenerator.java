@@ -86,7 +86,7 @@ public class HotspotGenerator {
             } else if (proteinAnnotation.contains(HGVS_DELETION + HGVS_INSERTION)) {
                 return isValidComplexDeletionInsertion(proteinAnnotation);
             } else if (proteinAnnotation.startsWith("*")) {
-                return true; //TODO: DEV-1475: deal with stop lost for hotspots
+                return true;
             } else {
                 return isValidSingleCodonMutation(proteinAnnotation);
             }
