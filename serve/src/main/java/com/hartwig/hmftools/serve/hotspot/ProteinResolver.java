@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc.hotspot;
+package com.hartwig.hmftools.serve.hotspot;
 
 import java.util.List;
 import java.util.Set;

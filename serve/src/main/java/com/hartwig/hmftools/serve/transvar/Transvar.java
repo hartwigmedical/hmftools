@@ -13,9 +13,9 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
-import com.hartwig.hmftools.serve.vicc.hotspot.ProteinResolver;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

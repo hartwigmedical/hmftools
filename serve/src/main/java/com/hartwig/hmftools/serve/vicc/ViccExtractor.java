@@ -83,20 +83,14 @@ public final class ViccExtractor {
         //        }
 
         LOGGER.info("unique known fusion pairs '{}'", fusionExtractor.uniqueFusionsPair().size());
-       // for (String knownFusionsPairs : fusionExtractor.uniqueFusionsPair()) {
-         //   LOGGER.info(knownFusionsPairs);
-       // }
+        // for (String knownFusionsPairs : fusionExtractor.uniqueFusionsPair()) {
+        //   LOGGER.info(knownFusionsPairs);
+        // }
 
         LOGGER.info("unique known fusion promiscuous '{}'", fusionExtractor.uniqueFusionsPromiscuous().size());
         //for (String knownFusionPromiscuous : fusionExtractor.uniqueFusionsPromiscuous()) {
-         //   LOGGER.info(knownFusionPromiscuous);
+        //   LOGGER.info(knownFusionPromiscuous);
         //}
-
-        LOGGER.info("Finished hotspot extraction and could not resolve hotspots for {} features",
-                hotspotExtractor.unresolvedProteinAnnotations().size());
-        for (String feature : hotspotExtractor.unresolvedProteinAnnotations()) {
-            LOGGER.debug(" {}", feature);
-        }
 
         return extractionResultsPerEntry;
     }

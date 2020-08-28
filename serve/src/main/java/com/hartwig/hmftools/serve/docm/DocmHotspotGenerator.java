@@ -14,10 +14,10 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
+import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.transvar.Transvar;
 import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
-import com.hartwig.hmftools.serve.vicc.hotspot.HotspotAnnotation;
-import com.hartwig.hmftools.serve.vicc.hotspot.ProteinResolver;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

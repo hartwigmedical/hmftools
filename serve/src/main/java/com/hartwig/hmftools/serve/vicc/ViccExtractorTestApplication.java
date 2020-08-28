@@ -18,6 +18,8 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
+import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
 import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
@@ -25,7 +27,6 @@ import com.hartwig.hmftools.serve.vicc.curation.CurationKey;
 import com.hartwig.hmftools.serve.vicc.curation.FeatureCurator;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
-import com.hartwig.hmftools.serve.vicc.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
@@ -101,12 +102,12 @@ public class ViccExtractorTestApplication {
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sources).maxEntriesToInclude(MAX_ENTRIES).build();
         List<ViccEntry> viccEntries = readAndCurate(viccJsonPath, querySelection);
 
-        HotspotExtractor hotspotExtractor =
-                generateHotspots ? HotspotExtractor.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotExtractor.dummy();
+        HotspotGenerator hotspotGenerator =
+                generateHotspots ? HotspotGenerator.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotGenerator.dummy();
 
         Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
 
-        ViccExtractor viccExtractor = new ViccExtractor(hotspotExtractor,
+        ViccExtractor viccExtractor = new ViccExtractor(new HotspotExtractor(hotspotGenerator),
                 new CopyNumberExtractor(),
                 new FusionExtractor(),
                 new GeneLevelEventExtractor(),
