@@ -404,7 +404,7 @@ public class DoubleMinuteData
         return hasValidCriteria;
     }
 
-    private boolean variantExceedsBothAdjacentJcn(final SvVarData var)
+    public static boolean variantExceedsBothAdjacentJcn(final SvVarData var)
     {
         double minAdjacentMaJcn = min(
                 var.getBreakend(true).majorAlleleJcn(true),

@@ -7,10 +7,12 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
+import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.variantExceedsBothAdjacentJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
@@ -19,6 +21,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -281,11 +284,11 @@ public class DoubleMinuteFinder
             }
             else
             {
-                if(dmSvList.stream().filter(x -> x != var).anyMatch(x -> isOverlapping(x, var)))
-                {
-                    chainSvList.add(var);
-                }
-                else
+                boolean hasOverlap = dmSvList.stream().filter(x -> x != var)
+                        .anyMatch(x -> positionWithin(x.position(true), var.position(true), var.position(false))
+                                || positionWithin(x.position(false), var.position(true), var.position(false)));
+
+                if(!hasOverlap && variantExceedsBothAdjacentJcn(var))
                 {
                     // special case creating a chain out of a DUP
                     SvChain chain = new SvChain(chainId++);
@@ -295,6 +298,10 @@ public class DoubleMinuteFinder
                     chain.closeChain();
                     chain.setDoubleMinute(true);
                     dmChains.add(chain);
+                }
+                else
+                {
+                    chainSvList.add(var);
                 }
             }
         }

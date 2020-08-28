@@ -32,7 +32,10 @@ public class AmpliconClusterMatch
 
         final Map<SvCluster,DriverAmpData> clusterAmpData = Maps.newHashMap();
 
-        double ampCopyNumber = calcRegionCopyNumber(ampRegion, breakendList);
+        // for each cluster, calculate the location and highest CN within the amplified region
+        // then calculate the net contribution towards this point but no further
+
+        // double ampCopyNumber = calcRegionCopyNumber(ampRegion, breakendList);
 
         // sum up breakend ploidies from telomere to centromere for the gene in question net off ploidy within a cluster
         int startIndex = 0;
@@ -73,7 +76,7 @@ public class AmpliconClusterMatch
                 processedClusters.add(cluster);
 
                 // proceeed from this point until the start of the gene
-                DriverAmpData ampData = checkClusterForAmplification(ampRegion, ampCopyNumber, breakendList, breakend, traverseUp, opposingSegments);
+                DriverAmpData ampData = checkClusterForAmplification(ampRegion, breakendList, breakend, traverseUp, opposingSegments);
 
                 if(ampData == null)
                     continue;
@@ -94,7 +97,7 @@ public class AmpliconClusterMatch
     }
 
     private static DriverAmpData checkClusterForAmplification(
-            final SvRegion ampRegion, double ampCopyNumber, final List<SvBreakend> breakendList, final SvBreakend startBreakend,
+            final SvRegion ampRegion, final List<SvBreakend> breakendList, final SvBreakend startBreakend,
             boolean traverseUp, final List<OpposingSegment> opposingSegments)
     {
         double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
@@ -103,6 +106,7 @@ public class AmpliconClusterMatch
 
         boolean inSegment = true;
         double segmentStartCopyNumber = startCopyNumber;
+        double segmentMaxCopyNumber = startBreakend.copyNumber();
         double netClusterCNChange = 0;
         int segmentCount = 0;
         int breakendCount = 0;
@@ -121,7 +125,7 @@ public class AmpliconClusterMatch
 
             breakend = breakendList.get(index);
 
-            if ((traverseUp && breakend.position() > ampRegion.start()) || (!traverseUp && breakend.position() < ampRegion.end()))
+            if ((traverseUp && breakend.position() > ampRegion.end()) || (!traverseUp && breakend.position() < ampRegion.start()))
                 break;
 
             final SvCluster cluster = breakend.getCluster();
@@ -182,8 +186,13 @@ public class AmpliconClusterMatch
                 if(!inSegment)
                 {
                     segmentStartCopyNumber = breakend.getCopyNumber(traverseUp);
+                    segmentMaxCopyNumber = breakend.copyNumber();
                     segStartBreakend = breakend;
                     inSegment = true;
+                }
+                else
+                {
+                    segmentMaxCopyNumber = max(segmentMaxCopyNumber, breakend.copyNumber());
                 }
             }
         }
@@ -192,11 +201,11 @@ public class AmpliconClusterMatch
 
         if(inSegment)
         {
-            clusterCNChange += ampCopyNumber - segmentStartCopyNumber;
+            if(segmentMaxCopyNumber > segmentStartCopyNumber)
+                clusterCNChange += segmentMaxCopyNumber - segmentStartCopyNumber;
 
             LNX_LOGGER.trace("ampRegion({}) cluster({}) open segment startCN({}) net({}) start breakend({})",
-                    ampRegion, targetCluster.id(), formatJcn(segmentStartCopyNumber), formatJcn(clusterCNChange),
-                    segStartBreakend);
+                    ampRegion, targetCluster.id(), formatJcn(segmentStartCopyNumber), formatJcn(clusterCNChange), segStartBreakend);
         }
 
         if(clusterCNChange > 0 && !copyNumbersEqual(clusterCNChange, 0) && !copyNumbersEqual(startCopyNumber + clusterCNChange, startCopyNumber))
