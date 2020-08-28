@@ -98,7 +98,7 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("rs681673");
         FEATURE_KEYWORDS_TO_IGNORE.add("RS751402");
 
-        // TODO: KODO add mapping + interpretation
+        // TODO: KODO/LS add mapping + interpretation
         FEATURE_KEYWORDS_TO_IGNORE.add("E13FS*3");
         FEATURE_KEYWORDS_TO_IGNORE.add("E55RfsTer11 (c.163delG)");
         FEATURE_KEYWORDS_TO_IGNORE.add("F1088*fs");
@@ -124,6 +124,9 @@ public final class FeatureIgnoreUtil {
         FEATURE_KEYWORDS_TO_IGNORE.add("M774INSAYVM"); //not correct annotated Y772_A775DUP ERBB2
         FEATURE_KEYWORDS_TO_IGNORE.add("T574insTQLPYD");
         FEATURE_KEYWORDS_TO_IGNORE.add("T148HFSX9");
+        FEATURE_KEYWORDS_TO_IGNORE.add("E2014K + E2419K");
+        FEATURE_KEYWORDS_TO_IGNORE.add("V600E+V600M");
+        FEATURE_KEYWORDS_TO_IGNORE.add("DI842-843VM");
 
 
         // exon number not exist in the using transcript

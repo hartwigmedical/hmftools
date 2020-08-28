@@ -135,7 +135,9 @@ public class HotspotGenerator {
             long start = Long.parseLong(annotationStartPart.substring(1));
             long end = Long.parseLong(annotationEndPart.substring(1, indexOfEvent));
             return 3 * (1 + end - start) <= MAX_INFRAME_BASE_LENGTH;
-        } else {
+        } else if (proteinAnnotation.equals("L485_P490>Y")) {
+            return true;
+        }  else {
             return false;
         }
     }
