@@ -217,6 +217,22 @@ public class GeneRangeExtractor {
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
+            } else if (feature.proteinAnnotation().contains("del") && feature.proteinAnnotation().contains("-")) {
+                String proteinAnnotation = feature.proteinAnnotation();
+                int start = Integer.valueOf(proteinAnnotation.split("-")[0].replaceAll("\\D+",""));
+                int end = Integer.valueOf(proteinAnnotation.split("-")[1].replaceAll("\\D+",""));
+                int  count = end -start;
+
+                if (count > 12) {
+                    geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                            .gene(Strings.EMPTY)
+                            .start(0)
+                            .end(0)
+                            .chromosome(Strings.EMPTY)
+                            .event(Strings.EMPTY)
+                            .build());
+                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                }
             }
         }
         return geneRangesPerFeature;

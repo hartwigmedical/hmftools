@@ -136,8 +136,12 @@ public final class FeatureIgnoreUtil {
 
     public static boolean canIgnore(@NotNull Feature feature) {
         for (String ignoreKeyword : FEATURE_KEYWORDS_TO_IGNORE) {
-            if (feature.name().contains(ignoreKeyword) || feature.description().contains(ignoreKeyword)) {
+            if (feature.name().contains(ignoreKeyword)) {
                 return true;
+            } else if (feature.description() != null){
+                if (feature.description().contains(ignoreKeyword)) {
+                    return true;
+                }
             }
         }
 

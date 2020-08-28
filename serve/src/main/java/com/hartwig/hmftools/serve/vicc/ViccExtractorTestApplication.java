@@ -252,7 +252,7 @@ public class ViccExtractorTestApplication {
                 writer.write("Ignore event" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                         + feature + "\n");
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-             //   LOGGER.debug(feature);
+                LOGGER.debug(feature);
             }
         }
 
