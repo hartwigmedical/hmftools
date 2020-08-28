@@ -239,6 +239,17 @@ public class TransvarInterpreterTest {
     }
 
     @Test
+    public void canReduceComplexityOnComplexDelInsHotspots() {
+        VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").position(10).ref("ATGTTA").alt("ATCCTA").build();
+
+        VariantHotspot simplifiedHotspot = TransvarInterpreter.reduceComplexityForComplexInsDel(hotspot);
+
+        assertEquals(12, simplifiedHotspot.position());
+        assertEquals("GT", simplifiedHotspot.ref());
+        assertEquals("CC", simplifiedHotspot.alt());
+    }
+
+    @Test
     public void canConvertDuplicationToHotspot() {
         TransvarRecord record =
                 baseRecord().gdnaPosition(5).annotation(ImmutableTransvarDuplication.builder().duplicatedBaseCount(3).build()).build();

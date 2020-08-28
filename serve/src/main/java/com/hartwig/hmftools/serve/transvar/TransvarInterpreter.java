@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
@@ -259,7 +260,8 @@ class TransvarInterpreter {
     }
 
     @NotNull
-    private static VariantHotspot reduceComplexityForComplexInsDel(@NotNull VariantHotspot complexInsDel) {
+    @VisibleForTesting
+    static VariantHotspot reduceComplexityForComplexInsDel(@NotNull VariantHotspot complexInsDel) {
         assert complexInsDel.ref().length() > 1 && complexInsDel.alt().length() > 1;
 
         String simplifiedRef = complexInsDel.ref();
@@ -269,9 +271,18 @@ class TransvarInterpreter {
             simplifiedRef = simplifiedRef.substring(0, simplifiedRef.length() - 1);
             simplifiedAlt = simplifiedAlt.substring(0, simplifiedAlt.length() - 1);
         }
+
+        long adjustedPos = complexInsDel.position();
+        while (simplifiedRef.length() > 2 && simplifiedAlt.length() > 2 && simplifiedRef.subSequence(0, 1)
+                .equals(simplifiedAlt.substring(0, 1))) {
+            adjustedPos++;
+            simplifiedRef = simplifiedRef.substring(1);
+            simplifiedAlt = simplifiedAlt.substring(1);
+        }
+
         return ImmutableVariantHotspotImpl.builder()
                 .chromosome(complexInsDel.chromosome())
-                .position(complexInsDel.position())
+                .position(adjustedPos)
                 .ref(simplifiedRef)
                 .alt(simplifiedAlt)
                 .build();
