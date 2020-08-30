@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.hartwigcurated;
+package com.hartwig.hmftools.serve.hartwig.curated;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.hartwigcurated;
+package com.hartwig.hmftools.serve.hartwig.curated;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class HartwigCuratedFileReaderTest {
 
-    private static final String EXAMPLE_TSV = Resources.getResource("hartwigcurated/example.tsv").getPath();
+    private static final String EXAMPLE_TSV = Resources.getResource("hartwig/curated/example.tsv").getPath();
 
     @Test
     public void canReadHartwigCohortFile() throws IOException {

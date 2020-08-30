@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.serve.hartwigcohort;
+package com.hartwig.hmftools.serve.hartwig.cohort;
+
+import com.hartwig.hmftools.serve.hartwig.HartwigEntry;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

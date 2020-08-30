@@ -14,9 +14,13 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.docm.DocmEntry;
 import com.hartwig.hmftools.serve.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.docm.DocmFileReader;
-import com.hartwig.hmftools.serve.docm.DocmUtil;
+import com.hartwig.hmftools.serve.hartwig.HartwigEntry;
+import com.hartwig.hmftools.serve.hartwig.HartwigExtractor;
+import com.hartwig.hmftools.serve.hartwig.cohort.HartwigCohortEntry;
+import com.hartwig.hmftools.serve.hartwig.cohort.HartwigCohortFileReader;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
+import com.hartwig.hmftools.serve.hotspot.HotspotUtil;
 import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.vicc.ViccExtractionResult;
 import com.hartwig.hmftools.serve.vicc.ViccExtractor;
@@ -92,7 +96,6 @@ public class ServeHotspotGenerator {
 
         Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, hotspotGenerator);
         Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, hotspotGenerator);
-        
 
         if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, viccHotspotMap);
@@ -110,8 +113,8 @@ public class ServeHotspotGenerator {
     }
 
     @NotNull
-    private static Map<VariantHotspot, HotspotAnnotation> viccHotspotMap(@NotNull String viccJson, @NotNull HotspotGenerator hotspotGenerator)
-            throws IOException {
+    private static Map<VariantHotspot, HotspotAnnotation> viccHotspotMap(@NotNull String viccJson,
+            @NotNull HotspotGenerator hotspotGenerator) throws IOException {
         List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(hotspotGenerator);
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
@@ -120,8 +123,8 @@ public class ServeHotspotGenerator {
     }
 
     @NotNull
-    private static Map<VariantHotspot, HotspotAnnotation> docmHotspotMap(@NotNull String docmTsv, @NotNull HotspotGenerator hotspotGenerator)
-            throws IOException {
+    private static Map<VariantHotspot, HotspotAnnotation> docmHotspotMap(@NotNull String docmTsv,
+            @NotNull HotspotGenerator hotspotGenerator) throws IOException {
         LOGGER.info("Reading DoCM TSV from '{}'", docmTsv);
         List<DocmEntry> docmEntries = DocmFileReader.readDcomFile(docmTsv);
         LOGGER.info(" Read {} entries", docmEntries.size());
@@ -129,7 +132,20 @@ public class ServeHotspotGenerator {
         DocmExtractor docmExtractor = new DocmExtractor(hotspotGenerator);
         Map<DocmEntry, List<VariantHotspot>> docmHotspotsPerEntry = docmExtractor.extractFromDocmEntries(docmEntries);
 
-        return DocmUtil.convertHotspots(docmHotspotsPerEntry);
+        return HotspotUtil.convertHotspots("docm", docmHotspotsPerEntry);
+    }
+
+    @NotNull
+    private static Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap(@NotNull String hartwigCohortTsv,
+            @NotNull HotspotGenerator hotspotGenerator) throws IOException {
+        LOGGER.info("Reading Hartwig Cohort TSV from '{}'", hartwigCohortTsv);
+        List<HartwigCohortEntry> hartwigCohortEntries = HartwigCohortFileReader.readCohortFile(hartwigCohortTsv);
+        LOGGER.info(" Read {} entries", hartwigCohortEntries.size());
+
+        HartwigExtractor hartwigExtractor = new HartwigExtractor(hotspotGenerator);
+        Map<HartwigEntry, List<VariantHotspot>> cohortHotspotsPerEntry = hartwigExtractor.extractFromHartwigEntries(hartwigCohortEntries);
+
+        return HotspotUtil.convertHotspots("hartwig_cohort", cohortHotspotsPerEntry);
     }
 
     private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<VariantHotspot, HotspotAnnotation> hotspotMap) {

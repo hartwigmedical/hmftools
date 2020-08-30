@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.hartwigcohort;
+package com.hartwig.hmftools.serve.hartwig.cohort;
 
 import static java.util.stream.Collectors.toList;
 
@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public final class HartwigCohortFileReader {
 
     private static final String DELIMITER = "\t";
+    private static final String IGNORE_PROTEIN_ANNOTATION = "-";
 
     private HartwigCohortFileReader() {
     }
@@ -39,7 +40,7 @@ public final class HartwigCohortFileReader {
                 .alt(values[3])
                 .gene(values[4])
                 .transcript(values[5])
-                .proteinAnnotation(proteinAnnotation)
+                .proteinAnnotation(proteinAnnotation.equals(IGNORE_PROTEIN_ANNOTATION) ? Strings.EMPTY : proteinAnnotation)
                 .build();
     }
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.hartwigcohort;
+package com.hartwig.hmftools.serve.hartwig.cohort;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,11 +7,12 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class HartwigCohortFileReaderTest {
 
-    private static final String EXAMPLE_TSV = Resources.getResource("hartwigcohort/example.tsv").getPath();
+    private static final String EXAMPLE_TSV = Resources.getResource("hartwig/cohort/example.tsv").getPath();
 
     @Test
     public void canReadHartwigCohortFile() throws IOException {
@@ -25,7 +26,7 @@ public class HartwigCohortFileReaderTest {
         assertEquals("A", entries.get(0).alt());
         assertEquals("TERT", entries.get(0).gene());
         assertEquals("ENST00000310581", entries.get(0).transcript());
-        assertEquals("-", entries.get(0).proteinAnnotation());
+        assertEquals(Strings.EMPTY, entries.get(0).proteinAnnotation());
 
         assertEquals("7", entries.get(1).chromosome());
         assertEquals(140453136, entries.get(1).position());

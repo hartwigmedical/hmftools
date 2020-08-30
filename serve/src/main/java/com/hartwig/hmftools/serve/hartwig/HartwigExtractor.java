@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.hartwigcohort;
+package com.hartwig.hmftools.serve.hartwig;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 public class HartwigExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(HartwigExtractor.class);
-    private static final String IGNORE_PROTEIN_ANNOTATION = "-";
 
     @NotNull
     private final HotspotGenerator hotspotGenerator;
@@ -30,7 +29,7 @@ public class HartwigExtractor {
         Map<HartwigEntry, List<VariantHotspot>> hotspotsPerEntry = Maps.newHashMap();
         for (HartwigEntry entry : entries) {
             List<VariantHotspot> hotspots = Lists.newArrayList();
-            if (!entry.proteinAnnotation().isEmpty() && !entry.proteinAnnotation().equals(IGNORE_PROTEIN_ANNOTATION)) {
+            if (!entry.proteinAnnotation().isEmpty()) {
                 if (HotspotGenerator.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
                     hotspots = hotspotGenerator.generateHotspots(entry.gene(), entry.transcript(), entry.proteinAnnotation());
                 } else {
@@ -40,7 +39,7 @@ public class HartwigExtractor {
 
             VariantHotspot impliedHotspot = toHotspot(entry);
             if (!hotspots.contains(impliedHotspot)) {
-                LOGGER.debug("Adding implied hotspot '{}' since it was not resolved from protein annotatio '{}'",
+                LOGGER.debug("Adding implied hotspot '{}' since it was not resolved from protein annotation '{}'",
                         impliedHotspot,
                         entry.proteinAnnotation());
                 hotspots.add(impliedHotspot);

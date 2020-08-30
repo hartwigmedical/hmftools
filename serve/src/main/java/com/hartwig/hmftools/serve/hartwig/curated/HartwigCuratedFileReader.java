@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.hartwigcurated;
+package com.hartwig.hmftools.serve.hartwig.curated;
 
 import static java.util.stream.Collectors.toList;
 
@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public final class HartwigCuratedFileReader {
 
     private static final String DELIMITER = "\t";
+    private static final String IGNORE_PROTEIN_ANNOTATION = "-";
 
     private HartwigCuratedFileReader() {
     }
@@ -32,6 +33,7 @@ public final class HartwigCuratedFileReader {
         String[] values = line.split(DELIMITER);
 
         String proteinAnnotation = values.length > 6 ? values[6] : Strings.EMPTY;
+
         return ImmutableHartwigCuratedEntry.builder()
                 .chromosome(values[0])
                 .position(Long.parseLong(values[1]))
@@ -39,7 +41,7 @@ public final class HartwigCuratedFileReader {
                 .alt(values[3])
                 .gene(values[4])
                 .transcript(values[5])
-                .proteinAnnotation(proteinAnnotation)
+                .proteinAnnotation(proteinAnnotation.equals(IGNORE_PROTEIN_ANNOTATION) ? Strings.EMPTY : proteinAnnotation)
                 .build();
     }
 }
