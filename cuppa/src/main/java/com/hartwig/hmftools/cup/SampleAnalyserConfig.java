@@ -30,6 +30,7 @@ public class SampleAnalyserConfig
     public final String RefTraitRateFile;
     public final String RefSnvPosFreqFile;
     public final String RefFeatureAvgFile;
+    public final String RefRnaExpFile;
 
     // sample data, if not sourced from the database
     public final String SampleDataFile;
@@ -39,6 +40,7 @@ public class SampleAnalyserConfig
     public final String SampleSnvPosFreqFile;
     public final String SampleSigContribFile;
     public final String SampleSvFile;
+    public final String SampleRnaExpFile;
 
     public final List<CategoryType> Categories; // to run, all if empty
 
@@ -58,6 +60,7 @@ public class SampleAnalyserConfig
     private static final String SAMPLE_SNV_POS_FREQ_FILE = "sample_snv_pos_freq_file";
     private static final String SAMPLE_SIG_CONTRIB_FILE = "sample_sig_contrib_file";
     private static final String SAMPLE_SV_FILE = "sample_sv_file";
+    private static final String SAMPLE_RNA_EXP_FILE = "sample_rna_exp_file";
 
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
     public static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
@@ -68,6 +71,7 @@ public class SampleAnalyserConfig
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
     private static final String REF_SNV_POS_FREQ_FILE = "ref_snv_pos_freq_file";
     private static final String REF_FEAT_AVG_FILE = "ref_feature_avg_file";
+    private static final String REF_RNA_EXP_FILE = "ref_rna_exp_file";
 
     public static final String OUTPUT_FILE_ID = "output_file_id";
     public static final String LOG_DEBUG = "log_debug";
@@ -97,6 +101,7 @@ public class SampleAnalyserConfig
         SampleSnvPosFreqFile = cmd.getOptionValue(SAMPLE_SNV_POS_FREQ_FILE, "");
         SampleSigContribFile = cmd.getOptionValue(SAMPLE_SIG_CONTRIB_FILE, "");
         SampleSvFile = cmd.getOptionValue(SAMPLE_SV_FILE, "");
+        SampleRnaExpFile = cmd.getOptionValue(SAMPLE_RNA_EXP_FILE, "");
 
         RefSampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
@@ -107,6 +112,7 @@ public class SampleAnalyserConfig
         RefTraitRateFile = cmd.getOptionValue(REF_TRAIT_RATE_FILE, "");
         RefSnvPosFreqFile = cmd.getOptionValue(REF_SNV_POS_FREQ_FILE, "");
         RefFeatureAvgFile = cmd.getOptionValue(REF_FEAT_AVG_FILE, "");
+        RefRnaExpFile = cmd.getOptionValue(REF_RNA_EXP_FILE, "");
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
@@ -145,6 +151,7 @@ public class SampleAnalyserConfig
         options.addOption(SAMPLE_TRAITS_FILE, true, "Sample traits");
         options.addOption(SAMPLE_SV_FILE, true, "Sample SV data");
         options.addOption(SAMPLE_SIG_CONTRIB_FILE, true, "Sample signature contributions");
+        options.addOption(SAMPLE_RNA_EXP_FILE, true, "Sample RNA gene expression TPMs");
 
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Reference SNV sample counts");
@@ -155,6 +162,7 @@ public class SampleAnalyserConfig
         options.addOption(REF_TRAIT_RATE_FILE, true, "Reference traits rates file");
         options.addOption(REF_SNV_POS_FREQ_FILE, true, "Reference SNV position frequency file");
         options.addOption(REF_FEAT_AVG_FILE, true, "Reference features per sample file");
+        options.addOption(REF_RNA_EXP_FILE, true, "Reference RNA gene expression file");
 
         addDatabaseCmdLineArgs(options);
 

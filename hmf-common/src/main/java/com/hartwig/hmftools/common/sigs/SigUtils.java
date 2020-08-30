@@ -195,6 +195,9 @@ public class SigUtils
                     if(ignoreFields.contains(columnNames.get(i)))
                     {
                         ignoreCols.add(i);
+
+                        if(ignoreCols.size() == ignoreFields.size())
+                            break;
                     }
                 }
 

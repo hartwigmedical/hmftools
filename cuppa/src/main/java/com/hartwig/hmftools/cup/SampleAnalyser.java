@@ -20,6 +20,7 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.feature.FeatureAnnotation;
+import com.hartwig.hmftools.cup.rna.RnaExpression;
 import com.hartwig.hmftools.cup.sample.SampleTraits;
 import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
 import com.hartwig.hmftools.cup.svs.SvAnnotation;
@@ -43,6 +44,7 @@ public class SampleAnalyser
     private final SignatureAnnotation mSnvSignatures;
     private final SampleTraits mSampleTraits;
     private final SvAnnotation mSvAnnotation;
+    private final RnaExpression mRnaExpression;
 
     private BufferedWriter mSampleDataWriter;
 
@@ -58,6 +60,7 @@ public class SampleAnalyser
         mFeatures = new FeatureAnnotation(mConfig, mSampleDataCache);
         mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
         mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
+        mRnaExpression = new RnaExpression(mConfig, mSampleDataCache);
 
         mSampleDataWriter = null;
     }
@@ -164,6 +167,9 @@ public class SampleAnalyser
 
         final List<SampleResult> driverResults = mFeatures.processSample(sample);
         allResults.addAll(driverResults);
+
+        final List<SampleResult> rnaResults = mRnaExpression.processSample(sample);
+        allResults.addAll(rnaResults);
 
         SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults);
 
