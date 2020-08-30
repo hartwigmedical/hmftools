@@ -52,7 +52,7 @@ public class ServeHotspotGenerator {
 
     private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
             Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
-    private static final Integer MAX_VICC_ENTRIES = null;
+    private static final Integer MAX_VICC_ENTRIES = 0;
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
