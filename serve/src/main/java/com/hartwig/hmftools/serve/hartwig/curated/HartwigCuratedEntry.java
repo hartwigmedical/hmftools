@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.hartwig.curated;
 
+import com.hartwig.hmftools.serve.hartwig.HartwigEntry;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -7,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HartwigCuratedEntry {
+public abstract class HartwigCuratedEntry implements HartwigEntry  {
 
     @NotNull
     public abstract String chromosome();

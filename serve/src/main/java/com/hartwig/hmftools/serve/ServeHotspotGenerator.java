@@ -18,6 +18,8 @@ import com.hartwig.hmftools.serve.hartwig.HartwigEntry;
 import com.hartwig.hmftools.serve.hartwig.HartwigExtractor;
 import com.hartwig.hmftools.serve.hartwig.cohort.HartwigCohortEntry;
 import com.hartwig.hmftools.serve.hartwig.cohort.HartwigCohortFileReader;
+import com.hartwig.hmftools.serve.hartwig.curated.HartwigCuratedEntry;
+import com.hartwig.hmftools.serve.hartwig.curated.HartwigCuratedFileReader;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
 import com.hartwig.hmftools.serve.hotspot.HotspotUtil;
@@ -96,9 +98,13 @@ public class ServeHotspotGenerator {
 
         Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, hotspotGenerator);
         Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, hotspotGenerator);
+        Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap = hartwigCohortMap(hartwigCohortTsv, hotspotGenerator);
+        Map<VariantHotspot, HotspotAnnotation> hartwigCuratedMap = hartwigCuratedMap(hartwigCuratedTsv, hotspotGenerator);
+        Map<VariantHotspot, HotspotAnnotation> mergedMap =
+                HotspotUtil.mergeHotspots(Lists.newArrayList(viccHotspotMap, docmHotspotMap, hartwigCohortMap, hartwigCuratedMap));
 
         if (generateHotspots && hotspotVcf != null) {
-            writeHotspots(hotspotVcf, viccHotspotMap);
+            writeHotspots(hotspotVcf, mergedMap);
 
             Set<String> unresolvedProteinAnnotations = hotspotGenerator.unresolvedProteinAnnotations();
             if (!unresolvedProteinAnnotations.isEmpty()) {
@@ -148,6 +154,19 @@ public class ServeHotspotGenerator {
         return HotspotUtil.convertHotspots("hartwig_cohort", cohortHotspotsPerEntry);
     }
 
+    @NotNull
+    private static Map<VariantHotspot, HotspotAnnotation> hartwigCuratedMap(@NotNull String hartwigCuratedTsv,
+            @NotNull HotspotGenerator hotspotGenerator) throws IOException {
+        LOGGER.info("Reading Hartwig Curated TSV from '{}'", hartwigCuratedTsv);
+        List<HartwigCuratedEntry> hartwigCuratedEntries = HartwigCuratedFileReader.readCuratedFile(hartwigCuratedTsv);
+        LOGGER.info(" Read {} entries", hartwigCuratedEntries.size());
+
+        HartwigExtractor hartwigExtractor = new HartwigExtractor(hotspotGenerator);
+        Map<HartwigEntry, List<VariantHotspot>> curatedHotspotsPerEntry = hartwigExtractor.extractFromHartwigEntries(hartwigCuratedEntries);
+
+        return HotspotUtil.convertHotspots("hartwig_curated", curatedHotspotsPerEntry);
+    }
+
     private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<VariantHotspot, HotspotAnnotation> hotspotMap) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
@@ -164,7 +183,7 @@ public class ServeHotspotGenerator {
             List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
             VariantContext variantContext = new VariantContextBuilder().noGenotypes()
-                    .source("VICC")
+                    .source("SERVE")
                     .chr(hotspot.chromosome())
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)

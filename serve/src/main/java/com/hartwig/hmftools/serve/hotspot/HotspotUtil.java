@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.hotspot;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -41,5 +42,45 @@ public final class HotspotUtil {
         }
 
         return convertedMap;
+    }
+
+    @NotNull
+    public static Map<VariantHotspot, HotspotAnnotation> mergeHotspots(@NotNull List<Map<VariantHotspot, HotspotAnnotation>> maps) {
+        Map<VariantHotspot, HotspotAnnotation> mergedMap = Maps.newTreeMap(new VariantHotspotComparator());
+        for (Map<VariantHotspot, HotspotAnnotation> map : maps) {
+            for (Map.Entry<VariantHotspot, HotspotAnnotation> entry : map.entrySet()) {
+                VariantHotspot hotspot = entry.getKey();
+                HotspotAnnotation newAnnotation = entry.getValue();
+                HotspotAnnotation currentAnnotation = mergedMap.get(hotspot);
+
+                if (currentAnnotation != null) {
+                    mergedMap.put(hotspot, mergeHotspotAnnotations(currentAnnotation, newAnnotation));
+                } else {
+                    mergedMap.put(hotspot, newAnnotation);
+                }
+            }
+        }
+        return mergedMap;
+    }
+
+    @NotNull
+    public static HotspotAnnotation mergeHotspotAnnotations(@NotNull HotspotAnnotation annotation1,
+            @NotNull HotspotAnnotation annotation2) {
+        if (annotation1.gene().equals(annotation2.gene())) {
+            LOGGER.warn("Genes mismatch on identical hotspot: '{}' vs '{}'", annotation1.gene(), annotation2.gene());
+        }
+
+        String bestTranscript = annotation1.transcript();
+        String bestProteinAnnotation = annotation1.proteinAnnotation();
+        if (bestTranscript == null) {
+            bestTranscript = annotation2.transcript();
+            bestProteinAnnotation = annotation2.proteinAnnotation();
+        }
+
+        Set<String> mergedSources = Sets.newHashSet();
+        mergedSources.addAll(annotation1.sources());
+        mergedSources.addAll(annotation2.sources());
+
+        return new HotspotAnnotation(mergedSources, annotation1.gene(), bestTranscript, bestProteinAnnotation);
     }
 }

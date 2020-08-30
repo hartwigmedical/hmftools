@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -13,7 +12,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
-import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
+import com.hartwig.hmftools.serve.hotspot.HotspotUtil;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
@@ -140,51 +139,21 @@ public final class ViccUtil {
             for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
                 Feature feature = featureResult.getKey();
                 for (VariantHotspot hotspot : featureResult.getValue()) {
-                    HotspotAnnotation annotation = convertedMap.get(hotspot);
-                    if (annotation != null) {
-                        Set<String> newSources = Sets.newHashSet(annotation.sources());
-                        if (annotation.sources().contains(entry.source().display())) {
-                            checkForDuplicateHotspotOnDifferentProteinAnnotation(entry, annotation, feature);
-                        } else {
-                            newSources.add(entry.source().display());
-                        }
-
-                        // Check if we can update transcript. In case we do, keep the protein annotation consistent.
-                        String newTranscript = annotation.transcript();
-                        String newProteinAnnotation = annotation.proteinAnnotation();
-                        if (annotation.transcript() == null) {
-                            newTranscript = entry.transcriptId();
-                            newProteinAnnotation = feature.proteinAnnotation();
-                        }
-                        annotation = new HotspotAnnotation(newSources, annotation.gene(), newTranscript, newProteinAnnotation);
+                    HotspotAnnotation currentAnnotation = convertedMap.get(hotspot);
+                    HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet(entry.source().display()),
+                            feature.geneSymbol(),
+                            entry.transcriptId(),
+                            feature.proteinAnnotation());
+                    if (currentAnnotation != null) {
+                        convertedMap.put(hotspot, HotspotUtil.mergeHotspotAnnotations(currentAnnotation, newAnnotation));
                     } else {
-                        annotation = new HotspotAnnotation(Sets.newHashSet(entry.source().display()),
-                                feature.geneSymbol(),
-                                entry.transcriptId(),
-                                feature.proteinAnnotation());
+                        convertedMap.put(hotspot, newAnnotation);
                     }
 
-                    convertedMap.put(hotspot, annotation);
                 }
             }
         }
 
         return convertedMap;
-    }
-
-    private static void checkForDuplicateHotspotOnDifferentProteinAnnotation(@NotNull ViccEntry entry,
-            @NotNull HotspotAnnotation annotation, @NotNull Feature feature) {
-        String transcript = entry.transcriptId();
-        if (annotation.gene().equals(feature.geneSymbol()) && transcript != null && transcript.equals(annotation.transcript())
-                && !feature.proteinAnnotation().equals(annotation.proteinAnnotation())) {
-            String existingKey =
-                    ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
-            String newKey = ProteinKeyFormatter.toProteinKey(feature.geneSymbol(), transcript, feature.proteinAnnotation());
-            LOGGER.warn(
-                    "Hotspot already exists when trying to add from '{}' under a different annotation. Existing key = '{}'. New key = '{}'",
-                    entry.source().display(),
-                    existingKey,
-                    newKey);
-        }
     }
 }
