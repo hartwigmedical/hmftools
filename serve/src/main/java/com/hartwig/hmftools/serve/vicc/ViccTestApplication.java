@@ -6,16 +6,15 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
-import com.hartwig.hmftools.vicc.selection.ImmutableViccQuerySelection;
-import com.hartwig.hmftools.vicc.selection.ViccQuerySelection;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -27,7 +26,9 @@ public class ViccTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccTestApplication.class);
 
-    private static final Integer MAX_ENTRIES = null;
+    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
+            Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
+    private static final Integer MAX_VICC_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -55,11 +56,7 @@ public class ViccTestApplication {
         LOGGER.debug("Configured '{}' as the fusion output TSV", fusionTsv);
         LOGGER.debug("Configured '{}' as the event mapping output TSV", eventMappingTsv);
 
-        List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
-        ViccQuerySelection querySelection =
-                ImmutableViccQuerySelection.builder().sourcesToFilterOn(sources).maxEntriesToInclude(MAX_ENTRIES).build();
-        List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJsonPath, querySelection);
-
+        List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(HotspotGenerator.dummy());
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 

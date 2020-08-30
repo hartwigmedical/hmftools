@@ -11,6 +11,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.docm.DocmEntry;
+import com.hartwig.hmftools.serve.docm.DocmExtractor;
+import com.hartwig.hmftools.serve.docm.DocmFileReader;
+import com.hartwig.hmftools.serve.docm.DocmUtil;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
 import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
@@ -21,8 +25,6 @@ import com.hartwig.hmftools.serve.vicc.ViccReader;
 import com.hartwig.hmftools.serve.vicc.ViccUtil;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
-import com.hartwig.hmftools.vicc.selection.ImmutableViccQuerySelection;
-import com.hartwig.hmftools.vicc.selection.ViccQuerySelection;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -42,6 +44,8 @@ public class ServeHotspotGenerator {
 
     private static final Logger LOGGER = LogManager.getLogger(ServeHotspotGenerator.class);
 
+    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
+            Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
     private static final Integer MAX_VICC_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {
@@ -50,43 +54,48 @@ public class ServeHotspotGenerator {
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
 
-        String viccJsonPath;
         String refGenomeFastaFile;
+        String serveSourceDir;
+
         boolean generateHotspots;
         String hotspotVcf = null;
 
         if (hostname.toLowerCase().contains("datastore")) {
-            viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+            serveSourceDir = "/data/common/dbs/serve";
+
             generateHotspots = true;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsServe.vcf";
         } else {
-            viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
             refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+            serveSourceDir = System.getProperty("user.home") + "/hmf/projects/serve";
 
             generateHotspots = false;
         }
 
+        String viccJson = serveSourceDir + "/vicc/all.json";
+        String docmTsv = serveSourceDir + "/docm/docm_v3.2.tsv";
+        String hartwigCohortTsv = serveSourceDir + "/hartwig/hartwig_cohort.tsv";
+        String hartwigCuratedTsv = serveSourceDir + "/hartwig/hartwig_curated.tsv";
+
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
-        LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the reference fasta path", refGenomeFastaFile);
+        LOGGER.debug("Configured '{}' as the VICC json path", viccJson);
+        LOGGER.debug("Configured '{}' as the DoCM TSV path", docmTsv);
+        LOGGER.debug("Configured '{}' as the Hartwig Cohort TSV path", hartwigCohortTsv);
+        LOGGER.debug("Configured '{}' as the Hartwig Curated TSV path", hartwigCuratedTsv);
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
-
-        List<ViccSource> sources = Lists.newArrayList(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
-        ViccQuerySelection querySelection =
-                ImmutableViccQuerySelection.builder().sourcesToFilterOn(sources).maxEntriesToInclude(MAX_VICC_ENTRIES).build();
-        List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJsonPath, querySelection);
 
         HotspotGenerator hotspotGenerator =
                 generateHotspots ? HotspotGenerator.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : HotspotGenerator.dummy();
 
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(hotspotGenerator);
-        Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
-        Map<VariantHotspot, HotspotAnnotation> hotspotMap = ViccUtil.convertToHotspotMap(resultsPerEntry);
+        Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, hotspotGenerator);
+        Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, hotspotGenerator);
+        
 
         if (generateHotspots && hotspotVcf != null) {
-            writeHotspots(hotspotVcf, hotspotMap);
+            writeHotspots(hotspotVcf, viccHotspotMap);
 
             Set<String> unresolvedProteinAnnotations = hotspotGenerator.unresolvedProteinAnnotations();
             if (!unresolvedProteinAnnotations.isEmpty()) {
@@ -98,6 +107,29 @@ public class ServeHotspotGenerator {
                 LOGGER.info("Hotspot generator could resolve hotspots for every protein annotation");
             }
         }
+    }
+
+    @NotNull
+    private static Map<VariantHotspot, HotspotAnnotation> viccHotspotMap(@NotNull String viccJson, @NotNull HotspotGenerator hotspotGenerator)
+            throws IOException {
+        List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
+        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(hotspotGenerator);
+        Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
+
+        return ViccUtil.convertToHotspotMap(resultsPerEntry);
+    }
+
+    @NotNull
+    private static Map<VariantHotspot, HotspotAnnotation> docmHotspotMap(@NotNull String docmTsv, @NotNull HotspotGenerator hotspotGenerator)
+            throws IOException {
+        LOGGER.info("Reading DoCM TSV from '{}'", docmTsv);
+        List<DocmEntry> docmEntries = DocmFileReader.readDcomFile(docmTsv);
+        LOGGER.info(" Read {} entries", docmEntries.size());
+
+        DocmExtractor docmExtractor = new DocmExtractor(hotspotGenerator);
+        Map<DocmEntry, List<VariantHotspot>> docmHotspotsPerEntry = docmExtractor.extractFromDocmEntries(docmEntries);
+
+        return DocmUtil.convertHotspots(docmHotspotsPerEntry);
     }
 
     private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<VariantHotspot, HotspotAnnotation> hotspotMap) {
