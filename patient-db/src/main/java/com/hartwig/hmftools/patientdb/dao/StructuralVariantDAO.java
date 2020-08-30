@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTU
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -25,6 +26,8 @@ import org.jooq.Record1;
 import org.jooq.Result;
 
 class StructuralVariantDAO {
+
+    private static final int MAX_LINKED_BY = 1024;
 
     @NotNull
     private final DSLContext context;
@@ -248,8 +251,8 @@ class StructuralVariantDAO {
                 variant.inexactHomologyOffsetStart(),
                 variant.inexactHomologyOffsetEnd(),
                 variant.id(),
-                variant.startLinkedBy(),
-                variant.endLinkedBy(),
+                limitSizeOfCSV(MAX_LINKED_BY, variant.startLinkedBy()),
+                limitSizeOfCSV(MAX_LINKED_BY, variant.endLinkedBy()),
                 variant.recovered(),
                 variant.recoveryMethod(),
                 variant.recoveryFilter(),
@@ -272,4 +275,30 @@ class StructuralVariantDAO {
     private static boolean byteToBoolean(@NotNull Byte b) {
         return b != 0;
     }
+
+    static String limitSizeOfCSV(int maxSize, String linkedBy) {
+        if (linkedBy.length() <= maxSize) {
+            return linkedBy;
+        }
+
+        if (!linkedBy.contains(",")) {
+            return linkedBy.substring(0, maxSize);
+        }
+
+        StringJoiner joiner = new StringJoiner(",");
+        String[] csv = linkedBy.split(",");
+        for (String s : csv) {
+            int sizeWithNewString = joiner.length() == 0
+                    ? s.length()
+                    : joiner.length() + 1 + s.length();
+
+            if (sizeWithNewString > maxSize) {
+                return joiner.toString();
+            }
+            joiner.add(s);
+        }
+
+        return joiner.toString();
+    }
+
 }
