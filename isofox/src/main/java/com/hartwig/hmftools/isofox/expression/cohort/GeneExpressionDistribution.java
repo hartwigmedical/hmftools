@@ -59,7 +59,7 @@ public class GeneExpressionDistribution
 
         initialiseWriter();
 
-        // load each sample's alt SJs and consolidate into a single list
+        // load each sample's gene expression records and consolidate into a single list
         for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
         {
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
