@@ -9,4 +9,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class TransvarFrameshift implements TransvarAnnotation {
 
+    public abstract boolean isFrameshiftInsideStartCodon();
+
 }

@@ -32,13 +32,19 @@ final class CurationFactory {
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "M1? (c.3G>A)"), "M1I (c.3G>A)");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "M1? (c.1-1_20del21)"),
                 "M1I (c.1-1_20del21)");
-        // Below is a mutation followed by a frameshift. The FS should be in small letters.
-        FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "M54IFS (c.162_166delGGAGG)"),
-                "M54Ifs (c.162_166delGGAGG)");
+
+        // Below is not wrong but leads to inconsistencies downstream.
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "EGFR", "ENST00000275493", "V769_770insASV"),
                 "V769_D770insASV");
 
-        // The below variants don't exist
+        // Variants implying stop lost. They are real but not handled yet in SERVE (TODO DEV-1475)
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "*214W (c.642A>G)"));
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "MLH1", "ENST00000231790", "*757L"));
+
+        // Variants that don't exist
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "NOTCH1", "ENST00000277541", "S2275FS"));
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "NOTCH1", "ENST00000277541", "V2444FS"));
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "L132fs (c.395delA)"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "GNAS", "ENST00000371100", "T393C"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "TERT", "ENST00000310581", "C228T"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "P81delRVV (c.243_251delGCGCGTCGT)"));
@@ -46,14 +52,17 @@ final class CurationFactory {
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "N167T (c.392A>C)"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "X214L (c.641G>T)"));
 
-        // The below variant is only possible through an MNV which spans an intron
+        // Variant only possible through an MNV which spans an intron
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "V155C (c.462delA)"));
 
-        // Synonymous variant, can't have an impact or evidence
+        // Synonymous variant, unlikely to have an impact
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "R161R (c.481C>A)"));
 
-        // The below variant is unlikely to be real as it spans multiple exons
+        // Variant unlikely to be real as it spans multiple exons
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "G114dup (c.342dupGGT)"));
+
+        // Variant hard to interpret as it crossing exonic boundary
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "G114fs (c.341delCGTTTCCAACAATTTCTCGGTGT)"));
     }
 
     private static void populateJaxCuration() {
@@ -87,6 +96,12 @@ final class CurationFactory {
 
         // The below is pending investigation by JAX, possibly a mistake by the paper.
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "PIK3CA", null, "PIK3CA R425L "));
+
+        // Variant that doesn't seem to exist. TODO Report to JAX in case still exists.
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "PTEN", null, "PTEN Y86fs "));
+
+        // Variant hard to interpret as it crossing exonic boundary
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "VHL", null, "VHL V155fs "));
     }
 
     private static void populateOncoKBCuration() {
@@ -96,15 +111,15 @@ final class CurationFactory {
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "PTEN", "ENST00000371953", "I32del"), "I33del");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
 
-        // The below variant is fine, but interpretation currently not supported by SERVE
+        // Variant is fine, but interpretation currently not supported by SERVE
         // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "BRAF", "ENST00000288602", "R506_K507insVLR"));
 
-        // The below variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
+        // Variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "PDGFRA", "ENST00000257290", "E311_K312del"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "ETV6", "ENST00000396373", "385_418del"));
 
-        // The below variants don't exist
+        // Variants that don't exist
         //  - Below is called a "silent promoter" according to https://pubmed.ncbi.nlm.nih.gov/11606402/
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "APC", "ENST00000257430", "A290T"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "AR", "ENST00000374690", "F876L"));
@@ -140,10 +155,12 @@ final class CurationFactory {
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "JAK1", "ENST00000342505", "G871E"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "KIT", "ENST00000288135", "A504_Y505ins"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "KIT", "ENST00000288135", "D814V"));
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "MAP3K1", "ENST00000399503", "T1481fs"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "PMS2", "ENST00000265849", "E541K"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "POLE", "ENST00000320574", "S279Y"));
         //  - This one comes from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4155059/ and probably should be L1237F.
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "RAD50", "ENST00000265335", "L1273F"));
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "RAD51D", "ENST00000335858", "S257delinsK"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "RXRA", "ENST00000481739", "S247F"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "RXRA", "ENST00000481739", "S247Y"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "SMAD4", "ENST00000342988", "D357Y"));

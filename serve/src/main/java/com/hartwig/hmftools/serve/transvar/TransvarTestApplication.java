@@ -27,7 +27,7 @@ public class TransvarTestApplication {
 
         String gene = "VHL";
         String transcript = "ENST00000256474";
-        String proteinImpact = "G114fs";
+        String proteinImpact = "M1fs";
 
         extractAndPrintHotspots(transvar, gene, transcript, proteinImpact);
     }

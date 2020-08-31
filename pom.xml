@@ -25,7 +25,6 @@
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>
         <module>sage</module>
-        <module>strelka-post-process</module>
         <module>bachelor</module>
         <module>sv-linx</module>
         <module>sv-tools</module>
@@ -69,7 +68,6 @@
         <cobalt.version>1.8</cobalt.version>
         <purple.version>2.46</purple.version>
         <sage.version>2.2</sage.version>
-        <strelka-post-process.version>1.6</strelka-post-process.version>
         <health-checker.version>3.1</health-checker.version>
         <patient-reporter.version>7.14</patient-reporter.version>
         <patient-db.version>3.46</patient-db.version>

@@ -94,7 +94,7 @@ final class TransvarConverter {
             if (gdna.contains(HGVS_INSERTION) || gdna.contains(HGVS_DELETION)) {
                 annotation = annotationForInsertionDeletion(position, gdnaParts[1], messageField);
             } else if (isFrameshift(messageField)) {
-                annotation = ImmutableTransvarFrameshift.builder().build();
+                annotation = annotationForFrameshift(coordinateField);
             } else {
                 annotation = annotationForDuplication(position, gdnaParts[1]);
             }
@@ -103,6 +103,11 @@ final class TransvarConverter {
         } else {
             return createForSNV(recordBuilder, gdna, messageField);
         }
+    }
+
+    @NotNull
+    private static TransvarAnnotation annotationForFrameshift(@NotNull String coordinateField) {
+        return ImmutableTransvarFrameshift.builder().isFrameshiftInsideStartCodon(coordinateField.contains("p.M1fs")).build();
     }
 
     @NotNull

@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.serve.docm;
+package com.hartwig.hmftools.serve.hartwig.curated;
 
-import com.hartwig.hmftools.serve.hotspot.HotspotSourceEntry;
+import com.hartwig.hmftools.serve.hartwig.HartwigEntry;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -9,7 +9,18 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DocmEntry implements HotspotSourceEntry {
+public abstract class HartwigCuratedEntry implements HartwigEntry  {
+
+    @NotNull
+    public abstract String chromosome();
+
+    public abstract long position();
+
+    @NotNull
+    public abstract String ref();
+
+    @NotNull
+    public abstract String alt();
 
     @NotNull
     public abstract String gene();
@@ -19,5 +30,4 @@ public abstract class DocmEntry implements HotspotSourceEntry {
 
     @NotNull
     public abstract String proteinAnnotation();
-
 }

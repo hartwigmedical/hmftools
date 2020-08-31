@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
+import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -35,7 +35,12 @@ public class GeneLevelEventExtractor {
             "mutant",
             "mut",
             "gene_only",
-            "ACTIVATING MUTATION");
+            "ACTIVATING MUTATION",
+            "DELETERIOUS MUTATION",
+            "feature_truncation",
+            "FRAMESHIFT TRUNCATION",
+            "FRAMESHIFT MUTATION",
+            "SPLICE VARIANT 7", "Splice", "DNMT3B7", "LCS6-variant", "AR-V7", "ARv567es");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
@@ -61,9 +66,9 @@ public class GeneLevelEventExtractor {
 
         for (Feature feature : viccEntry.features()) {
 
-            if (!HotspotExtractor.isResolvableProteinAnnotation(feature.proteinAnnotation())) {
+            if (!HotspotGenerator.isResolvableProteinAnnotation(feature.proteinAnnotation())) {
                 if (GENE_LEVEL.contains(feature.biomarkerType()) || GENE_LEVEL.contains(feature.name())
-                        || GENE_LEVEL.contains(feature.provenanceRule())) {
+                        || GENE_LEVEL.contains(feature.provenanceRule()) || GENE_LEVEL.contains(feature.proteinAnnotation())) {
                     geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
                 }
             }

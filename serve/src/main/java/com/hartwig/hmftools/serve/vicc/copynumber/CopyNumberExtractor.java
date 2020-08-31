@@ -42,7 +42,7 @@ public class CopyNumberExtractor {
             "over exp",
             "amp over exp",
             "OVEREXPRESSION",
-            "Overexpression", "ITD");
+            "Overexpression");
 
     private static final Set<String> DELETIONS = Sets.newHashSet("Deletion",
             "deletion",
@@ -52,8 +52,7 @@ public class CopyNumberExtractor {
             "dec exp",
             "UNDEREXPRESSION",
             "loss",
-            "LOSS",
-            "DELETERIOUS MUTATION", "Copy Number Loss", "COPY-NEUTRAL LOSS OF HETEROZYGOSITY");
+            "LOSS", "Copy Number Loss");
 
     @NotNull
     public Set<String> uniqueAmps() {
@@ -87,7 +86,7 @@ public class CopyNumberExtractor {
     private String extractKeyAmplificationDeletion(@NotNull Feature feature) {
         //TODO: fix combi events
         String featureName = feature.name();
-        if (featureName.contains(" ")) {
+        if (featureName.contains(" ") && !featureName.equals("Copy Number Loss")) {
             featureName = featureName.split(" ", 2)[1];
         }
 

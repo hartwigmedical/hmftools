@@ -25,7 +25,5 @@ public enum VariantTier {
             default:
                 return UNKNOWN;
         }
-
     }
-
 }

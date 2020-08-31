@@ -14,8 +14,10 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,13 +30,16 @@ import htsjdk.variant.vcf.VCFCodec;
 public class ServeAnnotatedHotspotVCFChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(ServeAnnotatedHotspotVCFChecker.class);
+    private static final boolean LOG_DEBUG = false;
 
     private static final Map<String, Map<String, List<String>>> SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
 
     private final Map<String, Set<String>> annotationsRequestedForMappingPerTranscript = Maps.newHashMap();
 
     public static void main(String[] args) throws IOException {
-        //        Configurator.setRootLevel(Level.DEBUG);
+        if (LOG_DEBUG) {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
 
         String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots.vcf";
         new ServeAnnotatedHotspotVCFChecker().run(annotatedHotspotVcf);
@@ -289,7 +294,6 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createBRCA1Map() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.V1688del", Lists.newArrayList("p.V1687del"));
-        map.put("p.S1297del", Lists.newArrayList("p.S1298del"));
         return map;
     }
 
