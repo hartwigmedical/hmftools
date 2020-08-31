@@ -51,6 +51,7 @@ public class HartwigExtractor {
                 }
                 hotspots.add(impliedHotspot);
             }
+            hotspotsPerEntry.put(entry, hotspots);
         }
 
         return hotspotsPerEntry;

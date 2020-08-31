@@ -101,6 +101,13 @@ public class ServeHotspotGenerator {
         Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, proteinToHotspotConverter);
         Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap = hartwigCohortMap(hartwigCohortTsv, proteinToHotspotConverter);
         Map<VariantHotspot, HotspotAnnotation> hartwigCuratedMap = hartwigCuratedMap(hartwigCuratedTsv, proteinToHotspotConverter);
+
+        LOGGER.info("Merging {} VICC hotspots with {} DoCM hotspots and {} Hartwig Cohort hotspots and {} Hartwig Curated hotspots",
+                viccHotspotMap.size(),
+                docmHotspotMap.size(),
+                hartwigCohortMap.size(),
+                hartwigCuratedMap.size());
+
         Map<VariantHotspot, HotspotAnnotation> mergedMap =
                 HotspotFunctions.mergeHotspots(Lists.newArrayList(viccHotspotMap, docmHotspotMap, hartwigCohortMap, hartwigCuratedMap));
 
@@ -109,12 +116,12 @@ public class ServeHotspotGenerator {
 
             Set<String> unresolvedProteinAnnotations = proteinToHotspotConverter.unresolvedProteinAnnotations();
             if (!unresolvedProteinAnnotations.isEmpty()) {
-                LOGGER.info("Hotspot generator could not resolve {} protein annotations", unresolvedProteinAnnotations.size());
+                LOGGER.warn("Protein resolver could not resolve {} protein annotations", unresolvedProteinAnnotations.size());
                 for (String unresolvedProteinAnnotation : unresolvedProteinAnnotations) {
-                    LOGGER.warn("Hotspot generator could not resolve protein annotation '{}'", unresolvedProteinAnnotation);
+                    LOGGER.warn("Protein resolver could not resolve protein annotation '{}'", unresolvedProteinAnnotation);
                 }
             } else {
-                LOGGER.info("Hotspot generator could resolve hotspots for every protein annotation");
+                LOGGER.info("Protein resolver could resolve hotspots for every protein annotation");
             }
         }
     }
