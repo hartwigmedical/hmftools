@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
+import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -57,7 +57,7 @@ public class ViccTestApplication {
         LOGGER.debug("Configured '{}' as the event mapping output TSV", eventMappingTsv);
 
         List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(HotspotGenerator.dummy());
+        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(ProteinToHotspotConverter.dummy());
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
         ViccUtil.writeEventMappingToTsv(eventMappingTsv, resultsPerEntry);

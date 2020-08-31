@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
+import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,10 +18,10 @@ public class HartwigExtractor {
     private static final Logger LOGGER = LogManager.getLogger(HartwigExtractor.class);
 
     @NotNull
-    private final HotspotGenerator hotspotGenerator;
+    private final ProteinToHotspotConverter proteinToHotspotConverter;
 
-    public HartwigExtractor(@NotNull final HotspotGenerator hotspotGenerator) {
-        this.hotspotGenerator = hotspotGenerator;
+    public HartwigExtractor(@NotNull final ProteinToHotspotConverter proteinToHotspotConverter) {
+        this.proteinToHotspotConverter = proteinToHotspotConverter;
     }
 
     @NotNull
@@ -30,8 +30,8 @@ public class HartwigExtractor {
         for (HartwigEntry entry : entries) {
             List<VariantHotspot> hotspots = Lists.newArrayList();
             if (!entry.proteinAnnotation().isEmpty()) {
-                if (HotspotGenerator.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
-                    hotspots = hotspotGenerator.generateHotspots(entry.gene(), entry.transcript(), entry.proteinAnnotation());
+                if (ProteinToHotspotConverter.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
+                    hotspots = proteinToHotspotConverter.generateHotspots(entry.gene(), entry.transcript(), entry.proteinAnnotation());
                 } else {
                     LOGGER.warn("Cannot resolve Hartwig Cohort protein annotation: '{}:p.{}'", entry.gene(), entry.proteinAnnotation());
                 }

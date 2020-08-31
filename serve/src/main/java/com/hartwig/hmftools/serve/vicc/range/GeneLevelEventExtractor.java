@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
+import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -66,7 +66,7 @@ public class GeneLevelEventExtractor {
 
         for (Feature feature : viccEntry.features()) {
 
-            if (!HotspotGenerator.isResolvableProteinAnnotation(feature.proteinAnnotation())) {
+            if (!ProteinToHotspotConverter.isResolvableProteinAnnotation(feature.proteinAnnotation())) {
                 if (GENE_LEVEL.contains(feature.biomarkerType()) || GENE_LEVEL.contains(feature.name())
                         || GENE_LEVEL.contains(feature.provenanceRule()) || GENE_LEVEL.contains(feature.proteinAnnotation())) {
                     geneLevelEventsPerFeature.put(feature, feature.geneSymbol());

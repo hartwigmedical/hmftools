@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
+import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,18 +16,18 @@ public class DocmExtractor {
     private static final Logger LOGGER = LogManager.getLogger(DocmExtractor.class);
 
     @NotNull
-    private final HotspotGenerator hotspotGenerator;
+    private final ProteinToHotspotConverter proteinToHotspotConverter;
 
-    public DocmExtractor(@NotNull final HotspotGenerator hotspotGenerator) {
-        this.hotspotGenerator = hotspotGenerator;
+    public DocmExtractor(@NotNull final ProteinToHotspotConverter proteinToHotspotConverter) {
+        this.proteinToHotspotConverter = proteinToHotspotConverter;
     }
 
     @NotNull
     public Map<DocmEntry, List<VariantHotspot>> extractFromDocmEntries(@NotNull List<DocmEntry> entries) {
         Map<DocmEntry, List<VariantHotspot>> hotspotsPerEntry = Maps.newHashMap();
         for (DocmEntry entry : entries) {
-            if (HotspotGenerator.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
-                hotspotsPerEntry.put(entry, hotspotGenerator.generateHotspots(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
+            if (ProteinToHotspotConverter.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
+                hotspotsPerEntry.put(entry, proteinToHotspotConverter.generateHotspots(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
             } else {
                 LOGGER.warn("Cannot resolve DoCM protein annotation: '{}:p.{}'", entry.gene(), entry.proteinAnnotation());
             }
