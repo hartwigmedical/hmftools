@@ -27,7 +27,7 @@ public class HotspotExtractor {
             String proteinAnnotation = feature.proteinAnnotation();
             if (ProteinToHotspotConverter.isResolvableProteinAnnotation(proteinAnnotation)) {
                 allHotspotsPerFeature.put(feature,
-                        proteinToHotspotConverter.generateHotspots(feature.geneSymbol(), viccEntry.transcriptId(), proteinAnnotation));
+                        proteinToHotspotConverter.resolveProteinAnnotation(feature.geneSymbol(), viccEntry.transcriptId(), proteinAnnotation));
             }
         }
 

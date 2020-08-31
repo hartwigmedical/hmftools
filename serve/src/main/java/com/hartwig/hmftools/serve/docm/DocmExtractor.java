@@ -27,7 +27,7 @@ public class DocmExtractor {
         Map<DocmEntry, List<VariantHotspot>> hotspotsPerEntry = Maps.newHashMap();
         for (DocmEntry entry : entries) {
             if (ProteinToHotspotConverter.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
-                hotspotsPerEntry.put(entry, proteinToHotspotConverter.generateHotspots(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
+                hotspotsPerEntry.put(entry, proteinToHotspotConverter.resolveProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
             } else {
                 LOGGER.warn("Cannot resolve DoCM protein annotation: '{}:p.{}'", entry.gene(), entry.proteinAnnotation());
             }

@@ -22,8 +22,8 @@ import com.hartwig.hmftools.serve.hartwig.curated.HartwigCuratedEntry;
 import com.hartwig.hmftools.serve.hartwig.curated.HartwigCuratedFileReader;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotUtil;
+import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
-import com.hartwig.hmftools.serve.util.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.vicc.ViccExtractionResult;
 import com.hartwig.hmftools.serve.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.vicc.ViccExtractorFactory;
@@ -93,9 +93,9 @@ public class ServeHotspotGenerator {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
-        ProteinToHotspotConverter proteinToHotspotConverter =
-                generateHotspots ? ProteinToHotspotConverter.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile) : ProteinToHotspotConverter
-                        .dummy();
+        ProteinToHotspotConverter proteinToHotspotConverter = generateHotspots
+                ? ProteinToHotspotConverter.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
+                : ProteinToHotspotConverter.dummy();
 
         Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, proteinToHotspotConverter);
         Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, proteinToHotspotConverter);
@@ -190,8 +190,7 @@ public class ServeHotspotGenerator {
                     .alleles(hotspotAlleles)
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
                     .attribute("sources", buildSourcesString(annotation.sources()))
-                    .attribute("feature",
-                            ProteinKeyFormatter.toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation()))
+                    .attribute("input", ProteinKeyFormatter.toProteinKey(annotation))
                     .make();
 
             LOGGER.debug("Writing {}", variantContext);

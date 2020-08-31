@@ -31,7 +31,7 @@ public class HartwigExtractor {
             List<VariantHotspot> hotspots = Lists.newArrayList();
             if (!entry.proteinAnnotation().isEmpty()) {
                 if (ProteinToHotspotConverter.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
-                    hotspots = proteinToHotspotConverter.generateHotspots(entry.gene(), entry.transcript(), entry.proteinAnnotation());
+                    hotspots = proteinToHotspotConverter.resolveProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation());
                 } else {
                     LOGGER.warn("Cannot resolve Hartwig Cohort protein annotation: '{}:p.{}'", entry.gene(), entry.proteinAnnotation());
                 }

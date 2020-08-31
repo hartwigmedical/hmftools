@@ -32,9 +32,11 @@ public class ProteinToHotspotConverter {
     private final ProteinResolver proteinResolver;
 
     @NotNull
-    public static ProteinToHotspotConverter transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
-            throws FileNotFoundException {
-        LOGGER.info("Creating hotspot generator with ref genome version '{}' and fasta path '{}'", refGenomeVersion, refGenomeFastaFile);
+    public static ProteinToHotspotConverter transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion,
+            @NotNull String refGenomeFastaFile) throws FileNotFoundException {
+        LOGGER.info("Creating protein to hotspot resolved with ref genome version '{}' and fasta path '{}'",
+                refGenomeVersion,
+                refGenomeFastaFile);
         return new ProteinToHotspotConverter(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile));
     }
 
@@ -61,7 +63,7 @@ public class ProteinToHotspotConverter {
     }
 
     @NotNull
-    public List<VariantHotspot> generateHotspots(@NotNull String gene, @Nullable String specificTranscript,
+    public List<VariantHotspot> resolveProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) {
         if (isResolvableProteinAnnotation(proteinAnnotation)) {
             return proteinResolver.extractHotspotsFromProteinAnnotation(gene, specificTranscript, proteinAnnotation);
