@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.common.cli;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 
@@ -23,6 +26,11 @@ public final class DriverGenePanelConfig {
 
     public static boolean isConfigured(@NotNull final CommandLine cmd) {
         return cmd.hasOption(DRIVER_GENE_PANEL_OPTION);
+    }
+
+    @NotNull
+    public static List<DriverGene> driverGenes(@NotNull final CommandLine cmd) throws IOException {
+        return DriverGeneFile.read(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
     }
 
     @NotNull

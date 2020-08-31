@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cli.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 
@@ -159,7 +158,7 @@ public class LinxConfig
         {
             try
             {
-                return DriverGenePanelConfig.driverGenePanel(cmd).driverGenes();
+                return DriverGenePanelConfig.driverGenes(cmd);
             }
             catch (IOException e)
             {
