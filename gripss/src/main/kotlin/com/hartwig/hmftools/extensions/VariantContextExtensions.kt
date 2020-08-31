@@ -34,6 +34,10 @@ fun VariantContext.imprecise(): Boolean {
     return this.getAttributeAsBoolean("IMPRECISE", false)
 }
 
+fun VariantContext.realigned(): Boolean {
+    return this.getAttributeAsBoolean("REALIGN", false)
+}
+
 fun VariantContext.homologyLength(): Int {
     return this.getAttributeAsInt("HOMLEN", 0)
 }

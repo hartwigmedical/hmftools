@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo
 import com.hartwig.hmftools.extensions.BEALN
 import com.hartwig.hmftools.extensions.REPEAT_MASKER_REPEAT_CLASS
 import com.hartwig.hmftools.extensions.REPEAT_MASKER_REPEAT_TYPE
+import com.hartwig.hmftools.extensions.realigned
 import com.hartwig.hmftools.gripss.GripssApplication.Companion.logger
 import com.hartwig.hmftools.gripss.dedup.DedupPair
 import com.hartwig.hmftools.gripss.dedup.DedupSingle
@@ -152,28 +153,43 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     }
 
     private fun hardFilterAndRealign(fileReader: VCFFileReader, ordinals: Pair<Int, Int>, hotspotFilter: (StructuralVariantContext) -> Boolean, contigComparator: ContigComparator): List<StructuralVariantContext> {
-        val unfiltered: MutableSet<String> = mutableSetOf()
         val hardFilter: MutableSet<String> = mutableSetOf()
-        val structuralVariants: MutableList<StructuralVariantContext> = mutableListOf()
+        val validVariantsById: MutableMap<String, StructuralVariantContext> = mutableMapOf()
 
+        // Read in all non hard filtered
         for (variantContext in fileReader) {
             val structuralVariant = StructuralVariantContext(variantContext, ordinals.first, ordinals.second)
             val isHotspot = hotspotFilter(structuralVariant)
-            val isMateFiltered = hardFilter.contains(structuralVariant.vcfId)
-            val isHardFiltered = isMateFiltered || structuralVariant.isHardFilter(config.filterConfig, contigComparator, isHotspot)
+            val isMateHardFiltered = hardFilter.contains(structuralVariant.vcfId)
+            val isHardFiltered = isMateHardFiltered || structuralVariant.isHardFilter(config.filterConfig, contigComparator, isHotspot)
 
             if (isHardFiltered) {
-                structuralVariant.mateId?.let { hardFilter.add(it) }
+                structuralVariant.mateId?.let {
+                    hardFilter.add(it)
+                    validVariantsById.remove(it)
+                }
             } else {
-                unfiltered.add(variantContext.id)
-                structuralVariants.add(structuralVariant.realign(refGenome, contigComparator))
+                validVariantsById[variantContext.id] = structuralVariant
+            }
+        }
+
+        // Realignment
+        val vcfIds = validVariantsById.keys
+        for (vcfId in vcfIds) {
+            val original = validVariantsById[vcfId]!!
+            val realigned = original.realign(refGenome, contigComparator)
+            if (realigned.context.realigned()) {
+                validVariantsById[vcfId] = realigned
+                realigned.mateId?.let { validVariantsById[it] }?.let { x ->
+                    validVariantsById[x.vcfId] = x.realignRemote(realigned)
+                }
             }
         }
 
         val contextComparator = VariantContextComparator(dictionary)
         val comparator: Comparator<StructuralVariantContext> = Comparator { x, y -> contextComparator.compare(x.context, y.context) }
-        val mateIsValidOrNull = { x: StructuralVariantContext -> x.mateId?.let { unfiltered.contains(it) } != false }
-        return structuralVariants.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }.sortedWith(comparator)
+        val mateIsValidOrNull = { x: StructuralVariantContext -> x.mateId?.let { validVariantsById.contains(it) } != false }
+        return validVariantsById.values.filter { x -> !hardFilter.contains(x.vcfId) && mateIsValidOrNull(x) }.sortedWith(comparator)
     }
 
     private fun assertInfoLine(header: VCFHeader, tag: String) {
