@@ -12,7 +12,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
-import com.hartwig.hmftools.serve.hotspot.HotspotUtil;
+import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
@@ -145,7 +145,7 @@ public final class ViccUtil {
                             entry.transcriptId(),
                             feature.proteinAnnotation());
                     if (currentAnnotation != null) {
-                        convertedMap.put(hotspot, HotspotUtil.mergeHotspotAnnotations(currentAnnotation, newAnnotation));
+                        convertedMap.put(hotspot, HotspotFunctions.mergeHotspotAnnotations(currentAnnotation, newAnnotation));
                     } else {
                         convertedMap.put(hotspot, newAnnotation);
                     }

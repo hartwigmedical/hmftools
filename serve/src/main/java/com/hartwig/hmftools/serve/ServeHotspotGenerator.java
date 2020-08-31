@@ -21,7 +21,7 @@ import com.hartwig.hmftools.serve.hartwig.cohort.HartwigCohortFileReader;
 import com.hartwig.hmftools.serve.hartwig.curated.HartwigCuratedEntry;
 import com.hartwig.hmftools.serve.hartwig.curated.HartwigCuratedFileReader;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
-import com.hartwig.hmftools.serve.hotspot.HotspotUtil;
+import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 import com.hartwig.hmftools.serve.vicc.ViccExtractionResult;
@@ -102,7 +102,7 @@ public class ServeHotspotGenerator {
         Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap = hartwigCohortMap(hartwigCohortTsv, proteinToHotspotConverter);
         Map<VariantHotspot, HotspotAnnotation> hartwigCuratedMap = hartwigCuratedMap(hartwigCuratedTsv, proteinToHotspotConverter);
         Map<VariantHotspot, HotspotAnnotation> mergedMap =
-                HotspotUtil.mergeHotspots(Lists.newArrayList(viccHotspotMap, docmHotspotMap, hartwigCohortMap, hartwigCuratedMap));
+                HotspotFunctions.mergeHotspots(Lists.newArrayList(viccHotspotMap, docmHotspotMap, hartwigCohortMap, hartwigCuratedMap));
 
         if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, mergedMap);
@@ -139,7 +139,7 @@ public class ServeHotspotGenerator {
         DocmExtractor docmExtractor = new DocmExtractor(proteinToHotspotConverter);
         Map<DocmEntry, List<VariantHotspot>> docmHotspotsPerEntry = docmExtractor.extractFromDocmEntries(docmEntries);
 
-        return HotspotUtil.convertHotspots("docm", docmHotspotsPerEntry);
+        return HotspotFunctions.convertHotspots("docm", docmHotspotsPerEntry);
     }
 
     @NotNull
@@ -152,7 +152,7 @@ public class ServeHotspotGenerator {
         HartwigExtractor hartwigExtractor = new HartwigExtractor(proteinToHotspotConverter);
         Map<HartwigEntry, List<VariantHotspot>> cohortHotspotsPerEntry = hartwigExtractor.extractFromHartwigEntries(hartwigCohortEntries);
 
-        return HotspotUtil.convertHotspots("hartwig_cohort", cohortHotspotsPerEntry);
+        return HotspotFunctions.convertHotspots("hartwig_cohort", cohortHotspotsPerEntry);
     }
 
     @NotNull
@@ -165,7 +165,7 @@ public class ServeHotspotGenerator {
         HartwigExtractor hartwigExtractor = new HartwigExtractor(proteinToHotspotConverter);
         Map<HartwigEntry, List<VariantHotspot>> curatedHotspotsPerEntry = hartwigExtractor.extractFromHartwigEntries(hartwigCuratedEntries);
 
-        return HotspotUtil.convertHotspots("hartwig_curated", curatedHotspotsPerEntry);
+        return HotspotFunctions.convertHotspots("hartwig_curated", curatedHotspotsPerEntry);
     }
 
     private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<VariantHotspot, HotspotAnnotation> hotspotMap) {
