@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analyser;
+package com.hartwig.hmftools.linx.clustering;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;

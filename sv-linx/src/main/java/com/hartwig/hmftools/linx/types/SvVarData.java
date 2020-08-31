@@ -84,6 +84,8 @@ public class SvVarData
 
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
     public static final String INF_SV_TYPE = "INF";
+    public static final String SGL_CENTRO_SATELLITE = "Satellite/centr";
+    public static final String SGL_TELO_SATELLITE = "Satellite/telo";
 
     public static String ASSEMBLY_TYPE_TI = "asm";
     public static String TRANSITIVE_TYPE_TI = "trs";
@@ -549,7 +551,7 @@ public class SvVarData
         if(!isSglBreakend() || isInferredSgl())
             return false;
 
-        if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr") || mSVData.insertSequenceRepeatClass().equals("Satellite/telo"))
+        if(mSVData.insertSequenceRepeatClass().equals(SGL_CENTRO_SATELLITE) || mSVData.insertSequenceRepeatClass().equals(SGL_TELO_SATELLITE))
             return true;
 
         if(mSVData.insertSequenceRepeatClass().equals("Simple_repeat"))
@@ -563,10 +565,10 @@ public class SvVarData
 
     public boolean sglToSatelliteRepeats()
     {
-        if(!isSglBreakend() || isInferredSgl())
+        if(type() != SGL)
             return false;
 
-        if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr"))
+        if(mSVData.insertSequenceRepeatClass().equals(SGL_CENTRO_SATELLITE))
             return true;
 
         final String repeatType = mSVData.insertSequenceRepeatType();

@@ -1,5 +1,6 @@
-package com.hartwig.hmftools.linx.analyser;
+package com.hartwig.hmftools.linx.clustering;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -7,8 +8,10 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringReason.CONSEC_BREAKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.OVERLAP_FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.SATELLITE_SGL;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.TI_JCN_MATCH;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
+import static com.hartwig.hmftools.linx.types.SvVarData.SGL_CENTRO_SATELLITE;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -28,6 +31,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class ComplexMergeRuleTest
@@ -222,6 +227,44 @@ public class ComplexMergeRuleTest
     }
 
     @Test
+    public void testChainedFoldbackMerge()
+    {
+        LinxTester tester = new LinxTester();
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        // cluster foldbacks on the same arm even if they're chained without assembly
+
+        // foldbacks clustered due to the foldback rule
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 100, -1);
+        SvVarData var2 = createBnd(tester.nextVarId(), "1", 2000, -1, "2", 200, 1);
+
+        // second cluster is sufficiently complex and distant to not trigger other rules
+        SvVarData var3 = createBnd(tester.nextVarId(), "1", 6101000, 1, "4", 100, -1);
+        SvVarData var4 = createBnd(tester.nextVarId(), "1", 6102000, 1, "4", 200, 1);
+
+        SvVarData var5 = createDup(tester.nextVarId(), "1", 6105000, 6110000);
+        SvVarData var6 = createDup(tester.nextVarId(), "1", 6108000, 6112000);
+        SvVarData var7 = createDel(tester.nextVarId(), "1", 6111000, 6120000);
+        SvVarData var8 = createSgl(tester.nextVarId(), "1", 6115000, -1);
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2));
+        tester.AllVariants.addAll(Lists.newArrayList(var3, var4, var5, var6, var7, var8));
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(var1.isChainedFoldback());
+        assertTrue(var2.isChainedFoldback());
+        assertTrue(var3.isChainedFoldback());
+        assertTrue(var4.isChainedFoldback());
+
+        assertEquals(1, tester.getClusters().size());
+        assertTrue(var1.hasClusterReason(FOLDBACKS));
+    }
+
+        @Test
     public void testDistancePloidyLinkMatchMerge()
     {
         LinxTester tester = new LinxTester();
@@ -267,5 +310,30 @@ public class ComplexMergeRuleTest
 
         assertTrue(var6.hasClusterReason(TI_JCN_MATCH));
         assertTrue(mainCluster.hasClusterReason(TI_JCN_MATCH));
+    }
+
+    @Test
+    public void testSatelittleSglMerge()
+    {
+        LinxTester tester = new LinxTester();
+
+        // foldbacks clustered due to the foldback rule
+        SvVarData var0 = createTestSv(tester.nextVarId(), "1", "0", 500, -1, 1, 0, SGL,
+                2, 0, 1, 0, 1, "", PASS, SGL_CENTRO_SATELLITE, "SAR");
+
+        SvVarData var1 = createTestSv(tester.nextVarId(), "1", "0", 50000, -1, -1, 0, SGL,
+                2, 0, 1, 0, 1, "", PASS, "", "SAR");
+
+        tester.AllVariants.add(var0);
+        tester.AllVariants.add(var1);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.getClusters().size());
+
+        assertTrue(var0.hasClusterReason(SATELLITE_SGL));
+        assertTrue(var1.hasClusterReason(SATELLITE_SGL));
     }
 }

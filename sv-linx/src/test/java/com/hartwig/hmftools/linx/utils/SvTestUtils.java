@@ -96,13 +96,15 @@ public class SvTestUtils
             int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq)
     {
-        return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type, cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, PASS);
+        return createTestSv(
+                varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type,
+                cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, PASS, "", "");
     }
 
     public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
             int posStart, int posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq,
-            final String filter)
+            final String filter, final String repeatClass, final String repeatType)
     {
         StructuralVariantData svData =
                 ImmutableStructuralVariantData.builder()
@@ -153,8 +155,8 @@ public class SvTestUtils
                         .recoveryMethod("")
                         .recoveryFilter("")
                         .insertSequenceAlignments("")
-                        .insertSequenceRepeatClass("")
-                        .insertSequenceRepeatType("")
+                        .insertSequenceRepeatClass(repeatClass)
+                        .insertSequenceRepeatType(repeatType)
                         .insertSequenceRepeatOrientation((byte)0)
                         .insertSequenceRepeatCoverage(0.0)
                         .startAnchoringSupportDistance(0)

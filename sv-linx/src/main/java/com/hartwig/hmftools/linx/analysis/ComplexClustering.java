@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.analysis.SimpleClustering.skipClusterTyp
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsHaveDifferentJcn;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsViolateLohHomLoss;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -536,9 +537,9 @@ public class ComplexClustering
             if(mergedClusters.contains(srCluster))
                 continue;
 
-            List<String> satelliteChromosomes1 = srCluster.getSVs().stream()
+            List<String> satelliteChrArms1 = srCluster.getSVs().stream()
                     .filter(x -> x.sglToSatelliteRepeats())
-                    .map(x -> x.chromosome(true))
+                    .map(x -> makeChrArmStr(x.chromosome(true), x.arm(true)))
                     .collect(Collectors.toList());
 
             int index = 0;
@@ -557,7 +558,7 @@ public class ComplexClustering
 
                 for(SvVarData var : sglCluster.getSVs())
                 {
-                    if(var.sglToSatelliteRepeats() && satelliteChromosomes1.contains(var.chromosome(true)))
+                    if(var.sglToSatelliteRepeats() && satelliteChrArms1.contains(makeChrArmStr(var.chromosome(true), var.arm(true))))
                     {
                         final String chromosome = var.chromosome(true);
 
