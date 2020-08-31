@@ -4,45 +4,26 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-final class DndsDriverGeneLikelihoodFile {
+public final class DndsDriverGeneLikelihoodFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(DndsDriverGeneLikelihoodFile.class);
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "gene";
 
-
     @NotNull
-    static Map<String, DndsDriverGeneLikelihood> fromMultiImpactInputStream(@NotNull final InputStream genomeInputStream) {
-        return fromMultiImpactLine(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
+    public static List<DndsDriverGeneLikelihood> fromInputStream(@NotNull final InputStream genomeInputStream) {
+        return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static Map<String, DndsDriverGeneLikelihood> fromMultiImpactLine(@NotNull final List<String> lines) {
-        Map<String, DndsDriverGeneLikelihood> result = Maps.newHashMap();
-        int i = 0;
-        for (String line : lines) {
-            i++;
-            try {
-                if (!line.startsWith(HEADER_PREFIX)) {
-                    final ModifiableDndsDriverGeneLikelihood entry = fromString(line);
-                    result.put(entry.gene(), entry);
-                }
-            } catch (RuntimeException e) {
-                LOGGER.info("Unable to parse line {}: {}", i, line);
-                throw e;
-            }
-        }
-
-        return result;
+    private static List<DndsDriverGeneLikelihood> fromLines(@NotNull final List<String> lines) {
+        return lines.stream()
+                .filter(line -> !line.startsWith(HEADER_PREFIX))
+                .map(DndsDriverGeneLikelihoodFile::fromString)
+                .collect(Collectors.toList());
     }
 
     @NotNull

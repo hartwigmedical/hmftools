@@ -57,7 +57,7 @@ public interface DriverCatalogConfig {
 
             genePanel = DriverGenePanelConfig.driverGenePanel(cmd);
         } else {
-            genePanel = new DriverGenePanelFactory().empty();
+            genePanel = DriverGenePanelFactory.empty();
         }
 
         return ImmutableDriverCatalogConfig.builder().enabled(enabled).hotspots(hotspots).genePanel(genePanel).build();

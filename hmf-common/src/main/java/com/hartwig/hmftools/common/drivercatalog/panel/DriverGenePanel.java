@@ -37,11 +37,6 @@ public abstract class DriverGenePanel {
     }
 
     @NotNull
-    public Set<String> disruptionTargets() {
-        return targets(DriverGene::reportDisruption);
-    }
-
-    @NotNull
     public abstract Map<String, String> deletionBandMap();
 
     @NotNull

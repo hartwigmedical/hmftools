@@ -7,12 +7,13 @@ import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodFile;
+import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,7 +33,6 @@ public class DriverGenePanelFactory {
                 .collect(Collectors.toList());
     }
 
-
     @NotNull
     public static DriverGenePanel empty() {
         return create(Collections.emptyList());
@@ -43,20 +43,42 @@ public class DriverGenePanelFactory {
         return create(DriverGeneFile.read(driverGenePanelFile));
     }
 
-    @NotNull
     public static DriverGenePanel create(final List<DriverGene> genes) {
-        final Set<String> tsGenes = genes.stream()
-                .filter(x -> x.likelihoodType().equals(DriverCategory.TSG) && x.reportVariant())
-                .map(DriverGene::gene)
-                .collect(Collectors.toSet());
+        return create(DriverGenePanelAssembly.HG19, genes);
+    }
 
-        final Set<String> oncoGenes = genes.stream()
-                .filter(x -> x.likelihoodType().equals(DriverCategory.ONCO) && x.reportVariant())
-                .map(DriverGene::gene)
-                .collect(Collectors.toSet());
+    @NotNull
+    static DriverGenePanel create(@NotNull final DriverGenePanelAssembly assembly, final List<DriverGene> genes) {
+        final DndsGeneName dndsGeneName = new DndsGeneName(assembly);
+        final Map<String, String> dndsTsGenes = Maps.newHashMap();
+        final Map<String, String> dndsOncoGenes = Maps.newHashMap();
 
-        Map<String, DndsDriverGeneLikelihood> tsgLikelihood = DndsDriverGeneLikelihoodSupplier.tsgLikelihood(tsGenes);
-        Map<String, DndsDriverGeneLikelihood> oncoLikelihood = DndsDriverGeneLikelihoodSupplier.oncoLikelihood(oncoGenes);
+        for (DriverGene gene : genes) {
+            if (gene.reportVariant()) {
+                boolean isValidGene = dndsGeneName.isValid(gene);
+                if (!isValidGene) {
+                    throw new IllegalArgumentException(
+                            "dNdS not available for " + gene.likelihoodType() + " gene " + gene.gene() + " in driver gene panel");
+                }
+
+                final String dndsName = dndsGeneName.dndsGeneName(gene);
+                if (gene.likelihoodType().equals(DriverCategory.TSG)) {
+                    dndsTsGenes.put(dndsName, gene.gene());
+                } else {
+                    dndsOncoGenes.put(dndsName, gene.gene());
+                }
+            }
+        }
+
+        Map<String, DndsDriverGeneLikelihood> tsgLikelihood = tsgLikelihood().stream()
+                .filter(x -> dndsTsGenes.containsKey(x.gene()))
+                .map(x -> ImmutableDndsDriverGeneLikelihood.builder().from(x).gene(dndsTsGenes.get(x.gene())).build())
+                .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
+        Map<String, DndsDriverGeneLikelihood> oncoLikelihood = oncoLikelihood().stream()
+                .filter(x -> dndsOncoGenes.containsKey(x.gene()))
+                .map(x -> ImmutableDndsDriverGeneLikelihood.builder().from(x).gene(dndsOncoGenes.get(x.gene())).build())
+                .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
+
         Map<String, String> deletionBandMap = genes.stream()
                 .filter(x -> x.reportDeletion() && !x.deletionBand().isEmpty())
                 .collect(Collectors.toMap(DriverGene::gene, DriverGene::deletionBand));
@@ -67,5 +89,20 @@ public class DriverGenePanelFactory {
                 .oncoLikelihood(oncoLikelihood)
                 .deletionBandMap(deletionBandMap)
                 .build();
+    }
+
+    @NotNull
+    public static List<DndsDriverGeneLikelihood> tsgLikelihood() {
+        return DndsDriverGeneLikelihoodFile.fromInputStream(resource("/dnds/DndsDriverLikelihoodTsg.tsv"));
+    }
+
+    @NotNull
+    public static List<DndsDriverGeneLikelihood> oncoLikelihood() {
+        return DndsDriverGeneLikelihoodFile.fromInputStream(resource("/dnds/DndsDriverLikelihoodOnco.tsv"));
+    }
+
+    @NotNull
+    private static InputStream resource(@NotNull final String resource) {
+        return DriverGenePanelFactory.class.getResourceAsStream(resource);
     }
 }
