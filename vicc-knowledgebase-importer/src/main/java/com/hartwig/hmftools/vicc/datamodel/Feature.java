@@ -2,6 +2,7 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
+import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
 import com.hartwig.hmftools.vicc.util.ProteinAnnotationExtractor;
 
 import org.immutables.value.Value;
@@ -16,6 +17,12 @@ public abstract class Feature {
     @Value.Derived
     public String proteinAnnotation() {
         return ProteinAnnotationExtractor.toProteinAnnotation(name());
+    }
+
+    @NotNull
+    @Value.Derived
+    public String eventAnnotation() {
+        return EventAnnotationExtractor.toEventAnnotation();
     }
 
     @NotNull
