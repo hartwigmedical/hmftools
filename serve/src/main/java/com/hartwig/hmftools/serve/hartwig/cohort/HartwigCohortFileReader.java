@@ -7,13 +7,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import com.hartwig.hmftools.serve.hartwig.HartwigProteinInterpreter;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class HartwigCohortFileReader {
 
     private static final String DELIMITER = "\t";
-    private static final String IGNORE_PROTEIN_ANNOTATION = "-";
 
     private HartwigCohortFileReader() {
     }
@@ -33,6 +34,7 @@ public final class HartwigCohortFileReader {
         String[] values = line.split(DELIMITER);
 
         String proteinAnnotation = values.length > 6 ? values[6] : Strings.EMPTY;
+
         return ImmutableHartwigCohortEntry.builder()
                 .chromosome(values[0])
                 .position(Long.parseLong(values[1]))
@@ -40,7 +42,7 @@ public final class HartwigCohortFileReader {
                 .alt(values[3])
                 .gene(values[4])
                 .transcript(values[5])
-                .proteinAnnotation(proteinAnnotation.equals(IGNORE_PROTEIN_ANNOTATION) ? Strings.EMPTY : proteinAnnotation)
+                .proteinAnnotation(HartwigProteinInterpreter.interpretProtein(proteinAnnotation))
                 .build();
     }
 }
