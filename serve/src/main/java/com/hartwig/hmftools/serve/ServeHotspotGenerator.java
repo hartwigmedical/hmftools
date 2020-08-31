@@ -11,6 +11,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.docm.DocmCurator;
 import com.hartwig.hmftools.serve.docm.DocmEntry;
 import com.hartwig.hmftools.serve.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.docm.DocmFileReader;
@@ -143,8 +144,11 @@ public class ServeHotspotGenerator {
         List<DocmEntry> docmEntries = DocmFileReader.readDcomFile(docmTsv);
         LOGGER.info(" Read {} entries", docmEntries.size());
 
+        List<DocmEntry> curatedDocmEntries = DocmCurator.curate(docmEntries);
+        LOGGER.info(" {} entries remaining after curation", curatedDocmEntries.size());
+
         DocmExtractor docmExtractor = new DocmExtractor(proteinToHotspotConverter);
-        Map<DocmEntry, List<VariantHotspot>> docmHotspotsPerEntry = docmExtractor.extractFromDocmEntries(docmEntries);
+        Map<DocmEntry, List<VariantHotspot>> docmHotspotsPerEntry = docmExtractor.extractFromDocmEntries(curatedDocmEntries);
 
         return HotspotFunctions.convertHotspots("docm", docmHotspotsPerEntry);
     }

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,11 +28,12 @@ public class DocmExtractor {
         Map<DocmEntry, List<VariantHotspot>> hotspotsPerEntry = Maps.newHashMap();
         for (DocmEntry entry : entries) {
             if (ProteinToHotspotConverter.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
-                hotspotsPerEntry.put(entry, proteinToHotspotConverter.resolveProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
+                hotspotsPerEntry.put(entry,
+                        proteinToHotspotConverter.resolveProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
             } else {
-                LOGGER.warn("Cannot resolve DoCM protein annotation: '{}:p.{}'", entry.gene(), entry.proteinAnnotation());
+                LOGGER.warn("Cannot resolve DoCM protein annotation: '{}''",
+                        ProteinKeyFormatter.toProteinKey(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
             }
-        }
-        return hotspotsPerEntry;
+        } return hotspotsPerEntry;
     }
 }
