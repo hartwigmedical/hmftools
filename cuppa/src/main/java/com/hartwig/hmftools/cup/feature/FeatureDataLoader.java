@@ -118,7 +118,7 @@ public class FeatureDataLoader
             {
                 final List<SampleFeatureData> viralInsertDataList = viralInserts.stream()
                         .map(x -> new SampleFeatureData(sampleId, fromVirusName(x.VirusName).toString(), FeatureType.VIRUS, 1))
-                        .filter(x -> !x.Gene.equals(OTHER.toString()))
+                        .filter(x -> !x.Name.equals(OTHER.toString()))
                         .collect(Collectors.toList());
 
                 featuresList.addAll(viralInsertDataList);

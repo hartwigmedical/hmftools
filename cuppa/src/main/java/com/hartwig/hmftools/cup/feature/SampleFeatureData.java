@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cup.feature;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SUBSET_DELIM;
 
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -11,7 +10,7 @@ import com.google.common.collect.Maps;
 public class SampleFeatureData
 {
     public final String SampleId;
-    public final String Gene;
+    public final String Name; // driver gene, fusion genes or virus
     public final FeatureType Type;
     public final double Likelihood;
     public final Map<String,String> ExtraInfo;
@@ -22,10 +21,10 @@ public class SampleFeatureData
 
     public static final String DRIVER_CHROMOSOME = "DriverChromosome";
 
-    public SampleFeatureData(final String sampleId, final String gene, final FeatureType type, final double likelihood)
+    public SampleFeatureData(final String sampleId, final String name, final FeatureType type, final double likelihood)
     {
         SampleId = sampleId;
-        Gene = gene;
+        Name = name;
         Type = type;
         Likelihood = likelihood;
         ExtraInfo = Maps.newHashMap();
@@ -53,7 +52,7 @@ public class SampleFeatureData
         return driverData;
     }
 
-    public String toString() { return String.format("sample(%s) gene(%s) type(%s)", SampleId, Gene, Type); }
+    public String toString() { return String.format("sample(%s) gene(%s) type(%s)", SampleId, Name, Type); }
 
     public String getExtraInfo(final String key) { return ExtraInfo.containsKey(key) ? ExtraInfo.get(key) : ""; }
 }

@@ -32,7 +32,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
-import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -102,10 +101,10 @@ public class FeatureAnnotation
 
         for(final SampleFeatureData feature : sampleFeatures)
         {
-            if(processedFeatures.contains(feature.Gene))
+            if(processedFeatures.contains(feature.Name))
                 continue;
 
-            processedFeatures.add(feature.Gene);
+            processedFeatures.add(feature.Name);
 
             final Map<String,Double> cancerTypeValues = Maps.newHashMap();
 
@@ -116,12 +115,15 @@ public class FeatureAnnotation
                 final List<FeaturePrevData> driverPrevalences = entry.getValue();
 
                 final FeaturePrevData driverPrev = driverPrevalences.stream()
-                        .filter(x -> x.Gene.equals(feature.Gene)).findFirst().orElse(null);
+                        .filter(x -> x.Gene.equals(feature.Name)).findFirst().orElse(null);
 
                 cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.Prevalence : 0);
             }
 
-            SampleResult result = new SampleResult(sample.Id, FEATURE, PREVALENCE, feature.Type.toString(), feature.Gene, cancerTypeValues);
+            final String featureName = feature.Likelihood == 1 ?
+                    String.format("%s (1)", feature.Name) : String.format("%s (%.2f)", feature.Name, feature.Likelihood);
+
+            SampleResult result = new SampleResult(sample.Id, FEATURE, PREVALENCE, feature.Type.toString(), featureName, cancerTypeValues);
             results.add(result);
         }
     }
@@ -164,7 +166,7 @@ public class FeatureAnnotation
             for(SampleFeatureData matchedDriver : matchingDrivers)
             {
                 final FeaturePrevData driverPrevalence = driverPrevalences.stream()
-                        .filter(x -> x.Gene.equals(matchedDriver.Gene)).findFirst().orElse(null);
+                        .filter(x -> x.Gene.equals(matchedDriver.Name)).findFirst().orElse(null);
 
                 if(driverPrevalence != null && driverPrevalence.Prevalence > maxPrev)
                 {
@@ -204,7 +206,7 @@ public class FeatureAnnotation
         double allCancerProbTotal = 0;
 
         final Set<String> allGenes = Sets.newHashSet();
-        allSampleFeatures.forEach(x -> allGenes.add(x.Gene));
+        allSampleFeatures.forEach(x -> allGenes.add(x.Name));
         final String geneNames = appendStrList(Lists.newArrayList(allGenes), ';');
 
         for(Map.Entry<String, List<FeaturePrevData>> entry : mCancerFeaturePrevalence.entrySet())
@@ -225,13 +227,13 @@ public class FeatureAnnotation
             final List<SampleFeatureData> sampleFeatures = allSampleFeatures; // cullMultiChromosomalEvents(allSampleFeatures, cancerType);
 
             final Set<String> genes = Sets.newHashSet();
-            sampleFeatures.forEach(x -> genes.add(x.Gene));
+            sampleFeatures.forEach(x -> genes.add(x.Name));
 
             double probabilityTotal = 1;
 
             for(final String gene : genes)
             {
-                double maxLikelihood = sampleFeatures.stream().filter(x -> x.Gene.equals(gene)).mapToDouble(x -> x.Likelihood).max().orElse(0);
+                double maxLikelihood = sampleFeatures.stream().filter(x -> x.Name.equals(gene)).mapToDouble(x -> x.Likelihood).max().orElse(0);
                 final FeaturePrevCounts genePrevTotals = mGenePrevalenceTotals.get(gene);
 
                 if(genePrevTotals == null)
