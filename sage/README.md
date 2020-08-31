@@ -27,8 +27,7 @@ More information about the tag available [here](https://samtools.github.io/hts-s
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-HG19 resources are available to download from [HMFTools-Resources > SAGE2](https://resources.hartwigmedicalfoundation.nl/). 
-HG38 resources to follow soon.
+HG19 and HG38 resources are available to download from [HMFTools-Resources > SAGE2](https://resources.hartwigmedicalfoundation.nl/). 
 
 R is used to generate the base quality recalibration charts. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
 R is not required if the charts are disable with the `-bqr_plot false` argument. 
