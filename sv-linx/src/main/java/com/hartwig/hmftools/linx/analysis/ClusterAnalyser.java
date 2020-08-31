@@ -426,7 +426,7 @@ public class ClusterAnalyser {
     private void setClusterResolvedState(SvCluster cluster, boolean isFinal)
     {
         ClusterClassification.setClusterResolvedState(cluster, isFinal,
-                mState.getDelCutoffLength(), mState.getDupCutoffLength(), mConfig.ProximityDistance);
+                mState.getDelCutoffLength(), mState.getDupCutoffLength(), mState.getChrBreakendMap());
     }
 
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)

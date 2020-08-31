@@ -35,6 +35,9 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
+import java.util.List;
+import java.util.Map;
+
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;
 import com.hartwig.hmftools.linx.types.ResolvedType;
@@ -127,7 +130,7 @@ public class ClusterClassification
     }
 
     public static void setClusterResolvedState(
-            SvCluster cluster, boolean isFinal, int longDelThreshold, int longDupThreshold, int proximityThreshold)
+            SvCluster cluster, boolean isFinal, int longDelThreshold, int longDupThreshold, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
         if(cluster.getResolvedType() != NONE)
             return;
@@ -143,7 +146,7 @@ public class ClusterClassification
         {
             if(cluster.getChains().size() == 1)
             {
-                classifyPairClusters(cluster, longDelThreshold, longDupThreshold);
+                classifyPairClusters(cluster, longDelThreshold, longDupThreshold, chrBreakendMap);
 
                 if(cluster.getResolvedType() != NONE)
                     return;
@@ -181,7 +184,7 @@ public class ClusterClassification
         // markSyntheticTypes(cluster, isFinal, longDelThreshold, longDupThreshold, proximityThreshold);
         if(cluster.getSglBreakendCount() == 0)
         {
-            classifyPairClusters(cluster, longDelThreshold, longDupThreshold);
+            classifyPairClusters(cluster, longDelThreshold, longDupThreshold, chrBreakendMap);
         }
         else
         {

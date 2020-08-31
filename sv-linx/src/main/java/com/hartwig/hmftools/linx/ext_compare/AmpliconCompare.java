@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.MIN_AMP_PERCENT_VS_MAX;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.findAmplifyingClusters;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.DATA_DELIM;
-import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.HIGH_SV_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MAX_FOLDBACK_INV_LENGTH;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MIN_CLUSTER_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.extractSampleId;

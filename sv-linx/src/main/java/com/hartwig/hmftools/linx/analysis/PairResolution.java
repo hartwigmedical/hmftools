@@ -31,6 +31,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -65,7 +66,8 @@ public class PairResolution
         return (resolvedType == DEL_TI || resolvedType == DUP_TI || resolvedType == UNBAL_TRANS_TI);
     }
 
-    public static void classifyPairClusters(SvCluster cluster, long longDelThreshold, long longDupThreshold)
+    public static void classifyPairClusters(
+            final SvCluster cluster, long longDelThreshold, long longDupThreshold, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
         // classifies 2-event clusters based on the types of breakends and their orientations, and whether a long TI exists
         // treat existing chains as SVs - ie with 2 breakends from the open ends
@@ -93,12 +95,13 @@ public class PairResolution
         List<SvChain> clusterChains = Lists.newArrayList(cluster.getChains());
         SvVarData unchainedSv = !cluster.getUnlinkedSVs().isEmpty() ? cluster.getUnlinkedSVs().get(0) : null;
         int unchainedSvCount = cluster.getUnlinkedSVs().size();
+        List<LinkedPair> longTiLinks = Lists.newArrayList();
         boolean existingChainModified = false;
 
         if(!clusterChains.isEmpty())
         {
-            List<LinkedPair> longTiLinks = cluster.getChains().get(0).getLinkedPairs().stream()
-                    .filter(x -> x.length() > SHORT_TI_LENGTH).collect(Collectors.toList());
+            longTiLinks.addAll(cluster.getChains().get(0).getLinkedPairs().stream()
+                    .filter(x -> x.length() > SHORT_TI_LENGTH).collect(Collectors.toList()));
 
             if(cluster.getChains().size() == 2)
             {
@@ -122,6 +125,9 @@ public class PairResolution
             classifySyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
             return;
         }
+
+        if(longTiLinks.stream().anyMatch(x -> isInterruptedTI(x, chrBreakendMap)))
+            return;
 
         // otherwise test whether a single chain be split at the long TI to make 2 chains and a balance translocation
         if(isSingleChain && longTiLink != null)
@@ -215,6 +221,9 @@ public class PairResolution
         {
             return;
         }
+
+        if(areInterruptedBreakends(startBe1, endBe1, startBe2, endBe2, chrBreakendMap))
+            return;
 
         if(startBe1.chromosome().equals(endBe1.chromosome()) && startBe2.chromosome().equals(endBe2.chromosome())
         && startBe1.chromosome().equals(startBe2.chromosome()))
@@ -615,6 +624,59 @@ public class PairResolution
                 cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
 
         cluster.setResolved(isResolved, resolvedType);
+    }
+
+    private static boolean isInterruptedTI(final LinkedPair pair, final Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        return isInterruptedBreakendPair(pair.getBreakend(true), pair.getBreakend(false), chrBreakendMap);
+    }
+
+    private static boolean areInterruptedBreakends(
+            final SvBreakend startBe1, final SvBreakend endBe1, final SvBreakend startBe2, final SvBreakend endBe2,
+            final Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        if(startBe1.getChrArm().equals(startBe2.getChrArm()) && isInterruptedBreakendPair(startBe1, startBe2, chrBreakendMap))
+            return true;
+        else if(startBe1.getChrArm().equals(endBe2.getChrArm()) && isInterruptedBreakendPair(startBe1, endBe2, chrBreakendMap))
+            return true;
+        else if(endBe1.getChrArm().equals(startBe2.getChrArm()) && isInterruptedBreakendPair(endBe1, startBe2, chrBreakendMap))
+            return true;
+        else if(endBe1.getChrArm().equals(endBe2.getChrArm()) && isInterruptedBreakendPair(endBe1, endBe2, chrBreakendMap))
+            return true;
+
+        return false;
+    }
+
+    private static boolean isInterruptedBreakendPair(final SvBreakend be1, final SvBreakend be2, final Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        // look between these breakends for any non-simple, non-contained SV
+        final List<SvBreakend> breakendList = chrBreakendMap.get(be1.chromosome());
+
+        final SvBreakend lowerBe = be1.position() < be2.position() ? be1 : be2;
+        final SvBreakend upperBe = lowerBe == be1 ? be2 : be1;
+
+        int startIndex = lowerBe.getChrPosIndex();
+        int endIndex = upperBe.getChrPosIndex();
+
+        for(int i = startIndex + 1; i < endIndex; ++i)
+        {
+            final SvVarData var = breakendList.get(i).getSV();
+
+            if(var == be1.getSV() || var == be2.getSV() || var.getCluster() == be1.getSV().getCluster())
+                continue;
+
+            if(var.getCluster().getSvCount() > 1)
+                return true;
+
+            if(!var.isSimpleType())
+                return true;
+
+            // lastly confirm the the simple SV is confined to this segment
+            if(var.getBreakend(true).getChrPosIndex() < startIndex || var.getBreakend(false).getChrPosIndex() > endIndex)
+                return true;
+        }
+
+        return false;
     }
 
 }
