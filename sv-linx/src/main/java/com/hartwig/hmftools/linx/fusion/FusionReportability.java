@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMA
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.SHORT_UNPHASED_DISTANCE_KNOWN;
@@ -45,6 +46,12 @@ public class FusionReportability
                 return false;
 
             if(fusion.sameChromosome() && fusion.distance() <= SHORT_UNPHASED_DISTANCE_KNOWN)
+                return false;
+        }
+
+        if(upTrans.gene().type() == SGL || downTrans.gene().type() == SGL)
+        {
+            if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != KNOWN_PAIR_UNMAPPABLE_3)
                 return false;
         }
 
