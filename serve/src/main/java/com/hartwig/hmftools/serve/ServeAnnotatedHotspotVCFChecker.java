@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.serve;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +30,8 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static final Logger LOGGER = LogManager.getLogger(ServeAnnotatedHotspotVCFChecker.class);
     private static final boolean LOG_DEBUG = false;
 
+    private static final String NO_INPUT_PROTEIN = "-";
+
     private static final Map<String, Map<String, List<String>>> SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
 
     private final Map<String, Set<String>> annotationsRequestedForMappingPerTranscript = Maps.newHashMap();
@@ -52,67 +52,38 @@ public class ServeAnnotatedHotspotVCFChecker {
         int diffCount = 0;
 
         LOGGER.info("Loading hotspots from '{}'", annotatedVcfFilePath);
-        AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedVcfFilePath, new VCFCodec(), false);
+        AbstractFeatureReader<VariantContext, LineIterator> reader =
+                AbstractFeatureReader.getFeatureReader(annotatedVcfFilePath, new VCFCodec(), false);
         for (VariantContext variant : reader.iterator()) {
             totalCount++;
-            String[] featureParts = variant.getAttributeAsString("feature", Strings.EMPTY).split("\\|");
-            String featureGene = featureParts[0];
-            String featureTranscript = featureParts[1].equals("null") ? null : featureParts[1];
-            String featureProteinAnnotation = featureParts[2];
 
-            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+            String[] inputParts = variant.getAttributeAsString("input", Strings.EMPTY).split("\\|");
+            String inputGene = inputParts[0];
+            String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
+            String inputProteinAnnotation = inputParts[2];
 
-            if (featureTranscript != null) {
-                SnpEffAnnotation annotation = annotationForTranscript(annotations, featureTranscript);
-
-                if (annotation != null) {
-                    String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                    if (!isSameAnnotation(featureTranscript, featureProteinAnnotation, snpeffProteinAnnotation)) {
-                        LOGGER.warn("Difference on gene '{}-{}' - {}:{} {}->{} : SERVE input protein '{}' vs SnpEff protein '{}'",
-                                featureGene,
-                                featureTranscript,
-                                variant.getContig(),
-                                variant.getStart(),
-                                variant.getReference().getBaseString(),
-                                variant.getAlternateAllele(0).getBaseString(),
-                                featureProteinAnnotation,
-                                snpeffProteinAnnotation);
-                        diffCount++;
-                    } else {
-                        if (snpeffProteinAnnotation.equals(featureProteinAnnotation)) {
-                            LOGGER.debug("Identical match found on {} for '{}'", featureGene, featureProteinAnnotation);
-                        } else {
-                            whitelistedMatchCount++;
-                            LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
-                                    featureGene,
-                                    featureProteinAnnotation,
-                                    snpeffProteinAnnotation);
-                        }
-                        matchCount++;
-                    }
-                } else {
-                    LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", featureTranscript, featureGene);
-                    diffCount++;
-                }
+            String formattedHotspot = formatHotspot(variant);
+            // TODO Remove "p." option.
+            if (inputProteinAnnotation.equals("p.") || inputProteinAnnotation.equals(NO_INPUT_PROTEIN)) {
+                LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
+                matchCount++;
             } else {
-                boolean matchFound = false;
-                for (SnpEffAnnotation annotation : annotations) {
-                    if (annotation.isTranscriptFeature()) {
-                        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                        if (isSameAnnotation(annotation.transcript(), featureProteinAnnotation, snpeffProteinAnnotation)) {
-                            matchFound = true;
-                        }
+                List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+                MatchType match = determineMatch(inputGene, inputTranscript, inputProteinAnnotation, annotations, formattedHotspot);
+                switch (match) {
+                    case WHITE_LIST: {
+                        whitelistedMatchCount++;
+                        matchCount++;
+                        break;
                     }
-                }
-
-                if (matchFound) {
-                    LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", featureProteinAnnotation, featureGene);
-                    matchCount++;
-                } else {
-                    LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
-                            featureProteinAnnotation,
-                            featureGene);
-                    diffCount++;
+                    case IDENTICAL: {
+                        matchCount++;
+                        break;
+                    }
+                    case NO_MATCH: {
+                        diffCount++;
+                        break;
+                    }
                 }
             }
         }
@@ -126,6 +97,66 @@ public class ServeAnnotatedHotspotVCFChecker {
         checkForUnusedMappings();
     }
 
+    @NotNull
+    private static String formatHotspot(@NotNull VariantContext variant) {
+        return variant.getContig() + ":" + variant.getStart() + " " + variant.getReference().getBaseString() + ">"
+                + variant.getAlternateAllele(0).getBaseString();
+    }
+
+    @NotNull
+    private MatchType determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
+            @NotNull List<SnpEffAnnotation> annotations, @NotNull String formattedHotspot) {
+        if (inputTranscript != null) {
+            SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);
+
+            if (annotation != null) {
+                String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                if (!isSameAnnotation(inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation)) {
+                    LOGGER.warn("Difference on gene '{}-{}' - {} : SERVE input protein '{}' vs SnpEff protein '{}'",
+                            inputGene,
+                            inputTranscript,
+                            formattedHotspot,
+                            inputProteinAnnotation,
+                            snpeffProteinAnnotation);
+                    return MatchType.NO_MATCH;
+                } else {
+                    if (snpeffProteinAnnotation.equals(inputProteinAnnotation)) {
+                        LOGGER.debug("Identical match found on {} for '{}'", inputGene, inputProteinAnnotation);
+                        return MatchType.IDENTICAL;
+                    } else {
+                        LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
+                                inputGene,
+                                inputProteinAnnotation,
+                                snpeffProteinAnnotation);
+                        return MatchType.WHITE_LIST;
+                    }
+                }
+            } else {
+                LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", inputTranscript, inputGene);
+                return MatchType.NO_MATCH;
+            }
+        } else {
+            // In case input transcript is missing we try to match against any transcript.
+            boolean matchFound = false;
+            for (SnpEffAnnotation annotation : annotations) {
+                if (annotation.isTranscriptFeature()) {
+                    String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                    if (isSameAnnotation(annotation.transcript(), inputProteinAnnotation, snpeffProteinAnnotation)) {
+                        matchFound = true;
+                    }
+                }
+            }
+
+            if (matchFound) {
+                LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", inputProteinAnnotation, inputGene);
+                return MatchType.IDENTICAL;
+            } else {
+                LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'", inputProteinAnnotation, inputGene);
+                return MatchType.NO_MATCH;
+            }
+        }
+    }
+
     @Nullable
     private static SnpEffAnnotation annotationForTranscript(@NotNull List<SnpEffAnnotation> annotations, @NotNull String transcript) {
         for (SnpEffAnnotation annotation : annotations) {
@@ -136,9 +167,9 @@ public class ServeAnnotatedHotspotVCFChecker {
         return null;
     }
 
-    private boolean isSameAnnotation(@NotNull String transcript, @NotNull String featureAnnotation, @NotNull String snpeffAnnotation) {
-        String curatedFeatureAnnotation = curateStartCodonAnnotation(featureAnnotation);
-        if (curatedFeatureAnnotation.equals(snpeffAnnotation)) {
+    private boolean isSameAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
+        String curatedInputAnnotation = curateStartCodonAnnotation(inputAnnotation);
+        if (curatedInputAnnotation.equals(snpeffAnnotation)) {
             return true;
         }
 
@@ -146,12 +177,12 @@ public class ServeAnnotatedHotspotVCFChecker {
         if (transcriptMapping != null) {
             Set<String> requestedAnnotations = annotationsRequestedForMappingPerTranscript.get(transcript);
             if (requestedAnnotations == null) {
-                requestedAnnotations = Sets.newHashSet(featureAnnotation);
+                requestedAnnotations = Sets.newHashSet(inputAnnotation);
             } else {
-                requestedAnnotations.add(featureAnnotation);
+                requestedAnnotations.add(inputAnnotation);
             }
             annotationsRequestedForMappingPerTranscript.put(transcript, requestedAnnotations);
-            List<String> mappedAnnotations = transcriptMapping.get(featureAnnotation);
+            List<String> mappedAnnotations = transcriptMapping.get(inputAnnotation);
             if (mappedAnnotations != null) {
                 return mappedAnnotations.contains(snpeffAnnotation);
             }
@@ -197,6 +228,7 @@ public class ServeAnnotatedHotspotVCFChecker {
         serveToSnpEffMappings.put("ENST00000357654", createBRCA1Map());
         serveToSnpEffMappings.put("ENST00000377045", createARAFMap());
         serveToSnpEffMappings.put("ENST00000460911", createEZH2Map()); // Note: This is not the canonical transcript for EZH2
+        serveToSnpEffMappings.put("ENST00000263967", createPIK3CAMap());
 
         return serveToSnpEffMappings;
     }
@@ -312,11 +344,24 @@ public class ServeAnnotatedHotspotVCFChecker {
     }
 
     @NotNull
+    private static Map<String, List<String>> createPIK3CAMap() {
+        Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.E109del", Lists.newArrayList("p.E110del"));
+        return map;
+    }
+
+    @NotNull
     private static String curateStartCodonAnnotation(@NotNull String serveAnnotation) {
         if (serveAnnotation.startsWith("p.M1") && serveAnnotation.length() == 5) {
             return "p.M1?";
         } else {
             return serveAnnotation;
         }
+    }
+
+    private enum MatchType {
+        IDENTICAL,
+        WHITE_LIST,
+        NO_MATCH
     }
 }

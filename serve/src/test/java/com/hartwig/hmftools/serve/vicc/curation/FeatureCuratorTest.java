@@ -57,6 +57,8 @@ public class FeatureCuratorTest {
         assertNull(curator.curate(blacklistEntry, blacklistFeature));
         int newUnusedCurationKeyCount = curator.unusedCurationKeys().size();
         assertEquals(1, unusedCurationKeyCount - newUnusedCurationKeyCount);
+
+        curator.reportUnusedBlacklistEntries();
     }
 
     @NotNull

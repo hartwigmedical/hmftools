@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.serve.vicc.curation.CurationKey;
 import com.hartwig.hmftools.serve.vicc.curation.FeatureCurator;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -44,14 +43,7 @@ public final class ViccReader {
                 curatedViccEntries.size(),
                 viccEntries.size() - curatedViccEntries.size());
 
-        LOGGER.info("Analyzing usage of curation configuration keys");
-        Set<CurationKey> unusedCurationKeys = curator.unusedCurationKeys();
-        for (CurationKey unusedKey : unusedCurationKeys) {
-            LOGGER.warn(" Unused key found: '{}'", unusedKey);
-        }
-
-        LOGGER.info("Finished analyzing usage of curation configuration keys. Found {} unused configuration entries",
-                unusedCurationKeys.size());
+        curator.reportUnusedBlacklistEntries();
 
         return curatedViccEntries;
     }

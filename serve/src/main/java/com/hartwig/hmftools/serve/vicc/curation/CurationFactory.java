@@ -171,7 +171,7 @@ final class CurationFactory {
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "TERT", "ENST00000310581", "C250T"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "TMPRSS2", "ENST00000398585", "M160V"));
 
-        // The below probably have the wrong transcripts configured by OncoKB:
+        // The below probably have the wrong transcripts configured by OncoKB
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "CASP8", "ENST00000358485", "G325A"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "EZH2", "ENST00000320356", "A677G"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "FBXW7", "ENST00000281708", "R482Q"));
@@ -220,12 +220,11 @@ final class CurationFactory {
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "TGFBR2", "ENST00000359013", "R537P"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "TMPRSS2", "ENST00000398585", "T75M"));
 
-        // The below are simply invalid protein annotations:
+        // The below are simply invalid protein annotations
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "BRAF", "ENST00000288602", "V600D_K601insFGLAT"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "CARD11", "ENST00000396946", "L225LI"));
     }
 
     private CurationFactory() {
     }
-
 }
