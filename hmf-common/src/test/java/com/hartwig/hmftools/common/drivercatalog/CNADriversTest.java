@@ -27,17 +27,6 @@ public class CNADriversTest {
         assertEquals("APC", drivers.get(0).gene());
     }
 
-    @Test
-    public void testChromosomeBand() {
-        GeneCopyNumber mapped = createTestCopyNumberBuilder("AC093642.5").build();
-        GeneCopyNumber unmapped = createTestCopyNumberBuilder("APC").build();
-
-        List<DriverCatalog> drivers = new CNADrivers(genePanel).deletions(Lists.newArrayList(mapped, unmapped));
-        assertEquals(2, drivers.size());
-        assertEquals("q telomere", drivers.get(0).chromosomeBand());
-        assertEquals("band", drivers.get(1).chromosomeBand());
-    }
-
     @NotNull
     private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene) {
         return ImmutableGeneCopyNumber.builder()

@@ -53,15 +53,10 @@ public class DriverGenePanelFactory {
                 .map(x -> ImmutableDndsDriverGeneLikelihood.builder().from(x).gene(dndsOncoGenes.get(x.gene())).build())
                 .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
 
-        Map<String, String> deletionBandMap = genes.stream()
-                .filter(x -> x.reportDeletion() && !x.deletionBand().isEmpty())
-                .collect(Collectors.toMap(DriverGene::gene, DriverGene::deletionBand));
-
         return ImmutableDriverGenePanel.builder()
                 .driverGenes(genes)
                 .tsgLikelihood(tsgLikelihood)
                 .oncoLikelihood(oncoLikelihood)
-                .deletionBandMap(deletionBandMap)
                 .build();
     }
 

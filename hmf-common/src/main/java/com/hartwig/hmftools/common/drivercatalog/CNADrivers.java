@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,14 +22,11 @@ public class CNADrivers {
     private final Set<String> amplificationTargets;
     @NotNull
     private final Set<String> deletionTargets;
-    @NotNull
-    private final Map<String, String> deletionBandMap;
 
     public CNADrivers(DriverGenePanel panel) {
         this.oncoGenes = panel.oncoGenes();
         this.tsGenes = panel.tsGenes();
         this.deletionTargets = panel.deletionTargets();
-        this.deletionBandMap = panel.deletionBandMap();
         this.amplificationTargets = panel.amplificationTargets();
     }
 
@@ -67,7 +63,7 @@ public class CNADrivers {
                 .filter(x -> tsGenes.contains(x.gene()) | deletionTargets.contains(x.gene()))
                 .map(x -> ImmutableDriverCatalog.builder()
                         .chromosome(x.chromosome())
-                        .chromosomeBand(deletionBandMap.getOrDefault(x.gene(), x.chromosomeBand()))
+                        .chromosomeBand(x.chromosomeBand())
                         .gene(x.gene())
                         .missense(0)
                         .nonsense(0)

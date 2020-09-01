@@ -37,9 +37,6 @@ public abstract class DriverGenePanel {
     }
 
     @NotNull
-    public abstract Map<String, String> deletionBandMap();
-
-    @NotNull
     public Set<String> oncoGenes() {
         return oncoLikelihood().keySet();
     }
