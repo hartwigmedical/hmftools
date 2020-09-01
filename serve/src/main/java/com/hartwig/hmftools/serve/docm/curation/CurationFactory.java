@@ -1,22 +1,12 @@
-package com.hartwig.hmftools.serve.docm;
+package com.hartwig.hmftools.serve.docm.curation;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+final class CurationFactory {
 
-public class DocmCurator {
-
-    private static final Logger LOGGER = LogManager.getLogger(DocmCurator.class);
-
-    private static final Set<CurationKey> ENTRY_BLACKLIST = Sets.newHashSet();
+    static final Set<CurationKey> ENTRY_BLACKLIST = Sets.newHashSet();
 
     static {
         // Not clear what the "minus" means, so ignoring. Could be DEL?
@@ -72,70 +62,7 @@ public class DocmCurator {
         ENTRY_BLACKLIST.add(new CurationKey("BRAF", "ENST00000496384", "G77V"));
     }
 
-    @NotNull
-    private final Set<CurationKey> evaluatedCurationKeys = Sets.newHashSet();
-
-    @NotNull
-    public List<DocmEntry> curate(@NotNull List<DocmEntry> entries) {
-        List<DocmEntry> curatedEntries = Lists.newArrayList();
-        for (DocmEntry entry : entries) {
-            CurationKey key = new CurationKey(entry.gene(), entry.transcript(), entry.proteinAnnotation());
-            evaluatedCurationKeys.add(key);
-            if (ENTRY_BLACKLIST.contains(key)) {
-                LOGGER.debug("Removing DocmEntry '{}' because of blacklist curation.",
-                        ProteinKeyFormatter.toProteinKey(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
-            } else {
-                curatedEntries.add(entry);
-            }
-        }
-        return curatedEntries;
+    private CurationFactory() {
     }
 
-    public void reportUnusedBlacklistEntries() {
-        int unusedKeys = 0;
-        for (CurationKey key : ENTRY_BLACKLIST) {
-            if (!evaluatedCurationKeys.contains(key)) {
-                unusedKeys++;
-                LOGGER.warn("Key '{}' hasn't been used during DoCM curation", key);
-            }
-        }
-
-        LOGGER.debug("Found {} unused DoCM blacklist entries. {} keys have been requested against {} blacklist entries",
-                unusedKeys,
-                evaluatedCurationKeys.size(),
-                ENTRY_BLACKLIST.size());
-    }
-
-    private static final class CurationKey {
-
-        @NotNull
-        private final String gene;
-        @NotNull
-        private final String transcript;
-        @NotNull
-        private final String proteinAnnotation;
-
-        public CurationKey(@NotNull final String gene, @NotNull final String transcript, @NotNull final String proteinAnnotation) {
-            this.gene = gene;
-            this.transcript = transcript;
-            this.proteinAnnotation = proteinAnnotation;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            final CurationKey that = (CurationKey) o;
-            return gene.equals(that.gene) && transcript.equals(that.transcript) && proteinAnnotation.equals(that.proteinAnnotation);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(gene, transcript, proteinAnnotation);
-        }
-    }
 }
