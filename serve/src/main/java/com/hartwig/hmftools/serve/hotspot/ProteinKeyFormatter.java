@@ -15,6 +15,7 @@ public final class ProteinKeyFormatter {
 
     @NotNull
     public static String toProteinKey(@NotNull String gene, @Nullable String transcript, @NotNull String proteinAnnotation) {
-        return gene + "|" + transcript + "|p." + proteinAnnotation;
+        String formattedProteinAnnotation = !proteinAnnotation.isEmpty() ? "p." + proteinAnnotation : "-";
+        return gene + "|" + transcript + "|" + formattedProteinAnnotation;
     }
 }
