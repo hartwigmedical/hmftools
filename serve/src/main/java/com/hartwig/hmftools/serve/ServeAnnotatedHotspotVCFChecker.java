@@ -226,6 +226,7 @@ public class ServeAnnotatedHotspotVCFChecker {
         serveToSnpEffMappings.put("ENST00000357654", createBRCA1Map());
         serveToSnpEffMappings.put("ENST00000377045", createARAFMap());
         serveToSnpEffMappings.put("ENST00000460911", createEZH2Map()); // Note: This is not the canonical transcript for EZH2
+        serveToSnpEffMappings.put("ENST00000263967", createPIK3CAMap());
 
         return serveToSnpEffMappings;
     }
@@ -337,6 +338,13 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createEZH2Map() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.T678_R679delinsKK", Lists.newArrayList("p.TR678KK"));
+        return map;
+    }
+
+    @NotNull
+    private static Map<String, List<String>> createPIK3CAMap() {
+        Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.E109del", Lists.newArrayList("p.E110del"));
         return map;
     }
 
