@@ -55,7 +55,7 @@ final class CurationFactory {
         ENTRY_BLACKLIST.add(new CurationKey("KIT", "ENST00000288135", "L862"));
         ENTRY_BLACKLIST.add(new CurationKey("MGMT", "ENST00000306010", "R22"));
 
-        // Variants that don't exist on the configured transcript TODO verify
+        // Variants that don't exist on the configured transcript
         ENTRY_BLACKLIST.add(new CurationKey("BRAF", "ENST00000496384", "F203L"));
         ENTRY_BLACKLIST.add(new CurationKey("BRAF", "ENST00000496384", "T207I"));
         ENTRY_BLACKLIST.add(new CurationKey("BRAF", "ENST00000496384", "G77L"));
