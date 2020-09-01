@@ -175,15 +175,15 @@ public class KnownFusionCache
 
             for(String data : fileContents)
             {
-                KnownFusionData knownFusionData = KnownFusionData.fromCsv(data, fieldIndexMap);
-
-                if(knownFusionData == null)
+                try
+                {
+                    KnownFusionData knownFusionData = KnownFusionData.fromCsv(data, fieldIndexMap);
+                    addData(knownFusionData);
+                }
+                catch (Exception e)
                 {
                     LOGGER.error("file({}) invalid known fusion data will be skipped: {}", filename, data);
-                    continue;
                 }
-
-                addData(knownFusionData);
             }
         }
         catch (IOException e)
