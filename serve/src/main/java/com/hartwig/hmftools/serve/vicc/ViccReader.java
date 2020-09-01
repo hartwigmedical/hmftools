@@ -37,9 +37,9 @@ public final class ViccReader {
     public static List<ViccEntry> curateViccEntries(@NotNull List<ViccEntry> viccEntries) {
         FeatureCurator curator = new FeatureCurator();
 
-        LOGGER.info("Curating {} entries.", viccEntries.size());
+        LOGGER.info("Curating {} VICC entriess", viccEntries.size());
         List<ViccEntry> curatedViccEntries = curator.curate(viccEntries);
-        LOGGER.info(" Finished curation. {} curated entries remaining. {} entries have been removed",
+        LOGGER.info(" Finished VICC curation. {} curated entries remaining. {} entries have been removed",
                 curatedViccEntries.size(),
                 viccEntries.size() - curatedViccEntries.size());
 

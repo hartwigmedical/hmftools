@@ -53,7 +53,7 @@ public class ServeHotspotGenerator {
 
     private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
             Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
-    private static final Integer MAX_VICC_ENTRIES = 0;
+    private static final Integer MAX_VICC_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -147,8 +147,11 @@ public class ServeHotspotGenerator {
         LOGGER.info(" Read {} entries", docmEntries.size());
 
         DocmCurator curator = new DocmCurator();
+        LOGGER.info("Curating {} DoCM entries", docmEntries.size());
         List<DocmEntry> curatedDocmEntries = curator.curate(docmEntries);
-        LOGGER.info(" {} entries remaining after curation", curatedDocmEntries.size());
+        LOGGER.info(" Finished DoCM curation. {} entries remaining after curation. {} entries have been removed",
+                curatedDocmEntries.size(),
+                docmEntries.size() - curatedDocmEntries.size());
         curator.reportUnusedBlacklistEntries();
 
         DocmExtractor docmExtractor = new DocmExtractor(proteinToHotspotConverter);
