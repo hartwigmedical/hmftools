@@ -97,11 +97,13 @@ public class ServeAnnotatedHotspotVCFChecker {
         checkForUnusedMappings();
     }
 
+    @NotNull
     private static String formatHotspot(@NotNull VariantContext variant) {
         return variant.getContig() + ":" + variant.getStart() + " " + variant.getReference().getBaseString() + ">"
                 + variant.getAlternateAllele(0).getBaseString();
     }
 
+    @NotNull
     private MatchType determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
             @NotNull List<SnpEffAnnotation> annotations, @NotNull String formattedHotspot) {
         if (inputTranscript != null) {
@@ -362,5 +364,4 @@ public class ServeAnnotatedHotspotVCFChecker {
         WHITE_LIST,
         NO_MATCH
     }
-
 }
