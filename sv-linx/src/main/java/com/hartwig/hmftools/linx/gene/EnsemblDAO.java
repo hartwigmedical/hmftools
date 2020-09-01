@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.gene;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -42,7 +43,7 @@ public class EnsemblDAO
 
     public EnsemblDAO(final CommandLine cmd)
     {
-        mRefGenomeVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(HG37)));
+        mRefGenomeVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(HG19)));
         mGeneIds = Sets.newHashSet();
         mTranscriptIds = Sets.newHashSet();
 
@@ -58,7 +59,7 @@ public class EnsemblDAO
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - HG37 (default) or HG38");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - HG19 (default) or HG38");
         options.addOption(DB_PASS, true, "Ensembl DB password");
         options.addOption(DB_URL, true, "Ensembl DB URL");
         options.addOption(DB_USER, true, "Ensembl DB username");
@@ -91,7 +92,7 @@ public class EnsemblDAO
 
     private int findCoordSystemId()
     {
-        final String version = mRefGenomeVersion == HG37 ? "GRCh37" : "GRCh38";
+        final String version = (mRefGenomeVersion == HG37 || mRefGenomeVersion == HG19) ? "GRCh37" : "GRCh38";
 
         final String queryStr = "select coord_system_id from coord_system"
                 + " where version = '" + version + "'"

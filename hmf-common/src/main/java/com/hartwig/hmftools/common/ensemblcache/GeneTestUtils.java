@@ -27,7 +27,7 @@ public class GeneTestUtils
     // Ensembl data types
     public static EnsemblDataCache createGeneDataCache()
     {
-        return new EnsemblDataCache("", RefGenomeVersion.HG37);
+        return new EnsemblDataCache("", RefGenomeVersion.HG19);
     }
     public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, int geneStart, int geneEnd)
     {

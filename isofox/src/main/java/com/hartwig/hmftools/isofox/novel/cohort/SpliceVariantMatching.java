@@ -45,7 +45,7 @@ public class SpliceVariantMatching
         mConfig = config;
         mFieldsMap = Maps.newHashMap();
 
-        mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.HG37);
+        mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.HG19);
         mGeneTransCache.setRequiredData(true, false, false, false);
         mGeneTransCache.load(false);
         mSampleSpliceVariants = Maps.newHashMap();

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_PREFIX;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -224,7 +225,7 @@ public class IsofoxConfig
         else
         {
             RefGenomeVersion refGenVersionOverride = checkRefGenomeVersion();
-            RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : HG37;
+            RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : HG19;
         }
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
@@ -426,9 +427,9 @@ public class IsofoxConfig
             return null;
 
         if(samReader.getFileHeader().getSequenceDictionary().getSequences().stream().anyMatch(x -> x.getSequenceName().contains(CHR_PREFIX)))
-            return HG38;
+            return HG37;
 
-        return HG37;
+        return HG19;
     }
 
     public IsofoxConfig()
@@ -445,7 +446,7 @@ public class IsofoxConfig
         OutputDir = null;
         BamFile = null;
         RefGenomeFile = null;
-        RefGenVersion = HG37;
+        RefGenVersion = HG19;
         RefGenome = new MockRefGenome();
         CanonicalTranscriptOnly = false;
         GeneReadLimit = 0;

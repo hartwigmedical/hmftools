@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.genome.refgenome;
 
 public enum RefGenomeVersion
 {
-    HG19, // included to distinguish from HG37 since has a 'chr' prefix
-    HG37,
+    HG19,
+    HG37, // included to distinguish from HG19 since has a 'chr' prefix
     HG38;
 
     // config option
@@ -13,9 +13,9 @@ public enum RefGenomeVersion
 
     public static String refGenomeChromosome(final String chromosome, RefGenomeVersion version)
     {
-        if((version == HG38 || version == HG19) && !chromosome.contains(CHR_PREFIX))
+        if((version == HG38 || version == HG37) && !chromosome.contains(CHR_PREFIX))
             return CHR_PREFIX + chromosome;
-        else if(version == HG37)
+        else if(version == HG19)
             return stripChromosome(chromosome);
         else
             return chromosome;

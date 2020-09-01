@@ -28,7 +28,7 @@ sample  | Required: Specific sample ID
 sv_vcf | Full path and filename for the SV VCF
 purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
 output_dir | Required: directory where all output files are written
-ref_genome_version | Defaults to HG37, valid values are 37 or 38. 
+ref_genome_version | Defaults to HG19, valid values are HG19, HG37 or HG38. 
 
 #### Database Connectivity
 LINX can source structural variants, copy number and purity data from the HMF MySQL database instead of from the VCF and TSV files.
@@ -155,11 +155,11 @@ java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
     -output_dir /path_to_write_data_files/ -ref_genome_version [37 or 38]
 ```
 
-Ensembl database URLs for 37 & 38 are:
+Ensembl database URLs for 19/37 & 38 are:
 - mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
 - mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_98_38
 
-By default LINX will use HG37, but this can be overridden using the ref_genome_version config described above.
+By default LINX will use HG19, but this can be overridden using the ref_genome_version config described above.
 
 ## Key Concepts in LINX
 

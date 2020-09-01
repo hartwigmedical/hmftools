@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -73,7 +74,7 @@ public class LinxConfig
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
 
-    public static RefGenomeVersion RG_VERSION = RefGenomeVersion.HG37;
+    public static RefGenomeVersion RG_VERSION = RefGenomeVersion.HG19;
 
     private static final String INDEL_ANNOTATIONS = "indel_annotation";
 
@@ -122,7 +123,7 @@ public class LinxConfig
         {
             RefGenomeVersion version = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION));
 
-            if(version == HG37 || version == HG38)
+            if(version == HG19 || version == HG38)
             {
                 RG_VERSION = version;
             }
@@ -202,7 +203,7 @@ public class LinxConfig
     public LinxConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
-        RG_VERSION = HG37;
+        RG_VERSION = HG19;
         PurpleDataPath = "";
         OutputDataPath = "";
         SvDataPath = "";
@@ -255,7 +256,7 @@ public class LinxConfig
         options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
-        options.addOption(REF_GENOME_VERSION, true, "Ref genom version - accepts HG37 or HG38 (default = HG37)");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genom version - accepts HG19 (default), HG37 or HG38");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, "Driver gene panel file");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");

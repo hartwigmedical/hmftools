@@ -31,7 +31,7 @@ public class RnaFusionTest
     @Test
     public void testRnaMatching()
     {
-        EnsemblDataCache geneTransCache = new EnsemblDataCache("", RefGenomeVersion.HG37);
+        EnsemblDataCache geneTransCache = new EnsemblDataCache("", RefGenomeVersion.HG19);
 
         String geneName = "GENE1";
         String geneId = "ENSG0001";
