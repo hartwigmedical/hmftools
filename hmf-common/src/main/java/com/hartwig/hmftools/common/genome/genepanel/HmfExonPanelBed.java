@@ -13,7 +13,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelAssembly;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -31,13 +34,15 @@ final class HmfExonPanelBed {
 
     @SuppressWarnings("WeakerAccess")
     public static void write19File(@NotNull final String filename, @NotNull final String genePanelFile) throws IOException {
-        DriverGenePanel genePanel = DriverGenePanelFactory.buildFromTsv(genePanelFile);
+        List<DriverGene> driverGenes = DriverGeneFile.read(genePanelFile);
+        DriverGenePanel genePanel = DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, driverGenes);
         writeBedFile(filename, Strings.EMPTY, createRegions(genePanel, HmfGenePanelSupplier.allGeneList37()));
     }
 
     @SuppressWarnings("WeakerAccess")
     public static void write38File(@NotNull final String filename, @NotNull final String genePanelFile) throws IOException {
-        DriverGenePanel genePanel = DriverGenePanelFactory.buildFromTsv(genePanelFile);
+        List<DriverGene> driverGenes = DriverGeneFile.read(genePanelFile);
+        DriverGenePanel genePanel = DriverGenePanelFactory.create(DriverGenePanelAssembly.HG38, driverGenes);
         writeBedFile(filename, "chr", createRegions(genePanel, HmfGenePanelSupplier.allGeneList38()));
     }
 

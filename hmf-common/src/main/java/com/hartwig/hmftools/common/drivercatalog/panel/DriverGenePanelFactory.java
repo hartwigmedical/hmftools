@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,36 +16,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class DriverGenePanelFactory {
 
-    @Deprecated
-    public DriverGenePanel create() {
-        return create(builtIn());
-    }
-
-    @NotNull
-    private static List<DriverGene> builtIn() {
-        final InputStream inputStream = DriverGenePanel.class.getResourceAsStream("/drivercatalog/DriverGenePanel.tsv");
-        return new BufferedReader(new InputStreamReader(inputStream)).lines()
-                .filter(x -> !x.startsWith("gene"))
-                .map(DriverGeneFile::fromString)
-                .collect(Collectors.toList());
-    }
-
     @NotNull
     public static DriverGenePanel empty() {
-        return create(Collections.emptyList());
+        return create(DriverGenePanelAssembly.HG19, Collections.emptyList());
     }
 
     @NotNull
-    public static DriverGenePanel buildFromTsv(@NotNull String driverGenePanelFile) throws IOException {
-        return create(DriverGeneFile.read(driverGenePanelFile));
-    }
-
-    public static DriverGenePanel create(final List<DriverGene> genes) {
-        return create(DriverGenePanelAssembly.HG19, genes);
-    }
-
-    @NotNull
-    static DriverGenePanel create(@NotNull final DriverGenePanelAssembly assembly, final List<DriverGene> genes) {
+    public static DriverGenePanel create(@NotNull final DriverGenePanelAssembly assembly, final List<DriverGene> genes) {
         final DndsGeneName dndsGeneName = new DndsGeneName(assembly);
         final Map<String, String> dndsTsGenes = Maps.newHashMap();
         final Map<String, String> dndsOncoGenes = Maps.newHashMap();

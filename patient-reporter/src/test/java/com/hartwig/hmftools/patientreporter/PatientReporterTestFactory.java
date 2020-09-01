@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelAssembly;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -193,7 +194,7 @@ public final class PatientReporterTestFactory {
     public static DriverGenePanel createTestDriverGenePanel(@NotNull String oncogene, @NotNull String tsg) {
         DriverGene oncoGene = createTestDriverGene(oncogene, DriverCategory.ONCO);
         DriverGene tsgGene = createTestDriverGene(tsg, DriverCategory.TSG);
-        return new DriverGenePanelFactory().create(Lists.newArrayList(oncoGene, tsgGene));
+        return DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, Lists.newArrayList(oncoGene, tsgGene));
     }
 
     @NotNull

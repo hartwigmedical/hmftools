@@ -35,7 +35,7 @@ public class SnpEffEnrichmentTest {
     public void setup() {
         codec = createTestCodec();
         capture = Lists.newArrayList();
-        victim = new SnpEffEnrichment(genePanel, transcripts, capture::add);
+        victim = new SnpEffEnrichment(genePanel.driverGenes(), transcripts, capture::add);
     }
 
     @NotNull

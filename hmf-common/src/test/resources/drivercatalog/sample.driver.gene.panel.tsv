@@ -113,7 +113,6 @@ DNMT3A		true	true	true	true	true	false	true	TSG
 DOCK8	p telomere	false	false	false	true	false	false	false	TSG
 DPYD		true	true	true	true	true	false	true	TSG
 DROSHA		true	true	true	true	true	false	true	TSG
-DUX4L7	q telomere	false	false	false	true	false	false	false	TSG
 EEF1A1		true	false	false	false	false	true	true	ONCO
 EGFR		true	false	false	false	false	true	true	ONCO
 EIF1AX		true	false	false	false	false	true	true	ONCO

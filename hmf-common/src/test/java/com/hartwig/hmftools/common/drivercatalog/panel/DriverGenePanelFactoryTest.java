@@ -27,7 +27,7 @@ public class DriverGenePanelFactoryTest {
 
     @NotNull
     public static DriverGenePanel testGenePanel() {
-        return DriverGenePanelFactory.create(builtIn());
+        return DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, builtIn());
     }
 
 

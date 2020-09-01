@@ -37,7 +37,7 @@ public class AnnotatedVCFSimplifier {
     public void run(@NotNull String annotatedInputVcf) throws IOException {
         DriverGenePanel genePanel = DriverGenePanelFactory.empty();
         List<CanonicalTranscript> canonicalTranscripts = CanonicalTranscriptFactory.create37();
-        CanonicalAnnotation factory = new CanonicalAnnotation(genePanel, canonicalTranscripts);
+        CanonicalAnnotation factory = new CanonicalAnnotation(genePanel.driverGenes(), canonicalTranscripts);
 
         LOGGER.info("Simplifying variants from '{}'", annotatedInputVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedInputVcf, new VCFCodec(), false);
