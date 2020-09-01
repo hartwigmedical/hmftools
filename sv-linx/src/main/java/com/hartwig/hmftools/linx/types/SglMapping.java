@@ -41,14 +41,14 @@ public class SglMapping
         if(location.length != 2)
             return null;
 
-        if(items[1].isEmpty() || items[3].isEmpty())
+        if(items[1].isEmpty())
             return null;
 
         String chromosome = location[0];
         int position = Integer.parseInt(location[1]);
         byte orientation = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
         String cigar = items[2];
-        int qualScore = Integer.parseInt(items[3]);
+        int qualScore = !items[3].isEmpty() ? Integer.parseInt(items[3]) : 0;
 
         return new SglMapping(chromosome, position, orientation, cigar, qualScore);
     }
