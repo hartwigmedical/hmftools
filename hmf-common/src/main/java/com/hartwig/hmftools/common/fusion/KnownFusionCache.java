@@ -92,6 +92,11 @@ public class KnownFusionCache
         return mDataByType.get(PROMISCUOUS_3).stream().anyMatch(x -> x.ThreeGene.equals(gene));
     }
 
+    public boolean isExonDelDupTrans(final String transName)
+    {
+        return mDataByType.get(EXON_DEL_DUP).stream().anyMatch(x -> x.specificTransName().equals(transName));
+    }
+
     public boolean isExonDelDup(final String geneName, final String transName, int fusedExonUp, int fusedExonDown)
     {
         for(final KnownFusionData knownData : mDataByType.get(EXON_DEL_DUP))

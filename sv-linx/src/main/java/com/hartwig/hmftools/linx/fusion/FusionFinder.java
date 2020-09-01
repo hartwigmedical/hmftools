@@ -156,7 +156,10 @@ public class FusionFinder
                                 continue;
                             }
 
-                            geneFusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair);
+                            boolean exonDelDupCandidate = upstreamTrans.StableId.equals(downstreamTrans.StableId)
+                                    && mKnownFusionCache.isExonDelDupTrans(upstreamTrans.StableId);
+
+                            geneFusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair, exonDelDupCandidate);
                         }
 
                         if(geneFusion == null)
@@ -238,11 +241,12 @@ public class FusionFinder
             return null;
         }
 
-        return transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, false);
+        return transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, false, false);
     }
 
     private static GeneFusion transcriptPairHasFusion(
-            final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params, boolean isKnownPair)
+            final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params,
+            boolean isKnownPair, boolean exonDelDupCandidate)
     {
         // see SV Fusions document for permitted combinations
         boolean checkExactMatch = false;
@@ -359,7 +363,8 @@ public class FusionFinder
                 phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
             }
 
-            if(!phaseMatched && params.AllowExonSkipping && !upstreamTrans.gene().StableId.equals(downstreamTrans.gene().StableId))
+            if(!phaseMatched && params.AllowExonSkipping
+            && (!upstreamTrans.gene().StableId.equals(downstreamTrans.gene().StableId) || exonDelDupCandidate))
             {
                 // check for a match within the alternative phasings from upstream and downstream of the breakend
                 for (Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())

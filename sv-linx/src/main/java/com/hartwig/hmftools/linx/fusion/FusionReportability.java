@@ -178,9 +178,10 @@ public class FusionReportability
         return (type == PROMISCUOUS_5 || type == PROMISCUOUS_3 || type == KNOWN_PAIR);
     }
 
-    public static boolean allowExonSkipping(final KnownFusionType type)
+    private static boolean allowExonSkipping(final KnownFusionType type)
     {
-        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS || type == KNOWN_PAIR_UNMAPPABLE_3);
+        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS
+                || type == KNOWN_PAIR_UNMAPPABLE_3 || type == EXON_DEL_DUP);
     }
 
 }

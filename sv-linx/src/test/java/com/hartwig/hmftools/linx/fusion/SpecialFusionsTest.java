@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneD
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExonStarts;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateTransName;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
@@ -106,9 +107,9 @@ public class SpecialFusionsTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        final String transName = generateTransName(TRANS_1);
+        String transName = generateTransName(TRANS_1);
 
-        final String knownDelRegion = String.format("%s;%d;%d;%d;%d", transName, 2, 3, 5, 6);
+        String knownDelRegion = String.format("%s;%d;%d;%d;%d", transName, 2, 3, 5, 6);
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
                 new KnownFusionData(EXON_DEL_DUP, GENE_NAME_1, GENE_NAME_1, "", "", knownDelRegion));
 
@@ -145,14 +146,61 @@ public class SpecialFusionsTest
         fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true));
 
         assertEquals(1, fusions.size());
-        final GeneFusion fusion = fusions.stream().filter(x -> x.knownType() == EXON_DEL_DUP).findFirst().orElse(null);
+        GeneFusion fusion = fusions.stream().filter(x -> x.knownType() == EXON_DEL_DUP).findFirst().orElse(null);
         assertTrue(fusion != null);
 
         // the selected fusion is the longest for coding bases and without any exon skipping
         assertEquals(upPos, fusion.upstreamTrans().gene().position());
         assertEquals(downPos, fusion.downstreamTrans().gene().position());
+        assertEquals(0, fusion.getExonsSkipped(true));
         assertEquals(0, fusion.getExonsSkipped(false));
-        assertEquals(0, fusion.getExonsSkipped(false));
+        assertTrue(fusion.reportable());
+
+        // test again with exon skipping as long as the skipping occurs within the bounds specified for the exon DEL-DUP
+
+        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        final String geneId = "ENSG0010";
+        int geneStart = 30000;
+        geneList.add(createEnsemblGeneData(geneId, geneId, CHR_1, POS_STRAND, geneStart, geneStart + 15 * 200));
+        addGeneData(geneTransCache, CHR_1, geneList);
+
+        int transId = 10;
+        TranscriptData transData = createTransExons(
+                geneId, transId, POS_STRAND, generateExonStarts(30000, 15, 100, 100),
+                100, geneStart + 250, geneStart + 2850, true, BIOTYPE_PROTEIN_CODING);
+
+        addTransExonData(geneTransCache, geneId, Lists.newArrayList(transData));
+
+        transName = generateTransName(transId);
+
+        knownDelRegion = String.format("%s;%d;%d;%d;%d", transName, 2, 5, 10, 14);
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
+                new KnownFusionData(EXON_DEL_DUP, geneId, geneId, "", "", knownDelRegion));
+
+        upGenes.clear();
+        downGenes.clear();
+        upPos = geneStart + 350;
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
+
+        downPos = geneStart + 1950;
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
+
+        fusions.clear();
+        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true));
+
+        assertEquals(1, fusions.size());
+        fusion = fusions.stream().filter(x -> x.knownType() == EXON_DEL_DUP).findFirst().orElse(null);
+        assertTrue(fusion != null);
+
+        // the selected fusion is the longest for coding bases and without any exon skipping
+        assertEquals(upPos, fusion.upstreamTrans().gene().position());
+        assertEquals(downPos, fusion.downstreamTrans().gene().position());
+        assertEquals(0, fusion.getExonsSkipped(true));
+        assertEquals(1, fusion.getExonsSkipped(false));
+        assertEquals(2, fusion.getFusedExon(true));
+        assertEquals(12, fusion.getFusedExon(false));
         assertTrue(fusion.reportable());
     }
 
