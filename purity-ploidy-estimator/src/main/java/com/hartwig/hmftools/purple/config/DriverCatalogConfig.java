@@ -40,14 +40,16 @@ public interface DriverCatalogConfig {
     DriverGenePanel genePanel();
 
     @NotNull
-    static DriverCatalogConfig createConfig(@NotNull final CommandLine cmd, @NotNull RefGenomeData refGenomeData) throws ParseException, IOException {
+    static DriverCatalogConfig createConfig(@NotNull final CommandLine cmd, @NotNull RefGenomeData refGenomeData)
+            throws ParseException, IOException {
         boolean enabled = cmd.hasOption(DRIVER_ENABLED);
         String hotspots = cmd.getOptionValue(HOTSPOT, Strings.EMPTY);
         final DriverGenePanel genePanel;
 
         if (enabled) {
             if (!DriverGenePanelConfig.isConfigured(cmd)) {
-                throw new ParseException(DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
+                throw new ParseException(
+                        DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
             }
 
             if (hotspots.isEmpty()) {
@@ -59,7 +61,8 @@ public interface DriverCatalogConfig {
             }
 
             final List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
-            final DriverGenePanelAssembly driverGenePanelAssembly = refGenomeData.isHg38() ? DriverGenePanelAssembly.HG38 : DriverGenePanelAssembly.HG19;
+            final DriverGenePanelAssembly driverGenePanelAssembly =
+                    refGenomeData.isHg38() ? DriverGenePanelAssembly.HG38 : DriverGenePanelAssembly.HG19;
             genePanel = DriverGenePanelFactory.create(driverGenePanelAssembly, driverGenes);
         } else {
             genePanel = DriverGenePanelFactory.empty();

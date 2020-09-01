@@ -5,13 +5,13 @@ import java.util.function.Predicate;
 
 class DndsGeneName {
 
-    private final DriverGenePanelMap panelMap;
+    private final DndsGeneNameMap panelMap;
     private final Predicate<DriverGene> isValidPredicate;
     private final Function<DriverGene, String> dndsGeneFunction;
 
-    public DndsGeneName(final DriverGenePanelAssembly version) {
-        panelMap = new DriverGenePanelMap();
-        if (version == DriverGenePanelAssembly.HG19) {
+    public DndsGeneName(final DriverGenePanelAssembly assembly) {
+        panelMap = new DndsGeneNameMap();
+        if (assembly == DriverGenePanelAssembly.HG19) {
             isValidPredicate = aDriverGene -> panelMap.isValidHg19Gene(aDriverGene.gene());
             dndsGeneFunction = DriverGene::gene;
         } else {

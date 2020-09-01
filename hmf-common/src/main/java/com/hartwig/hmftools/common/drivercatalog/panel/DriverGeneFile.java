@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.drivercatalog.panel;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -87,7 +86,6 @@ public final class DriverGeneFile {
 
     public static void write(@NotNull final String filename, @NotNull final List<DriverGene> driverGenes) throws IOException {
         List<DriverGene> sorted = Lists.newArrayList(driverGenes);
-        Collections.sort(sorted);
         Files.write(new File(filename).toPath(), toLines(sorted));
     }
 }

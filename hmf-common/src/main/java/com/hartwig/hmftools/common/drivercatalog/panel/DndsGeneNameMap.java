@@ -11,13 +11,14 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DriverGenePanelMap {
+public class DndsGeneNameMap {
 
     private final Set<String> hg19Set = Sets.newHashSet();
     private final Map<String, String> hg38Map = Maps.newHashMap();
+    private final Map<String, String> hg19Map = Maps.newHashMap();
 
-    public DriverGenePanelMap() {
-        final InputStream inputStream = DriverGenePanel.class.getResourceAsStream("/drivercatalog/DriverGenePanelMap.tsv");
+    public DndsGeneNameMap() {
+        final InputStream inputStream = DriverGenePanel.class.getResourceAsStream("/drivercatalog/DndsGeneNameMap.tsv");
         new BufferedReader(new InputStreamReader(inputStream)).lines()
                 .filter(x -> !x.startsWith("hg19"))
                 .map(x -> x.split("\t"))
@@ -28,6 +29,7 @@ public class DriverGenePanelMap {
                         hg38Map.put(hg38, hg19);
                     }
                     hg19Set.add(hg19);
+                    hg19Map.put(hg19, hg38);
                 });
 
     }
@@ -37,7 +39,7 @@ public class DriverGenePanelMap {
     }
 
     public boolean isValidHg19Gene(@NotNull final String hg19GeneId) {
-        return hg19Set.contains(hg19GeneId);
+        return hg19Map.containsKey(hg19GeneId);
     }
 
     @NotNull
@@ -49,4 +51,12 @@ public class DriverGenePanelMap {
         return result;
     }
 
+    @NotNull
+    String hg38Gene(@NotNull final String hg19GeneId) {
+        String result = hg19Map.get(hg19GeneId);
+        if (result == null ) {
+            return "NA";
+        }
+        return result;
+    }
 }
