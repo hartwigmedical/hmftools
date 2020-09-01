@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.util;
+package com.hartwig.hmftools.serve.hotspot;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -6,6 +6,11 @@ import org.jetbrains.annotations.Nullable;
 public final class ProteinKeyFormatter {
 
     private ProteinKeyFormatter() {
+    }
+
+    @NotNull
+    public static String toProteinKey(@NotNull HotspotAnnotation annotation) {
+        return toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
     }
 
     @NotNull

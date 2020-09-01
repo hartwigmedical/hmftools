@@ -12,7 +12,7 @@ import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.serve.compassionateuse.CompassionateUseProgramFile;
-import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
+import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 import com.hartwig.hmftools.serve.vicc.copynumber.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.KnownFusions;
@@ -69,8 +69,8 @@ public class ServeGeneratorApplication {
         assert refVersionString.equals("hg19");
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
 
-        HotspotGenerator hotspotGenerator =
-                HotspotGenerator.transvarWithRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
+        ProteinToHotspotConverter proteinToHotspotConverter =
+                ProteinToHotspotConverter.transvarWithRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         //Lists of known genomic events
         List<KnownAmplificationDeletion> listKnownAmplification = Lists.newArrayList();

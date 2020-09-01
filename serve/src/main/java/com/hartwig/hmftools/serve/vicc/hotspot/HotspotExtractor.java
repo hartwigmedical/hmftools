@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.hotspot.HotspotGenerator;
+import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -14,10 +14,10 @@ import org.jetbrains.annotations.NotNull;
 public class HotspotExtractor {
 
     @NotNull
-    private final HotspotGenerator hotspotGenerator;
+    private final ProteinToHotspotConverter proteinToHotspotConverter;
 
-    public HotspotExtractor(@NotNull final HotspotGenerator hotspotGenerator) {
-        this.hotspotGenerator = hotspotGenerator;
+    public HotspotExtractor(@NotNull final ProteinToHotspotConverter proteinToHotspotConverter) {
+        this.proteinToHotspotConverter = proteinToHotspotConverter;
     }
 
     @NotNull
@@ -25,9 +25,9 @@ public class HotspotExtractor {
         Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
             String proteinAnnotation = feature.proteinAnnotation();
-            if (HotspotGenerator.isResolvableProteinAnnotation(proteinAnnotation)) {
+            if (ProteinToHotspotConverter.isResolvableProteinAnnotation(proteinAnnotation)) {
                 allHotspotsPerFeature.put(feature,
-                        hotspotGenerator.generateHotspots(feature.geneSymbol(), viccEntry.transcriptId(), proteinAnnotation));
+                        proteinToHotspotConverter.resolveProteinAnnotation(feature.geneSymbol(), viccEntry.transcriptId(), proteinAnnotation));
             }
         }
 

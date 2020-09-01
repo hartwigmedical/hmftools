@@ -13,11 +13,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class HotspotUtil {
+public final class HotspotFunctions {
 
-    private static final Logger LOGGER = LogManager.getLogger(HotspotUtil.class);
+    private static final Logger LOGGER = LogManager.getLogger(HotspotFunctions.class);
 
-    private HotspotUtil() {
+    private HotspotFunctions() {
     }
 
     @NotNull
@@ -34,7 +34,8 @@ public final class HotspotUtil {
 
                 HotspotAnnotation currentAnnotation = convertedMap.get(hotspot);
                 if (currentAnnotation != null) {
-                    LOGGER.warn("Annotation '{}' already found previously: '{}'", newAnnotation, currentAnnotation);
+                    LOGGER.debug("Annotation '{}' already found previously: '{}'", newAnnotation, currentAnnotation);
+                    convertedMap.put(hotspot, mergeHotspotAnnotations(currentAnnotation, newAnnotation));
                 } else {
                     convertedMap.put(hotspot, newAnnotation);
                 }
@@ -66,7 +67,7 @@ public final class HotspotUtil {
     @NotNull
     public static HotspotAnnotation mergeHotspotAnnotations(@NotNull HotspotAnnotation annotation1,
             @NotNull HotspotAnnotation annotation2) {
-        if (annotation1.gene().equals(annotation2.gene())) {
+        if (!annotation1.gene().equals(annotation2.gene())) {
             LOGGER.warn("Genes mismatch on identical hotspot: '{}' vs '{}'", annotation1.gene(), annotation2.gene());
         }
 

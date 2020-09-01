@@ -16,7 +16,7 @@ SERVE supports the ingestion of the following knowledgebases:
  along with cancer types and molecular inclusion criteria for these trials.
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
  a database of approved compassionate use programs in the Netherlands
- - HMF Cohort - a database of recurring mutations that we deem pathogenic based on their recurrence rate.
+ - HMF Cohort - a database of recurrent somatic mutations in the coding or splice regions of known cancer genes that are deemed likely pathogenic due to being found in at least 4 unique patients.
  - HMF Curated - a database of known driver mutations curated by the Hartwig team.
   
 Do note that SERVE does not provide the actual data that is input to the algorithm, but only provides support for its ingestion.

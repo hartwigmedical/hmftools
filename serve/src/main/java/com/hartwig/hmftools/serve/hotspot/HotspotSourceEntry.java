@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.serve.hotspot;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface HotspotSourceEntry {
 
     @NotNull
     String gene();
 
-    @NotNull
+    @Nullable
     String transcript();
 
     @NotNull

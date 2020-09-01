@@ -22,9 +22,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HotspotGenerator {
+public class ProteinToHotspotConverter {
 
-    private static final Logger LOGGER = LogManager.getLogger(HotspotGenerator.class);
+    private static final Logger LOGGER = LogManager.getLogger(ProteinToHotspotConverter.class);
 
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
@@ -32,15 +32,17 @@ public class HotspotGenerator {
     private final ProteinResolver proteinResolver;
 
     @NotNull
-    public static HotspotGenerator transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
-            throws FileNotFoundException {
-        LOGGER.info("Creating hotspot generator with ref genome version '{}' and fasta path '{}'", refGenomeVersion, refGenomeFastaFile);
-        return new HotspotGenerator(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile));
+    public static ProteinToHotspotConverter transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion,
+            @NotNull String refGenomeFastaFile) throws FileNotFoundException {
+        LOGGER.info("Creating protein to hotspot resolved with ref genome version '{}' and fasta path '{}'",
+                refGenomeVersion,
+                refGenomeFastaFile);
+        return new ProteinToHotspotConverter(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile));
     }
 
     @NotNull
-    public static HotspotGenerator dummy() {
-        return new HotspotGenerator(new ProteinResolver() {
+    public static ProteinToHotspotConverter dummy() {
+        return new ProteinToHotspotConverter(new ProteinResolver() {
             @NotNull
             @Override
             public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull final String gene,
@@ -56,12 +58,12 @@ public class HotspotGenerator {
         });
     }
 
-    private HotspotGenerator(@NotNull ProteinResolver proteinResolver) {
+    private ProteinToHotspotConverter(@NotNull ProteinResolver proteinResolver) {
         this.proteinResolver = proteinResolver;
     }
 
     @NotNull
-    public List<VariantHotspot> generateHotspots(@NotNull String gene, @Nullable String specificTranscript,
+    public List<VariantHotspot> resolveProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) {
         if (isResolvableProteinAnnotation(proteinAnnotation)) {
             return proteinResolver.extractHotspotsFromProteinAnnotation(gene, specificTranscript, proteinAnnotation);

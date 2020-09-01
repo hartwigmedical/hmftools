@@ -137,6 +137,8 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- Upcoming
+  - Fix bug where alt does not always realign
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.5)
   - Tumor only support
   - Added GripssHardFilterApplicationKt application
