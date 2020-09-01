@@ -63,8 +63,7 @@ public class ServeAnnotatedHotspotVCFChecker {
             String inputProteinAnnotation = inputParts[2];
 
             String formattedHotspot = formatHotspot(variant);
-            // TODO Remove "p." option.
-            if (inputProteinAnnotation.equals("p.") || inputProteinAnnotation.equals(NO_INPUT_PROTEIN)) {
+            if (inputProteinAnnotation.equals(NO_INPUT_PROTEIN)) {
                 LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
                 matchCount++;
             } else {

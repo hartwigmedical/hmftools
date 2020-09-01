@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.serve.vicc.curation.FeatureCurator;
+import com.hartwig.hmftools.serve.vicc.curation.ViccCurator;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
@@ -20,9 +20,12 @@ public final class ViccReader {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccReader.class);
 
+    private ViccReader() {
+    }
+
     @NotNull
-    public static List<ViccEntry> readAndCurate(@NotNull String viccJson, @NotNull Set<ViccSource> sourcesToFilterOn, @Nullable Integer maxEntries)
-            throws IOException {
+    public static List<ViccEntry> readAndCurate(@NotNull String viccJson, @NotNull Set<ViccSource> sourcesToFilterOn,
+            @Nullable Integer maxEntries) throws IOException {
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sourcesToFilterOn).maxEntriesToInclude(maxEntries).build();
 
@@ -30,14 +33,9 @@ public final class ViccReader {
         List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJson, querySelection);
         LOGGER.info(" Read {} entries", viccEntries.size());
 
-        return curateViccEntries(viccEntries);
-    }
+        ViccCurator curator = new ViccCurator();
 
-    @NotNull
-    public static List<ViccEntry> curateViccEntries(@NotNull List<ViccEntry> viccEntries) {
-        FeatureCurator curator = new FeatureCurator();
-
-        LOGGER.info("Curating {} VICC entriess", viccEntries.size());
+        LOGGER.info("Curating {} VICC entries", viccEntries.size());
         List<ViccEntry> curatedViccEntries = curator.curate(viccEntries);
         LOGGER.info(" Finished VICC curation. {} curated entries remaining. {} entries have been removed",
                 curatedViccEntries.size(),

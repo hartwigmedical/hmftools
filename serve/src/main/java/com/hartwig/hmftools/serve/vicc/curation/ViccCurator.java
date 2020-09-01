@@ -16,15 +16,15 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FeatureCurator {
+public class ViccCurator {
 
-    private static final Logger LOGGER = LogManager.getLogger(FeatureCurator.class);
+    private static final Logger LOGGER = LogManager.getLogger(ViccCurator.class);
     private static final Set<String> NON_ONCOGENIC_INDICATORS = Sets.newHashSet("Inconclusive", "Likely Neutral");
 
     @NotNull
     private final Set<CurationKey> evaluatedCurationKeys = Sets.newHashSet();
 
-    public FeatureCurator() {
+    public ViccCurator() {
     }
 
     @NotNull

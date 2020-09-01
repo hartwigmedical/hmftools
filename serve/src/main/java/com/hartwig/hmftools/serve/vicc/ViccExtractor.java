@@ -72,10 +72,10 @@ public final class ViccExtractor {
                             .build());
         }
 
-        LOGGER.info("Unique known amps:'{}'", copyNumberExtractor.uniqueAmps().size());
-        LOGGER.info("Unique known dels: '{}'", copyNumberExtractor.uniqueDels().size());
-        LOGGER.info("Unique known fusion pairs: '{}'", fusionExtractor.uniqueFusionsPair().size());
-        LOGGER.info("Unique known fusion promiscuous '{}'", fusionExtractor.uniqueFusionsPromiscuous().size());
+        LOGGER.info("Unique known amps: {}", copyNumberExtractor.uniqueAmps().size());
+        LOGGER.info("Unique known dels: {}", copyNumberExtractor.uniqueDels().size());
+        LOGGER.info("Unique known fusion pairs: {}", fusionExtractor.uniqueFusionsPair().size());
+        LOGGER.info("Unique known fusion promiscuous: {}", fusionExtractor.uniqueFusionsPromiscuous().size());
 
         return extractionResultsPerEntry;
     }
