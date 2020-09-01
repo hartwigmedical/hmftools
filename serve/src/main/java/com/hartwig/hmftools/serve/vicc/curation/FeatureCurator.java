@@ -61,16 +61,16 @@ public class FeatureCurator {
         evaluatedCurationKeys.add(key);
 
         if (CurationFactory.FEATURE_BLACKLIST.contains(key)) {
-          //  LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
+            LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
             return null;
         } else {
             String mappedFeatureName = CurationFactory.FEATURE_NAME_MAPPINGS.get(key);
             if (mappedFeatureName != null) {
-//                LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
-//                        feature.name(),
-//                        mappedFeatureName,
-//                        feature.geneSymbol(),
-//                        entry.source());
+                LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
+                        feature.name(),
+                        mappedFeatureName,
+                        feature.geneSymbol(),
+                        entry.source());
                 return ImmutableFeature.builder().from(feature).name(mappedFeatureName).build();
             }
         }
@@ -78,8 +78,32 @@ public class FeatureCurator {
         return feature;
     }
 
+    public void reportUnusedBlacklistEntries() {
+        int unusedKeyCount = 0;
+        for (CurationKey key : CurationFactory.FEATURE_BLACKLIST) {
+            if (!evaluatedCurationKeys.contains(key)) {
+                unusedKeyCount++;
+                LOGGER.warn("Key '{}' hasn't been used during VICC blacklist curation", key);
+            }
+        }
+
+        for (CurationKey key : CurationFactory.FEATURE_NAME_MAPPINGS.keySet()) {
+            if (!evaluatedCurationKeys.contains(key)) {
+                unusedKeyCount++;
+                LOGGER.warn("Key '{}' hasn't been used during VICC name mapping curation", key);
+            }
+        }
+
+        int totalKeyCount = CurationFactory.FEATURE_BLACKLIST.size() + CurationFactory.FEATURE_NAME_MAPPINGS.keySet().size();
+        LOGGER.debug("Found {} unused VICC curation entries. {} keys have been requested against {} blacklist entries",
+                unusedKeyCount,
+                evaluatedCurationKeys.size(),
+                totalKeyCount);
+    }
+
     @NotNull
-    public Set<CurationKey> unusedCurationKeys() {
+    @VisibleForTesting
+    Set<CurationKey> unusedCurationKeys() {
         Set<CurationKey> unusedCurationKeys = Sets.newHashSet();
 
         unusedCurationKeys.addAll(CurationFactory.FEATURE_BLACKLIST);
