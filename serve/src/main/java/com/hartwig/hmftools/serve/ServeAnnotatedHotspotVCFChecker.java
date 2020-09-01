@@ -229,6 +229,7 @@ public class ServeAnnotatedHotspotVCFChecker {
         serveToSnpEffMappings.put("ENST00000377045", createARAFMap());
         serveToSnpEffMappings.put("ENST00000460911", createEZH2Map()); // Note: This is not the canonical transcript for EZH2
         serveToSnpEffMappings.put("ENST00000263967", createPIK3CAMap());
+        serveToSnpEffMappings.put("ENST00000374690", createARMap());
 
         return serveToSnpEffMappings;
     }
@@ -245,6 +246,7 @@ public class ServeAnnotatedHotspotVCFChecker {
     @NotNull
     private static Map<String, List<String>> createKITMap() {
         Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.S501_A502insAY", Lists.newArrayList("p.A502_Y503insYA"));
         map.put("p.K550_W557del", Lists.newArrayList("p.P551_K558del"));
         map.put("p.V555_V559del", Lists.newArrayList("p.Q556_V560del"));
         map.put("p.P577_W582delinsPYD", Lists.newArrayList("p.H580_W582del"));
@@ -317,6 +319,7 @@ public class ServeAnnotatedHotspotVCFChecker {
     @NotNull
     private static Map<String, List<String>> createERBB2Map() {
         Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.A771_Y772insYVMA", Lists.newArrayList("p.Y772_V773insVMAY"));
         map.put("p.M774_A775insAYVM", Lists.newArrayList("p.A775_G776insYVMA"));
         map.put("p.A775_G776insYVMA", Lists.newArrayList("p.Y772_A775dup"));
         return map;
@@ -347,6 +350,13 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createPIK3CAMap() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.E109del", Lists.newArrayList("p.E110del"));
+        return map;
+    }
+
+    @NotNull
+    private static Map<String, List<String>> createARMap() {
+        Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.Q86del", Lists.newArrayList("p.Q87del", "p.Q88del", "p.Q89del", "p.Q90del", "p.Q91del"));
         return map;
     }
 
