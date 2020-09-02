@@ -8,11 +8,12 @@ import org.apache.commons.compress.utils.Lists;
 public class DriverGenePanelConversion {
 
     public static void main(String[] args) throws IOException {
-        String inputFile = "/Users/jon/hmf/resources/DriverGenePanel.hg19.tsv";
-        String outputFile = "/Users/jon/hmf/resources/DriverGenePanel.hg38.tsv";
+        String templateFile = "/Users/jon/hmf/resources/DriverGenePanel.template.txt";
+        String outputFile19 = "/Users/jon/hmf/resources/DriverGenePanel.hg19.tsv";
+        String outputFile38 = "/Users/jon/hmf/resources/DriverGenePanel.hg38.tsv";
 
         DndsGeneNameMap geneNameMap = new DndsGeneNameMap();
-        List<DriverGene> inputDriverGenes = DriverGeneFile.read(inputFile);
+        List<DriverGene> inputDriverGenes = DriverGeneFile.read(templateFile);
         List<DriverGene> outputDriverGenes = Lists.newArrayList();
         for (DriverGene input : inputDriverGenes) {
             final String hg19Gene = input.gene();
@@ -30,6 +31,7 @@ public class DriverGenePanelConversion {
                 outputDriverGenes.add(converted);
             }
         }
-        DriverGeneFile.write(outputFile, outputDriverGenes);
+        DriverGeneFile.write(outputFile19, inputDriverGenes);
+        DriverGeneFile.write(outputFile38, outputDriverGenes);
     }
 }

@@ -46,6 +46,7 @@ public final class DriverGeneFile {
     @NotNull
     private static String toString(@NotNull final DriverGene gene) {
         return new StringJoiner(DELIMITER).add(gene.gene())
+                .add(String.valueOf(gene.reportMissenseAndInframe()))
                 .add(String.valueOf(gene.reportNonsenseAndFrameshift()))
                 .add(String.valueOf(gene.reportSplice()))
                 .add(String.valueOf(gene.reportDeletion()))
@@ -61,13 +62,13 @@ public final class DriverGeneFile {
         String[] values = line.split(DELIMITER);
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder()
                 .gene(values[0])
-                .reportMissenseAndInframe(Boolean.parseBoolean(values[1]))
-                .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[2]))
-                .reportSplice(Boolean.parseBoolean(values[3]))
-                .reportDeletion(Boolean.parseBoolean(values[4]))
-                .reportDisruption(Boolean.parseBoolean(values[5]))
-                .reportAmplification(Boolean.parseBoolean(values[6]))
-                .reportHotspot(Boolean.parseBoolean(values[7]))
+                .reportMissenseAndInframe(Boolean.parseBoolean(values[1].toLowerCase()))
+                .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[2].toLowerCase()))
+                .reportSplice(Boolean.parseBoolean(values[3].toLowerCase()))
+                .reportDeletion(Boolean.parseBoolean(values[4].toLowerCase()))
+                .reportDisruption(Boolean.parseBoolean(values[5].toLowerCase()))
+                .reportAmplification(Boolean.parseBoolean(values[6].toLowerCase()))
+                .reportHotspot(Boolean.parseBoolean(values[7].toLowerCase()))
                 .likelihoodType(DriverCategory.valueOf(values[8]));
         return builder.build();
     }
