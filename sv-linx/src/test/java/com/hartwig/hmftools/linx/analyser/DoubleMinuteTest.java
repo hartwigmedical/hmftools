@@ -72,8 +72,6 @@ public class DoubleMinuteTest
         // form a DM from 2 INVs
         LinxTester tester = new LinxTester();
 
-        // tester.logVerbose(true);
-
         final SvVarData var1 = createTestSv(1,"1","1",1000,6000,-1,-1, INV,8);
         final SvVarData var2 = createTestSv(2,"1","1",3000,8000,1,1, INV,8);
 
@@ -245,8 +243,6 @@ public class DoubleMinuteTest
     public void testMultipleDMsInCluster()
     {
         LinxTester tester = new LinxTester();
-
-        // tester.Analyser.getDoubleMinuteFinder().setOutputDir("", true);
 
         SvVarData var1 = createTestSv(1,"1","1",1000,10000,-1,1, DUP,8);
         SvVarData var2 = createTestSv(2,"1","1",2000,3000,1,-1, DEL,1);

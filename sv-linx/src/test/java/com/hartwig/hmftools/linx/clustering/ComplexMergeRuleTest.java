@@ -231,7 +231,7 @@ public class ComplexMergeRuleTest
     {
         LinxTester tester = new LinxTester();
 
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         // cluster foldbacks on the same arm even if they're chained without assembly
 
