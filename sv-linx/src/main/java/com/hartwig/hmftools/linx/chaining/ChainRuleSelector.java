@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.MIN_CHAINING_JCN_LEVEL;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatchForSplits;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnOverlap;
@@ -388,7 +389,7 @@ public class ChainRuleSelector
                     }
                 }
 
-                if(minUnlinkedPloidy == 0 || chainHasSimpleFoldback)
+                if(minUnlinkedPloidy < MIN_CHAINING_JCN_LEVEL || chainHasSimpleFoldback)
                 {
                     LNX_LOGGER.debug("foldback pair({}) removed from consideration: minUnlinkedPloidy({}) chainHasSimpleFoldback({})",
                             fbPair, formatJcn(minUnlinkedPloidy), chainHasSimpleFoldback);
