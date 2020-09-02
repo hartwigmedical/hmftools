@@ -598,13 +598,10 @@ public class FusionDisruptionAnalyser
                     upperSV = chain.getChainEndSV(false);
                 }
 
-                int upperBreakendPos;
-
                 List<GeneAnnotation> genesListUpper;
 
                 if(upperBreakend != null)
                 {
-                    upperBreakendPos = upperBreakend.position();
                     genesListUpper = getBreakendGeneList(upperSV, upperBreakend.usesStart());
                 }
                 else
@@ -613,8 +610,6 @@ public class FusionDisruptionAnalyser
 
                     if(genesListUpper.isEmpty())
                         continue;
-
-                    upperBreakendPos = genesListUpper.get(0).position();
                 }
 
                 // if a new linked pair has been traversed to reach this upper breakend, record its length
@@ -772,9 +767,8 @@ public class FusionDisruptionAnalyser
 
                     // accept invalidated chains and transcripts for known fusions
                     boolean chainLengthOk =  totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
-                    boolean notTerminated = !fusion.isTerminated();
 
-                    if(validTraversal && ((chainLengthOk && notTerminated) || allowSuspectChains(fusion.knownType())))
+                    if(validTraversal && (chainLengthOk || allowSuspectChains(fusion.knownType())))
                     {
                         if(!hasIdenticalFusion(fusion, chainFusions))
                         {
@@ -783,9 +777,7 @@ public class FusionDisruptionAnalyser
                     }
                     else
                     {
-                        final String invalidReason = !validTraversal ? "TraversesSPA" :
-                                (!chainLengthOk ? "LongChain" : "Terminated");
-
+                        final String invalidReason = !validTraversal ? "TraversesSPA" : "LongChain";
                         recordInvalidFusion(fusion, invalidReason);
                     }
                 }
