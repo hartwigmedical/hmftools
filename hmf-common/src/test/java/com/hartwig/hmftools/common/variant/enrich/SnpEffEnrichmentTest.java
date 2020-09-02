@@ -35,7 +35,7 @@ public class SnpEffEnrichmentTest {
     public void setup() {
         codec = createTestCodec();
         capture = Lists.newArrayList();
-        victim = new SnpEffEnrichment(genePanel, transcripts, capture::add);
+        victim = new SnpEffEnrichment(genePanel.driverGenes(), transcripts, capture::add);
     }
 
     @NotNull
@@ -78,6 +78,39 @@ public class SnpEffEnrichmentTest {
         assertEquals(CodingEffect.SYNONYMOUS, summary.canonicalCodingEffect());
         assertEquals("c.78G>A", summary.canonicalHgvsCodingImpact());
         assertEquals("p.Ser26Ser", summary.canonicalHgvsProteinImpact());
+    }
+
+    @Test
+    public void testInframeIndelIgnoredForUTR() {
+        final String template =
+                "7\t101898665\t.\tCAA\tC\t767\tPASS\tANN=C|3_prime_UTR_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000360264|protein_coding|24/24|c.*6344_*6345delAA|||||6344|,C|3_prime_UTR_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000292535|protein_coding|24/24|c.*6344_*6345delAA|||||6344|,C|intron_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000437600|protein_coding|14/22|c.1250-17971_1250-17970delAA||||||,C|intron_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000292538|protein_coding|14/22|c.1256-17971_1256-17970delAA||||||,C|intron_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000393824|protein_coding|13/21|c.1139-17971_1139-17970delAA||||||,C|intron_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000547394|protein_coding|13/21|c.1208-17971_1208-17970delAA||||||,C|intron_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000425244|protein_coding|13/21|c.1118-17971_1118-17970delAA||||||,C|intron_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000560541|processed_transcript|14/22|n.1844-17971_1844-17970delAA||||||,C|intron_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000558836|processed_transcript|13/21|n.1362-17971_1362-17970delAA||||||;LPS=13958;MAPPABILITY=1;MH=AA;%sRC=CCCAAAAAAAAAAAGAC;RC_MH=AA;RC_NM=2;RC_REPC=11;RC_REPS=A;REP_C=13;REP_S=A;SEC=CUX1,ENST00000360264,UTR_variant,MISSENSE,c.*6344_*6345delAA,;SEW=CUX1,ENST00000360264,UTR_variant,MISSENSE,1;TIER=LOW_CONFIDENCE;TNC=CCA\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:5,0:0:16:235,0:7,0:0,0,0,0,5,16:0:0,0,0:0,0,0,0,98,229:18\t0/1:14,70:0.515:136:1122,2161:32,69:29,9,32,0,14,136:0:0,1,2:628,141,593,0,259,2569:151";
+        final String line1 = String.format(template, "");
+        final String line2 = String.format(template, "PII=1;");
+
+        final VariantContext variantContext1 = codec.decode(line1);
+        final VariantContext variantContext2 = codec.decode(line2);
+        victim.accept(variantContext1);
+        victim.accept(variantContext2);
+        final SnpEffSummary summary1 = SnpEffSummaryFactory.fromSage(capture.get(0));
+        final SnpEffSummary summary2 = SnpEffSummaryFactory.fromSage(capture.get(1));
+        assertEquals(CodingEffect.NONE, summary1.canonicalCodingEffect());
+        assertEquals(CodingEffect.NONE, summary2.canonicalCodingEffect());
+    }
+
+    @Test
+    public void testInframeIndel() {
+        final String template = "16\t50813650\t.\tCCTCCTGTGAACTCACT\tC\t143\tPASS\tANN=C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000311559|protein_coding|10/20|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1605/5371|1214/2871|405/956||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000569418|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1483/3513|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000540145|protein_coding|9/19|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1629/8713|1214/2871|405/956||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000564326|protein_coding|7/17|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1399/3259|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000566206|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1455/3104|1205/2733|402/910||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000398568|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1505/3536|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000427738|protein_coding|8/18|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1419/8503|1214/2871|405/956||,C|sequence_feature|MODERATE|CYLD|ENSG00000083799|modified-residue:phosphoserine|ENST00000311559|protein_coding|10/20|c.1214_1229delCTCCTGTGAACTCACT||||||,C|sequence_feature|MODERATE|CYLD|ENSG00000083799|modified-residue:phosphoserine|ENST00000398568|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT||||||,C|intron_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000568704|protein_coding|5/13|c.1129+1799_1129+1814delCTCCTGTGAACTCACT||||||,C|non_coding_transcript_exon_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000569891|retained_intron|9/12|n.1600_1615delCTCCTGTGAACTCACT||||||,C|non_coding_transcript_exon_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000563629|retained_intron|6/10|n.941_956delCTCCTGTGAACTCACT||||||;LOF=(CYLD|ENSG00000083799|17|0.41);LPS=6910;MAPPABILITY=1;MH;%sPURPLE_AF=0.0871;PURPLE_CN=3.97;PURPLE_GERMLINE=AMPLIFICATION;PURPLE_MACN=0.00;PURPLE_VCN=0.346;RC=ACGGCGACCAC;RC_NM=2;REPORTED;REP_C=3;REP_S=CCT;SEC=CYLD,ENST00000427738,frameshift_variant,MISSENSE,c.1214_1229delCTCCTGTGAACTCACT,p.Pro405fs;SEW=CYLD,ENST00000311559,frameshift_variant,MISSENSE,1;SUBCL=0.140;TIER=PANEL;TNC=TCC\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:36,1:0.026:38:1389,0:39,0:1,0,0,0,36,38:0:0,0,0:28,0,0,0,880,908:40\t0/1:119,6:0.047:128:4472,193:125,5:6,0,0,0,119,128:0:0,0,0:143,0,0,0,2582,2738:133";
+        final String line1 = String.format(template, "");
+        final String line2 = String.format(template, "PII=1;");
+
+        final VariantContext variantContext1 = codec.decode(line1);
+        final VariantContext variantContext2 = codec.decode(line2);
+        victim.accept(variantContext1);
+        victim.accept(variantContext2);
+        final SnpEffSummary summary1 = SnpEffSummaryFactory.fromSage(capture.get(0));
+        final SnpEffSummary summary2 = SnpEffSummaryFactory.fromSage(capture.get(1));
+        assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, summary1.canonicalCodingEffect());
+        assertEquals(CodingEffect.MISSENSE, summary2.canonicalCodingEffect());
     }
 
 }

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
@@ -21,8 +21,8 @@ public class SnpEffSummaryFactory {
 
     private final CanonicalAnnotation canonicalAnnotationFactory;
 
-    public SnpEffSummaryFactory(@NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts) {
-        this.canonicalAnnotationFactory = new CanonicalAnnotation(genePanel, transcripts);
+    public SnpEffSummaryFactory(@NotNull final List<DriverGene> driverGenes, @NotNull final List<CanonicalTranscript> transcripts) {
+        this.canonicalAnnotationFactory = new CanonicalAnnotation(driverGenes, transcripts);
     }
 
     @NotNull
@@ -75,7 +75,9 @@ public class SnpEffSummaryFactory {
 
     private CodingEffect codingEffect(boolean phasedInframeIndel, @NotNull final String gene,
             @NotNull final List<VariantConsequence> consequences) {
-        return phasedInframeIndel ? CodingEffect.MISSENSE : CodingEffect.effect(gene, consequences);
+        CodingEffect effect = CodingEffect.effect(gene, consequences);
+        return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                ? CodingEffect.MISSENSE
+                : effect;
     }
-
 }

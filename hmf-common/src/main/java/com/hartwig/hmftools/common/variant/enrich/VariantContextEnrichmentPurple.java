@@ -39,7 +39,7 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
                 new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, subclonalLikelihoodEnrichment);
         kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
         somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
-        snpEffEnrichment = new SnpEffEnrichment(genePanel, transcripts, somaticRefContextEnrichment);
+        snpEffEnrichment = new SnpEffEnrichment(genePanel.driverGenes(), transcripts, somaticRefContextEnrichment);
         if (hotspotEnabled) {
             hotspotEnrichment = new VariantHotspotEnrichment(readFromVCF(hotspots), snpEffEnrichment);
         } else {

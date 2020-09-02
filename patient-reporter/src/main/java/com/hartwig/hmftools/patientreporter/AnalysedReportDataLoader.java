@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelAssembly;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
@@ -24,7 +28,10 @@ final class AnalysedReportDataLoader {
 
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
-        DriverGenePanel genePanel = DriverGenePanelFactory.buildFromTsv(driverGenePanelFile);
+        List<DriverGene> driverGenes = DriverGeneFile.read(driverGenePanelFile);
+
+        //TODO: Remove dependency on DriverGenePanelAssembly when patient report reads driver catalog directly from PURPLE.
+        DriverGenePanel genePanel = DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, driverGenes);
 
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)

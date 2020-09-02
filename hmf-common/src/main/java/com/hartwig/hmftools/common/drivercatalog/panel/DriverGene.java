@@ -13,9 +13,6 @@ public interface DriverGene extends Comparable<DriverGene> {
     @NotNull
     String gene();
 
-    @NotNull
-    String deletionBand();
-
     boolean reportMissenseAndInframe();
 
     boolean reportNonsenseAndFrameshift();

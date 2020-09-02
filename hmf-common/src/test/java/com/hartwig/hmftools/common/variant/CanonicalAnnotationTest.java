@@ -41,7 +41,7 @@ public class CanonicalAnnotationTest {
 
         List<SnpEffAnnotation> all = Lists.newArrayList(other, p14, p16);
 
-        CanonicalAnnotation victim = new CanonicalAnnotation(genePanel, transcripts);
+        CanonicalAnnotation victim = new CanonicalAnnotation(genePanel.driverGenes(), transcripts);
         assertEquals(p16, victim.canonicalSnpEffAnnotation(all).get());
         assertFalse(victim.canonicalSnpEffAnnotation(Lists.newArrayList(p14)).isPresent());
     }
@@ -53,7 +53,7 @@ public class CanonicalAnnotationTest {
         TranscriptAnnotation noDriverGene = createSnpEffAnnotation("AL136376.1", "ENST00000598661", VariantConsequence.MISSENSE_VARIANT);
         TranscriptAnnotation canonicalDriverGene = createSnpEffAnnotation("ATP1A1", "ENST00000537345", VariantConsequence.MISSENSE_VARIANT);
 
-        CanonicalAnnotation victim = new CanonicalAnnotation(genePanel, transcripts);
+        CanonicalAnnotation victim = new CanonicalAnnotation(genePanel.driverGenes(), transcripts);
         assertEquals(Optional.empty(), victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene)));
 
         Optional<TranscriptAnnotation> annotationSecond =

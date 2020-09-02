@@ -1005,6 +1005,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT
 - [2.46](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.46) 
   - Configurable driver gene panel
   - Added `REPORTED` flag to any variants that are eligible for the driver catalog. Requires [patch](../patient-db/src/main/resources/patches/patientdb3.45_to_3.46_migration.sql) to load to data base.

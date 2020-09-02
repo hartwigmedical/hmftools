@@ -6,9 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class DriverGenePanelMapTest {
+public class DndsGeneNameMapTest {
 
-    DriverGenePanelMap victim = new DriverGenePanelMap();
+    DndsGeneNameMap victim = new DndsGeneNameMap();
 
     @Test
     public void testPRAMEF11() {
