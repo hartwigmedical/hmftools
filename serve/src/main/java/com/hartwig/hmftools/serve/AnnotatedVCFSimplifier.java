@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,6 +46,11 @@ public class AnnotatedVCFSimplifier {
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
             Optional<SnpEffAnnotation> canonical = factory.canonicalSnpEffAnnotation(annotations);
 
+            String canonicalProtein = canonical.map(SnpEffAnnotation::hgvsProtein).orElse(Strings.EMPTY);
+            if (canonicalProtein.isEmpty()) {
+                canonicalProtein = "-";
+            }
+
             StringJoiner joiner = new StringJoiner("|");
             joiner.add(variant.getContig())
                     .add(String.valueOf(variant.getStart()))
@@ -54,7 +60,7 @@ public class AnnotatedVCFSimplifier {
                     .add(canonical.map(SnpEffAnnotation::transcript).orElse(Strings.EMPTY))
                     .add(canonical.map(SnpEffAnnotation::consequenceString).orElse(Strings.EMPTY))
                     .add(canonical.map(SnpEffAnnotation::hgvsCoding).orElse(Strings.EMPTY))
-                    .add(canonical.map(SnpEffAnnotation::hgvsProtein).orElse(Strings.EMPTY));
+                    .add(AminoAcidFunctions.forceSingleLetterProteinAnnotation(canonicalProtein));
 
             Object input = variant.getAttribute("input");
             if (input != null) {
