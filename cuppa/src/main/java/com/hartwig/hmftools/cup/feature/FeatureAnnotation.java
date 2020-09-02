@@ -82,15 +82,9 @@ public class FeatureAnnotation
         if(sampleFeatures == null || sampleFeatures.isEmpty())
             return results;
 
-        if(mConfig.runCategory(FEATURE))
-        {
-            addDriverPrevalence(sample, sampleFeatures, results);
-        }
+        addDriverPrevalence(sample, sampleFeatures, results);
 
-        if(mConfig.runCategory(CLASSIFIER))
-        {
-            calcCancerTypeProbability(sample, sampleFeatures, results);
-        }
+        calcCancerTypeProbability(sample, sampleFeatures, results);
 
         return results;
     }

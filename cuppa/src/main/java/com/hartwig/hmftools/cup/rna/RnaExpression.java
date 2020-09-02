@@ -71,10 +71,7 @@ public class RnaExpression
         if(mSampleIndexMap.isEmpty())
             return results;
 
-        if(mConfig.runCategory(CLASSIFIER))
-        {
-            addGeneExpressionCssResults(sample, results);
-        }
+        addGeneExpressionCssResults(sample, results);
 
         return results;
     }

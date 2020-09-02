@@ -2,7 +2,6 @@ package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
@@ -96,14 +95,15 @@ public class SampleTraits
         for(Map.Entry<SampleTraitType, Map<String, Double>> entry : mRefTraitRates.entrySet())
         {
             final SampleTraitType traitType = entry.getKey();
+
+            if(!isReportableType(traitType))
+                continue;
+
             Map<String, Double> cancerRates = entry.getValue();
 
             // reverse the prevalence for MALE since gender is currently IsFemale
             if(traitType == GENDER)
             {
-                if(!mConfig.runCategory(CategoryType.GENDER))
-                    continue;
-
                 if(sampleTraits.GenderType != Gender.FEMALE)
                 {
                     Map<String, Double> oppGenderRates = Maps.newHashMap();
@@ -112,16 +112,12 @@ public class SampleTraits
                 }
 
                 SampleResult result = new SampleResult(
-                        sample.Id, CategoryType.GENDER, PREVALENCE, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
+                        sample.Id, SAMPLE_TRAIT, PREVALENCE, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
 
                 results.add(result);
             }
             else if(traitType == WGD)
             {
-                if(!mConfig.runCategory(SAMPLE_TRAIT))
-                    continue;
-
-
                 SampleResult result = new SampleResult(
                         sample.Id, SAMPLE_TRAIT, PREVALENCE, traitType.toString(), sampleTraits.getStrValue(traitType), cancerRates);
 
@@ -129,42 +125,47 @@ public class SampleTraits
             }
         }
 
-        if(mConfig.runCategory(SAMPLE_TRAIT))
+        for(Map.Entry<SampleTraitType, Map<String, double[]>> entry : mRefTraitPercentiles.entrySet())
         {
-            for(Map.Entry<SampleTraitType, Map<String, double[]>> entry : mRefTraitPercentiles.entrySet())
+            final SampleTraitType traitType = entry.getKey();
+
+            if(!isReportableType(traitType))
+                continue;
+
+            double traitValue = sampleTraits.getDoubleValue(traitType);
+
+            final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+
+            for(Map.Entry<String, double[]> cancerPercentiles : entry.getValue().entrySet())
             {
-                final SampleTraitType traitType = entry.getKey();
-                double traitValue = sampleTraits.getDoubleValue(traitType);
-
-                final Map<String, Double> cancerTypeValues = Maps.newHashMap();
-
-                for(Map.Entry<String, double[]> cancerPercentiles : entry.getValue().entrySet())
-                {
-                    final String cancerType = cancerPercentiles.getKey();
-                    double percentile = getPercentile(cancerPercentiles.getValue(), traitValue, true);
-                    cancerTypeValues.put(cancerType, percentile);
-                }
-
-                SampleResult result = new SampleResult(
-                        sample.Id, SAMPLE_TRAIT, PERCENTILE, traitType.toString(), traitValue, cancerTypeValues);
-
-                results.add(result);
+                final String cancerType = cancerPercentiles.getKey();
+                double percentile = getPercentile(cancerPercentiles.getValue(), traitValue, true);
+                cancerTypeValues.put(cancerType, percentile);
             }
 
-            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+            SampleResult result = new SampleResult(
+                    sample.Id, SAMPLE_TRAIT, PERCENTILE, traitType.toString(), traitValue, cancerTypeValues);
 
-            final Map<String,double[]> indelPercentiles = mRefTraitPercentiles.get(MS_INDELS_TMB);
-            double indelMb = sampleTraits.IndelsMbPerMb;
-
-            final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, true);
-            results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_LOW", indelMb, cancerPrevsLow));
-
-            final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, false);
-            results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_HIGH", indelMb, cancerPrevsHigh));
+            results.add(result);
         }
+
+        int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+
+        final Map<String,double[]> indelPercentiles = mRefTraitPercentiles.get(MS_INDELS_TMB);
+        double indelMb = sampleTraits.IndelsMbPerMb;
+
+        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, true);
+        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_LOW", indelMb, cancerPrevsLow));
+
+        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, false);
+        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_HIGH", indelMb, cancerPrevsHigh));
 
         return results;
     }
 
+    private static boolean isReportableType(final SampleTraitType type)
+    {
+        return (type == MS_INDELS_TMB || type == GENDER);
+    }
 
 }

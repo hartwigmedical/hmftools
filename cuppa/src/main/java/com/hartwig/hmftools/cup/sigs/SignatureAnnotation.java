@@ -152,40 +152,34 @@ public class SignatureAnnotation
         final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
         int snvTotal = (int)sumVector(sampleCounts);
 
-        if(mConfig.runCategory(CLASSIFIER))
+        addCssResults(sample, sampleCounts, snvTotal, results);
+        addPosFreqCssResults(sample, results);
+
+        addSigContributionResults(sample, results);
+
+        // add a percentile result
+
+        final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+
+        for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
         {
-            addCssResults(sample, sampleCounts, snvTotal, results);
-            addPosFreqCssResults(sample, results);
+            final String cancerType = cancerPercentiles.getKey();
+            double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
+            cancerTypeValues.put(cancerType, percentile);
         }
 
-        if(mConfig.runCategory(SNV_SIG))
-        {
-            addSigContributionResults(sample, results);
+        SampleResult result = new SampleResult(
+                sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
 
-            // add a percentile result
+        results.add(result);
 
-            final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+        int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
 
-            for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
-            {
-                final String cancerType = cancerPercentiles.getKey();
-                double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
-                cancerTypeValues.put(cancerType, percentile);
-            }
+        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvTotal, cancerTypeCount, true);
+        results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_LOW", snvTotal, cancerPrevsLow));
 
-            SampleResult result = new SampleResult(
-                    sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
-
-            results.add(result);
-
-            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-
-            final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvTotal, cancerTypeCount, true);
-            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_LOW", snvTotal, cancerPrevsLow));
-
-            final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvTotal, cancerTypeCount, false);
-            results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
-        }
+        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvTotal, cancerTypeCount, false);
+        results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
 
         return results;
     }

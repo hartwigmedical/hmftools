@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
-import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -11,8 +10,6 @@ import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
 import static com.hartwig.hmftools.cup.svs.SvDataType.LINE;
 import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_COMPLEX_SIZE;
-import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DEL_20KB_1MB;
-import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_100KB_5MB;
 import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_32B_200B;
 import static com.hartwig.hmftools.cup.svs.SvDataType.TELOMERIC_SGL;
 
@@ -21,7 +18,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
-import com.hartwig.hmftools.cup.common.ResultType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -52,14 +48,16 @@ public class SvAnnotation
         mIsValid &= loadSampleSvData();
     }
 
+    private static boolean isReportableType(final SvDataType type)
+    {
+        return (type == LINE || type == TELOMERIC_SGL || type == SIMPLE_DUP_32B_200B || type == MAX_COMPLEX_SIZE);
+    }
+
     public boolean isValid() { return mIsValid; }
 
     public List<SampleResult> processSample(final SampleData sample)
     {
         final List<SampleResult> results = Lists.newArrayList();
-
-        if(!mConfig.runCategory(SV))
-            return results;
 
         final SvData svData = mSampleSvData.get(sample.Id);
 
@@ -69,6 +67,10 @@ public class SvAnnotation
         for(Map.Entry<SvDataType,Map<String,double[]>> entry : mRefSvTypePercentiles.entrySet())
         {
             final SvDataType svDataType = entry.getKey();
+
+            if(!isReportableType(svDataType))
+                continue;
+
             double svCount = svData.getCount(svDataType);
 
             final Map<String,Double> cancerTypeValues = Maps.newHashMap();

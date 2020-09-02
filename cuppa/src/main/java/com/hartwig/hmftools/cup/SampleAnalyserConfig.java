@@ -42,8 +42,6 @@ public class SampleAnalyserConfig
     public final String SampleSvFile;
     public final String SampleRnaExpFile;
 
-    public final List<CategoryType> Categories; // to run, all if empty
-
     // database access
     public final DatabaseAccess DbAccess;
 
@@ -51,7 +49,6 @@ public class SampleAnalyserConfig
     public final String OutputFileId;
 
     // config strings
-    public static final String CATEGORIES = "categories";
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
     private static final String SAMPLE_FEAT_FILE = "sample_feature_file";
@@ -84,16 +81,6 @@ public class SampleAnalyserConfig
 
     public SampleAnalyserConfig(final CommandLine cmd)
     {
-        Categories = Lists.newArrayList();
-
-        if(cmd.hasOption(CATEGORIES))
-        {
-            Categories.addAll(Arrays.stream(cmd.getOptionValue(CATEGORIES)
-                    .split(SUBSET_DELIM, -1))
-                    .map(x -> CategoryType.valueOf(x))
-                    .collect(Collectors.toList()));
-        }
-
         SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
         SampleTraitsFile = cmd.getOptionValue(SAMPLE_TRAITS_FILE, "");
         SampleFeatureFile = cmd.getOptionValue(SAMPLE_FEAT_FILE, "");
@@ -125,11 +112,6 @@ public class SampleAnalyserConfig
         return !OutputDir.isEmpty();
     }
 
-    public boolean runCategory(final CategoryType type)
-    {
-        return Categories.isEmpty() || Categories.contains(type);
-    }
-
     public String formOutputFilename(final String fileId)
     {
         String outputFile = OutputDir + "CUP";
@@ -142,7 +124,6 @@ public class SampleAnalyserConfig
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(CATEGORIES, true, "Optional: list of categories to run classifications, separated by ';' (default=all)");
         options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
         options.addOption(SAMPLE_DATA_FILE, true, "Sample data file");
         options.addOption(SAMPLE_SNV_COUNTS_FILE, true, "Sample SNV counts");
