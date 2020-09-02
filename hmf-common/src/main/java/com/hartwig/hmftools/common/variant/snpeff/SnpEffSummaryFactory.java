@@ -75,7 +75,9 @@ public class SnpEffSummaryFactory {
 
     private CodingEffect codingEffect(boolean phasedInframeIndel, @NotNull final String gene,
             @NotNull final List<VariantConsequence> consequences) {
-        return phasedInframeIndel ? CodingEffect.MISSENSE : CodingEffect.effect(gene, consequences);
+        CodingEffect effect = CodingEffect.effect(gene, consequences);
+        return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                ? CodingEffect.MISSENSE
+                : effect;
     }
-
 }
