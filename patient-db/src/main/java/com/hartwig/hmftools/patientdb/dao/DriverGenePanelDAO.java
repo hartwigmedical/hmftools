@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep11;
+import org.jooq.InsertValuesStep10;
 
 public class DriverGenePanelDAO {
 
@@ -24,10 +24,9 @@ public class DriverGenePanelDAO {
     void writePanel(@NotNull DriverGenePanel genePanel) {
         context.truncate(DRIVERGENEPANEL).execute();
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        InsertValuesStep11 inserter = context.insertInto(DRIVERGENEPANEL,
+        InsertValuesStep10 inserter = context.insertInto(DRIVERGENEPANEL,
                 DRIVERGENEPANEL.MODIFIED,
                 DRIVERGENEPANEL.GENE,
-                DRIVERGENEPANEL.DELETIONBAND,
                 DRIVERGENEPANEL.REPORTMISSENSE,
                 DRIVERGENEPANEL.REPORTNONSENSE,
                 DRIVERGENEPANEL.REPORTSPLICE,
@@ -40,7 +39,6 @@ public class DriverGenePanelDAO {
         for (DriverGene driverGene : genePanel.driverGenes()) {
             inserter.values(timestamp,
                     driverGene.gene(),
-                    driverGene.deletionBand(),
                     driverGene.reportMissenseAndInframe(),
                     driverGene.reportNonsenseAndFrameshift(),
                     driverGene.reportSplice(),

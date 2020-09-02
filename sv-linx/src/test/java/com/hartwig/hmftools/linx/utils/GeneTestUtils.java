@@ -149,7 +149,6 @@ public class GeneTestUtils
     {
         return ImmutableDriverGene.builder()
                 .gene(name)
-                .deletionBand("")
                 .reportMissenseAndInframe(false)
                 .reportNonsenseAndFrameshift(false)
                 .reportSplice(false)

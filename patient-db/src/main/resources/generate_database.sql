@@ -991,7 +991,6 @@ CREATE TABLE driverGenePanel
 (
     modified DATETIME NOT NULL,
     gene varchar(255) NOT NULL,
-    deletionBand varchar(255) NOT NULL,
     reportMissense BOOLEAN NOT NULL,
     reportNonsense BOOLEAN NOT NULL,
     reportSplice BOOLEAN NOT NULL,

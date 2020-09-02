@@ -223,7 +223,6 @@ public final class PatientReporterTestFactory {
     private static DriverGene createTestDriverGene(@NotNull final String gene, @NotNull final DriverCategory type) {
         return ImmutableDriverGene.builder()
                 .gene(gene)
-                .deletionBand(Strings.EMPTY)
                 .reportMissenseAndInframe(true)
                 .reportNonsenseAndFrameshift(false)
                 .reportSplice(false)
