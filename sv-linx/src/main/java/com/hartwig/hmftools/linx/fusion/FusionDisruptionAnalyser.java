@@ -98,6 +98,7 @@ public class FusionDisruptionAnalyser
     public static final String LOG_REPEAT_GENE_PAIRS = "log_repeat_gene_pairs";
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
+    public static final String FIVE_PRIME_DOWNSTREAM_DISTANCE = "five_prime_downstream_distance";
     public static final String NEO_EPITOPES = "neo_epitopes";
 
     public FusionDisruptionAnalyser(final CommandLine cmdLineArgs, final LinxConfig config,
@@ -142,6 +143,7 @@ public class FusionDisruptionAnalyser
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
         options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
+        options.addOption(FIVE_PRIME_DOWNSTREAM_DISTANCE, true, "Known pair 5' downstream distance permitted (default 0, not applied)");
 
         options.addOption(RNA_FUSIONS_FILE, true, "Sample RNA fusion data to match vs Linx fusios");
         options.addOption(RNA_FILE_SOURCE, true, "RNA fusion source: ISOFOX, ARRIBA or STARFUSION");
@@ -225,11 +227,25 @@ public class FusionDisruptionAnalyser
         if(cmdLineArgs.hasOption(CHECK_FUSIONS) && !mFusionFinder.hasValidConfigData())
             mValidState = false;
 
-        cacheSpecialFusionGenes();
+        int fivePrimeDownstreamDistance = Integer.parseInt(cmdLineArgs.getOptionValue(FIVE_PRIME_DOWNSTREAM_DISTANCE, "0"));
+
+        cacheSpecialFusionGenes(fivePrimeDownstreamDistance);
     }
 
-    public void cacheSpecialFusionGenes()
+    public void cacheSpecialFusionGenes(int fivePrimeDownstreamDistance)
     {
+        if(fivePrimeDownstreamDistance > 0)
+        {
+            for(final KnownFusionData knownPair : mFusionFinder.getKnownFusionCache().getDataByType(KNOWN_PAIR))
+            {
+                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(knownPair.FiveGene);
+                if(geneData != null)
+                {
+                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, fivePrimeDownstreamDistance);
+                }
+            }
+        }
+
         for(final KnownFusionData igDownstreamGene : mFusionFinder.getKnownFusionCache().getDataByType(IG_KNOWN_PAIR))
         {
             if(igDownstreamGene.igDownstreamDistance() > 0)
@@ -237,7 +253,7 @@ public class FusionDisruptionAnalyser
                 final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(igDownstreamGene.ThreeGene);
                 if(geneData != null)
                 {
-                    mGeneDataCache.getDownstreamGeneAnnotations().put(geneData, igDownstreamGene.igDownstreamDistance());
+                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, igDownstreamGene.igDownstreamDistance());
                 }
             }
         }

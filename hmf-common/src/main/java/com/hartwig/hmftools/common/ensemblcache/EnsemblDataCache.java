@@ -75,7 +75,11 @@ public class EnsemblDataCache
         mRestrictedGeneIdList.addAll(geneIds);
     }
 
-    public final Map<EnsemblGeneData,Integer> getDownstreamGeneAnnotations() { return mDownstreamGeneAnnotations; }
+    public void addDownstreamGeneAnnotations(final EnsemblGeneData geneData, int distance)
+    {
+        mDownstreamGeneAnnotations.put(geneData, distance);
+    }
+
     public final List<EnsemblGeneData> getAlternativeGeneData() { return mAlternativeGeneData; }
 
     public void setRequiredData(boolean exons, boolean proteinDomains, boolean splicePositions, boolean canonicalOnly)
@@ -208,6 +212,7 @@ public class EnsemblDataCache
 
             if(currentGene.transcripts().isEmpty() && mDownstreamGeneAnnotations.containsKey(geneData))
             {
+                // generate a canonical transcript record for the downstream SV position
                 final TranscriptData trans = transcriptDataList.stream().filter(x -> x.IsCanonical).findAny().orElse(null);
 
                 if(trans != null)
