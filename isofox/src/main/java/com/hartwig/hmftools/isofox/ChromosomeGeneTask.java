@@ -455,15 +455,7 @@ public class ChromosomeGeneTask implements Callable
 
         mPerfCounters[PERF_READS].start();
         mBamFragmentAllocator.produceBamCounts(geneCollection, geneRegion);
-
         mPerfCounters[PERF_READS].stop();
-
-        if(mConfig.runFunction(NOVEL_LOCATIONS))
-        {
-            mPerfCounters[PERF_NOVEL_LOCATIONS].start();
-            mBamFragmentAllocator.annotateNovelLocations();
-            mPerfCounters[PERF_NOVEL_LOCATIONS].stop();
-        }
 
         postBamReadTranscriptCounts(geneCollection);
         postBamReadNovelLocations();
