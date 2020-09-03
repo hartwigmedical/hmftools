@@ -105,11 +105,14 @@ public class AltSpliceJunctionCohort
 
         ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
 
-        if(mMinSampleThreshold > 1)
+        if(mProbabilityThreshold < 1)
         {
             // write a report for any re-occurring alt SJ
             writeReoccurringAltSpliceJunctions();
         }
+
+        // write a cohort file
+        writeCombinedAltSpliceJunctions();
 
         if(mSpliceVariantMatching != null)
             mSpliceVariantMatching.close();
@@ -171,8 +174,6 @@ public class AltSpliceJunctionCohort
             chrSJs.put(altSJ.getGeneId(), geneList);
         }
 
-        boolean isCohortA = mConfig.SampleData.sampleInCohort(sampleId, SampleDataCache.COHORT_A);
-
         AltSpliceJuncCohortData altSjData = geneList.stream().filter(x -> x.AltSJ.matches(altSJ)).findFirst().orElse(null);
 
         if(altSjData == null)
@@ -181,16 +182,82 @@ public class AltSpliceJunctionCohort
             geneList.add(altSjData);
         }
 
-        altSjData.addSampleAndCount(sampleId, altSJ.getFragmentCount(), isCohortA);
+        if(!mConfig.SampleData.SampleCohort.isEmpty())
+        {
+            boolean isCohortA = mConfig.SampleData.sampleInCohort(sampleId, SampleDataCache.COHORT_A);
+            altSjData.addSampleAndCount(sampleId, altSJ.getFragmentCount(), isCohortA);
+        }
+        else
+        {
+            altSjData.addSampleAndCount(sampleId, altSJ.getFragmentCount());
+        }
+
         altSjData.addPositionCount(SE_START, altSJ.getPositionCount(SE_START));
         altSjData.addPositionCount(SE_END, altSJ.getPositionCount(SE_END));
+    }
+
+    private void writeCombinedAltSpliceJunctions()
+    {
+        try
+        {
+            final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort.csv");
+            final BufferedWriter writer = createBufferedWriter(outputFileName, false);
+
+            writer.write("GeneId,Chromosome,Type,SjStart,SjEnd,SampleCount");
+            writer.write(",StartContext,EndContext,BaseMotif");
+            writer.write(",AvgFrags,MaxFrags,AvgStartDepth,AvgEndDepth,SampleIds");
+            writer.newLine();
+
+            for(Map.Entry<String,Map<String,List<AltSpliceJuncCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
+            {
+                final String chromosome = chrEntry.getKey();
+                final Map<String,List<AltSpliceJuncCohortData>> geneMap = chrEntry.getValue();
+
+                for(Map.Entry<String,List<AltSpliceJuncCohortData>> geneEntry : geneMap.entrySet())
+                {
+                    final String geneId = geneEntry.getKey();
+
+                    for (AltSpliceJuncCohortData altSjData : geneEntry.getValue())
+                    {
+                        final AltSpliceJunction altSJ = altSjData.AltSJ;
+
+                        int sampleCount = altSjData.getSampleIds().size();
+
+                        if(sampleCount < mMinSampleThreshold)
+                            continue;
+
+                        writer.write(String.format("%s,%s,%s,%d,%d,%d",
+                                geneId, chromosome, altSJ.type(), altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], sampleCount));
+
+                        writer.write(String.format(",%s,%s,%s",
+                                altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END], altSJ.getDonorAcceptorBases()));
+
+                        writer.write(String.format(",%.0f,%d,%.0f,%.0f",
+                                altSjData.getAvgFragmentCount(), altSjData.getMaxFragmentCount(),
+                                altSjData.getPositionCount(SE_START)/(double)sampleCount,
+                                altSjData.getPositionCount(SE_END)/(double)sampleCount));
+
+                        writer.write(String.format(",%s",
+                                appendStrList(altSjData.getSampleIds(), ';')));
+
+                        writer.newLine();
+                    }
+                }
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write alt-SJ cohort file: {}", e.toString());
+        }
     }
 
     private void writeReoccurringAltSpliceJunctions()
     {
         try
         {
-            final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort.csv");
+            final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort_compare.csv");
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             writer.write("GeneId,Chromosome,Type,SjStart,SjEnd");
@@ -218,9 +285,9 @@ public class AltSpliceJunctionCohort
                     {
                         final AltSpliceJunction altSJ = altSjData.AltSJ;
 
-                        int scWithAltSJ = altSjData.totalSamples();
-                        int scWithAltSJCohortA = altSjData.getSampleIds(true).size();
-                        int scWithAltSJCohortB = scWithAltSJ - scWithAltSJCohortA;
+                        int scWithAltSJCohortA = altSjData.getCohortSampleIds(true).size();
+                        int scWithAltSJCohortB = altSjData.getCohortSampleIds(false).size();
+                        int scWithAltSJ = scWithAltSJCohortA + scWithAltSJCohortB;
 
                         if(scWithAltSJCohortA < mMinSampleThreshold && scWithAltSJCohortB < mMinSampleThreshold)
                             continue;
@@ -252,8 +319,8 @@ public class AltSpliceJunctionCohort
                                 scWithAltSJCohortA, scWithAltSJCohortB, scCohortA, scNoAltSJCohortA, scNoAltSJCohortB));
 
                         writer.write(String.format(",%s,%s",
-                                appendStrList(altSjData.getSampleIds(true), ';'),
-                                appendStrList(altSjData.getSampleIds(false), ';')));
+                                appendStrList(altSjData.getCohortSampleIds(true), ';'),
+                                appendStrList(altSjData.getCohortSampleIds(false), ';')));
 
                         writer.newLine();
                     }
@@ -266,6 +333,5 @@ public class AltSpliceJunctionCohort
         {
             ISF_LOGGER.error("failed to write alt-SJ cohort file: {}", e.toString());
         }
-
     }
 }

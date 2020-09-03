@@ -43,9 +43,9 @@ public class SampleDataCache
 
     // required fields
     private static final int COL_SAMPLE_ID = 0;
-    private static final int COL_CANCER_TYPE = 1;
 
     // optional fields
+    private static final String COL_CANCER_TYPE = "CancerType";
     private static final String COL_COHORT_NAME = "CohortName";
     private static final String COL_GENE_ID = "GeneId";
 
@@ -86,28 +86,32 @@ public class SampleDataCache
             final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(items.get(0), DELIMITER);
             items.remove(0);
 
+            Integer cancerTypeIndex = fieldIndexMap.get(COL_CANCER_TYPE);
             Integer cohortNameIndex = fieldIndexMap.get(COL_COHORT_NAME);
             Integer geneIdIndex = fieldIndexMap.get(COL_GENE_ID);
 
             for(String item : items)
             {
                 final String[] data = item.split(DELIMITER);
-                if(data.length < 2)
-                    return false;
 
                 final String sampleId = data[COL_SAMPLE_ID];
-                final String cancerType = data[COL_CANCER_TYPE];
+
+                final String cancerType = cancerTypeIndex != null ? data[cancerTypeIndex] : null;
 
                 if(!SampleIds.contains(sampleId))
                 {
                     SampleIds.add(sampleId);
-                    SampleCancerType.put(sampleId, cancerType);
 
-                    List<String> sampleIds = CancerTypeSamples.get(cancerType);
-                    if(sampleIds == null)
-                        CancerTypeSamples.put(cancerType, Lists.newArrayList(sampleId));
-                    else
-                        sampleIds.add(sampleId);
+                    if(cancerType != null)
+                    {
+                        SampleCancerType.put(sampleId, cancerType);
+
+                        List<String> sampleIds = CancerTypeSamples.get(cancerType);
+                        if(sampleIds == null)
+                            CancerTypeSamples.put(cancerType, Lists.newArrayList(sampleId));
+                        else
+                            sampleIds.add(sampleId);
+                    }
                 }
 
                 if(cohortNameIndex != null)

@@ -61,15 +61,6 @@ public class SvDataLoader
 
         for(final String sampleId : sampleIds)
         {
-            /*'
-              summarise(LINE=sum((LEStart!='NONE'&LEStart!='None')|(LEEnd!='NONE'&LEEnd!='None')),
-            SIMPLE_DEL_20KB_1MB=sum(Type=='DEL'&Length>=2e4&Length<=1e6),
-            SIMPLE_DUP_32B_200B=sum(Type=='DUP'&Length>=32&Length<=200),
-            SIMPLE_DUP_100KB_5MB=sum(Type=='DUP'&Length>=1e5&Length<=5e6),
-            MAX_EVENT_SIZE=max(ClusterCount),
-            TELOMERIC_SGL=sum(Type=='SGL'&(RepeatClass=='Simple_repeat'&(RepeatType=='(TTAGGG)n'|RepeatType=='(CCCTAA)n'))))
-
-            */
             final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantData(sampleId);
 
             // final List<LinxSvAnnotation> svAnnotationList = dbAccess.readSvAnnotaions(sampleId);

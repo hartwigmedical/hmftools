@@ -14,12 +14,15 @@ public class AltSpliceJuncCohortData
     public final AltSpliceJunction AltSJ;
 
     // cohort data
+    private final List<String> mSampleIds;
     private final List<String> mSampleIdsCohortA;
     private final List<String> mSampleIdsCohortB;
 
+    private int mTotalFragmentCount;
     private int mTotalFragmentCountCohortA;
     private int mTotalFragmentCountCohortB;
 
+    private int mMaxFragmentCount;
     private int mMaxFragmentCountCohortA;
     private int mMaxFragmentCountCohortB;
     private final int[] mPositionCounts; // counts at the start and end
@@ -27,15 +30,25 @@ public class AltSpliceJuncCohortData
     public AltSpliceJuncCohortData(final AltSpliceJunction altSJ)
     {
         AltSJ = altSJ;
+        mSampleIds = Lists.newArrayList();
         mSampleIdsCohortA = Lists.newArrayList();
         mSampleIdsCohortB = Lists.newArrayList();
 
+        mTotalFragmentCount = 0;
         mTotalFragmentCountCohortA = 0;
         mTotalFragmentCountCohortB = 0;
 
+        mMaxFragmentCount = 0;
         mMaxFragmentCountCohortA = 0;
         mMaxFragmentCountCohortB = 0;
         mPositionCounts = new int[SE_PAIR];
+    }
+
+    public void addSampleAndCount(final String sampleId, int fragCount)
+    {
+        mSampleIds.add(sampleId);
+        mTotalFragmentCount += fragCount;
+        mMaxFragmentCount = max(mMaxFragmentCount, fragCount);
     }
 
     public void addSampleAndCount(final String sampleId, int fragCount, boolean isCohortA)
@@ -54,11 +67,13 @@ public class AltSpliceJuncCohortData
         }
     }
 
-    public int totalSamples() { return mSampleIdsCohortA.size() + mSampleIdsCohortB.size(); }
+    public final List<String> getSampleIds() { return mSampleIds; }
+    public final List<String> getCohortSampleIds(boolean isCohortA) { return isCohortA ? mSampleIdsCohortA : mSampleIdsCohortB; }
 
-    public final List<String> getSampleIds(boolean isCohortA) { return isCohortA ? mSampleIdsCohortA : mSampleIdsCohortB; }
-
+    public int getMaxFragmentCount() { return mMaxFragmentCount; }
     public int getMaxFragmentCount(boolean isCohortA) { return isCohortA ? mMaxFragmentCountCohortA : mMaxFragmentCountCohortB; }
+
+    public double getAvgFragmentCount() { return mSampleIds.size() > 0 ? mTotalFragmentCount / (double)mSampleIds.size() : 0; }
 
     public double getAvgFragmentCount(boolean isCohortA)
     {

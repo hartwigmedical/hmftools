@@ -82,7 +82,7 @@ public class AltSpliceJunction
     public boolean matches(final AltSpliceJunction other)
     {
         return Chromosome.equals(other.Chromosome)
-                &&  SpliceJunction[SE_START] == other.SpliceJunction[SE_START]
+                && SpliceJunction[SE_START] == other.SpliceJunction[SE_START]
                 && SpliceJunction[SE_END] == other.SpliceJunction[SE_END];
     }
 
