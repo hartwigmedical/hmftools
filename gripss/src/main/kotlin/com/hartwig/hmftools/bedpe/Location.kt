@@ -29,14 +29,14 @@ data class Breakend(override val contig: String, override val start: Int, overri
 
         fun fromBealn(line: String): Breakend {
             val fields = line.split("|")
-            val (chromosome, location) = fields[0].split(":")
+            val (chromosome, location) = LocationString(fields[0])
             val orientation = when (fields[1]) {
                 "+" -> 1.toByte()
                 "-" -> (-1).toByte()
                 else -> 0.toByte()
             }
 
-            return Breakend(chromosome, location.toInt(), location.toInt(), orientation)
+            return Breakend(chromosome, location, location, orientation)
         }
     }
 

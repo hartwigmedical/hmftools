@@ -1,0 +1,15 @@
+package com.hartwig.hmftools.bedpe
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class LocationStringTest {
+
+    @Test
+    fun testFromString() {
+        assertEquals(LocationString("chr1", 10000), LocationString("chr1:10000"))
+        assertEquals(LocationString("HLA-A*01:04N", 1737), LocationString("HLA-A*01:04N:1737"))
+        assertEquals(LocationString("HLA:10:100", 1000), LocationString("HLA:10:100:1000"))
+    }
+
+}
