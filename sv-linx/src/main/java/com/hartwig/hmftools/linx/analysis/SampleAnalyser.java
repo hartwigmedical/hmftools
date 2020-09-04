@@ -26,15 +26,12 @@ import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvAnnotation;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxLinkFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotationFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
@@ -383,9 +380,9 @@ public class SampleAnalyser
             try
             {
                 // write per-sample DB-style output
-                LinxSvAnnotationFile.write(LinxSvAnnotationFile.generateFilename(mConfig.OutputDataPath, mSampleId), linxSvData);
-                LinxClusterFile.write(LinxClusterFile.generateFilename(mConfig.OutputDataPath, mSampleId), clusterData);
-                LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
+                LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mSampleId), linxSvData);
+                LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mSampleId), clusterData);
+                LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
                 LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, mSampleId), viralInserts);
 
             }
@@ -410,14 +407,14 @@ public class SampleAnalyser
     {
         try
         {
-            LinxSvAnnotationFile.write(LinxSvAnnotationFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxClusterFile.write(LinxClusterFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
 
-            LinxFusionFile.write(LinxFusionFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxBreakendFile.write(LinxBreakendFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxDriverFile.write(LinxDriverFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
 
             ReportableDisruptionFile.write(ReportableDisruptionFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             ReportableGeneFusionFile.write(ReportableGeneFusionFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());

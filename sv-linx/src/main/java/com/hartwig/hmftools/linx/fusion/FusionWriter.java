@@ -25,9 +25,7 @@ import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
 
 public class FusionWriter
 {
@@ -126,11 +124,11 @@ public class FusionWriter
             ReportableGeneFusionFile.write(reportedFusionsFile, reportedFusions);
 
             // write flat files for database loading
-            final String breakendsFile = LinxBreakendFile.generateFilename(mOutputDir, sampleId);
-            LinxBreakendFile.write(breakendsFile, breakends);
+            final String breakendsFile = LinxBreakend.generateFilename(mOutputDir, sampleId);
+            LinxBreakend.write(breakendsFile, breakends);
 
-            final String fusionsFile = LinxFusionFile.generateFilename(mOutputDir, sampleId);
-            LinxFusionFile.write(fusionsFile, fusions);
+            final String fusionsFile = LinxFusion.generateFilename(mOutputDir, sampleId);
+            LinxFusion.write(fusionsFile, fusions);
         }
         catch(IOException e)
         {

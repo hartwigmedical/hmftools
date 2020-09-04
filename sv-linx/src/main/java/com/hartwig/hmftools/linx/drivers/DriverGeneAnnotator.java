@@ -22,8 +22,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
@@ -31,7 +29,6 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
@@ -218,8 +215,8 @@ public class DriverGeneAnnotator
             final String driverCatalogFile = DriverCatalogFile.generateFilename(mOutputDir, mSampleId);
             DriverCatalogFile.write(driverCatalogFile, mDataCache.getDriverCatalog());
 
-            final String driversFile = LinxDriverFile.generateFilename(mOutputDir, mSampleId);
-            LinxDriverFile.write(driversFile, mDriverOutputList);
+            final String driversFile = LinxDriver.generateFilename(mOutputDir, mSampleId);
+            LinxDriver.write(driversFile, mDriverOutputList);
         }
         catch(IOException e)
         {
