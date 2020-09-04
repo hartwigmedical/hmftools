@@ -61,8 +61,11 @@ final class CurationFactory {
         // Variant unlikely to be real as it spans multiple exons
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "G114dup (c.342dupGGT)"));
 
-        // Variant hard to interpret as it crossing exonic boundary
+        // Variant hard to interpret as it crossing exonic boundary (in protein space)
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "G114fs (c.341delCGTTTCCAACAATTTCTCGGTGT)"));
+
+        // Variant hard to interpret in protein space as it changes an amino acid followed by a frameshift.
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "M54IFS (c.162_166delGGAGG)"));
     }
 
     private static void populateJaxCuration() {
@@ -86,12 +89,16 @@ final class CurationFactory {
                 "EGFR K745_E746insIPVAIK ");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.JAX, "KIT", null, "KIT V559del "), "KIT V560del ");
 
+        // Variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "KIT", null, "KIT K550_W557del "));
+
         // The below variants in FLT3 are from a paper where an additional R was added in the ref sequence, shifting all AAs by one position.
         // This has been corrected in current live CKB.
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "FLT3", null, "FLT3 L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL "));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "FLT3", null, "FLT3 E612_F613insGYVDFREYEYDLKWEFRPRENLEF "));
 
-        // The transcript that should have this mutation (ENST00000507379.1) is annotated as 3' truncated with only 1135 AAs in ensembl)
+        // The transcript that should have this mutation (ENST00000507379) is annotated as 3' truncated with only 1135 AAs in ensembl)
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "APC", null, "APC S1197* "));
 
         // The below is pending investigation by JAX, possibly a mistake by the paper.
@@ -112,8 +119,13 @@ final class CurationFactory {
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
 
         // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine
+        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine (TODO DEV-1475)
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "BRAF", "ENST00000288602", "R506_K507insVLR"));
+
+        // Variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "KIT", "ENST00000288135", "K550_K558del"));
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "KIT", "ENST00000288135", "K550_W557del"));
 
         // Variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "PDGFRA", "ENST00000257290", "E311_K312del"));
