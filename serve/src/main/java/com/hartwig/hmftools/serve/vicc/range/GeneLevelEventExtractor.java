@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,30 +18,6 @@ public class GeneLevelEventExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
     // frameshift will be in event type hotspots
-
-    private static final Set<String> GENE_LEVEL = Sets.newHashSet("Gain-of-function Mutations",
-            "Gain-of-Function",
-            "Oncogenic Mutations",
-            "MUTATION",
-            "act mut",
-            "pos",
-            "positive",
-            "inact mut",
-            "biallelic inactivation",
-            "negative",
-            "Loss Of Function Variant",
-            "Loss Of Heterozygosity",
-            "TRUNCATING MUTATION",
-            "Truncating Mutations",
-            "mutant",
-            "mut",
-            "gene_only",
-            "ACTIVATING MUTATION",
-            "DELETERIOUS MUTATION",
-            "feature_truncation",
-            "FRAMESHIFT TRUNCATION",
-            "FRAMESHIFT MUTATION",
-            "SPLICE VARIANT 7", "Splice", "DNMT3B7", "LCS6-variant", "AR-V7", "ARv567es");
 
     private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
             "act mut",
@@ -67,8 +44,8 @@ public class GeneLevelEventExtractor {
         for (Feature feature : viccEntry.features()) {
 
             if (!ProteinToHotspotConverter.isResolvableProteinAnnotation(feature.proteinAnnotation())) {
-                if (GENE_LEVEL.contains(feature.biomarkerType()) || GENE_LEVEL.contains(feature.name())
-                        || GENE_LEVEL.contains(feature.provenanceRule()) || GENE_LEVEL.contains(feature.proteinAnnotation())) {
+                if (EventAnnotationExtractor.GENE_LEVEL.contains(feature.biomarkerType()) || EventAnnotationExtractor.GENE_LEVEL.contains(feature.name())
+                        || EventAnnotationExtractor.GENE_LEVEL.contains(feature.provenanceRule()) || EventAnnotationExtractor.GENE_LEVEL.contains(feature.proteinAnnotation())) {
                     geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
                 }
             }
