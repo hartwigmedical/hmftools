@@ -28,12 +28,12 @@ final class CurationFactory {
     }
 
     private static void populateCIViCCuration() {
-        // Below is not wrong but transvar struggles with interpreting start lost variants,
+        // Below is not wrong but transvar can't resolve generic start lost variants so we update to something that transvar can interpret.
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "M1? (c.3G>A)"), "M1I (c.3G>A)");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "M1? (c.1-1_20del21)"),
                 "M1I (c.1-1_20del21)");
 
-        // Below is not wrong but leads to inconsistencies downstream.
+        // Protein annotation is not formally correct, update to make it correct.
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "EGFR", "ENST00000275493", "V769_770insASV"),
                 "V769_D770insASV");
 
@@ -52,7 +52,7 @@ final class CurationFactory {
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "N167T (c.392A>C)"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "X214L (c.641G>T)"));
 
-        // Variant only possible through an MNV which spans an intron
+        // Variant only possible through an MNV which spans an intron, and inconsistent with its coding impact.
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "V155C (c.462delA)"));
 
         // Synonymous variant, unlikely to have an impact
@@ -69,6 +69,7 @@ final class CurationFactory {
     }
 
     private static void populateJaxCuration() {
+        // Update protein annotation to be correct (should be capitalized).
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.JAX, "PIK3CA", null, "PIK3CA E545k "), "PIK3CA E545K ");
 
         // These mappings are to work around the missing transcripts in JAX.
@@ -183,7 +184,7 @@ final class CurationFactory {
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "TERT", "ENST00000310581", "C250T"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "TMPRSS2", "ENST00000398585", "M160V"));
 
-        // The below probably have the wrong transcripts configured by OncoKB
+        // Variants that probably have the wrong transcripts configured by OncoKB
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "CASP8", "ENST00000358485", "G325A"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "EZH2", "ENST00000320356", "A677G"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "FBXW7", "ENST00000281708", "R482Q"));
@@ -232,7 +233,7 @@ final class CurationFactory {
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "TGFBR2", "ENST00000359013", "R537P"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "TMPRSS2", "ENST00000398585", "T75M"));
 
-        // The below are simply invalid protein annotations
+        // Variants that are simply invalid protein annotations
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "BRAF", "ENST00000288602", "V600D_K601insFGLAT"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "CARD11", "ENST00000396946", "L225LI"));
     }
