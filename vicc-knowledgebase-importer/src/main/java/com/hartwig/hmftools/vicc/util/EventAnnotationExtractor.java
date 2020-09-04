@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class EventAnnotationExtractor {
 
@@ -93,21 +94,22 @@ public final class EventAnnotationExtractor {
     public static final String EVENT_GENE_RANGE = "Gene_range";
 
     @NotNull
-    public static String toEventAnnotation(@NotNull String featureName, @NotNull String biomarkerType) {
-        if (featureName.contains(" ") && !featureName.equals("Copy Number Loss")) {
-            featureName = featureName.split(" ", 2)[1];
+    public static String toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType) {
+        String feature = featureName;
+        if (feature.contains(" ") && !feature.equals("Copy Number Loss")) {
+            feature = feature.split(" ", 2)[1];
         }
 
-        if (EventAnnotationExtractor.SIGNATURES.contains(featureName)) {
+        if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
             return "signature";
-        } else if (EventAnnotationExtractor.AMPLIFICATIONS.contains(featureName) ||
+        } else if (EventAnnotationExtractor.AMPLIFICATIONS.contains(feature) ||
                 EventAnnotationExtractor.AMPLIFICATIONS.contains(biomarkerType)) {
             return "Amplification";
-        } else if (EventAnnotationExtractor.DELETIONS.contains(featureName) ||
+        } else if (EventAnnotationExtractor.DELETIONS.contains(feature) ||
                 EventAnnotationExtractor.DELETIONS.contains(biomarkerType)) {
             return "Deletion";
         } else {
-            LOGGER.warn("No event annotation extracted from event!");
+//            LOGGER.warn("No event annotation extracted from event!");
             return Strings.EMPTY;
         }
     }
