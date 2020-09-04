@@ -16,7 +16,7 @@ SERVE supports the ingestion of the following knowledgebases:
  along with cancer types and molecular inclusion criteria for these trials.
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
  a database of approved compassionate use programs in the Netherlands
- - HMF Cohort - a database of recurrent somatic mutations in the coding or splice regions of known cancer genes that are deemed likely pathogenic due to being found in at least 4 unique patients.
+ - HMF Cohort - a database of recurrent somatic mutations in cancer related genes in the Hartwig database.
  - HMF Curated - a database of known driver mutations curated by the Hartwig team.
   
 Do note that SERVE does not provide the actual data that is input to the algorithm, but only provides support for its ingestion.
@@ -66,13 +66,14 @@ The following genomic events can be mapped to clinical evidence:
   - In case the mutation is caused by SNV or MNV we generate every possible trinucleotide mutation combination that codes for the new amino acid.
   - In case the mutation is caused by a duplication (DUP) or an inframe deletion (DEL) we generate 1 hotspot where we 
   assume the exact reference sequence has been duplicated or deleted. 
+    - In case the DEL can be left-aligned we also generate a hotspot for every position between the left-aligned position and the actual position. 
   - In case the mutation is caused by an inframe insertion (INS) we have 2 flavors based on the length of the insertion:
     1. In case 1 amino acid is inserted , we generate hotspots for every trinucleotide coding for that amino acid.
     1. In case multiple amino acids are inserted , we generate one of the potentially many hotspots.
   - In case of a complex deletion/insertion (DELINS) we extrapolate from the rules for hotspot generation for deletions and insertions. 
   Hence, we assume the reference sequence has been deleted, and one new nucleotide sequence is inserted unless the insertion is 1 amino acid in which
   case we generate hotspots for all trinucleotides coding for the inserted amino acid. We then reduce the complexity of the resulting variant by removing
-  any trailing bases that are shared between ref and alt.
+  any bases that are shared between ref and alt at start or end of the variant.
   - In case of a frameshift we generate the following hotspots:
     - Any of the 12 possible single base inserts inside the affected codon that does not lead to synonymous impact in the affected codon
     - Any of the 3 possible single base deletes inside the affected codon that does not lead to synonymous impact in the affected codon
