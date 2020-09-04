@@ -25,9 +25,9 @@ public class TransvarTestApplication {
 
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
-        String gene = "HIST1H3C";
-        String transcript = "ENST00000540144";
-        String proteinImpact = "K28M";
+        String gene = "EZH2";
+        String transcript = null;
+        String proteinImpact = "T678_R679insK";
 
         extractAndPrintHotspots(transvar, gene, transcript, proteinImpact);
     }

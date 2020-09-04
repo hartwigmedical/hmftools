@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.transvar;
 
+import static com.hartwig.hmftools.serve.util.AminoAcidFunctions.reverseAndFlip;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -190,9 +192,9 @@ class TransvarInterpreter {
                 ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position).ref(preMutatedSequence);
 
         // We assume inserts of length 3 are always (inframe) amino acid inserts,
-        //  we expand those hotspots but only if there are no potential re-alignments possible
         //  and we know the inserted bases match the proteins inserted.
-        if (insertion.insertedBases().length() == 3 && insertion.leftAlignedGDNAPosition() == position) {
+        // TODO Not sure why we don't generate events for re-aligned inframes.
+        if (insertion.insertedBases().length() == 3) {
             for (String trinucleotide : AminoAcidFunctions.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
                 hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
             }
@@ -441,29 +443,5 @@ class TransvarInterpreter {
             }
         }
         return hotspots;
-    }
-
-    @NotNull
-    private static String reverseAndFlip(@NotNull String string) {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int i = string.length() - 1; i >= 0; i--) {
-            stringBuilder.append(flipBase(string.charAt(i)));
-        }
-        return stringBuilder.toString();
-    }
-
-    private static char flipBase(char base) {
-        switch (base) {
-            case 'A':
-                return 'T';
-            case 'T':
-                return 'A';
-            case 'G':
-                return 'C';
-            case 'C':
-                return 'G';
-        }
-
-        throw new IllegalArgumentException("Cannot flip invalid base: " + base);
     }
 }

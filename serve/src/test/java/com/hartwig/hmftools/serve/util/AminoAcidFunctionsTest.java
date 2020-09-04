@@ -51,15 +51,15 @@ public class AminoAcidFunctionsTest {
     public void canLookupTrinucleotides() {
         // Serine (S)
         assertEquals(6, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TCT", Strand.FORWARD).size());
-        assertEquals(6, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TCT", Strand.REVERSE).size());
+        assertEquals(6, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("AGA", Strand.REVERSE).size());
 
         // Valine (V)
         assertEquals(4, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("GTC", Strand.FORWARD).size());
-        assertEquals(4, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("CTG", Strand.REVERSE).size());
+        assertEquals(4, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("GAC", Strand.REVERSE).size());
 
         // Tyrosine (Y)
         assertEquals(2, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TAC", Strand.FORWARD).size());
-        assertEquals(2, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("CAT", Strand.REVERSE).size());
+        assertEquals(2, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("GTA", Strand.REVERSE).size());
 
         // Does not exist -> no trinucleotides found!
         assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("???", Strand.FORWARD).size());
@@ -67,7 +67,7 @@ public class AminoAcidFunctionsTest {
 
         // No trinucleotide -> return none.
         assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TCTC", Strand.FORWARD).size());
-        assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("TCTC", Strand.REVERSE).size());
+        assertEquals(0, AminoAcidFunctions.allTrinucleotidesForSameAminoAcid("GAGA", Strand.REVERSE).size());
     }
 
     @Test
