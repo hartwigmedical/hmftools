@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LINKS;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.SHORT_UNPHASED_DISTANCE_KNOWN;
@@ -72,6 +73,12 @@ public class FusionReportability
             if(fusion.getExonsSkipped(true) > 0 || fusion.getExonsSkipped(false) > 0)
                 return false;
         }
+
+        if(fusion.isTerminated() && fusion.knownType() != KNOWN_PAIR)
+            return false;
+
+        if(fusion.getChainLinks() > FUSION_MAX_CHAIN_LINKS)
+            return false;
 
         return true;
     }

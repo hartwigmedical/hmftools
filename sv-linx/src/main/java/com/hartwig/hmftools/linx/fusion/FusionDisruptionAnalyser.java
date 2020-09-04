@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportableFusion;
@@ -534,8 +535,6 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private static int FUSION_MAX_CHAIN_LENGTH = 100000;
-
     private void findChainedFusions(final SvCluster cluster, final SvChain chain, List<GeneFusion> chainFusions)
     {
         // look for fusions formed by breakends connected in a chain
@@ -908,6 +907,17 @@ public class FusionDisruptionAnalyser
         return transcriptTerminated;
     }
 
+    private static boolean persistFusion(final GeneFusion fusion)
+    {
+        if(!fusion.validChainTraversal())
+            return false;
+
+        if(fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())
+            return false;
+
+        return true;
+    }
+
     private final List<GeneFusion> extractUniqueFusions()
     {
         // from the list of all potential fusions, collect up all reportable ones, and then the highest priority fusion
@@ -935,7 +945,7 @@ public class FusionDisruptionAnalyser
                 continue;
 
             // only add viable fusions for upload
-            if(!fusion.isViable() || fusion.neoEpitopeOnly())
+            if(!persistFusion(fusion) || fusion.neoEpitopeOnly())
                 continue;
 
             // gather up all other candidate fusions for this pairing and take the highest priority
@@ -943,7 +953,7 @@ public class FusionDisruptionAnalyser
 
             similarFusions.addAll(mFusions.stream()
                     .filter(x -> !x.reportable())
-                    .filter(x -> x.isViable() && !x.neoEpitopeOnly())
+                    .filter(x -> persistFusion(x) && !x.neoEpitopeOnly())
                     .filter(x -> x != fusion)
                     .filter(x -> x.name().equals(fusion.name()))
                     .filter(x -> !usedSvIds.contains(x.upstreamTrans().gene().id()) && !usedSvIds.contains(x.downstreamTrans().gene().id()))

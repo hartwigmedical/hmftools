@@ -184,7 +184,7 @@ public class FusionWriter
                     mFusionWriter.write(fieldsStr);
                 }
 
-                mFusionWriter.write(",ProteinsKept,ProteinsLost,PriorityScore,OverlapUp,OverlapDown,ChainInfo");
+                mFusionWriter.write(",ProteinsKept,ProteinsLost,PriorityScore,ChainTerminatedUp,ChainTerminatedDown,ChainInfo");
                 mFusionWriter.newLine();
             }
         }

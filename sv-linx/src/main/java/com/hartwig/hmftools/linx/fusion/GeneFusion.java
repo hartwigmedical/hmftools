@@ -167,17 +167,6 @@ public class GeneFusion
             return true;
     }
 
-    public boolean isViable()
-    {
-        if(!validChainTraversal() || (isTerminated() && mKnownFusionType != KNOWN_PAIR))
-            return false;
-
-        if(mTranscripts[FS_DOWNSTREAM].hasNegativePrevSpliceAcceptorDistance())
-            return false;
-
-        return true;
-    }
-
     public final String toString()
     {
         return String.format("%s %s phased(%s) type(%s)",
