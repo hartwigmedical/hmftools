@@ -19,6 +19,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTr
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
 import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
+import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,25 +35,7 @@ public class CopyNumberExtractor {
     @NotNull
     private final Set<String> uniqueDels = Sets.newHashSet();
 
-    private static final Set<String> AMPLIFICATIONS = Sets.newHashSet("Amplification",
-            "amplification",
-            "AMPLIFICATION",
-            "amp",
-            "overexpression",
-            "over exp",
-            "amp over exp",
-            "OVEREXPRESSION",
-            "Overexpression");
 
-    private static final Set<String> DELETIONS = Sets.newHashSet("Deletion",
-            "deletion",
-            "DELETION",
-            "del",
-            "undexpression",
-            "dec exp",
-            "UNDEREXPRESSION",
-            "loss",
-            "LOSS", "Copy Number Loss");
 
     @NotNull
     public Set<String> uniqueAmps() {
@@ -90,9 +73,9 @@ public class CopyNumberExtractor {
             featureName = featureName.split(" ", 2)[1];
         }
 
-        if (AMPLIFICATIONS.contains(featureName) || AMPLIFICATIONS.contains(feature.biomarkerType())) {
+        if (EventAnnotationExtractor.AMPLIFICATIONS.contains(featureName) || EventAnnotationExtractor.AMPLIFICATIONS.contains(feature.biomarkerType())) {
             return "Amplification";
-        } else if (DELETIONS.contains(featureName) || DELETIONS.contains(feature.biomarkerType())) {
+        } else if (EventAnnotationExtractor.DELETIONS.contains(featureName) || EventAnnotationExtractor.DELETIONS.contains(feature.biomarkerType())) {
             return "Deletion";
         } else {
             return Strings.EMPTY;

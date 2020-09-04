@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
+import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,14 +17,11 @@ import org.jetbrains.annotations.NotNull;
 public class SignaturesExtractor {
     private static final Logger LOGGER = LogManager.getLogger(SignaturesExtractor.class);
 
-    private static final Set<String> SIGNATURES =
-            Sets.newHashSet("Microsatellite Instability-High");
-
     @NotNull
     public Map<Feature, String> extractSignatures(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> signaturesPerFeature = Maps.newHashMap();
             for (Feature feature : viccEntry.features()) {
-                if (SIGNATURES.contains(feature.name())) {
+                if (EventAnnotationExtractor.SIGNATURES.contains(feature.name())) {
                     signaturesPerFeature.put(feature, feature.name());
                 }
             }

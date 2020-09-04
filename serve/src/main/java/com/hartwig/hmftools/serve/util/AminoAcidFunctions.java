@@ -94,16 +94,17 @@ public final class AminoAcidFunctions {
             return Lists.newArrayList();
         }
 
-        String strandCorrectedTrinucleotide = strand == Strand.FORWARD ? trinucleotideToFind : reverse(trinucleotideToFind);
+        String aminoAcid = findAminoAcidForCodon(strand == Strand.FORWARD ? trinucleotideToFind : reverseAndFlip(trinucleotideToFind));
 
         List<String> allTrinucleotides = Lists.newArrayList();
-        for (Map.Entry<String, Set<String>> aminoAcidEntry : AMINO_ACID_TO_TRINUCLEOTIDES_MAP.entrySet()) {
-            Set<String> trinucleotides = aminoAcidEntry.getValue();
-            if (trinucleotides.contains(strandCorrectedTrinucleotide)) {
-                for (String trinucleotide : trinucleotides) {
-                    allTrinucleotides.add(strand == Strand.FORWARD ? trinucleotide : reverse(trinucleotide));
-                }
+        Set<String> trinucleotides = AMINO_ACID_TO_TRINUCLEOTIDES_MAP.get(aminoAcid);
+        if (trinucleotides != null) {
+            for (String trinucleotide : trinucleotides) {
+                allTrinucleotides.add(strand == Strand.FORWARD ? trinucleotide : reverseAndFlip(trinucleotide));
             }
+        }
+        else {
+            LOGGER.warn("Could not find amino acid for trinucleotide '{}' on {} strand", trinucleotideToFind, strand);
         }
 
         return allTrinucleotides;
@@ -125,11 +126,27 @@ public final class AminoAcidFunctions {
     }
 
     @NotNull
-    private static String reverse(@NotNull String string) {
+    public static String reverseAndFlip(@NotNull String string) {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = string.length() - 1; i >= 0; i--) {
-            stringBuilder.append(string.charAt(i));
+            stringBuilder.append(flipBase(string.charAt(i)));
         }
         return stringBuilder.toString();
+    }
+
+    private static char flipBase(char base) {
+        switch (base) {
+            case 'A':
+                return 'T';
+            case 'T':
+                return 'A';
+            case 'G':
+                return 'C';
+            case 'C':
+                return 'G';
+        }
+
+        LOGGER.warn("Cannot flip invalid base '{};'", base);
+        return base;
     }
 }

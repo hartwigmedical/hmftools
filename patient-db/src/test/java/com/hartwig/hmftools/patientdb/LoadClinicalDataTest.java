@@ -33,6 +33,7 @@ import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.jetbrains.annotations.Nullable;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LoadClinicalDataTest {
@@ -42,6 +43,7 @@ public class LoadClinicalDataTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Test
+    @Ignore
     public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();

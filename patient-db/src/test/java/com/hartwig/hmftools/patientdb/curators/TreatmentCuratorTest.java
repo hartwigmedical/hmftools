@@ -11,11 +11,13 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TreatmentCuratorTest {
 
     @Test
+    @Ignore
     public void canCreateFromProductionResource() throws IOException {
         assertNotNull(TreatmentCurator.fromProductionResource());
     }

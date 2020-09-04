@@ -229,6 +229,9 @@ public class ServeAnnotatedHotspotVCFChecker {
         serveToSnpEffMappings.put("ENST00000460911", createEZH2Map()); // Note: This is not the canonical transcript for EZH2
         serveToSnpEffMappings.put("ENST00000263967", createPIK3CAMap());
         serveToSnpEffMappings.put("ENST00000374690", createARMap());
+        serveToSnpEffMappings.put("ENST00000231790", createMLH1Map());
+        serveToSnpEffMappings.put("ENST00000371953", createPTENMap());
+        serveToSnpEffMappings.put("ENST00000227507", createCCND1Map());
 
         return serveToSnpEffMappings;
     }
@@ -246,15 +249,19 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createKITMap() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.S501_A502insAY", Lists.newArrayList("p.A502_Y503insYA"));
+        map.put("p.S501_A502dup", Lists.newArrayList("p.S501_A502insAS"));
+        map.put("p.A502_Y503dup", Lists.newArrayList("p.A502_Y503insYA"));
         map.put("p.K550_W557del", Lists.newArrayList("p.P551_K558del"));
         map.put("p.V555_V559del", Lists.newArrayList("p.Q556_V560del"));
         map.put("p.P577_W582delinsPYD", Lists.newArrayList("p.H580_W582del"));
+        map.put("p.V560del", Lists.newArrayList("p.V559del"));
         return map;
     }
 
     @NotNull
     private static Map<String, List<String>> createPIK3R1Map() {
         Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.W237_Y242del", Lists.newArrayList("p.Q235_L240del", "p.Y236_Q241del"));
         map.put("p.I559_D560insDKRMNS", Lists.newArrayList("p.K561_R562insRMNSDK"));
         return map;
     }
@@ -263,11 +270,18 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createEGFRMap() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.K745_E746insIPVAIK", Lists.newArrayList("p.I740_K745dup"));
+        map.put("p.L747_E749del", Lists.newArrayList("p.E746_R748del"));
+        map.put("p.A750_E758del", Lists.newArrayList("p.E749_K757del"));
+        map.put("p.A767_V769dup", Lists.newArrayList("p.A767_S768insSVA"));
         map.put("p.S768_V769insVAS", Lists.newArrayList("p.V769_D770insASV"));
-        map.put("p.D770_N771insD", Lists.newArrayList("p.D770dup"));
+        map.put("p.S768_D770dup", Lists.newArrayList("p.S768_V769insVDS"));
         map.put("p.V769_D770insASV", Lists.newArrayList("p.A767_V769dup"));
+        map.put("p.D770_N771insD", Lists.newArrayList("p.D770dup"));
+        map.put("p.D770_P772dup", Lists.newArrayList("p.D770_N771insNPD"));
         map.put("p.D770_N771insSVD", Lists.newArrayList("p.S768_D770dup"));
         map.put("p.D770_N771insNPG", Lists.newArrayList("p.P772_H773insGNP"));
+        map.put("p.N771_H773dup", Lists.newArrayList("p.N771_P772insPHN"));
+        map.put("p.P772_V774dup", Lists.newArrayList("p.P772_H773insHVP"));
         map.put("p.H773_V774insH", Lists.newArrayList("p.H773dup"));
         map.put("p.H773_V774insNPH", Lists.newArrayList("p.N771_H773dup"));
         return map;
@@ -319,8 +333,10 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createERBB2Map() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.A771_Y772insYVMA", Lists.newArrayList("p.Y772_V773insVMAY"));
+        map.put("p.Y772_A775dup", Lists.newArrayList("p.Y772_V773insVMAY"));
         map.put("p.M774_A775insAYVM", Lists.newArrayList("p.A775_G776insYVMA"));
         map.put("p.A775_G776insYVMA", Lists.newArrayList("p.Y772_A775dup"));
+        map.put("p.G778_P780dup", Lists.newArrayList("p.G778_S779insSPG"));
         return map;
     }
 
@@ -334,7 +350,7 @@ public class ServeAnnotatedHotspotVCFChecker {
     @NotNull
     private static Map<String, List<String>> createARAFMap() {
         Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.Q347_A348del", Lists.newArrayList("p.Q349_A350del"));
+        map.put("p.Q347_A348del", Lists.newArrayList("p.Q349_A350del", "p.A348_Q349del"));
         return map;
     }
 
@@ -349,6 +365,7 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createPIK3CAMap() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.E109del", Lists.newArrayList("p.E110del"));
+        map.put("p.H450_P458del", Lists.newArrayList("p.P449_N457del"));
         return map;
     }
 
@@ -356,6 +373,28 @@ public class ServeAnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createARMap() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.Q86del", Lists.newArrayList("p.Q87del", "p.Q88del", "p.Q89del", "p.Q90del", "p.Q91del"));
+        return map;
+    }
+
+    @NotNull
+    private static Map<String, List<String>> createMLH1Map() {
+        Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.K618del", Lists.newArrayList("p.K616del", "p.K617del"));
+        return map;
+    }
+
+    @NotNull
+    private static Map<String, List<String>> createPTENMap() {
+        Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.I33del", Lists.newArrayList("p.I32del"));
+        map.put("p.M199del", Lists.newArrayList("p.M198del"));
+        return map;
+    }
+
+    @NotNull
+    private static Map<String, List<String>> createCCND1Map() {
+        Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.L283_D294del", Lists.newArrayList("p.V281_D292del", "p.D282_V293del"));
         return map;
     }
 

@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
+import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,24 +22,6 @@ public class FusionExtractor {
     private final Set<String> uniqueFusionsPair = Sets.newHashSet();
     @NotNull
     private final Set<String> uniqueFusionsPromiscuous = Sets.newHashSet();
-    private static final Set<String> SEARCH_FUSION_PAIRS = Sets.newHashSet("Fusion",
-            "Disruptive Inframe Deletion",
-            "Gene Fusion",
-            "EGFR-KDD",
-            "Transcript Regulatory Region Fusion",
-            "FGFR3 - BAIAP2L1 Fusion",
-            "p61BRAF-V600E");
-    private static final Set<String> SEARCH_FUSION_PROMISCUOUS =
-            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "nonsense", "FUSIONS");
-    private static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
-    private static final Set<String> INTERNAL_FUSION = Sets.newHashSet("(Partial",
-            "Exon Loss Variant",
-            "Inframe Deletion",
-            "is_deletion",
-            "EGFRvIII",
-            "EGFRvV",
-            "EGFRvII",
-            "ITD");
 
     @NotNull
     public Set<String> uniqueFusionsPair() {
@@ -70,12 +53,12 @@ public class FusionExtractor {
 
     @NotNull
     private FusionEvent extractKeyFusion(@NotNull Feature feature) {
-        if (!IGNORE.contains(feature.name())) { // Extract internal fusion
-            if (INTERNAL_FUSION.contains(feature.proteinAnnotation())) {
+        if (!EventAnnotationExtractor.IGNORE.contains(feature.name())) { // Extract internal fusion
+            if (EventAnnotationExtractor.INTERNAL_FUSION.contains(feature.proteinAnnotation())) {
                 return FusionEvent.FUSION_PAIR;
-            } else if (feature.name().contains("DELETION") && INTERNAL_FUSION.contains(feature.biomarkerType())) {
+            } else if (feature.name().contains("DELETION") && EventAnnotationExtractor.INTERNAL_FUSION.contains(feature.biomarkerType())) {
                 return FusionEvent.FUSION_PAIR;
-            } else if (feature.name().contains("DELETION") && INTERNAL_FUSION.contains(feature.provenanceRule())) {
+            } else if (feature.name().contains("DELETION") && EventAnnotationExtractor.INTERNAL_FUSION.contains(feature.provenanceRule())) {
                 return FusionEvent.FUSION_PAIR;
             } else if (feature.name().contains("Exon") && feature.name().contains("deletion")) {
                 return FusionEvent.FUSION_PAIR;
@@ -83,25 +66,25 @@ public class FusionExtractor {
                 return FusionEvent.FUSION_PAIR;
             } else if (feature.name().contains("Exon") && feature.name().contains("insertions/deletions")) {
                 return FusionEvent.FUSION_PAIR;
-            }else if (SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
+            }else if (EventAnnotationExtractor.SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
                 return FusionEvent.FUSION_PAIR;
-            } else if (SEARCH_FUSION_PAIRS.contains(feature.name())) {
+            } else if (EventAnnotationExtractor.SEARCH_FUSION_PAIRS.contains(feature.name())) {
                 return FusionEvent.FUSION_PAIR;
-            } else if (SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
+            } else if (EventAnnotationExtractor.SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
                 if (feature.name().contains("-")) {
                     return FusionEvent.FUSION_PAIR;
                 } else {
                     return FusionEvent.FUSION_PROMISCUOUS;
                 }
             } else if (feature.biomarkerType() != null) {
-                if (SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
+                if (EventAnnotationExtractor.SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
                     if (feature.name().contains("-")) {
                         return FusionEvent.FUSION_PAIR;
                     } else {
                         return FusionEvent.FUSION_PROMISCUOUS;
                     }
                 }
-                if (SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
+                if (EventAnnotationExtractor.SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
                     return FusionEvent.FUSION_PAIR;
                 }
             } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()

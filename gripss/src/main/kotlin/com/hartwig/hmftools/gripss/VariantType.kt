@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss
 
+import com.hartwig.hmftools.bedpe.LocationString
 import kotlin.math.abs
 
 data class Single(
@@ -121,9 +122,7 @@ sealed class VariantType {
         private fun paired(chromosome: String, position: Int, ref: String, alt: String): Paired {
             val match = Regex(BREAKPOINT_REGEX).find(alt)!!
             val (initialSequence, bracket, location, finalSequence) = match.destructured
-            val lastColonIndex: Int = location.lastIndexOf(":")
-            val otherChromosome = location.substring(0, lastColonIndex)
-            val otherPosition = location.substring(lastColonIndex + 1, location.length).toInt()
+            val (otherChromosome, otherPosition) = LocationString(location)
 
             val endOrientation: Byte = if (bracket == "]") 1 else -1
 
