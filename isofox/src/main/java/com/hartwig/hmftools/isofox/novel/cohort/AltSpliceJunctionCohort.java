@@ -39,10 +39,14 @@ public class AltSpliceJunctionCohort
     private final int mMinFragsUnrequiredGenes;
     private final double mProbabilityThreshold;
     private final String mSpliceVariantFile;
+    private final boolean mRewriteCohortFile;
+
+    private BufferedWriter mSampleDataWriter;
 
     private static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
     private static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     private static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
+    private static final String ALT_SJ_REWRITE_COHORT = "alt_sj_rewrite_cohort";
     private static final String SPLICE_VARIANT_FILE = "splice_variant_file";
 
     private final Map<String,Integer> mFieldsMap;
@@ -65,6 +69,9 @@ public class AltSpliceJunctionCohort
         mMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
         mProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
         mSpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
+        mRewriteCohortFile = cmd.hasOption(ALT_SJ_REWRITE_COHORT);
+
+        mSampleDataWriter = null;
 
         mSpliceVariantMatching = mSpliceVariantFile != null ? new SpliceVariantMatching(mConfig, mSpliceVariantFile) : null;
     }
@@ -74,6 +81,7 @@ public class AltSpliceJunctionCohort
         options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
         options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
+        options.addOption(ALT_SJ_REWRITE_COHORT, false, "Combined alt SJs from multiple samples into a single file");
         options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
     }
 
@@ -99,6 +107,9 @@ public class AltSpliceJunctionCohort
 
             altSJs.forEach(x -> addAltSpliceJunction(x, sampleId));
 
+            if(mRewriteCohortFile)
+                altSJs.forEach(x -> writeAltSpliceJunctionData(sampleId, x));
+
             if(mSpliceVariantMatching != null)
                 mSpliceVariantMatching.evaluateSpliceVariants(sampleId, altSJs);
         }
@@ -116,6 +127,8 @@ public class AltSpliceJunctionCohort
 
         if(mSpliceVariantMatching != null)
             mSpliceVariantMatching.close();
+
+        closeBufferedWriter(mSampleDataWriter);
     }
 
     private List<AltSpliceJunction> loadFile(final Path filename)
@@ -131,6 +144,7 @@ public class AltSpliceJunctionCohort
 
             return lines.stream()
                     .map(x -> fromCsv(x, mFieldsMap))
+                    .filter(x -> passesFilter(x))
                     .collect(Collectors.toList());
         }
         catch(IOException e)
@@ -140,24 +154,29 @@ public class AltSpliceJunctionCohort
         }
     }
 
-    private void addAltSpliceJunction(final AltSpliceJunction altSJ, final String sampleId)
+    private boolean passesFilter(final AltSpliceJunction altSJ)
     {
         if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(altSJ.getGeneId()))
         {
             if(mMinFragsUnrequiredGenes > 0)
             {
                 if(altSJ.getFragmentCount() < mMinFragsUnrequiredGenes)
-                    return;
+                    return false;
             }
             else
             {
-                return;
+                return false;
             }
         }
 
         if(!mConfig.ExcludedGeneIds.isEmpty() && mConfig.ExcludedGeneIds.contains(altSJ.getGeneId()))
-            return;
+            return false;
 
+        return true;
+    }
+
+    private void addAltSpliceJunction(final AltSpliceJunction altSJ, final String sampleId)
+    {
         Map<String,List<AltSpliceJuncCohortData>> chrSJs = mAltSpliceJunctions.get(altSJ.Chromosome);
 
         if(chrSJs == null)
@@ -194,6 +213,40 @@ public class AltSpliceJunctionCohort
 
         altSjData.addPositionCount(SE_START, altSJ.getPositionCount(SE_START));
         altSjData.addPositionCount(SE_END, altSJ.getPositionCount(SE_END));
+    }
+
+    private void writeAltSpliceJunctionData(final String sampleId, final AltSpliceJunction altSJ)
+    {
+        if(altSJ.getFragmentCount() < mMinFragsUnrequiredGenes)
+            return;
+
+        try
+        {
+            if(mSampleDataWriter == null)
+            {
+                final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort_sample_data.csv");
+                mSampleDataWriter = createBufferedWriter(outputFileName, false);
+
+                mSampleDataWriter.write("SampleId,GeneId,Chromosome,Type,SjStart,SjEnd");
+                mSampleDataWriter.write(",FragCount,StartDepth,EndDepth,StartContext,EndContext,TransStart,TransEnd");
+                mSampleDataWriter.newLine();
+            }
+
+            mSampleDataWriter.write(String.format("%s,%s,%s,%s,%d,%d",
+                    sampleId, altSJ.getGeneId(), altSJ.Chromosome, altSJ.type(),
+                    altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]));
+
+            mSampleDataWriter.write(String.format(",%d,%d,%d,%s,%s,%s,%s",
+                    altSJ.getFragmentCount(), altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END),
+                    altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
+                    altSJ.getTranscriptNames()[SE_START], altSJ.getTranscriptNames()[SE_END]));
+
+            mSampleDataWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write alt-SJ sample data file: {}", e.toString());
+        }
     }
 
     private void writeCombinedAltSpliceJunctions()
