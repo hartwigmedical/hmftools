@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -22,7 +23,6 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -137,7 +137,7 @@ public class GenomicData {
 
                     if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
-                    } else if (filterMinCopyNumberTumor || chordAnalysis.predictedResponseValue()) {
+                    } else if (filterMinCopyNumberTumor || chordAnalysis.hrdValue() > 0.5) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                     }
                 }
