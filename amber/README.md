@@ -148,7 +148,7 @@ The REFERENCE.amber.snp.vcf.gz contains some 1000 SNP points that can be used to
 This is particularly important when doing cohort analysis as multiple samples from the same patient can skew results.
 
 To enable patient matching a database is required with three tables, AmberSample, AmberMapping and AmberPatient. 
-Scripts to generate these tables are available [here](../patient-db/src/main/resources/patches/amber3.4_to_3.5_migration.sql).   
+Scripts to generate these tables are available [here](../patient-db/src/main/resources/patches/amber/amber3.4_to_3.5_migration.sql).   
 
 Each sample is loaded into AmberSample with the `LoadAmberSample` application which downsamples the REFERENCE.amber.snp.vcf.gz file to 100 loci and describes each locus as:
 - 1: Homozygous ref
@@ -191,10 +191,10 @@ ORDER BY sampleCount desc;
  
 # Version History and Download Links
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.5)
-  - Updated patient matching logic [Database patch required](../patient-db/src/main/resources/patches/amber3.4_to_3.5_migration.sql).
+  - Updated patient matching logic [Database patch required](../patient-db/src/main/resources/patches/amber/amber3.4_to_3.5_migration.sql).
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.4)
   - Fixed bug where SNPCHECK loci were not written to REFERENCE.amber.snp.vcf.gz where read depth = 0
-  - Added AmberSample and AmberPatient DB tables. [Database patch required](../patient-db/src/main/resources/patches/amber3.3_to_3.4_migration.sql).
+  - Added AmberSample and AmberPatient DB tables. [Database patch required](../patient-db/src/main/resources/patches/amber/amber3.3_to_3.4_migration.sql).
   - Added patient matching functionality
 - [3.3](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.3)
   - Improved contamination check for very shallow sequencing
