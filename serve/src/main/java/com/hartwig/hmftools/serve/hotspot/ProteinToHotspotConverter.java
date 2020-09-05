@@ -34,7 +34,7 @@ public class ProteinToHotspotConverter {
     @NotNull
     public static ProteinToHotspotConverter transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion,
             @NotNull String refGenomeFastaFile) throws FileNotFoundException {
-        LOGGER.info("Creating protein to hotspot resolved with ref genome version '{}' and fasta path '{}'",
+        LOGGER.info("Creating protein to hotspot resolver with ref genome version '{}' and fasta path '{}'",
                 refGenomeVersion,
                 refGenomeFastaFile);
         return new ProteinToHotspotConverter(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile));
