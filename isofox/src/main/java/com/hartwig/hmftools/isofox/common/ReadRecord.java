@@ -67,7 +67,6 @@ public class ReadRecord
     private final int[] mSoftClipRegionsMatched;
     private int mFragmentInsertSize;
     private String mSupplementaryAlignment;
-    private int mSecondaryReadCount;
     private boolean mHasInterGeneSplit;
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
@@ -122,7 +121,6 @@ public class ReadRecord
         mSoftClipRegionsMatched = new int[] {0, 0};
         mFragmentInsertSize = insertSize;
         mSupplementaryAlignment = null;
-        mSecondaryReadCount = 0;
         mHasInterGeneSplit = false;
     }
 
@@ -148,8 +146,6 @@ public class ReadRecord
     public boolean isProperPair() { return (mFlags & SAMFlag.PROPER_PAIR.intValue()) != 0; }
     public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
     public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.SECONDARY_ALIGNMENT.intValue()) != 0; }
-
-    public void setSecondaryReadCount(int count) { mSecondaryReadCount = count; }
 
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
@@ -787,6 +783,8 @@ public class ReadRecord
     }
 
     public boolean inferredCoordAdded(boolean isLower) { return isLower ? mLowerInferredAdded : mUpperInferredAdded; }
+
+    public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
 
     public boolean isSoftClipped(int se)
     {

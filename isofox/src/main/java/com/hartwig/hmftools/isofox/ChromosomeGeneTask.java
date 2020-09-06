@@ -62,7 +62,6 @@ public class ChromosomeGeneTask implements Callable
     private final TranscriptExpression mExpTransRates;
     private final ExpectedRatesGenerator mExpRatesGenerator;
     private final GcTranscriptCalculator mTranscriptGcRatios;
-    private final FragmentSizeCalcs mFragmentSizeCalc;
     private final ExpectedCountsCache mExpectedCountsCache;
     private final BamReadCounter mBamReadCounter;
 
@@ -119,7 +118,6 @@ public class ChromosomeGeneTask implements Callable
         mCurrentGeneIndex = 0;
         mCurrentTaskType = null;
 
-        mFragmentSizeCalc = new FragmentSizeCalcs(mConfig, mGeneTransCache, mResultsWriter.getFragmentLengthWriter());
         mBamReadCounter = new BamReadCounter(mConfig);
         mExpectedCountsCache = expectedCountsCache;
 
@@ -158,7 +156,6 @@ public class ChromosomeGeneTask implements Callable
     }
 
     public String chromosome() { return mChromosome; }
-    public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final Map<String,ReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
@@ -189,10 +186,6 @@ public class ChromosomeGeneTask implements Callable
 
             case GENERATE_EXPECTED_COUNTS:
                 generateExpectedCounts();
-                break;
-
-            case FRAGMENT_LENGTHS:
-                calcFragmentLengths();
                 break;
 
             case GENERATE_GC_COUNTS:
@@ -350,16 +343,6 @@ public class ChromosomeGeneTask implements Callable
             ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
             ISF_LOGGER.info("chr({}) chimeric data: {} dups={}", mChromosome, mChimericStats, mChimericDuplicateReadIds.size());
         }
-    }
-
-    private void calcFragmentLengths()
-    {
-        mPerfCounters[PERF_FRAG_LENGTH].start();
-
-        int requiredFragCount = mConfig.FragmentLengthMinCount / 20; // split evenly amongst chromosomes
-        mFragmentSizeCalc.calcSampleFragmentSize(mChromosome, mGeneDataList, requiredFragCount);
-
-        mPerfCounters[PERF_FRAG_LENGTH].stop();
     }
 
     private void countBamReads()

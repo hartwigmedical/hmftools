@@ -14,7 +14,8 @@ public class SupplementaryReadData
     public static SupplementaryReadData from(final String suppData)
     {
         // example data: 21;42870046;-;46S30M;255;0;
-        final String[] items = suppData.split(SUPP_DELIM);
+        final String delim = suppData.contains(SUPP_DELIM) ? SUPP_DELIM : ";";
+        final String[] items = suppData.split(delim);
         if(items.length != SUPP_FIELD_COUNT)
             return null;
 

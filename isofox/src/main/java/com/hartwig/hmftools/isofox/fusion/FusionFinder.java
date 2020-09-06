@@ -18,10 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -40,6 +42,7 @@ import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
+import com.hartwig.hmftools.isofox.common.TaskExecutor;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionFinder
@@ -53,11 +56,13 @@ public class FusionFinder
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
     private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
 
-    private List<FusionTask> mFusionTasks;
+    private final List<FusionTask> mFusionTasks;
     private final FusionWriter mFusionWriter;
 
     private final List<GenomeRegion> mRestrictedGeneRegions;
     private final List<GenomeRegion> mExcludedGeneRegions;
+
+    private final boolean mUseCachedReads;
 
     private final PerformanceCounter mPerfCounter;
 
@@ -75,6 +80,7 @@ public class FusionFinder
 
         mExcludedGeneRegions = Lists.newArrayList();
         mRestrictedGeneRegions = Lists.newArrayList();
+        mUseCachedReads = mConfig.Fusions.ChimericReadsFile != null;
         buildGeneRegions();
 
         mPerfCounter = new PerformanceCounter("Fusions");
@@ -218,7 +224,8 @@ public class FusionFinder
                     }
                 }
 
-                reads.forEach(x -> checkMissingGeneData(x));
+                if(!mUseCachedReads)
+                    reads.forEach(x -> checkMissingGeneData(x));
 
                 FusionFragment fragment = new FusionFragment(readGroup);
 
@@ -296,7 +303,9 @@ public class FusionFinder
         }
         else
         {
-            executeFusionTasks();
+            final List<Callable> callableList = mFusionTasks.stream().collect(Collectors.toList());
+            TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+            // executeFusionTasks();
             logPerformanceStats();
         }
 
@@ -310,6 +319,7 @@ public class FusionFinder
         ISF_LOGGER.info("fusion calling complete");
     }
 
+    /*
     private boolean executeFusionTasks()
     {
         if(mConfig.Threads <= 1)
@@ -358,6 +368,7 @@ public class FusionFinder
 
         return true;
     }
+    */
 
     private boolean skipMissingReads(final List<ReadRecord> reads)
     {

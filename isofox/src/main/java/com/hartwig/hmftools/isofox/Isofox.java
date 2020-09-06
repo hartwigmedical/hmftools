@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -39,6 +40,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.Callables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -47,10 +50,12 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.FragmentType;
+import com.hartwig.hmftools.isofox.common.TaskExecutor;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
+import com.hartwig.hmftools.isofox.fusion.ChimericReadCache;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
@@ -107,46 +112,25 @@ public class Isofox
 
     public boolean runAnalysis()
     {
-        if(mConfig.SampleId != null)
-            ISF_LOGGER.info("sample({}) running RNA analysis", mConfig.SampleId);
-        else
-            ISF_LOGGER.info("running Isofox cache generation", mConfig.SampleId);
-
-        // allocate work at the chromosome level
-        List<ChromosomeGeneTask> chrTasks = Lists.newArrayList();
-
-        for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
+        if(mConfig.runFunction(FUSIONS) && mConfig.Fusions.ChimericReadsFile != null)
         {
-            final List<EnsemblGeneData> geneDataList = entry.getValue();
-
-            final String chromosome = entry.getKey();
-
-            if (mConfig.skipChromosome(chromosome) || geneDataList.isEmpty())
-                continue;
-
-            ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(
-                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mExpectedCountsCache, mGcTranscriptCalcs);
-
-            chrTasks.add(chrGeneTask);
+            mFusionFinder.addChimericReads(ChimericReadCache.loadChimericReads(mConfig.Fusions.ChimericReadsFile));
+            mFusionFinder.findFusions();
+            return true;
         }
+
+        // all other routines split work by chromosome
+        final List<ChromosomeGeneTask> chrTasks = createChromosomeTasks();
+
+        final Map<String,List<EnsemblGeneData>> chrGeneMap = getChromosomeGeneLists(mGeneTransCache, mConfig);
 
         if(chrTasks.isEmpty())
         {
-            ISF_LOGGER.warn("no chromosomes selected");
+            ISF_LOGGER.error("no chromosome tasks created");
             return false;
         }
 
-        if(mConfig.requireFragmentLengthCalcs())
-        {
-            calcFragmentLengths(chrTasks);
-
-            if(mConfig.WriteFragmentLengthsByGene)
-            {
-                mResultsWriter.close();
-                return true;
-            }
-        }
-
+        // first execute non-core tasks
         if(mConfig.runFunction(EXPECTED_GC_COUNTS))
         {
             generateGcRatios(chrTasks);
@@ -165,6 +149,29 @@ public class Isofox
         {
             countBamReads(chrTasks);
             return true;
+        }
+
+        // BAM processing for the key routines - novel junctions, fusions and gene expression
+        if(!processBam(chrTasks, chrGeneMap))
+            return false;
+
+
+        return true;
+    }
+
+    private boolean processBam(final List<ChromosomeGeneTask> chrTasks, final Map<String,List<EnsemblGeneData>> chrGeneMap)
+    {
+        ISF_LOGGER.info("sample({}) running RNA analysis", mConfig.SampleId);
+
+        if(mConfig.requireFragmentLengthCalcs())
+        {
+            calcFragmentLengths(chrGeneMap);
+
+            if(mConfig.WriteFragmentLengthsByGene)
+            {
+                mResultsWriter.close();
+                return true;
+            }
         }
 
         boolean validExecution = executeChromosomeTask(chrTasks, TRANSCRIPT_COUNTS);
@@ -289,21 +296,56 @@ public class Isofox
             return;
     }
 
-    private void countBamReads(final List<ChromosomeGeneTask> chrTasks)
+    private final List<ChromosomeGeneTask> createChromosomeTasks()
     {
-        boolean validExecution = executeChromosomeTask(chrTasks, BAM_READ_COUNTER);
+        // allocate work at the chromosome level
+        final List<ChromosomeGeneTask> chrTasks = Lists.newArrayList();
 
-        if(!validExecution)
+        for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
         {
-            mIsValid = false;
-            return;
+            final List<EnsemblGeneData> geneDataList = entry.getValue();
+
+            final String chromosome = entry.getKey();
+
+            if (mConfig.skipChromosome(chromosome) || geneDataList.isEmpty())
+                continue;
+
+            ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(
+                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mExpectedCountsCache, mGcTranscriptCalcs);
+
+            chrTasks.add(chrGeneTask);
         }
+
+        return chrTasks;
     }
 
-    private void calcFragmentLengths(final List<ChromosomeGeneTask> chrTasks)
+    public static Map<String,List<EnsemblGeneData>> getChromosomeGeneLists(final EnsemblDataCache geneTransCache, final IsofoxConfig config)
     {
-        // determine the distribution of fragment lengths for analysis and adjustment of expected transcript rates
-        boolean validExecution = executeChromosomeTask(chrTasks, FRAGMENT_LENGTHS);
+        final Map<String,List<EnsemblGeneData>> chrGeneMap = Maps.newHashMap();
+
+        geneTransCache.getChrGeneDataMap().entrySet().stream()
+                .filter(x -> config.skipChromosome(x.getKey()))
+                .filter(x -> !x.getValue().isEmpty())
+                .forEach(x -> chrGeneMap.put(x.getKey(), x.getValue()));
+
+        return chrGeneMap;
+    }
+
+    private void calcFragmentLengths(final Map<String,List<EnsemblGeneData>> chrGeneMap)
+    {
+        int requiredFragCount = mConfig.FragmentLengthMinCount / chrGeneMap.size(); // split evenly amongst chromosomes
+
+        final List<FragmentSizeCalcs> fragSizeCalcs = Lists.newArrayList();
+
+        for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
+        {
+            FragmentSizeCalcs fragSizeCalc = new FragmentSizeCalcs(mConfig, mGeneTransCache, mResultsWriter.getFragmentLengthWriter());
+            fragSizeCalc.initialise(entry.getKey(), entry.getValue(), requiredFragCount);
+            fragSizeCalcs.add(fragSizeCalc);
+        }
+
+        final List<Callable> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
+        boolean validExecution = TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
 
         if(!validExecution)
         {
@@ -313,11 +355,10 @@ public class Isofox
 
         // merge results from all chromosomes
         int maxReadLength = 0;
-        for(final ChromosomeGeneTask chrGeneTask : chrTasks)
+        for(final FragmentSizeCalcs fragSizeCalc : fragSizeCalcs)
         {
-            final FragmentSizeCalcs fragSizeCalcs = chrGeneTask.getFragSizeCalcs();
-            maxReadLength = max(maxReadLength, fragSizeCalcs.getMaxReadLength());
-            FragmentSizeCalcs.mergeData(mFragmentLengthDistribution, fragSizeCalcs);
+            maxReadLength = max(maxReadLength, fragSizeCalc.getMaxReadLength());
+            FragmentSizeCalcs.mergeData(mFragmentLengthDistribution, fragSizeCalc);
         }
 
         if(mConfig.ApplyFragmentLengthAdjust)
@@ -325,13 +366,14 @@ public class Isofox
 
         if (mConfig.WriteFragmentLengths)
         {
-            FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution,
-                    chrTasks.get(0).getFragSizeCalcs().getSoftClipLengthBuckets());
+            FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution, fragSizeCalcs.get(0).getSoftClipLengthBuckets());
         }
     }
 
     private void generateGcRatios(final List<ChromosomeGeneTask> chrTasks)
     {
+        ISF_LOGGER.info("generating GC counts cache");
+
         // for now a way of only calculating fragment lengths and nothing more
         boolean validExecution = executeChromosomeTask(chrTasks, GENERATE_GC_COUNTS);
 
@@ -344,8 +386,23 @@ public class Isofox
 
     private void generateExpectedCounts(final List<ChromosomeGeneTask> chrTasks)
     {
+        ISF_LOGGER.info("generating expected transcript counts cache");
+
         // for now a way of only calculating fragment lengths and nothing more
         boolean validExecution = executeChromosomeTask(chrTasks, GENERATE_EXPECTED_COUNTS);
+
+        if(!validExecution)
+        {
+            mIsValid = false;
+            return;
+        }
+    }
+
+    private void countBamReads(final List<ChromosomeGeneTask> chrTasks)
+    {
+        ISF_LOGGER.info("basic BAM read counts");
+
+        boolean validExecution = executeChromosomeTask(chrTasks, BAM_READ_COUNTER);
 
         if(!validExecution)
         {

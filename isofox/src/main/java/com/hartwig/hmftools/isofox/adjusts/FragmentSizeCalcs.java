@@ -22,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -43,10 +44,14 @@ import htsjdk.samtools.SamReaderFactory;
 // calculate fragment length distribution for a sample
 // this can be done either independently from fragment counting or lengths can be registering during that process
 
-public class FragmentSizeCalcs
+public class FragmentSizeCalcs implements Callable
 {
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
+
+    private String mChromosome;
+    private final List<EnsemblGeneData> mGeneDataList;
+    private int mRequiredFragCount;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -77,7 +82,8 @@ public class FragmentSizeCalcs
 
     private PerformanceCounter mPerfCounter;
 
-    public FragmentSizeCalcs(final IsofoxConfig config, final EnsemblDataCache geneTransCache, final BufferedWriter writer)
+    public FragmentSizeCalcs(
+            final IsofoxConfig config, final EnsemblDataCache geneTransCache, final BufferedWriter writer)
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
@@ -98,38 +104,60 @@ public class FragmentSizeCalcs
 
         mGeneWriter = writer;
 
+        mGeneDataList = Lists.newArrayList();
         mFragmentLengths = Lists.newArrayList();
         mFragmentLengthsByGene = Lists.newArrayList();
 
         mSoftClipLengthBuckets = Lists.newArrayList(1,2,3,5,10,25,50);
+        
+        mChromosome = "";
+        mRequiredFragCount = 0;
 
         mPerfCounter = new PerformanceCounter("FragLengthDist");
     }
 
     public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
     public final int getMaxReadLength() { return mMaxReadLength; }
+    public final PerformanceCounter getPerformanceCounter() { return mPerfCounter; }
     public final List<Integer> getSoftClipLengthBuckets() { return mSoftClipLengthBuckets; }
-
-    public void calcSampleFragmentSize(final String chromosome, final List<EnsemblGeneData> geneDataList, int requiredFragCount)
+    
+    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList, int requiredFragCount)
     {
-        if (geneDataList == null || geneDataList.isEmpty())
-            return;
+        mChromosome = chromosome;
+        mGeneDataList.clear();
+        mGeneDataList.addAll(geneDataList);
+        mRequiredFragCount = requiredFragCount;
+    }
 
-        if (requiredFragCount == 0)
+    @Override
+    public Long call()
+    {
+        mPerfCounter.start();
+        calcSampleFragmentSize();
+        mPerfCounter.stop();
+        return (long)0;
+    }
+
+    private void calcSampleFragmentSize()
+    {
+        if (mGeneDataList.isEmpty() || mRequiredFragCount == 0)
+        {
+            ISF_LOGGER.error("chromosome({}) fragment size uninitialised", mChromosome);
             return;
+        }
 
         // walk through each chromosome, taking groups of overlapping genes together
-        ISF_LOGGER.info("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
+        ISF_LOGGER.info("calculating fragment size for chromosome({}) geneCount({})", mChromosome, mGeneDataList.size());
 
-        List<int[]> excludedRegions = generateExcludedRegions(chromosome);
+        List<int[]> excludedRegions = generateExcludedRegions();
 
         final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
         int currentGeneIndex = 0;
         int nextLogCount = 100;
 
-        while(currentGeneIndex < geneDataList.size())
+        while(currentGeneIndex < mGeneDataList.size())
         {
-            currentGeneIndex = findNextOverlappingGenes(geneDataList, currentGeneIndex, overlappingGenes);
+            currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
             if(overlappingGenes.stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneId)))
                 continue;
@@ -165,7 +193,7 @@ public class FragmentSizeCalcs
             {
                 nextLogCount += 100;
                 ISF_LOGGER.debug("chromosome({}) processed {} genes, fragCount({}) totalReads({})",
-                        chromosome, currentGeneIndex, mProcessedFragments, mTotalFragmentCount);
+                        mChromosome, currentGeneIndex, mProcessedFragments, mTotalFragmentCount);
             }
 
             mPerfCounter.start();
@@ -173,10 +201,10 @@ public class FragmentSizeCalcs
             mCurrentFragmentCount = 0;
             mCurrentGenes = overlappingGenes.get(0).GeneName;
 
-            final List<SvRegion> regions = Lists.newArrayList(new SvRegion(chromosome, mCurrentGenesRange));
+            final List<SvRegion> regions = Lists.newArrayList(new SvRegion(mChromosome, mCurrentGenesRange));
 
             ISF_LOGGER.trace("chromosome({}) gene({} index={}) fragCount({}) nextRegion({})",
-                    chromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, regions.get(0).toString());
+                    mChromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, regions.get(0).toString());
 
             try
             {
@@ -185,7 +213,7 @@ public class FragmentSizeCalcs
             catch(Exception e)
             {
                 ISF_LOGGER.error("chromosome({}) geneIndex({}) fragCount({}) currentRegion({}) error slicing bam: {}",
-                        chromosome, currentGeneIndex, mProcessedFragments, regions.get(0).toString(), e.toString());
+                        mChromosome, currentGeneIndex, mProcessedFragments, regions.get(0).toString(), e.toString());
                 return;
             }
 
@@ -199,21 +227,21 @@ public class FragmentSizeCalcs
                     genesName += ITEM_DELIM + overlappingGenes.get(i).GeneName;
                 }
 
-                writeGeneFragmentLengths(mGeneWriter, mFragmentLengthsByGene, genesName, overlappingGenes.size(), chromosome, mCurrentGenesRange);
+                writeGeneFragmentLengths(mGeneWriter, mFragmentLengthsByGene, genesName, overlappingGenes.size(), mChromosome, mCurrentGenesRange);
                 mFragmentLengthsByGene.clear();
             }
 
-            if (mProcessedFragments >= requiredFragCount)
+            if (mProcessedFragments >= mRequiredFragCount)
             {
-                ISF_LOGGER.debug("chromosome({}) max fragment length samples reached: {}", chromosome, mProcessedFragments);
+                ISF_LOGGER.debug("chromosome({}) max fragment length samples reached: {}", mChromosome, mProcessedFragments);
                 break;
             }
         }
 
-        ISF_LOGGER.debug("chromosome({}) processing complete", chromosome);
+        ISF_LOGGER.debug("chromosome({}) processing complete", mChromosome);
     }
 
-    private List<int[]> generateExcludedRegions(final String chromosome)
+    private List<int[]> generateExcludedRegions()
     {
         // create a buffer around the enriched gene to avoid excessive reads in this vicinity
         final List<int[]> excludedRegions = Lists.newArrayList();
@@ -223,7 +251,7 @@ public class FragmentSizeCalcs
             if(geneData == null)
                 continue;
 
-            if(geneData.Chromosome.equals(chromosome))
+            if(geneData.Chromosome.equals(mChromosome))
             {
                 excludedRegions.add(new int[] { geneData.GeneStart - ENRICHED_GENE_BUFFER, geneData.GeneEnd + ENRICHED_GENE_BUFFER});
             }

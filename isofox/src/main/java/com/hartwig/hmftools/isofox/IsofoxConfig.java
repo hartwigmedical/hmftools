@@ -342,8 +342,11 @@ public class IsofoxConfig
 
         if(BamFile == null || BamFile.isEmpty() || !Files.exists(Paths.get(BamFile)))
         {
-            ISF_LOGGER.error("BAM file({}) missing or not found", BamFile);
-            return false;
+            if(!runFusionsOnly() || Fusions.ChimericReadsFile == null)
+            {
+                ISF_LOGGER.error("BAM file({}) missing or not found", BamFile);
+                return false;
+            }
         }
 
         if(SampleId == null || SampleId.isEmpty())
