@@ -51,8 +51,7 @@ public class ServeHotspotGenerator {
 
     private static final Logger LOGGER = LogManager.getLogger(ServeHotspotGenerator.class);
 
-    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
-            Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
+    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE = Sets.newHashSet(ViccSource.CIVIC, ViccSource.CGI);
     private static final Integer MAX_VICC_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {

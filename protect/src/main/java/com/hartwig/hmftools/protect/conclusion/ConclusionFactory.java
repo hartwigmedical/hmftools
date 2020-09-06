@@ -4,16 +4,15 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.common.DriverInterpretation;
 import com.hartwig.hmftools.protect.common.ReportableGainLoss;
 import com.hartwig.hmftools.protect.common.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.common.ReportableVariant;
 import com.hartwig.hmftools.protect.common.ReportableVariantAnalysis;
-import com.hartwig.hmftools.protect.report.chord.ChordStatus;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,12 +39,12 @@ public class ConclusionFactory {
         String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation, cancerSubtype);
         conclusion.append(textTumorLocation).append(enter);
 
-        if (ChordStatus.formChord(chordScore).equals(ChordStatus.HR_DEFICIENT)) {
-            String HRD = ChordStatus.HR_DEFICIENT.toString();
+        if (chordScore > 0.5) {
+            String HRD = "HR-deficient";
             for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
                 TemplateConclusion templateConclusion = entry.getValue();
                 if (HRD.equals("HR-deficient")) {
-                    String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
+                    String hrDeficient = sentenceHrDeficient(chordScore, templateConclusion);
                     conclusion.append(startRow).append(hrDeficient).append(enter);
                 }
             }
@@ -227,7 +226,7 @@ public class ConclusionFactory {
         return sentence;
     }
 
-    private static String sentenseHrDeficient(double chordScore, @NotNull TemplateConclusion templateConclusion) {
+    private static String sentenceHrDeficient(double chordScore, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
         sentence = sentence.replace("a high CHORD score (XXX) ", "a high CHORD score (" + String.format("%.2f", chordScore) + ") ");
         return sentence;

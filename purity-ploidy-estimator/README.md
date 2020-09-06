@@ -19,7 +19,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [Somatic Variant Input VCF (optional)](#somatic-variant-input-vcf-optional)
 * [Tumor Only Mode](#tumor-only-mode)  
 * [Algorithm](#algorithm)
-  + [1. Gender](#1-gender)
+  + [1. Sex](#1-sex-determination)
   + [2. Segmentation](#2-segmentation)
   + [3. Sample Purity and Ploidy](#3-sample-purity-and-ploidy)
   + [4. Copy Number Smoothing](#4-copy-number-smoothing)
@@ -284,13 +284,13 @@ It is important to first run AMBER and COBALT in tumor only mode.
 AMBER has native support for tumor only as described in the [readme](../amber#tumor-only-mode).
 
 COBALT does not have native support for tumor only mode but this can be circumvented by using another sample's normal data. 
-It is important that the substituted bam is of the same gender as the sample.   
+It is important that the substituted bam is of the same sex as the sample.   
 
 
 ## Algorithm`
 
 There are 11 key steps in the PURPLE pipeline described in detail below:
-1. Gender determination
+1. Sex determination
 2. Segmentation
 3. Sample purity and ploidy fitting
 4. Copy number smoothing
@@ -582,7 +582,7 @@ Score | 0.68 | Score of fit (lower is better)
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
 WholeGenomeDuplication | true | True if more than 10 autosomes have major allele copy number > 1.5
-[Gender](#1-gender) | MALE | One of `MALE`, `FEMALE` or `MALE_KLINEFELTER`
+[Gender](#1-sex-determination) | MALE | One of `MALE`, `FEMALE` or `MALE_KLINEFELTER`
 [Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 MinPurity | 0.95 | Minimum purity with score within 10% of best
 MaxPurity | 1.00 | Maximum purity with score within 10% of best
@@ -754,7 +754,7 @@ mysql -u purple_writer -p < generate_database.sql
 It is also worth noting that this script contains many more tables than just those used by PURPLE. 
 
 #### Update Tables
-If upgrading to a newer version of PURPLE, check the [patches directory](../patient-db/src/main/resources/patches/) for purplex_to_y_migration patch scripts. 
+If upgrading to a newer version of PURPLE, check the [patches directory](../patient-db/src/main/resources/patches/purple) for purplex_to_y_migration patch scripts. 
 They can be executed in a similar manner as above.
 
 #### Persist Data
@@ -1010,13 +1010,13 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT
 - [2.46](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.46) 
   - Configurable driver gene panel
-  - Added `REPORTED` flag to any variants that are eligible for the driver catalog. Requires [patch](../patient-db/src/main/resources/patches/patientdb3.45_to_3.46_migration.sql) to load to data base.
+  - Added `REPORTED` flag to any variants that are eligible for the driver catalog. Requires [patch](../patient-db/src/main/resources/patches/patientdb/patientdb3.45_to_3.46_migration.sql) to load to data base.
 - [2.45](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.45) 
   - Sunrise plot shows relative score
   - Minor cosmetic changes to plots
   - Replicate SAGE SnpEff somatic variant enrichments SEW and SEC for driver catalog
 - [2.44](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.44) 
-  - Requires [database patch](../patient-db/src/main/resources/patches/purple2.43_to_2.44_migration.sql). Note that there are corresponding patches for [Linx](../patient-db/src/main/resources/patches/linx_1.10.sql) and [PatientDb](../patient-db/src/main/resources/patches/patientdb3.43_to_3.44_migration.sql).
+  - Requires [database patch](../patient-db/src/main/resources/patches/purple/purple2.43_to_2.44_migration.sql). Note that there are corresponding patches for [Linx](../patient-db/src/main/resources/patches/linx/linx_1.10.sql) and [PatientDb](../patient-db/src/main/resources/patches/patientdb/patientdb3.43_to_3.44_migration.sql).
   - Use non diplod-normalised normal ratio for input circos figure
   - Do not include chrY in female output in HG38
   - Small change to LOH BAF inferring
@@ -1040,7 +1040,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - [2.39](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.39) 
   - Use appropriate karyotype in circos plot 
 - [2.38](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.38) 
-  - Added tumor mutational load and burden to purity output (requires database [patch](../patient-db/src/main/resources/patches/purple2.37_to_2.38_migration.sql))
+  - Added tumor mutational load and burden to purity output (requires database [patch](../patient-db/src/main/resources/patches/purple/purple2.37_to_2.38_migration.sql))
   - Support ensemble transcript version id in driver catalog
 - [2.37](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.37)
   - Remove requirement of chromosome lengths in somatic VCF 

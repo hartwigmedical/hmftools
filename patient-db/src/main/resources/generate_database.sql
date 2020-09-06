@@ -766,10 +766,12 @@ DROP TABLE IF EXISTS chord;
 CREATE TABLE chord
 (   sampleId varchar(255) NOT NULL,
     BRCA1 DOUBLE PRECISION NOT NULL,
-    nothing DOUBLE PRECISION NOT NULL,
     BRCA2 DOUBLE PRECISION NOT NULL,
     hrd DOUBLE PRECISION NOT NULL,
-    predictedResponse BOOLEAN NOT NULL,
+    hrStatus varchar(255) NOT NULL,
+    hrdType varchar(255) NOT NULL,
+    remarksHrStatus varchar(255) NOT NULL,
+    remarksHrdType varchar(255) NOT NULL,
     PRIMARY KEY (sampleId)
 );
 

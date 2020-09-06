@@ -7,20 +7,30 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ChordFileReader {
 
     private static final String VALUE_SEPARATOR = "\t";
+    @VisibleForTesting
+    static final String V1_NA = "N/A";
 
-    private static final int NONE_COLUMN = 1;
-    private static final int BRCA1_COLUMN = 2;
-    private static final int BRCA2_COLUMN = 3;
-    private static final int HRD_COLUMN = 4;
-    private static final int PREDICTED_RESPONSE_COLUMN = 5;
+    private static final int V1_BRCA1_COLUMN = 2;
+    private static final int V1_BRCA2_COLUMN = 3;
+    private static final int V1_HRD_COLUMN = 4;
+
+    private static final int V2_BRCA1_COLUMN = 1;
+    private static final int V2_BRCA2_COLUMN = 2;
+    private static final int V2_HRD_COLUMN = 3;
+    private static final int V2_HR_STATUS_COLUMN = 4;
+    private static final int V2_HRD_TYPE_COLUMN = 5;
+    private static final int V2_REMARKS_HR_STATUS_COLUMN = 6;
+    private static final int V2_REMARKS_HRD_TYPE_COLUMN = 7;
 
     private ChordFileReader() {
     }
@@ -30,11 +40,26 @@ public final class ChordFileReader {
         ImmutableChordAnalysis.Builder builder = ImmutableChordAnalysis.builder();
         String[] values = findValuesLine(filePath).split(VALUE_SEPARATOR);
 
-        builder.noneValue(Double.parseDouble(values[NONE_COLUMN]));
-        builder.BRCA1Value(Double.parseDouble(values[BRCA1_COLUMN]));
-        builder.BRCA2Value(Double.parseDouble(values[BRCA2_COLUMN]));
-        builder.hrdValue(Double.parseDouble(values[HRD_COLUMN]));
-        builder.predictedResponseValue(Boolean.parseBoolean(values[PREDICTED_RESPONSE_COLUMN]));
+        if (isV1(values)) {
+            builder.BRCA1Value(Double.parseDouble(values[V1_BRCA1_COLUMN]));
+            builder.BRCA2Value(Double.parseDouble(values[V1_BRCA2_COLUMN]));
+            builder.hrdValue(Double.parseDouble(values[V1_HRD_COLUMN]));
+            builder.hrStatus(V1_NA);
+            builder.hrdType(V1_NA);
+            builder.remarksHrStatus(V1_NA);
+            builder.remarksHrdType(V1_NA);
+        } else {
+            String remarksHrStatus = values.length > V2_REMARKS_HR_STATUS_COLUMN ? values[V2_REMARKS_HR_STATUS_COLUMN] : Strings.EMPTY;
+            String remarksHrdType = values.length > V2_REMARKS_HRD_TYPE_COLUMN ? values[V2_REMARKS_HRD_TYPE_COLUMN] : Strings.EMPTY;
+
+            builder.BRCA1Value(Double.parseDouble(values[V2_BRCA1_COLUMN]));
+            builder.BRCA2Value(Double.parseDouble(values[V2_BRCA2_COLUMN]));
+            builder.hrdValue(Double.parseDouble(values[V2_HRD_COLUMN]));
+            builder.hrStatus(values[V2_HR_STATUS_COLUMN]);
+            builder.hrdType(values[V2_HRD_TYPE_COLUMN]);
+            builder.remarksHrStatus(remarksHrStatus);
+            builder.remarksHrdType(remarksHrdType);
+        }
 
         return builder.build();
     }
@@ -59,5 +84,19 @@ public final class ChordFileReader {
             throw new MalformedFileException(String.format("Could not find header line in CHORD file with %s lines.", lines.size()));
         }
         return lineNumbers.get();
+    }
+
+    private static boolean isV1(@NotNull String[] values) {
+        assert V1_HRD_COLUMN == V2_HR_STATUS_COLUMN && V1_HRD_COLUMN == 4;
+        return isDouble(values[4]);
+    }
+
+    private static boolean isDouble(@NotNull String value) {
+        try {
+            Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }

@@ -251,7 +251,6 @@ public class ServeAnnotatedHotspotVCFChecker {
         map.put("p.S501_A502insAY", Lists.newArrayList("p.A502_Y503insYA"));
         map.put("p.S501_A502dup", Lists.newArrayList("p.S501_A502insAS"));
         map.put("p.A502_Y503dup", Lists.newArrayList("p.A502_Y503insYA"));
-        map.put("p.K550_W557del", Lists.newArrayList("p.P551_K558del"));
         map.put("p.V555_V559del", Lists.newArrayList("p.Q556_V560del"));
         map.put("p.P577_W582delinsPYD", Lists.newArrayList("p.H580_W582del"));
         map.put("p.V560del", Lists.newArrayList("p.V559del"));

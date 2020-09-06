@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CHORD;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
@@ -22,13 +23,23 @@ class ChordDAO {
     void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
         deleteChordForSample(sample);
 
-        context.insertInto(CHORD, CHORD.SAMPLEID, CHORD.NOTHING, CHORD.BRCA1, CHORD.BRCA2, CHORD.HRD, CHORD.PREDICTEDRESPONSE)
+        context.insertInto(CHORD,
+                CHORD.SAMPLEID,
+                CHORD.BRCA1,
+                CHORD.BRCA2,
+                CHORD.HRD,
+                CHORD.HRSTATUS,
+                CHORD.HRDTYPE,
+                CHORD.REMARKSHRSTATUS,
+                CHORD.REMARKSHRDTYPE)
                 .values(sample,
-                        DatabaseUtil.decimal(chordAnalysis.noneValue()),
                         DatabaseUtil.decimal(chordAnalysis.BRCA1Value()),
                         DatabaseUtil.decimal(chordAnalysis.BRCA2Value()),
                         DatabaseUtil.decimal(chordAnalysis.hrdValue()),
-                        chordAnalysis.predictedResponseValue() ? (byte) 1 : (byte) 0)
+                        chordAnalysis.hrStatus(),
+                        chordAnalysis.hrdType(),
+                        chordAnalysis.remarksHrStatus(),
+                        chordAnalysis.remarksHrdType())
                 .execute();
     }
 
@@ -40,15 +51,17 @@ class ChordDAO {
             return null;
         }
 
+        // TODO: Read all fields once every database is patched to CHORD v2
         return ImmutableChordAnalysis.builder()
-                .noneValue(result.getValue(CHORD.NOTHING))
                 .BRCA1Value(result.getValue(CHORD.BRCA1))
                 .BRCA2Value(result.getValue(CHORD.BRCA2))
                 .hrdValue(result.getValue(CHORD.HRD))
-                .predictedResponseValue(result.getValue(CHORD.PREDICTEDRESPONSE)==1)
+                .hrStatus(Strings.EMPTY)
+                .hrdType(Strings.EMPTY)
+                .remarksHrStatus(Strings.EMPTY)
+                .remarksHrdType(Strings.EMPTY)
                 .build();
     }
-
 
     void deleteChordForSample(@NotNull String sample) {
         context.delete(CHORD).where(CHORD.SAMPLEID.eq(sample)).execute();

@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -44,8 +46,6 @@ import com.hartwig.hmftools.protect.common.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.protect.conclusion.ConclusionFactory;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusion;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusionFile;
-import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
-import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
