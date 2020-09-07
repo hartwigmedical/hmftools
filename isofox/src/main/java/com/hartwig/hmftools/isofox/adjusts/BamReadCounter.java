@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.ChromosomeGeneTask.findNextOverlappingGenes;
+import static com.hartwig.hmftools.isofox.BamFragmentReaderTask.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
@@ -32,8 +33,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 // simple BAM read counter, used for experimental purposes at the moment
-
-public class BamReadCounter
+public class BamReadCounter implements Callable
 {
     private final IsofoxConfig mConfig;
 
@@ -45,6 +45,7 @@ public class BamReadCounter
     private int mCurrentGeneReadCount;
     private int[] mReadTypeCounts;
     private String mChromosome;
+    private final List<EnsemblGeneData> mGeneDataList;
     private String mCurrentGenes;
     private final FragmentTracker mFragmentTracker;
 
@@ -56,32 +57,46 @@ public class BamReadCounter
 
         mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, false);
 
+        mGeneDataList = Lists.newArrayList();
+        mChromosome = "";
+
         mCurrentGenesRange = new int[SE_PAIR];
         mTotalReadCount = 0;
         mCurrentGeneReadCount = 0;
         mCurrentGenes = "";
-        mChromosome = "";
         mReadTypeCounts = new int[typeAsInt(FragmentType.MAX)];
         mFragmentTracker = new FragmentTracker();
     }
 
-    public void processBam(final String chromosome, final List<EnsemblGeneData> geneDataList)
+    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList)
     {
-        if (geneDataList == null || geneDataList.isEmpty())
+        mChromosome = chromosome;
+        mGeneDataList.clear();
+        mGeneDataList.addAll(geneDataList);
+    }
+
+    @Override
+    public Long call()
+    {
+        processBam();
+        return (long)0;
+    }
+
+    private void processBam()
+    {
+        if (mGeneDataList.isEmpty())
             return;
 
-        mChromosome = chromosome;
-
         // walk through each chromosome, taking groups of overlapping genes together
-        ISF_LOGGER.info("processing reads for chromosome({}) geneCount({})", chromosome, geneDataList.size());
+        ISF_LOGGER.info("processing reads for chromosome({}) geneCount({})", mChromosome, mGeneDataList.size());
 
         final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
         int currentGeneIndex = 0;
         int nextLogCount = 100;
 
-        while(currentGeneIndex < geneDataList.size())
+        while(currentGeneIndex < mGeneDataList.size())
         {
-            currentGeneIndex = findNextOverlappingGenes(geneDataList, currentGeneIndex, overlappingGenes);
+            currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
             if(overlappingGenes.stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneId)))
                 continue;
@@ -102,19 +117,19 @@ public class BamReadCounter
             {
                 nextLogCount += 100;
                 ISF_LOGGER.info("chromosome({}) processed {} genes, totalReads({})",
-                        chromosome, currentGeneIndex, mTotalReadCount);
+                        mChromosome, currentGeneIndex, mTotalReadCount);
             }
 
             mCurrentGenes = overlappingGenes.get(0).GeneId;
             mCurrentGeneReadCount = 0;
 
-            final List<SvRegion> regions = Lists.newArrayList(new SvRegion(chromosome, mCurrentGenesRange));
+            final List<SvRegion> regions = Lists.newArrayList(new SvRegion(mChromosome, mCurrentGenesRange));
 
             mBamSlicer.slice(mSamReader, regions, this::processBamRead);
         }
 
         ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({})",
-                chromosome, mTotalReadCount, mReadTypeCounts[typeAsInt(DUPLICATE)], mReadTypeCounts[typeAsInt(CHIMERIC)]);
+                mChromosome, mTotalReadCount, mReadTypeCounts[typeAsInt(DUPLICATE)], mReadTypeCounts[typeAsInt(CHIMERIC)]);
     }
 
     private void processBamRead(@NotNull final SAMRecord read)

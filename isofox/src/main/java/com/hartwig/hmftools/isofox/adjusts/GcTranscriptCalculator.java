@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -33,11 +34,13 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 
-public class GcTranscriptCalculator
+public class GcTranscriptCalculator implements Callable
 {
     private final IsofoxConfig mConfig;
-
     private final EnsemblDataCache mGeneTransCache;
+
+    private String mChromosome;
+    private final List<EnsemblGeneData> mGeneDataList;
 
     private final Map<String,GcRatioCounts> mTranscriptGcRatioCache;
 
@@ -52,7 +55,10 @@ public class GcTranscriptCalculator
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
+
+        mGeneDataList = Lists.newArrayList();
         mTranscriptGcRatioCache = Maps.newHashMap();
+        mChromosome = "";
 
         mTranscriptFitGcCounts = new GcRatioCounts();
         mGcRatioAdjustments = new double[mTranscriptFitGcCounts.size()];
@@ -63,6 +69,20 @@ public class GcTranscriptCalculator
         mWriter = mConfig.runFunction(EXPECTED_GC_COUNTS) ? createWriter() : null;
 
         mTotalExpectedCounts = mConfig.runFunction(EXPECTED_GC_COUNTS) ? new double[mTranscriptFitGcCounts.size()] : null;
+    }
+
+    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList)
+    {
+        mChromosome = chromosome;
+        mGeneDataList.clear();
+        mGeneDataList.addAll(geneDataList);
+    }
+
+    @Override
+    public Long call()
+    {
+        generateExpectedCounts();
+        return (long)0;
     }
 
     public void close() { closeBufferedWriter(mWriter); }
@@ -103,14 +123,14 @@ public class GcTranscriptCalculator
         }
     }
 
-    public void generateExpectedCounts(final String chromosome, final List<EnsemblGeneData> geneDataList)
+    private void generateExpectedCounts()
     {
-        ISF_LOGGER.info("chromosome({}) generating expected GC ratios for {} genes", chromosome, geneDataList.size());
+        ISF_LOGGER.info("chromosome({}) generating expected GC ratios for {} genes", mChromosome, mGeneDataList.size());
 
         int genesProcessed = 0;
         int nextLogCount = 100;
 
-        for(final EnsemblGeneData geneData : geneDataList)
+        for(final EnsemblGeneData geneData : mGeneDataList)
         {
             final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
@@ -118,7 +138,7 @@ public class GcTranscriptCalculator
 
             if(transDataList != null)
             {
-                transDataList.forEach(x -> calculateTranscriptGcRatios(chromosome, x));
+                transDataList.forEach(x -> calculateTranscriptGcRatios(mChromosome, x));
             }
 
             ++genesProcessed;
@@ -126,11 +146,11 @@ public class GcTranscriptCalculator
             if (genesProcessed >= nextLogCount)
             {
                 nextLogCount += 100;
-                ISF_LOGGER.info("chr({}) processed {} of {} genes", chromosome, genesProcessed, geneDataList.size());
+                ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, genesProcessed, mGeneDataList.size());
             }
         }
 
-        writeExpectedGcRatios(mWriter, String.format("CHR_%s", chromosome), mTotalExpectedCounts);
+        writeExpectedGcRatios(mWriter, String.format("CHR_%s", mChromosome), mTotalExpectedCounts);
     }
 
     private void generateExpectedGeneCounts(final EnsemblGeneData geneData)

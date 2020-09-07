@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.common;
 
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.regionExists;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -7,9 +8,11 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
@@ -80,6 +83,29 @@ public class GeneReadData
     {
         return String.format("%s:%s location(%s:%d -> %d) trans(%d)",
                 GeneData.GeneId, GeneData.GeneName, GeneData.Chromosome, GeneData.GeneStart, GeneData.GeneEnd, mTranscripts.size());
+    }
+
+    public static List<GeneReadData> createGeneReadData(final List<EnsemblGeneData> geneDataList, final EnsemblDataCache geneTransCache)
+    {
+        final List<GeneReadData> geneReadDataList = Lists.newArrayList();
+
+        for(EnsemblGeneData geneData : geneDataList)
+        {
+            GeneReadData geneReadData = new GeneReadData(geneData);
+
+            List<TranscriptData> transDataList = Lists.newArrayList(geneTransCache.getTranscripts(geneData.GeneId));
+
+            if(transDataList.isEmpty())
+            {
+                ISF_LOGGER.warn("no transcripts found for gene({}:{})", geneData.GeneId, geneData.GeneName);
+                continue;
+            }
+
+            geneReadData.setTranscripts(transDataList);
+            geneReadDataList.add(geneReadData);
+        }
+
+        return geneReadDataList;
     }
 
 }

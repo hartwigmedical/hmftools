@@ -84,7 +84,6 @@ public class IsofoxConfig
     private static final String APPLY_GC_BIAS_ADJUSTMENT = "apply_gc_bias_adjust";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
-    private static final String SPECIFIC_TRANS_IDS = "specific_trans";
     private static final String SPECIFIC_CHR = "specific_chr";
     private static final String GENE_READ_LIMIT = "gene_read_limit";
     private static final String RUN_VALIDATIONS = "validate";
@@ -135,7 +134,6 @@ public class IsofoxConfig
 
     public final FusionConfig Fusions;
 
-    public final List<String> SpecificTransIds;
     public final List<String> SpecificChromosomes;
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
@@ -243,10 +241,6 @@ public class IsofoxConfig
 
         GC_RATIO_BUCKET = cmd.hasOption(GC_RATIO_BUCKET_SIZE) ?
                 Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : DEFAULT_GC_RATIO_BUCKET;
-
-        SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
-                Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(ITEM_DELIM)).collect(Collectors.toList())
-                : Lists.newArrayList();
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
         RunValidations = cmd.hasOption(RUN_VALIDATIONS);
@@ -477,7 +471,6 @@ public class IsofoxConfig
         WriteFragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
 
-        SpecificTransIds = Lists.newArrayList();
         SpecificChromosomes = Lists.newArrayList();
         RunValidations = true;
         RunPerfChecks = false;
@@ -528,7 +521,6 @@ public class IsofoxConfig
         options.addOption(WRITE_EXPECTED_RATES, false, "Write sample expected expression rates to file");
 
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
-        options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
         options.addOption(SPECIFIC_CHR, true, "Specify a single chromosome to analyse");
         options.addOption(THREADS, true, "Number of threads to use (default=0, single-threaded)");
         options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
