@@ -21,14 +21,12 @@ public abstract class LinxBreakend
     public abstract int id();
     public abstract int svId();
     public abstract boolean isStart();
-    public abstract String type();
     public abstract String gene();
     public abstract String transcriptId();
     public abstract boolean canonical();
     public abstract String geneOrientation();
     public abstract boolean disruptive();
     public abstract boolean reportedDisruption();
-    public abstract double junctionCopyNumber();
     public abstract double undisruptedCopyNumber();
     public abstract String regionType();
     public abstract String codingContext();
@@ -40,12 +38,14 @@ public abstract class LinxBreakend
     public abstract int totalExonCount();
 
     // additional fields for patient report
+    public abstract String type();
     public abstract String chromosome();
     public abstract int orientation();
     public abstract int strand();
     public abstract String chrBand();
     public abstract int exonUp();
     public abstract int exonDown();
+    public abstract double junctionCopyNumber();
 
     private static final String FILE_EXTENSION = ".linx.breakend.tsv";
 
@@ -88,18 +88,12 @@ public abstract class LinxBreakend
                 .add("Id")
                 .add("SvId")
                 .add("IsStart")
-                .add("Type")
                 .add("Gene")
-                .add("Chromosome")
-                .add("Orientation")
-                .add("Strand")
-                .add("ChrBand")
                 .add("TranscriptId")
                 .add("Canonical")
                 .add("GeneOrientation")
                 .add("Disruptive")
                 .add("ReportedDisruption")
-                .add("JunctionCopyNumber")
                 .add("UndisruptedCopyNumber")
                 .add("RegionType")
                 .add("CodingContext")
@@ -109,8 +103,14 @@ public abstract class LinxBreakend
                 .add("NextSpliceExonPhase")
                 .add("NextSpliceDistance")
                 .add("TotalExonCount")
+                .add("Type")
+                .add("Chromosome")
+                .add("Orientation")
+                .add("Strand")
+                .add("ChrBand")
                 .add("ExonUp")
                 .add("ExonDown")
+                .add("JunctionCopyNumber")
                 .toString();
     }
 
@@ -121,18 +121,12 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.id()))
                 .add(String.valueOf(breakend.svId()))
                 .add(String.valueOf(breakend.isStart()))
-                .add(String.valueOf(breakend.type()))
                 .add(String.valueOf(breakend.gene()))
-                .add(String.valueOf(breakend.chromosome()))
-                .add(String.valueOf(breakend.orientation()))
-                .add(String.valueOf(breakend.strand()))
-                .add(String.valueOf(breakend.chrBand()))
                 .add(String.valueOf(breakend.transcriptId()))
                 .add(String.valueOf(breakend.canonical()))
                 .add(String.valueOf(breakend.geneOrientation()))
                 .add(String.valueOf(breakend.disruptive()))
                 .add(String.valueOf(breakend.reportedDisruption()))
-                .add(String.valueOf(breakend.junctionCopyNumber()))
                 .add(String.valueOf(breakend.undisruptedCopyNumber()))
                 .add(String.valueOf(breakend.regionType()))
                 .add(String.valueOf(breakend.codingContext()))
@@ -142,15 +136,21 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.nextSpliceExonPhase()))
                 .add(String.valueOf(breakend.nextSpliceDistance()))
                 .add(String.valueOf(breakend.totalExonCount()))
+                .add(String.valueOf(breakend.type()))
+                .add(String.valueOf(breakend.chromosome()))
+                .add(String.valueOf(breakend.orientation()))
+                .add(String.valueOf(breakend.strand()))
+                .add(String.valueOf(breakend.chrBand()))
                 .add(String.valueOf(breakend.exonUp()))
                 .add(String.valueOf(breakend.exonDown()))
+                .add(String.valueOf(breakend.junctionCopyNumber()))
                 .toString();
     }
 
     @NotNull
     private static LinxBreakend fromString(@NotNull final String breakend)
     {
-        String[] values = breakend.split(DELIMITER);
+        String[] values = breakend.split(DELIMITER, -1);
 
         int index = 0;
 
@@ -158,19 +158,13 @@ public abstract class LinxBreakend
                 .id(Integer.parseInt(values[index++]))
                 .svId(Integer.parseInt(values[index++]))
                 .isStart(Boolean.parseBoolean(values[index++]))
-                .type(values[index++])
                 .gene(values[index++])
-                .chromosome(values[index++])
-                .orientation(Integer.parseInt(values[index++]))
-                .strand(Integer.parseInt(values[index++]))
-                .chrBand(values[index++])
                 .transcriptId(values[index++])
                 .canonical(Boolean.parseBoolean(values[index++]))
                 .geneOrientation(values[index++])
                 .disruptive(Boolean.parseBoolean(values[index++]))
                 .reportedDisruption(Boolean.parseBoolean(values[index++]))
                 .undisruptedCopyNumber(Double.parseDouble(values[index++]))
-                .junctionCopyNumber(Double.parseDouble(values[index++]))
                 .regionType(values[index++])
                 .codingContext(values[index++])
                 .biotype(values[index++])
@@ -179,8 +173,14 @@ public abstract class LinxBreakend
                 .nextSpliceExonPhase(Integer.parseInt(values[index++]))
                 .nextSpliceDistance(Integer.parseInt(values[index++]))
                 .totalExonCount(Integer.parseInt(values[index++]))
+                .type(values[index++])
+                .chromosome(values[index++])
+                .orientation(Integer.parseInt(values[index++]))
+                .strand(Integer.parseInt(values[index++]))
+                .chrBand(values[index++])
                 .exonUp(Integer.parseInt(values[index++]))
                 .exonDown(Integer.parseInt(values[index++]))
+                .junctionCopyNumber(Double.parseDouble(values[index++]))
                 .build();
     }
 

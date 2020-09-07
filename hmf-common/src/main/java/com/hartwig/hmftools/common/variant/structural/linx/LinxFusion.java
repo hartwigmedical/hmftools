@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.fusion.Transcript;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -139,7 +140,7 @@ public abstract class LinxFusion
     @NotNull
     private static LinxFusion fromString(@NotNull final String fusion)
     {
-        String[] values = fusion.split(DELIMITER);
+        String[] values = fusion.split(DELIMITER, -1);
         int index = 0;
 
         return ImmutableLinxFusion.builder()
@@ -168,4 +169,22 @@ public abstract class LinxFusion
                 .build();
      }
 
+    public static String context(@NotNull Transcript transcript, int fusedExon) {
+        switch (transcript.regionType()) {
+            case UPSTREAM:
+                return "Promoter Region";
+            case IG:
+                return "IG";
+            case EXONIC:
+            case INTRONIC:
+                return String.format("Exon %d", fusedExon);
+        }
+
+        return String.format("ERROR: %s", transcript.regionType());
+    }
+
+    public static double fusionJcn(double downstreamJcn, double upstreamJcn)
+    {
+        return (upstreamJcn + downstreamJcn) * 0.5;
+    }
 }

@@ -16,10 +16,10 @@ import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
+import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.fusion.ReportableDisruption;
-import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
@@ -31,6 +31,8 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -216,13 +218,20 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
+    private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxBreakendsTsv,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
+
+        final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
+
+        final List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
+
         LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
 
-        List<ReportableDisruption> disruptions = ReportableDisruptionFile.read(linxDisruptionTsv);
-        LOGGER.info("Loaded {} disruptions from {}", disruptions.size(), linxDisruptionTsv);
+        final List<LinxBreakend> linxBreakends = LinxBreakend.read(linxBreakendsTsv);
+
+        List<ReportableDisruption> disruptions = ReportableDisruption.from(linxBreakends);
+
+        LOGGER.info("Loaded {} disruptions from {}", disruptions.size(), linxBreakendsTsv);
 
         return SvAnalyzer.run(fusions, disruptions, reportData.actionabilityAnalyzer(), patientTumorLocation);
     }

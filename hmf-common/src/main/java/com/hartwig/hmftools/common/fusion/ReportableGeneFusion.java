@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.common.fusion;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,4 +34,20 @@ public abstract class ReportableGeneFusion {
 
     @Nullable
     public abstract Double junctionCopyNumber();
+
+    public static final List<ReportableGeneFusion> from(final List<LinxFusion> linxFusions)
+    {
+        return linxFusions.stream()
+                .filter(x -> x.reported())
+                .map(x -> ImmutableReportableGeneFusion.builder()
+                        .geneStart(x.geneStart())
+                        .geneContextStart(x.geneContextStart())
+                        .geneTranscriptStart(x.geneTranscriptStart())
+                        .geneEnd(x.geneEnd())
+                        .geneContextEnd(x.geneContextEnd())
+                        .geneTranscriptEnd(x.geneTranscriptEnd())
+                        .junctionCopyNumber(x.junctionCopyNumber())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }

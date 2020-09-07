@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -131,7 +131,9 @@ public class LoadEvidenceData {
     @NotNull
     private static List<ReportableGeneFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
         LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
+
+        final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
+        final List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
         LOGGER.info(" Loaded {} fusions", fusions.size());
         return fusions;
     }

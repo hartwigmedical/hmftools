@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -23,6 +22,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,7 +65,8 @@ public class GenomicData {
     @NotNull
     public static List<ReportableGeneFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
         LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
+        final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
+        List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
         LOGGER.info(" Loaded {} fusions", fusions.size());
         return fusions;
     }
