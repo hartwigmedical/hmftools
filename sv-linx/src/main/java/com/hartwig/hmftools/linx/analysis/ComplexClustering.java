@@ -42,7 +42,6 @@ public class ComplexClustering
     private final List<SvCluster> mClusters;
     private final ClusteringState mState;
     private final SimpleClustering mSimpleClustering;
-    private CnDataLoader mCopyNumberData;
     private String mSampleId;
 
     public ComplexClustering(final ClusteringState state, final List<SvCluster> clusters, final SimpleClustering simpleClustering)
@@ -52,8 +51,6 @@ public class ComplexClustering
         mSimpleClustering = simpleClustering;
         mSampleId = "";
     }
-
-    public void setCopyNumberAnalyser(CnDataLoader cnAnalyser) { mCopyNumberData = cnAnalyser; }
 
     public void applyRules(final String sampleId, boolean foldbacksOnly)
     {

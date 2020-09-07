@@ -118,7 +118,6 @@ public class ClusterAnalyser {
 
         mDmFinder.setCopyNumberAnalyser(cnDataLoader);
         mBfbFinder.setCopyNumberAnalyser(cnDataLoader);
-        mComplexClustering.setCopyNumberAnalyser(cnDataLoader);
     }
 
     public void setGeneCollection(final EnsemblDataCache geneDataCache)
@@ -232,11 +231,19 @@ public class ClusterAnalyser {
             if(cluster.getResolvedType() != DOUBLE_MINUTE && !cluster.isResolved())
                 mBfbFinder.analyseCluster(cluster);
 
-            if(!cluster.isResolved() && cluster.getResolvedType() != NONE)
+            if(!cluster.isResolved())
             {
-                // any cluster with a long DEL or DUP not merged can now be marked as resolved
-                if(cluster.getSvCount() == 1 && cluster.getResolvedType().isSimple())
-                    cluster.setResolved(true, cluster.getResolvedType());
+                if(cluster.getResolvedType() != NONE)
+                {
+                    // any cluster with a long DEL or DUP not merged can now be marked as resolved
+                    if(cluster.getSvCount() == 1 && cluster.getResolvedType().isSimple())
+                        cluster.setResolved(true, cluster.getResolvedType());
+                }
+                else
+                {
+                    setClusterResolvedState(cluster, true);
+                    cluster.logDetails();
+                }
             }
 
             cluster.cacheLinkedPairs();

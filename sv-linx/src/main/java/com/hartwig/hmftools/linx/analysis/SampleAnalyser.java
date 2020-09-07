@@ -498,6 +498,7 @@ public class SampleAnalyser
             final ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
             linxSvData.add(ImmutableLinxSvAnnotation.builder()
+                    .vcfId(var.getSvData().vcfId())
                     .svId(var.id())
                     .clusterId(cluster.id())
                     .clusterReason(var.getClusterReason())
