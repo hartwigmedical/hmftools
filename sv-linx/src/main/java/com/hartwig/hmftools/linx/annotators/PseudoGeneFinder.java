@@ -131,6 +131,7 @@ public class PseudoGeneFinder
                                 String exonMatchData = String.format("%s;%s;%d;%d",
                                         gene.GeneName, maxTrans.TransName, pseudoMatch.ExonRank, pseudoMatch.ExonLength);
 
+                                /*
                                 for(int se = SE_START; se <= SE_END; ++se)
                                 {
                                     final SvBreakend breakend = pair.getBreakend(se);
@@ -150,6 +151,7 @@ public class PseudoGeneFinder
                                     exonMatchData += String.format(";%d;%d;%s",
                                             pseudoMatch.HomologyOffset[se], pseudoMatch.PositionMismatch[se], homMismatch);
                                 }
+                                */
 
                                 pair.setExonMatchData(exonMatchData);
 
