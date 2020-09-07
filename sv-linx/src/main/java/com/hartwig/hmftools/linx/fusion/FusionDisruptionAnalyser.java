@@ -354,7 +354,7 @@ public class FusionDisruptionAnalyser
 
         if(mConfig.isSingleSample())
         {
-            mFusionWriter.writeSampleData(mSampleId, mUniqueFusions, fusions, breakends);
+            mFusionWriter.writeSampleData(mSampleId, fusions, breakends);
             mDisruptionFinder.writeSampleData(mSampleId);
 
             if(mLogAllPotentials)

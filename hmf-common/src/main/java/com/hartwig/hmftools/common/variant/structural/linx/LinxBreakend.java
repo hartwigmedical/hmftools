@@ -37,6 +37,13 @@ public abstract class LinxBreakend
     public abstract int nextSpliceDistance();
     public abstract int totalExonCount();
 
+    // additional fields for patient report
+    public abstract String chromosome();
+    public abstract int orientation();
+    public abstract int strand();
+    public abstract String chrBand();
+
+
     private static final String FILE_EXTENSION = ".linx.breakend.tsv";
 
     @NotNull
@@ -79,6 +86,10 @@ public abstract class LinxBreakend
                 .add("SvId")
                 .add("IsStart")
                 .add("Gene")
+                .add("Chromosome")
+                .add("Orientation")
+                .add("Strand")
+                .add("ChrBand")
                 .add("TranscriptId")
                 .add("Canonical")
                 .add("GeneOrientation")
@@ -104,6 +115,10 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.svId()))
                 .add(String.valueOf(breakend.isStart()))
                 .add(String.valueOf(breakend.gene()))
+                .add(String.valueOf(breakend.chromosome()))
+                .add(String.valueOf(breakend.orientation()))
+                .add(String.valueOf(breakend.strand()))
+                .add(String.valueOf(breakend.chrBand()))
                 .add(String.valueOf(breakend.transcriptId()))
                 .add(String.valueOf(breakend.canonical()))
                 .add(String.valueOf(breakend.geneOrientation()))
@@ -133,6 +148,10 @@ public abstract class LinxBreakend
                 .svId(Integer.parseInt(values[index++]))
                 .isStart(Boolean.parseBoolean(values[index++]))
                 .gene(values[index++])
+                .chromosome(values[index++])
+                .orientation(Integer.parseInt(values[index++]))
+                .strand(Integer.parseInt(values[index++]))
+                .chrBand(values[index++])
                 .transcriptId(values[index++])
                 .canonical(Boolean.parseBoolean(values[index++]))
                 .geneOrientation(values[index++])

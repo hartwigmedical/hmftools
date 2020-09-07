@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 public abstract class LinxFusion
@@ -33,6 +34,15 @@ public abstract class LinxFusion
     public abstract int skippedExonsDown();
     public abstract int fusedExonUp();
     public abstract int fusedExonDown();
+
+    // for patient report
+    public abstract String geneStart();
+    public abstract String geneContextStart();
+    public abstract String geneTranscriptStart();
+    public abstract String geneEnd();
+    public abstract String geneContextEnd();
+    public abstract String geneTranscriptEnd();
+    public abstract Double junctionCopyNumber();
 
     private static final String FILE_EXTENSION = ".linx.fusion.tsv";
 
@@ -87,6 +97,13 @@ public abstract class LinxFusion
                 .add("SkippedExonsDown")
                 .add("FusedExonUp")
                 .add("FusedExonDown")
+                .add("GeneStart")
+                .add("GeneContextStart")
+                .add("TranscriptStart")
+                .add("GeneEnd")
+                .add("GeneContextEnd")
+                .add("TranscriptEnd")
+                .add("JunctionCopyNumber")
                 .toString();
     }
 
@@ -109,6 +126,13 @@ public abstract class LinxFusion
                 .add(String.valueOf(fusion.skippedExonsDown()))
                 .add(String.valueOf(fusion.fusedExonUp()))
                 .add(String.valueOf(fusion.fusedExonDown()))
+                .add(String.valueOf(fusion.geneStart()))
+                .add(String.valueOf(fusion.geneContextStart()))
+                .add(String.valueOf(fusion.geneTranscriptStart()))
+                .add(String.valueOf(fusion.geneEnd()))
+                .add(String.valueOf(fusion.geneContextEnd()))
+                .add(String.valueOf(fusion.geneTranscriptEnd()))
+                .add(String.valueOf(fusion.junctionCopyNumber()))
                 .toString();
     }
 
@@ -134,7 +158,14 @@ public abstract class LinxFusion
                 .skippedExonsDown(Integer.parseInt(values[index++]))
                 .fusedExonUp(Integer.parseInt(values[index++]))
                 .fusedExonDown(Integer.parseInt(values[index++]))
+                .geneStart(values[index++])
+                .geneContextStart(values[index++])
+                .geneTranscriptStart(values[index++])
+                .geneEnd(values[index++])
+                .geneContextEnd(values[index++])
+                .geneTranscriptEnd(values[index++])
+                .junctionCopyNumber(Double.parseDouble(values[index++]))
                 .build();
-    }
+     }
 
 }

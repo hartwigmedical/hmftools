@@ -15,12 +15,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
@@ -49,6 +45,8 @@ public class FusionWriter
         {
             transIdMap.put(transcript, breakendId);
 
+            final GeneAnnotation gene = transcript.gene();
+
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(breakendId++)
                     .svId(transcript.gene().id())
@@ -68,6 +66,10 @@ public class FusionWriter
                     .nextSpliceExonPhase(transcript.nextSpliceExonPhase())
                     .nextSpliceDistance(transcript.isUpstream() ? transcript.prevSpliceAcceptorDistance() : transcript.nextSpliceAcceptorDistance())
                     .totalExonCount(transcript.ExonMax)
+                    .chromosome(gene.chromosome())
+                    .orientation(gene.orientation())
+                    .strand(gene.Strand)
+                    .chrBand(gene.karyotypeBand())
                     .build());
         }
 
@@ -92,37 +94,21 @@ public class FusionWriter
                     .skippedExonsDown(geneFusion.getExonsSkipped(false))
                     .fusedExonUp(geneFusion.getFusedExon(true))
                     .fusedExonDown(geneFusion.getFusedExon(false))
+                    .geneStart(geneFusion.geneName(FS_UPSTREAM))
+                    .geneTranscriptStart(geneFusion.upstreamTrans().StableId)
+                    .geneContextStart(context(geneFusion.upstreamTrans(), geneFusion.getFusedExon(true)))
+                    .geneEnd(geneFusion.geneName(FS_DOWNSTREAM))
+                    .geneTranscriptEnd(geneFusion.downstreamTrans().StableId)
+                    .geneContextEnd(context(geneFusion.downstreamTrans(), geneFusion.getFusedExon(false)))
+                    .junctionCopyNumber(fusionJcn(geneFusion.upstreamTrans().gene().jcn(), geneFusion.downstreamTrans().gene().jcn()))
                     .build());
         }
     }
 
-    public void writeSampleData(
-            final String sampleId, final List<GeneFusion> geneFusions, final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
+    public void writeSampleData(final String sampleId, final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
-        // write sample files for patient reporter
-        List<ReportableGeneFusion> reportedFusions = Lists.newArrayList();
-        for(final GeneFusion fusion : geneFusions)
-        {
-            if(fusion.reportable())
-            {
-                reportedFusions.add(ImmutableReportableGeneFusion.builder()
-                        .geneStart(fusion.geneName(FS_UPSTREAM))
-                        .geneTranscriptStart(fusion.upstreamTrans().StableId)
-                        .geneContextStart(context(fusion.upstreamTrans(), fusion.getFusedExon(true)))
-                        .geneEnd(fusion.geneName(FS_DOWNSTREAM))
-                        .geneTranscriptEnd(fusion.downstreamTrans().StableId)
-                        .geneContextEnd(context(fusion.downstreamTrans(), fusion.getFusedExon(false)))
-                        .junctionCopyNumber(fusionJcn(fusion.upstreamTrans().gene().jcn(), fusion.downstreamTrans().gene().jcn()))
-                        .build());
-            }
-        }
-
         try
         {
-            // write file of reportable fusions for for patient reporter
-            final String reportedFusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, sampleId);
-            ReportableGeneFusionFile.write(reportedFusionsFile, reportedFusions);
-
             // write flat files for database loading
             final String breakendsFile = LinxBreakend.generateFilename(mOutputDir, sampleId);
             LinxBreakend.write(breakendsFile, breakends);
