@@ -43,7 +43,6 @@ public class LoadClinicalDataTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Test
-    @Ignore
     public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();

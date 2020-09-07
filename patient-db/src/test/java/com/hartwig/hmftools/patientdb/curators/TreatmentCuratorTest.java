@@ -17,7 +17,6 @@ import org.junit.Test;
 public class TreatmentCuratorTest {
 
     @Test
-    @Ignore
     public void canCreateFromProductionResource() throws IOException {
         assertNotNull(TreatmentCurator.fromProductionResource());
     }
