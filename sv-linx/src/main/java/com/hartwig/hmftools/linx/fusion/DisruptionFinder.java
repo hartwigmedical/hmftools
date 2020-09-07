@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -28,9 +27,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
-import com.hartwig.hmftools.common.fusion.ReportableDisruption;
-import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -535,41 +531,6 @@ public class DisruptionFinder
         }
 
         return cnLowSide;
-    }
-
-    public void writeSampleData(final String sampleId)
-    {
-        // write sample file for patient reporter
-        List<ReportableDisruption> reportedDisruptions = Lists.newArrayList();
-
-        for(final Transcript transcript : mDisruptions)
-        {
-            final GeneAnnotation gene = transcript.gene();
-
-            reportedDisruptions.add(ImmutableReportableDisruption.builder()
-                    .svId(gene.id())
-                    .chromosome(gene.chromosome())
-                    .orientation(gene.orientation())
-                    .strand(gene.Strand)
-                    .chrBand(gene.karyotypeBand())
-                    .gene(transcript.geneName())
-                    .type(gene.type().toString())
-                    .junctionCopyNumber(gene.jcn())
-                    .exonUp(transcript.ExonUpstream)
-                    .exonDown(transcript.ExonDownstream)
-                    .undisruptedCopyNumber(max(transcript.undisruptedCopyNumber(),0))
-                    .build());
-        }
-
-        try
-        {
-            final String disruptionsFile = ReportableDisruptionFile.generateFilename(mOutputDir, sampleId);
-            ReportableDisruptionFile.write(disruptionsFile, reportedDisruptions);
-        }
-        catch(IOException e)
-        {
-            LNX_LOGGER.error("failed to write sample disruptions file: {}", e.toString());
-        }
     }
 
     public void initialiseOutputFile(final String fileName)

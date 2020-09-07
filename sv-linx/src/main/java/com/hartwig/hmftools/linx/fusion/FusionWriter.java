@@ -51,12 +51,14 @@ public class FusionWriter
                     .id(breakendId++)
                     .svId(transcript.gene().id())
                     .isStart(transcript.gene().isStart())
+                    .type(gene.type().toString())
                     .gene(transcript.geneName())
                     .transcriptId(transcript.StableId)
                     .canonical(transcript.isCanonical())
                     .geneOrientation(transcript.isUpstream() ? "Upstream" : "Downstream")
                     .disruptive(transcript.isDisruptive())
                     .reportedDisruption(transcript.reportableDisruption())
+                    .junctionCopyNumber(gene.jcn())
                     .undisruptedCopyNumber(transcript.undisruptedCopyNumber())
                     .regionType(transcript.regionType().toString())
                     .codingContext(transcript.codingType().toString())
@@ -70,6 +72,8 @@ public class FusionWriter
                     .orientation(gene.orientation())
                     .strand(gene.Strand)
                     .chrBand(gene.karyotypeBand())
+                    .exonUp(transcript.ExonUpstream)
+                    .exonDown(transcript.ExonDownstream)
                     .build());
         }
 

@@ -73,7 +73,6 @@ public class FusionDisruptionAnalyser
     private String mSampleId;
     private final String mOutputDir;
     private final EnsemblDataCache mGeneDataCache;
-    private Map<String, List<SvBreakend>> mChrBreakendMap;
     private LinxConfig mConfig;
 
     private final FusionParameters mFusionParams;
@@ -130,7 +129,6 @@ public class FusionDisruptionAnalyser
 
         mPerfCounter = new PerformanceCounter("Fusions");
 
-        mChrBreakendMap = null;
         mRestrictedGenes = Lists.newArrayList();
 
         mValidState = true;
@@ -335,7 +333,6 @@ public class FusionDisruptionAnalyser
         mPerfCounter.start();
 
         mSampleId = sampleId;
-        mChrBreakendMap = chrBreakendMap;
 
         mUniqueFusions.clear();
         findFusions(svList, clusters);
@@ -355,7 +352,6 @@ public class FusionDisruptionAnalyser
         if(mConfig.isSingleSample())
         {
             mFusionWriter.writeSampleData(mSampleId, fusions, breakends);
-            mDisruptionFinder.writeSampleData(mSampleId);
 
             if(mLogAllPotentials)
             {
@@ -403,8 +399,6 @@ public class FusionDisruptionAnalyser
 
         if(mNeoEpitopeFinder != null)
             mNeoEpitopeFinder.reportNeoEpitopes(mSampleId, mFusions);
-
-        mChrBreakendMap = null;
 
         mPerfCounter.stop();
     }

@@ -21,12 +21,14 @@ public abstract class LinxBreakend
     public abstract int id();
     public abstract int svId();
     public abstract boolean isStart();
+    public abstract String type();
     public abstract String gene();
     public abstract String transcriptId();
     public abstract boolean canonical();
     public abstract String geneOrientation();
     public abstract boolean disruptive();
     public abstract boolean reportedDisruption();
+    public abstract double junctionCopyNumber();
     public abstract double undisruptedCopyNumber();
     public abstract String regionType();
     public abstract String codingContext();
@@ -42,7 +44,8 @@ public abstract class LinxBreakend
     public abstract int orientation();
     public abstract int strand();
     public abstract String chrBand();
-
+    public abstract int exonUp();
+    public abstract int exonDown();
 
     private static final String FILE_EXTENSION = ".linx.breakend.tsv";
 
@@ -85,6 +88,7 @@ public abstract class LinxBreakend
                 .add("Id")
                 .add("SvId")
                 .add("IsStart")
+                .add("Type")
                 .add("Gene")
                 .add("Chromosome")
                 .add("Orientation")
@@ -95,6 +99,7 @@ public abstract class LinxBreakend
                 .add("GeneOrientation")
                 .add("Disruptive")
                 .add("ReportedDisruption")
+                .add("JunctionCopyNumber")
                 .add("UndisruptedCopyNumber")
                 .add("RegionType")
                 .add("CodingContext")
@@ -104,6 +109,8 @@ public abstract class LinxBreakend
                 .add("NextSpliceExonPhase")
                 .add("NextSpliceDistance")
                 .add("TotalExonCount")
+                .add("ExonUp")
+                .add("ExonDown")
                 .toString();
     }
 
@@ -114,6 +121,7 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.id()))
                 .add(String.valueOf(breakend.svId()))
                 .add(String.valueOf(breakend.isStart()))
+                .add(String.valueOf(breakend.type()))
                 .add(String.valueOf(breakend.gene()))
                 .add(String.valueOf(breakend.chromosome()))
                 .add(String.valueOf(breakend.orientation()))
@@ -124,6 +132,7 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.geneOrientation()))
                 .add(String.valueOf(breakend.disruptive()))
                 .add(String.valueOf(breakend.reportedDisruption()))
+                .add(String.valueOf(breakend.junctionCopyNumber()))
                 .add(String.valueOf(breakend.undisruptedCopyNumber()))
                 .add(String.valueOf(breakend.regionType()))
                 .add(String.valueOf(breakend.codingContext()))
@@ -133,6 +142,8 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.nextSpliceExonPhase()))
                 .add(String.valueOf(breakend.nextSpliceDistance()))
                 .add(String.valueOf(breakend.totalExonCount()))
+                .add(String.valueOf(breakend.exonUp()))
+                .add(String.valueOf(breakend.exonDown()))
                 .toString();
     }
 
@@ -147,6 +158,7 @@ public abstract class LinxBreakend
                 .id(Integer.parseInt(values[index++]))
                 .svId(Integer.parseInt(values[index++]))
                 .isStart(Boolean.parseBoolean(values[index++]))
+                .type(values[index++])
                 .gene(values[index++])
                 .chromosome(values[index++])
                 .orientation(Integer.parseInt(values[index++]))
@@ -158,6 +170,7 @@ public abstract class LinxBreakend
                 .disruptive(Boolean.parseBoolean(values[index++]))
                 .reportedDisruption(Boolean.parseBoolean(values[index++]))
                 .undisruptedCopyNumber(Double.parseDouble(values[index++]))
+                .junctionCopyNumber(Double.parseDouble(values[index++]))
                 .regionType(values[index++])
                 .codingContext(values[index++])
                 .biotype(values[index++])
@@ -166,6 +179,8 @@ public abstract class LinxBreakend
                 .nextSpliceExonPhase(Integer.parseInt(values[index++]))
                 .nextSpliceDistance(Integer.parseInt(values[index++]))
                 .totalExonCount(Integer.parseInt(values[index++]))
+                .exonUp(Integer.parseInt(values[index++]))
+                .exonDown(Integer.parseInt(values[index++]))
                 .build();
     }
 
