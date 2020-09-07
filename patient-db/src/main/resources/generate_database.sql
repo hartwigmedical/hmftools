@@ -810,21 +810,17 @@ CREATE TABLE clinicalEvidenceProtect
     INDEX(sampleId)
 );
 
-DROP TABLE IF EXISTS sampleMapping;
-CREATE TABLE sampleMapping
+DROP TABLE IF EXISTS anonymizedSampleMapping;
+CREATE TABLE anonymizedSampleMapping
 (   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    sampleId varchar(50),
-    hmfId varchar(50),
+    sampleId varchar(50) NOT NULL,
+    hmfId varchar(50) NOT NULL,
     PRIMARY KEY (sampleId)
 );
 
+-- TODO Can be removed after 1st of october 2020
+DROP TABLE IF EXISTS sampleMapping;
 DROP TABLE IF EXISTS patientMapping;
-CREATE TABLE patientMapping
-(   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    sourceId varchar(50),
-    targetId varchar(50),
-    PRIMARY KEY (sourceId, targetId)
-);
 
 DROP TABLE IF EXISTS pgxCalls;
 CREATE TABLE pgxCalls
