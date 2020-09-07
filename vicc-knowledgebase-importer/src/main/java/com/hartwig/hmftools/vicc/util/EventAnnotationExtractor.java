@@ -84,6 +84,7 @@ public final class EventAnnotationExtractor {
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
+    //TODO: create enum for the events
     public static final String EVENT_SIGNATURES = "Signatures";
     public static final String EVENT_AMPLIFICATIONS = "Amplification";
     public static final String EVENT_DELETIONS = "Deletions";
@@ -101,13 +102,13 @@ public final class EventAnnotationExtractor {
         }
 
         if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
-            return "signature";
+            return EVENT_SIGNATURES;
         } else if (EventAnnotationExtractor.AMPLIFICATIONS.contains(feature) ||
                 EventAnnotationExtractor.AMPLIFICATIONS.contains(biomarkerType)) {
-            return "Amplification";
+            return EVENT_AMPLIFICATIONS;
         } else if (EventAnnotationExtractor.DELETIONS.contains(feature) ||
                 EventAnnotationExtractor.DELETIONS.contains(biomarkerType)) {
-            return "Deletion";
+            return EVENT_DELETIONS;
         } else {
 //            LOGGER.warn("No event annotation extracted from event!");
             return Strings.EMPTY;
