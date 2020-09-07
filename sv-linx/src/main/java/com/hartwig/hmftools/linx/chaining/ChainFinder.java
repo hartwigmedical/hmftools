@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.LINE_CHAINS;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnExceedsMajorAlleleJcn;
@@ -156,7 +158,9 @@ public class ChainFinder
     public void initialiseOutput(final LinxConfig config)
     {
         mDiagnostics.setOutputDir(config.OutputDataPath, config.Output.LogChainingMaxSize);
-        mLineChainer.initialiseOutput(config.OutputDataPath);
+
+        if(runAnnotation(config.RequiredAnnotations, LINE_CHAINS))
+            mLineChainer.initialiseOutput(config.OutputDataPath);
     }
 
     public void clear()
