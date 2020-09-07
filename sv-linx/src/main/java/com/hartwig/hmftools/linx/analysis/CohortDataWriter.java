@@ -313,7 +313,7 @@ public class CohortDataWriter
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,SuperType,ResolvedType,Synthetic,Subclonal,FullyChained,ChainCount");
+            writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,SuperType,ResolvedType,Synthetic,FullyChained,ChainCount");
             writer.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
             writer.write(",ClusterReasons,Consistency,IsLINE,Replication,MinJcn,MaxJcn,Foldbacks");
             writer.write(",ArmCount,OriginArms,FragmentArms,ConsistentArms,ComplexArms,Annotations,AlleleValidPerc");
@@ -358,10 +358,10 @@ public class CohortDataWriter
 
                 final String superType = getSuperType(cluster);
 
-                mClusterFileWriter.write(String.format("%s,%d,%s,%d,%s,%s,%s,%s,%s,%d",
+                mClusterFileWriter.write(String.format("%s,%d,%s,%d,%s,%s,%s,%s,%d",
                         sampleId, cluster.id(), cluster.getDesc(), clusterSvCount,
                         superType, resolvedType, cluster.isSyntheticType(),
-                        cluster.isSubclonal(), cluster.isFullyChained(false), cluster.getChains().size()));
+                        cluster.isFullyChained(false), cluster.getChains().size()));
 
                 mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
                         cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),

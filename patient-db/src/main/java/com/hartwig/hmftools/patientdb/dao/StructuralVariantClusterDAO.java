@@ -26,7 +26,7 @@ import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep22;
 import org.jooq.InsertValuesStep5;
-import org.jooq.InsertValuesStep9;
+import org.jooq.InsertValuesStep8;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -47,14 +47,13 @@ class StructuralVariantClusterDAO
 
         for (List<LinxCluster> batch : Iterables.partition(clusters, DB_BATCH_INSERT_SIZE))
         {
-            InsertValuesStep9 inserter = context.insertInto(SVCLUSTER,
+            InsertValuesStep8 inserter = context.insertInto(SVCLUSTER,
                     SVCLUSTER.SAMPLEID,
                     SVCLUSTER.MODIFIED,
                     SVCLUSTER.CLUSTERID,
-                    SVCLUSTER.RESOLVEDTYPE,
+                    SVCLUSTER.CATEGORY,
                     SVCLUSTER.SYNTHETIC,
-                    SVCLUSTER.SUBCLONAL,
-                    SVCLUSTER.SUBTYPE,
+                    SVCLUSTER.RESOLVEDTYPE,
                     SVCLUSTER.CLUSTERCOUNT,
                     SVCLUSTER.CLUSTERDESC);
 
@@ -63,16 +62,15 @@ class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
             @NotNull LinxCluster cluster)
     {
         inserter.values(sample,
                 timestamp,
                 cluster.clusterId(),
-                cluster.resolvedType(),
+                cluster.category(),
                 cluster.synthetic(),
-                cluster.subClonal(),
-                cluster.subType(),
+                cluster.category(),
                 cluster.clusterCount(),
                 DatabaseUtil.checkStringLength(cluster.clusterDesc(), SVCLUSTER.CLUSTERDESC));
     }
@@ -305,10 +303,9 @@ class StructuralVariantClusterDAO
         {
             LinxCluster cluster = ImmutableLinxCluster.builder()
                     .clusterId(record.getValue(SVCLUSTER.CLUSTERID))
-                    .resolvedType(record.getValue(SVCLUSTER.RESOLVEDTYPE))
+                    .category(record.getValue(SVCLUSTER.CATEGORY))
                     .synthetic(record.getValue(SVCLUSTER.SYNTHETIC) == 1)
-                    .subClonal(record.getValue(SVCLUSTER.SUBCLONAL) == 1)
-                    .subType(record.getValue(SVCLUSTER.SUBTYPE))
+                    .resolvedType(record.getValue(SVCLUSTER.RESOLVEDTYPE))
                     .clusterCount(record.getValue(SVCLUSTER.CLUSTERCOUNT))
                     .clusterDesc(record.getValue(SVCLUSTER.CLUSTERDESC))
                     .build();

@@ -67,7 +67,7 @@ public class SvDataLoader
 
             final List<LinxCluster> clusterList = dbAccess.readClusters(sampleId);
 
-            int lineCount = clusterList.stream().filter(x -> x.subType().equals("LINE")).mapToInt(x -> x.clusterCount()).sum();
+            int lineCount = clusterList.stream().filter(x -> x.resolvedType().equals("LINE")).mapToInt(x -> x.clusterCount()).sum();
 
             int telomericSgls = (int)svDataList.stream()
                     .filter(x -> x.type() == SGL)
@@ -90,7 +90,7 @@ public class SvDataLoader
                     .filter(x -> x >= 1e5 && x <= 5e6).count();
 
             int maxEventSize = clusterList.stream()
-                    .filter(x -> !x.subType().equals("LINE"))
+                    .filter(x -> !x.resolvedType().equals("LINE"))
                     .mapToInt(x -> x.clusterCount()).max().orElse(0);
 
             SvData svData = new SvData(sampleId);

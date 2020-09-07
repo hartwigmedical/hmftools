@@ -197,9 +197,6 @@ public class ClusterAnalyser {
         // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
         FoldbackFinder.markFoldbacks(mState.getChrBreakendMap());
 
-        // subclonal clusters won't be merged any further
-        mClusters.forEach(x -> x.markSubclonal());
-
         mPcClustering.resume();
         mComplexClustering.applyRules(mSampleId, false);
         mSimpleClustering.mergeLongDelDupClusters(mClusters);

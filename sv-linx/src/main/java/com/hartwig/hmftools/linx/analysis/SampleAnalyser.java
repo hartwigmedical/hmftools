@@ -534,10 +534,9 @@ public class SampleAnalyser
 
                 clusterData.add(ImmutableLinxCluster.builder()
                         .clusterId(cluster.id())
-                        .resolvedType(superType)
+                        .category(superType)
                         .synthetic(cluster.isSyntheticType())
-                        .subClonal(cluster.isSubclonal())
-                        .subType(cluster.getResolvedType().toString())
+                        .resolvedType(cluster.getResolvedType().toString())
                         .clusterCount(cluster.getSvCount())
                         .clusterDesc(cluster.getDesc())
                         .build());

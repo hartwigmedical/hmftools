@@ -75,7 +75,6 @@ public class SvCluster
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<SvChain> mDoubleMinuteChains;
     private boolean mHasLinkingLineElements;
-    private boolean mIsSubclonal;
     private boolean mRequiresRecalc;
 
     // state for SVs which link different arms or chromosomes
@@ -126,7 +125,6 @@ public class SvCluster
         mShortTIRemoteSVs = Lists.newArrayList();
         mUnlinkedRemoteSVs = Lists.newArrayList();
         mRecalcRemoteSVStatus = false;
-        mIsSubclonal = false;
 
         mRequiresReplication = false;
 
@@ -572,14 +570,6 @@ public class SvCluster
     }
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
-
-    public void markSubclonal()
-    {
-        int lowCNChangeSupportCount = (int)mSVs.stream().filter(x -> hasLowJcn(x)).count();
-        mIsSubclonal = lowCNChangeSupportCount / (double)mSVs.size() > 0.5;
-    }
-
-    public boolean isSubclonal() { return mIsSubclonal; }
 
     public final List<SvVarData> getUnlinkedRemoteSVs() { return mUnlinkedRemoteSVs; }
 

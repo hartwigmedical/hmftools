@@ -17,10 +17,9 @@ import org.jetbrains.annotations.NotNull;
 public abstract class LinxCluster
 {
     public abstract int clusterId();
-    public abstract String resolvedType();
+    public abstract String category();
     public abstract boolean synthetic();
-    public abstract boolean subClonal();
-    public abstract String subType();
+    public abstract String resolvedType();
     public abstract int clusterCount();
     public abstract String clusterDesc();
 
@@ -65,10 +64,9 @@ public abstract class LinxCluster
     {
         return new StringJoiner(DELIMITER)
                 .add("clusterId")
-                .add("resolvedType")
+                .add("category")
                 .add("synthetic")
-                .add("subClonal")
-                .add("subType")
+                .add("resolvedType")
                 .add("clusterCount")
                 .add("clusterDesc")
                 .toString();
@@ -79,10 +77,9 @@ public abstract class LinxCluster
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(cluster.clusterId()))
-                .add(String.valueOf(cluster.resolvedType()))
+                .add(String.valueOf(cluster.category()))
                 .add(String.valueOf(cluster.synthetic()))
-                .add(String.valueOf(cluster.subClonal()))
-                .add(String.valueOf(cluster.subType()))
+                .add(String.valueOf(cluster.resolvedType()))
                 .add(String.valueOf(cluster.clusterCount()))
                 .add(String.valueOf(cluster.clusterDesc()))
                 .toString();
@@ -97,10 +94,9 @@ public abstract class LinxCluster
 
         return ImmutableLinxCluster.builder()
                 .clusterId(Integer.parseInt(values[index++]))
-                .resolvedType(values[index++])
+                .category(values[index++])
                 .synthetic(Boolean.parseBoolean(values[index++]))
-                .subClonal(Boolean.parseBoolean(values[index++]))
-                .subType(values[index++])
+                .resolvedType(values[index++])
                 .clusterCount(Integer.parseInt(values[index++]))
                 .clusterDesc(values[index++])
                 .build();

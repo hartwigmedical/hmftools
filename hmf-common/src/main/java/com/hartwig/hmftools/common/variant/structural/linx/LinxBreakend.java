@@ -24,14 +24,14 @@ public abstract class LinxBreakend
     public abstract String gene();
     public abstract String transcriptId();
     public abstract boolean canonical();
-    public abstract boolean isUpstream();
+    public abstract String geneOrientation();
     public abstract boolean disruptive();
     public abstract boolean reportedDisruption();
     public abstract double undisruptedCopyNumber();
     public abstract String regionType();
     public abstract String codingContext();
     public abstract String biotype();
-    public abstract int exonBasePhase();
+    public abstract int exonicBasePhase();
     public abstract int nextSpliceExonRank();
     public abstract int nextSpliceExonPhase();
     public abstract int nextSpliceDistance();
@@ -81,16 +81,16 @@ public abstract class LinxBreakend
                 .add("Gene")
                 .add("TranscriptId")
                 .add("Canonical")
-                .add("IsUpstream")
+                .add("GeneOrientation")
                 .add("Disruptive")
                 .add("ReportedDisruption")
                 .add("UndisruptedCopyNumber")
                 .add("RegionType")
                 .add("CodingContext")
                 .add("Biotype")
-                .add("ExonBasePhase")
-                .add("NextSpliceRank")
-                .add("NextSplicePhase")
+                .add("ExonicBasePhase")
+                .add("NextSpliceExonRank")
+                .add("NextSpliceExonPhase")
                 .add("NextSpliceDistance")
                 .add("TotalExonCount")
                 .toString();
@@ -106,14 +106,14 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.gene()))
                 .add(String.valueOf(breakend.transcriptId()))
                 .add(String.valueOf(breakend.canonical()))
-                .add(String.valueOf(breakend.isUpstream()))
+                .add(String.valueOf(breakend.geneOrientation()))
                 .add(String.valueOf(breakend.disruptive()))
                 .add(String.valueOf(breakend.reportedDisruption()))
                 .add(String.valueOf(breakend.undisruptedCopyNumber()))
                 .add(String.valueOf(breakend.regionType()))
                 .add(String.valueOf(breakend.codingContext()))
                 .add(String.valueOf(breakend.biotype()))
-                .add(String.valueOf(breakend.exonBasePhase()))
+                .add(String.valueOf(breakend.exonicBasePhase()))
                 .add(String.valueOf(breakend.nextSpliceExonRank()))
                 .add(String.valueOf(breakend.nextSpliceExonPhase()))
                 .add(String.valueOf(breakend.nextSpliceDistance()))
@@ -135,14 +135,14 @@ public abstract class LinxBreakend
                 .gene(values[index++])
                 .transcriptId(values[index++])
                 .canonical(Boolean.parseBoolean(values[index++]))
-                .isUpstream(Boolean.parseBoolean(values[index++]))
+                .geneOrientation(values[index++])
                 .disruptive(Boolean.parseBoolean(values[index++]))
                 .reportedDisruption(Boolean.parseBoolean(values[index++]))
                 .undisruptedCopyNumber(Double.parseDouble(values[index++]))
                 .regionType(values[index++])
                 .codingContext(values[index++])
                 .biotype(values[index++])
-                .exonBasePhase(Integer.parseInt(values[index++]))
+                .exonicBasePhase(Integer.parseInt(values[index++]))
                 .nextSpliceExonRank(Integer.parseInt(values[index++]))
                 .nextSpliceExonPhase(Integer.parseInt(values[index++]))
                 .nextSpliceDistance(Integer.parseInt(values[index++]))
