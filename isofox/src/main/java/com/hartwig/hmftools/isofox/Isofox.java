@@ -302,7 +302,7 @@ public class Isofox
         final Map<String,List<EnsemblGeneData>> chrGeneMap = Maps.newHashMap();
 
         mGeneTransCache.getChrGeneDataMap().entrySet().stream()
-                .filter(x -> mConfig.skipChromosome(x.getKey()))
+                .filter(x -> !mConfig.skipChromosome(x.getKey()))
                 .filter(x -> !x.getValue().isEmpty())
                 .forEach(x -> chrGeneMap.put(x.getKey(), x.getValue()));
 

@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
@@ -173,6 +174,7 @@ public class ChimericReadCache
             final Map<String,Integer> fieldsMap  = createFieldsIndexMap(line, DELIMITER);
 
             int readId = fieldsMap.get("ReadId");
+            int fusionGroup = fieldsMap.get("FusionGroup");
             int chr = fieldsMap.get("Chromosome");
             int posStart = fieldsMap.get("PosStart");
             int posEnd = fieldsMap.get("PosEnd");
@@ -204,6 +206,9 @@ public class ChimericReadCache
 
                 try
                 {
+                    if(items[fusionGroup].contains("INVALID"))
+                        continue;
+
                     ReadRecord read = new ReadRecord(
                             items[readId],
                             items[chr],
@@ -215,18 +220,6 @@ public class ChimericReadCache
                             Integer.parseInt(items[flags]),
                             items[mateChr],
                             Integer.parseInt(items[matePosStart]));
-
-                    if(readGroup == null || !readGroup.id().equals(read.Id))
-                    {
-                        readGroup = new ReadGroup(read);
-                    }
-                    else
-                    {
-                        readGroup.Reads.add(read);
-
-                        if(readGroup.isComplete())
-                            readGroupList.add(readGroup);
-                    }
 
                     String saData = items[suppAlgn];
 
@@ -259,6 +252,19 @@ public class ChimericReadCache
                     {
                         List<TransExonRef> transExonRefs = parseTransExonRefs(items[upperTransExonData]);
                         read.getTransExonRefs(SE_END).put(matchType, transExonRefs);
+                    }
+
+                    // reads are written by fragment so all reads will be sequential
+                    if(readGroup == null || !readGroup.id().equals(read.Id))
+                    {
+                        readGroup = new ReadGroup(read);
+                    }
+                    else
+                    {
+                        readGroup.Reads.add(read);
+
+                        if(readGroup.isComplete())
+                            readGroupList.add(readGroup);
                     }
                 }
                 catch (Exception e)
