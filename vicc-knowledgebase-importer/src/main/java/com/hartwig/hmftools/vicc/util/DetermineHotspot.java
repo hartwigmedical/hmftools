@@ -4,20 +4,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_DELETION;
+import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_DUPLICATION;
+import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_INSERTION;
+import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_RANGE_INDICATOR;
+import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_FRAMESHIFT_SUFFIX;
+import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED;
+
 public class DetermineHotspot {
 
     private DetermineHotspot() {
     }
 
     private static final Logger LOGGER = LogManager.getLogger(DetermineHotspot.class);
-
-    private static final String HGVS_RANGE_INDICATOR = "_";
-    private static final String HGVS_DELETION = "del";
-    private static final String HGVS_INSERTION = "ins";
-    private static final String HGVS_DUPLICATION = "dup";
-
-    private static final String HGVS_FRAMESHIFT_SUFFIX = "fs";
-    private static final String HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED = "fs*";
 
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
