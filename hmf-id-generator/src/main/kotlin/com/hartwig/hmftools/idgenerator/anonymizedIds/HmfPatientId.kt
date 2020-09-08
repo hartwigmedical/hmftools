@@ -15,3 +15,12 @@ data class HmfPatientId(val hashId: HashId) : AnonymizedId by hashId, Comparable
         return hashId.id.compareTo(other.hashId.id)
     }
 }
+
+data class HmfPatientIdSimple(val id: Int) : Comparable<HmfPatientIdSimple> {
+    val plaintext = "HMF" + id.toString().padStart(6, '0')
+
+    override fun compareTo(other: HmfPatientIdSimple): Int {
+        return id.compareTo(other.id)
+    }
+
+}
