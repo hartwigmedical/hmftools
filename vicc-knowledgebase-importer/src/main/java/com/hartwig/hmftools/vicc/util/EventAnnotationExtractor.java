@@ -105,7 +105,9 @@ public final class EventAnnotationExtractor {
             }
         }
 
-        if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
+        if (DetermineHotspot.isResolvableProteinAnnotation(proteinAnnotation)) {
+            return EventAnnotation.HOTSPOT;
+        } else if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
             return EventAnnotation.SIGNATURE;
         } else if (DetermineCopyNumber.isAmplification(feature, biomarkerType)) {
             return EventAnnotation.AMPLIFICATION;
@@ -115,8 +117,6 @@ public final class EventAnnotationExtractor {
             return EventAnnotation.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
             return EventAnnotation.FUSION_PROMISCUOUS;
-        } else if (DetermineHotspot.isResolvableProteinAnnotation(proteinAnnotation)) {
-            return EventAnnotation.HOTSPOT;
         } else if (!DetermineHotspot.isResolvableProteinAnnotation(proteinAnnotation)) {
             if (EventAnnotationExtractor.GENE_LEVEL.contains(biomarkerType) || EventAnnotationExtractor.GENE_LEVEL.contains(feature)
                     || EventAnnotationExtractor.GENE_LEVEL.contains(provenanceRule) || EventAnnotationExtractor.GENE_LEVEL.contains(
