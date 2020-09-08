@@ -140,6 +140,7 @@ public final class EventAnnotationExtractor {
             LOGGER.warn("No event annotation extracted from event!");
             return EventAnnotation.UNKNOWN;
         }
+        LOGGER.warn("No event annotation extracted from event!");
         return EventAnnotation.UNKNOWN;
 
     }
