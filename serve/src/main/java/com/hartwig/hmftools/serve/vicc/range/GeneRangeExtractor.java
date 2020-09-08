@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,10 +24,6 @@ public class GeneRangeExtractor {
 
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
-
-    private static final Set<String> GENE_EXON = Sets.newHashSet("exon", "Exon Variant");
-    private static final Set<String> GENE_MULTIPLE_CODONS =
-            Sets.newHashSet("nonsense", "(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
 
     public GeneRangeExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
@@ -68,7 +65,7 @@ public class GeneRangeExtractor {
 
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-            if (GENE_EXON.contains(event) && !feature.name().toLowerCase().contains("deletion")) {
+            if (EventAnnotationExtractor.GENE_EXON.contains(event) && !feature.name().toLowerCase().contains("deletion")) {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -159,9 +156,9 @@ public class GeneRangeExtractor {
                     //                            feature);
                 }
 
-            } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
+            } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
                     .substring(feature.proteinAnnotation().length() - 1)
-                    .equals("X") && GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
+                    .equals("X") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
                     geneRangesPerFeature = determineRanges(viccEntry,
                             feature,
@@ -179,7 +176,7 @@ public class GeneRangeExtractor {
                             geneRangesPerFeature,
                             canonicalTranscript);
                 }
-            } else if (GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
+            } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,
@@ -197,7 +194,7 @@ public class GeneRangeExtractor {
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
-            } else if (feature.name().contains("DEL") && GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
+            } else if (feature.name().contains("DEL") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,

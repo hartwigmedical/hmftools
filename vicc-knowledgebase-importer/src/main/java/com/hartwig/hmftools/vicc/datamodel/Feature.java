@@ -23,7 +23,7 @@ public abstract class Feature {
     @NotNull
     @Value.Derived
     public EventAnnotation eventAnnotation() {
-        return EventAnnotationExtractor.toEventAnnotation(name(), biomarkerType());
+        return EventAnnotationExtractor.toEventAnnotation(name(), biomarkerType(), provenanceRule(), proteinAnnotation());
     }
 
     @NotNull

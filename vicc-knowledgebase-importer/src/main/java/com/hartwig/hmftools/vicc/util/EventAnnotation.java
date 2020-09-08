@@ -8,6 +8,7 @@ public enum EventAnnotation {
     FUSION_PROMISCUOUS,
     HOTSPOT,
     GENE_LEVEL,
-    GENE_RANGE,
+    GENE_RANGE_CODON,
+    GENE_RANGE_EXON,
     UNKNOWN;
 }

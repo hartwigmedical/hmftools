@@ -19,24 +19,6 @@ public class GeneLevelEventExtractor {
 
     // frameshift will be in event type hotspots
 
-    private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
-            "act mut",
-            "pos",
-            "positive",
-            "Gain Of Function Variant",
-            "Stop Lost",
-            "Missense Variant");
-
-    private static final Set<String> GENE_INACTIVATION = Sets.newHashSet("Truncating Mutations",
-            "inact mut",
-            "loss",
-            "biallelic inactivation",
-            "negative",
-            "is_deletion",
-            "Loss Of Function Variant",
-            "Start Lost",
-            "Loss Of Heterozygosity");
-
     @NotNull
     public Map<Feature, String> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> geneLevelEventsPerFeature = Maps.newHashMap();
