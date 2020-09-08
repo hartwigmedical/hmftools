@@ -16,6 +16,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.Transvar;
+import com.hartwig.hmftools.vicc.util.DetermineHotspot;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,7 +66,7 @@ public class ProteinToHotspotConverter {
     @NotNull
     public List<VariantHotspot> resolveProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) {
-        if (isResolvableProteinAnnotation(proteinAnnotation)) {
+        if (DetermineHotspot.isResolvableProteinAnnotation(proteinAnnotation)) {
             return proteinResolver.extractHotspotsFromProteinAnnotation(gene, specificTranscript, proteinAnnotation);
         }
 

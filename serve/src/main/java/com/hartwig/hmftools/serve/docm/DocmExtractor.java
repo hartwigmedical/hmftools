@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
+import com.hartwig.hmftools.vicc.util.DetermineHotspot;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +28,7 @@ public class DocmExtractor {
     public Map<DocmEntry, List<VariantHotspot>> extractFromDocmEntries(@NotNull List<DocmEntry> entries) {
         Map<DocmEntry, List<VariantHotspot>> hotspotsPerEntry = Maps.newHashMap();
         for (DocmEntry entry : entries) {
-            if (ProteinToHotspotConverter.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
+            if (DetermineHotspot.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
                 hotspotsPerEntry.put(entry,
                         proteinToHotspotConverter.resolveProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
             } else {
