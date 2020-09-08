@@ -21,7 +21,7 @@ class AmberPatientAnonymizer(private val oldPassword: String, private val newPas
             result.addAll(patientExistingSamples)
 
             val patientId = (patientExistingSamples.map { x -> x.patientId }.max() ?: ++maxPatientId)
-            var maxSampleIdForPatient = patientExistingSamples.map { x -> x.sampleId }.max() ?: -1
+            var maxSampleIdForPatient = patientExistingSamples.map { x -> x.sampleId }.max() ?: 0
 
             for (sample in amberSamples) {
                 val hash = sampleHashMap.fromSample(sample)

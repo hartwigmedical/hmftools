@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.idgenerator
 
+import com.hartwig.hmftools.common.amber.AmberPatient
+import com.hartwig.hmftools.common.amber.ImmutableAmberPatient
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.createRunModeCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
@@ -39,6 +41,10 @@ fun main(args: Array<String>) {
             val updateIdsCmd = updateIdsModeOptions().createCommandLine("hmf-id", args)
             runUpdateIds(updateIdsCmd)
         }
+        cmd.hasOption(UPDATE_IDS_WITH_AMBER_MODE) -> {
+            val updateIdsCmd = updateIdsWithAmberModeOptions().createCommandLine("hmf-id", args)
+            runUpdateIdsWithAmber(updateIdsCmd)
+        }
         cmd.hasOption(ANONYMIZE_IDS_MODE) -> {
             val anonymizeIdsCmd = anonymizeIdsModeOptions().createCommandLine("hmf-id", args)
             runAnonymizeIds(anonymizeIdsCmd)
@@ -52,6 +58,7 @@ private fun createOptions(): Options {
     inputModeOptionGroup.addOption(Option.builder(CREATE_SINGLE_HASH_MODE).required().desc("create single hash").build())
     inputModeOptionGroup.addOption(Option.builder(CREATE_IDS_MODE).required().desc("create hmf ids").build())
     inputModeOptionGroup.addOption(Option.builder(UPDATE_IDS_MODE).required().desc("update hmf ids").build())
+    inputModeOptionGroup.addOption(Option.builder(UPDATE_IDS_WITH_AMBER_MODE).required().desc("update hmf ids amber").build())
     inputModeOptionGroup.addOption(Option.builder(ANONYMIZE_IDS_MODE).required().desc("anonymize ids").build())
     inputModeOptionGroup.isRequired = true
     options.addOptionGroup(inputModeOptionGroup)
@@ -86,6 +93,17 @@ private fun updateIdsModeOptions(): HmfOptions {
     hmfOptions.add(RequiredInputFileOption(PATIENT_MAPPING_FILE, "csv containing the patient mapping, a patient pair per line"))
     hmfOptions.add(RequiredOutputOption(OUTPUT_FILE, "output file location"))
     hmfOptions.add(RequiredOutputOption(SAMPLE_MAPPING_OUTPUT_FILE, "sample mapping output file location"))
+    hmfOptions.add(OutputOption(ANONYMIZE_OUT, "anonymized output file location"))
+    return hmfOptions
+}
+
+private fun updateIdsWithAmberModeOptions(): HmfOptions {
+    val hmfOptions = HmfOptions()
+    hmfOptions.add(RequiredFlagOption(UPDATE_IDS_WITH_AMBER_MODE, "update hmf ids"))
+    hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
+    hmfOptions.add(InputOption(NEW_PASSWORD, "password used to generate hashes in HMF ids file"))
+    hmfOptions.add(RequiredInputFileOption(AMBER_PATIENT_FILE, "csv file containing a list of amber patients"))
+    hmfOptions.add(RequiredOutputOption(OUTPUT_FILE, "output file location"))
     hmfOptions.add(OutputOption(ANONYMIZE_OUT, "anonymized output file location"))
     return hmfOptions
 }
@@ -143,6 +161,28 @@ private fun runUpdateIds(cmd: CommandLine) {
     logger.info("Created hmf sample ids for ${anonymizedSamples.size} samples")
 }
 
+private fun runUpdateIdsWithAmber(cmd: CommandLine) {
+    logger.info("Mode: update ids with AMBER")
+    val password = cmd.getOptionValue(PASSWORD)
+    val newPassword = cmd.getOptionValue(NEW_PASSWORD, password)
+    val amberPatients = readAmberPatientInput(cmd.getOptionValue(AMBER_PATIENT_FILE))
+    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(SAMPLE_HASHES_CSV).openStream())
+            .map { it.toHmfSampleId() }
+            .map { it.simplify() }
+
+    val amberAnonymizer = AmberPatientAnonymizer(password, newPassword)
+    val result = amberAnonymizer.anonymize(amberPatients, currentIds)
+    CsvWriter.writeCSV(result.map { HmfSampleIdRecord(it.complicate()) }, cmd.getOptionValue(OUTPUT_FILE))
+
+    if (cmd.hasOption(ANONYMIZE_OUT)) {
+        val anonymizedLookup = AnonymizedLookup(newPassword, result)
+        val anonymizedRecords = amberPatients.map { x-> AnonymizedRecord(x.sample(), anonymizedLookup[x.sample()].plaintext) }
+        CsvWriter.writeCSV(anonymizedRecords, cmd.getOptionValue(ANONYMIZE_OUT))
+    }
+
+    logger.info("Created hmf sample ids for ${result.size} samples")
+}
+
 private fun runAnonymizeIds(cmd: CommandLine) {
     logger.info("Mode: anonymize ids")
     val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(SAMPLE_HASHES_CSV).openStream())
@@ -172,4 +212,13 @@ private fun readSamplesInput(sampleIdsFile: String, patientMappingFile: String):
         return@mapNotNull if (patientId == null || canonicalId == null) null else patientId to canonicalId
     }.toMap()
     return SamplesInput(samples, patientMapping)
+}
+
+private fun readAmberPatientInput(amberPatientFile: String): List<AmberPatient> {
+    val result = mutableListOf<AmberPatient>()
+    for (line in File(amberPatientFile).readLines()) {
+        val (patientId, sample) = line.split(",")
+        result.add(ImmutableAmberPatient.builder().patientId(patientId.toInt()).sample(sample).build())
+    }
+    return result
 }

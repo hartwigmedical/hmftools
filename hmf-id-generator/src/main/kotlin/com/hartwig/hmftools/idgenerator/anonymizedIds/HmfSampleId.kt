@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.idgenerator.anonymizedIds
 
 import com.hartwig.hmftools.idgenerator.Hash
-import java.util.*
 
 data class HmfSampleId(val hashId: HashId, val hmfPatientId: HmfPatientId) : AnonymizedId by hashId, Comparable<HmfSampleId> {
     val plaintext = hmfPatientId.plaintext + (64 + hashId.id).toChar()
@@ -23,16 +22,8 @@ data class HmfSampleIdSimple(val patientId: Int, val sampleId: Int, val hash: Ha
 
     fun updateHash(hash: Hash) = copy(hash = hash)
 
-    companion object {
-
-    }
-
-    fun toCsv(): String {
-        return StringJoiner(",").add(patientId.toString()).add(sampleId.toString()).add(hash.toString()).toString()
-    }
-
     fun complicate(): HmfSampleId {
-        return HmfSampleId(HashId(hash, sampleId), HmfPatientId("hash", patientId))
+        return HmfSampleId(HashId(hash, sampleId), HmfPatientId("na", patientId))
     }
 
     override fun compareTo(other: HmfSampleIdSimple): Int {
