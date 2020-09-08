@@ -75,7 +75,7 @@ public final class ViccUtil {
                     }
 
                     if (fusionForFeature != null) {
-                        writer.write(fusionForFeature.fusionEvent() + "\t" + fusionForFeature.fusion() + "\t" + feature.name() + "\t"
+                        writer.write(feature.eventAnnotation() + "\t" + fusionForFeature.fusion() + "\t" + feature.name() + "\t"
                                 + feature.biomarkerType() + "\t" + feature + "\n");
                         featuresWithFusionCount++;
                     }
