@@ -90,7 +90,7 @@ public final class EventAnnotationExtractor {
 
     @NotNull
     public static EventAnnotation toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType,
-            @NotNull String provenanceRule, @NotNull String proteinAnnotation) {
+            @Nullable String provenanceRule, @NotNull String proteinAnnotation) {
         String feature = featureName;
         if (feature.contains(" ") && !feature.equals("Copy Number Loss")) {
             feature = feature.split(" ", 2)[1];
@@ -122,9 +122,6 @@ public final class EventAnnotationExtractor {
                     || EventAnnotationExtractor.GENE_LEVEL.contains(provenanceRule) || EventAnnotationExtractor.GENE_LEVEL.contains(
                     proteinAnnotation)) {
                 return EventAnnotation.GENE_LEVEL;
-            } else {
-                LOGGER.warn("No event annotation extracted from event!");
-                return EventAnnotation.UNKNOWN;
             }
         } else if (EventAnnotationExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
             return EventAnnotation.GENE_RANGE_EXON;
@@ -143,6 +140,7 @@ public final class EventAnnotationExtractor {
             LOGGER.warn("No event annotation extracted from event!");
             return EventAnnotation.UNKNOWN;
         }
+        return EventAnnotation.UNKNOWN;
 
     }
 

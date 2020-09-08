@@ -63,12 +63,12 @@ public final class ViccUtil {
                     if (hotspotsForFeature != null) {
                         featuresWithHotspotsCount++;
                         totalHotspotsCount += hotspotsForFeature.size();
-                        writer.write("Hotspot" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                        writer.write(feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                                 + feature + "\n");
                     }
 
                     if (ampDelForFeature != null) {
-                        writer.write("Amp/Del" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                        writer.write(feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                                 + feature + "\n");
 
                         featuresWithCopyNumberCount++;
@@ -82,21 +82,21 @@ public final class ViccUtil {
 
                     if (geneLevelEventForFeature != null) {
                         writer.write(
-                                "Gene_level" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                                         + feature + "\n");
                         featuresWithGeneLevelEventCount++;
                     }
 
                     if (geneRangeForFeature != null) {
                         writer.write(
-                                "Gene_range" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                                         + feature + "\n");
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
                         writer.write(
-                                "Signature" + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                                feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                                         + feature + "\n");
 
                         featuresWithSignatureCount++;

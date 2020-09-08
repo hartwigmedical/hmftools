@@ -9,7 +9,7 @@ public class DetermineFusion {
 
     }
 
-    public static boolean isFusion(@NotNull String feature, @Nullable String biomarkerType, @NotNull String provenanceRule,
+    public static boolean isFusion(@NotNull String feature, @Nullable String biomarkerType, @Nullable String provenanceRule,
             @NotNull String proteinAnnotation) {
         FusionEvent eventKeyFusion = extractKeyFusion(feature, biomarkerType, provenanceRule, proteinAnnotation);
         if (eventKeyFusion.equals(FusionEvent.FUSION_PAIR)) {
@@ -19,7 +19,7 @@ public class DetermineFusion {
         }
     }
 
-    public static boolean isFusionPromiscuous(@NotNull String feature, @Nullable String biomarkerType, @NotNull String provenanceRule,
+    public static boolean isFusionPromiscuous(@NotNull String feature, @Nullable String biomarkerType, @Nullable String provenanceRule,
             @NotNull String proteinAnnotation) {
         FusionEvent eventKeyFusion = extractKeyFusion(feature, biomarkerType, provenanceRule, proteinAnnotation);
         if (eventKeyFusion.equals(FusionEvent.FUSION_PROMISCUOUS)) {
@@ -30,7 +30,7 @@ public class DetermineFusion {
     }
 
     @NotNull
-    private static FusionEvent extractKeyFusion(@NotNull String feature, @Nullable String biomarkerType, @NotNull String provenanceRule,
+    private static FusionEvent extractKeyFusion(@NotNull String feature, @Nullable String biomarkerType, @Nullable String provenanceRule,
             @NotNull String proteinAnnotation) {
         if (!EventAnnotationExtractor.IGNORE.contains(feature)) { // Extract internal fusion
             if (EventAnnotationExtractor.INTERNAL_FUSION.contains(proteinAnnotation)) {
