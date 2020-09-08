@@ -4,32 +4,25 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentBuilder.isValidFragment;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
@@ -394,6 +387,8 @@ public class FusionFinder
             return true;
 
         if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(otherChromosome))
+            return true;
+        else if(!mConfig.SpecificRegions.isEmpty() && !mConfig.SpecificRegions.stream().anyMatch(x -> x.containsPosition(otherChromosome, otherPosition)))
             return true;
 
         if(!mRestrictedGeneRegions.isEmpty() && !mRestrictedGeneRegions.stream().filter(x -> x.chromosome().equals(otherChromosome))

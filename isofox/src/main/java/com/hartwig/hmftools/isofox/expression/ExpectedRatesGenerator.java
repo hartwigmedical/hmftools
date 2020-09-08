@@ -4,14 +4,14 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
