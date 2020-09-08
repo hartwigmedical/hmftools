@@ -6,7 +6,6 @@ import com.google.common.collect.Sets;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -84,34 +83,24 @@ public final class EventAnnotationExtractor {
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
-    //TODO: create enum for the events
-    public static final String EVENT_SIGNATURES = "Signatures";
-    public static final String EVENT_AMPLIFICATIONS = "Amplification";
-    public static final String EVENT_DELETIONS = "Deletions";
-    public static final String EVENT_FUSION_PAIR = "Fusion pair";
-    public static final String EVENT_FUSION_PROMISCUOUS = "Fusion promiscuous";
-    public static final String EVENT_HOTSPOT = "Hotspot";
-    public static final String EVENT_GENE_LEVEL = "Gene_level";
-    public static final String EVENT_GENE_RANGE = "Gene_range";
-
     @NotNull
-    public static String toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType) {
+    public static EventAnnotation toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType) {
         String feature = featureName;
         if (feature.contains(" ") && !feature.equals("Copy Number Loss")) {
             feature = feature.split(" ", 2)[1];
         }
 
         if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
-            return EVENT_SIGNATURES;
+            return EventAnnotation.SIGNATURE;
         } else if (EventAnnotationExtractor.AMPLIFICATIONS.contains(feature) ||
                 EventAnnotationExtractor.AMPLIFICATIONS.contains(biomarkerType)) {
-            return EVENT_AMPLIFICATIONS;
+            return EventAnnotation.AMPLIFICATION;
         } else if (EventAnnotationExtractor.DELETIONS.contains(feature) ||
                 EventAnnotationExtractor.DELETIONS.contains(biomarkerType)) {
-            return EVENT_DELETIONS;
+            return EventAnnotation.DELETION;
         } else {
 //            LOGGER.warn("No event annotation extracted from event!");
-            return Strings.EMPTY;
+            return EventAnnotation.UNKNOWN;
         }
     }
 }
