@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.util.EventAnnotation;
 import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,18 +55,9 @@ public class GeneRangeExtractor {
         List<GeneRangeAnnotation> geneRangeAnnotation = Lists.newArrayList();
         for (Feature feature : viccEntry.features()) {
 
-            String event = Strings.EMPTY;
-            if (feature.name().toLowerCase().contains("exon")) {
-                event = "exon";
-            } else if (feature.biomarkerType() != null) {
-                if (feature.biomarkerType().equals("Exon Variant")) {
-                    event = "exon";
-                }
-            }
-
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-            if (EventAnnotationExtractor.GENE_EXON.contains(event) && !feature.name().toLowerCase().contains("deletion")) {
+            if (feature.eventAnnotation().equals(EventAnnotation.GENE_RANGE_EXON)) {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -156,9 +148,7 @@ public class GeneRangeExtractor {
                     //                            feature);
                 }
 
-            } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(feature.biomarkerType()) && feature.proteinAnnotation()
-                    .substring(feature.proteinAnnotation().length() - 1)
-                    .equals("X") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(feature.proteinAnnotation())) {
+            } else if (feature.eventAnnotation().equals(EventAnnotation.GENE_RANGE_CODON)) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
                     geneRangesPerFeature = determineRanges(viccEntry,
                             feature,
@@ -167,7 +157,7 @@ public class GeneRangeExtractor {
                             geneRangesPerFeature,
                             canonicalTranscript);
                 }
-            } else if (feature.proteinAnnotation().length() >= 1 && isValidSingleCodonRange(feature.proteinAnnotation())) {
+            } else if (feature.eventAnnotation().equals(EventAnnotation.GENE_RANGE_CODON)) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
                     geneRangesPerFeature = determineRanges(viccEntry,
                             feature,
@@ -176,7 +166,7 @@ public class GeneRangeExtractor {
                             geneRangesPerFeature,
                             canonicalTranscript);
                 }
-            } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
+            } else if (feature.eventAnnotation().equals(EventAnnotation.GENE_RANGE_CODON)) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,
@@ -194,7 +184,7 @@ public class GeneRangeExtractor {
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
-            } else if (feature.name().contains("DEL") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(feature.biomarkerType())) {
+            } else if (feature.eventAnnotation().equals(EventAnnotation.GENE_RANGE_CODON)) {
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("L485_P490")) {
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,
@@ -212,7 +202,7 @@ public class GeneRangeExtractor {
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
-            } else if (feature.proteinAnnotation().contains("del") && feature.proteinAnnotation().contains("_")) {
+            } else if (feature.eventAnnotation().equals(EventAnnotation.GENE_RANGE_CODON)) {
                 String proteinAnnotation = feature.proteinAnnotation();
                 int start = Integer.valueOf(proteinAnnotation.split("_")[0].replaceAll("\\D+",""));
                 int end = Integer.valueOf(proteinAnnotation.split("_")[1].replaceAll("\\D+",""));

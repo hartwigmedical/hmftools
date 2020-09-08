@@ -107,10 +107,9 @@ public final class EventAnnotationExtractor {
 
         if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
             return EventAnnotation.SIGNATURE;
-        } else if (EventAnnotationExtractor.AMPLIFICATIONS.contains(feature) || EventAnnotationExtractor.AMPLIFICATIONS.contains(
-                biomarkerType)) {
+        } else if (DetermineCopyNumber.isAmplification(feature, biomarkerType)) {
             return EventAnnotation.AMPLIFICATION;
-        } else if (EventAnnotationExtractor.DELETIONS.contains(feature) || EventAnnotationExtractor.DELETIONS.contains(biomarkerType)) {
+        } else if (DetermineCopyNumber.isDeletion(feature, biomarkerType)) {
             return EventAnnotation.DELETION;
         } else if (DetermineFusion.isFusion(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
             return EventAnnotation.FUSION_PAIR;
@@ -124,14 +123,13 @@ public final class EventAnnotationExtractor {
                     proteinAnnotation)) {
                 return EventAnnotation.GENE_LEVEL;
             } else {
-                //            LOGGER.warn("No event annotation extracted from event!");
+                LOGGER.warn("No event annotation extracted from event!");
                 return EventAnnotation.UNKNOWN;
             }
         } else if (EventAnnotationExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
             return EventAnnotation.GENE_RANGE_EXON;
-        } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation
-                .substring(proteinAnnotation.length() - 1)
-                .equals("X") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
+        } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
+                proteinAnnotation.length() - 1).equals("X") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
             return EventAnnotation.GENE_RANGE_CODON;
         } else if (proteinAnnotation.length() >= 1 && isValidSingleCodonRange(proteinAnnotation)) {
             return EventAnnotation.GENE_RANGE_CODON;
@@ -142,7 +140,7 @@ public final class EventAnnotationExtractor {
         } else if (proteinAnnotation.contains("del") && proteinAnnotation.contains("_")) {
             return EventAnnotation.GENE_RANGE_CODON;
         } else {
-            //            LOGGER.warn("No event annotation extracted from event!");
+            LOGGER.warn("No event annotation extracted from event!");
             return EventAnnotation.UNKNOWN;
         }
 
