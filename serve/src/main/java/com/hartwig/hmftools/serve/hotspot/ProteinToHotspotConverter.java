@@ -20,8 +20,6 @@ public class ProteinToHotspotConverter {
 
     private static final Logger LOGGER = LogManager.getLogger(ProteinToHotspotConverter.class);
 
-    private static final int MAX_INFRAME_BASE_LENGTH = 50;
-
     @NotNull
     private final ProteinResolver proteinResolver;
 
