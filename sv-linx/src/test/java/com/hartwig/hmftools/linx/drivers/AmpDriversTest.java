@@ -94,7 +94,7 @@ public class AmpDriversTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        driverAnnotator.clearResults();
+        driverAnnotator.clearResults(false);
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var2));
@@ -129,7 +129,7 @@ public class AmpDriversTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        driverAnnotator.clearResults();
+        driverAnnotator.clearResults(false);
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, driverAnnotator.getDriverGeneDataList().size());
@@ -167,7 +167,7 @@ public class AmpDriversTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        driverAnnotator.clearResults();
+        driverAnnotator.clearResults(false);
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, driverAnnotator.getDriverGeneDataList().size());

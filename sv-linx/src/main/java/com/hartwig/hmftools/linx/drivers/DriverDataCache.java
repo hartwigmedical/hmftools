@@ -181,7 +181,7 @@ public class DriverDataCache
                 .splice(0)
                 .inframe(0)
                 .frameshift(0)
-                .biallelic(false)
+                .biallelic(true)
                 .minCopyNumber(gcnData != null ? gcnData.minCopyNumber() : 0)
                 .maxCopyNumber(gcnData != null ? gcnData.maxCopyNumber() : 0)
                 .build();
