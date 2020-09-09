@@ -90,7 +90,7 @@ public final class EventAnnotationExtractor {
 
     @NotNull
     public static EventAnnotation toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType,
-            @NotNull String provenanceRule, @NotNull String proteinAnnotation) {
+            @Nullable String provenanceRule, @NotNull String proteinAnnotation) {
         String feature = featureName;
         if (feature.contains(" ") && !feature.equals("Copy Number Loss")) {
             feature = feature.split(" ", 2)[1];
