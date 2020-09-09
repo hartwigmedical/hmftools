@@ -321,14 +321,15 @@ Isofox also determines the coverage at both breakends and the max anchor length 
 
 The filters and thresholds per tier are as follows:
 
-Filter | definition | Known pathogenic fusions | Splice Site-Splice Site* | Splice Site-Canonical | Canonical-Canonical | Other
+Filter | definition | Known pathogenic fusions* | Splice Site-Splice Site** | Splice Site-Canonical | Canonical-Canonical | Other
 ---|---|---|---|---|---|---
 min_fragment_support | total fragments supporting fusion | Splice Site-Splice Site or Splice Site-Canonical: 2; Other: 4  | 2 | 3 | 4 | 10
 min_af | min(AFUp, AFDown) | 0 | 0.005 | 0.005 | 0.005 | 0.05
 min_anchor | min(maxAnchorLengthUp, maxAnchorLengthDown) | 0 | 20 | 20 | 20 | 20 
-max_cohort_frequency** | count of observations in cohort | NA if known;  5 if either gene known | 2 | 2 | 2 | 2
+max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if either gene known | 2 | 2 | 2 | 2
 
-'* 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs
+'* For known pair fusions supporting fragment are cumulative aross all novel junctions
+'** 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs. 
 
 '** seee below for cohort frequency calculation
 
