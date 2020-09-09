@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -273,19 +274,14 @@ public class FusionTask implements Callable
     private void setGeneData(final FusionReadData fusionData)
     {
         // get the genes supporting the splice junction in the terms of an SV (ie lower chromosome and lower position first)
-        final List<List<EnsemblGeneData>> genesByPosition = Lists.newArrayList(Lists.newArrayList(), Lists.newArrayList());
+        final List<EnsemblGeneData>[] genesByPosition = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        final List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         FusionFragment initialFragment = fusionData.getInitialFragment();
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final List<String> spliceGeneIds = fusionData.getInitialFragment().getGeneIds(se);
-
-            if(!spliceGeneIds.isEmpty())
-            {
-                genesByPosition.set(se, spliceGeneIds.stream()
-                        .map(x -> mGeneTransCache.getGeneDataById(x)).collect(Collectors.toList()));
-            }
+            final List<String> spliceGeneIds = initialFragment.getGeneIds(se);
 
             // purge any invalid transcript exons when the splice junction is known
             final List<TranscriptData> transDataList = Lists.newArrayList();
@@ -293,6 +289,54 @@ public class FusionTask implements Callable
 
             // purge any invalid transcript-exons and mark the junction as known if applicable
             initialFragment.validateTranscriptExons(transDataList, se);
+
+            // and collect again
+            spliceGeneIds.clear();
+            spliceGeneIds.addAll(initialFragment.getGeneIds(se));
+
+            if(!spliceGeneIds.isEmpty())
+            {
+                genesByPosition[se] = spliceGeneIds.stream().map(x -> mGeneTransCache.getGeneDataById(x)).collect(Collectors.toList());
+
+                final int seIndex = se;
+                validTransDataList[se] = transDataList.stream()
+                        .filter(x -> initialFragment.getTransExonRefs()[seIndex].stream().anyMatch(y -> x.TransId == y.TransId))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        if(genesByPosition[SE_START].size() > 1 || genesByPosition[SE_END].size() > 1)
+        {
+            boolean matched = false;
+
+            for(EnsemblGeneData gene1 : genesByPosition[SE_START])
+            {
+                for(EnsemblGeneData gene2 : genesByPosition[SE_END])
+                {
+                    if(mConfig.Fusions.KnownFusions.hasKnownFusion(gene1.GeneName, gene2.GeneName)
+                    || mConfig.Fusions.KnownFusions.hasKnownFusion(gene2.GeneName, gene1.GeneName))
+                    {
+                        matched = true;
+                        genesByPosition[SE_START].clear();
+                        genesByPosition[SE_START].add(gene1);
+                        genesByPosition[SE_END].clear();
+                        genesByPosition[SE_END].add(gene2);
+                        break;
+                    }
+                }
+
+                if(matched)
+                    break;
+            }
+
+            if(!matched)
+            {
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    if(genesByPosition[se].size() > 1)
+                        prioritiseKnownFusionGene(genesByPosition[se]);
+                }
+            }
         }
 
         // organise genes by strand based on the orientations around the splice junction
@@ -310,11 +354,15 @@ public class FusionTask implements Callable
             // for the start being the upstream gene, if the orientation is +1 then require a +ve strand gene,
             // and so the end is the downstream gene and will set the orientation as required
 
-            final List<EnsemblGeneData> upstreamGenes = genesByPosition.get(upstreamIndex).stream()
+            final List<EnsemblGeneData> upstreamGenes = genesByPosition[upstreamIndex].stream()
                     .filter(x -> x.Strand == sjOrientations[upstreamIndex]).collect(Collectors.toList());
 
-            final List<EnsemblGeneData> downstreamGenes = genesByPosition.get(downstreamIndex).stream()
+            final List<EnsemblGeneData> downstreamGenes = genesByPosition[downstreamIndex].stream()
                     .filter(x -> x.Strand == -sjOrientations[downstreamIndex]).collect(Collectors.toList());
+
+            // where multiple (non-known) genes are still considered, take the longest coding one
+            prioritiseLongestCodingFusionGene(upstreamGenes, validTransDataList[upstreamIndex]);
+            prioritiseLongestCodingFusionGene(downstreamGenes, validTransDataList[downstreamIndex]);
 
             if(!upstreamGenes.isEmpty() && !downstreamGenes.isEmpty())
             {
@@ -340,6 +388,64 @@ public class FusionTask implements Callable
         fusionData.cacheTranscriptData();
 
         initialFragment.setJunctionTypes(mConfig.RefGenome, fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
+    }
+
+    private void prioritiseLongestCodingFusionGene(final List<EnsemblGeneData> geneList, final List<TranscriptData> transDataList)
+    {
+        if(geneList.isEmpty())
+            return;
+        else if(geneList.size() == 1)
+            return;
+
+        // take the longest protein coding
+        EnsemblGeneData longestGene = null;
+        int longestLength = 0;
+
+        for(EnsemblGeneData geneData : geneList)
+        {
+            int maxCodingBases = transDataList.stream()
+                    .filter(x -> x.GeneId.equals(geneData.GeneId))
+                    .filter(x -> x.CodingStart != null)
+                    .mapToInt(x -> x.CodingEnd - x.CodingStart)
+                    .max().orElse(0);
+
+            if(maxCodingBases > longestLength)
+            {
+                longestLength = maxCodingBases;
+                longestGene = geneData;
+            }
+        }
+
+        geneList.clear();
+        geneList.add(longestGene);
+    }
+
+    private void prioritiseKnownFusionGene(final List<EnsemblGeneData> geneList)
+    {
+        if(geneList.isEmpty())
+            return;
+        else if(geneList.size() == 1)
+            return;
+
+        // first look for a known pair gene
+        List<EnsemblGeneData> culledList = geneList.stream()
+                .filter(x -> mConfig.Fusions.KnownFusions.hasKnownPairGene(x.GeneName))
+                .collect(Collectors.toList());
+
+        if(culledList.isEmpty())
+        {
+            culledList = geneList.stream()
+                    .filter(x -> mConfig.Fusions.KnownFusions.hasPromiscuousFiveGene(x.GeneName)
+                            || mConfig.Fusions.KnownFusions.hasPromiscuousThreeGene(x.GeneName))
+                    .collect(Collectors.toList());
+        }
+
+        if(culledList.size() == 1)
+        {
+            geneList.clear();
+            geneList.add(culledList.get(0));
+            return;
+        }
     }
 
     private void reconcileFusions()

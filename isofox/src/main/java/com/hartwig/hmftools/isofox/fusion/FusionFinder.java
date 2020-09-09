@@ -311,57 +311,6 @@ public class FusionFinder
         ISF_LOGGER.info("fusion calling complete");
     }
 
-    /*
-    private boolean executeFusionTasks()
-    {
-        if(mConfig.Threads <= 1)
-        {
-            mFusionTasks.forEach(x -> x.call());
-            return true;
-        }
-
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("IsofoxFusions-%d").build();
-
-        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
-        List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
-
-        for(FusionTask fusionTask : mFusionTasks)
-        {
-            FutureTask futureTask = new FutureTask(fusionTask);
-
-            threadTaskList.add(futureTask);
-            executorService.execute(futureTask);
-        }
-
-        if(!checkThreadCompletion(threadTaskList))
-        {
-            return false;
-        }
-
-        executorService.shutdown();
-        return true;
-    }
-
-    private boolean checkThreadCompletion(final List<FutureTask> taskList)
-    {
-        try
-        {
-            for (FutureTask futureTask : taskList)
-            {
-                futureTask.get();
-            }
-        }
-        catch (Exception e)
-        {
-            ISF_LOGGER.error("task execution error: {}", e.toString());
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }
-    */
-
     private boolean skipMissingReads(final List<ReadRecord> reads)
     {
         for(final ReadRecord read : reads)
