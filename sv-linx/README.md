@@ -164,9 +164,13 @@ By default LINX will use HG19, but this can be overridden using the ref_genome_v
 
 ## Outputs
 
-### Annotated SVs
+Linx writes all output to tsv files, each of which is decribed below.
 
-Generated file: sample_id.sv.tsv
+### SV Annotations
+
+Additional annotations of each breakjunction
+
+Generated file: sample_id.svs.tsv
 
 Field | Description 
 ---|---
@@ -192,7 +196,7 @@ localTopologyEnd | Local breakend toplogy type at stie of end breakend.  One of 
 localTICountStart | Number of chained templated insertions in local topology group of start breakend
 localTICountEnd | Number of chained templated insertions in local topology group of end breakend
 
-### Annotated breakends
+### Breakends
 
 Impact of each break junction on each overlapping gene
 
