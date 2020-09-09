@@ -164,9 +164,13 @@ By default LINX will use HG19, but this can be overridden using the ref_genome_v
 
 ## Outputs
 
-### Annotated SVs
+Linx writes all output to tsv files, each of which is decribed below.
 
-Generated file: sample_id.sv.tsv
+### SV Annotations
+
+Additional annotations of each breakjunction
+
+Generated file: sample_id.svs.tsv
 
 Field | Description 
 ---|---
@@ -191,6 +195,132 @@ localTopologyStart | Local breakend toplogy type at site of start breakend.  One
 localTopologyEnd | Local breakend toplogy type at stie of end breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
 localTICountStart | Number of chained templated insertions in local topology group of start breakend
 localTICountEnd | Number of chained templated insertions in local topology group of end breakend
+
+### Breakends
+
+Impact of each break junction on each overlapping gene
+
+Generated file: sample_id.breakend.tsv
+
+Field | Description 
+---|---
+Id | Id of breakend annotation
+SvId | Id of break junction
+IsStart | Annotation relates to the start breakend of the break junction (1 = true,0 = false)
+Gene | Gene annotated
+TranscriptId | Ensembl stable transcript id of annotation
+Canonical | Transcript is the canonical transcript of the gene.   LINX annotates 1 record for each canonical transcript overlapping the breakend + a record for any non-canonical transcript that is annotated as part of a fusion
+geneOrientation | Orientation which breakend points relative to the gene taking into account both gene strand and breakend orientation.  
+Disruptive | Breakend is part of a break junction which disrupts the exonic sequence of the transcript
+ReportedDisruption | Breakend is disruptive and gene is flagged as reportable for disruption
+UndisruptedCopyNumber | Number of remaining wildtype alleles of the gene that are not disrupted by the breakend.  If <0.5 then disruption is considered Homozygous
+RegionType | Location of the breakend relative to the transcript.    One of 'UPSTREAM' (within 10kb upstream of the 1st base of the transcript), 'INTRONIC' or 'EXONIC'
+CodingContext | Location of the breakend relative to the coding context of the transcript.    One of  'CODING', 'NON_CODING','UTR_5P','UTR_3P' or 'ENHANCER' (IG enhancer rearrangements only)
+Biotype | Ensembl biotype of the transcript
+ExonicBasePhase | If regionType = EXONIC, the exact base phase of the breakend, else -1
+NextSpliceExonRank | The exon rank of the next splice acceptor (if gene orientation is 'DOWNSTREAM') or splice donor (if gene orientation is 'UPSTREAM')
+NextSpliceExonPhase | The phase of the 1st base after the next splice acceptor (if gene orientation is 'DOWNSTREAM') or splice donor (if gene orientation is 'UPSTREAM')
+NextSpliceDistance | The distance in bases to the next splice site identified in nextSpliceExonRank
+TotalExonCount | Total number of exons in the transcript
+
+### Clusters
+
+Clustering of all SV events and their resolved classification.
+
+Generated file: sample_id.clusters.tsv
+
+Field | Description 
+---|---
+ClusterId | Unique Id for the cluster
+Category | High level categoristion of the cluster classification
+Synthetic | Set to TRUE if the cluster is resolved to a non complex type by simplification of a short templated insertion (<1kb)
+ResolvedType | Resolved classification of the cluster.
+clusterCount | The number of break juncitons in the cluster
+clusterDesc | String containing the types and counts of break junctions in the cluster.   eg. DEL=2_INV=2 
+
+
+### Links
+
+Chromosomal segments joining break junction pairs predicted to be linked and phased in cis on the derivative chromosome
+
+Generated file: sample_id.links.tsv
+
+Field | Description 
+---|---
+clusterId | Id of the cluster which contains the link
+chainId | Id of the chain to which the link belongs representing a multi-segment prediction of the derivative chromosme
+chainIndex | Position of the linked segment in the chain.  The predicted chain can be reconstructed by traversing each linked segment in order ie. 0,1,...,n
+chainCount | Total count of linked segments in the chan
+lowerBreakendId | svId of the leftmost breakend of the linked segment
+upperBreakendId | svId of the rightmost breakend of the linked segment
+lowerBreakendIsStart | True if the lower breakend is the start breakend of the break junction
+upperBreakendIsStart | True if the right breakend is the start breakend of the break junction
+chromosome | Chromosome of the linked sgement
+arm | Arm (P/Q) of the linked segment
+assembled | True if the segment is linked by a GRIDSS assembly
+traversedSVCount | The number of other breakends that are located on the linked segment
+length | Length of the linked segment
+junctionCopyNumber | Predicted copy number of the chain
+junctionCopyNumberUncertainty | Uncertainty in the copy number of the chain
+pseudogeneInfo | If the segment precisely matches an exon of an ensembl gene, then containts details of the matching exon:  {geneName;TranscriptId,ExonRank,ExonLength}
+ecDna | True if the link is predicted to be part of a DM / ecDNA chain
+
+### Viral insertions
+
+Viral insertions detected in the sample
+
+Generated file: sample_id.viral_inserts.tsv
+
+Field | Description 
+---|---
+SvId | Id of break junction
+VirusId | Id of virus that insertion sequence is mapped to
+VirusName | Full name of virus
+
+
+### Fusions
+
+All inframe and out of frame fusions predicted in the sample including HMF fusion knowledgebase annotations
+
+Generated file: sample_id.fusions.tsv
+
+Field | Description 
+---|---
+FivePrimeBreakendId | Id of the 5' breakend in the fusion
+ThreePrimeBreakendId | Id of the 3' breakend in the fusion
+Name | Name of the fusion in the form 5'GENE_3'GENE
+Reported | True if the fusion meets all reportable fusion criteria for LINX
+ReportedType | If one or both of the genes matches  a promiscuous gene or known rearrangament in the HMF fusion knowledgebase, then the type of reportable gene pair:  f 'KNOWN_PAIR', 'PROMISCUOUS_5', 'PROMISCUOUS_3', 'PROMISCUOUS_BOTH', 'EXON_DEL_DUP', 'IG_PROMICUOUS', 'IG_KNOWN_PAIR', KNOWN_PAIR_UNMMABLE_3' or 'NONE' (if no match is found)
+Phased | Set to 1 if a phased fusion can be formed (after allowing for exon skipping)
+ChainLength | 0 for simple fusions.  If fusion is chained equal to the total length of segments chained between 5' and 3' partners
+ChainLinks | 0 for simple fusions.  If fusion is chained equal to the number of segments chained between 5' and 3' partners
+ChainTerminated | True if the fusion is interupted either on the 5’ partner side by a chained breakend prior to the start of the 5’ gene or by a chained breakend prior to the last coding base of the 3’ gene
+DomainsKept | List of 3' partner domains retained in fusion product (as annotated by PROSITE profiles)
+DomainsLost | List of 3' partner domains lost in fusion product (as annotated by PROSITE profiles)
+SkippedExonsUp | Count of splice donors required to be skipped on 5' partner side to form an inframe fusion.  
+SkippedExonsDown | Count of splice donors required to be skipped on 3' partner side to form an inframe fusion
+FusedExonUp | Last exon fused on 5' partner side
+FusedExonDown | First exon fused on 3' partner side
+
+### Driver Catalog
+
+Reproduction of the driver catalog produced by PURPLE with homozygous disruptions events appended
+
+Generated file: sample_id.driver.catalog.tsv
+
+For more details about this file see:   https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#driver-catalog-file
+
+### Drivers
+
+Linkage of drivers from driver catalog to SV cluster which contributed to those drivers including LOH, deletion, disruption and amplification events.
+
+Generated file: sample_id.driver.tsv
+
+Field | Description 
+---|---
+clusterId | Id of cluster which break junction associated with driver.  Set to -1 for ARM or CHR level events.
+gene | Gene of driver.   Multiple clusters may be linked to a gene for a sample
+eventType | Type of driver .   One of ''GAIN" (amplification by SV), "GAIN_ARM" (amplification of whole arm), "GAIN_CHR" (amplification of whole chromosome), "DEL" (homozygous deletion), "LOH" (focal LOH), "LOH_ARM" (arm level LOH), "LOH_CHR" (chromosome level LOH), "LOH_SV_TELO" (LOH from SV to telomere), "LOH_SV_CENTRO" (LOH from SV to centromere), "HOM_DUP_DISRUPTION (homozygous disruption via cross exonic tandem duplication), "HOM_DEL_DISRUPTION" (homozygous disruption without homozygous copy number loss)
 
 ## Key Concepts in LINX
 
