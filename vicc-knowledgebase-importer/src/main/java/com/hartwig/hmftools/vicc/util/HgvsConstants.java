@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.util;
+package com.hartwig.hmftools.vicc.util;
 
 public final class HgvsConstants {
 

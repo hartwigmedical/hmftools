@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.serve.vicc.range;
 
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
+import com.hartwig.hmftools.vicc.util.EventAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,35 +16,15 @@ public class GeneLevelEventExtractor {
 
     // frameshift will be in event type hotspots
 
-    private static final Set<String> GENE_ACTIVATION = Sets.newHashSet("Gain-of-function Mutations",
-            "act mut",
-            "pos",
-            "positive",
-            "Gain Of Function Variant",
-            "Stop Lost",
-            "Missense Variant");
-
-    private static final Set<String> GENE_INACTIVATION = Sets.newHashSet("Truncating Mutations",
-            "inact mut",
-            "loss",
-            "biallelic inactivation",
-            "negative",
-            "is_deletion",
-            "Loss Of Function Variant",
-            "Start Lost",
-            "Loss Of Heterozygosity");
-
     @NotNull
     public Map<Feature, String> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
 
-            if (!ProteinToHotspotConverter.isResolvableProteinAnnotation(feature.proteinAnnotation())) {
-                if (EventAnnotationExtractor.GENE_LEVEL.contains(feature.biomarkerType()) || EventAnnotationExtractor.GENE_LEVEL.contains(feature.name())
-                        || EventAnnotationExtractor.GENE_LEVEL.contains(feature.provenanceRule()) || EventAnnotationExtractor.GENE_LEVEL.contains(feature.proteinAnnotation())) {
-                    geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
-                }
+            if (feature.eventAnnotation().equals(EventAnnotation.GENE_LEVEL)){
+                geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
+
             }
 
             //             else if (isValidSingleCodonRange(feature.proteinAnnotation())) {
@@ -62,8 +39,7 @@ public class GeneLevelEventExtractor {
             //                    || GENE_INACTIVATION.contains(feature.provenanceRule()) || GENE_INACTIVATION.contains(feature.proteinAnnotation())) {
             //                geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
             //            }
-        }
-        return geneLevelEventsPerFeature;
+        } return geneLevelEventsPerFeature;
     }
 
 }

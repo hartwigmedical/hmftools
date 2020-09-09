@@ -19,7 +19,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTr
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
 import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
-import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
+import com.hartwig.hmftools.vicc.util.EventAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,8 +35,6 @@ public class CopyNumberExtractor {
     @NotNull
     private final Set<String> uniqueDels = Sets.newHashSet();
 
-
-
     @NotNull
     public Set<String> uniqueAmps() {
         return uniqueAmps;
@@ -47,50 +45,15 @@ public class CopyNumberExtractor {
         return uniqueDels;
     }
 
-    private boolean isAmplification(@NotNull Feature feature) {
-        String eventKeyAmplification = extractKeyAmplificationDeletion(feature);
-        if (eventKeyAmplification.equals("Amplification")) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private boolean isDeletion(@NotNull Feature feature) {
-        String eventKeyDeletion = extractKeyAmplificationDeletion(feature);
-
-        if (eventKeyDeletion.equals("Deletion")) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private String extractKeyAmplificationDeletion(@NotNull Feature feature) {
-        //TODO: fix combi events
-        String featureName = feature.name();
-        if (featureName.contains(" ") && !featureName.equals("Copy Number Loss")) {
-            featureName = featureName.split(" ", 2)[1];
-        }
-
-        if (EventAnnotationExtractor.AMPLIFICATIONS.contains(featureName) || EventAnnotationExtractor.AMPLIFICATIONS.contains(feature.biomarkerType())) {
-            return "Amplification";
-        } else if (EventAnnotationExtractor.DELETIONS.contains(featureName) || EventAnnotationExtractor.DELETIONS.contains(feature.biomarkerType())) {
-            return "Deletion";
-        } else {
-            return Strings.EMPTY;
-        }
-    }
-
     @NotNull
     public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (isAmplification(feature)) {
+            if (feature.eventAnnotation().equals(EventAnnotation.AMPLIFICATION)) {
                 ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", viccEntry.source().display()));
                 uniqueAmps.add(feature.geneSymbol());
-            } else if (isDeletion(feature)) {
+            } else if (feature.eventAnnotation().equals(EventAnnotation.DELETION)) {
                 ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", viccEntry.source().display()));
                 uniqueDels.add(feature.geneSymbol());
             }

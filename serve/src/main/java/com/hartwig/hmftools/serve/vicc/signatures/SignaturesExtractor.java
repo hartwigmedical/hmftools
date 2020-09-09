@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
+import com.hartwig.hmftools.vicc.util.EventAnnotation;
 import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,7 +22,7 @@ public class SignaturesExtractor {
     public Map<Feature, String> extractSignatures(@NotNull ViccEntry viccEntry) {
         Map<Feature, String> signaturesPerFeature = Maps.newHashMap();
             for (Feature feature : viccEntry.features()) {
-                if (EventAnnotationExtractor.SIGNATURES.contains(feature.name())) {
+                if (feature.eventAnnotation().equals(EventAnnotation.SIGNATURE)) {
                     signaturesPerFeature.put(feature, feature.name());
                 }
             }

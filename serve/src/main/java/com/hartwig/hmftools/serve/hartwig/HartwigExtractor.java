@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
+import com.hartwig.hmftools.vicc.util.DetermineHotspot;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,7 +34,7 @@ public class HartwigExtractor {
         for (HartwigEntry entry : entries) {
             List<VariantHotspot> hotspots = Lists.newArrayList();
             if (!entry.proteinAnnotation().isEmpty()) {
-                if (ProteinToHotspotConverter.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
+                if (DetermineHotspot.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
                     hotspots =
                             proteinToHotspotConverter.resolveProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation());
                 } else {

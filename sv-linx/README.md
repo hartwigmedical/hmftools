@@ -7,6 +7,7 @@ LINX is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
 * [Configuration](#configuration)
   + [Example Usage](#example-usage)
 * [Dependencies](#dependencies)
+* [Outputs](#outputs)
 * [Key Concepts in LINX](#key-concepts-in-linx)
   + [LINX terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
   + [Overview of event classification system in LINX](#overview-of-event-classification-system-in-linx)
@@ -160,6 +161,36 @@ Ensembl database URLs for 19/37 & 38 are:
 - mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_98_38
 
 By default LINX will use HG19, but this can be overridden using the ref_genome_version config described above.
+
+## Outputs
+
+### Annotated SVs
+
+Generated file: sample_id.sv.tsv
+
+Field | Description 
+---|---
+svId | Id of break junction
+vcfId | Id of break junction for mapping to GRIDSS / PURPLE vcf
+clusterId | Id of cluster which break junction is assigned to
+clusterReason | Reason for clustering and svId of clustered break junction for other break junction(s) to which the variant has been clustered
+fragileSiteStart | Start breakend of break junction is in a known fragile site (T/F)
+fragileSiteEnd | End breakend of break junction is in a known fragile site (T/F)
+isFoldback | Break junction is classified as a foldback (T/F)
+lineTypeStart | Start breakend of break junction is in a known or suspected line source element
+lineTypeEnd | End breakend of break junction is in a known or suspected line source element
+junctionCopyNumberMin | Minimum bound JCN estimate for breakjunction
+junctionCopyNumberMax | Maximum bound JCN estimate for breakjunction
+geneStart | Gene(s) overlapping start breakend of SV
+geneEnd | Gene(s) overlapping end breakend of SV
+replicationTimingStart | Start breakend of break junction is in a known fragile site (based on HeLa replication timing,  hg19 only)
+replicationTimingEnd | End breakend of break junction is in a known fragile site (based on HeLa replication timing,  hg19 only)
+localTopologyIdStart | Id for group of proximate breakends to the start breakend of break junction within an extending 5kb window 
+localTopologyIdEnd | Id for group of proximate breakends to the end breakend of break junction within an extending 5kb window 
+localTopologyStart | Local breakend toplogy type at site of start breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
+localTopologyEnd | Local breakend toplogy type at stie of end breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
+localTICountStart | Number of chained templated insertions in local topology group of start breakend
+localTICountEnd | Number of chained templated insertions in local topology group of end breakend
 
 ## Key Concepts in LINX
 

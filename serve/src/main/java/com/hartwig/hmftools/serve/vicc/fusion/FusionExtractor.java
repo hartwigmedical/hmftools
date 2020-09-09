@@ -8,7 +8,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
+import com.hartwig.hmftools.vicc.util.EventAnnotation;
 import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
+import com.hartwig.hmftools.vicc.util.FusionEvent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,80 +35,14 @@ public class FusionExtractor {
         return uniqueFusionsPromiscuous;
     }
 
-    private boolean isFusion(@NotNull Feature feature) {
-        FusionEvent eventKeyFusion = extractKeyFusion(feature);
-        if (eventKeyFusion.equals(FusionEvent.FUSION_PAIR)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private boolean isFusionPromiscuous(@NotNull Feature feature) {
-        FusionEvent eventKeyFusion = extractKeyFusion(feature);
-        if (eventKeyFusion.equals(FusionEvent.FUSION_PROMISCUOUS)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @NotNull
-    private FusionEvent extractKeyFusion(@NotNull Feature feature) {
-        if (!EventAnnotationExtractor.IGNORE.contains(feature.name())) { // Extract internal fusion
-            if (EventAnnotationExtractor.INTERNAL_FUSION.contains(feature.proteinAnnotation())) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.name().contains("DELETION") && EventAnnotationExtractor.INTERNAL_FUSION.contains(feature.biomarkerType())) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.name().contains("DELETION") && EventAnnotationExtractor.INTERNAL_FUSION.contains(feature.provenanceRule())) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.name().contains("Exon") && feature.name().contains("deletion")) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.name().contains("Exon") && feature.name().contains("deletion/insertion")) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.name().contains("Exon") && feature.name().contains("insertions/deletions")) {
-                return FusionEvent.FUSION_PAIR;
-            }else if (EventAnnotationExtractor.SEARCH_FUSION_PAIRS.contains(feature.proteinAnnotation())) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (EventAnnotationExtractor.SEARCH_FUSION_PAIRS.contains(feature.name())) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (EventAnnotationExtractor.SEARCH_FUSION_PROMISCUOUS.contains(feature.proteinAnnotation())) {
-                if (feature.name().contains("-")) {
-                    return FusionEvent.FUSION_PAIR;
-                } else {
-                    return FusionEvent.FUSION_PROMISCUOUS;
-                }
-            } else if (feature.biomarkerType() != null) {
-                if (EventAnnotationExtractor.SEARCH_FUSION_PROMISCUOUS.contains(feature.biomarkerType())) {
-                    if (feature.name().contains("-")) {
-                        return FusionEvent.FUSION_PAIR;
-                    } else {
-                        return FusionEvent.FUSION_PROMISCUOUS;
-                    }
-                }
-                if (EventAnnotationExtractor.SEARCH_FUSION_PAIRS.contains(feature.biomarkerType())) {
-                    return FusionEvent.FUSION_PAIR;
-                }
-            } else if (feature.name().toLowerCase().contains("exon") && feature.name().toLowerCase().contains("deletion") && feature.name()
-                    .contains("-") || feature.name().contains("&")) {// Extract internal fusion
-                return FusionEvent.FUSION_PAIR;
-            } else {
-                return FusionEvent.UNKNOWN;
-            }
-        }
-
-        //TODO: check why this is needed??
-        return FusionEvent.UNKNOWN;
-    }
-
     public Map<Feature, FusionAnnotation> extractKnownFusions(@NotNull ViccEntry viccEntry) {
         Map<Feature, FusionAnnotation> fusionsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (isFusion(feature)) {
+            if (feature.eventAnnotation().equals(EventAnnotation.FUSION_PAIR)) {
                 fusionsPerFeature.put(feature,
                         ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PAIR).build());
-            } else if (isFusionPromiscuous(feature)) {
+            } else if (feature.eventAnnotation().equals(EventAnnotation.FUSION_PROMISCUOUS)) {
                 fusionsPerFeature.put(feature,
                         ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PROMISCUOUS).build());
             }

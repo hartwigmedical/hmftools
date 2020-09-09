@@ -10,5 +10,6 @@ public interface AmberPatient {
 
     int patientId();
 
+    @NotNull
     String sample();
 }

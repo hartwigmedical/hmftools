@@ -82,36 +82,96 @@ public final class EventAnnotationExtractor {
             "AR-V7",
             "ARv567es");
 
+    public static final Set<String> GENE_EXON = Sets.newHashSet("exon", "Exon Variant");
+    public static final Set<String> GENE_MULTIPLE_CODONS =
+            Sets.newHashSet("nonsense", "(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
+
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
-    //TODO: create enum for the events
-    public static final String EVENT_SIGNATURES = "Signatures";
-    public static final String EVENT_AMPLIFICATIONS = "Amplification";
-    public static final String EVENT_DELETIONS = "Deletions";
-    public static final String EVENT_FUSION_PAIR = "Fusion pair";
-    public static final String EVENT_FUSION_PROMISCUOUS = "Fusion promiscuous";
-    public static final String EVENT_HOTSPOT = "Hotspot";
-    public static final String EVENT_GENE_LEVEL = "Gene_level";
-    public static final String EVENT_GENE_RANGE = "Gene_range";
-
     @NotNull
-    public static String toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType) {
+    public static EventAnnotation toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType,
+            @Nullable String provenanceRule, @NotNull String proteinAnnotation) {
         String feature = featureName;
         if (feature.contains(" ") && !feature.equals("Copy Number Loss")) {
             feature = feature.split(" ", 2)[1];
         }
 
-        if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
-            return EVENT_SIGNATURES;
-        } else if (EventAnnotationExtractor.AMPLIFICATIONS.contains(feature) ||
-                EventAnnotationExtractor.AMPLIFICATIONS.contains(biomarkerType)) {
-            return EVENT_AMPLIFICATIONS;
-        } else if (EventAnnotationExtractor.DELETIONS.contains(feature) ||
-                EventAnnotationExtractor.DELETIONS.contains(biomarkerType)) {
-            return EVENT_DELETIONS;
-        } else {
-//            LOGGER.warn("No event annotation extracted from event!");
-            return Strings.EMPTY;
+        String event = Strings.EMPTY;
+        if (feature.toLowerCase().contains("exon")) {
+            event = "exon";
+        } else if (biomarkerType != null) {
+            if (biomarkerType.equals("Exon Variant")) {
+                event = "exon";
+            }
         }
+
+        if (DetermineHotspot.isResolvableProteinAnnotation(proteinAnnotation)) {
+            return EventAnnotation.HOTSPOT;
+        } else if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
+            return EventAnnotation.SIGNATURE;
+        } else if (DetermineCopyNumber.isAmplification(feature, biomarkerType)) {
+            return EventAnnotation.AMPLIFICATION;
+        } else if (DetermineCopyNumber.isDeletion(feature, biomarkerType)) {
+            return EventAnnotation.DELETION;
+        } else if (DetermineFusion.isFusion(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
+            return EventAnnotation.FUSION_PAIR;
+        } else if (DetermineFusion.isFusionPromiscuous(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
+            return EventAnnotation.FUSION_PROMISCUOUS;
+        } else if (!DetermineHotspot.isResolvableProteinAnnotation(proteinAnnotation)) {
+            if (EventAnnotationExtractor.GENE_LEVEL.contains(biomarkerType) || EventAnnotationExtractor.GENE_LEVEL.contains(feature)
+                    || EventAnnotationExtractor.GENE_LEVEL.contains(provenanceRule) || EventAnnotationExtractor.GENE_LEVEL.contains(
+                    proteinAnnotation)) {
+                return EventAnnotation.GENE_LEVEL;
+            }
+        } else if (EventAnnotationExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
+            return EventAnnotation.GENE_RANGE_EXON;
+        } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
+                proteinAnnotation.length() - 1).equals("X") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
+            return EventAnnotation.GENE_RANGE_CODON;
+        } else if (proteinAnnotation.length() >= 1 && isValidSingleCodonRange(proteinAnnotation)) {
+            return EventAnnotation.GENE_RANGE_CODON;
+        } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
+            return EventAnnotation.GENE_RANGE_CODON;
+        } else if (feature.contains("DEL") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
+            return EventAnnotation.GENE_RANGE_CODON;
+        } else if (proteinAnnotation.contains("del") && proteinAnnotation.contains("_")) {
+            return EventAnnotation.GENE_RANGE_CODON;
+        } else {
+            LOGGER.warn("No event annotation extracted from event!");
+            return EventAnnotation.UNKNOWN;
+        }
+        return EventAnnotation.UNKNOWN;
+
     }
+
+    private static boolean isValidSingleCodonRange(@NotNull String feature) {
+
+        // Features are expected to look something like V600 (1 char - N digits)
+        if (feature.length() < 3) {
+            return false;
+        }
+
+        if (!Character.isLetter(feature.charAt(0))) {
+            return false;
+        }
+
+        if (!Character.isDigit(feature.charAt(1))) {
+            return false;
+        }
+
+        if (feature.contains("*")) {
+            return false;
+        }
+
+        if (feature.contains("/")) {
+            return false;
+        }
+
+        if (feature.contains("fs")) {
+            return false;
+        }
+
+        return Character.isDigit(feature.substring(feature.length() - 1).charAt(0));
+    }
+
 }

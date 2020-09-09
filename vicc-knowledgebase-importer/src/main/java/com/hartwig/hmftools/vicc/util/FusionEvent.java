@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc.fusion;
+package com.hartwig.hmftools.vicc.util;
 
 public enum FusionEvent {
     FUSION_PROMISCUOUS,

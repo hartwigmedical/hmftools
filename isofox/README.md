@@ -264,7 +264,7 @@ The calculated biases are applied as a weighting to each raw fragment based on i
 
 ### 7. Counting and characterisation of novel splice junctions
 
-A novel splice junction in Isofox is considered to be a novel splicing event which is not part of any annotated gene in ensembl. To be treated as a novel splicing event in a particular gene, at least 1 of the splicing ends must fall within the gene, the other splice end must be within 500k bases upstream or downstream of the gene and the splicing must not link 2 annotated splice sites that are not both present in a single ensembl gene.  Circular RNAs (typically formed by backsplicing) are also treated as novel splice junctions when they fall wholly within a gene and are marked as orientation "CIRCULAR".  Inversion oriented events are not considered to be novel splice junctions and are instead treated as chimeric.
+A novel splice junction in Isofox is considered to be a novel splicing event which is not part of any annotated gene in ensembl. To be treated as a novel splicing event in a particular gene, at least 1 of the splicing ends must fall within the gene, the other splice end must be within 500k bases upstream or downstream of the gene.   The splice junction must not link 2 annotated splice sites that are not both present in a single ensembl gene and must not link a known fusion pair (GOPC_ROS1 is the main example) or else it will be counted a chimeric junction (see section below).  Circular RNAs (typically formed by backsplicing) are also treated as novel splice junctions when they fall wholly within a gene and are marked as orientation "CIRCULAR".  Inversion oriented events are not considered to be novel splice junctions and are instead treated as chimeric.
 
 For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.  Each novel splice junction is classified as one of the following types of events
 
@@ -297,9 +297,14 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 #### A. Identify candidate chimeric junctions
 
-Any junction supported by at least one read with either a supplementary alignment or a spliced alignment which either links 2 known splice sites in different genes OR extends beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, Isofox also searches for candidate locations without split alignments  supported only by discordant read pairs.
+Any junction supported by at least one read with either a supplementary alignment or a spliced alignment which either links 2 known splice sites which are not present in any single ensemble gene OR links 2 known splice sites that create a known fusion pair (eg. GOPC_ROS1) OR extends at least 500kb beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, Isofox also searches for candidate locations without split alignments supported only by discordant read pairs.
 
 The chimeric junction is oriented by the splice site type of the 2 breakends:  a location matching a donor splice site is set to be the 'up' breakend and a location matching the acceptor site is set to be the down breakend. If no splice site exists at either breakend, then the direction is infered by looking for canonical donor and acceptor sequences.
+
+If either end of the chimeric junction overlaps more than 1 gene, then select one gene candidate according to the following priority rules:
+* Genes with matching splice site / orientation 
+* Genes which are marked in the HMF fusion knowledgebase as known or promiscuous partners
+* Longest protein coding gene 
 
 #### B. Count support
 
@@ -316,14 +321,16 @@ Isofox also determines the coverage at both breakends and the max anchor length 
 
 The filters and thresholds per tier are as follows:
 
-Filter | definition | Known pathogenic fusions | Splice Site-Splice Site* | Splice Site-Canonical | Canonical-Canonical | Other
+Filter | definition | Known pathogenic fusions* | Splice Site-Splice Site** | Splice Site-Canonical | Canonical-Canonical | Other
 ---|---|---|---|---|---|---
 min_fragment_support | total fragments supporting fusion | Splice Site-Splice Site or Splice Site-Canonical: 2; Other: 4  | 2 | 3 | 4 | 10
 min_af | min(AFUp, AFDown) | 0 | 0.005 | 0.005 | 0.005 | 0.05
 min_anchor | min(maxAnchorLengthUp, maxAnchorLengthDown) | 0 | 20 | 20 | 20 | 20 
-max_cohort_frequency** | count of observations in cohort | NA if known;  5 if either gene known | 2 | 2 | 2 | 2
+max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if either gene known | 2 | 2 | 2 | 2
 
-'* 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs
+'* For known pair fusions supporting fragments are cumulative aross all novel junctions
+
+'** 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs. 
 
 '** seee below for cohort frequency calculation
 
