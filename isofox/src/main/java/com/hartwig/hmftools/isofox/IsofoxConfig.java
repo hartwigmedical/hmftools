@@ -577,6 +577,7 @@ public class IsofoxConfig
             }
 
             geneIdList.addAll(fileContents.stream()
+                    .filter(x -> !x.isEmpty())
                     .filter(x -> !x.contains("GeneId"))
                     .filter(x -> !x.startsWith("#"))
                     .map(x -> x.split(",")[COL_GENE_ID]).collect(Collectors.toList()));

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -8,8 +10,10 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOF
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 
 import java.util.List;
+import java.util.Set;
 
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 import htsjdk.samtools.CigarOperator;
@@ -61,12 +65,6 @@ public class FusionUtils
         }
 
         return false;
-
-        /*
-        Set<Byte> orientations = Sets.newHashSet();
-        reads.stream().filter(x -> !x.isSupplementaryAlignment()).forEach(x -> orientations.add(x.orientation()));
-        return orientations.size() == 1;
-         */
     }
 
     public static ReadRecord findSplitRead(final List<ReadRecord> reads)
@@ -116,5 +114,106 @@ public class FusionUtils
         return hasRealignableSoftClip(read, SE_START, true) || hasRealignableSoftClip(read, SE_END, true);
     }
 
+    public static boolean setHasMultipleKnownSpliceGenes(final List<ReadRecord> reads, final List<String[]> knownPairGeneIds)
+    {
+        // determines whether reads definitely span multiple genes based on the presence of known splice sites at the fragment junction
+        Set<Integer> junctionPositions = Sets.newHashSet();
+        ReadRecord splitRead = null;
+
+        for(ReadRecord read : reads)
+        {
+            if(read.containsSplit())
+            {
+                // find the largest N-split to mark the junction
+                final int[] splitJunction = findSplitReadJunction(read);
+
+                if(splitJunction != null)
+                {
+                    junctionPositions.add(splitJunction[SE_START]);
+                    junctionPositions.add(splitJunction[SE_END]);
+                    splitRead = read;
+                }
+
+                break;
+            }
+
+            if(hasRealignableSoftClip(read, SE_START, false))
+                junctionPositions.add(read.getCoordsBoundary(SE_START));
+
+            if(hasRealignableSoftClip(read, SE_END, false))
+                junctionPositions.add(read.getCoordsBoundary(SE_END));
+        }
+
+        if(junctionPositions.size() < 2)
+            return false;
+
+        List<Set<String>> positionGeneLists = Lists.newArrayList();
+
+        for(int juncPosition : junctionPositions)
+        {
+            Set<String> geneIds = Sets.newHashSet();
+
+            if(splitRead != null)
+            {
+                splitRead.getMappedRegions().entrySet().stream()
+                        .filter(x -> x.getKey().PosStart == juncPosition || x.getKey().PosEnd == juncPosition)
+                        .forEach(x -> x.getKey().getTransExonRefs().stream().forEach(y -> geneIds.add(y.GeneId)));
+            }
+            else
+            {
+                reads.stream().forEach(x -> x.getMappedRegions().entrySet().stream()
+                        .filter(y -> y.getKey().PosStart == juncPosition || y.getKey().PosEnd == juncPosition)
+                        .forEach(y -> y.getKey().getTransExonRefs().stream().forEach(z -> geneIds.add(z.GeneId))));
+            }
+
+            positionGeneLists.add(geneIds);
+        }
+
+        for(final String[] geneIdPair : knownPairGeneIds)
+        {
+            if(positionGeneLists.get(0).stream().anyMatch(x -> x.equals(geneIdPair[FS_UPSTREAM]))
+            && positionGeneLists.get(1).stream().anyMatch(x -> x.equals(geneIdPair[FS_DOWNSTREAM])))
+            {
+                if(splitRead != null)
+                    splitRead.setHasInterGeneSplit(); // will make use of this when handling fusions
+
+                return true;
+            }
+            else if(positionGeneLists.get(0).stream().anyMatch(x -> x.equals(geneIdPair[FS_DOWNSTREAM]))
+            && positionGeneLists.get(1).stream().anyMatch(x -> x.equals(geneIdPair[FS_UPSTREAM])))
+            {
+                if(splitRead != null)
+                    splitRead.setHasInterGeneSplit(); // will make use of this when handling fusions
+
+                return true;
+            }
+        }
+
+        for(int i = 0; i < positionGeneLists.size() - 1; ++i)
+        {
+            Set<String> geneIds1 = positionGeneLists.get(i);
+
+            if(geneIds1.isEmpty())
+                continue;
+
+            for(int j = i + 1; j < positionGeneLists.size(); ++j)
+            {
+                Set<String> geneIds2 = positionGeneLists.get(j);
+
+                if(geneIds2.isEmpty())
+                    continue;
+
+                if(!geneIds1.stream().anyMatch(x -> geneIds2.contains(x)))
+                {
+                    if(splitRead != null)
+                        splitRead.setHasInterGeneSplit(); // will make use of this when handling fusions
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
 }

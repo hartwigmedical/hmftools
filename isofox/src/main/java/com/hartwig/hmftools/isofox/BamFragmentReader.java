@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
@@ -26,6 +27,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
@@ -50,7 +53,7 @@ import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
-public class BamFragmentReaderTask implements Callable
+public class BamFragmentReader implements Callable
 {
     private final String mChromosome;
     private final IsofoxConfig mConfig;
@@ -97,7 +100,7 @@ public class BamFragmentReaderTask implements Callable
 
     private final PerformanceCounter[] mPerfCounters;
 
-    public BamFragmentReaderTask(
+    public BamFragmentReader(
             final IsofoxConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
             final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter,
             final ExpectedCountsCache expectedCountsCache, final GcTranscriptCalculator transcriptGcCalcs)
@@ -118,6 +121,8 @@ public class BamFragmentReaderTask implements Callable
         mExpectedCountsCache = expectedCountsCache;
 
         mBamFragmentAllocator = new BamFragmentAllocator(mConfig, resultsWriter);
+        mBamFragmentAllocator.registerKnownFusionPairs(mGeneTransCache);
+
         mGcRatioCounts = mBamFragmentAllocator.getGcRatioCounts();
         mExpTransRates = mConfig.ApplyExpectedRates ? new TranscriptExpression(mConfig, mExpectedCountsCache, resultsWriter) : null;
 

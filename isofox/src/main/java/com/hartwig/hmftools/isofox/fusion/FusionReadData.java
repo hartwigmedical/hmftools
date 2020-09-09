@@ -177,8 +177,6 @@ public class FusionReadData
 
     public boolean hasViableGenes() { return !mCandidateGenes[FS_UPSTREAM].isEmpty() && !mCandidateGenes[FS_DOWNSTREAM].isEmpty(); }
 
-    public boolean isValid() { return hasViableGenes() && !hasIncompleteData(); }
-
     public void setJunctionBases(final RefGenomeInterface refGenome)
     {
         if(mFragment.type() != MATCHED_JUNCTION)

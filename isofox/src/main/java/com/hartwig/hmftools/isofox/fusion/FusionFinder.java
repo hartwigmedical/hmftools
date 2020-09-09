@@ -298,7 +298,6 @@ public class FusionFinder
         {
             final List<Callable> callableList = mFusionTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
-            // executeFusionTasks();
             logPerformanceStats();
         }
 

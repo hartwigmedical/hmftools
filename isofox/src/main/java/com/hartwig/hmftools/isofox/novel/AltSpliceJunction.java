@@ -29,9 +29,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-
 public class AltSpliceJunction
 {
     public final String Chromosome;

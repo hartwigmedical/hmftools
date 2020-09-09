@@ -43,7 +43,7 @@ public class FusionTask implements Callable
 
     private int mNextFusionId;
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
-    private Map<String,Map<String,FusionReadData>> mFusionsByLocation;
+    private Map<String,Map<String,FusionReadData>> mFusionsByLocation; // keyed by the chromosome pair, then precise position (hashed)
     private final Map<String,List<FusionReadData>> mFusionsByGene; // keyed by the locationId
     private final Map<String,List<FusionFragment>> mDiscordantFragments; // keyed by the chromosome pair
     private final Map<String,List<FusionFragment>> mRealignCandidateFragments; // keyed by chromosome, since single-sided

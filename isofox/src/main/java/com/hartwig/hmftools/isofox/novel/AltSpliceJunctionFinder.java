@@ -3,10 +3,12 @@ package com.hartwig.hmftools.isofox.novel;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.EXON_INTRON;
@@ -65,13 +67,24 @@ public class AltSpliceJunctionFinder
     public void evaluateFragmentReads(
             final List<GeneReadData> genes, final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
     {
-        if(read1.isDuplicate() || read2.isDuplicate())
+        if(read1.isDuplicate() || read2.isDuplicate() || genes.isEmpty())
             return;
 
-        // for now exclude SJs outside known transcripts
+        // exclude SJs too far outside known transcripts
+        int[] geneBounds = new int[] {
+                genes.stream().mapToInt(x -> x.GeneData.GeneStart).min().orElse(0) - MAX_NOVEL_SJ_DISTANCE,
+                genes.stream().mapToInt(x -> x.GeneData.GeneStart).max().orElse(0) + MAX_NOVEL_SJ_DISTANCE };
+
+        if(!positionsWithin(read1.PosStart, read1.PosEnd, geneBounds[SE_START], geneBounds[SE_END])
+        || !positionsWithin(read2.PosStart, read2.PosEnd, geneBounds[SE_START], geneBounds[SE_END]))
+        {
+            return;
+        }
+
+        // at least one of the reads must fall within a gene
         final List<GeneReadData> candidateGenes = genes.stream()
-                .filter(x -> !(read1.PosStart < x.GeneData.GeneStart || read2.PosStart < x.GeneData.GeneStart
-                        || read1.PosEnd > x.GeneData.GeneEnd || read2.PosEnd > x.GeneData.GeneEnd))
+                .filter(x -> positionsWithin(read1.PosStart, read1.PosEnd, x.GeneData.GeneStart,x.GeneData.GeneEnd)
+                        || positionsWithin(read2.PosStart, read2.PosEnd, x.GeneData.GeneStart,x.GeneData.GeneEnd))
                 .collect(Collectors.toList());
 
         if(candidateGenes.isEmpty())
