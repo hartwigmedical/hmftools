@@ -301,6 +301,11 @@ Any junction supported by at least one read with either a supplementary alignmen
 
 The chimeric junction is oriented by the splice site type of the 2 breakends:  a location matching a donor splice site is set to be the 'up' breakend and a location matching the acceptor site is set to be the down breakend. If no splice site exists at either breakend, then the direction is infered by looking for canonical donor and acceptor sequences.
 
+If either end of the chimeric junction overlaps more than 1 gene, then select one gene candidate according to the following priority rules:
+* Genes with matching splice site / orientation 
+* Genes which are marked in the HMF fusion knowledgebase as known or promiscuous partners
+* Longest protein coding gene 
+
 #### B. Count support
 
 Isofox counts 3 categories all fragments supporting the break junction broken into 3 categories:
