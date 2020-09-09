@@ -340,9 +340,12 @@ public class DriverGeneAnnotator
     }
 
     @VisibleForTesting
-    public void clearResults()
+    public void clearResults(boolean clearDrivers)
     {
         mDataCache.getDriverGeneDataList().clear();
+
+        if(clearDrivers)
+            mDataCache.getDriverCatalog().clear();
     }
 
     public void close()

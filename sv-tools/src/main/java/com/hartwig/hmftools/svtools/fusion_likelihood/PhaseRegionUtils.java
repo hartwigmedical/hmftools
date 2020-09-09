@@ -256,13 +256,6 @@ public class PhaseRegionUtils
                 if (!upperGene.Arm.equals(lowerGene.Arm))
                     break;
 
-                /*
-                if(lowerGene.GeneData.GeneId.equals("ENSG00000121236") && upperGene.GeneData.GeneId.equals("ENSG00000258588"))
-                {
-                    LOGGER.info("spec genes");
-                }
-                */
-
                 List<GenePhaseRegion> upperRegions = upperGene.getPhaseRegions();
 
                 int lrIndex = 0;

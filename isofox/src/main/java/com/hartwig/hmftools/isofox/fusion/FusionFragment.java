@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
@@ -11,10 +12,8 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalAcceptor;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalDonor;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
@@ -121,17 +120,9 @@ public class FusionFragment
 
     public String positionHash()
     {
-        if(isSingleGeneCollection())
-        {
-            return String.format("%d_%d",
-                    mJunctionPositions[SE_START], mJunctionOrientations[SE_START]);
-        }
-        else
-        {
-            return String.format("%d_%d_%d_%d",
-                    mJunctionPositions[SE_START], mJunctionOrientations[SE_START],
-                    mJunctionPositions[SE_END], mJunctionOrientations[SE_END]);
-        }
+        return String.format("%d_%d_%d_%d",
+                mJunctionPositions[SE_START], mJunctionOrientations[SE_START],
+                mJunctionPositions[SE_END], mJunctionOrientations[SE_END]);
     }
 
     public void setType(FusionFragmentType type) { mType = type; }

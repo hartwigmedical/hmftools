@@ -51,24 +51,6 @@ public class BamSlicer
         }
     }
 
-    public void slice(@NotNull final SamReader samReader, final QueryInterval[] queryIntervals, @NotNull final Consumer<SAMRecord> consumer)
-    {
-        mConsumerHalt = false;
-
-        try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
-        {
-            while (!mConsumerHalt && iterator.hasNext())
-            {
-                final SAMRecord record = iterator.next();
-
-                if (passesFilters(record))
-                {
-                    consumer.accept(record);
-                }
-            }
-        }
-    }
-
     public List<SAMRecord> slice(@NotNull final SamReader samReader, final QueryInterval[] queryIntervals)
     {
         final List<SAMRecord> records = Lists.newArrayList();

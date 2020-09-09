@@ -52,6 +52,12 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
@@ -413,6 +419,13 @@ public class SampleAnalyser
             LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+
+            VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            VisGeneExonFile.write(VisGeneExonFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            VisSegmentFile.write(VisSegmentFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            VisFusionFile.write(VisFusionFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
         }
         catch (IOException e)
         {

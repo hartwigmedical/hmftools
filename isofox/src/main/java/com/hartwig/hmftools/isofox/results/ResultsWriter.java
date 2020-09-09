@@ -62,6 +62,7 @@ public class ResultsWriter
     public static final String ISOFOX_ID = ".isf.";
     public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
+    public static final String SUB_ITEM_DELIM = ":";
     public static final String FLD_SAMPLE_ID = "SampleId";
     public static final String FLD_GENE_ID = "GeneId";
     public static final String FLD_GENE_SET_ID = "GeneSetId";

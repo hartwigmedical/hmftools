@@ -3,8 +3,11 @@ package com.hartwig.hmftools.isofox;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
@@ -24,8 +27,6 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -33,6 +34,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -44,6 +46,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
@@ -101,6 +106,7 @@ public class BamFragmentAllocator
     private final GcRatioCounts mGeneGcRatioCounts;
     private int mEnrichedGeneFragments;
     private final DuplicateReadTracker mDuplicateTracker;
+    private final List<String[]> mKnownPairGeneIds;
 
     public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
@@ -137,6 +143,8 @@ public class BamFragmentAllocator
         mGeneGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
         mBaseDepth = new BaseDepth();
         mChimericReads = new ChimericReadTracker(mConfig);
+
+        mKnownPairGeneIds = Lists.newArrayList();
 
         if(mConfig.runFunction(NOVEL_LOCATIONS))
         {
@@ -213,11 +221,37 @@ public class BamFragmentAllocator
             processEnrichedGeneFragments();
 
         if(mRunFusions)
+        {
             mChimericReads.postProcessChimericReads(mBaseDepth, mFragmentReads);
+            processChimericNovelJunctions();
+        }
 
         ISF_LOGGER.debug("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
                 mCurrentGenes.geneNames(), mGeneReadCount, mBaseDepth.basesWithDepth(),
                 String.format("%.3f", mBaseDepth.basesWithDepthPerc()), mBaseDepth.maxDepth());
+    }
+
+    private void processChimericNovelJunctions()
+    {
+        if(mAltSpliceJunctionFinder == null || mChimericReads.getLocalChimericReads().isEmpty())
+            return;
+
+        final List<Integer> invalidTrans = Lists.newArrayList();
+
+        for(final List<ReadRecord> reads : mChimericReads.getLocalChimericReads())
+        {
+            if(reads.size() != 2)
+                continue;
+
+            final ReadRecord read1 = reads.get(0);
+            final ReadRecord read2 = reads.get(1);
+
+            int readPosMin = min(read1.PosStart, read2.PosStart);
+            int readPosMax = max(read1.PosEnd, read2.PosEnd);
+
+            final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax);
+            mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTrans);
+        }
     }
 
     public void annotateNovelLocations()
@@ -264,14 +298,22 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:21612:19589:16341";
+    // private static final String LOG_READ_ID = "A00260:30:HGL2NDSXX:2:1476:6117:17754";
+    // private static final int LOG_READ_POS = 117642557;
 
     private void processRead(ReadRecord read)
     {
         if(read.Id.equals(LOG_READ_ID))
         {
-            ISF_LOGGER.debug("specific read: {}", read.toString());
+            ISF_LOGGER.debug("specific read by ID: {}", read.toString());
         }
+        /*
+        //else if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(LOG_READ_POS, x[SE_START], x[SE_END])))
+        else if(read.getMappedRegionCoords().stream().anyMatch(x -> x[SE_START] == LOG_READ_POS || x[SE_END] == LOG_READ_POS))
+        {
+            ISF_LOGGER.debug("specific read by position: {}", read.toString());
+        }
+        */
 
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
@@ -334,6 +376,11 @@ public class BamFragmentAllocator
 
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
         boolean isChimeric = read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection();
+
+        if(!isChimeric && !isDuplicate && (read1.containsSplit() || read2.containsSplit()))
+        {
+            isChimeric = setHasMultipleKnownSpliceGenes(Lists.newArrayList(read1, read2), mKnownPairGeneIds);
+        }
 
         if(mStatsOnly)
         {
@@ -790,6 +837,17 @@ public class BamFragmentAllocator
         else
         {
             mChimericReads.addChimericReadPair(read1, read2);
+        }
+    }
+
+    public void registerKnownFusionPairs(final EnsemblDataCache geneTransCache)
+    {
+        for(final KnownFusionData knownPair : mConfig.Fusions.KnownFusions.getDataByType(KNOWN_PAIR))
+        {
+            final EnsemblGeneData upGene = geneTransCache.getGeneDataByName(knownPair.FiveGene);
+            final EnsemblGeneData downGene = geneTransCache.getGeneDataByName(knownPair.ThreeGene);
+            if(upGene != null && downGene != null)
+                mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
         }
     }
 

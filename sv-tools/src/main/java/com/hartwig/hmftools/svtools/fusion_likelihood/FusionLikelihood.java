@@ -196,8 +196,6 @@ public class FusionLikelihood
         }
     }
 
-    // public void setRestrictedGeneIds(final List<String> geneIds) { mRestrictedGeneIds.addAll(geneIds); }
-
     @VisibleForTesting
     public void initialise(final EnsemblDataCache geneTransCache, final List<Integer> delDepLengths)
     {
@@ -347,7 +345,7 @@ public class FusionLikelihood
 
                         int bucketIndex = bEntry.getKey();
 
-                        int[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(isDel, bucketIndex);
+                        int[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(bucketIndex);
                         int bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
 
                         double fusionRate = overlapCount / (bucketWidth * GENOME_BASE_COUNT);
@@ -530,7 +528,7 @@ public class FusionLikelihood
 
                                 int bucketIndex = bEntry.getKey();
 
-                                int[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(isDel, bucketIndex);
+                                int[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(bucketIndex);
                                 int minBucketLen = bucketMinMax[BUCKET_MIN];
                                 int maxBucketLen = bucketMinMax[BUCKET_MAX];
                                 int bucketWidth = maxBucketLen - minBucketLen;

@@ -410,15 +410,14 @@ public class FusionFinder
                 // look for any match between the 2 sets of alt-phasings
             }
 
-            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
+            // moving past an exon into the intron to phase-match is not considered as as skipping an exon
+            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic() && phaseExonsSkippedUp == 1 && phaseExonsSkippedDown == 0)
             {
-                if(phaseExonsSkippedUp == 0)
-                    phaseExonsSkippedUp = 1;
+                phaseExonsSkippedUp = 0;
             }
-            else if(!upstreamTrans.isExonic() && downstreamTrans.isExonic())
+            else if(!upstreamTrans.isExonic() && downstreamTrans.isExonic() && phaseExonsSkippedUp == 0 && phaseExonsSkippedDown == 1)
             {
-                if(phaseExonsSkippedDown == 0)
-                    phaseExonsSkippedDown = 1;
+                phaseExonsSkippedDown = 0;
             }
 
             if(!phaseMatched)

@@ -49,6 +49,7 @@ public class CohortExpFusions
 {
     // config
     private final List<Integer> mProximateBucketLengths;
+    private int mMaxProximateBucketLength;
 
     private final Map<String, List<GeneRangeData>> mChrGeneDataMap;
 
@@ -83,6 +84,7 @@ public class CohortExpFusions
         mDupGenePairCounts = Maps.newHashMap();
         mGlobalProximateCounts = Lists.newArrayList();
         mProximateBucketLengths = Lists.newArrayList();
+        mMaxProximateBucketLength = 0;
         mGlobalShortInvCount = 0;
         mGlobalLongDelDupInvCount = 0;
         mArmLengthFactor = 0;
@@ -103,6 +105,9 @@ public class CohortExpFusions
 
         mProximateBucketLengths.stream().forEach(x -> mGlobalProximateCounts.add(0));
 
+        mMaxProximateBucketLength = !mProximateBucketLengths.isEmpty() ?
+                mProximateBucketLengths.get(mProximateBucketLengths.size() - 1) : MIN_BUCKET_LENGTH;
+
         // sum up all arm lengths to adjust same-arm fusion rates
         int maxBucketLength = max(getMaxBucketLength(), 4000000);
 
@@ -113,12 +118,12 @@ public class CohortExpFusions
             if(!restrictedChromosomes.isEmpty() && !restrictedChromosomes.contains(chromosome))
                 continue;
 
-            int armLength = (int)getChromosomalArmLength(chromosome, P_ARM);
+            int armLength = getChromosomalArmLength(chromosome, P_ARM);
 
             if(armLength > maxBucketLength)
                 mArmLengthFactor += pow(armLength - maxBucketLength, 2);
 
-            armLength = (int)getChromosomalArmLength(chromosome, Q_ARM);
+            armLength = getChromosomalArmLength(chromosome, Q_ARM);
 
             if(armLength > maxBucketLength)
                 mArmLengthFactor += armLength * (armLength - maxBucketLength);
@@ -149,7 +154,7 @@ public class CohortExpFusions
             - determine same-gene fusions
             - determine proximate fusions
             - determine non-proximate fusions
-            - finally determine global fusion
+            - finally determine global fusion rates
         */
 
         final Map<String, List<EnsemblGeneData>> chrGeneDataMap = geneTransCache.getChrGeneDataMap();
@@ -461,10 +466,7 @@ public class CohortExpFusions
         }
     }
 
-    public int getMaxBucketLength()
-    {
-        return !mProximateBucketLengths.isEmpty() ? mProximateBucketLengths.get(mProximateBucketLengths.size() - 1) : MIN_BUCKET_LENGTH;
-    }
+    public int getMaxBucketLength() { return mMaxProximateBucketLength; }
 
     public void generateProximateCounts(final List<GeneRangeData> geneList, int strandMatch)
     {
@@ -801,7 +803,7 @@ public class CohortExpFusions
     public static final int BUCKET_MIN = 0;
     public static final int BUCKET_MAX = 1;
 
-    public int[] getBucketLengthMinMax(boolean isDel, int bucketIndex)
+    public int[] getBucketLengthMinMax(int bucketIndex)
     {
         if(bucketIndex >= mProximateBucketLengths.size())
             return new int[2];
@@ -811,7 +813,7 @@ public class CohortExpFusions
 
     public void addGeneFusionData(final GeneRangeData lowerGene, final GeneRangeData upperGene, int overlapCount, boolean isDel, int bucketIndex)
     {
-        int[] bucketMinMax = getBucketLengthMinMax(isDel, bucketIndex);
+        int[] bucketMinMax = getBucketLengthMinMax(bucketIndex);
         int bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
         double fusionRate = overlapCount / (bucketWidth * GENOME_BASE_COUNT);
 

@@ -190,7 +190,7 @@ public class HomDisruptionsTest
         SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
-        driverAnnotator.clearResults();
+        driverAnnotator.clearResults(true);
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(2, tester.Analyser.getClusters().size());

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.isofox.common;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -20,25 +18,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-
 public class RnaUtils
 {
-    public static boolean positionsOverlap(int posStart1, int posEnd1, int posStart2, int posEnd2)
-    {
-        return !(posStart1 > posEnd2 || posEnd1 < posStart2);
-    }
-
-    public static boolean positionWithin(int position, int otherPosStart, int otherPosEnd)
-    {
-        return (position >= otherPosStart && position <= otherPosEnd);
-    }
-
-    public static boolean positionsWithin(int innerStart, int innerEnd, int outerStart, int outerEnd)
-    {
-        return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
-    }
-
     public static List<int[]> deriveCommonRegions(final List<int[]> regions1, final List<int[]> regions2)
     {
         // merges any overlapping regoins to create a combined set without overlaps

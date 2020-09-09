@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_F
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUB_ITEM_DELIM;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
 
@@ -85,6 +87,7 @@ public class IsofoxConfig
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
     private static final String SPECIFIC_CHR = "specific_chr";
+    private static final String SPECIFIC_REGIONS = "specific_regions";
     private static final String GENE_READ_LIMIT = "gene_read_limit";
     private static final String RUN_VALIDATIONS = "validate";
     private static final String PERF_CHECKS = "perf_checks";
@@ -135,6 +138,7 @@ public class IsofoxConfig
     public final FusionConfig Fusions;
 
     public final List<String> SpecificChromosomes;
+    public final List<SvRegion> SpecificRegions;
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
@@ -243,11 +247,6 @@ public class IsofoxConfig
                 Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : DEFAULT_GC_RATIO_BUCKET;
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
-        RunValidations = cmd.hasOption(RUN_VALIDATIONS);
-        RunPerfChecks = cmd.hasOption(PERF_CHECKS);
-        SpecificChromosomes = cmd.hasOption(SPECIFIC_CHR) ? Arrays.stream(cmd.getOptionValue(SPECIFIC_CHR).split(ITEM_DELIM)).collect(Collectors.toList())
-                : Lists.newArrayList();
-
         ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
         ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
         ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
@@ -271,6 +270,27 @@ public class IsofoxConfig
         }
 
         Fusions = new FusionConfig(cmd);
+
+        RunValidations = cmd.hasOption(RUN_VALIDATIONS);
+        RunPerfChecks = cmd.hasOption(PERF_CHECKS);
+
+        SpecificChromosomes = Lists.newArrayList();
+        SpecificRegions = Lists.newArrayList();
+
+        if(cmd.hasOption(SPECIFIC_REGIONS))
+        {
+            final List<String> regionStrs = Arrays.stream(cmd.getOptionValue(SPECIFIC_REGIONS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
+            for(String regionStr : regionStrs)
+            {
+                final String[] items = regionStr.split(SUB_ITEM_DELIM);
+                if(items.length == 3)
+                    SpecificRegions.add(new SvRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2])));
+            }
+        }
+        else if(cmd.hasOption(SPECIFIC_CHR))
+        {
+            SpecificChromosomes.addAll(Arrays.stream(cmd.getOptionValue(SPECIFIC_CHR).split(ITEM_DELIM)).collect(Collectors.toList()));
+        }
     }
 
     public boolean isValid()
@@ -472,6 +492,7 @@ public class IsofoxConfig
         FragmentLengthMinCount = 0;
 
         SpecificChromosomes = Lists.newArrayList();
+        SpecificRegions = Lists.newArrayList();
         RunValidations = true;
         RunPerfChecks = false;
         Threads = 0;
@@ -521,7 +542,8 @@ public class IsofoxConfig
         options.addOption(WRITE_EXPECTED_RATES, false, "Write sample expected expression rates to file");
 
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
-        options.addOption(SPECIFIC_CHR, true, "Specify a single chromosome to analyse");
+        options.addOption(SPECIFIC_CHR, true, "Restrict to chromosome(s) separated by ';'");
+        options.addOption(SPECIFIC_REGIONS, true, "Restrict to regions(s) separated by ';' in format Chr:PosStart:PosEnd");
         options.addOption(THREADS, true, "Number of threads to use (default=0, single-threaded)");
         options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
         options.addOption(PERF_CHECKS, false, "Run performance logging routines");
@@ -555,6 +577,7 @@ public class IsofoxConfig
             }
 
             geneIdList.addAll(fileContents.stream()
+                    .filter(x -> !x.isEmpty())
                     .filter(x -> !x.contains("GeneId"))
                     .filter(x -> !x.startsWith("#"))
                     .map(x -> x.split(",")[COL_GENE_ID]).collect(Collectors.toList()));

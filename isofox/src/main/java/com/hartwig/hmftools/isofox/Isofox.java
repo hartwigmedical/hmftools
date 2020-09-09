@@ -4,7 +4,8 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
-import static com.hartwig.hmftools.isofox.BamFragmentReaderTask.PERF_FIT;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.isofox.BamFragmentReader.PERF_FIT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -34,6 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.adjusts.BamReadCounter;
@@ -157,12 +159,12 @@ public class Isofox
             }
         }
 
-        final List<BamFragmentReaderTask> chrTasks = Lists.newArrayList();
+        final List<BamFragmentReader> chrTasks = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
 
         for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
         {
-            BamFragmentReaderTask bamReaderTask = new BamFragmentReaderTask(
+            BamFragmentReader bamReaderTask = new BamFragmentReader(
                     mConfig, entry.getKey(), entry.getValue(), mGeneTransCache, mResultsWriter, mExpectedCountsCache, mGcTranscriptCalcs);
 
             chrTasks.add(bamReaderTask);
@@ -187,7 +189,7 @@ public class Isofox
         {
             // extract all chimeric reads and associated data for fusion calling
             ChimericStats chimericStats = new ChimericStats();
-            for(BamFragmentReaderTask chrTask : chrTasks)
+            for(BamFragmentReader chrTask : chrTasks)
             {
                 mFusionFinder.addChimericReads(chrTask.getChimericPartialReadGroups(), chrTask.getChimericReadGroups());
                 mFusionFinder.addDuplicateReadIds(chrTask.getChimericDuplicateReadIds());
@@ -211,7 +213,7 @@ public class Isofox
         return true;
     }
 
-    private void processBamFragments(final List<BamFragmentReaderTask> chrTasks, final List<Callable> callableList)
+    private void processBamFragments(final List<BamFragmentReader> chrTasks, final List<Callable> callableList)
     {
         int[] totalCounts = new int[typeAsInt(FragmentType.MAX)];
 
@@ -279,7 +281,7 @@ public class Isofox
     }
 
     private void applyGcAdjustments(
-            final List<BamFragmentReaderTask> chrTasks, final List<Callable> callableList, final GcRatioCounts actualGcCounts)
+            final List<BamFragmentReader> chrTasks, final List<Callable> callableList, final GcRatioCounts actualGcCounts)
     {
         ISF_LOGGER.info("applying GC adjustments and transcript re-fit");
 
@@ -299,12 +301,31 @@ public class Isofox
 
     private Map<String,List<EnsemblGeneData>> getChromosomeGeneLists()
     {
+        if(mConfig.SpecificRegions.isEmpty() && mConfig.SpecificChromosomes.isEmpty())
+            return mGeneTransCache.getChrGeneDataMap();
+
         final Map<String,List<EnsemblGeneData>> chrGeneMap = Maps.newHashMap();
 
-        mGeneTransCache.getChrGeneDataMap().entrySet().stream()
-                .filter(x -> !mConfig.skipChromosome(x.getKey()))
-                .filter(x -> !x.getValue().isEmpty())
-                .forEach(x -> chrGeneMap.put(x.getKey(), x.getValue()));
+        if(mConfig.SpecificRegions.isEmpty())
+        {
+            mGeneTransCache.getChrGeneDataMap().entrySet().stream()
+                    .filter(x -> mConfig.SpecificChromosomes.contains(x.getKey()))
+                    .filter(x -> !x.getValue().isEmpty())
+                    .forEach(x -> chrGeneMap.put(x.getKey(), x.getValue()));
+        }
+        else
+        {
+            for(final SvRegion region : mConfig.SpecificRegions)
+            {
+                List<EnsemblGeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(region.Chromosome);
+
+                List<EnsemblGeneData> regionGeneList = geneDataList.stream()
+                        .filter(x -> positionsOverlap(region.start(), region.end(), x.GeneStart, x.GeneEnd))
+                        .collect(Collectors.toList());
+
+                chrGeneMap.put(region.Chromosome, regionGeneList);
+            }
+        }
 
         return chrGeneMap;
     }
