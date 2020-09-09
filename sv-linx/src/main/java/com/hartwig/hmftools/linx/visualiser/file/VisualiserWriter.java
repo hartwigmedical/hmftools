@@ -208,7 +208,7 @@ public class VisualiserWriter
         }
         catch(IOException e)
         {
-            LNX_LOGGER.error("filed to write VIS copy number output");
+            LNX_LOGGER.error("filed to write VIS SV data output");
         }
     }
 
