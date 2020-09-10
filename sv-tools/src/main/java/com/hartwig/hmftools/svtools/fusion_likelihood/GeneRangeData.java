@@ -27,11 +27,11 @@ public class GeneRangeData
     private Boolean mStreamUpOnly; // if a gene is forced to only be a 5' or 3' partner
 
     // maps from the DEL or DUP bucket length array index to overlap count
-    private Map<Integer,Integer> mDelFusionBaseCounts;
-    private Map<Integer,Integer> mDupFusionBaseCounts;
+    private Map<Integer,Long> mDelFusionBaseCounts;
+    private Map<Integer,Long> mDupFusionBaseCounts;
 
-    private int[] mBaseOverlapCountDownstream;
-    private int[] mBaseOverlapCountUpstream;
+    private long[] mBaseOverlapCountDownstream;
+    private long[] mBaseOverlapCountUpstream;
 
     public static final int NON_PROX_TYPE_SHORT_INV = 0;
     public static final int NON_PROX_TYPE_MEDIUM_INV = 1;
@@ -53,8 +53,8 @@ public class GeneRangeData
         mDelFusionBaseCounts = Maps.newHashMap();
         mDupFusionBaseCounts = Maps.newHashMap();
 
-        mBaseOverlapCountUpstream = new int[NON_PROX_TYPE_MAX];
-        mBaseOverlapCountDownstream = new int[NON_PROX_TYPE_MAX];
+        mBaseOverlapCountUpstream = new long[NON_PROX_TYPE_MAX];
+        mBaseOverlapCountDownstream = new long[NON_PROX_TYPE_MAX];
     }
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
@@ -68,25 +68,29 @@ public class GeneRangeData
     public boolean isOnlyDownstreamPartner() { return mStreamUpOnly != null ? !mStreamUpOnly : false; }
     public void setRestrictedStream(Boolean stream) { mStreamUpOnly = stream; }
 
-    public Map<Integer,Integer> getDelFusionBaseCounts() { return mDelFusionBaseCounts; }
-    public Map<Integer,Integer> getDupFusionBaseCounts() { return mDupFusionBaseCounts; }
+    public Map<Integer,Long> getDelFusionBaseCounts() { return mDelFusionBaseCounts; }
+    public Map<Integer,Long> getDupFusionBaseCounts() { return mDupFusionBaseCounts; }
 
     public boolean hasCodingTranscripts()
     {
         return mPhaseRegions.stream().anyMatch(x -> x.Phase != PHASE_NON_CODING);
     }
 
-    public int getBaseOverlapCountUpstream(int type) { return mBaseOverlapCountUpstream[type]; }
-    public void addBaseOverlapCountUpstream(int type, int count) { mBaseOverlapCountUpstream[type] += count; }
-    public int getBaseOverlapCountDownstream(int type) { return mBaseOverlapCountDownstream[type]; }
-    public void addBaseOverlapCountDownstream(int type, int count) { mBaseOverlapCountDownstream[type] += count; }
+    public long getBaseOverlapCountUpstream(int type) { return mBaseOverlapCountUpstream[type]; }
+    public void addBaseOverlapCountUpstream(int type, long count) { mBaseOverlapCountUpstream[type] += count; }
+    public long getBaseOverlapCountDownstream(int type) { return mBaseOverlapCountDownstream[type]; }
+    public void addBaseOverlapCountDownstream(int type, long count) { mBaseOverlapCountDownstream[type] += count; }
 
     public void clearOverlapCounts()
     {
         mDelFusionBaseCounts.clear();
         mDupFusionBaseCounts.clear();
-        mBaseOverlapCountUpstream = new int[NON_PROX_TYPE_MAX];
-        mBaseOverlapCountDownstream = new int[NON_PROX_TYPE_MAX];
+
+        for(int i = 0; i < NON_PROX_TYPE_MAX; ++i)
+        {
+            mBaseOverlapCountUpstream[i] = 0;
+            mBaseOverlapCountDownstream[i] = 0;
+        }
     }
 
     public int phasedRegionTotal()

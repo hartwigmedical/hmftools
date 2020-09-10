@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svtools.fusion_likelihood;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import java.util.Map;
 
@@ -59,14 +58,14 @@ public class RegionAllocator
         return true;
     }
 
-    public int allocateBases(
+    public long allocateBases(
             int lowerStart, int lowerEnd, int upperStart, int upperEnd,
             int minBucketLen, int maxBucketLen, boolean requireAllocation)
     {
         if(lowerStart >= lowerEnd || upperStart >= upperEnd)
             return 0;
 
-        int overlapCount = 0;
+        long overlapCount = 0;
 
         for (int base = lowerStart; base <= lowerEnd;)
         {
@@ -92,12 +91,12 @@ public class RegionAllocator
         return overlapCount * mBlockArea;
     }
 
-    public int allocateBases(int lowerStart, int lowerEnd, int upperStart, int upperEnd)
+    public long allocateBases(int lowerStart, int lowerEnd, int upperStart, int upperEnd)
     {
         if(lowerStart >= lowerEnd || upperStart >= upperEnd)
             return 0;
 
-        int overlapCount = 0;
+        long overlapCount = 0;
 
         for (int base = lowerStart; base <= lowerEnd;)
         {

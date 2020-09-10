@@ -480,7 +480,7 @@ public class FusionLikelihoodTest
         int blockArea = regionAllocator.blockSize() * regionAllocator.blockSize();
 
         // first test without any restricting bucket lengths
-        int overlap = regionAllocator.allocateBases(10, 45, 55, 99);
+        long overlap = regionAllocator.allocateBases(10, 45, 55, 99);
         assertEquals(blockArea, overlap);
 
         // cannot reallocate
@@ -571,10 +571,10 @@ public class FusionLikelihoodTest
         GenePhaseRegion lowerRegion = new GenePhaseRegion(gene1.GeneId, 100, 200, PHASE_1);
         GenePhaseRegion upperRegion = new GenePhaseRegion(gene2.GeneId, 300, 400, PHASE_1);
 
-        Map<Integer,Integer> bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        Map<Integer,Long> bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
-        int overlap = bucketOverlapCounts.get(0);
+        long overlap = bucketOverlapCounts.get(0);
         assertEquals(10000, overlap);
 
         // with a max bucket length restriction

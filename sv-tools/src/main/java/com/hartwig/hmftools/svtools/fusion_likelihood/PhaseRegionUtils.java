@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.PERMITTED_REGION_OVERLAP;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.FusionLikelihood.FLC_LOGGER;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.haveOverlap;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_MAX;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.intAsType;
@@ -14,13 +15,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class PhaseRegionUtils
 {
-    private static final Logger LOGGER = LogManager.getLogger(PhaseRegionUtils.class);
-
     public static void checkAddCombinedGenePhaseRegion(final GenePhaseRegion regionToAdd, final List<GenePhaseRegion> regions)
     {
         // combine all regions into non-overlapping regions, allowing for mixed phasings
@@ -48,7 +44,7 @@ public class PhaseRegionUtils
 
                 if(newRegion == null || region == null)
                 {
-                    LOGGER.error("isNull: region({}) or new region({})", region == null, newRegion == null);
+                    FLC_LOGGER.error("isNull: region({}) or new region({})", region == null, newRegion == null);
                     return;
                 }
 
@@ -282,7 +278,7 @@ public class PhaseRegionUtils
 
                         if(lrIndex >= lowerRegions.size() || urIndex >= upperRegions.size())
                         {
-                            LOGGER.error("genes({} & {}) index errors", lowerGene.GeneData.GeneId, upperGene.GeneData.GeneId);
+                            FLC_LOGGER.error("genes({} & {}) index errors", lowerGene.GeneData.GeneId, upperGene.GeneData.GeneId);
                             return;
                         }
 
@@ -311,7 +307,7 @@ public class PhaseRegionUtils
 
         int added = max(newPhaseRegions - phaseRegions + regionsRemoved, 0);
 
-        LOGGER.debug("chromosome({}) arm({}) dividing phase regions: initial({}) removed({}) added({}) final({})",
+        FLC_LOGGER.debug("chromosome({}) arm({}) dividing phase regions: initial({}) removed({}) added({}) final({})",
                 chromosome, arm, phaseRegions, regionsRemoved, added, newPhaseRegions);
     }
 
@@ -446,7 +442,7 @@ public class PhaseRegionUtils
                     hasMismatches = true;
                     double diffPercent = abs(phaseCounts[i] - combinedPhaseCounts[i]) / (double) phaseCounts[i];
 
-                    LOGGER.warn("geneId({}) phase({}: {}) {} pre-gene simple({}) vs combined({}) diff({})",
+                    FLC_LOGGER.warn("geneId({}) phase({}: {}) {} pre-gene simple({}) vs combined({}) diff({})",
                             geneId, i, intAsType(i), includePreGene ? "incl" : "no",
                             phaseCounts[i], combinedPhaseCounts[i], String.format("%.4f", diffPercent));
                 }
@@ -455,20 +451,20 @@ public class PhaseRegionUtils
 
         if(hasMismatches && combinedRegions.size() <= 10)
         {
-            LOGGER.info("geneId({}) simple phases:", geneId);
+            FLC_LOGGER.info("geneId({}) simple phases:", geneId);
 
             for(int i = 0; i < simpleRegions.size(); ++i)
             {
                 GenePhaseRegion region = simpleRegions.get(i);
-                LOGGER.info("{}: {}", i, region.toString());
+                FLC_LOGGER.info("{}: {}", i, region.toString());
             }
 
-            LOGGER.info("geneId({}) combined phases:", geneId);
+            FLC_LOGGER.info("geneId({}) combined phases:", geneId);
 
             for(int i = 0; i < combinedRegions.size(); ++i)
             {
                 GenePhaseRegion region = combinedRegions.get(i);
-                LOGGER.info("{}: {}", i, region.toString());
+                FLC_LOGGER.info("{}: {}", i, region.toString());
             }
         }
 

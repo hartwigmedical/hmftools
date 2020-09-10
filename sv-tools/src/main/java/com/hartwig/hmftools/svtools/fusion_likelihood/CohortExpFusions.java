@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLe
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.UNKNOWN;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.FusionLikelihood.FLC_LOGGER;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.haveOverlap;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.mapExonPhase;
@@ -41,9 +42,6 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 // routines for calculating expected fusion rates across the whole genome for a set of pre-described SV and length categories
 public class CohortExpFusions
 {
@@ -53,14 +51,14 @@ public class CohortExpFusions
 
     private final Map<String, List<GeneRangeData>> mChrGeneDataMap;
 
-    private final Map<String,Map<Integer,Integer>> mDelGenePairCounts; // pair of gene-pairs to their overlap counts keyed by bucket index
-    private final Map<String,Map<Integer,Integer>> mDupGenePairCounts;
+    private final Map<String,Map<Integer,Long>> mDelGenePairCounts; // pair of gene-pairs to their overlap counts keyed by bucket index
+    private final Map<String,Map<Integer,Long>> mDupGenePairCounts;
 
     // global counts by type and buck length
-    private List<Integer> mGlobalProximateCounts; // indexed as per the proximate lengths
+    private final List<Integer> mGlobalProximateCounts; // indexed as per the proximate lengths
     private int mGlobalShortInvCount;
     private int mGlobalLongDelDupInvCount;
-    private int mArmLengthFactor;
+    private double mArmLengthFactor;
     private final List<RegionAllocator> mDelRegionAllocators;
     private final List<RegionAllocator> mDupRegionAllocators;
 
@@ -74,8 +72,6 @@ public class CohortExpFusions
     public static final double GENOME_BASE_COUNT = 3e9;
     public static final double MIN_FUSION_RATE = 1e-12;
     public static final String GENE_PAIR_DELIM = "_";
-
-    private static final Logger LOGGER = LogManager.getLogger(CohortExpFusions.class);
 
     public CohortExpFusions()
     {
@@ -94,10 +90,10 @@ public class CohortExpFusions
     }
 
     public final Map<String, List<GeneRangeData>> getChrGeneRangeDataMap() { return mChrGeneDataMap; }
-    public Map<String,Map<Integer,Integer>> getDelGenePairCounts() { return mDelGenePairCounts; }
-    public Map<String,Map<Integer,Integer>> getDupGenePairCounts() { return mDupGenePairCounts; }
+    public Map<String,Map<Integer,Long>> getDelGenePairCounts() { return mDelGenePairCounts; }
+    public Map<String,Map<Integer,Long>> getDupGenePairCounts() { return mDupGenePairCounts; }
 
-    public int getArmLengthFactor() { return mArmLengthFactor; }
+    public double getArmLengthFactor() { return mArmLengthFactor; }
 
     public void initialiseLengths(final List<Integer> proximateBucketLengths, final List<String> restrictedChromosomes)
     {
@@ -115,8 +111,8 @@ public class CohortExpFusions
         {
             final String chromosome = entry.getKey().toString();
 
-            if(!restrictedChromosomes.isEmpty() && !restrictedChromosomes.contains(chromosome))
-                continue;
+            // if(!restrictedChromosomes.isEmpty() && !restrictedChromosomes.contains(chromosome))
+            //    continue;
 
             int armLength = getChromosomalArmLength(chromosome, P_ARM);
 
@@ -129,7 +125,7 @@ public class CohortExpFusions
                 mArmLengthFactor += armLength * (armLength - maxBucketLength);
         }
 
-        LOGGER.debug("arm length factor: {}", mArmLengthFactor);
+        FLC_LOGGER.debug("arm length factor: {}", mArmLengthFactor);
 
         // create region allocators for same-gene fusions
         int bucketLengths = mProximateBucketLengths.size() - 1;
@@ -171,7 +167,7 @@ public class CohortExpFusions
             if(chrGenes.isEmpty())
                 continue;
 
-            LOGGER.info("generating phase counts for chromosome({})", chromosome);
+            FLC_LOGGER.info("generating phase counts for chromosome({})", chromosome);
 
             List<GeneRangeData> chrGeneList = Lists.newArrayList();
             List<GeneRangeData> armGeneList = Lists.newArrayList();
@@ -223,13 +219,13 @@ public class CohortExpFusions
                 {
                     if(mLogVerbose)
                     {
-                        LOGGER.debug("gene({}) {}", region.GeneId, region.toString());
+                        FLC_LOGGER.debug("gene({}) {}", region.GeneId, region.toString());
                     }
 
                     // validity check
                     if(region.length() <= 0)
                     {
-                        LOGGER.error("invalid region: gene({}) range({} -> {}) phase({})",
+                        FLC_LOGGER.error("invalid region: gene({}) range({} -> {}) phase({})",
                                 region.GeneId, region.start(), region.end(), region.getCombinedPhase());
                         continue;
                     }
@@ -251,7 +247,7 @@ public class CohortExpFusions
     private void processArmGenes(final String chromosome, final ChromosomeArm arm,
             List<GeneRangeData> armGeneList, List<GeneRangeData> armGeneEndFirstList)
     {
-        LOGGER.info("chr({}) arm({}) processing {} genes", chromosome, arm, armGeneList.size());
+        FLC_LOGGER.info("chr({}) arm({}) processing {} genes", chromosome, arm, armGeneList.size());
 
         // mark all overlapping regions to avoid reallocation of base overlaps
         divideOverlappingRegions(chromosome, arm, armGeneList);
@@ -262,7 +258,7 @@ public class CohortExpFusions
 
             List<GeneRangeData> geneDataList = strand == 1 ? armGeneList : armGeneEndFirstList;
 
-            LOGGER.info("chr({}) arm({}) finding same-gene fusions", chromosome, arm);
+            FLC_LOGGER.info("chr({}) arm({}) finding same-gene fusions", chromosome, arm);
 
             for(GeneRangeData geneData : geneDataList)
             {
@@ -275,11 +271,11 @@ public class CohortExpFusions
                 }
             }
 
-            LOGGER.info("chr({}) arm({}) finding proximate fusions", chromosome, arm);
+            FLC_LOGGER.info("chr({}) arm({}) finding proximate fusions", chromosome, arm);
 
             generateProximateCounts(geneDataList, strand);
 
-            LOGGER.info("chr({}) arm({}) finding non-proximate fusions", chromosome, arm);
+            FLC_LOGGER.info("chr({}) arm({}) finding non-proximate fusions", chromosome, arm);
 
             generateNonProximateCounts(geneDataList, strand);
         }
@@ -673,7 +669,7 @@ public class CohortExpFusions
         {
             final String chromosome = entry.getKey();
 
-            LOGGER.info("calculating remote overlap counts for chr({})", chromosome);
+            FLC_LOGGER.info("calculating remote overlap counts for chr({})", chromosome);
 
             List<GeneRangeData> chrGeneList = entry.getValue();
 
@@ -765,7 +761,7 @@ public class CohortExpFusions
             if (!phaseMatched)
                 continue;
 
-            Map<Integer,Integer> bucketOverlapCounts = calcOverlapBucketAreas(
+            final Map<Integer,Long> bucketOverlapCounts = calcOverlapBucketAreas(
                     mProximateBucketLengths, trackAllocations ? (isDel ? mDelRegionAllocators : mDupRegionAllocators) : null,
                     lowerGene, upperGene, lowerRegion, upperRegion, isDel);
 
@@ -775,23 +771,23 @@ public class CohortExpFusions
 
                 if (mLogVerbose)
                 {
-                    LOGGER.debug("gene({}: {}) and gene({}: {}) matched-region lower({} -> {}) upper({} -> {}) phase({}):",
+                    FLC_LOGGER.debug("gene({}: {}) and gene({}: {}) matched-region lower({} -> {}) upper({} -> {}) phase({}):",
                             lowerGene.GeneData.GeneId, lowerGene.GeneData.GeneName,
                             upperGene.GeneData.GeneId, upperGene.GeneData.GeneName,
                             lowerRegion.start(), lowerRegion.end(), upperRegion.start(), upperRegion.end(),
                             lowerRegion.getCombinedPhase());
                 }
 
-                for (Map.Entry<Integer,Integer> entry : bucketOverlapCounts.entrySet())
+                for (Map.Entry<Integer,Long> entry : bucketOverlapCounts.entrySet())
                 {
                     int bucketIndex = entry.getKey();
-                    int overlap = entry.getValue();
+                    long overlap = entry.getValue();
                     addGeneFusionData(lowerGene, upperGene, overlap, isDel, bucketIndex);
 
                     if (mLogVerbose)
                     {
                         int bucketLen = mProximateBucketLengths.get(bucketIndex);
-                        LOGGER.debug("matched-region bucketLength({}: {}) overlap({})", bucketIndex, bucketLen, overlap);
+                        FLC_LOGGER.debug("matched-region bucketLength({}: {}) overlap({})", bucketIndex, bucketLen, overlap);
                     }
                 }
             }
@@ -811,7 +807,7 @@ public class CohortExpFusions
         return new int[] {mProximateBucketLengths.get(bucketIndex), mProximateBucketLengths.get(bucketIndex + 1)};
     }
 
-    public void addGeneFusionData(final GeneRangeData lowerGene, final GeneRangeData upperGene, int overlapCount, boolean isDel, int bucketIndex)
+    public void addGeneFusionData(final GeneRangeData lowerGene, final GeneRangeData upperGene, long overlapCount, boolean isDel, int bucketIndex)
     {
         int[] bucketMinMax = getBucketLengthMinMax(bucketIndex);
         int bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
@@ -822,15 +818,15 @@ public class CohortExpFusions
 
         if(mLogVerbose)
         {
-            LOGGER.debug("gene pair({} & {}) adding {} overlap({}) for bucket length index({})",
+            FLC_LOGGER.debug("gene pair({} & {}) adding {} overlap({}) for bucket length index({})",
                     lowerGene.GeneData.GeneName, upperGene.GeneData.GeneName,
                     isDel ? "DEL" : "DUP", overlapCount, bucketIndex);
         }
 
-        Map<String, Map<Integer,Integer>> genePairCounts = isDel ? mDelGenePairCounts : mDupGenePairCounts;
+        Map<String,Map<Integer,Long>> genePairCounts = isDel ? mDelGenePairCounts : mDupGenePairCounts;
 
         final String genePair = lowerGene.GeneData.GeneId + GENE_PAIR_DELIM + upperGene.GeneData.GeneId;
-        Map<Integer,Integer> bucketOverlapCounts = genePairCounts.get(genePair);
+        Map<Integer,Long> bucketOverlapCounts = genePairCounts.get(genePair);
 
         if(bucketOverlapCounts == null)
         {
@@ -851,7 +847,7 @@ public class CohortExpFusions
 
             if(geneData == null)
             {
-                LOGGER.error("geneId({}) not found", geneId);
+                FLC_LOGGER.error("geneId({}) not found", geneId);
                 continue;
             }
 
@@ -869,13 +865,13 @@ public class CohortExpFusions
             {
                 if(mLogVerbose)
                 {
-                    LOGGER.debug("gene({}) {}", region.GeneId, region.toString());
+                    FLC_LOGGER.debug("gene({}) {}", region.GeneId, region.toString());
                 }
 
                 // validity check
                 if(region.length() <= 0)
                 {
-                    LOGGER.error("invalid region: gene({}) range({} -> {}) phase({})",
+                    FLC_LOGGER.error("invalid region: gene({}) range({} -> {}) phase({})",
                             region.GeneId, region.start(), region.end(), region.getCombinedPhase());
                     continue;
                 }
@@ -889,9 +885,9 @@ public class CohortExpFusions
 
     public void logGlobalCounts()
     {
-        LOGGER.info("GLOBAL_COUNTS: Type,GlobalCount,LengthMin,LengthMax");
-        LOGGER.info("GLOBAL_COUNTS: LONG_DDI,{},{},{}", mGlobalLongDelDupInvCount, 5000000, 5000000);
-        LOGGER.info("GLOBAL_COUNTS: INV,{},{},{}", mGlobalShortInvCount, 1000, 2000);
+        FLC_LOGGER.info("GLOBAL_COUNTS: Type,GlobalCount,LengthMin,LengthMax");
+        FLC_LOGGER.info("GLOBAL_COUNTS: LONG_DDI,{},{},{}", mGlobalLongDelDupInvCount, 5000000, 5000000);
+        FLC_LOGGER.info("GLOBAL_COUNTS: INV,{},{},{}", mGlobalShortInvCount, 1000, 2000);
 
         // assign to correct bucket length
         for(int b = 0; b < mProximateBucketLengths.size() - 1; ++b)
@@ -899,8 +895,8 @@ public class CohortExpFusions
             int minLength = mProximateBucketLengths.get(b);
             int maxLength = mProximateBucketLengths.get(b + 1);
 
-            LOGGER.info("GLOBAL_COUNTS: DEL,{},{},{}", mGlobalProximateCounts.get(b), minLength, maxLength);
-            LOGGER.info("GLOBAL_COUNTS: DUP,{},{},{}", mGlobalProximateCounts.get(b), minLength, maxLength);
+            FLC_LOGGER.info("GLOBAL_COUNTS: DEL,{},{},{}", mGlobalProximateCounts.get(b), minLength, maxLength);
+            FLC_LOGGER.info("GLOBAL_COUNTS: DUP,{},{},{}", mGlobalProximateCounts.get(b), minLength, maxLength);
         }
     }
 

@@ -36,9 +36,8 @@ import static com.hartwig.hmftools.svtools.fusion_likelihood.LikelihoodCalc.repo
 import static com.hartwig.hmftools.svtools.fusion_likelihood.RegionAllocator.DEFAULT_BUCKET_REGION_RATIO;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.RegionAllocator.MIN_BLOCK_SIZE;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -79,8 +78,6 @@ public class FusionLikelihood
     private final List<String[]> mGeneFusionPairs;
     private String mOutputDir;
 
-    private boolean mLogVerbose;
-
     private static final String DEL_DUP_BUCKET_LENGTHS = "fl_del_dup_bucket_lengths";
     private static final String SHORT_INV_BUCKET_LENGTH = "fl_inv_bucket_length";
 
@@ -90,7 +87,7 @@ public class FusionLikelihood
     private static final String LIMITED_GENE_IDS = "limited_gene_ids";
     private static final String LIMITED_CHROMOSOMES = "limited_chromosomes";
 
-    private static final Logger LOGGER = LogManager.getLogger(FusionLikelihood.class);
+    public static final Logger FLC_LOGGER = LogManager.getLogger(FusionLikelihood.class);
 
     public FusionLikelihood()
     {
@@ -100,8 +97,6 @@ public class FusionLikelihood
         mRestrictedChromosomes = Lists.newArrayList();
         mRestrictedGeneIds = Lists.newArrayList();
         mGeneFusionPairs = Lists.newArrayList();
-
-        mLogVerbose = false;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -143,7 +138,7 @@ public class FusionLikelihood
         {
             final String genePairFile = cmdLineArgs.getOptionValue(GENE_PAIR_FILE);
 
-            LOGGER.info("calculating fusion likelihood for gene-pairs in file: {}", genePairFile);
+            FLC_LOGGER.info("calculating fusion likelihood for gene-pairs in file: {}", genePairFile);
 
             loadGenePairs(genePairFile);
 
@@ -164,7 +159,7 @@ public class FusionLikelihood
 
         if(!mGeneTransCache.load(limitedLoading))
         {
-            LOGGER.error("Ensembl data cache load failed, exiting");
+            FLC_LOGGER.error("Ensembl data cache load failed, exiting");
             return;
         }
 
@@ -183,13 +178,13 @@ public class FusionLikelihood
     {
         if(!mGeneFusionPairs.isEmpty())
         {
-            LOGGER.info("calculating fusion likelihood for {} gene-pairs", mGeneFusionPairs.size());
+            FLC_LOGGER.info("calculating fusion likelihood for {} gene-pairs", mGeneFusionPairs.size());
 
             calculateSpecificFusionLikelihood();
         }
         else
         {
-            LOGGER.info("generating genome-wide fusion likelihood data");
+            FLC_LOGGER.info("generating genome-wide fusion likelihood data");
 
             generateGlobalExpectedFusionCounts();
             // fusionLikelihood.generateGlobalStats(outputDir);
@@ -205,7 +200,6 @@ public class FusionLikelihood
 
     public void setLogVerbose(boolean toggle)
     {
-        mLogVerbose = toggle;
         mCohortCalculator.setLogVerbose(toggle);
     }
 
@@ -235,7 +229,7 @@ public class FusionLikelihood
 
     private void writeGeneLikelihoodData()
     {
-        LOGGER.info("writing output files");
+        FLC_LOGGER.info("writing output files");
 
         writeGeneData();
         writeProximateFusionData();
@@ -243,7 +237,7 @@ public class FusionLikelihood
 
     private void writeGeneData()
     {
-        LOGGER.info("writing gene fusion data");
+        FLC_LOGGER.info("writing gene fusion data");
 
         try
         {
@@ -305,13 +299,13 @@ public class FusionLikelihood
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing gene range data: {}", e.toString());
+            FLC_LOGGER.error("error writing gene range data: {}", e.toString());
         }
     }
 
     private void writeProximateFusionData()
     {
-        LOGGER.info("total gene-pair candidate count: dels({}) dups({})",
+        FLC_LOGGER.info("total gene-pair candidate count: dels({}) dups({})",
                 mCohortCalculator.getDelGenePairCounts().size(), mCohortCalculator.getDupGenePairCounts().size());
 
         try
@@ -326,9 +320,9 @@ public class FusionLikelihood
             for(int i = 0; i <= 1; ++i)
             {
                 boolean isDel = (i == 0);
-                Map<String, Map<Integer, Integer>> genePairCounts = isDel ? mCohortCalculator.getDelGenePairCounts() : mCohortCalculator.getDupGenePairCounts();
+                Map<String, Map<Integer,Long>> genePairCounts = isDel ? mCohortCalculator.getDelGenePairCounts() : mCohortCalculator.getDupGenePairCounts();
 
-                for (Map.Entry<String, Map<Integer,Integer>> entry : genePairCounts.entrySet())
+                for (Map.Entry<String,Map<Integer,Long>> entry : genePairCounts.entrySet())
                 {
                     final String genePair[] = entry.getKey().split(GENE_PAIR_DELIM);
                     final String geneIdLower = genePair[0];
@@ -337,11 +331,11 @@ public class FusionLikelihood
                     EnsemblGeneData geneUp = null;
                     EnsemblGeneData geneDown = null;
 
-                    Map<Integer,Integer> bucketLengthCounts = entry.getValue();
+                    Map<Integer,Long> bucketLengthCounts = entry.getValue();
 
-                    for (Map.Entry<Integer,Integer> bEntry : bucketLengthCounts.entrySet())
+                    for (Map.Entry<Integer,Long> bEntry : bucketLengthCounts.entrySet())
                     {
-                        int overlapCount = bEntry.getValue();
+                        long overlapCount = bEntry.getValue();
 
                         int bucketIndex = bEntry.getKey();
 
@@ -377,7 +371,7 @@ public class FusionLikelihood
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing gene-pair fusion candidates: {}", e.toString());
+            FLC_LOGGER.error("error writing gene-pair fusion candidates: {}", e.toString());
         }
     }
 
@@ -400,31 +394,20 @@ public class FusionLikelihood
             return;
 
         // expected format: GeneIdUp,GeneIdDown
-        List<String[]> geneFusionPairs = Lists.newArrayList();
-
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
 
-            // skip field names
-            String line = fileReader.readLine();
+            // final String header = fileContents.get(0);
+            fileContents.remove(0);
 
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
+            fileContents.stream().map(x -> x.split(",")).filter(x -> x.length == 2).forEach(x -> mGeneFusionPairs.add(x));
 
-                if(items.length < 2)
-                {
-                    LOGGER.error("invalid gene-pair entry: {}", line);
-                    break;
-                }
-
-                mGeneFusionPairs.add(items);
-            }
+            FLC_LOGGER.info("loaded {} specific gene fusions", mGeneFusionPairs.size());
         }
         catch (IOException e)
         {
-            LOGGER.error("Failed to read specific gene fusions CSV file({}): {}", filename, e.toString());
+            FLC_LOGGER.error("Failed to read specific gene fusions CSV file({}): {}", filename, e.toString());
         }
     }
 
@@ -456,8 +439,20 @@ public class FusionLikelihood
                 regionAllocators[i] = new RegionAllocator(blockSize);
             }
 
-            for(final String[] genePair : mGeneFusionPairs)
+            double sameArmFusionFactor = 1.0 / mCohortCalculator.getArmLengthFactor();
+            int maxBucketLength = mCohortCalculator.getMaxBucketLength();
+            double mediumInvFusionFactor = 1.0 / ((maxBucketLength - SHORT_INV_BUCKET) * GENOME_BASE_COUNT);
+            double shortInvFusionFactor = 1.0 / (SHORT_INV_BUCKET * GENOME_BASE_COUNT);
+
+            for(int i = 0; i < mGeneFusionPairs.size(); ++i)
             {
+                final String[] genePair = mGeneFusionPairs.get(i);
+
+                if(i > 0 && (i % 100) == 0)
+                {
+                    FLC_LOGGER.info("processed {} gene pairs", i);
+                }
+
                 final GeneRangeData geneUp = geneIdRangeDataMap.get(genePair[0]);
                 final GeneRangeData geneDown = geneIdRangeDataMap.get(genePair[1]);
 
@@ -514,14 +509,14 @@ public class FusionLikelihood
                             mCohortCalculator.generateProximateCounts(genePairList, 0);
                         }
 
-                        for(int i = 0; i <= 1; ++i)
+                        for(int j = 0; j <= 1; ++j)
                         {
-                            boolean isDel = (i == 0);
-                            Map<Integer,Integer> proximateCounts = isDel ? geneUp.getDelFusionBaseCounts() : geneUp.getDupFusionBaseCounts();
+                            boolean isDel = (j == 0);
+                            Map<Integer,Long> proximateCounts = isDel ? geneUp.getDelFusionBaseCounts() : geneUp.getDupFusionBaseCounts();
 
-                            for (Map.Entry<Integer,Integer> bEntry : proximateCounts.entrySet())
+                            for (Map.Entry<Integer,Long> bEntry : proximateCounts.entrySet())
                             {
-                                int overlapArea = bEntry.getValue();
+                                long overlapArea = bEntry.getValue();
 
                                 if(overlapArea == 0)
                                     continue;
@@ -533,14 +528,14 @@ public class FusionLikelihood
                                 int maxBucketLen = bucketMinMax[BUCKET_MAX];
                                 int bucketWidth = maxBucketLen - minBucketLen;
 
-                                int geneOverlapArea = calcGeneOverlapAreas(
+                                long geneOverlapArea = calcGeneOverlapAreas(
                                         geneUp, geneDown, isDel, minBucketLen, maxBucketLen, regionAllocators[bucketIndex]);
 
                                 if(geneOverlapArea < overlapArea)
                                 {
                                     // occurs rarely and not by more than 50%, not sure why
                                     double percent = overlapArea / (double)geneOverlapArea;
-                                    LOGGER.debug("genes({} & {}) bucket({} -> {}) have inconsistent overlaps(fus={} gene={} perc={})",
+                                    FLC_LOGGER.debug("genes({} & {}) bucket({} -> {}) have inconsistent overlaps(fus={} gene={} perc={})",
                                             geneUp, geneDown, minBucketLen, maxBucketLen, overlapArea, geneOverlapArea, String.format("%.3f", percent));
 
                                     geneOverlapArea = overlapArea;
@@ -549,7 +544,7 @@ public class FusionLikelihood
                                 double genePairRate = geneOverlapArea / (bucketWidth * GENOME_BASE_COUNT);
                                 double fusionRate = overlapArea / (bucketWidth * GENOME_BASE_COUNT);
 
-                                writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,%.12f",
+                                writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.6g,%.6g",
                                         geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
                                         isDel ? "DEL" : "DUP", bucketMinMax[BUCKET_MIN], bucketMinMax[BUCKET_MAX], fusionRate, genePairRate));
 
@@ -565,9 +560,8 @@ public class FusionLikelihood
 
                         if(geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) > 0)
                         {
-                            double shortInvFusionFactor = 1.0 / (SHORT_INV_BUCKET * GENOME_BASE_COUNT);
 
-                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
+                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.6g,0",
                                     geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
                                     "INV", MIN_BUCKET_LENGTH, SHORT_INV_BUCKET,
                                     geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) * shortInvFusionFactor));
@@ -577,10 +571,7 @@ public class FusionLikelihood
 
                         if(geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_MEDIUM_INV) > 0)
                         {
-                            int maxBucketLength = mCohortCalculator.getMaxBucketLength();
-                            double mediumInvFusionFactor = 1.0 / ((maxBucketLength - SHORT_INV_BUCKET) * GENOME_BASE_COUNT);
-
-                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
+                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.6g,0",
                                     geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
                                     "INV", SHORT_INV_BUCKET, LONG_DDI_BUCKET,
                                     geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_MEDIUM_INV) * mediumInvFusionFactor));
@@ -590,12 +581,11 @@ public class FusionLikelihood
 
                         if(geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) > 0)
                         {
-                            double sameArmFusionFactor = 1.0 / mCohortCalculator.getArmLengthFactor();
+                            double fusionRate = geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) * sameArmFusionFactor;
 
-                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
+                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.6g,0",
                                     geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
-                                    "LONG_DDI", LONG_DDI_BUCKET, LONG_DDI_BUCKET,
-                                    geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) * sameArmFusionFactor));
+                                    "LONG_DDI", LONG_DDI_BUCKET, LONG_DDI_BUCKET, fusionRate));
 
                             writer.newLine();
                         }
@@ -636,7 +626,7 @@ public class FusionLikelihood
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing gene-pair fusion candidates: {}", e.toString());
+            FLC_LOGGER.error("error writing gene-pair fusion candidates: {}", e.toString());
         }
     }
 
@@ -664,6 +654,6 @@ public class FusionLikelihood
 
         fusionLikelihood.run();
 
-        LOGGER.info("gene-fusion likelihood calcs complete");
+        FLC_LOGGER.info("gene-fusion likelihood calcs complete");
     }
 }

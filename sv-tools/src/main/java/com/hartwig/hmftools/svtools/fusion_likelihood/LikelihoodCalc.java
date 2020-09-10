@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.PRE_GENE_3P_DISTANCE;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.FusionLikelihood.FLC_LOGGER;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.haveOverlap;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.regionsPhaseMatched;
@@ -14,45 +15,18 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class LikelihoodCalc
 {
-    private static final Logger LOGGER = LogManager.getLogger(LikelihoodCalc.class);
-
-    public static int calcNonProximateLikelihood(final GeneRangeData geneUp, final GeneRangeData geneDown)
-    {
-        // calculate the overlap area for 2 non-proximate genes
-        int totalOverlap = 0;
-
-        for (GenePhaseRegion regionUp : geneUp.getPhaseRegions())
-        {
-            // the downstream gene of the potential fusion cannot be non-coding
-            for (GenePhaseRegion regionDown : geneDown.getPhaseRegions())
-            {
-                if(hasAnyPhaseMatch(regionUp, regionDown, false)
-                || regionsPhaseMatched(regionUp, regionDown))
-                {
-                    int regionOverlap = regionUp.length() * regionDown.length();
-                    totalOverlap += regionOverlap;
-                }
-            }
-        }
-
-        return totalOverlap;
-    }
-
-    public static Map<Integer, Integer> calcOverlapBucketAreas(
+    public static Map<Integer,Long> calcOverlapBucketAreas(
             final List<Integer> bucketLengths, final List<RegionAllocator> regionAllocators,
             GeneRangeData lowerGene, GeneRangeData upperGene,
             GenePhaseRegion lowerRegion, GenePhaseRegion upperRegion, boolean isDel)
     {
-        Map<Integer,Integer> bucketOverlapCounts = Maps.newHashMap();
+        Map<Integer,Long> bucketOverlapCounts = Maps.newHashMap();
 
         if(lowerRegion.length() < 0 || upperRegion.length() < 0)
         {
-            LOGGER.warn("negative region lengths");
+            FLC_LOGGER.warn("negative region lengths");
             return bucketOverlapCounts;
         }
 
@@ -77,7 +51,7 @@ public class LikelihoodCalc
                 - if the max bucket length = 150 then 100 + 150 doesn't reach the start of the upper gene, so the base overlap region must start from 150+
             */
 
-            int baseOverlapArea = 0;
+            long baseOverlapArea = 0;
 
             if(minBucketLen <= upperRegion.start() - lowerRegion.end() && maxBucketLen >= upperRegion.end() - lowerRegion.start())
             {
@@ -168,7 +142,7 @@ public class LikelihoodCalc
         return bucketOverlapCounts;
     }
 
-    public static int calcGeneOverlapAreas(GeneRangeData geneUp, GeneRangeData geneDown,
+    public static long calcGeneOverlapAreas(GeneRangeData geneUp, GeneRangeData geneDown,
             boolean isDel, int minBucketLen, int maxBucketLen, final RegionAllocator regionAllocator)
     {
         int upGeneTransStart = geneUp.getPhaseRegions().stream().mapToInt(x -> x.start()).min().orElse(0);
@@ -234,7 +208,7 @@ public class LikelihoodCalc
             return 0;
         }
 
-        int baseOverlapArea = 0;
+        long baseOverlapArea = 0;
 
         if(minBucketLen <= upperRegionStart - lowerRegionEnd && maxBucketLen >= upperRegionEnd - lowerRegionStart)
         {
@@ -290,13 +264,13 @@ public class LikelihoodCalc
         return baseOverlapArea;
     }
 
-    public static void setBucketLengthData(Map<Integer,Integer> countsData, int bucketIndex, int newCounts)
+    public static void setBucketLengthData(Map<Integer,Long> countsData, int bucketIndex, long newCounts)
     {
         if(newCounts <= 0)
             return;
 
         // initialise the array if empty
-        Integer bucketCount = countsData.get(bucketIndex);
+        Long bucketCount = countsData.get(bucketIndex);
 
         if(bucketCount == null)
         {
@@ -310,8 +284,8 @@ public class LikelihoodCalc
 
     public static void reportGeneOverlaps(Map<String, List<GeneRangeData>> chrGeneDataMap)
     {
-        int blockSize = 1000;
-        int bucketMax = 250000; // to cover the longest arm
+        // int blockSize = 1000;
+        // int bucketMax = 250000; // to cover the longest arm
         // int[] overlapBuckets = new int[bucketMax];
 
         // exclude regions where one or both are not protein coding
@@ -325,7 +299,7 @@ public class LikelihoodCalc
             if(geneRangeList.isEmpty())
                 continue;
 
-            LOGGER.info("calculating genic overlap for chromosome({}) geneCount({})", chromosome, geneRangeList.size());
+            FLC_LOGGER.info("calculating genic overlap for chromosome({}) geneCount({})", chromosome, geneRangeList.size());
 
             for(int s = 0; s <= 1; ++s)
             {
@@ -410,7 +384,7 @@ public class LikelihoodCalc
                         {
                             // Time,GeneId,GeneName,Strand,GeneStart,GeneEnd,GeneLength,RegionCount,CodingBases,ProteinCoding,
                             // OtherGeneId,OtherGeneName,OtherGeneStart,OtherGeneEnd,OtherGeneLength,OtherRegionCount,OtherCodingBases,TotalOverlap
-                            LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+                            FLC_LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
                                     gene.GeneData.GeneId, gene.GeneData.GeneName, gene.GeneData.Strand,
                                     gene.GeneData.GeneStart, gene.GeneData.GeneEnd, gene.GeneData.GeneEnd - gene.GeneData.GeneStart,
                                     gene.getPhaseRegions().size(), gene.phasedRegionTotal(),
@@ -439,9 +413,32 @@ public class LikelihoodCalc
             overlapBuckets[i] = 0;
         }
 
-        LOGGER.info("chromosome({}) arm({}) strand({}) genicRegion({}) overlapRegion({}) percent({})",
+        FLC_LOGGER.info("chromosome({}) arm({}) strand({}) genicRegion({}) overlapRegion({}) percent({})",
                 chromosome, arm, strand, totalGenicRegion, overlapRegions,
                 String.format("%.1f", overlapRegions/(double)totalGenicRegion*100));
     }
+
+    public static int calcNonProximateLikelihood(final GeneRangeData geneUp, final GeneRangeData geneDown)
+    {
+        // calculate the overlap area for 2 non-proximate genes
+        int totalOverlap = 0;
+
+        for (GenePhaseRegion regionUp : geneUp.getPhaseRegions())
+        {
+            // the downstream gene of the potential fusion cannot be non-coding
+            for (GenePhaseRegion regionDown : geneDown.getPhaseRegions())
+            {
+                if(hasAnyPhaseMatch(regionUp, regionDown, false)
+                        || regionsPhaseMatched(regionUp, regionDown))
+                {
+                    int regionOverlap = regionUp.length() * regionDown.length();
+                    totalOverlap += regionOverlap;
+                }
+            }
+        }
+
+        return totalOverlap;
+    }
+
 
 }
