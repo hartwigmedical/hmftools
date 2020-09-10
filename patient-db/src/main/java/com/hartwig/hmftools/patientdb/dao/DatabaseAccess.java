@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
@@ -42,6 +43,7 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -139,9 +141,13 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     public static void addDatabaseCmdLineArgs(final Options options) {
-        options.addOption(DB_USER, true, "Database user name");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database url");
+        addDatabaseCmdLineArgs(options, false);
+    }
+
+    public static void addDatabaseCmdLineArgs(final Options options, boolean isRequired) {
+        options.addOption(Option.builder(DB_USER).desc("Database user name").hasArg(true).required(isRequired).build());
+        options.addOption(Option.builder(DB_PASS).desc("Database password").hasArg(true).required(isRequired).build());
+        options.addOption(Option.builder(DB_URL).desc("Database url").hasArg(true).required(isRequired).build());
     }
 
     public static boolean hasDatabaseConfig(@NotNull final CommandLine cmd) {
@@ -306,6 +312,10 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeAmberPatients(List<AmberPatient> mapping) {
         amberDAO.writePatients(mapping);
+    }
+
+    public void writeAmberAnonymous(List<AmberAnonymous> mapping) {
+        amberDAO.writeAnonymous(mapping);
     }
 
     public void writeAmberSample(@NotNull AmberSample identity) {

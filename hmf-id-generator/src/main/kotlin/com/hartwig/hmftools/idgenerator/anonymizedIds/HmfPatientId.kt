@@ -1,26 +1,9 @@
 package com.hartwig.hmftools.idgenerator.anonymizedIds
 
-import com.hartwig.hmftools.idgenerator.Hash
-
-data class HmfPatientId(val hashId: HashId) : AnonymizedId by hashId, Comparable<HmfPatientId> {
-    companion object {
-        operator fun invoke(hashString: String, id: Int) = HmfPatientId(HashId(Hash(hashString), id))
-    }
-
-    fun updateHash(hash: Hash) = copy(hashId = hashId.copy(hash = hash))
-
+data class HmfPatientId(val id: Int) : Comparable<HmfPatientId> {
     val plaintext = "HMF" + id.toString().padStart(6, '0')
 
     override fun compareTo(other: HmfPatientId): Int {
-        return hashId.id.compareTo(other.hashId.id)
-    }
-}
-
-data class HmfPatientIdSimple(val id: Int) : Comparable<HmfPatientIdSimple> {
-    val plaintext = "HMF" + id.toString().padStart(6, '0')
-
-    override fun compareTo(other: HmfPatientIdSimple): Int {
         return id.compareTo(other.id)
     }
-
 }
