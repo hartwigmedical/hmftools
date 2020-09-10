@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.patientdb.curators;
 
-import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,10 +16,14 @@ import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCurator implements CleanableCurator {
+
+    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
 
     @NotNull
     private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
@@ -29,12 +32,14 @@ public class TumorLocationCurator implements CleanableCurator {
 
     @NotNull
     public static TumorLocationCurator fromProductionResource(@NotNull String tumorLocationMappingCSV) throws IOException {
-        return new TumorLocationCurator(new ByteArrayInputStream(tumorLocationMappingCSV.getBytes()));
+        return new TumorLocationCurator(tumorLocationMappingCSV);
     }
 
     @VisibleForTesting
-    TumorLocationCurator(@NotNull InputStream mappingInputStream) throws IOException {
-        CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+    TumorLocationCurator(@NotNull String mappingInputStream) throws IOException {
+        BufferedReader file = new BufferedReader(new FileReader(mappingInputStream));
+        CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
+
         for (CSVRecord record : parser) {
             String searchTerm = record.get("searchTerm");
             String primaryTumorLocation = record.get("primaryTumorLocation");

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.patientdb.curators;
 
-import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Objects;
@@ -30,12 +30,14 @@ public class BiopsySiteCurator {
 
     @NotNull
     public static BiopsySiteCurator fromProductionResource(@NotNull String biopsyMappingCSV) throws IOException {
-        return new BiopsySiteCurator(new ByteArrayInputStream(biopsyMappingCSV.getBytes()));
+        return new BiopsySiteCurator(biopsyMappingCSV);
     }
 
     @VisibleForTesting
-    BiopsySiteCurator(@NotNull InputStream mappingInputStream) throws IOException {
-        CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+    BiopsySiteCurator(@NotNull String mappingInputStream) throws IOException {
+        BufferedReader file = new BufferedReader(new FileReader(mappingInputStream));
+        CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
+
         for (CSVRecord record : parser) {
             String primaryTumorLocation = record.get("primaryTumorLocation");
             String cancerSubType = record.get("cancerSubType");

@@ -4,11 +4,10 @@ import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.GENERATE_WORD_PARTS;
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.SPLIT_ON_NUMERICS;
 
-import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -89,11 +88,11 @@ public class TreatmentCurator implements CleanableCurator {
 
     @NotNull
     public static TreatmentCurator fromProductionResource(@NotNull String treatmentMappingCSV) throws IOException {
-        return new TreatmentCurator(new ByteArrayInputStream(treatmentMappingCSV.getBytes()));
+        return new TreatmentCurator(treatmentMappingCSV);
     }
 
     @VisibleForTesting
-    TreatmentCurator(@NotNull InputStream mappingInputStream) throws IOException {
+    TreatmentCurator(@NotNull String mappingInputStream) throws IOException {
         List<DrugEntry> drugEntries = readEntries(mappingInputStream);
         Directory index = createIndex(drugEntries);
         IndexReader reader = DirectoryReader.open(index);
@@ -146,9 +145,11 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static List<DrugEntry> readEntries(@NotNull InputStream mappingInputStream) throws IOException {
+    private static List<DrugEntry> readEntries(@NotNull String mappingInputStream) throws IOException {
         List<DrugEntry> drugEntries = Lists.newArrayList();
-        CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        BufferedReader file = new BufferedReader(new FileReader(mappingInputStream));
+        CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
+
         for (CSVRecord record : parser) {
             String canonicalName = record.get(DRUG_NAME_CSV_FIELD).trim();
             String drugType = record.get(DRUG_TYPE_CSV_FIELD).trim();

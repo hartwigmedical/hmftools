@@ -19,7 +19,7 @@ public final class TestCuratorFactory {
     @NotNull
     public static TumorLocationCurator tumorLocationCurator() {
         try {
-            return new TumorLocationCurator(new FileInputStream(TUMOR_LOCATION_MAPPING_CSV));
+            return new TumorLocationCurator(TUMOR_LOCATION_MAPPING_CSV);
         } catch (IOException e) {
             throw new IllegalStateException("Could not create tumor location curator!");
         }
@@ -28,7 +28,7 @@ public final class TestCuratorFactory {
     @NotNull
     public static BiopsySiteCurator biopsySiteCurator() {
         try {
-            return new BiopsySiteCurator(new FileInputStream(BIOPSY_SITE_MAPPING_CSV));
+            return new BiopsySiteCurator(BIOPSY_SITE_MAPPING_CSV);
         } catch (IOException e) {
             throw new IllegalStateException("Could not create biopsy site curator!");
         }
@@ -37,7 +37,7 @@ public final class TestCuratorFactory {
     @NotNull
     public static TreatmentCurator treatmentCurator() {
         try {
-            return new TreatmentCurator(new FileInputStream(TREATMENT_MAPPING_CSV));
+            return new TreatmentCurator(TREATMENT_MAPPING_CSV);
         } catch (IOException e) {
             throw new IllegalStateException("Could not create treatment curator!");
         }
