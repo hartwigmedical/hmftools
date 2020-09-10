@@ -36,7 +36,6 @@ class BamCountReader
     void initialise(final String refGenomeFile, IndexedFastaSequenceFile ifSeqFile)
     {
         mIndexedFastaSequenceFile = ifSeqFile;
-
         mRefGenomeFile = new File(refGenomeFile);
     }
 

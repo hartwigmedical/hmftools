@@ -123,12 +123,8 @@ class VariantEnricher
             return;
         }
 
-        long recordsWithTumorData = bachRecords.stream().filter(x -> x.isReadDataSet()).count();
-
-        if(mBamCountReader != null && recordsWithTumorData < bachRecords.size())
-        {
+        if(mBamCountReader != null)
             mBamCountReader.readBamCounts(mConfig.BamFile, bachRecords);
-        }
 
         final String sampleId = mConfig.SampleId;
 

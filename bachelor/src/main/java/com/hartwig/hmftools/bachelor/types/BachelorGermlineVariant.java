@@ -43,7 +43,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     private int mGermlineReadDepth;
     private int mTumorAltCount;
     private int mTumorReadDepth;
-    private boolean mReadDataSet;
 
     private boolean mHasEnrichmentData;
     private double mAdjustedCopyNumber;
@@ -87,7 +86,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mTumorAltCount = 0;
         mGermlineReadDepth = 0;
         mTumorReadDepth = 0;
-        mReadDataSet = false;
 
         mHasEnrichmentData = false;
         mAdjustedVaf = 0;
@@ -205,15 +203,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mTumorAltCount = altCount;
         mTumorReadDepth = readDepth;
     }
-
-    public void setReadData(int tumorCount, int tumorReadDepth)
-    {
-        mTumorAltCount = tumorCount;
-        mTumorReadDepth = tumorReadDepth;
-        mReadDataSet = true;
-    }
-
-    public boolean isReadDataSet() { return mReadDataSet; }
 
     public void setEnrichmentData(double adjustedVaf, double maCopyNumber, double adjustedCopyNumber)
     {

@@ -463,23 +463,7 @@ public class GermlineVariantFinder
 
             int germlineReadDepth = refGenotype.getDP();
 
-            int tumorAltCount = 0;
-            int tumorReadDepth = 0;
-            boolean hasDepthInfo = false;
-
-            if (variant.getGenotypes().size() >= 2)
-            {
-                hasDepthInfo = true;
-                final Genotype tumorGenotype = variant.getGenotype(1);
-                int[] alleleData = tumorGenotype.getAD();
-                tumorAltCount = alleleData[1];
-                tumorReadDepth = tumorGenotype.getDP();
-            }
-
             germlineVariant.setGermlineData(germlineReadDepth);
-
-            if(hasDepthInfo)
-                germlineVariant.setReadData(tumorAltCount, tumorReadDepth);
 
             if(germlineVariant.isLowScore() && germlineVariant.filterType() == PASS)
                 germlineVariant.setFilterType(ARTEFACT);
