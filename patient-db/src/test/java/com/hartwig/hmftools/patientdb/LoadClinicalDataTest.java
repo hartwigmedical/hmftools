@@ -34,7 +34,6 @@ import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.jetbrains.annotations.Nullable;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class LoadClinicalDataTest {
@@ -45,8 +44,7 @@ public class LoadClinicalDataTest {
 
     @Test
     public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
-        TumorLocationCurator tumorLocationCurator =
-                TumorLocationCurator.fromProductionResource(TestCuratorFactory.TUMOR_LOCATION_MAPPING_CSV);
+        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(TestCuratorFactory.TUMOR_LOCATION_MAPPING_CSV);
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource(TestCuratorFactory.BIOPSY_SITE_MAPPING_CSV);
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource(TestCuratorFactory.TREATMENT_MAPPING_CSV);
 

@@ -337,7 +337,7 @@ public final class LoadClinicalData {
             @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull EcrfModels ecrfModels,
             @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink, @NotNull String tumorLocationMappingCSV,
             @NotNull String treatmentMappingCSV, @NotNull String biopsyMappingCSV) throws IOException {
-        TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource(tumorLocationMappingCSV);
+        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(tumorLocationMappingCSV);
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource(biopsyMappingCSV);
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource(treatmentMappingCSV);
 

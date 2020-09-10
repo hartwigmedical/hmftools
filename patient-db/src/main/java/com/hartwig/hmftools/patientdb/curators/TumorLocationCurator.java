@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.Utils;
@@ -16,28 +15,18 @@ import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCurator implements CleanableCurator {
-
-    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
 
     @NotNull
     private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
 
-    @NotNull
-    public static TumorLocationCurator fromProductionResource(@NotNull String tumorLocationMappingCSV) throws IOException {
-        return new TumorLocationCurator(tumorLocationMappingCSV);
-    }
-
-    @VisibleForTesting
-    TumorLocationCurator(@NotNull String mappingInput) throws IOException {
-        BufferedReader file = new BufferedReader(new FileReader(mappingInput));
+    public TumorLocationCurator(@NotNull String tumorLocationMappingCSV) throws IOException {
+        BufferedReader file = new BufferedReader(new FileReader(tumorLocationMappingCSV));
         CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
 
         for (CSVRecord record : parser) {

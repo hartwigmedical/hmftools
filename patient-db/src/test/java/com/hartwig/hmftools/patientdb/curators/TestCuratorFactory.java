@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.curators;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
