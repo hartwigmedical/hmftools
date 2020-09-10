@@ -34,8 +34,8 @@ public class BiopsySiteCurator {
     }
 
     @VisibleForTesting
-    BiopsySiteCurator(@NotNull String mappingInputStream) throws IOException {
-        BufferedReader file = new BufferedReader(new FileReader(mappingInputStream));
+    BiopsySiteCurator(@NotNull String mappingInput) throws IOException {
+        BufferedReader file = new BufferedReader(new FileReader(mappingInput));
         CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
 
         for (CSVRecord record : parser) {

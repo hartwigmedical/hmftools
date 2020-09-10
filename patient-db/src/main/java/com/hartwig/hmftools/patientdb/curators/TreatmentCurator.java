@@ -145,9 +145,9 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static List<DrugEntry> readEntries(@NotNull String mappingInputStream) throws IOException {
+    private static List<DrugEntry> readEntries(@NotNull String mappingInput) throws IOException {
         List<DrugEntry> drugEntries = Lists.newArrayList();
-        BufferedReader file = new BufferedReader(new FileReader(mappingInputStream));
+        BufferedReader file = new BufferedReader(new FileReader(mappingInput));
         CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
 
         for (CSVRecord record : parser) {
