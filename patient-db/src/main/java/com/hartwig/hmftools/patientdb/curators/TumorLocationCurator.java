@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.patientdb.curators;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.Utils;
@@ -21,22 +20,15 @@ import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCurator implements CleanableCurator {
 
-    private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
-            TumorLocationCurator.class.getResourceAsStream("/tumor_location_mapping.csv");
-
     @NotNull
     private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
 
-    @NotNull
-    public static TumorLocationCurator fromProductionResource() throws IOException {
-        return new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE);
-    }
+    public TumorLocationCurator(@NotNull String tumorLocationMappingCSV) throws IOException {
+        BufferedReader file = new BufferedReader(new FileReader(tumorLocationMappingCSV));
+        CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
 
-    @VisibleForTesting
-    TumorLocationCurator(@NotNull InputStream mappingInputStream) throws IOException {
-        CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (CSVRecord record : parser) {
             String searchTerm = record.get("searchTerm");
             String primaryTumorLocation = record.get("primaryTumorLocation");

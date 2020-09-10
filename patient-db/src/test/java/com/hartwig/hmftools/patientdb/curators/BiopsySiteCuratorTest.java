@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
@@ -14,7 +15,7 @@ public class BiopsySiteCuratorTest {
 
     @Test
     public void canCreateFromProductionResource() throws IOException {
-        assertNotNull(BiopsySiteCurator.fromProductionResource());
+        assertNotNull(BiopsySiteCurator.fromProductionResource(TestCuratorFactory.BIOPSY_SITE_MAPPING_CSV));
     }
 
     @Test

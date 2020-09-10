@@ -3,18 +3,11 @@ package com.hartwig.hmftools.patientdb.curators;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
-
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 
 import org.junit.Test;
 
 public class TumorLocationCuratorTest {
-
-    @Test
-    public void canCreateFromProductionResource() throws IOException {
-        assertNotNull(TumorLocationCurator.fromProductionResource());
-    }
 
     @Test
     public void canDetermineUnusedTerms() {

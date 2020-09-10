@@ -4,10 +4,10 @@ import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.GENERATE_WORD_PARTS;
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.SPLIT_ON_NUMERICS;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedDrug;
 
@@ -64,7 +63,6 @@ import org.jetbrains.annotations.NotNull;
 public class TreatmentCurator implements CleanableCurator {
 
     private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
-    private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
 
     private static final String DRUG_TERMS_FIELD = "drugTerms";
     private static final String DRUG_NAME_FIELD = "drugName";
@@ -89,12 +87,12 @@ public class TreatmentCurator implements CleanableCurator {
     private final IndexSearcher indexSearcher;
 
     @NotNull
-    public static TreatmentCurator fromProductionResource() throws IOException {
-        return new TreatmentCurator(TREATMENT_MAPPING_RESOURCE);
+    public static TreatmentCurator fromProductionResource(@NotNull String treatmentMappingCSV) throws IOException {
+        return new TreatmentCurator(treatmentMappingCSV);
     }
 
     @VisibleForTesting
-    TreatmentCurator(@NotNull InputStream mappingInputStream) throws IOException {
+    TreatmentCurator(@NotNull String mappingInputStream) throws IOException {
         List<DrugEntry> drugEntries = readEntries(mappingInputStream);
         Directory index = createIndex(drugEntries);
         IndexReader reader = DirectoryReader.open(index);
@@ -147,9 +145,11 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static List<DrugEntry> readEntries(@NotNull InputStream mappingInputStream) throws IOException {
+    private static List<DrugEntry> readEntries(@NotNull String mappingInput) throws IOException {
         List<DrugEntry> drugEntries = Lists.newArrayList();
-        CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        BufferedReader file = new BufferedReader(new FileReader(mappingInput));
+        CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
+
         for (CSVRecord record : parser) {
             String canonicalName = record.get(DRUG_NAME_CSV_FIELD).trim();
             String drugType = record.get(DRUG_TYPE_CSV_FIELD).trim();

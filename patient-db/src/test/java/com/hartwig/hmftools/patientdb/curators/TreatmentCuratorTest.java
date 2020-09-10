@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,7 @@ public class TreatmentCuratorTest {
 
     @Test
     public void canCreateFromProductionResource() throws IOException {
-        assertNotNull(TreatmentCurator.fromProductionResource());
+        assertNotNull(TreatmentCurator.fromProductionResource(TestCuratorFactory.TREATMENT_MAPPING_CSV));
     }
 
     @Test
