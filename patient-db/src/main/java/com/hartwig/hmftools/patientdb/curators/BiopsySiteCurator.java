@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.curators;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -8,7 +9,6 @@ import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedBiopsyType;
@@ -25,14 +25,12 @@ public class BiopsySiteCurator {
 
     private static final Logger LOGGER = LogManager.getLogger(BiopsySiteCurator.class);
 
-    private static final InputStream BIOPSY_SITE_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/biopsy_site_mapping.csv");
-
     @NotNull
     private final Map<Key, CuratedBiopsyType> curationMap = Maps.newHashMap();
 
     @NotNull
-    public static BiopsySiteCurator fromProductionResource() throws IOException {
-        return new BiopsySiteCurator(BIOPSY_SITE_MAPPING_RESOURCE);
+    public static BiopsySiteCurator fromProductionResource(@NotNull String biopsyMappingCSV) throws IOException {
+        return new BiopsySiteCurator(new ByteArrayInputStream(biopsyMappingCSV.getBytes()));
     }
 
     @VisibleForTesting

@@ -9,9 +9,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TestCuratorFactory {
 
-    private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("test_tumor_location_mapping.csv").getPath();
-    private static final String BIOPSY_SITE_MAPPING_CSV = Resources.getResource("test_biopsy_site_mapping.csv").getPath();
-    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("test_treatment_mapping.csv").getPath();
+    public static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("test_tumor_location_mapping.csv").getPath();
+    public static final String BIOPSY_SITE_MAPPING_CSV = Resources.getResource("test_biopsy_site_mapping.csv").getPath();
+    public static final String TREATMENT_MAPPING_CSV = Resources.getResource("test_treatment_mapping.csv").getPath();
 
     private TestCuratorFactory() {
     }

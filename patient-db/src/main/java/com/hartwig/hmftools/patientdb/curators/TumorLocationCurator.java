@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.curators;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -21,17 +22,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCurator implements CleanableCurator {
 
-    private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
-            TumorLocationCurator.class.getResourceAsStream("/tumor_location_mapping.csv");
-
     @NotNull
     private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
 
     @NotNull
-    public static TumorLocationCurator fromProductionResource() throws IOException {
-        return new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE);
+    public static TumorLocationCurator fromProductionResource(@NotNull String tumorLocationMappingCSV) throws IOException {
+        return new TumorLocationCurator(new ByteArrayInputStream(tumorLocationMappingCSV.getBytes()));
     }
 
     @VisibleForTesting
