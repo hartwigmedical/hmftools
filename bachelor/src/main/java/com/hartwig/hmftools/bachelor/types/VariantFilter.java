@@ -79,24 +79,16 @@ public class VariantFilter
     public boolean whitelistMatch(String gene, String chromosome, long position, String ref, String alt,
             CodingEffect codingEffect, String hgvsProtein)
     {
-        if(codingEffect == MISSENSE)
+        if (!HgvsProteinCodon.isEmpty() && HgvsProteinCodon.equals(hgvsProtein))
         {
-            if (!HgvsProteinCodon.isEmpty() && HgvsProteinCodon.equals(hgvsProtein))
-            {
-                BACH_LOGGER.debug("Gene({}) matches filter on hgvsProtein({})", gene, hgvsProtein);
-
-                return true;
-            }
+            BACH_LOGGER.debug("Gene({}) matches filter on hgvsProtein({})", gene, hgvsProtein);
+            return true;
         }
-        else
+        else if (Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt))
         {
-            if (Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt))
-            {
-                BACH_LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
-                        gene, chromosome, position, ref, alt);
-
-                return true;
-            }
+            BACH_LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
+                    gene, chromosome, position, ref, alt);
+            return true;
         }
 
         return false;
