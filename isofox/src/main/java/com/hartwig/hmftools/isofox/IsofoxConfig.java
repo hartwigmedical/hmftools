@@ -284,12 +284,25 @@ public class IsofoxConfig
             {
                 final String[] items = regionStr.split(SUB_ITEM_DELIM);
                 if(items.length == 3)
-                    SpecificRegions.add(new SvRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2])));
+                {
+                    SvRegion region = new SvRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+
+                    if(!region.isValid())
+                    {
+                        ISF_LOGGER.error("invalid specific region: {}", region);
+                        continue;
+                    }
+
+                    ISF_LOGGER.info("filtering for specific region: {}", region);
+                    SpecificRegions.add(region);
+                }
             }
         }
         else if(cmd.hasOption(SPECIFIC_CHR))
         {
-            SpecificChromosomes.addAll(Arrays.stream(cmd.getOptionValue(SPECIFIC_CHR).split(ITEM_DELIM)).collect(Collectors.toList()));
+            final String chromosomes = cmd.getOptionValue(SPECIFIC_CHR);
+            ISF_LOGGER.info("filtering for specific chromosomes: {}", chromosomes);
+            SpecificChromosomes.addAll(Arrays.stream(chromosomes.split(ITEM_DELIM)).collect(Collectors.toList()));
         }
     }
 
