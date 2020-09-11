@@ -480,7 +480,7 @@ public class FusionFinder
         if(knownFusionData != null)
         {
             // a known IG-partner gene
-            if(knownFusionData.igDownstreamDistance() > 0)
+            if(knownFusionData.downstreamDistance() > 0)
             {
                 candidateTranscripts.addAll(downGene.transcripts().stream().filter(x -> x.postCoding()).collect(Collectors.toList()));
             }

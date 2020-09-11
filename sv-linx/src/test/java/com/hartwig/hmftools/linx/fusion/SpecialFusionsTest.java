@@ -502,7 +502,7 @@ public class SpecialFusionsTest
                 .addData(new KnownFusionData(KNOWN_PAIR_UNMAPPABLE_3, igGeneName, GENE_NAME_3, "", "",
                         String.format("%s;%s", igRegionStr, threeAltMapping)));
 
-        tester.FusionAnalyser.cacheSpecialFusionGenes(0);
+        tester.FusionAnalyser.cacheSpecialFusionGenes();
 
         int varId = 1;
         SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);

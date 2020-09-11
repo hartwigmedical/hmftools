@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -28,6 +29,10 @@ public class KnownFusionData
     private boolean mValidData;
     private final String mOtherData;
 
+    // type-specific data:
+
+    private int mDownstreamDistance; // used for some known pair 5' genes and IG 3' genes
+
     // exon deletion
     private String mSpecificTransName;
     private int[] mMinFusedExons;
@@ -36,13 +41,9 @@ public class KnownFusionData
     // IG region
     private SvRegion mIgRegion;
     private byte mIgStrand;
-    private int mIgDownstreamDistance;
 
     // 3' gene alternative mappings
     private final List<SvRegion> mThreeGeneAltRegions;
-
-    public static final int FIVE_GENE = 0;
-    public static final int THREE_GENE = 1;
 
     private static final String FILE_DELIMITER = ",";
     private static final String OTHER_DATA_DELIMITER = ";";
@@ -70,7 +71,7 @@ public class KnownFusionData
         mMaxFusedExons = new int[FS_PAIR];
         mIgRegion = null;
         mIgStrand = 0;
-        mIgDownstreamDistance = 0;
+        mDownstreamDistance = 0;
         mThreeGeneAltRegions = Lists.newArrayList();
 
         mValidData = true;
@@ -95,7 +96,12 @@ public class KnownFusionData
 
     private void setTypeInfo()
     {
-        if(Type == EXON_DEL_DUP)
+        if(Type == KNOWN_PAIR)
+        {
+            if(!mOtherData.isEmpty())
+                mDownstreamDistance = Integer.parseInt(mOtherData);
+        }
+        else if(Type == EXON_DEL_DUP)
         {
             final String[] items = mOtherData.split(OTHER_DATA_DELIMITER);
             if(items.length != 5)
@@ -123,7 +129,7 @@ public class KnownFusionData
             mIgStrand = Byte.parseByte(items[0]);
 
             mIgRegion = new SvRegion(items[1], Integer.parseInt(items[2]), Integer.parseInt(items[3]));
-            mIgDownstreamDistance = Integer.parseInt(items[4]);
+            mDownstreamDistance = Integer.parseInt(items[4]);
         }
         else if(Type == KNOWN_PAIR_UNMAPPABLE_3)
         {
@@ -150,7 +156,7 @@ public class KnownFusionData
                 mIgStrand = Byte.parseByte(items[0]);
 
                 mIgRegion = new SvRegion(items[1], Integer.parseInt(items[2]), Integer.parseInt(items[3]));
-                mIgDownstreamDistance = Integer.parseInt(items[4]);
+                mDownstreamDistance = Integer.parseInt(items[4]);
 
                 index += 5;
             }
@@ -186,7 +192,7 @@ public class KnownFusionData
         return mIgStrand == orientation && withinIgRegion(chromosome, position);
     }
 
-    public int igDownstreamDistance() { return mIgDownstreamDistance; }
+    public int downstreamDistance() { return mDownstreamDistance; }
 
     public final List<SvRegion> getThreeGeneAltRegions() { return mThreeGeneAltRegions; }
 
