@@ -20,17 +20,15 @@ fun main(args: Array<String>) {
     runUpdateIdsWithAmber(updateIdsCmd)
 }
 
-
 private fun updateIdsWithAmberModeOptions(): HmfOptions {
     val hmfOptions = HmfOptions()
-    DatabaseAccess.addDatabaseCmdLineArgs(hmfOptions.options, true);
+    DatabaseAccess.addDatabaseCmdLineArgs(hmfOptions.options, true)
     hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
     hmfOptions.add(InputOption(NEW_PASSWORD, "password used to generate hashes in HMF ids file"))
     hmfOptions.add(RequiredInputOption(HASH_FILE_IN, "input hash file location"))
     hmfOptions.add(RequiredOutputOption(HASH_FILE_OUT, "output hash file location"))
     return hmfOptions
 }
-
 
 private fun runUpdateIdsWithAmber(cmd: CommandLine) {
     logger.info("Mode: update ids with AMBER")
