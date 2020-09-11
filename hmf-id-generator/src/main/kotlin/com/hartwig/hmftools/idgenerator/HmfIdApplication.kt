@@ -47,8 +47,8 @@ private fun runUpdateIdsWithAmber(cmd: CommandLine) {
     val result = amberAnonymizer.anonymize(amberPatients, currentIds)
     CsvWriter.writeCSV(result.map { it.toCsv() }, cmd.getOptionValue(HASH_FILE_OUT))
 
-    logger.info("Writing ${result.size} sample mapping to database")
     val anonymizedRecords = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() })
+    logger.info("Writing ${result.size} sample mapping to database")
     databaseAccess.writeAmberAnonymous(anonymizedRecords.map { x -> x.toAmberAnonymous() })
     logger.info("Complete")
 }
