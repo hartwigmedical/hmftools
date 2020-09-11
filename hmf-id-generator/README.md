@@ -12,7 +12,7 @@ The sampleId and the hash can subsequently be used to map towards the HMF sample
 
 The tool expects a properly populated amberPatient in the database that is connected to, and can be run as follows:
  ```bash
-java -jar /path/to/id_generator_jar} \
+java -jar /path/to/id_generator_jar \
     -password ${anonymization_password} \
     -in "/path/to/sample_hashes.csv" \
     -out "/path/to/new_sample_hashes.csv" \
@@ -21,7 +21,7 @@ java -jar /path/to/id_generator_jar} \
 
 Do note:
  - Parameters "in" and "out" can point to the same file in which case the sample hashes will be overwritten.
- - You can optionally provide a "new_password" to reset the anonymization password to a new value.  
+ - A "new_password" parameter can optionally be provided to reset the anonymization password to a new value.  
 
 In addition to creating the new hashes, this command repopulates the table amberAnonymous containing all the sampleId -> hmfSampleId mappings. 
    
