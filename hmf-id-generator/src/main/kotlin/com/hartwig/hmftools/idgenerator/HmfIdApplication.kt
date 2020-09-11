@@ -15,23 +15,20 @@ import org.apache.logging.log4j.LogManager
 private val logger = LogManager.getLogger("HmfIdApplication")
 
 fun main(args: Array<String>) {
-    logger.info("Running id-generator $Version")
-    val updateIdsCmd = updateIdsWithAmberModeOptions().createCommandLine("hmf-id", args)
-    runUpdateIdsWithAmber(updateIdsCmd)
-}
+    logger.info("Running id-generator")
 
-private fun updateIdsWithAmberModeOptions(): HmfOptions {
     val hmfOptions = HmfOptions()
     DatabaseAccess.addDatabaseCmdLineArgs(hmfOptions.options, true)
     hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
     hmfOptions.add(InputOption(NEW_PASSWORD, "password used to generate hashes in HMF ids file"))
     hmfOptions.add(RequiredInputOption(HASH_FILE_IN, "input hash file location"))
     hmfOptions.add(RequiredOutputOption(HASH_FILE_OUT, "output hash file location"))
-    return hmfOptions
+
+    run(hmfOptions.createCommandLine("hmf-id", args))
 }
 
-private fun runUpdateIdsWithAmber(cmd: CommandLine) {
-    logger.info("Mode: update ids with AMBER")
+private fun run(cmd: CommandLine) {
+    logger.info("Updating IDs based on AMBER database data")
     val password = cmd.getOptionValue(PASSWORD)
     val newPassword = cmd.getOptionValue(NEW_PASSWORD, password)
     val databaseAccess = DatabaseAccess.databaseAccess(cmd)
