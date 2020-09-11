@@ -2,15 +2,15 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.FIVE_GENE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_COHORT;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_SUPPORT;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.ALLELE_FREQUENCY;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.ANCHOR_DISTANCE;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.COHORT;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.FRAGMENT_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_OTHER;
 import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_PAIR;
 import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_PROM3;
@@ -59,6 +59,8 @@ public class FusionFilters
         mKnownFusionCache.loadFromFile(cmd);
     }
 
+    private static final int KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS = 2;
+    private static final int KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS = 4;
     private static final int MIN_ANCHOR_DISTANCE = 20;
     private static final double AF_KNOWN_TIER = 0.005;
     private static final double AF_UNKNOWN_TIER = 0.05;
@@ -67,14 +69,11 @@ public class FusionFilters
     {
         if(fusion.getKnownFusionType() == KNOWN_PAIR)
         {
-            int requiredFragments = fusion.hasKnownSpliceSites()
-                    || (fusion.JunctionTypes[SE_START] == FusionJunctionType.CANONICAL && fusion.JunctionTypes[SE_END] == FusionJunctionType.KNOWN)
-                    || (fusion.JunctionTypes[SE_START] == FusionJunctionType.KNOWN && fusion.JunctionTypes[SE_END] == FusionJunctionType.CANONICAL) ?
-                    2 : 4;
+            int requiredFragments = hasKnownSpliceSite(fusion) ? KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS : KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS;
 
             if(fusion.totalFragments() < requiredFragments)
             {
-                fusion.setFilter(FILTER_SUPPORT);
+                fusion.setFilter(FRAGMENT_COUNT);
                 return false;
             }
 
@@ -83,7 +82,7 @@ public class FusionFilters
 
         if(min(fusion.AnchorDistance[SE_START], fusion.AnchorDistance[SE_END]) < MIN_ANCHOR_DISTANCE && fusion.DiscordantFrags == 0)
         {
-            fusion.setFilter(FILTER_SUPPORT);
+            fusion.setFilter(ANCHOR_DISTANCE);
             return false;
         }
 
@@ -114,13 +113,13 @@ public class FusionFilters
 
         if(fusion.alleleFrequency() < requiredAF)
         {
-            fusion.setFilter(FILTER_SUPPORT);
+            fusion.setFilter(ALLELE_FREQUENCY);
             return false;
         }
 
         if(fusion.totalFragments() < requiredFragments)
         {
-            fusion.setFilter(FILTER_SUPPORT);
+            fusion.setFilter(FRAGMENT_COUNT);
             return false;
         }
 
@@ -128,11 +127,29 @@ public class FusionFilters
 
         if(fusion.cohortFrequency() >= cohortFreqLimit)
         {
-            fusion.setFilter(FILTER_COHORT);
+            fusion.setFilter(COHORT);
             return false;
         }
 
         return true;
+    }
+
+    private static boolean hasKnownSpliceSite(final FusionData fusion)
+    {
+        return fusion.hasKnownSpliceSites()
+            || (fusion.JunctionTypes[SE_START] == FusionJunctionType.CANONICAL && fusion.JunctionTypes[SE_END] == FusionJunctionType.KNOWN)
+            || (fusion.JunctionTypes[SE_START] == FusionJunctionType.KNOWN && fusion.JunctionTypes[SE_END] == FusionJunctionType.CANONICAL);
+    }
+
+    public static boolean hasSufficientKnownFusionFragments(final List<FusionData> fusions)
+    {
+        int knownSpliceSiteFragments = fusions.stream()
+                .filter(x -> hasKnownSpliceSite(x))
+                .mapToInt(x -> x.totalFragments()).sum();
+
+        int totalFragments = fusions.stream().mapToInt(x -> x.totalFragments()).sum();
+
+        return knownSpliceSiteFragments >= KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS || totalFragments >= KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS;
     }
 
     public FusionCohortData findCohortFusion(final FusionData fusion)

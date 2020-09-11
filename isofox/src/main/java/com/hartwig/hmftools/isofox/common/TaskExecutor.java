@@ -16,8 +16,6 @@ public class TaskExecutor
 {
     public static boolean executeChromosomeTask(final List<Callable> tasks, int threadCount)
     {
-        // chrTasks.forEach(x -> x.setTaskType(taskType));
-
         if(threadCount <= 1)
         {
             for(Callable task : tasks)

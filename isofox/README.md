@@ -332,7 +332,7 @@ max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if e
 
 '** 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs. 
 
-'** seee below for cohort frequency calculation
+'** see below for cohort frequency calculation
 
 ### 10. Cohort frequency <TO DO>
 

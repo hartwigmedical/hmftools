@@ -12,19 +12,16 @@ import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilename
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
+import com.hartwig.hmftools.isofox.common.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -106,7 +103,8 @@ public class FusionCohort
 
         ISF_LOGGER.info("loading {} sample fusion files, allocating to {} task(s)", totalSampleCount, fusionTasks.size());
 
-        executeTasks(fusionTasks);
+        final List<Callable> callableList = fusionTasks.stream().collect(Collectors.toList());
+        TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
 
         if(mConfig.Fusions.GenerateCohort)
         {
@@ -121,53 +119,6 @@ public class FusionCohort
             fusionTasks.forEach(x -> ExternalFusionCompare.writeResults(mExternalCompareWriter, x.getExternalCompare().getResults()));
             closeBufferedWriter(mExternalCompareWriter);
         }
-    }
-
-    private boolean executeTasks(final List<FusionCohortTask> fusionTasks)
-    {
-        if(mConfig.Threads <= 1)
-        {
-            fusionTasks.forEach(x -> x.call());
-            return true;
-        }
-
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Isofox-%d").build();
-
-        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
-        List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
-
-        for(FusionCohortTask fusionTask : fusionTasks)
-        {
-            FutureTask futureTask = new FutureTask(fusionTask);
-
-            threadTaskList.add(futureTask);
-            executorService.execute(futureTask);
-        }
-
-        if(!checkThreadCompletion(threadTaskList))
-            return false;
-
-        executorService.shutdown();
-        return true;
-    }
-
-    private boolean checkThreadCompletion(final List<FutureTask> taskList)
-    {
-        try
-        {
-            for (FutureTask futureTask : taskList)
-            {
-                futureTask.get();
-            }
-        }
-        catch (Exception e)
-        {
-            ISF_LOGGER.error("task execution error: {}", e.toString());
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
     }
 
     private void intialiseCombinedWriter()
@@ -198,7 +149,7 @@ public class FusionCohort
             {
                 writer.write(String.format("%s,%s", sampleId, fusion.rawData()));
                 writer.write(String.format(",%s,%d,%s",
-                        fusion.filter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
+                        fusion.getFilter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
                 writer.newLine();
             }
         }

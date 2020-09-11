@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.writeCombinedFusions;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionData.FILTER_PASS;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.FRAGMENT_COUNT;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.PASS;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilters.hasSufficientKnownFusionFragments;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 
@@ -140,6 +142,7 @@ public class FusionCohortTask implements Callable
         // mark passing fusions, and then include any which are related to them
         final List<FusionData> passingFusions = Lists.newArrayList();
         final List<FusionData> nonPassingFusionsWithRelated = Lists.newArrayList();
+        final Map<String,List<FusionData>> lowSupportKnownFusions = Maps.newHashMap();
 
         for (FusionData fusion : sampleFusions)
         {
@@ -158,6 +161,24 @@ public class FusionCohortTask implements Callable
             {
                 if(!fusion.relatedFusionIds().isEmpty())
                     nonPassingFusionsWithRelated.add(fusion);
+
+                if(fusion.getKnownFusionType() == KnownGeneType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT)
+                {
+                    List<FusionData> fusions = lowSupportKnownFusions.get(fusion.name());
+                    if(fusions == null)
+                        lowSupportKnownFusions.put(fusion.name(), Lists.newArrayList(fusion));
+                    else
+                        fusions.add(fusion);
+                }
+            }
+        }
+
+        // tally up fragment count across known-pairs for a joint
+        for(final List<FusionData> fusions : lowSupportKnownFusions.values())
+        {
+            if(hasSufficientKnownFusionFragments(fusions))
+            {
+                passingFusions.addAll(fusions);
             }
         }
 
@@ -186,7 +207,7 @@ public class FusionCohortTask implements Callable
             }
         }
 
-        passingFusions.forEach(x -> x.setFilter(FILTER_PASS));
+        passingFusions.forEach(x -> x.setFilter(PASS));
 
         ISF_LOGGER.debug("sample({}) passing fusions({}) from total({} relatedToPass={})",
                 sampleId, passingFusions.size(), sampleFusions.size(), relatedToPassing);
@@ -219,7 +240,7 @@ public class FusionCohortTask implements Callable
             {
                 writer.write(fusion.rawData());
                 writer.write(String.format(",%s,%d,%s",
-                        fusion.filter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
+                        fusion.getFilter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
                 writer.newLine();
             }
 

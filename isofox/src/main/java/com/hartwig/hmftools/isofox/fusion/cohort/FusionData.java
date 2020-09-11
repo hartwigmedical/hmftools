@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FUSION_ID_PREFIX;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FUSION_NONE;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.NOT_SET;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
@@ -41,11 +42,7 @@ public class FusionData
     private final List<Integer> mRelatedFusionIds;
     private boolean mHasRelatedKnownSpliceSites;
     private int mCohortFrequency;
-    private String mFilter;
-
-    public static final String FILTER_PASS = "PASS";
-    public static final String FILTER_COHORT = "COHORT";
-    public static final String FILTER_SUPPORT = "SUPPORT";
+    private FusionFilterType mFilter;
 
     public FusionData(int id, final String[] chromosomes, final int[] junctionPositions, final byte[] junctionOrientations,
             final FusionJunctionType[] junctionTypes, final String svType, final String[] geneIds, final String[] geneNames,
@@ -71,8 +68,10 @@ public class FusionData
         mRelatedFusionIds = Lists.newArrayList();
         mHasRelatedKnownSpliceSites = false;
         mCohortFrequency = 0;
-        mFilter = "";
+        mFilter = NOT_SET;
     }
+
+    public String name() { return String.format("%s_%s", GeneNames[SE_START], GeneNames[SE_END]); }
 
     public void cacheCsvData(final String data) { mRawData = data; }
     public String rawData() { return mRawData; }
@@ -103,8 +102,8 @@ public class FusionData
     public void setCohortFrequency(int count) { mCohortFrequency = count; }
     public int cohortFrequency() { return mCohortFrequency; }
 
-    public void setFilter(String filter) { mFilter = filter; }
-    public String filter() { return mFilter; }
+    public void setFilter(FusionFilterType type) { mFilter = type; }
+    public FusionFilterType getFilter() { return mFilter; }
 
     public static FusionData fromCsv(final String data, final Map<String,Integer> fieldIndexMap)
     {
