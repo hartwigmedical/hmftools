@@ -1,23 +1,27 @@
 # ID Generator
 
-The ID generator translates all original sample IDs to anonymous HMF IDs. The main uses of this tool are as follows:
- - Generate hashes for a selection of sampleIDs such that a subsequent release of ID generator can anonymize these samples
- - Create anonymous ID for a sample using the internal hashes of the ID generator
+The ID generator maps all original sample IDs to anonymous HMF IDs. The benefits of this are:
+ - There is no reference anymore to the original sample ID which was provided by the study/hospital contributing the sample.
+ - It becomes immediately clear which samples belong to the same patient.
  
  ### ID anonymization
  
-To generate a set of anonymous IDs for a set of sample IDs, you need:
- - to use the same password that was used to create the initial hashes for these samples.
- - to use a release of id generator that holds the hashes for every sample.
- 
+The ID anonymization is based on the patient mapping performed by [AMBER](../amber/README.md).
+For every sampleId we create a hash using the anonymization password and linking this to the patient derived from amber patient mapping.
+The sampleId and the hash can subsequently be used to map towards the HMF sample ID.
+
+The tool expects a properly populated amberPatient in the database that is connected to, and can be run as follows:
  ```bash
-java -jar id-generator.jar \
-    -anonymize_ids \ 
-    -password ${secret_password_that_was_used_for_hash_creation} \
-    -sample_ids_file /path/to/sample_ids_file \
-    -patient_mapping_file /path/to/patient_mapping_file
+java -jar /path/to/id_generator_jar} \
+    -password ${anonymization_password} \
+    -in "/path/to/sample_hashes.csv" \
+    -out "/path/to/new_sample_hashes.csv" \
+    -db_user ${db_user} -db_pass ${db_pass} -db_url ${db_url}
  ```
 
-The patient mapping file can map 2 sample IDs onto each other if you know these samples belong to the same patient 
-(but participated in multiple studies for example). 
+Do note:
+ - Parameters "in" and "out" can point to the same file in which case the sample hashes will be overwritten.
+ - You can optionally provide a "new_password" to reset the anonymization password to a new value.  
+
+In addition to creating the new hashes, this command repopulates the table amberAnonymous containing all the sampleId -> hmfSampleId mappings. 
    
