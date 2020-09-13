@@ -73,7 +73,7 @@ public class BamFragmentReader implements Callable
     private int mGenesProcessed;
 
     // fusion state cached across all gene collections
-    private final Map<Integer, BaseDepth> mGeneDepthMap;
+    private final Map<Integer,BaseDepth> mGeneDepthMap;
     private final List<ReadGroup> mChimericReadGroups;
     private final Map<String,ReadGroup> mChimericPartialReadGroups;
     private final Set<String> mChimericDuplicateReadIds;

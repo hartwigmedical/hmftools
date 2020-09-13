@@ -212,7 +212,6 @@ public class CohortConfig
         return true;
     }
 
-
     public static Options createCmdLineOptions()
     {
         final Options options = new Options();

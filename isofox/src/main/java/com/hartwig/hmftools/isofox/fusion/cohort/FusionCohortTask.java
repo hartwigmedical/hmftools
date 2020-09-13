@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
@@ -55,6 +56,7 @@ public class FusionCohortTask implements Callable
     }
 
     public final ExternalFusionCompare getExternalCompare() { return mExternalFusionCompare; }
+    public final Set<String> getSamples() { return mSampleFileMap.keySet(); }
 
     @Override
     public Long call()
@@ -62,8 +64,6 @@ public class FusionCohortTask implements Callable
         ISF_LOGGER.info("task {}: processing {} sample fusion files", mTaskId, mSampleFileMap.size());
 
         int totalProcessed = 0;
-
-        final Map<String,Integer> fieldsMap = Maps.newHashMap();
 
         // load each sample's fusions and consolidate into a single list
         for(Map.Entry<String,Path> entry : mSampleFileMap.entrySet())

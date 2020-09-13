@@ -14,11 +14,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.common.TaskExecutor;
@@ -81,12 +83,15 @@ public class FusionCohort
 
         List<FusionCohortTask> fusionTasks = Lists.newArrayList();
 
-        Map<String,Path> sampleFileMap = Maps.newHashMap();
+        Map<String,Path> sampleFileMap = null;
 
         for(int i = 0; i < totalSampleCount; ++i)
         {
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path fusionFile = filenames.get(i);
+
+            if(sampleFileMap == null)
+                sampleFileMap = Maps.newHashMap();
 
             sampleFileMap.put(sampleId, fusionFile);
 
@@ -96,12 +101,12 @@ public class FusionCohort
                 fusionTasks.add(new FusionCohortTask(
                         taskId++, mConfig, sampleFileMap, mFilters, mFusionCollection, mWriter, mExternalCompareWriter));
 
-                sampleFileMap = Maps.newHashMap();
+                sampleFileMap = null;
                 sampleCount = 0;
             }
         }
 
-        ISF_LOGGER.info("loading {} sample fusion files, allocating to {} task(s)", totalSampleCount, fusionTasks.size());
+        ISF_LOGGER.info("loading ({}) sample fusion files, allocating to {} task(s)", totalSampleCount, fusionTasks.size());
 
         final List<Callable> callableList = fusionTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
@@ -119,6 +124,8 @@ public class FusionCohort
             fusionTasks.forEach(x -> ExternalFusionCompare.writeResults(mExternalCompareWriter, x.getExternalCompare().getResults()));
             closeBufferedWriter(mExternalCompareWriter);
         }
+
+        ISF_LOGGER.info("fusion cohort analysis complete");
     }
 
     private void intialiseCombinedWriter()
