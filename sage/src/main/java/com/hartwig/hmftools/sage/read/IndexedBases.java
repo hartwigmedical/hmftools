@@ -256,6 +256,10 @@ public class IndexedBases {
         return bases[position - this.position + index];
     }
 
+    public int maxFlankLength() {
+        return Math.min(leftCoreIndex, bases.length - rightCoreIndex - 1);
+    }
+
     public byte[] trinucleotideContext(int position) {
         return new byte[] { base(position - 1), base(position), base(position + 1) };
     }

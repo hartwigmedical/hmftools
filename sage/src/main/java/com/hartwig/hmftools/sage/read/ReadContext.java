@@ -234,6 +234,10 @@ public class ReadContext {
         return readBases.flankSize();
     }
 
+    public int maxFlankLength() {
+        return readBases.maxFlankLength();
+    }
+
     public byte[] refTrinucleotideContext(int position) {
         return refBases.trinucleotideContext(position);
     }

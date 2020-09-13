@@ -115,6 +115,45 @@ public class AltContextTest {
         assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
     }
 
+    @Test
+    public void testBalancedCore() {
+        String core = "CAT";
+
+        final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
+        final AltContext victim = new AltContext(refContext, "C", "T");
+
+        victim.addReadContext(3, simpleReadContext("AAA", core, "CCC"));
+        assertEquals("AAACATCCC", new String(victim.interimReadContexts().get(0).readContext().readBases()));
+
+        // Adding same size shouldn't change it
+        victim.addReadContext(2, simpleReadContext("TTA", core, "CGG"));
+        assertEquals("AAACATCCC", new String(victim.interimReadContexts().get(0).readContext().readBases()));
+
+        // Adding one to left won't change it
+        victim.addReadContext(3, simpleReadContext("TAAA", core, "CCC"));
+        assertEquals("AAACATCCC", new String(victim.interimReadContexts().get(0).readContext().readBases()));
+
+        // Adding one to right won't change it
+        victim.addReadContext(3, simpleReadContext("AAA", core, "CCCG"));
+        assertEquals("AAACATCCC", new String(victim.interimReadContexts().get(0).readContext().readBases()));
+
+        // Adding one to both WILL change it
+        victim.addReadContext(3, simpleReadContext("TAAA", core, "CCCG"));
+        AltContext.ReadContextCandidate finalCandidate = victim.interimReadContexts().get(0);
+
+        assertEquals("TAAACATCCCG", new String(finalCandidate.readContext().readBases()));
+        assertEquals(2,  finalCandidate.minNumberOfEvents());
+        assertEquals(4,  finalCandidate.fullMatch());
+
+    }
+
+    @NotNull
+    public static ReadContext simpleReadContext(@NotNull final String leftFlank, @NotNull final String core, @NotNull final String rightFlank) {
+        assert (core.length() == 3);
+        return ReadContextTest.create(POS, 1, leftFlank, core, rightFlank, 1);
+    }
+
+
     @NotNull
     public static ReadContext simpleSnv(@NotNull final String leftFlank, @NotNull final String core, @NotNull final String rightFlank) {
         assert (core.length() == 5);

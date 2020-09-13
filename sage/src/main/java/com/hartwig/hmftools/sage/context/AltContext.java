@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -40,15 +41,16 @@ public class AltContext implements VariantHotspot {
             throw new IllegalStateException();
         }
 
-        int fullMatch = 0;
         int partialMatch = 0;
         int coreMatch = 0;
+        ReadContextCandidate fullMatchCandidate = null;
+
         for (ReadContextCandidate candidate : interimReadContexts) {
             final ReadContextMatch match = candidate.readContext().matchAtPosition(newReadContext);
             switch (match) {
                 case FULL:
                     candidate.incrementFull(1, numberOfEvents);
-                    fullMatch++;
+                    fullMatchCandidate = candidate;
                     break;
                 case PARTIAL:
                     candidate.incrementPartial(1);
@@ -61,10 +63,18 @@ public class AltContext implements VariantHotspot {
             }
         }
 
-        if (fullMatch == 0) {
+
+        if (fullMatchCandidate == null) {
             final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
             candidate.incrementCore(coreMatch);
             candidate.incrementPartial(partialMatch);
+            interimReadContexts.add(candidate);
+        } else if (newReadContext.maxFlankLength() > fullMatchCandidate.maxFlankLength()) {
+            interimReadContexts.remove(fullMatchCandidate);
+            final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
+            candidate.incrementCore(fullMatchCandidate.coreMatch);
+            candidate.incrementPartial(fullMatchCandidate.partialMatch);
+            candidate.incrementFull(fullMatchCandidate.fullMatch, fullMatchCandidate.minNumberOfEvents);
             interimReadContexts.add(candidate);
         }
 
@@ -76,6 +86,11 @@ public class AltContext implements VariantHotspot {
 
     public int minNumberOfEvents() {
         return candidate.minNumberOfEvents();
+    }
+
+    @VisibleForTesting
+    List<ReadContextCandidate> interimReadContexts() {
+        return interimReadContexts;
     }
 
     public boolean finaliseAndValidate() {
@@ -189,9 +204,17 @@ public class AltContext implements VariantHotspot {
             return minNumberOfEvents;
         }
 
+        public int maxFlankLength() {
+            return readContext.maxFlankLength();
+        }
+
         @NotNull
         public ReadContext readContext() {
             return readContext;
+        }
+
+        public int fullMatch() {
+            return fullMatch;
         }
 
         @Override
