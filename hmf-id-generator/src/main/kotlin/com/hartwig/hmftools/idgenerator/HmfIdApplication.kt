@@ -44,9 +44,9 @@ private fun run(cmd: CommandLine) {
         exitProcess(1)
     }
 
-    val currentIds = CsvReader.readCSVByName<HmfSampleIdCsv>(cmd.getOptionValue(HASH_FILE_IN))
-            .map { it.toHmfSampleId() }
-    logger.info("Retrieved ${currentIds.size} samples hashes from file")
+    val hashFileIn = cmd.getOptionValue(HASH_FILE_IN)
+    val currentIds = CsvReader.readCSVByName<HmfSampleIdCsv>(hashFileIn).map { it.toHmfSampleId() }
+    logger.info("Retrieved ${currentIds.size} samples hashes from ${hashFileIn}")
 
     logger.info("Processing samples")
     val amberAnonymizer = PatientAnonymizer(password, newPassword)
@@ -64,8 +64,9 @@ private fun run(cmd: CommandLine) {
     }
 
     // Write to file and database
-    logger.info("Writing ${result.size} samples hashes to file")
-    CsvWriter.writeCSV(result.map { it.toCsv() }, cmd.getOptionValue(HASH_FILE_OUT))
+    val hashFileOut = cmd.getOptionValue(HASH_FILE_OUT)
+    logger.info("Writing ${result.size} samples hashes to ${hashFileOut}")
+    CsvWriter.writeCSV(result.map { it.toCsv() }, hashFileOut)
     logger.info("Writing ${newMappings.size} sample mappings to database")
     databaseAccess.writeAmberAnonymous(newMappings)
     logger.info("Complete")
