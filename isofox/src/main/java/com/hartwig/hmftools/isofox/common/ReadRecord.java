@@ -324,6 +324,7 @@ public class ReadRecord
 
         for(int transId : transcripts)
         {
+            // determine for each transcript whether the mapped regions support a spliced transcript, unspliced or alternate splicing
             TransMatchType transMatchType = UNKNOWN;
 
             List<RegionReadData> transRegions = regions.stream()
@@ -368,11 +369,12 @@ public class ReadRecord
                     minExonRank = minExonRank == 0 ? exonRank : min(exonRank, minExonRank);
 
                     int mappingIndex = getRegionMappingIndex(region);
+                    int adjustedMappingIndex = mappingIndex;
 
                     if(mLowerInferredAdded)
-                        --mappingIndex;
+                        --adjustedMappingIndex;
 
-                    if (mappingIndex < 0 || mappingIndex != regionIndex)
+                    if (adjustedMappingIndex < 0 || adjustedMappingIndex != regionIndex)
                     {
                         transMatchType = ALT;
                         break;
@@ -443,6 +445,7 @@ public class ReadRecord
 
     public void captureGeneInfo(boolean purgeRegions)
     {
+        // converts the more details view of transcript mapping data to a stream-lined data set for chimeric read processing
         for(Map.Entry<RegionReadData,RegionMatchType> entry : mMappedRegions.entrySet())
         {
             List<TransExonRef> transRefList = mTransExonRefs.get(entry.getValue());

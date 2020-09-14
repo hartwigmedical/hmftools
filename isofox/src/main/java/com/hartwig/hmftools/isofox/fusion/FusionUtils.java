@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 
@@ -15,6 +16,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.TransMatchType;
 
 import htsjdk.samtools.CigarOperator;
 
@@ -146,6 +148,12 @@ public class FusionUtils
 
         if(junctionPositions.size() < 2)
             return false;
+
+        // rule out split reads which support a single transcript
+        if(splitRead != null && splitRead.getTranscriptClassifications().values().stream().anyMatch(x -> x == SPLICE_JUNCTION))
+        {
+            return false;
+        }
 
         List<Set<String>> positionGeneLists = Lists.newArrayList();
 
