@@ -36,16 +36,31 @@ private fun run(cmd: CommandLine) {
     val amberPatients = databaseAccess.readAmberPatients()
     logger.info("Retrieved ${amberPatients.size} samples from database")
 
+    val existingMappings = databaseAccess.readAmberAnonymous().toSet()
+    logger.info("Retrieved ${existingMappings.size} sample mappings from database")
+
     val currentIds = CsvReader.readCSVByName<HmfSampleIdCsv>(cmd.getOptionValue(HASH_FILE_IN))
             .map { it.toHmfSampleId() }
     logger.info("Retrieved ${currentIds.size} samples hashes from file")
 
+    logger.info("Processing samples")
     val amberAnonymizer = PatientAnonymizer(password, newPassword)
     val result = amberAnonymizer.anonymize(amberPatients, currentIds)
-    CsvWriter.writeCSV(result.map { it.toCsv() }, cmd.getOptionValue(HASH_FILE_OUT))
+    val newMappings = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() }).map { x -> x.toAmberAnonymous() }
 
-    val anonymizedRecords = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() })
-    logger.info("Writing ${anonymizedRecords.size} sample mapping to database")
-    databaseAccess.writeAmberAnonymous(anonymizedRecords.map { x -> x.toAmberAnonymous() })
+    val existingMappingsThatNoLongerExist = existingMappings.subtract(newMappings)
+    for (missing in existingMappingsThatNoLongerExist) {
+        logger.error("Previous mapping ${missing} is no longer found")
+    }
+
+    if (existingMappingsThatNoLongerExist.isNotEmpty()) {
+        System.exit(1);
+    }
+
+    // Write to file and database
+    logger.info("Writing ${result.size} samples hashes to file")
+    CsvWriter.writeCSV(result.map { it.toCsv() }, cmd.getOptionValue(HASH_FILE_OUT))
+    logger.info("Writing ${newMappings.size} sample mappings to database")
+    databaseAccess.writeAmberAnonymous(newMappings)
     logger.info("Complete")
 }

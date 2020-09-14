@@ -328,8 +328,8 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<AmberMapping> readAmberMappings() {
-        return amberDAO.readMapping();
+    public List<AmberAnonymous> readAmberAnonymous() {
+        return amberDAO.readAnonymous();
     }
 
     @NotNull

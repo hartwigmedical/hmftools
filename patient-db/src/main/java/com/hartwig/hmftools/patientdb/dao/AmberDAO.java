@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
+import com.hartwig.hmftools.common.amber.ImmutableAmberAnonymous;
 import com.hartwig.hmftools.common.amber.ImmutableAmberMapping;
 import com.hartwig.hmftools.common.amber.ImmutableAmberPatient;
 import com.hartwig.hmftools.common.amber.ImmutableAmberSample;
@@ -110,6 +111,20 @@ class AmberDAO {
         inserter.execute();
     }
 
+    List<AmberAnonymous> readAnonymous() {
+
+        final List<AmberAnonymous> result = Lists.newArrayList();
+        final Result<Record> queryResult = context.select().from(AMBERANONYMOUS).fetch();
+
+        for (Record record : queryResult) {
+            result.add(ImmutableAmberAnonymous.builder()
+                    .sampleId(record.get(AMBERANONYMOUS.SAMPLEID))
+                    .hmfSampleId(record.get(AMBERANONYMOUS.HMFSAMPLEID))
+                    .build());
+        }
+
+        return result;
+    }
 
     List<AmberMapping> readMapping() {
         final List<AmberMapping> result = Lists.newArrayList();
