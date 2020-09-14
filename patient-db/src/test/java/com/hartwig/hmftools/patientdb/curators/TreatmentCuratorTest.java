@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TreatmentCuratorTest {

@@ -13,12 +13,10 @@ import java.util.Map;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Viralinsertion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -208,7 +206,7 @@ public class StructuralVariantFusionDAO {
     @NotNull
     List<LinxViralInsertion> readViralInsertions(@NotNull String sample)
     {
-        List<LinxViralInsertion> viralinsertions = Lists.newArrayList();
+        List<LinxViralInsertion> viralInsertions = Lists.newArrayList();
 
         Result<Record> result = context.select().from(VIRALINSERTION).where(VIRALINSERTION.SAMPLEID.eq(sample)).fetch();
 
@@ -218,10 +216,10 @@ public class StructuralVariantFusionDAO {
                     sample, record.getValue(VIRALINSERTION.SVID),
                     record.getValue(VIRALINSERTION.VIRUSID), record.getValue(VIRALINSERTION.VIRUSNAME));
 
-            viralinsertions.add(viralInsert);
+            viralInsertions.add(viralInsert);
         }
 
-        return viralinsertions;
+        return viralInsertions;
     }
 
 }
