@@ -87,7 +87,6 @@ public class SomaticVariantFactory {
 
     public void fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
             @NotNull final String vcfFile, Consumer<SomaticVariant> consumer) throws IOException {
-
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
             if (!sampleInFile(tumor, header)) {
@@ -156,7 +155,6 @@ public class SomaticVariantFactory {
     @NotNull
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context) {
-
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .qual(context.getPhredScaledQual())
                 .chromosome(context.getContig())
