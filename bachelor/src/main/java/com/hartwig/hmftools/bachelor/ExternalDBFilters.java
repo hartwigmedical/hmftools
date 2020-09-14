@@ -235,6 +235,7 @@ public class ExternalDBFilters
         str = str.replaceAll(",", ";");
         str = str.replaceAll("\\[", "");
         str = str.replaceAll("]", "");
+        str = str.replaceAll("%3B", ";"); // in HG38 version
         return str;
     }
 
