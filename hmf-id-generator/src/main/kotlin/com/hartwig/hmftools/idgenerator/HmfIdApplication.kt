@@ -45,7 +45,7 @@ private fun run(cmd: CommandLine) {
     CsvWriter.writeCSV(result.map { it.toCsv() }, cmd.getOptionValue(HASH_FILE_OUT))
 
     val anonymizedRecords = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() })
-    logger.info("Writing ${result.size} sample mapping to database")
+    logger.info("Writing ${anonymizedRecords.size} sample mapping to database")
     databaseAccess.writeAmberAnonymous(anonymizedRecords.map { x -> x.toAmberAnonymous() })
     logger.info("Complete")
 }
