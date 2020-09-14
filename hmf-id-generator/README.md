@@ -1,7 +1,7 @@
 # ID Generator
 
 The ID generator maps all original sample IDs to anonymous HMF IDs. The benefits of this are:
- - There is no reference anymore to the original sample ID which was provided by the study/hospital contributing the sample.
+ - There is no reference anymore to the original sample ID which is known to group that contributed the sample.
  - It becomes immediately clear which samples belong to the same patient.
  
  ### ID anonymization
