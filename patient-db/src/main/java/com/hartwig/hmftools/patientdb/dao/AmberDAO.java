@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERANONYMOUS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERMAPPING;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERPATIENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERSAMPLE;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
@@ -94,6 +96,20 @@ class AmberDAO {
         inserter.execute();
 
     }
+
+    void writeAnonymous(List<AmberAnonymous> patients) {
+        if (patients.isEmpty()) {
+            return;
+        }
+        context.truncate(AMBERANONYMOUS).execute();
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+        InsertValuesStep3 inserter = context.insertInto(AMBERANONYMOUS, AMBERANONYMOUS.MODIFIED, AMBERANONYMOUS.SAMPLEID, AMBERANONYMOUS.HMFSAMPLEID);
+        for (AmberAnonymous amberPatient : patients) {
+            inserter.values(timestamp, amberPatient.sampleId(), amberPatient.hmfSampleId());
+        }
+        inserter.execute();
+    }
+
 
     List<AmberMapping> readMapping() {
         final List<AmberMapping> result = Lists.newArrayList();

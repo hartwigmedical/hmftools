@@ -46,6 +46,9 @@ import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class ServeHotspotGenerator {
 
@@ -53,6 +56,9 @@ public class ServeHotspotGenerator {
 
     private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE = Sets.newHashSet(ViccSource.CIVIC, ViccSource.CGI);
     private static final Integer MAX_VICC_ENTRIES = null;
+
+    private static final String INFO_SOURCES = "sources";
+    private static final String INFO_INPUT = "sources";
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -188,11 +194,16 @@ public class ServeHotspotGenerator {
     private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<VariantHotspot, HotspotAnnotation> hotspotMap) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
-                .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .build();
 
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
+        header.addMetaDataLine(new VCFInfoHeaderLine(INFO_INPUT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "input"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(INFO_SOURCES,
+                VCFHeaderLineCount.UNBOUNDED,
+                VCFHeaderLineType.String,
+                "sources [civic,cgi,docm]"));
+
         writer.writeHeader(header);
 
         for (Map.Entry<VariantHotspot, HotspotAnnotation> entry : hotspotMap.entrySet()) {
@@ -206,8 +217,8 @@ public class ServeHotspotGenerator {
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                    .attribute("sources", buildSourcesString(annotation.sources()))
-                    .attribute("input", ProteinKeyFormatter.toProteinKey(annotation))
+                    .attribute(INFO_SOURCES, buildSourcesString(annotation.sources()))
+                    .attribute(INFO_INPUT, ProteinKeyFormatter.toProteinKey(annotation))
                     .make();
 
             LOGGER.debug("Writing {}", variantContext);

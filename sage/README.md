@@ -550,6 +550,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
+ - Upcoming
+   - Favour reads with variants closer to the centre when determining read context
  - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.2)
    - Realignment of inframe indels
    - Improved MNV deduplication

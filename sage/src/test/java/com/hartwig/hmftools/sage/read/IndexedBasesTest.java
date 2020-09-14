@@ -13,6 +13,15 @@ public class IndexedBasesTest {
     private final IndexedBases victim = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
     @Test
+    public void testMaxFlankLength() {
+        IndexedBases constrainedOnLeft = new IndexedBases(1000, 5, 2, 6, 3, "GATCTCCTCA".getBytes());
+        IndexedBases constrainedOnRight = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
+
+        assertEquals(2, constrainedOnLeft.maxFlankLength());
+        assertEquals(3, constrainedOnRight.maxFlankLength());
+    }
+
+    @Test
     public void testRightFlankMatchingBases() {
         assertEquals(-1, victim.rightFlankMatchingBases(3, "TCTCCTCG".getBytes()));
 

@@ -67,7 +67,7 @@
         <amber.version>3.5</amber.version>
         <cobalt.version>1.8</cobalt.version>
         <purple.version>2.47</purple.version>
-        <sage.version>2.2</sage.version>
+        <sage.version>2.3</sage.version>
         <health-checker.version>3.1</health-checker.version>
         <patient-reporter.version>7.14</patient-reporter.version>
         <patient-db.version>3.46</patient-db.version>
@@ -206,11 +206,6 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-extensions-cli</artifactId>
-                <version>${hmf-extensions.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>hmf-extensions-samtools</artifactId>
                 <version>${hmf-extensions.version}</version>
             </dependency>
             <dependency>

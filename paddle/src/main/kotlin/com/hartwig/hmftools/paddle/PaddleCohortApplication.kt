@@ -17,8 +17,8 @@ fun main(args: Array<String>) {
         outOption.isRequired = true
         options.addOption(outOption)
 
-        val minPurityOptino = Option(MIN_PURITY, true, "Min purity [$MIN_PURITY_DEFAULT]")
-        options.addOption(minPurityOptino)
+        val minPurityOption = Option(MIN_PURITY, true, "Min purity [$MIN_PURITY_DEFAULT]")
+        options.addOption(minPurityOption)
 
         DatabaseAccess.addDatabaseCmdLineArgs(options)
         return options
