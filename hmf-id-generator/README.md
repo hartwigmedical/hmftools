@@ -1,13 +1,13 @@
 # ID Generator
 
 The ID generator maps all original sample IDs to anonymous HMF IDs. The benefits of this are:
- - There is no reference anymore to the original sample ID which is known to group that contributed the sample.
+ - There is no reference anymore to the original sample ID which is known to the group that contributed the sample.
  - It becomes immediately clear which samples belong to the same patient.
  
  ### ID anonymization
  
 The ID anonymization is based on the patient mapping performed by [AMBER](../amber/README.md).
-For every sampleId we create a hash using the anonymization password and linking this to the patient derived from amber patient mapping.
+For every sampleId we create a hash using the anonymization password and link this to the patient derived from amber patient mapping.
 The sampleId and the hash can subsequently be used to map towards the HMF sample ID.
 
 The tool expects a properly populated amberPatient in the database that is connected to, and can be run as follows:
