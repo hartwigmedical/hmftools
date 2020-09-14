@@ -4,11 +4,11 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
@@ -42,7 +42,6 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
-import ngs.Read;
 
 public class ReadRecord
 {
@@ -76,7 +75,7 @@ public class ReadRecord
     private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
     private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
 
-    public final static int NO_GENE_ID = -1;
+    public static final int NO_GENE_ID = -1;
 
     public static ReadRecord from(final SAMRecord record)
     {
@@ -663,7 +662,7 @@ public class ReadRecord
 
         if(region.start() > readStartPos && readEndPos > region.start())
         {
-            extraBaseLength = (int)(region.start() - readStartPos);
+            extraBaseLength = region.start() - readStartPos;
         }
 
         if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S && readStartPos == region.start())
@@ -719,7 +718,7 @@ public class ReadRecord
 
         if(readEndPos > region.end() && readStartPos < region.end())
         {
-            extraBaseLength = (int)(readEndPos - region.end());
+            extraBaseLength = readEndPos - region.end();
         }
 
         if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S && readEndPos == region.end())

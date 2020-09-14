@@ -24,8 +24,8 @@ public class SampleDataCache
 
     private boolean mIsValid;
 
-    public final static String COHORT_A = "CohortA"; // 'cohort A' being evaluated, may be arbitrary
-    public final static String COHORT_B = "CohortB"; // 'cohort A' being evaluated, may be arbitrary
+    public static final String COHORT_A = "CohortA"; // 'cohort A' being evaluated, may be arbitrary
+    public static final String COHORT_B = "CohortB"; // 'cohort A' being evaluated, may be arbitrary
 
     public SampleDataCache(final String inputFile)
     {

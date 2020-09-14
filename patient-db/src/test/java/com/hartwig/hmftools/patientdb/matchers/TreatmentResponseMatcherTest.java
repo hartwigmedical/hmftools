@@ -22,29 +22,29 @@ import org.junit.Test;
 
 public class TreatmentResponseMatcherTest {
 
-    private final static LocalDate JAN2015 = LocalDate.parse("2015-01-01");
-    private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
-    private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
-    private final static LocalDate JUL2015 = LocalDate.parse("2015-07-01");
-    private final static LocalDate AUG2015 = LocalDate.parse("2015-08-01");
-    private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
-    private final static LocalDate OCT2015 = LocalDate.parse("2015-10-01");
-    private final static LocalDate NOV2015 = LocalDate.parse("2015-11-01");
+    private static final LocalDate JAN2015 = LocalDate.parse("2015-01-01");
+    private static final LocalDate FEB2015 = LocalDate.parse("2015-02-01");
+    private static final LocalDate MAR2015 = LocalDate.parse("2015-03-01");
+    private static final LocalDate JUL2015 = LocalDate.parse("2015-07-01");
+    private static final LocalDate AUG2015 = LocalDate.parse("2015-08-01");
+    private static final LocalDate SEP2015 = LocalDate.parse("2015-09-01");
+    private static final LocalDate OCT2015 = LocalDate.parse("2015-10-01");
+    private static final LocalDate NOV2015 = LocalDate.parse("2015-11-01");
 
-    private final static BiopsyTreatmentData TREATMENT_JAN2015_JUL2015 = treatmentWithStartEnd(JAN2015, JUL2015);
-    private final static BiopsyTreatmentData TREATMENT_FEB2015_JUL2015 = treatmentWithStartEnd(FEB2015, JUL2015);
-    private final static BiopsyTreatmentData TREATMENT_FEB2015_NULL = treatmentWithStartEnd(FEB2015, null);
-    private final static BiopsyTreatmentData TREATMENT_OCT2015_NULL = treatmentWithStartEnd(OCT2015, null);
+    private static final BiopsyTreatmentData TREATMENT_JAN2015_JUL2015 = treatmentWithStartEnd(JAN2015, JUL2015);
+    private static final BiopsyTreatmentData TREATMENT_FEB2015_JUL2015 = treatmentWithStartEnd(FEB2015, JUL2015);
+    private static final BiopsyTreatmentData TREATMENT_FEB2015_NULL = treatmentWithStartEnd(FEB2015, null);
+    private static final BiopsyTreatmentData TREATMENT_OCT2015_NULL = treatmentWithStartEnd(OCT2015, null);
 
-    private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 = responseOnDate(JAN2015);
-    private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 = responseOnDate(FEB2015);
-    private final static BiopsyTreatmentResponseData RESPONSE_MAR2015 = responseOnDate(MAR2015);
-    private final static BiopsyTreatmentResponseData RESPONSE_JUL2015 = responseOnDate(JUL2015);
-    private final static BiopsyTreatmentResponseData RESPONSE_AUG2015 = responseOnDate(AUG2015);
-    private final static BiopsyTreatmentResponseData RESPONSE_AUG2015_BASELINE = baselineResponseOnDate(AUG2015);
-    private final static BiopsyTreatmentResponseData RESPONSE_SEP2015 = responseOnDate(SEP2015);
-    private final static BiopsyTreatmentResponseData RESPONSE_NOV2015 = responseOnDate(NOV2015);
-    private final static BiopsyTreatmentResponseData RESPONSE_NULL = responseOnDate(null);
+    private static final BiopsyTreatmentResponseData RESPONSE_JAN2015 = responseOnDate(JAN2015);
+    private static final BiopsyTreatmentResponseData RESPONSE_FEB2015 = responseOnDate(FEB2015);
+    private static final BiopsyTreatmentResponseData RESPONSE_MAR2015 = responseOnDate(MAR2015);
+    private static final BiopsyTreatmentResponseData RESPONSE_JUL2015 = responseOnDate(JUL2015);
+    private static final BiopsyTreatmentResponseData RESPONSE_AUG2015 = responseOnDate(AUG2015);
+    private static final BiopsyTreatmentResponseData RESPONSE_AUG2015_BASELINE = baselineResponseOnDate(AUG2015);
+    private static final BiopsyTreatmentResponseData RESPONSE_SEP2015 = responseOnDate(SEP2015);
+    private static final BiopsyTreatmentResponseData RESPONSE_NOV2015 = responseOnDate(NOV2015);
+    private static final BiopsyTreatmentResponseData RESPONSE_NULL = responseOnDate(null);
 
     //    ---response(jan)-start(feb)-----end(jul)--
     @Test

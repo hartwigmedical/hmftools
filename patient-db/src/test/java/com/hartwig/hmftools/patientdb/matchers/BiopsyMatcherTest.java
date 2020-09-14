@@ -21,29 +21,29 @@ import org.junit.Test;
 
 public class BiopsyMatcherTest {
 
-    private final static LocalDate JAN2015 = LocalDate.parse("2015-01-01");
-    private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
-    private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
-    private final static LocalDate JUL2015 = LocalDate.parse("2015-07-01");
-    private final static LocalDate AUG2015 = LocalDate.parse("2015-08-01");
-    private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
-    private final static LocalDate NOV2015 = LocalDate.parse("2015-11-01");
+    private static final LocalDate JAN2015 = LocalDate.parse("2015-01-01");
+    private static final LocalDate FEB2015 = LocalDate.parse("2015-02-01");
+    private static final LocalDate MAR2015 = LocalDate.parse("2015-03-01");
+    private static final LocalDate JUL2015 = LocalDate.parse("2015-07-01");
+    private static final LocalDate AUG2015 = LocalDate.parse("2015-08-01");
+    private static final LocalDate SEP2015 = LocalDate.parse("2015-09-01");
+    private static final LocalDate NOV2015 = LocalDate.parse("2015-11-01");
 
-    private final static SampleData SEQUENCED_BIOPSY_JUL = sampleBuilder(JUL2015).build();
-    private final static SampleData SEQUENCED_BIOPSY_AUG = sampleBuilder(AUG2015).build();
-    private final static SampleData SEQUENCED_BIOPSY_SEP = sampleBuilder(SEP2015).build();
-    private final static SampleData SEQUENCED_BIOPSY_NOV = sampleBuilder(NOV2015).build();
+    private static final SampleData SEQUENCED_BIOPSY_JUL = sampleBuilder(JUL2015).build();
+    private static final SampleData SEQUENCED_BIOPSY_AUG = sampleBuilder(AUG2015).build();
+    private static final SampleData SEQUENCED_BIOPSY_SEP = sampleBuilder(SEP2015).build();
+    private static final SampleData SEQUENCED_BIOPSY_NOV = sampleBuilder(NOV2015).build();
 
-    private final static SampleData SEQUENCED_BIOPSY_ARRIVED_NOV_SAMPLED_MAR = sampleBuilder(NOV2015).samplingDate(MAR2015).build();
+    private static final SampleData SEQUENCED_BIOPSY_ARRIVED_NOV_SAMPLED_MAR = sampleBuilder(NOV2015).samplingDate(MAR2015).build();
 
-    private final static BiopsyData CLINICAL_BIOPSY_JAN = biopsyBuilder().date(JAN2015).build();
-    private final static BiopsyData CLINICAL_BIOPSY_FEB = biopsyBuilder().date(FEB2015).build();
-    private final static BiopsyData CLINICAL_BIOPSY_MAR = biopsyBuilder().date(MAR2015).build();
-    private final static BiopsyData CLINICAL_BIOPSY_MAR_NOT_EVALUABLE = biopsyBuilder().date(MAR2015).biopsyEvaluable("no").build();
-    private final static BiopsyData CLINICAL_BIOPSY_JUL = biopsyBuilder().date(JUL2015).build();
-    private final static BiopsyData CLINICAL_BIOPSY_SEP = biopsyBuilder().date(SEP2015).build();
+    private static final BiopsyData CLINICAL_BIOPSY_JAN = biopsyBuilder().date(JAN2015).build();
+    private static final BiopsyData CLINICAL_BIOPSY_FEB = biopsyBuilder().date(FEB2015).build();
+    private static final BiopsyData CLINICAL_BIOPSY_MAR = biopsyBuilder().date(MAR2015).build();
+    private static final BiopsyData CLINICAL_BIOPSY_MAR_NOT_EVALUABLE = biopsyBuilder().date(MAR2015).biopsyEvaluable("no").build();
+    private static final BiopsyData CLINICAL_BIOPSY_JUL = biopsyBuilder().date(JUL2015).build();
+    private static final BiopsyData CLINICAL_BIOPSY_SEP = biopsyBuilder().date(SEP2015).build();
 
-    private final static BiopsyData CLINICAL_BIOPSY_NULL = biopsyBuilder().build();
+    private static final BiopsyData CLINICAL_BIOPSY_NULL = biopsyBuilder().build();
 
     //    ---biopsy(jul)/sample(jul)---
     @Test

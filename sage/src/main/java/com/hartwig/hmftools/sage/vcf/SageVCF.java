@@ -27,19 +27,19 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class SageVCF implements AutoCloseable {
 
-    public final static String READ_CONTEXT = "RC";
-    public final static String PASS = "PASS";
-    public final static String DEDUP_FILTER = "dedup";
+    public static final String READ_CONTEXT = "RC";
+    public static final String PASS = "PASS";
+    public static final String DEDUP_FILTER = "dedup";
 
-    private final static String READ_CONTEXT_DESCRIPTION = "Read context";
-    public final static String READ_CONTEXT_JITTER = "RC_JIT";
-    private final static String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
+    private static final String READ_CONTEXT_DESCRIPTION = "Read context";
+    public static final String READ_CONTEXT_JITTER = "RC_JIT";
+    private static final String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
 
-    public final static String READ_CONTEXT_EVENTS = "RC_NM";
-    private final static String READ_CONTEXT_EVENTS_DESCRIPTION = "Minimum number of events in read";
+    public static final String READ_CONTEXT_EVENTS = "RC_NM";
+    private static final String READ_CONTEXT_EVENTS_DESCRIPTION = "Minimum number of events in read";
 
-    public final static String READ_CONTEXT_COUNT = "RC_CNT";
-    private final static String READ_CONTEXT_COUNT_DESCRIPTION = "Read context counts [Full, Partial, Core, Realigned, Reference, Total]";
+    public static final String READ_CONTEXT_COUNT = "RC_CNT";
+    private static final String READ_CONTEXT_COUNT_DESCRIPTION = "Read context counts [Full, Partial, Core, Realigned, Reference, Total]";
     public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
     private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
@@ -59,11 +59,10 @@ public class SageVCF implements AutoCloseable {
     public static final String RAW_ALLELIC_DEPTH = "RAD";
     public static final String RAW_ALLELIC_BASE_QUALITY = "RABQ";
 
-
-    public final static String MIXED_SOMATIC_GERMLINE = "MSG";
-    public final static String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
-    public final static String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";
-    public final static String RIGHT_ALIGNED_MICROHOMOLOGY_DESCRIPTION = "Right aligned microhomology";
+    public static final String MIXED_SOMATIC_GERMLINE = "MSG";
+    public static final String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
+    public static final String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";
+    public static final String RIGHT_ALIGNED_MICROHOMOLOGY_DESCRIPTION = "Right aligned microhomology";
 
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;

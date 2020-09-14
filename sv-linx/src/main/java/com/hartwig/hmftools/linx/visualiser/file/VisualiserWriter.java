@@ -2,14 +2,14 @@ package com.hartwig.hmftools.linx.visualiser.file;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_TELOMERE;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_FIVE_PRIME_UTR;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_NON_CODING;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_THREE_PRIME_UTR;
@@ -28,9 +28,9 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.SvCNData;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class VisualiserWriter
@@ -53,10 +53,10 @@ public class VisualiserWriter
     private BufferedWriter mProteinDomainFileWriter;
     private BufferedWriter mFusionFileWriter;
 
-    public final static String GENE_TYPE_DRIVER = "DRIVER";
-    public final static String GENE_TYPE_FUSION = "FUSION";
-    public final static String GENE_TYPE_PSEUDOGENE = "PSEUDO";
-    public final static String GENE_TYPE_EXON_LOST = "EXON_LOST";
+    public static final String GENE_TYPE_DRIVER = "DRIVER";
+    public static final String GENE_TYPE_FUSION = "FUSION";
+    public static final String GENE_TYPE_PSEUDOGENE = "PSEUDO";
+    public static final String GENE_TYPE_EXON_LOST = "EXON_LOST";
 
     public VisualiserWriter(final String outputDir, boolean enabled, boolean isBatchOutput)
     {
@@ -348,7 +348,7 @@ public class VisualiserWriter
         }
     }
 
-    private final String getPositionValue(final SvBreakend breakend, boolean isChainEnd)
+    private String getPositionValue(final SvBreakend breakend, boolean isChainEnd)
     {
         int position = breakend.position();
 
@@ -423,7 +423,7 @@ public class VisualiserWriter
             {
                 for (final TranscriptProteinData proteinData : transProteinData)
                 {
-                    final Integer[] domainPositions = mGeneTranscriptCollection.getProteinDomainPositions(proteinData, transData);
+                    final Integer[] domainPositions = EnsemblDataCache.getProteinDomainPositions(proteinData, transData);
 
                     if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
                     {

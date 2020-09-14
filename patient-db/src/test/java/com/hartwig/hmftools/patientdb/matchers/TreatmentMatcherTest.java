@@ -22,26 +22,26 @@ import org.junit.Test;
 
 public class TreatmentMatcherTest {
 
-    private final static LocalDate JAN2015 = LocalDate.parse("2015-01-01");
-    private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
-    private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
-    private final static LocalDate MAY2015 = LocalDate.parse("2015-05-01");
-    private final static LocalDate JUL2015 = LocalDate.parse("2015-07-01");
-    private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
+    private static final LocalDate JAN2015 = LocalDate.parse("2015-01-01");
+    private static final LocalDate FEB2015 = LocalDate.parse("2015-02-01");
+    private static final LocalDate MAR2015 = LocalDate.parse("2015-03-01");
+    private static final LocalDate MAY2015 = LocalDate.parse("2015-05-01");
+    private static final LocalDate JUL2015 = LocalDate.parse("2015-07-01");
+    private static final LocalDate SEP2015 = LocalDate.parse("2015-09-01");
 
-    private final static BiopsyTreatmentData TREATMENT_FEB_JUL2015 =
+    private static final BiopsyTreatmentData TREATMENT_FEB_JUL2015 =
             biopsyTreatmentBuilder().treatmentGiven("Yes").addDrugs(drugWithStartAndEndDate(FEB2015, JUL2015)).build();
-    private final static BiopsyTreatmentData TREATMENT_MAY_SEP2015 =
+    private static final BiopsyTreatmentData TREATMENT_MAY_SEP2015 =
             biopsyTreatmentBuilder().treatmentGiven("Yes").addDrugs(drugWithStartAndEndDate(MAY2015, SEP2015)).build();
-    private final static BiopsyTreatmentData NO_TREATMENT_GIVEN = biopsyTreatmentBuilder().treatmentGiven("No").build();
-    private final static BiopsyTreatmentData TREATMENT_MAR_NULL =
+    private static final BiopsyTreatmentData NO_TREATMENT_GIVEN = biopsyTreatmentBuilder().treatmentGiven("No").build();
+    private static final BiopsyTreatmentData TREATMENT_MAR_NULL =
             biopsyTreatmentBuilder().treatmentGiven("Yes").addDrugs(drugWithStartAndEndDate(MAR2015, null)).build();
 
-    private final static BiopsyData BIOPSY_JAN = biopsyBuilder().date(JAN2015).build();
-    private final static BiopsyData BIOPSY_FEB = biopsyBuilder().date(FEB2015).build();
-    private final static BiopsyData BIOPSY_MAR = biopsyBuilder().date(MAR2015).build();
-    private final static BiopsyData BIOPSY_SEP = biopsyBuilder().date(SEP2015).build();
-    private final static BiopsyData BIOPSY_NULL = biopsyBuilder().date(null).build();
+    private static final BiopsyData BIOPSY_JAN = biopsyBuilder().date(JAN2015).build();
+    private static final BiopsyData BIOPSY_FEB = biopsyBuilder().date(FEB2015).build();
+    private static final BiopsyData BIOPSY_MAR = biopsyBuilder().date(MAR2015).build();
+    private static final BiopsyData BIOPSY_SEP = biopsyBuilder().date(SEP2015).build();
+    private static final BiopsyData BIOPSY_NULL = biopsyBuilder().date(null).build();
 
     //    ---biopsy(mar)----no-treatment---
     @Test

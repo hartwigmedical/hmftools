@@ -7,8 +7,8 @@ public enum ChromosomeArm
     CENTROMERE,
     UNKNOWN;
 
-    public final static String CHROMOSOME_ARM_P = "P";
-    public final static String CHROMOSOME_ARM_Q = "Q";
+    public static final String CHROMOSOME_ARM_P = "P";
+    public static final String CHROMOSOME_ARM_Q = "Q";
 
     public static String asStr(final ChromosomeArm arm)
     {

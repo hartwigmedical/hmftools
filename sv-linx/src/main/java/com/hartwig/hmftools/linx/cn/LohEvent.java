@@ -31,7 +31,7 @@ public class LohEvent
     private SvBreakend mBreakendStart;
     private SvBreakend mBreakendEnd;
 
-    public final static int CN_DATA_NO_SV = -1;
+    public static final int CN_DATA_NO_SV = -1;
 
     public LohEvent(
             final String chr,
