@@ -11,6 +11,7 @@ import com.hartwig.hmftools.idgenerator.anonymizedIds.HmfSampleIdCsv
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import org.apache.commons.cli.CommandLine
 import org.apache.logging.log4j.LogManager
+import kotlin.system.exitProcess
 
 private val logger = LogManager.getLogger("HmfIdApplication")
 
@@ -38,6 +39,10 @@ private fun run(cmd: CommandLine) {
 
     val existingMappings = databaseAccess.readAmberAnonymous().toSet()
     logger.info("Retrieved ${existingMappings.size} sample mappings from database")
+    if (existingMappings.isEmpty()) {
+        logger.error("Current amber anonymous table seems to be truncated. Exiting")
+        exitProcess(1)
+    }
 
     val currentIds = CsvReader.readCSVByName<HmfSampleIdCsv>(cmd.getOptionValue(HASH_FILE_IN))
             .map { it.toHmfSampleId() }
@@ -49,12 +54,13 @@ private fun run(cmd: CommandLine) {
     val newMappings = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() }).map { x -> x.toAmberAnonymous() }
 
     val existingMappingsThatNoLongerExist = existingMappings.subtract(newMappings)
-    for (missing in existingMappingsThatNoLongerExist) {
-        logger.error("Previous mapping ${missing} is no longer found")
-    }
-
     if (existingMappingsThatNoLongerExist.isNotEmpty()) {
-        System.exit(1);
+        for (missing in existingMappingsThatNoLongerExist) {
+            logger.error("Previous mapping ${missing} is no longer found")
+        }
+        exitProcess(1)
+    } else {
+        logger.info("Check successful: All existing mappings from amberAnonymous still exist.")
     }
 
     // Write to file and database

@@ -23,5 +23,14 @@ Do note:
  - Parameters "in" and "out" can point to the same file in which case the sample hashes will be overwritten.
  - A "new_password" parameter can optionally be provided to reset the anonymization password to a new value.  
 
-In addition to creating the new hashes, this command repopulates the table "amberAnonymous" containing all the sampleId -> hmfSampleId mappings. 
+The following checks are done by the algorithm using the contents of the existing amberAnonymous mappings:
+ - If there are no current mappings, an error is thrown since we expect mappings to exist.
+ - If any of the existing mappings don't exist anymore after new round of anonymization an error is thrown since we expect all existing mappings to remain unchanged.
+
+Assuming the above checks succeed, the ID generator will do the following:
+ - Write the new hashes to the "out" parameter provided to the command line
+ - Repopulate the table "amberAnonymous" with the new sampleId -> hmfSampleId mappings.
+
+
+ 
    

@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.amber.ImmutableAmberAnonymous;
-import com.hartwig.hmftools.common.amber.ImmutableAmberMapping;
 import com.hartwig.hmftools.common.amber.ImmutableAmberPatient;
 import com.hartwig.hmftools.common.amber.ImmutableAmberSample;
 
@@ -78,7 +77,7 @@ class AmberDAO {
         return result;
     }
 
-    void writePatients(List<AmberPatient> patients) {
+    void writePatients(@NotNull List<AmberPatient> patients) {
         if (patients.isEmpty()) {
             return;
         }
@@ -98,21 +97,22 @@ class AmberDAO {
 
     }
 
-    void writeAnonymous(List<AmberAnonymous> patients) {
+    void writeAnonymous(@NotNull List<AmberAnonymous> patients) {
         if (patients.isEmpty()) {
             return;
         }
         context.truncate(AMBERANONYMOUS).execute();
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        InsertValuesStep3 inserter = context.insertInto(AMBERANONYMOUS, AMBERANONYMOUS.MODIFIED, AMBERANONYMOUS.SAMPLEID, AMBERANONYMOUS.HMFSAMPLEID);
+        InsertValuesStep3 inserter =
+                context.insertInto(AMBERANONYMOUS, AMBERANONYMOUS.MODIFIED, AMBERANONYMOUS.SAMPLEID, AMBERANONYMOUS.HMFSAMPLEID);
         for (AmberAnonymous amberPatient : patients) {
             inserter.values(timestamp, amberPatient.sampleId(), amberPatient.hmfSampleId());
         }
         inserter.execute();
     }
 
+    @NotNull
     List<AmberAnonymous> readAnonymous() {
-
         final List<AmberAnonymous> result = Lists.newArrayList();
         final Result<Record> queryResult = context.select().from(AMBERANONYMOUS).fetch();
 
@@ -126,23 +126,7 @@ class AmberDAO {
         return result;
     }
 
-    List<AmberMapping> readMapping() {
-        final List<AmberMapping> result = Lists.newArrayList();
-        final Result<Record> queryResult = context.select().from(AMBERMAPPING).fetch();
-
-        for (Record record : queryResult) {
-            result.add(ImmutableAmberMapping.builder()
-                    .firstSample(record.get(AMBERMAPPING.FIRSTSAMPLEID))
-                    .secondSample(record.get(AMBERMAPPING.SECONDSAMPLEID))
-                    .matches(record.get(AMBERMAPPING.MATCHES))
-                    .sites(record.get(AMBERMAPPING.SITES))
-                    .build());
-        }
-
-        return result;
-    }
-
-    void writeMapping(String sample, List<AmberMapping> mapping) {
+    void writeMapping(@NotNull String sample, @NotNull List<AmberMapping> mapping) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(AMBERMAPPING).where(AMBERMAPPING.FIRSTSAMPLEID.eq(sample)).execute();
@@ -168,7 +152,7 @@ class AmberDAO {
         inserter.execute();
     }
 
-    void writeIdentity(AmberSample identity) {
+    void writeIdentity(@NotNull AmberSample identity) {
         byte[] entries = identity.entries();
         if (entries.length != AMBERSAMPLE.fields().length - 2) {
             throw new IllegalArgumentException(
@@ -292,8 +276,8 @@ class AmberDAO {
         inserter.execute();
     }
 
-
     void deleteAmberRecordsForSample(@NotNull String sample) {
+        context.delete(AMBERANONYMOUS).where(AMBERANONYMOUS.SAMPLEID.eq(sample)).execute();
         context.delete(AMBERPATIENT).where(AMBERPATIENT.SAMPLEID.eq(sample)).execute();
         context.delete(AMBERMAPPING).where(AMBERMAPPING.FIRSTSAMPLEID.eq(sample)).execute();
         context.delete(AMBERMAPPING).where(AMBERMAPPING.SECONDSAMPLEID.eq(sample)).execute();

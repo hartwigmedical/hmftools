@@ -145,7 +145,7 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     public static void addDatabaseCmdLineArgs(final Options options, boolean isRequired) {
-        options.addOption(Option.builder(DB_USER).desc("Database user name").hasArg(true).required(isRequired).build());
+        options.addOption(Option.builder(DB_USER).desc("Database username").hasArg(true).required(isRequired).build());
         options.addOption(Option.builder(DB_PASS).desc("Database password").hasArg(true).required(isRequired).build());
         options.addOption(Option.builder(DB_URL).desc("Database url").hasArg(true).required(isRequired).build());
     }
@@ -256,11 +256,6 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<LinxSvAnnotation> readSvAnnotaions(@NotNull String sample) {
-        return structuralVariantClusterDAO.readAnnotations(sample);
-    }
-
-    @NotNull
     public List<LinxCluster> readClusters(@NotNull String sample) {
         return structuralVariantClusterDAO.readClusters(sample);
     }
@@ -347,10 +342,6 @@ public class DatabaseAccess implements AutoCloseable {
 
     public SomaticVariantStreamWriter somaticVariantWriter(@NotNull final String sampleId) {
         return new SomaticVariantStreamWriter(somaticVariantDAO, sampleId);
-    }
-
-    public void writeSomaticVariants(@NotNull String sampleId, @NotNull List<SomaticVariant> variants) {
-        somaticVariantDAO.write(sampleId, variants);
     }
 
     public void writeStructuralVariants(@NotNull String sampleId, @NotNull List<StructuralVariantData> variants) {
