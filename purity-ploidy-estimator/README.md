@@ -577,7 +577,7 @@ Version | 2.25 | Version of PURPLE
 Purity  | 0.98 | Purity of tumor in the sample
 NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number implies higher ploidy
 Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity
-SomaticDeviation | 0.00 | Penalty from somatic variants with implied variant copy numnbers that are inconsistent with the minor and major allele copy number 
+SomaticDeviation | 0.00 | Penalty from somatic variants with implied variant copy numbers that are inconsistent with the minor and major allele copy number 
 Score | 0.68 | Score of fit (lower is better)
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
@@ -1017,7 +1017,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Replicate SAGE SnpEff somatic variant enrichments SEW and SEC for driver catalog
 - [2.44](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.44) 
   - Requires [database patch](../patient-db/src/main/resources/patches/purple/purple2.43_to_2.44_migration.sql). Note that there are corresponding patches for [Linx](../patient-db/src/main/resources/patches/linx/linx_1.10.sql) and [PatientDb](../patient-db/src/main/resources/patches/patientdb/patientdb3.43_to_3.44_migration.sql).
-  - Use non diplod-normalised normal ratio for input circos figure
+  - Use non diploid-normalised normal ratio for input circos figure
   - Do not include chrY in female output in HG38
   - Small change to LOH BAF inferring
   - Always use LONG-ARM inferring for 21p copy number
