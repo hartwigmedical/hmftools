@@ -54,13 +54,13 @@ private fun run(cmd: CommandLine) {
     val newMappings = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() }).map { x -> x.toAmberAnonymous() }
 
     val existingMappingsThatNoLongerExist = existingMappings.subtract(newMappings)
-    if (existingMappingsThatNoLongerExist.isNotEmpty()) {
+    if (existingMappingsThatNoLongerExist.isEmpty()) {
+        logger.info("Check successful: All ${existingMappings.size} existing mappings from amberAnonymous still exist.")
+    } else {
         for (missing in existingMappingsThatNoLongerExist) {
             logger.error("Previous mapping ${missing} is no longer found")
         }
         exitProcess(1)
-    } else {
-        logger.info("Check successful: All existing mappings from amberAnonymous still exist.")
     }
 
     // Write to file and database
