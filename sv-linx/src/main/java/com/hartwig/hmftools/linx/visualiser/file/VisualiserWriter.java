@@ -434,7 +434,7 @@ public class VisualiserWriter
             }
 
             // show the 5' and 3' UTR or non-coding regions as 'protein domains'
-            if(transData.CodingEnd != null && transData.CodingEnd != null)
+            if(transData.CodingStart != null && transData.CodingEnd != null)
             {
                 int fivePrimeUtrStart = transData.Strand == 1 ? transData.TransStart : transData.CodingEnd + 1;
                 int fivePrimeUtrEnd = transData.Strand == 1 ? transData.CodingStart - 1 : transData.TransEnd;
