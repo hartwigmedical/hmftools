@@ -26,7 +26,7 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
 
 
     override fun run() {
-        val path = "dnds4305" // "dnds4305" || "dnds5441"
+        val path = "dnds5441" // "dnds4305" || "dnds5441"
 
         val cohortFile = "/Users/jon/hmf/analysis/${path}/mutationalLoad.tsv"
         val dndsCVFile = "/Users/jon/hmf/analysis/${path}/HmfRefCDSCv.tsv"

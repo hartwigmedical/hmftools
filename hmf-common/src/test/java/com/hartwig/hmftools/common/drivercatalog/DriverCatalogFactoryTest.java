@@ -35,19 +35,19 @@ public class DriverCatalogFactoryTest {
     @Test
     public void testHIST2H3DMissense() {
         double value = DriverCatalogFactory.probabilityDriverVariant(27742, onco.get("HIST2H3D"));
-        assertEquals(0.6065, value, EPSILON);
+        assertEquals(0.6109, value, EPSILON);
     }
 
     @Test
     public void testABL1Missense() {
         double value = DriverCatalogFactory.probabilityDriverVariant(996698, onco.get("ABL1"));
-        assertEquals(0.0009, value, EPSILON);
+        assertEquals(0.0039, value, EPSILON);
     }
 
     @Test
     public void testGATA3Indel() {
         double value = DriverCatalogFactory.probabilityDriverVariant(587, tsg.get("GATA3").indel());
-        assertEquals(0.9945, value, EPSILON);
+        assertEquals(0.9956, value, EPSILON);
     }
 
     @Test
