@@ -11,11 +11,14 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOF
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 
 import htsjdk.samtools.CigarOperator;
@@ -119,8 +122,9 @@ public class FusionUtils
     public static boolean setHasMultipleKnownSpliceGenes(final List<ReadRecord> reads, final List<String[]> knownPairGeneIds)
     {
         // determines whether reads definitely span multiple genes based on the presence of known splice sites at the fragment junction
-        Set<Integer> junctionPositions = Sets.newHashSet();
         ReadRecord splitRead = null;
+
+        final List<TransExonRef>[] junctionTransRefs = new List[] { Lists.newArrayList(), Lists.newArrayList()};
 
         for(ReadRecord read : reads)
         {
@@ -131,8 +135,8 @@ public class FusionUtils
 
                 if(splitJunction != null)
                 {
-                    junctionPositions.add(splitJunction[SE_START]);
-                    junctionPositions.add(splitJunction[SE_END]);
+                    junctionTransRefs[SE_START].addAll(read.getJunctionMatchingTransRefs(splitJunction[SE_START], true));
+                    junctionTransRefs[SE_END].addAll(read.getJunctionMatchingTransRefs(splitJunction[SE_END], false));
                     splitRead = read;
                 }
 
@@ -140,42 +144,66 @@ public class FusionUtils
             }
 
             if(hasRealignableSoftClip(read, SE_START, false))
-                junctionPositions.add(read.getCoordsBoundary(SE_START));
+                junctionTransRefs[SE_START].addAll(read.getJunctionMatchingTransRefs(read.getCoordsBoundary(SE_START), false));
 
             if(hasRealignableSoftClip(read, SE_END, false))
-                junctionPositions.add(read.getCoordsBoundary(SE_END));
+                junctionTransRefs[SE_END].addAll(read.getJunctionMatchingTransRefs(read.getCoordsBoundary(SE_END), true));
         }
 
-        if(junctionPositions.size() < 2)
+        if(junctionTransRefs[SE_START].isEmpty() || junctionTransRefs[SE_END].isEmpty())
             return false;
 
-        // rule out split reads which support a single transcript
+        // if this junction supports any single transcript then it's not a chimeric candidate
+        boolean matchesKnownPair = false;
+        boolean hasGeneMatch = false;
+
+        for(TransExonRef transExonRefStart : junctionTransRefs[SE_START])
+        {
+            for(TransExonRef transExonRefEnd : junctionTransRefs[SE_END])
+            {
+                if(transExonRefStart.TransId == transExonRefEnd.TransId)
+                {
+                    hasGeneMatch = true;
+
+                    if(transExonRefStart.ExonRank == transExonRefEnd.ExonRank - 1) // supports a transcript's known splice site
+                        return false;
+
+                    continue;
+                }
+
+                if(transExonRefStart.GeneId.equals(transExonRefEnd.GeneId))
+                {
+                    hasGeneMatch = true;
+                }
+                else if(!matchesKnownPair)
+                {
+                    // look for a known fusion pair
+                    if(knownPairGeneIds.stream().anyMatch(x -> x[FS_UPSTREAM].equals(transExonRefStart.GeneId)
+                            && x[FS_DOWNSTREAM].equals(transExonRefEnd.GeneId)))
+                    {
+                        matchesKnownPair = true;
+                    }
+                }
+            }
+        }
+
+        if(!hasGeneMatch || matchesKnownPair)
+        {
+            if(splitRead != null)
+                splitRead.setHasInterGeneSplit(); // will make use of this when handling fusions
+
+            return true;
+        }
+
+        return false;
+
+        /*
+        // rule out any junction which support a single transcript
         if(splitRead != null && splitRead.getTranscriptClassifications().values().stream().anyMatch(x -> x == SPLICE_JUNCTION))
         {
             return false;
         }
 
-        List<Set<String>> positionGeneLists = Lists.newArrayList();
-
-        for(int juncPosition : junctionPositions)
-        {
-            Set<String> geneIds = Sets.newHashSet();
-
-            if(splitRead != null)
-            {
-                splitRead.getMappedRegions().entrySet().stream()
-                        .filter(x -> x.getKey().PosStart == juncPosition || x.getKey().PosEnd == juncPosition)
-                        .forEach(x -> x.getKey().getTransExonRefs().stream().forEach(y -> geneIds.add(y.GeneId)));
-            }
-            else
-            {
-                reads.stream().forEach(x -> x.getMappedRegions().entrySet().stream()
-                        .filter(y -> y.getKey().PosStart == juncPosition || y.getKey().PosEnd == juncPosition)
-                        .forEach(y -> y.getKey().getTransExonRefs().stream().forEach(z -> geneIds.add(z.GeneId))));
-            }
-
-            positionGeneLists.add(geneIds);
-        }
 
         for(final String[] geneIdPair : knownPairGeneIds)
         {
@@ -222,6 +250,7 @@ public class FusionUtils
         }
 
         return false;
+        */
     }
 
 }

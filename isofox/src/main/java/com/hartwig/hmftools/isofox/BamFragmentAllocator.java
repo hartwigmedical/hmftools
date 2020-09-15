@@ -298,7 +298,7 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "A00624:105:HFC2TDSXY:2:1437:17888:4288";
+    // private static final String LOG_READ_ID = "A00624:105:HFC2TDSXY:3:2429:20464:16611";
     // private static final int LOG_READ_POS = 117642557;
 
     private void processRead(ReadRecord read)

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
+import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
@@ -16,8 +17,13 @@ import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
+import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
+import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
+import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
+import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,6 +41,7 @@ import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadTracker;
 
 import org.junit.Test;
@@ -152,7 +159,7 @@ public class ChimericReadTest
         // DEL linking 2 genes at known splice sites is considered chimeric
         read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         read1.setFlag(FIRST_OF_PAIR, true);
-        read2 = createMappedRead(readId, gc1, 10500, 10519, createCigar(20, 20, 0));
+        read2 = createMappedRead(readId, gc1, 10400, 10419, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
         chimericRT.addChimericReadPair(read1, read2);
@@ -161,7 +168,7 @@ public class ChimericReadTest
         assertEquals(1, chimericRT.getReadMap().size());
         assertEquals(2, chimericRT.getJunctionPositions().size());
         assertTrue(chimericRT.getJunctionPositions().contains(1100));
-        assertTrue(chimericRT.getJunctionPositions().contains(10500));
+        assertTrue(chimericRT.getJunctionPositions().contains(10400));
 
         chimericRT.clear();
         chimericRT.getJunctionPositions().clear(); // force a clean-up
@@ -421,6 +428,55 @@ public class ChimericReadTest
 
         assertEquals(1, chimericRT.getReadMap().size());
         assertEquals(1, chimericRT.getJunctionPositions().size());
+    }
+
+    @Test
+    public void testMultiGeneChimericRead()
+    {
+        // test a read which match more than 1 gene
+        int trans1 = 1;
+        int trans2 = 2;
+
+        RegionReadData region1 = createRegion(GENE_ID_1, trans1, 1, CHR_1, 100, 200);
+        RegionReadData region2 = createRegion(GENE_ID_1, trans1, 2, CHR_1, 300, 400);
+        RegionReadData region3 = createRegion(GENE_ID_1, trans1, 3, CHR_1, 500, 600);
+
+        RegionReadData region4 = createRegion(GENE_ID_2, trans2, 7, CHR_1, 350, 400);
+        RegionReadData region5 = createRegion(GENE_ID_2, trans2, 8, CHR_1, 500, 550);
+        RegionReadData region6 = createRegion(GENE_ID_2, trans2, 9, CHR_1, 600, 700);
+
+        region1.addPostRegion(region2);
+        region2.addPreRegion(region1);
+        region2.addPostRegion(region3);
+        region3.addPreRegion(region2);
+
+        region4.addPostRegion(region5);
+        region5.addPreRegion(region4);
+
+        ReadRecord read = createReadRecord(1, CHR_1, 391, 409, REF_BASE_STR_1,
+                createCigar(0, 10, 99, 10, 0));
+
+        List<RegionReadData> allRegions = Lists.newArrayList(region1, region2, region3, region4, region5);
+        read.processOverlappingRegions(ReadRecord.findOverlappingRegions(allRegions, read));
+
+        assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans1));
+        assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans2));
+
+        final List<String[]> knownPairGeneIds = Lists.newArrayList();
+        assertFalse(setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
+
+        // now a ready which doesn't support any known junction but is still within just one gene
+        read = createReadRecord(1, CHR_1, 191, 509, REF_BASE_STR_1,
+                createCigar(0, 10, 299, 10, 0));
+
+        read.processOverlappingRegions(ReadRecord.findOverlappingRegions(allRegions, read));
+        assertEquals(ALT, read.getTranscriptClassification(trans1));
+
+        assertFalse(setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
+        
+        // if the genes are known then treat this as chimeroc
+        knownPairGeneIds.add(new String[] {GENE_ID_1, GENE_ID_2});
+        assertTrue(setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
     }
 
 }

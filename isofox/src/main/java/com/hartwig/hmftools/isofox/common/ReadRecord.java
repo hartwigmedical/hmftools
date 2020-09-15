@@ -864,6 +864,18 @@ public class ReadRecord
             mTransExonRefs.put(INTRON, transRefList);
     }
 
+    public final List<TransExonRef> getJunctionMatchingTransRefs(int junctionPosition, boolean isJunctionStart)
+    {
+        final List<TransExonRef> matchedTransRefs = Lists.newArrayList();
+
+        mMappedRegions.entrySet().stream()
+                .filter(x -> exonBoundary(x.getValue()))
+                .filter(x -> (isJunctionStart && x.getKey().PosEnd == junctionPosition)
+                        || (!isJunctionStart && x.getKey().PosStart == junctionPosition))
+                .forEach(x -> matchedTransRefs.addAll(x.getKey().getTransExonRefs()));
+
+        return matchedTransRefs;
+    }
 
     public final Map<Integer,TransMatchType> getTranscriptClassifications() { return mTranscriptClassification; }
 
