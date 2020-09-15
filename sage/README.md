@@ -551,6 +551,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 # Version History and Download Links
  - Upcoming
+   - Extend local phase set detection to maximum of 60 bases
    - Favour reads with variants closer to the centre when determining read context
  - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.2)
    - Realignment of inframe indels

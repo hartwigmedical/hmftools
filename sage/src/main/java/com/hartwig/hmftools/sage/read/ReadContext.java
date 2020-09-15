@@ -8,7 +8,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContext {
 
-    private static final int BONUS_FLANK = 10;
+    private static final int BONUS_FLANK = 50;
 
     private final int position;
     private final String repeat;
