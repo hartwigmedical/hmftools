@@ -67,7 +67,7 @@ public class DndsVariantFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final DndsVariant variant) {
+    static String toString(@NotNull final DndsVariant variant) {
         return new StringJoiner(DELIMITER).add(variant.sampleId())
                 .add(variant.chromosome())
                 .add(String.valueOf(variant.position()))
@@ -91,7 +91,7 @@ public class DndsVariantFile {
     }
 
     @NotNull
-    private static DndsVariant fromString(@NotNull final String line) {
+    static DndsVariant fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableDndsVariant.builder()
                 .sampleId(values[0])

@@ -3,7 +3,7 @@ library(ggplot2)
 library(dplyr)
 theme_set(theme_bw())
 
-#sample = "COLO829T"
+#sample = "COLO829v003T"
 #purpleDir <- "~/hmf/analysis/COLO829T/purple"
 #plotDir   <- "~/hmf/analysis/COLO829T/purple/plot"
 
@@ -171,8 +171,10 @@ clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clon
 clonalityModelPlot = clonality_plot(somaticBuckets, clonalityModel)
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
 
-vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
-somaticVariants = vcf_data_frame(vcf)
-rainfallPlot = rainfall_plot(somaticVariants)
-ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)
-
+totalSomatics = sum(somaticBuckets$count)
+if (totalSomatics <= 100000) {
+  vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
+  somaticVariants = vcf_data_frame(vcf)
+  rainfallPlot = rainfall_plot(somaticVariants)
+  ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)
+}
