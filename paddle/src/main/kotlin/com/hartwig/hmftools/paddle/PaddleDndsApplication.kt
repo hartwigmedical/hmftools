@@ -26,9 +26,11 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
 
 
     override fun run() {
-        val cohortFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfTMB.tsv"
-        val dndsCVFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/HmfRefCDSCv.tsv"
-        val mutationsFile = "/Users/jon/hmf/repos/hmftools/paddle/src/main/resources/DndsMutations.tsv"
+        val path = "dnds4305" // "dnds4305" || "dnds5441"
+
+        val cohortFile = "/Users/jon/hmf/analysis/${path}/mutationalLoad.tsv"
+        val dndsCVFile = "/Users/jon/hmf/analysis/${path}/HmfRefCDSCv.tsv"
+        val mutationsFile = "/Users/jon/hmf/analysis/${path}/DndsMutations.tsv"
 
         logger.info("Loading dNdScv values: $dndsCVFile")
         val dndsCv = DndsCvGene.fromFile(dndsCVFile).associateBy { x -> x.gene }
@@ -49,8 +51,6 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         LikelihoodGene.writeFile(false, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
         LikelihoodGene.writeFile(false, "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
     }
-
-
 
     override fun close() {
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
