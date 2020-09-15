@@ -18,8 +18,8 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SnpEffEnrichment implements VariantContextEnrichment {
 
-    public static String SNPEFF_WORST = "SEW";
-    public static String SNPEFF_CANONICAL = "SEC";
+    public static final String SNPEFF_WORST = "SEW";
+    public static final String SNPEFF_CANONICAL = "SEC";
 
     private final Consumer<VariantContext> consumer;
     private final SnpEffSummaryFactory snpEffSummaryFactory;

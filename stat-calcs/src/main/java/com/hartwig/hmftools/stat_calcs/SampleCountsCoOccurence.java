@@ -369,10 +369,10 @@ public class SampleCountsCoOccurence
         return sampleData;
     }
 
-    private final static int SC_COL_SAMPLEID = 0;
-    private final static int SC_COL_CT = 1;
-    private final static int SC_COL_GENE = 2;
-    private final static int SC_COL_DS = 3;
+    private static final int SC_COL_SAMPLEID = 0;
+    private static final int SC_COL_CT = 1;
+    private static final int SC_COL_GENE = 2;
+    private static final int SC_COL_DS = 3;
 
     private void loadDriverGeneData(final String filename)
     {
@@ -442,8 +442,8 @@ public class SampleCountsCoOccurence
         }
     }
 
-    private final static int SC_COL_CAT = 2;
-    private final static int SC_COL_ENRICHED = 3;
+    private static final int SC_COL_CAT = 2;
+    private static final int SC_COL_ENRICHED = 3;
 
     private void loadSampleCountsData(final String filename)
     {

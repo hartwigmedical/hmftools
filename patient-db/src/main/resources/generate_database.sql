@@ -1,7 +1,9 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS ecrf;
-DROP TABLE IF EXISTS ecrfDatamodel;
+-- TODO Can be removed after 1st of october 2020
+DROP TABLE IF EXISTS sampleMapping;
+DROP TABLE IF EXISTS patientMapping;
+DROP TABLE IF EXISTS amber;
 
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
@@ -816,10 +818,6 @@ CREATE TABLE anonymizedSampleMapping
     hmfId varchar(50) NOT NULL,
     PRIMARY KEY (sampleId)
 );
-
--- TODO Can be removed after 1st of october 2020
-DROP TABLE IF EXISTS sampleMapping;
-DROP TABLE IF EXISTS patientMapping;
 
 DROP TABLE IF EXISTS pgxCalls;
 CREATE TABLE pgxCalls

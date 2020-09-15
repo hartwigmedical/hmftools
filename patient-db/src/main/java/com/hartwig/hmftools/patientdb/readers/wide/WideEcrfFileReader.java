@@ -163,7 +163,7 @@ public class WideEcrfFileReader {
 
     @NotNull
     private static List<WideAvlTreatmentData> treatmentData(@NotNull List<WideAvlTreatmentData> wideTreatments, CSVRecord line,
-            char delimeter) {
+            char delimiter) {
         String widePatientId = WideFileInputInterpreter.toWideID(line.get(AVL_TREATMENT_DATA_PATIENT_ID));
         if (!widePatientId.isEmpty()) {
 
@@ -171,10 +171,10 @@ public class WideEcrfFileReader {
                     .widePatientId(widePatientId)
                     .drugCode(line.get(AVL_TREATMENT_DATA_DRUG_CODE))
                     .drug(line.get(AVL_TREATMENT_DATA_DRUG))
-                    .startDate(delimeter == SEMI_COMMA_DELIMITER
+                    .startDate(delimiter == SEMI_COMMA_DELIMITER
                             ? WideFileInputInterpreter.interpretDateNL(line.get(AVL_TREATMENT_DATA_START_DATE))
                             : WideFileInputInterpreter.interpretDateEN(line.get(AVL_TREATMENT_DATA_START_DATE)))
-                    .endDate(delimeter == SEMI_COMMA_DELIMITER ? WideFileInputInterpreter.interpretDateNL(line.get(
+                    .endDate(delimiter == SEMI_COMMA_DELIMITER ? WideFileInputInterpreter.interpretDateNL(line.get(
                             AVL_TREATMENT_DATA_END_DATE)) : WideFileInputInterpreter.interpretDateEN(line.get(AVL_TREATMENT_DATA_END_DATE)))
                     .build();
 
@@ -189,7 +189,7 @@ public class WideEcrfFileReader {
         char delimiter;
         if (new BufferedReader(new InputStreamReader(new FileInputStream(pathToCsv))).readLine().startsWith("TRAWPTNR,")) {
             delimiter = COMMA_DELIMITER;
-        } else if (new BufferedReader(new InputStreamReader(new FileInputStream(pathToCsv))).readLine().startsWith("TRAWPTNR;")){
+        } else if (new BufferedReader(new InputStreamReader(new FileInputStream(pathToCsv))).readLine().startsWith("TRAWPTNR;")) {
             delimiter = SEMI_COMMA_DELIMITER;
         } else {
             delimiter = ' ';

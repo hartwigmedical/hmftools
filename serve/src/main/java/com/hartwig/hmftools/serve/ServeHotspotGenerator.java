@@ -58,7 +58,7 @@ public class ServeHotspotGenerator {
     private static final Integer MAX_VICC_ENTRIES = null;
 
     private static final String INFO_SOURCES = "sources";
-    private static final String INFO_INPUT = "sources";
+    private static final String INFO_INPUT = "input";
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -202,7 +202,7 @@ public class ServeHotspotGenerator {
         header.addMetaDataLine(new VCFInfoHeaderLine(INFO_SOURCES,
                 VCFHeaderLineCount.UNBOUNDED,
                 VCFHeaderLineType.String,
-                "sources [civic,cgi,docm]"));
+                "sources [civic,cgi,docm,hartwig_curated,hartwig_cohort]"));
 
         writer.writeHeader(header);
 

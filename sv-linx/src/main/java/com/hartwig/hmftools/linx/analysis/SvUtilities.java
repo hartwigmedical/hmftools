@@ -4,15 +4,14 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.UNKNOWN;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
@@ -30,9 +29,9 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class SvUtilities {
 
-    public final static int NO_LENGTH = -1;
+    public static final int NO_LENGTH = -1;
 
-    public static final RefGenome refGenomeLengths()
+    public static RefGenome refGenomeLengths()
     {
         return RG_VERSION == RefGenomeVersion.HG38 ? RefGenome.HG38 : RefGenome.HG19;
     }
@@ -44,7 +43,7 @@ public class SvUtilities {
         return chrLength != null ? chrLength.intValue() : 0;
     }
 
-    public static final ChromosomeArm getChromosomalArm(final String chromosome, final int position)
+    public static ChromosomeArm getChromosomalArm(final String chromosome, final int position)
     {
         final Long centromerePos = refGenomeLengths().centromeres().get(HumanChromosome.fromString(chromosome));
 
@@ -154,7 +153,7 @@ public class SvUtilities {
         }
     }
 
-    public static final String getSvTypesStr(final int[] typeCounts)
+    public static String getSvTypesStr(final int[] typeCounts)
     {
         // the following map-based naming convention leads
         // to a predictable ordering of types: INV, CRS, BND, DEL and DUP
@@ -292,12 +291,12 @@ public class SvUtilities {
             return String.format("%.1f", jcn);
     }
 
-    public static final String makeChrArmStr(final SvVarData var, boolean useStart)
+    public static String makeChrArmStr(final SvVarData var, boolean useStart)
     {
         return makeChrArmStr(var.chromosome(useStart), var.arm(useStart));
     }
 
-    public static final String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
-    public static final String makeChrArmStr(final String chr, final ChromosomeArm arm) { return makeChrArmStr(chr, asStr(arm)); }
+    public static String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
+    public static String makeChrArmStr(final String chr, final ChromosomeArm arm) { return makeChrArmStr(chr, asStr(arm)); }
 
 }

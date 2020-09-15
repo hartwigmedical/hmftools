@@ -14,28 +14,28 @@ public class GermlineFilters implements VariantContextFilter
     private GermlineVcfConfig mConfig;
 
     // VCF field identifiers
-    public final static String QUAL = "QUAL";
-    public final static String SR = "SR";
-    public final static String SRQ = "SRQ";
-    public final static String VF = "VF";
-    public final static String RP = "RP";
-    public final static String RPQ = "RPQ";
-    public final static String REF = "REF";
-    public final static String BEID = "BEID";
-    public final static String BEIDL = "BEIDL";
-    public final static String HOMSEQ = "HOMSEQ";
+    public static final String QUAL = "QUAL";
+    public static final String SR = "SR";
+    public static final String SRQ = "SRQ";
+    public static final String VF = "VF";
+    public static final String RP = "RP";
+    public static final String RPQ = "RPQ";
+    public static final String REF = "REF";
+    public static final String BEID = "BEID";
+    public static final String BEIDL = "BEIDL";
+    public static final String HOMSEQ = "HOMSEQ";
 
-    public final static String AS = "AS";
-    public final static String CAS = "CAS";
-    public final static String RAS = "RAS";
+    public static final String AS = "AS";
+    public static final String CAS = "CAS";
+    public static final String RAS = "RAS";
 
-    private final static String BASRP = "BASRP";
-    private final static String ASRP = "ASRP";
-    private final static String SB = "SB";
-    private final static String BVF = "BVF";
-    private final static String REFPAIR = "REFPAIR";
+    private static final String BASRP = "BASRP";
+    private static final String ASRP = "ASRP";
+    private static final String SB = "SB";
+    private static final String BVF = "BVF";
+    private static final String REFPAIR = "REFPAIR";
 
-    private final static int SHORT_DEL_DUP_LENGTH = 1000;
+    private static final int SHORT_DEL_DUP_LENGTH = 1000;
     private static final String LONG_POLY_C = "CCCCCCCCCCCCCCCC";
     private static final String LONG_POLY_G = "GGGGGGGGGGGGGGGG";
     private static final double MAX_ALLOWABLE_SHORT_EVENT_STRAND_BIAS = 0.95;

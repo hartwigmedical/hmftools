@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.sig_analyser.nmf;
 
-
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
-import com.hartwig.hmftools.sig_analyser.common.SigReporter;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.sig_analyser.common.SigReporter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -362,18 +361,18 @@ public class NmfSampleFitter
     // SBS18,SBS19,SBS20,SBS21,SBS22,SBS24,SBS26,SBS28,SBS30,SBS33,SBS34,SBS35,SBS36,SBS37,SBS38,SBS39,SBS40,SBSR1,SBSR2
 
     // PCAWG inclusion and exclusion rules
-    public final static int PCAWG_SIG_1_AGE = 0;
-    public final static int PCAWG_SIG_5_AGE = 4;
-    public final static int PCAWG_SIG_2_AIDAPOBEC = 1;
-    public final static int PCAWG_SIG_13_AIDAPOBEC = 16;
-    public final static int PCAWG_SIG_7A_SKIN = 6;
-    public final static int PCAWG_SIG_7B_SKIN = 7;
-    public final static int PCAWG_SIG_7C_SKIN = 8;
-    public final static int PCAWG_SIG_7D_SKIN = 9;
-    public final static int PCAWG_SIG_10A = 12;
-    public final static int PCAWG_SIG_10B = 13;
-    public final static int PCAWG_SIG_17A = 20;
-    public final static int PCAWG_SIG_17B = 21;
+    public static final int PCAWG_SIG_1_AGE = 0;
+    public static final int PCAWG_SIG_5_AGE = 4;
+    public static final int PCAWG_SIG_2_AIDAPOBEC = 1;
+    public static final int PCAWG_SIG_13_AIDAPOBEC = 16;
+    public static final int PCAWG_SIG_7A_SKIN = 6;
+    public static final int PCAWG_SIG_7B_SKIN = 7;
+    public static final int PCAWG_SIG_7C_SKIN = 8;
+    public static final int PCAWG_SIG_7D_SKIN = 9;
+    public static final int PCAWG_SIG_10A = 12;
+    public static final int PCAWG_SIG_10B = 13;
+    public static final int PCAWG_SIG_17A = 20;
+    public static final int PCAWG_SIG_17B = 21;
 
     private boolean belowRequiredMutLoad(int sig, double sampleCount)
     {

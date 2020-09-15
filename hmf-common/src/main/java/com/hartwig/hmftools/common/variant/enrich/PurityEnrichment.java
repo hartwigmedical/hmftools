@@ -16,7 +16,6 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class PurityEnrichment implements VariantContextEnrichment {
 
-
     private final String purpleVersion;
     private final PurityAdjustedSomaticVariantFactory factory;
     private final Consumer<VariantContext> consumer;

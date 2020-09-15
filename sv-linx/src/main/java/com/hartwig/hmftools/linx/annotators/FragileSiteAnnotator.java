@@ -17,7 +17,7 @@ public class FragileSiteAnnotator
 {
     private List<SvRegion> mFragileSites;
 
-    private final static int CSV_REQUIRED_FIELDS = 3;
+    private static final int CSV_REQUIRED_FIELDS = 3;
 
     public FragileSiteAnnotator()
     {

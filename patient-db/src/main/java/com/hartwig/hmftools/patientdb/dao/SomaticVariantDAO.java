@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import static org.jooq.impl.DSL.count;
 
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
@@ -206,17 +203,7 @@ class SomaticVariantDAO {
         return b != 0;
     }
 
-    void write(@NotNull String sample, @NotNull List<SomaticVariant> variants) {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
-        deleteSomaticVariantForSample(sample);
-
-        for (List<SomaticVariant> splitRegions : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
-            writeAll(timestamp, sample, splitRegions);
-        }
-    }
-
     void writeAll(@NotNull final Timestamp timestamp, @NotNull String sample, @NotNull List<SomaticVariant> variants) {
-
         final InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
                 SOMATICVARIANT.SAMPLEID,
                 SOMATICVARIANT.CHROMOSOME,

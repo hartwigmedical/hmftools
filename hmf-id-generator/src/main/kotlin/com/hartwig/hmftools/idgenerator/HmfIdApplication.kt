@@ -11,6 +11,7 @@ import com.hartwig.hmftools.idgenerator.anonymizedIds.HmfSampleIdCsv
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import org.apache.commons.cli.CommandLine
 import org.apache.logging.log4j.LogManager
+import kotlin.system.exitProcess
 
 private val logger = LogManager.getLogger("HmfIdApplication")
 
@@ -36,16 +37,37 @@ private fun run(cmd: CommandLine) {
     val amberPatients = databaseAccess.readAmberPatients()
     logger.info("Retrieved ${amberPatients.size} samples from database")
 
-    val currentIds = CsvReader.readCSVByName<HmfSampleIdCsv>(cmd.getOptionValue(HASH_FILE_IN))
-            .map { it.toHmfSampleId() }
-    logger.info("Retrieved ${currentIds.size} samples hashes from file")
+    val existingMappings = databaseAccess.readAmberAnonymous().toSet()
+    logger.info("Retrieved ${existingMappings.size} sample mappings from database")
+    if (existingMappings.isEmpty()) {
+        logger.error("Current amber anonymous table seems to be truncated. Exiting")
+        exitProcess(1)
+    }
 
+    val hashFileIn = cmd.getOptionValue(HASH_FILE_IN)
+    val currentIds = CsvReader.readCSVByName<HmfSampleIdCsv>(hashFileIn).map { it.toHmfSampleId() }
+    logger.info("Retrieved ${currentIds.size} samples hashes from ${hashFileIn}")
+
+    logger.info("Processing samples")
     val amberAnonymizer = PatientAnonymizer(password, newPassword)
     val result = amberAnonymizer.anonymize(amberPatients, currentIds)
-    CsvWriter.writeCSV(result.map { it.toCsv() }, cmd.getOptionValue(HASH_FILE_OUT))
+    val newMappings = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() }).map { x -> x.toAmberAnonymous() }
 
-    val anonymizedRecords = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() })
-    logger.info("Writing ${anonymizedRecords.size} sample mapping to database")
-    databaseAccess.writeAmberAnonymous(anonymizedRecords.map { x -> x.toAmberAnonymous() })
+    val existingMappingsThatNoLongerExist = existingMappings.subtract(newMappings)
+    if (existingMappingsThatNoLongerExist.isEmpty()) {
+        logger.info("Check successful: All ${existingMappings.size} existing mappings from amberAnonymous still exist.")
+    } else {
+        for (missing in existingMappingsThatNoLongerExist) {
+            logger.error("Previous mapping ${missing} is no longer found")
+        }
+        exitProcess(1)
+    }
+
+    // Write to file and database
+    val hashFileOut = cmd.getOptionValue(HASH_FILE_OUT)
+    logger.info("Writing ${result.size} samples hashes to ${hashFileOut}")
+    CsvWriter.writeCSV(result.map { it.toCsv() }, hashFileOut)
+    logger.info("Writing ${newMappings.size} sample mappings to database")
+    databaseAccess.writeAmberAnonymous(newMappings)
     logger.info("Complete")
 }

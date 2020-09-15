@@ -8,7 +8,7 @@ Since publication we have have made a number of significant improvements includi
 - Reportable point mutations extended to include all genes with actionable point mutations (B evidence level or higher)
 - Reported amps and dels extended to include all actionable amps and dels (B evidence level or higher)
 - TSG / Oncogene classifications updated to mark genes dominated by INDELs as TSG, and to use known and actionable amplifications and deletions to assist classification for COSMIC ambiguous, non significant genes.
-- Biallelic TSG missense variants no longer reported as driverlikelihood = 1.  Instead dnds is calculated separately for bialllelic and non-biallelic variants.
+- Biallelic TSG missense variants no longer reported as driver likelihood = 1.  Instead dnds is calculated separately for biallelic and non-biallelic variants.
 
 These are described in more detail below. 
 
@@ -82,10 +82,10 @@ For coding mutations we also mark coding mutations that are highly likely to be 
 For the remaining point mutation variants (non-hotspot missense variants in oncogenes and non-hotspot variants of all types in TSG) these are only assigned a > 0 driver likelihood where there is a remaining excess of unallocated drivers based on the calculated dNdS rates in that gene across the cohort after applying the above rules. 
 Any remaining point mutations are assigned a driver likelihood between 0 and 1 using a bayesian statistic to calculate a sample specific likelihood of each gene based on the type of variant observed (missense, nonsense, splice or INDEL) and taking into account the mutational load of the sample.
 For TSG dnds rates, we find that biallelic dnds rates are typically much higher than non-biallelic rates reflecting the biology that both alleles are normally required to be knocked out to cause a TSG driver.   
-Hence for missense variants in TSG where we observed a higher biallelic dnds rate compared to non-biallelic, we treat bialllelic and non-biallelic missense variants as independent variant classes and calculated dnds rates, passenger and driver counts separately. 
+Hence for missense variants in TSG where we observed a higher biallelic dnds rate compared to non-biallelic, we treat biallelic and non-biallelic missense variants as independent variant classes and calculated dnds rates, passenger and driver counts separately. 
 If the biallelic dnds rate is lower than the non-biallelic rate for a TSG then all missense variants for that gene are pooled together and the combined dnds rate for that gene is used.
 
-The principle behind the likelihood method is that the likelihood of a passenger variant occuring in a particular sample should be approximately proportional to the tumor mutational burden and hence variants in samples with lower mutational burden are more likely to be drivers.
+The principle behind the likelihood method is that the likelihood of a passenger variant occurring in a particular sample should be approximately proportional to the tumor mutational burden and hence variants in samples with lower mutational burden are more likely to be drivers.
 
 The sample specific likelihood of a residual excess variant being a driver is estimated for each gene using the following formula:
 
@@ -105,5 +105,5 @@ And P(Variant|Non-Driver), the probability of observing n or more passenger vari
 P(Variant|Non-Driver) = 1 - poisson(λ = TMB(Sample) / TMB(Cohort) * (# of passenger variants in cohort),k=n-1)
 ```
 
-Note that the TMB is calculated separately for INDELs and SNVs, and in the case of TSG separately for bialllelic and non biallelic variants.
+Note that the TMB is calculated separately for INDELs and SNVs, and in the case of TSG separately for biallelic and non biallelic variants.
 

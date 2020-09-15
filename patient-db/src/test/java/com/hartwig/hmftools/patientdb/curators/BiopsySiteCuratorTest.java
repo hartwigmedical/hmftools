@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;

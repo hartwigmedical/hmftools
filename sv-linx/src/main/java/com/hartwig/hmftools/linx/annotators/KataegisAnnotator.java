@@ -148,13 +148,13 @@ public class KataegisAnnotator
         }
     }
 
-    private final static int CSV_REQUIRED_FIELDS = 6;
-    private final static int KAT_COL_SAMPLE = 0;
-    private final static int KAT_COL_ID = 1;
-    private final static int KAT_COL_SNV_COUNT = 2;
-    private final static int KAT_COL_CHR = 3;
-    private final static int KAT_COL_POS_START = 4;
-    private final static int KAT_COL_POS_END = 5;
+    private static final int CSV_REQUIRED_FIELDS = 6;
+    private static final int KAT_COL_SAMPLE = 0;
+    private static final int KAT_COL_ID = 1;
+    private static final int KAT_COL_SNV_COUNT = 2;
+    private static final int KAT_COL_CHR = 3;
+    private static final int KAT_COL_POS_START = 4;
+    private static final int KAT_COL_POS_END = 5;
 
     public void loadKataegisData(final String filename)
     {
