@@ -27,7 +27,7 @@ More information about the tag available [here](https://samtools.github.io/hts-s
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-HG19 and HG38 resources are available to download from [HMFTools-Resources > SAGE2](https://resources.hartwigmedicalfoundation.nl/). 
+HG19 and HG38 resources are available to download from [HMFTools-Resources > SAGE](https://resources.hartwigmedicalfoundation.nl/). 
 
 R is used to generate the base quality recalibration charts. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
 R is not required if the charts are disable with the `-bqr_plot false` argument. 
@@ -405,7 +405,9 @@ To set the parameters at the command line append the tier to the filter eg `hots
 
 ### Local Phase Set
 Local phasing implies that two or more variants co-exist on the same read. 
-Somatic variants can be phased using the complete read context with nearby germline variants or other somatic variants.
+In practice, somatic variants are phased using the read contexts of nearby germline or other somatic variants. 
+As we are comparing read contexts (with an additional buffer of 50 bases) we are only able to phase variants within a maximum of 60 bases of each other.
+This distance is further reduced if the read contexts we are comparing have been extended in opposing directions due to repeats or microhomology.
 
 Phasing is interesting for somatic calling from 2 perspectives: 
   - understanding the somatic mutational mechanism which has led to the variant; and 
@@ -419,7 +421,7 @@ Phasing is also important for functional impact particularly in 2 prominent case
   - 2 nearby phased frameshift variants can lead to an inframe (and potentially activating) INDEL; and 
   - 2 phased synonymous SNVs in the same codon could potentially cause a nonsense or missense effect together.    
 
-Two variants are considered phased if their read contexts are identical after adjusting for their relative position.
+Two variants are considered phased if their read context cores and any intervening bases are identical after adjusting for their relative position.
 This is demonstrated in the example below where two SNVs share an identical sequence of bases.
 
 <pre>
