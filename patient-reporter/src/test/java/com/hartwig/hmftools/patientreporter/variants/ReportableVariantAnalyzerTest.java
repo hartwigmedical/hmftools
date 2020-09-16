@@ -160,11 +160,11 @@ public class ReportableVariantAnalyzerTest {
     @NotNull
     private static List<ReportableGermlineVariantExtended> createBiallelicGermlineVariantsOnOncoAndTSG() {
         ReportableGermlineVariantExtended germlineVariant1 = ImmutableReportableGermlineVariantExtended.builder()
-                .variant(PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCO).biallelic(true).build())
+                .variant(PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCO).biallelic(true).adjustedVaf(0).build())
                 .driverLikelihood(1.0)
                 .build();
         ReportableGermlineVariantExtended germlineVariant2 = ImmutableReportableGermlineVariantExtended.builder()
-                .variant(PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(TSG).biallelic(false).build())
+                .variant(PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(TSG).biallelic(false).adjustedVaf(0).build())
                 .driverLikelihood(0.5)
                 .build();
         return Lists.newArrayList(germlineVariant1, germlineVariant2);

@@ -34,15 +34,25 @@ public class FilterGermlineVariantsTest {
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         List<SomaticVariant> somaticVariants = Lists.newArrayList();
 
-        List<ReportableGermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
-        List<ReportableGermlineVariantExtended> filteredGermlineVariantMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariants,
+        List<ReportableGermlineVariant> germlineVariantsSubclonal = createTestGermlineVariantsONCOGeneSubclonal();
+        List<ReportableGermlineVariantExtended> filteredGermlineVariantMatchSubclonal = FilterGermlineVariants.filterGermlineVariantsForReporting(
+                germlineVariantsSubclonal,
                 TEST_DRIVER_GENE_PANEL,
                 germlineReportingModel,
                 geneCopyNumbers,
                 somaticVariants,
                 ChordStatus.HRP);
-        assertEquals(1, filteredGermlineVariantMatch.size());
+        assertEquals(0, filteredGermlineVariantMatchSubclonal.size());
+
+        List<ReportableGermlineVariant> germlineVariantsNonSubclonal = createTestGermlineVariantsONCOGeneNonSubclonal();
+        List<ReportableGermlineVariantExtended> filteredGermlineVariantMatchNonSubclonal = FilterGermlineVariants.filterGermlineVariantsForReporting(
+                germlineVariantsNonSubclonal,
+                TEST_DRIVER_GENE_PANEL,
+                germlineReportingModel,
+                geneCopyNumbers,
+                somaticVariants,
+                ChordStatus.HRP);
+        assertEquals(1, filteredGermlineVariantMatchNonSubclonal.size());
     }
 
     @Test
@@ -141,8 +151,13 @@ public class FilterGermlineVariantsTest {
     }
 
     @NotNull
-    private static List<ReportableGermlineVariant> createTestGermlineVariantsONCOGene() {
-        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(ONCOGENE).build());
+    private static List<ReportableGermlineVariant> createTestGermlineVariantsONCOGeneSubclonal() {
+        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(ONCOGENE).adjustedVaf(0).build());
+    }
+
+    @NotNull
+    private static List<ReportableGermlineVariant> createTestGermlineVariantsONCOGeneNonSubclonal() {
+        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(ONCOGENE).adjustedVaf(0.6).build());
     }
 
     @NotNull
@@ -150,6 +165,7 @@ public class FilterGermlineVariantsTest {
         return Lists.newArrayList(createTestGermlineVariantBuilder().gene(TSG)
                 .biallelic(biallelic)
                 .adjustedCopyNumber(adjustedCopyNumber)
+                .adjustedVaf(0.6)
                 .build());
     }
 
