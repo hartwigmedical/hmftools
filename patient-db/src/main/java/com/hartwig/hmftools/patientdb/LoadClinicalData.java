@@ -338,8 +338,8 @@ public final class LoadClinicalData {
             @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink, @NotNull String tumorLocationMappingCSV,
             @NotNull String treatmentMappingCSV, @NotNull String biopsyMappingCSV) throws IOException {
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(tumorLocationMappingCSV);
-        BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource(biopsyMappingCSV);
-        TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource(treatmentMappingCSV);
+        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(biopsyMappingCSV);
+        TreatmentCurator treatmentCurator = new TreatmentCurator(treatmentMappingCSV);
 
         Map<String, Patient> patients =
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);

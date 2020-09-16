@@ -45,8 +45,8 @@ public class LoadClinicalDataTest {
     @Test
     public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(TestCuratorFactory.TUMOR_LOCATION_MAPPING_CSV);
-        BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource(TestCuratorFactory.BIOPSY_SITE_MAPPING_CSV);
-        TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource(TestCuratorFactory.TREATMENT_MAPPING_CSV);
+        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(TestCuratorFactory.BIOPSY_SITE_MAPPING_CSV);
+        TreatmentCurator treatmentCurator = new TreatmentCurator(TestCuratorFactory.TREATMENT_MAPPING_CSV);
 
         EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLNoFormStates(TEST_ECRF);
         assertEquals(1, cpctEcrfModel.patientCount());
