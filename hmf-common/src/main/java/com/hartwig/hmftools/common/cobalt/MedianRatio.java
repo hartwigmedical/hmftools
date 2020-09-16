@@ -11,4 +11,6 @@ public interface MedianRatio {
     String chromosome();
 
     double medianRatio();
+
+    int count();
 }

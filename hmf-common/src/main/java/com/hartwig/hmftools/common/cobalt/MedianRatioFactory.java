@@ -19,10 +19,14 @@ public class MedianRatioFactory {
 
         for (Chromosome contig : HumanChromosome.values()) {
             if (ratios.containsKey(contig)) {
-                final List<Double> contigRatios =
-                        ratios.get(contig).stream().map(CobaltRatio::referenceGCRatio).collect(Collectors.toList());
-                final double medianRatio = Doubles.median(contigRatios, Doubles::positive);
-                results.add(ImmutableMedianRatio.builder().chromosome(contig.toString()).medianRatio(medianRatio).build());
+                final List<Double> contigRatios = ratios.get(contig)
+                        .stream()
+                        .map(CobaltRatio::referenceGCRatio)
+                        .filter(Doubles::positive)
+                        .collect(Collectors.toList());
+                int count = contigRatios.size();
+                final double medianRatio = count > 0 ? Doubles.median(contigRatios) : 0;
+                results.add(ImmutableMedianRatio.builder().chromosome(contig.toString()).medianRatio(medianRatio).count(count).build());
             }
         }
         return results;

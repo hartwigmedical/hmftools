@@ -46,12 +46,15 @@ public final class MedianRatioFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("chromosome").add("medianRatio").toString();
+        return new StringJoiner(DELIMITER, "", "").add("chromosome").add("medianRatio").add("count").toString();
     }
 
     @NotNull
     private static String toString(@NotNull final MedianRatio position) {
-        return new StringJoiner(DELIMITER).add(position.chromosome()).add(String.valueOf(position.medianRatio())).toString();
+        return new StringJoiner(DELIMITER).add(position.chromosome())
+                .add(String.valueOf(position.medianRatio()))
+                .add(String.valueOf(position.count()))
+                .toString();
     }
 
     @NotNull
@@ -60,7 +63,8 @@ public final class MedianRatioFile {
 
         final String chromosome = values[0].trim();
         final double ratio = Double.parseDouble(values[1].trim());
+        final int count = Integer.parseInt(values[2].trim());
 
-        return ImmutableMedianRatio.builder().chromosome(chromosome).medianRatio(ratio).build();
+        return ImmutableMedianRatio.builder().chromosome(chromosome).medianRatio(ratio).count(count).build();
     }
 }
