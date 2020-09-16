@@ -33,7 +33,7 @@ public final class FilterGermlineVariants {
                 // Note: Reportable germline genes may not necessarily be present in driverGeneView!
                 if (driverGenePanel.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
-                    if (germlineVariant.adjustedVaf() >= 0.5) {
+                    if (filterSubclonalGermlineVariants(germlineVariant)) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                     }
                 } else {
@@ -61,11 +61,11 @@ public final class FilterGermlineVariants {
                     }
 
                     if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
-                        if (germlineVariant.adjustedVaf() >= 0.5) {
+                        if (filterSubclonalGermlineVariants(germlineVariant)) {
                             reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                         }
                     } else if (filterMinCopyNumberTumor || chordStatus == ChordStatus.HRD) {
-                        if (germlineVariant.adjustedVaf() >= 0.5) {
+                        if (filterSubclonalGermlineVariants(germlineVariant)) {
                             reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                         }
                     }
@@ -80,6 +80,15 @@ public final class FilterGermlineVariants {
     private static ReportableGermlineVariantExtended reportableGermlineVariantWithDriverLikelihood(
             @NotNull ReportableGermlineVariant germlineVariant, double driverLikelihood) {
         return ImmutableReportableGermlineVariantExtended.builder().variant(germlineVariant).driverLikelihood(driverLikelihood).build();
+    }
+
+    private static boolean filterSubclonalGermlineVariants(@NotNull ReportableGermlineVariant germlineVariant) {
+        //Filter germline variants out when it is subclonal
+        if (germlineVariant.adjustedVaf() >= 0.5) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @NotNull
