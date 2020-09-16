@@ -119,6 +119,8 @@ public class PatientReporterApplication {
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
         String refSampleId;
         String refSampleBarcode;
+
+        // if ref sample barcode is null change to N/A
         if (config.refSampleBarcode().equals(Strings.EMPTY)) {
             LOGGER.warn("Ref sample barcode is unknown {}", config.refSampleBarcode());
             refSampleBarcode = "N/A";
@@ -126,6 +128,7 @@ public class PatientReporterApplication {
             refSampleBarcode = config.refSampleBarcode();
         }
 
+        // if ref sample Id is null change to N/A
         if (config.refSampleId().equals(Strings.EMPTY)) {
             LOGGER.warn("Ref sample Id is unkown {}", config.refSampleId());
             refSampleId = "N/A";
