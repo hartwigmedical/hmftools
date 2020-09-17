@@ -79,7 +79,7 @@ public abstract class LinxBreakend
     private static List<LinxBreakend> fromLines(@NotNull List<String> lines)
     {
         List<String> breakendList = Lists.newArrayList();
-        if (lines.get(0).startsWith("id")) {
+        if (lines.get(0).startsWith("svId")) {
             for (String line : lines.subList(1, lines.size())) {
                 breakendList.add(line);
             }
