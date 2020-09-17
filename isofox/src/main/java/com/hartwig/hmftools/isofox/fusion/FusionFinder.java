@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
@@ -28,12 +27,8 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TaskExecutor;
@@ -51,15 +46,13 @@ public class FusionFinder
 
     private final List<FusionTask> mFusionTasks;
     private final FusionWriter mFusionWriter;
-
-    private final List<GenomeRegion> mRestrictedGeneRegions;
-    private final List<GenomeRegion> mExcludedGeneRegions;
+    private final FusionGeneFilters mGeneFilters;
 
     private final boolean mUseCachedReads;
 
     private final PerformanceCounter mPerfCounter;
 
-    public FusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
+    public FusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache, final FusionWriter fusionWriter)
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
@@ -70,14 +63,14 @@ public class FusionFinder
         mChrGeneCollectionMap = Maps.newHashMap();
         mFusionTasks = Lists.newArrayList();
 
-        mExcludedGeneRegions = Lists.newArrayList();
-        mRestrictedGeneRegions = Lists.newArrayList();
         mUseCachedReads = mConfig.Fusions.ChimericReadsFile != null;
-        buildGeneRegions();
+        mGeneFilters = new FusionGeneFilters(config, geneTransCache);
 
         mPerfCounter = new PerformanceCounter("Fusions");
-        mFusionWriter = new FusionWriter(mConfig);
+        mFusionWriter = fusionWriter;
     }
+
+    public FusionGeneFilters getGeneFilters() { return mGeneFilters; }
 
     public void addChimericReads(final Map<String,ReadGroup> partialReadGroups, final List<ReadGroup> readGroups)
     {
@@ -165,7 +158,7 @@ public class FusionFinder
                 continue;
             }
 
-            if(reads.stream().anyMatch(x -> skipRead(x.mateChromosome(), x.mateStartPosition())))
+            if(reads.stream().anyMatch(x -> mGeneFilters.skipRead(x.mateChromosome(), x.mateStartPosition())))
             {
                 ++skipped;
 
@@ -242,7 +235,7 @@ public class FusionFinder
 
         for(int taskId = 0; taskId < max(mConfig.Threads, 1); ++taskId)
         {
-            mFusionTasks.add(new FusionTask(String.valueOf(taskId), mConfig, mGeneTransCache, mFusionWriter));
+            mFusionTasks.add(new FusionTask(String.valueOf(taskId), mConfig, mGeneTransCache, mGeneFilters, mFusionWriter));
         }
 
         for(List<FusionFragment> chrPairFrags : chrPairFragments.values())
@@ -311,36 +304,11 @@ public class FusionFinder
             {
                 SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
 
-                if(skipRead(suppData.Chromosome, suppData.Position))
+                if(mGeneFilters.skipRead(suppData.Chromosome, suppData.Position))
                     return true;
 
                 ISF_LOGGER.debug("read({}) missing supp({})", read, suppData);
             }
-        }
-
-        return false;
-    }
-
-    private boolean skipRead(final String otherChromosome, int otherPosition)
-    {
-        if(!HumanChromosome.contains(otherChromosome))
-            return true;
-
-        if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(otherChromosome))
-            return true;
-        else if(!mConfig.SpecificRegions.isEmpty() && !mConfig.SpecificRegions.stream().anyMatch(x -> x.containsPosition(otherChromosome, otherPosition)))
-            return true;
-
-        if(!mRestrictedGeneRegions.isEmpty() && !mRestrictedGeneRegions.stream().filter(x -> x.chromosome().equals(otherChromosome))
-                .anyMatch(x -> positionWithin(otherPosition, (int)x.start(), (int)x.end())))
-        {
-            return true;
-        }
-
-        if(mExcludedGeneRegions.stream().filter(x -> x.chromosome().equals(otherChromosome))
-                .anyMatch(x -> positionWithin(otherPosition, (int)x.start(), (int)x.end())))
-        {
-            return true;
         }
 
         return false;
@@ -376,6 +344,12 @@ public class FusionFinder
 
     private void checkMissingGeneData(final ReadRecord read)
     {
+        if(read.getGeneCollectons()[SE_END] == NO_GENE_ID)
+        {
+            ISF_LOGGER.warn("read({}) startGC({}) missing end gene data", read, read.getGeneCollectons()[SE_START]);
+            return;
+        }
+
         if(!read.spansGeneCollections())
             return;
 
@@ -442,26 +416,7 @@ public class FusionFinder
         }
     }
 
-    private void buildGeneRegions()
-    {
-        mConfig.EnrichedGeneIds.stream()
-                .map(x -> mGeneTransCache.getGeneDataById(x))
-                .filter(x -> x != null)
-                .forEach(x -> mExcludedGeneRegions.add(GenomeRegions.create(
-                        x.Chromosome, x.GeneStart - ENRICHED_GENE_BUFFER, x.GeneEnd + ENRICHED_GENE_BUFFER)));
 
-        mConfig.ExcludedGeneIds.stream()
-                .map(x -> mGeneTransCache.getGeneDataById(x))
-                .filter(x -> x != null)
-                .forEach(x -> mExcludedGeneRegions.add(GenomeRegions.create(
-                        x.Chromosome, x.GeneStart, x.GeneEnd)));
-
-        mConfig.RestrictedGeneIds.stream()
-                .map(x -> mGeneTransCache.getGeneDataById(x))
-                .filter(x -> x != null)
-                .forEach(x -> mRestrictedGeneRegions.add(GenomeRegions.create(
-                        x.Chromosome, x.GeneStart - 1000, x.GeneEnd + 1000)));
-    }
 
     private List<EnsemblGeneData> findGeneCollection(final String chromosome, int geneCollectionId)
     {

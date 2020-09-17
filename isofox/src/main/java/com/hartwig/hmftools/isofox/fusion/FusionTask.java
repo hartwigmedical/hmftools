@@ -51,11 +51,13 @@ public class FusionTask implements Callable
     private final Map<String,List<FusionFragment>> mRealignCandidateFragments; // keyed by chromosome, since single-sided
 
     private final FusionWriter mFusionWriter;
+    private final FusionGeneFilters mGeneFilters;
 
     private final PerformanceCounter mPerfCounter;
 
     public FusionTask(
-            final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache, final FusionWriter fusionWriter)
+            final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
+            final FusionGeneFilters fusionGeneFilters, final FusionWriter fusionWriter)
     {
         mTaskId = taskId;
         mConfig = config;
@@ -71,6 +73,7 @@ public class FusionTask implements Callable
         mRealignCandidateFragments = Maps.newHashMap();
 
         mFusionWriter = fusionWriter;
+        mGeneFilters = fusionGeneFilters;
 
         mPerfCounter = new PerformanceCounter("FusionTask");
    }
@@ -92,9 +95,9 @@ public class FusionTask implements Callable
 
     public void processReadGroups(final List<ReadGroup> readGroups)
     {
-        clearState();
-
         // read groups are guaranteed to be complete
+
+        clearState();
 
         mPerfCounter.start();
 
@@ -116,6 +119,11 @@ public class FusionTask implements Callable
 
             final List<ReadRecord> reads = readGroup.Reads;
 
+            if(reads.stream().anyMatch(x -> mGeneFilters.skipRead(x.mateChromosome(), x.mateStartPosition())))
+            {
+                continue;
+            }
+
             /*
             if(reads.get(0).Id.equals(LOG_READ_ID))
             {
@@ -134,20 +142,7 @@ public class FusionTask implements Callable
                 continue;
             }
 
-            if(reads.stream().anyMatch(x -> skipRead(x.mateChromosome(), x.mateStartPosition())))
-            {
-                ++skipped;
-
-                if(!isComplete)
-                    ++partialSkipped;
-
-                continue;
-            }
             */
-
-
-            // if(!mUseCachedReads)
-            //    reads.forEach(x -> checkMissingGeneData(x));
 
             FusionFragment fragment = new FusionFragment(readGroup);
 
@@ -158,7 +153,6 @@ public class FusionTask implements Callable
             }
 
             mAllFragments.add(fragment);
-
         }
 
         processFragments();
@@ -180,7 +174,6 @@ public class FusionTask implements Callable
         int initialFragmentCount = mAllFragments.size();
 
         ISF_LOGGER.info("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
-
 
         formInitialFusions();
         reconcileFusions();

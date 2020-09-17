@@ -71,7 +71,7 @@ public class FusionDataTest
 
         IsofoxConfig config = new IsofoxConfig();
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache);
+        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
 
         int gcId = 0;
 
@@ -139,7 +139,7 @@ public class FusionDataTest
         addTestTranscripts(geneTransCache);
 
         IsofoxConfig config = new IsofoxConfig();
-        FusionFinder finder = new FusionFinder(config, geneTransCache);
+        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
 
         int gcId = 0;
 
@@ -320,7 +320,7 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache);
+        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
 
         int gcId = 0;
 
@@ -391,7 +391,7 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache);
+        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
 
         int gcId = 0;
 
@@ -469,7 +469,7 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache);
+        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
 
         int gcId = 0;
 
@@ -546,7 +546,7 @@ public class FusionDataTest
 
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
-        FusionFinder finder = new FusionFinder(config, geneTransCache);
+        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
 
         int gcId = 0;
 
@@ -616,7 +616,7 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache);
+        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
 
         int gcId = 0;
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
@@ -700,7 +700,7 @@ public class FusionDataTest
         addTestTranscripts(geneTransCache);
 
         IsofoxConfig config = new IsofoxConfig();
-        FusionFinder finder = new FusionFinder(config, geneTransCache);
+        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
 
         int gcId = 0;
 

@@ -6,6 +6,10 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
@@ -17,7 +21,12 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 
@@ -196,61 +205,56 @@ public class FusionUtils
         }
 
         return false;
+    }
 
-        /*
-        // rule out any junction which support a single transcript
-        if(splitRead != null && splitRead.getTranscriptClassifications().values().stream().anyMatch(x -> x == SPLICE_JUNCTION))
+    public static void checkMissingGeneData(final ReadRecord read, final List<TranscriptData> transDataList)
+    {
+        if(!read.getIsGenicRegion()[SE_END])
+            return;
+
+        // due to the way the BAM fragment allocator processes reads per gene collection, the upper gene collection will have missed its
+        // transcript exon data, so populate this now
+
+        int upperCoordIndex = read.getMappedRegionCoords().size() - 1;
+        final int[] upperCoords = read.getMappedRegionCoords().get(upperCoordIndex);
+        final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(SE_END);
+
+        for(TranscriptData transData : transDataList)
         {
-            return false;
-        }
-
-
-        for(final String[] geneIdPair : knownPairGeneIds)
-        {
-            if(positionGeneLists.get(0).stream().anyMatch(x -> x.equals(geneIdPair[FS_UPSTREAM]))
-            && positionGeneLists.get(1).stream().anyMatch(x -> x.equals(geneIdPair[FS_DOWNSTREAM])))
-            {
-                if(splitRead != null)
-                    splitRead.setHasInterGeneSplit(); // will make use of this when handling fusions
-
-                return true;
-            }
-            else if(positionGeneLists.get(0).stream().anyMatch(x -> x.equals(geneIdPair[FS_DOWNSTREAM]))
-            && positionGeneLists.get(1).stream().anyMatch(x -> x.equals(geneIdPair[FS_UPSTREAM])))
-            {
-                if(splitRead != null)
-                    splitRead.setHasInterGeneSplit(); // will make use of this when handling fusions
-
-                return true;
-            }
-        }
-
-        for(int i = 0; i < positionGeneLists.size() - 1; ++i)
-        {
-            Set<String> geneIds1 = positionGeneLists.get(i);
-
-            if(geneIds1.isEmpty())
+            if(!positionsWithin(upperCoords[SE_START], upperCoords[SE_END], transData.TransStart, transData.TransEnd))
                 continue;
 
-            for(int j = i + 1; j < positionGeneLists.size(); ++j)
+            for(ExonData exonData : transData.exons())
             {
-                Set<String> geneIds2 = positionGeneLists.get(j);
-
-                if(geneIds2.isEmpty())
+                if(!positionsOverlap(upperCoords[SE_START], upperCoords[SE_END], exonData.ExonStart, exonData.ExonEnd))
                     continue;
 
-                if(!geneIds1.stream().anyMatch(x -> geneIds2.contains(x)))
+                RegionMatchType matchType;
+                if(upperCoords[SE_START] == exonData.ExonStart || upperCoords[SE_END] == exonData.ExonEnd)
                 {
-                    if(splitRead != null)
-                        splitRead.setHasInterGeneSplit(); // will make use of this when handling fusions
-
-                    return true;
+                    matchType = RegionMatchType.EXON_BOUNDARY;
                 }
+                else if(positionsWithin(upperCoords[SE_START], upperCoords[SE_END], exonData.ExonStart, exonData.ExonEnd))
+                {
+                    matchType = RegionMatchType.WITHIN_EXON;
+                }
+                else
+                {
+                    matchType = RegionMatchType.EXON_INTRON;
+                }
+
+                TransExonRef teRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exonData.ExonRank);
+
+                final List<TransExonRef> transExonRefs = transExonRefMap.get(matchType);
+
+                if(transExonRefs == null)
+                    transExonRefMap.put(matchType, Lists.newArrayList(teRef));
+                else
+                    transExonRefs.add(teRef);
+
+                break;
             }
         }
-
-        return false;
-        */
     }
 
 }

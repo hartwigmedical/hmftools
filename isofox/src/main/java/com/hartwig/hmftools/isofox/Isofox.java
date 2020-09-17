@@ -94,7 +94,7 @@ public class Isofox
         mGcTranscriptCalcs = mConfig.runFunction(EXPECTED_GC_COUNTS) || mConfig.ApplyGcBiasAdjust ?
                 new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
 
-        mFusionFinder = mConfig.runFunction(FUSIONS) ? new FusionFinder(mConfig, mGeneTransCache) : null;
+        mFusionFinder = mConfig.runFunction(FUSIONS) ? new FusionFinder(mConfig, mGeneTransCache, mResultsWriter.getFusionWriter()) : null;
 
         mFragmentLengthDistribution = Lists.newArrayList();
     }
@@ -165,7 +165,8 @@ public class Isofox
         for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
         {
             BamFragmentReader bamReaderTask = new BamFragmentReader(
-                    mConfig, entry.getKey(), entry.getValue(), mGeneTransCache, mResultsWriter, mExpectedCountsCache, mGcTranscriptCalcs);
+                    mConfig, entry.getKey(), entry.getValue(), mGeneTransCache, mResultsWriter,
+                    mFusionFinder != null ? mFusionFinder.getGeneFilters() : null, mExpectedCountsCache, mGcTranscriptCalcs);
 
             chrTasks.add(bamReaderTask);
             callableList.add(bamReaderTask);

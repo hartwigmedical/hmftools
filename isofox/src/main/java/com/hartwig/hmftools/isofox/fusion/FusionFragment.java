@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -292,4 +294,10 @@ public class FusionFragment
         }
     }
 
+    public String toString()
+    {
+        return String.format("type(%s) chr(%s-%s) junc(%d-%d %d/%d %s)",
+                mType, mChromosomes[SE_START], mChromosomes[SE_END], mJunctionPositions[SE_START], mJunctionPositions[SE_END],
+                mJunctionOrientations[SE_START], mJunctionOrientations[SE_END], getImpliedSvType());
+    }
 }
