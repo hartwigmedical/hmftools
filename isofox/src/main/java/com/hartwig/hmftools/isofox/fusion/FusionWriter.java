@@ -23,6 +23,8 @@ public class FusionWriter
     private final ChimericReadCache mChimericReadCache;
     private final boolean mWriteReads;
 
+    private int mNextFusionId;
+
     public FusionWriter(final IsofoxConfig config)
     {
         mConfig = config;
@@ -31,10 +33,13 @@ public class FusionWriter
         mFusionWriter = null;
         mFragmentWriter = null;
         mChimericReadCache = new ChimericReadCache(config);
+        mNextFusionId = 0;
 
         initialiseFusionWriter();
         initialiseFragmentWriter();
     }
+
+    public synchronized int getNextFusionId() { return mNextFusionId++; }
 
     public void close()
     {

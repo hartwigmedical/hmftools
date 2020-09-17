@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
@@ -47,7 +48,6 @@ public class FusionFinder
     private final Map<String,ReadGroup> mChimericPartialReadGroups;
     private final Set<String> mDuplicateReadIds;
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
-    private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
 
     private final List<FusionTask> mFusionTasks;
     private final FusionWriter mFusionWriter;
@@ -68,7 +68,6 @@ public class FusionFinder
         mChimericReadGroups = Lists.newArrayList();
         mDuplicateReadIds = Sets.newHashSet();
         mChrGeneCollectionMap = Maps.newHashMap();
-        mChrGeneDepthMap = Maps.newHashMap();
         mFusionTasks = Lists.newArrayList();
 
         mExcludedGeneRegions = Lists.newArrayList();
@@ -109,13 +108,6 @@ public class FusionFinder
     {
         mChrGeneCollectionMap.put(chromosome, geneCollectionMap);
     }
-
-    public void addChromosomeGeneDepth(final String chromosome, final Map<Integer,BaseDepth> geneDepthMap)
-    {
-        mChrGeneDepthMap.put(chromosome, geneDepthMap);
-    }
-
-    private static final int LOG_COUNT = 100000;
 
     private static final String LOG_READ_ID = "";
     // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:23308:18394:18413";
@@ -250,7 +242,7 @@ public class FusionFinder
 
         for(int taskId = 0; taskId < max(mConfig.Threads, 1); ++taskId)
         {
-            mFusionTasks.add(new FusionTask(taskId, mConfig, mGeneTransCache, mChrGeneDepthMap, mFusionWriter));
+            mFusionTasks.add(new FusionTask(String.valueOf(taskId), mConfig, mGeneTransCache, mFusionWriter));
         }
 
         for(List<FusionFragment> chrPairFrags : chrPairFragments.values())

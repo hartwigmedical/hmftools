@@ -2,7 +2,9 @@ package com.hartwig.hmftools.isofox.results;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.FUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -34,6 +36,7 @@ import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
+import com.hartwig.hmftools.isofox.fusion.FusionWriter;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 
@@ -58,6 +61,7 @@ public class ResultsWriter
     private BufferedWriter mGeneFragLengthWriter;
     private BufferedWriter mReadGcRatioWriter;
     private BufferedWriter mRetainedIntronWriter;
+    private FusionWriter mFusionWriter;
 
     public static final String ISOFOX_ID = ".isf.";
     public static final String DELIMITER = ",";
@@ -92,6 +96,8 @@ public class ResultsWriter
             initialiseGeneCollectionWriter();
             initialiseExternalWriters();
         }
+
+        mFusionWriter = mConfig.runFunction(FUSIONS) ? new FusionWriter(config) : null;
     }
 
     public void close()
@@ -107,6 +113,9 @@ public class ResultsWriter
         closeBufferedWriter(mGeneFragLengthWriter);
         closeBufferedWriter(mReadGcRatioWriter);
         closeBufferedWriter(mRetainedIntronWriter);
+
+        if(mFusionWriter != null)
+            mFusionWriter.close();
     }
 
     private void initialiseExternalWriters()
@@ -151,6 +160,7 @@ public class ResultsWriter
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mGeneFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
+    public FusionWriter getFusionWriter() { return mFusionWriter; }
 
     public void writeSummaryStats(final SummaryStats summaryStats)
     {

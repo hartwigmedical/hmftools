@@ -68,6 +68,8 @@ public class ReadRecord
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
 
+    private final Map<Integer,Integer> mJunctionDepth;
+
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
 
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
@@ -121,6 +123,7 @@ public class ReadRecord
         mFragmentInsertSize = insertSize;
         mSupplementaryAlignment = null;
         mHasInterGeneSplit = false;
+        mJunctionDepth = Maps.newHashMap();
     }
 
     public int range() { return PosEnd - PosStart; }
@@ -882,6 +885,17 @@ public class ReadRecord
     {
         TransMatchType transType = mTranscriptClassification.get(transId);
         return transType != null ? transType : UNKNOWN;
+    }
+
+    public Map<Integer,Integer> getJunctionDepth() { return mJunctionDepth; }
+
+    public void setReadJunctionDepth(final BaseDepth baseDepth)
+    {
+        for(final int[] mappedCoords : mMappedCoords)
+        {
+            mJunctionDepth.put(mappedCoords[SE_START], baseDepth.depthAtBase(mappedCoords[SE_START]));
+            mJunctionDepth.put(mappedCoords[SE_END], baseDepth.depthAtBase(mappedCoords[SE_END]));
+        }
     }
 
     public String toString()

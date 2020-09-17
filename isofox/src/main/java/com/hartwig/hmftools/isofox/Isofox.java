@@ -194,7 +194,6 @@ public class Isofox
                 mFusionFinder.addChimericReads(chrTask.getChimericPartialReadGroups(), chrTask.getChimericReadGroups());
                 mFusionFinder.addDuplicateReadIds(chrTask.getChimericDuplicateReadIds());
                 mFusionFinder.addChromosomeGeneCollections(chrTask.chromosome(), chrTask.getGeneCollectionMap());
-                mFusionFinder.addChromosomeGeneDepth(chrTask.chromosome(), chrTask.getGeneDepthMap());
                 chimericStats.merge(chrTask.getChimericStats());
             }
 

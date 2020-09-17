@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
@@ -31,15 +32,15 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
+import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionTask implements Callable
 {
-    private final int mTaskId;
+    private final String mTaskId;
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
-    private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
     private final List<FusionFragment> mAllFragments;
 
     private int mNextFusionId;
@@ -54,13 +55,11 @@ public class FusionTask implements Callable
     private final PerformanceCounter mPerfCounter;
 
     public FusionTask(
-            int taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
-            final Map<String,Map<Integer,BaseDepth>> geneDepthMap, final FusionWriter fusionWriter)
+            final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache, final FusionWriter fusionWriter)
     {
         mTaskId = taskId;
         mConfig = config;
         mGeneTransCache = geneTransCache;
-        mChrGeneDepthMap = geneDepthMap;
 
         mAllFragments = Lists.newArrayList();
 
@@ -80,14 +79,108 @@ public class FusionTask implements Callable
     public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mDiscordantFragments; }
     public final List<FusionFragment> getFragments() { return mAllFragments; }
 
+    public void clearState()
+    {
+        mAllFragments.clear();
+        mNextFusionId = 0;
+        mFusionCandidates.clear();
+        mFusionsByLocation.clear();
+        mFusionsByGene.clear();
+        mDiscordantFragments.clear();
+        mRealignCandidateFragments.clear();
+    }
+
+    public void processReadGroups(final List<ReadGroup> readGroups)
+    {
+        clearState();
+
+        // read groups are guaranteed to be complete
+
+        mPerfCounter.start();
+
+        // first turn them into fragments, then look for fusions
+        ISF_LOGGER.info("processing {} chimeric read groups", readGroups.size());
+
+        int readGroupCount = 0;
+        int nextLog = LOG_COUNT;
+
+        for(ReadGroup readGroup : readGroups)
+        {
+            ++readGroupCount;
+
+            if(readGroupCount >= nextLog)
+            {
+                nextLog += LOG_COUNT;
+                ISF_LOGGER.info("processed {} chimeric read groups", readGroupCount);
+            }
+
+            final List<ReadRecord> reads = readGroup.Reads;
+
+            /*
+            if(reads.get(0).Id.equals(LOG_READ_ID))
+            {
+                ISF_LOGGER.debug("specific read: {}", reads.get(0));
+            }
+            */
+
+            /*
+            if(mDuplicateReadIds.contains(reads.get(0).Id) || reads.stream().anyMatch(x -> x.isDuplicate()))
+            {
+                ++duplicates;
+
+                if(!isComplete)
+                    ++partialDups;
+
+                continue;
+            }
+
+            if(reads.stream().anyMatch(x -> skipRead(x.mateChromosome(), x.mateStartPosition())))
+            {
+                ++skipped;
+
+                if(!isComplete)
+                    ++partialSkipped;
+
+                continue;
+            }
+            */
+
+
+            // if(!mUseCachedReads)
+            //    reads.forEach(x -> checkMissingGeneData(x));
+
+            FusionFragment fragment = new FusionFragment(readGroup);
+
+            if(fragment.type() == FusionFragmentType.UNKNOWN)
+            {
+                mFusionWriter.writeReadData(reads, "INVALID_FRAG");
+                continue;
+            }
+
+            mAllFragments.add(fragment);
+
+        }
+
+        processFragments();
+        mPerfCounter.stop();
+    }
+
     @Override
     public Long call()
+    {
+        mPerfCounter.start();;
+        processFragments();
+        mPerfCounter.stop();
+
+        return (long)1;
+    }
+
+    private void processFragments()
     {
         int initialFragmentCount = mAllFragments.size();
 
         ISF_LOGGER.info("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
 
-        mPerfCounter.start();;
 
         formInitialFusions();
         reconcileFusions();
@@ -100,16 +193,12 @@ public class FusionTask implements Callable
 
         annotateFusions();
 
-        mPerfCounter.stop();
-
         writeData();
 
         ISF_LOGGER.info("{}: fusion task complete, fusions({}) unassigned(disc={} realgn={})",
                 mTaskId, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
                 mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum());
-
-        return (long)1;
     }
 
     public final PerformanceCounter getPerfCounter() { return mPerfCounter; }
@@ -162,7 +251,6 @@ public class FusionTask implements Callable
         {
             for (FusionReadData fusionData : fusions)
             {
-                fusionData.calcJunctionDepth(mChrGeneDepthMap);
                 fusionData.calcMaxSplitMappedLength();
             }
         }
@@ -214,7 +302,8 @@ public class FusionTask implements Callable
             mFusionCandidates.put(fragment.locationPair(), fusions);
         }
 
-        int fusionId = mTaskId * 1000000 + mNextFusionId++; // keep unique across threaded tasks
+        // int fusionId = mTaskId * 1000000 + mNextFusionId++; // keep unique across threaded tasks
+        int fusionId = mFusionWriter.getNextFusionId();
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
         fusionData.setJunctionBases(mConfig.RefGenome);
@@ -716,14 +805,5 @@ public class FusionTask implements Callable
             allocatedFragments.forEach(x -> fragments.remove(x));
         }
     }
-
-    public void clearState()
-    {
-        mNextFusionId = 0;
-        mFusionCandidates.clear();
-        mDiscordantFragments.clear();
-        mRealignCandidateFragments.clear();
-    }
-
 }
 

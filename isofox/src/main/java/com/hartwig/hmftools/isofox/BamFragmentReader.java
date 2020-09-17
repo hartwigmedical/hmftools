@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.isofox;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
@@ -27,14 +26,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
-import com.hartwig.hmftools.isofox.adjusts.BamReadCounter;
-import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -48,6 +43,7 @@ import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
+import com.hartwig.hmftools.isofox.fusion.FusionTask;
 import com.hartwig.hmftools.isofox.fusion.ReadGroup;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
@@ -73,7 +69,7 @@ public class BamFragmentReader implements Callable
     private int mGenesProcessed;
 
     // fusion state cached across all gene collections
-    private final Map<Integer,BaseDepth> mGeneDepthMap;
+    private final FusionTask mFusionFinder;
     private final List<ReadGroup> mChimericReadGroups;
     private final Map<String,ReadGroup> mChimericPartialReadGroups;
     private final Set<String> mChimericDuplicateReadIds;
@@ -112,7 +108,6 @@ public class BamFragmentReader implements Callable
 
         mGeneDataList = geneDataList;
         mGeneCollectionMap = Maps.newHashMap();
-        mGeneDepthMap = Maps.newHashMap();
         mCollectionId = 0;
 
         mCurrentGeneIndex = 0;
@@ -142,6 +137,9 @@ public class BamFragmentReader implements Callable
         mMissingJunctionPositions = Sets.newHashSet();
         mChimericStats = new ChimericStats();
 
+        mFusionFinder = mConfig.runFunction(FUSIONS) ?
+                new FusionTask(mChromosome, mConfig, mGeneTransCache, resultsWriter.getFusionWriter()) : null;
+
         mPerfCounters = new PerformanceCounter[PERF_MAX];
         mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
         mPerfCounters[PERF_READS] = new PerformanceCounter("ReadCounts");
@@ -162,7 +160,6 @@ public class BamFragmentReader implements Callable
     public final List<ReadGroup> getChimericReadGroups() { return mChimericReadGroups; }
     public final Set<String> getChimericDuplicateReadIds() { return mChimericDuplicateReadIds; }
     public final Map<Integer,List<EnsemblGeneData>> getGeneCollectionMap() { return mGeneCollectionMap; }
-    public final Map<Integer,BaseDepth> getGeneDepthMap() { return mGeneDepthMap; }
     public final ChimericStats getChimericStats() { return mChimericStats; }
     public boolean isValid() { return mIsValid; }
     public int totalReadCount() { return mTotalReadsProcessed; }
@@ -465,10 +462,22 @@ public class BamFragmentReader implements Callable
 
     private void postBamReadFusions(final GeneCollection geneCollection)
     {
-        if(!mConfig.runFunction(FUSIONS))
+        if(!mConfig.runFunction(FUSIONS) || mFusionFinder == null)
             return;
 
         final Map<String,ReadGroup> readMap = mBamFragmentAllocator.getChimericReadTracker().getReadMap();
+        List<ReadGroup> completeReadGroups = Lists.newArrayList(); // readMap.values().stream().filter(x -> x.isComplete()).collect(Collectors.toList());
+
+        // cache depth info against any junction since it won't be available later on once the gene collection data is lost
+
+        // pass any complete chimeric read groups to the fusion finder
+        // and add to this any groups which are now complete (ie which were partially complete before)
+        // cache any incomplete groups (either for later gene collections or from other chromosomes
+        mergeChimericReadMaps(mChimericPartialReadGroups, completeReadGroups, readMap);
+
+        mFusionFinder.processReadGroups(completeReadGroups);
+
+
         final Set<Integer> candidateJunctions = mBamFragmentAllocator.getChimericReadTracker().getJunctionPositions();
 
         mergeChimericReadMaps(mChimericPartialReadGroups, mChimericReadGroups, readMap);
@@ -501,13 +510,11 @@ public class BamFragmentReader implements Callable
         foundPositions.forEach(x -> mMissingJunctionPositions.remove(x)); // remove those just found
         missingJuncPositions.forEach(x -> mMissingJunctionPositions.add(x)); // add the new ones
 
-        mGeneDepthMap.put(geneCollection.id(), new BaseDepth(baseDepth, depthMap));
-
         if(ISF_LOGGER.isDebugEnabled() && readMap.size() > 50)
         {
-            ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={}) missJuncPos({})",
+            ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({})",
                     mChromosome, geneCollection.geneNames(), readMap.size(), mChimericPartialReadGroups.size(), candidateJunctions.size(),
-                    depthMap.size(), mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum(), mMissingJunctionPositions.size());
+                    depthMap.size(), mMissingJunctionPositions.size());
         }
 
         mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());

@@ -563,31 +563,6 @@ public class FusionReadData
         }
     }
 
-    public void calcJunctionDepth(final Map<String,Map<Integer,BaseDepth>> chrGeneDepthMap)
-    {
-        for (int se = SE_START; se <= SE_END; ++se)
-        {
-            if(mGeneCollections[se] == NO_GENE_ID)
-                continue;
-
-            final Map<Integer, BaseDepth> baseDepthMap = chrGeneDepthMap.get(mChromosomes[se]);
-
-            if(baseDepthMap == null)
-                continue;
-
-            final BaseDepth baseDepth = baseDepthMap.get(mGeneCollections[se]);
-
-            if(baseDepth == null)
-            {
-                ISF_LOGGER.error("fusion({}) gc({}) missing base depth", this.toString(), mGeneCollections[se]);
-                continue;
-            }
-
-            int baseDepthCount = baseDepth.depthAtBase(junctionPositions()[se]);
-            mReadDepth[se] += baseDepthCount;
-        }
-    }
-
     public int[] getReadDepth() { return mReadDepth; }
     public int[] getMaxSplitLengths() { return mMaxSplitLengths; }
 

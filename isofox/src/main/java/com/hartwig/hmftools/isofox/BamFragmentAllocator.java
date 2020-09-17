@@ -849,6 +849,8 @@ public class BamFragmentAllocator
             if(upGene != null && downGene != null)
                 mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
         }
+
+        mChimericReads.addKnownPairGeneIds(mKnownPairGeneIds);
     }
 
     public static BufferedWriter createReadDataWriter(final IsofoxConfig config)

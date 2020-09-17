@@ -259,6 +259,7 @@ public class ChimericReadTracker
         for(final ReadGroup readGroup : mChimericReadMap.values())
         {
             readGroup.Reads.forEach(x -> x.captureGeneInfo(true));
+            readGroup.Reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
         }
     }
 
