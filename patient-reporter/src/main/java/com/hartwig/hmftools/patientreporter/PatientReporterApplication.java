@@ -121,24 +121,24 @@ public class PatientReporterApplication {
         String refSampleBarcode;
 
         // if ref sample barcode is null change to N/A
-        if (config.refSampleBarcode().equals(Strings.EMPTY)) {
-            LOGGER.warn("Ref sample barcode is unknown {}", config.refSampleBarcode());
+        if (config.refSampleBarcode() == null) {
+            LOGGER.warn("Ref sample barcode is unknown: {}", config.refSampleBarcode());
             refSampleBarcode = "N/A";
         } else {
             refSampleBarcode = config.refSampleBarcode();
         }
 
         // if ref sample Id is null change to N/A
-        if (config.refSampleId().equals(Strings.EMPTY)) {
-            LOGGER.warn("Ref sample Id is unkown {}", config.refSampleId());
+        if (config.refSampleId() == null) {
+            LOGGER.warn("Ref sample Id is unknown: {}", config.refSampleId());
             refSampleId = "N/A";
         } else {
             refSampleId = config.refSampleId();
         }
 
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId(refSampleId)
-                .refSampleBarcode(refSampleBarcode)
+                .refSampleId(refSampleId) // null is changed to N/A
+                .refSampleBarcode(refSampleBarcode) // null is changed to N/A
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
                 .build();
