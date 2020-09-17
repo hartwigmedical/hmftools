@@ -261,8 +261,8 @@ public interface PatientReporterConfig {
         }
 
         return ImmutablePatientReporterConfig.builder()
-                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? optionalValue(cmd, REF_SAMPLE_ID) : null )
-                .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? optionalValue(cmd, REF_SAMPLE_BARCODE): null)
+                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null )
+                .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? nonOptionalValue(cmd, REF_SAMPLE_BARCODE): null)
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
@@ -304,11 +304,6 @@ public interface PatientReporterConfig {
         }
 
         return value;
-    }
-
-    @Nullable
-    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
-        return cmd.getOptionValue(param);
     }
 
     @NotNull
