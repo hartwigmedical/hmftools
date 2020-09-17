@@ -166,10 +166,12 @@ public abstract class LinxFusion
                 .geneTranscriptEnd(values[index++])
                 .junctionCopyNumber(Double.parseDouble(values[index++]))
                 .build();
-    }
+     }
 
-    public static String context(@NotNull Transcript transcript, int fusedExon) {
-        switch (transcript.regionType()) {
+    public static String context(@NotNull Transcript transcript, int fusedExon)
+    {
+        switch (transcript.regionType())
+        {
             case UPSTREAM:
                 return "Promoter Region";
             case IG:
