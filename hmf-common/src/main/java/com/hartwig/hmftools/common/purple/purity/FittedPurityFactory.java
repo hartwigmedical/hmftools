@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
@@ -162,7 +163,7 @@ public class FittedPurityFactory {
             fittedRegions.add(fittedRegion);
         }
 
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
+        final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(gender, purity, normFactor);
         final double somaticPenalty = Doubles.greaterThan(somaticPenaltyWeight, 0)
                 ? somaticPenaltyWeight * SomaticPenaltyFactory.penalty(purityAdjuster, fittedRegions,
                 variants) : 0;

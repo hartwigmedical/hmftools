@@ -9,6 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -56,7 +57,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     @Override
     @NotNull
     public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion) {
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
+        final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(gender, purity, normFactor);
 
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);

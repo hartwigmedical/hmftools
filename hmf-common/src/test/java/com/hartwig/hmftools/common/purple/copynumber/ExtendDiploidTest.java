@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.tolerance.AlleleTolerance;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -22,7 +23,7 @@ public class ExtendDiploidTest {
     private static final int MIN_TUMOR_COUNT_AT_CENTROMERE = 50;
     private static final String CHROMOSOME = "1";
     private static final double EPSILON = 1e-10;
-    private static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
+    private static final PurityAdjuster PURE = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1d, 1d);
     private static final ExtendDiploid PURE_VICTIM =
             new ExtendDiploid(new AlleleTolerance(PURE), MIN_TUMOR_COUNT, MIN_TUMOR_COUNT_AT_CENTROMERE);
 

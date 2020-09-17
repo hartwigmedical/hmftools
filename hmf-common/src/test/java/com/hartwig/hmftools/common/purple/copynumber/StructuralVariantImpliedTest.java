@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -29,7 +30,7 @@ public class StructuralVariantImpliedTest {
     private static final String CONTIG = "1";
     private static final Chromosome CHROMOSOME = HumanChromosome.fromString(CONTIG);
     private static final int PLOIDY = 1;
-    private static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1, 1);
+    private static final PurityAdjuster PURE = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 1);
 
     @Test
     public void testNonSymmetricMultiPass() {

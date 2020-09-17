@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -155,7 +156,7 @@ public class PurityPloidyEstimateApplication   {
             final BestFit bestFit =
                     fitPurity(executorService, configSupplier, cobaltGender, fittingSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
-            final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, fittedPurity);
+            final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(cobaltGender, fittedPurity);
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(cobaltGender, smoothingConfig.minDiploidTumorRatioCount(),
