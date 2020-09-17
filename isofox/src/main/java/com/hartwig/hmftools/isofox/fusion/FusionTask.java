@@ -5,17 +5,20 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
+import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +35,7 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -44,11 +48,15 @@ public class FusionTask implements Callable
     private final List<FusionFragment> mAllFragments;
 
     private int mNextFusionId;
+
+    private final List<ReadGroup> mSpanningReadGroups; // temporary caching for read groups spanning gene collections
+    private final Map<String,ReadGroup> mChimericPartialReadGroups;
+
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
-    private Map<String,Map<String,FusionReadData>> mFusionsByLocation; // keyed by the chromosome pair, then precise position (hashed)
-    private final Map<String,List<FusionReadData>> mFusionsByGene; // keyed by the locationId
+    private final Map<String,Map<String,FusionReadData>> mFusionsByLocation; // keyed by the chromosome pair, then precise position (hashed)
+    private final Map<Integer,List<FusionReadData>> mFusionsByGene; // keyed by the gene collectionId
     private final Map<String,List<FusionFragment>> mDiscordantFragments; // keyed by the chromosome pair
-    private final Map<String,List<FusionFragment>> mRealignCandidateFragments; // keyed by chromosome, since single-sided
+    private final Map<Integer,List<FusionFragment>> mRealignCandidateFragments; // keyed by gene zcollectionIdz
 
     private final FusionWriter mFusionWriter;
     private final FusionGeneFilters mGeneFilters;
@@ -65,6 +73,9 @@ public class FusionTask implements Callable
 
         mAllFragments = Lists.newArrayList();
 
+        mChimericPartialReadGroups = Maps.newHashMap();
+        mSpanningReadGroups = Lists.newArrayList();
+
         mNextFusionId = 0;
         mFusionCandidates = Maps.newHashMap();
         mFusionsByLocation = Maps.newHashMap();
@@ -80,7 +91,10 @@ public class FusionTask implements Callable
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
     public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mDiscordantFragments; }
+    public final Map<Integer,List<FusionFragment>> getRealignCandidateFragments() { return mRealignCandidateFragments; }
+    public final Map<String,ReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
     public final List<FusionFragment> getFragments() { return mAllFragments; }
+    public final List<ReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
 
     public void clearState()
     {
@@ -90,10 +104,86 @@ public class FusionTask implements Callable
         mFusionsByLocation.clear();
         mFusionsByGene.clear();
         mDiscordantFragments.clear();
-        mRealignCandidateFragments.clear();
     }
 
-    public void processReadGroups(final List<ReadGroup> readGroups)
+    public List<ReadGroup> processNewChimericReadGroups(
+            final GeneCollection geneCollection, final BaseDepth baseDepth, final Map<String,ReadGroup> newReadGroups)
+    {
+        List<ReadGroup> completeReadGroups = Lists.newArrayList();
+
+        mergeChimericReadMaps(mChimericPartialReadGroups, completeReadGroups, newReadGroups);
+
+        // identify any read groups with reads spanning into a future gene collection
+        // and fill in any missing gene info for reads (partial or complete) which link to this gene collections
+        final List<ReadGroup> spanningGroups = newReadGroups.values().stream()
+                .filter(x -> x.Reads.stream().anyMatch(y -> y.getGeneCollectons()[SE_END] == NO_GENE_ID))
+                .collect(Collectors.toList());
+
+        final List<ReadGroup> geneCompletedGroups = reconcileSpanningReadGroups(geneCollection, spanningGroups, baseDepth);
+
+        spanningGroups.stream().forEach(x -> completeReadGroups.remove(x));
+        geneCompletedGroups.stream().filter(x -> !completeReadGroups.contains(x)).forEach(x -> completeReadGroups.add(x));
+
+        return completeReadGroups;
+    }
+
+    private List<ReadGroup> reconcileSpanningReadGroups(
+            final GeneCollection geneCollection, final List<ReadGroup> spanningReadGroups, final BaseDepth baseDepth)
+    {
+        List<ReadGroup> completeGroups = Lists.newArrayList();
+
+        // check pending groups which needed their upper gene and depth info populated by this gene collection
+        int index = 0;
+        while(index < mSpanningReadGroups.size())
+        {
+            ReadGroup readGroup = mSpanningReadGroups.get(index);
+            boolean missingGeneInfo = false;
+
+            for(ReadRecord read : readGroup.Reads)
+            {
+                if(read.getGeneCollectons()[SE_END] != NO_GENE_ID)
+                    continue;
+
+                if(!positionWithin(read.getCoordsBoundary(SE_END),
+                        geneCollection.getNonGenicPositions()[SE_START], geneCollection.getNonGenicPositions()[SE_END]))
+                {
+                    missingGeneInfo = true;
+                    continue;
+                }
+
+                if(positionWithin(read.getCoordsBoundary(SE_END),
+                        geneCollection.regionBounds()[SE_START], geneCollection.regionBounds()[SE_END]))
+                {
+                    read.setGeneCollection(SE_END, geneCollection.id(), true);
+                    checkMissingGeneData(read, geneCollection.getTranscripts());
+                }
+                else
+                {
+                    read.setGeneCollection(SE_END, geneCollection.id(), false);
+                }
+
+                // fill in junction positions depth from reads which spanned into this GC (eg from long N-split reads)
+                read.setReadJunctionDepth(baseDepth);
+            }
+
+            if(!missingGeneInfo)
+            {
+                mSpanningReadGroups.remove(index);
+
+                if(readGroup.isComplete())
+                    completeGroups.add(readGroup);
+            }
+            else
+            {
+                ++index;
+            }
+        }
+
+        mSpanningReadGroups.addAll(spanningReadGroups);
+        return completeGroups;
+    }
+
+    public void processReadGroups(final int geneCollectionId, final List<ReadGroup> readGroups)
     {
         // read groups are guaranteed to be complete
 
@@ -156,6 +246,7 @@ public class FusionTask implements Callable
         }
 
         processFragments();
+
         mPerfCounter.stop();
     }
 
@@ -254,7 +345,9 @@ public class FusionTask implements Callable
         // write results
         mFusionWriter.writeFusionData(mFusionCandidates);
         mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
-        mFusionWriter.writeUnfusedFragments(mRealignCandidateFragments);
+
+        // TODO
+        //mFusionWriter.writeUnfusedFragments(mRealignCandidateFragments);
     }
 
     private FusionReadData findExistingFusion(final FusionFragment fragment)
@@ -319,13 +412,13 @@ public class FusionTask implements Callable
         // add to the cache by gene for later assignment or realigned fragments
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            if(se == SE_END && fragment.locationIds()[SE_START].equals(fragment.locationIds()[SE_END]))
+            if(se == SE_END && fragment.geneCollections()[SE_START] == fragment.geneCollections()[SE_END])
                 break;
 
-            List<FusionReadData> fusionsByGene = mFusionsByGene.get(fragment.locationIds()[se]);
+            List<FusionReadData> fusionsByGene = mFusionsByGene.get(fragment.geneCollections()[se]);
 
             if(fusionsByGene == null)
-                mFusionsByGene.put(fragment.locationIds()[se], Lists.newArrayList(fusionData));
+                mFusionsByGene.put(fragment.geneCollections()[se], Lists.newArrayList(fusionData));
             else
                 fusionsByGene.add(fusionData);
         }
@@ -345,10 +438,10 @@ public class FusionTask implements Callable
 
     private void cacheRealignCandidateFragment(final FusionFragment fragment)
     {
-        List<FusionFragment> fragments = mRealignCandidateFragments.get(fragment.locationIds()[SE_START]);
+        List<FusionFragment> fragments = mRealignCandidateFragments.get(fragment.geneCollections()[SE_START]);
 
         if(fragments == null)
-            mRealignCandidateFragments.put(fragment.locationIds()[SE_START], Lists.newArrayList(fragment));
+            mRealignCandidateFragments.put(fragment.geneCollections()[SE_START], Lists.newArrayList(fragment));
         else
             fragments.add(fragment);
     }
@@ -771,6 +864,38 @@ public class FusionTask implements Callable
 
     private void assignRealignedFragments()
     {
+        for(Map.Entry<Integer,List<FusionReadData>> entry : mFusionsByGene.entrySet())
+        {
+            int geneCollectionId = entry.getKey();
+            final List<FusionReadData> fusions = entry.getValue();
+
+            final List<FusionFragment> realignCandidates = mRealignCandidateFragments.get(geneCollectionId);
+
+            if(realignCandidates == null || realignCandidates.isEmpty())
+                continue;
+
+            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
+
+            for(final FusionReadData fusionData : fusions)
+            {
+                for (FusionFragment fragment : realignCandidates)
+                {
+                    if(fusionData.canRelignFragmentToJunction(fragment))
+                    {
+                        fragment.setType(REALIGNED);
+                        fusionData.addFusionFragment(fragment);
+                        allocatedFragments.add(fragment);
+                    }
+                }
+            }
+
+            allocatedFragments.forEach(x -> realignCandidates.remove(x));
+
+            if(realignCandidates.isEmpty())
+                mRealignCandidateFragments.remove(geneCollectionId);
+        }
+
+        /*
         for(Map.Entry<String,List<FusionFragment>> entry : mRealignCandidateFragments.entrySet())
         {
             final List<FusionReadData> fusions = mFusionsByGene.get(entry.getKey());
@@ -797,6 +922,8 @@ public class FusionTask implements Callable
 
             allocatedFragments.forEach(x -> fragments.remove(x));
         }
+
+        */
     }
 }
 

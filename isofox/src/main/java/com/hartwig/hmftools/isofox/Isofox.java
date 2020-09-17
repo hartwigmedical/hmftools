@@ -192,9 +192,8 @@ public class Isofox
             ChimericStats chimericStats = new ChimericStats();
             for(BamFragmentReader chrTask : chrTasks)
             {
-                mFusionFinder.addChimericReads(chrTask.getChimericPartialReadGroups(), chrTask.getChimericReadGroups());
+                mFusionFinder.addChimericReads(chrTask.getChimericPartialReadGroups());
                 mFusionFinder.addDuplicateReadIds(chrTask.getChimericDuplicateReadIds());
-                mFusionFinder.addChromosomeGeneCollections(chrTask.chromosome(), chrTask.getGeneCollectionMap());
                 chimericStats.merge(chrTask.getChimericStats());
             }
 

@@ -104,7 +104,22 @@ public class FusionReadData
 
         mFusionGenes = new EnsemblGeneData[] { null, null};
         mStreamIndices = new int[] { SE_START, SE_END };
+
         mReadDepth = new int[] {0, 0};
+
+        // extract depth from reads
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            for(ReadRecord read : mFragment.reads())
+            {
+                if(read.getJunctionDepth().containsKey(mJunctionPositions[se]))
+                {
+                    mReadDepth[se] = read.getJunctionDepth().get(mJunctionPositions[se]);
+                    break;
+                }
+            }
+        }
+
         mMaxSplitLengths = new int[] {0, 0};
         mJunctionHomology = new int[] {0, 0};
 

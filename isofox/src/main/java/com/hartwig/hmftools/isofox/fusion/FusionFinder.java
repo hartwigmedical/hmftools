@@ -4,11 +4,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
@@ -24,15 +20,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TaskExecutor;
-import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionFinder
 {
@@ -42,13 +33,10 @@ public class FusionFinder
     private final List<ReadGroup> mChimericReadGroups;
     private final Map<String,ReadGroup> mChimericPartialReadGroups;
     private final Set<String> mDuplicateReadIds;
-    private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
 
     private final List<FusionTask> mFusionTasks;
     private final FusionWriter mFusionWriter;
     private final FusionGeneFilters mGeneFilters;
-
-    private final boolean mUseCachedReads;
 
     private final PerformanceCounter mPerfCounter;
 
@@ -60,10 +48,8 @@ public class FusionFinder
         mChimericPartialReadGroups = Maps.newHashMap();
         mChimericReadGroups = Lists.newArrayList();
         mDuplicateReadIds = Sets.newHashSet();
-        mChrGeneCollectionMap = Maps.newHashMap();
         mFusionTasks = Lists.newArrayList();
 
-        mUseCachedReads = mConfig.Fusions.ChimericReadsFile != null;
         mGeneFilters = new FusionGeneFilters(config, geneTransCache);
 
         mPerfCounter = new PerformanceCounter("Fusions");
@@ -72,15 +58,9 @@ public class FusionFinder
 
     public FusionGeneFilters getGeneFilters() { return mGeneFilters; }
 
-    public void addChimericReads(final Map<String,ReadGroup> partialReadGroups, final List<ReadGroup> readGroups)
+    public void addChimericReads(final Map<String,ReadGroup> partialReadGroups)
     {
         mergeChimericReadMaps(mChimericPartialReadGroups, mChimericReadGroups, partialReadGroups);
-        mChimericReadGroups.addAll(readGroups);
-    }
-
-    public void addChimericReads(final List<ReadGroup> readGroups)
-    {
-        mChimericReadGroups.addAll(readGroups);
     }
 
     public void addDuplicateReadIds(final Set<String> readIds)
@@ -95,11 +75,6 @@ public class FusionFinder
             chimericReadMap.put(read.Id, new ReadGroup(read));
         else
             chimericReads.Reads.add(read);
-    }
-
-    public void addChromosomeGeneCollections(final String chromosome, final Map<Integer,List<EnsemblGeneData>> geneCollectionMap)
-    {
-        mChrGeneCollectionMap.put(chromosome, geneCollectionMap);
     }
 
     private static final String LOG_READ_ID = "";
@@ -201,9 +176,6 @@ public class FusionFinder
                         ISF_LOGGER.error("partial read({}) group also in complete list", readGroup.id());
                     }
                 }
-
-                if(!mUseCachedReads)
-                    reads.forEach(x -> checkMissingGeneData(x));
 
                 FusionFragment fragment = new FusionFragment(readGroup);
 
@@ -314,116 +286,6 @@ public class FusionFinder
         return false;
     }
 
-    private void setMissingGeneCollection(final ReadRecord read)
-    {
-        if(read.getGeneCollectons()[SE_START] != NO_GENE_ID && read.getGeneCollectons()[SE_END] == NO_GENE_ID)
-        {
-            final Map<Integer,List<EnsemblGeneData>> geneCollectionMap = mChrGeneCollectionMap.get(read.Chromosome);
-
-            int readEnd = read.getCoordsBoundary(SE_END);
-
-            for(Map.Entry<Integer,List<EnsemblGeneData>> entry : geneCollectionMap.entrySet())
-            {
-                final int[] genesRange = new int[] {
-                        entry.getValue().stream().mapToInt(x -> x.GeneStart).min().orElse(0),
-                        entry.getValue().stream().mapToInt(x -> x.GeneEnd).max().orElse(0) };
-
-                if(positionWithin(readEnd, genesRange[SE_START], genesRange[SE_END]))
-                {
-                    read.setGeneCollection(SE_END, entry.getKey(), true);
-                    return;
-                }
-                else if(readEnd < genesRange[SE_START])
-                {
-                    read.setGeneCollection(SE_END, entry.getKey(), false);
-                    return;
-                }
-            }
-        }
-    }
-
-    private void checkMissingGeneData(final ReadRecord read)
-    {
-        if(read.getGeneCollectons()[SE_END] == NO_GENE_ID)
-        {
-            ISF_LOGGER.warn("read({}) startGC({}) missing end gene data", read, read.getGeneCollectons()[SE_START]);
-            return;
-        }
-
-        if(!read.spansGeneCollections())
-            return;
-
-        if(read.getGeneCollectons()[SE_END] == NO_GENE_ID)
-        {
-            setMissingGeneCollection(read);
-        }
-
-        if(!read.getIsGenicRegion()[SE_END])
-            return;
-
-        // due to the way the BAM fragment allocator processes reads per gene collection, the upper gene collection will have missed its
-        // transcript exon data, so populate this now
-
-        final List<EnsemblGeneData> geneDataList = findGeneCollection(read.Chromosome, read.getGeneCollectons()[SE_END]);
-
-        if(geneDataList == null)
-            return;
-
-        int upperCoordIndex = read.getMappedRegionCoords().size() - 1;
-        final int[] upperCoords = read.getMappedRegionCoords().get(upperCoordIndex);
-        final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(SE_END);
-
-        for(EnsemblGeneData geneData : geneDataList)
-        {
-            final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
-
-            for(TranscriptData transData : transDataList)
-            {
-                if(!positionsWithin(upperCoords[SE_START], upperCoords[SE_END], transData.TransStart, transData.TransEnd))
-                    continue;
-
-                for(ExonData exonData : transData.exons())
-                {
-                    if(!positionsOverlap(upperCoords[SE_START], upperCoords[SE_END], exonData.ExonStart, exonData.ExonEnd))
-                        continue;
-
-                    RegionMatchType matchType;
-                    if(upperCoords[SE_START] == exonData.ExonStart || upperCoords[SE_END] == exonData.ExonEnd)
-                    {
-                        matchType = RegionMatchType.EXON_BOUNDARY;
-                    }
-                    else if(positionsWithin(upperCoords[SE_START], upperCoords[SE_END], exonData.ExonStart, exonData.ExonEnd))
-                    {
-                        matchType = RegionMatchType.WITHIN_EXON;
-                    }
-                    else
-                    {
-                        matchType = RegionMatchType.EXON_INTRON;
-                    }
-
-                    TransExonRef teRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exonData.ExonRank);
-
-                    final List<TransExonRef> transExonRefs = transExonRefMap.get(matchType);
-
-                    if(transExonRefs == null)
-                        transExonRefMap.put(matchType, Lists.newArrayList(teRef));
-                    else
-                        transExonRefs.add(teRef);
-
-                    break;
-                }
-            }
-        }
-    }
-
-
-
-    private List<EnsemblGeneData> findGeneCollection(final String chromosome, int geneCollectionId)
-    {
-        final Map<Integer,List<EnsemblGeneData>> geneCollectionMap = mChrGeneCollectionMap.get(chromosome);
-        return geneCollectionMap != null && geneCollectionId >= 0 ? geneCollectionMap.get(geneCollectionId) : Lists.newArrayList();
-    }
-
     public static void mergeDuplicateReadIds(final Set<String> destSet, final Set<String> sourceSet)
     {
         sourceSet.forEach(x -> destSet.add(x));
@@ -441,7 +303,6 @@ public class FusionFinder
 
         for (int i = 1; i < mFusionTasks.size(); ++i)
         {
-            final PerformanceCounter taskPC = mFusionTasks.get(i).getPerfCounter();
             perfCounter.merge(mFusionTasks.get(i).getPerfCounter());
         }
 
@@ -459,11 +320,15 @@ public class FusionFinder
         return mFusionTasks.isEmpty() ? Maps.newHashMap() : mFusionTasks.get(0).getUnfusedFragments();
     }
 
+    public void addChimericReads(final List<ReadGroup> readGroups)
+    {
+        mChimericReadGroups.addAll(readGroups);
+    }
+
     public void clearState()
     {
         mChimericPartialReadGroups.clear();
         mChimericReadGroups.clear();
         mFusionTasks.get(0).clearState();
     }
-
 }

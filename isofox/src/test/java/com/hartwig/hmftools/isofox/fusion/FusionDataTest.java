@@ -3,9 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
-import static com.hartwig.hmftools.isofox.TestUtils.CHR_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
@@ -46,17 +44,13 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
-import com.hartwig.hmftools.isofox.fusion.FusionFinder;
-import com.hartwig.hmftools.isofox.fusion.FusionFragment;
-import com.hartwig.hmftools.isofox.fusion.FusionReadData;
-import com.hartwig.hmftools.isofox.fusion.ReadGroup;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class FusionDataTest
@@ -76,11 +70,6 @@ public class FusionDataTest
         int gcId = 0;
 
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
-
-        Map<Integer,List<EnsemblGeneData>> gcMap = Maps.newHashMap();
-
-        gcMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        finder.addChromosomeGeneCollections(CHR_1, gcMap);
 
         // a DEL within the same gene collection is invalid
         ReadRecord read1 = createMappedRead(1, gc1, 1081, 1100, createCigar(0, 20, 20));
@@ -148,18 +137,6 @@ public class FusionDataTest
         final GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
         final GeneCollection gc4 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_4)));
         final GeneCollection gc5 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
-
-        Map<Integer,List<EnsemblGeneData>> gcMap = Maps.newHashMap();
-
-        gcMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        gcMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        gcMap.put(gc3.id(), gc3.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        finder.addChromosomeGeneCollections(CHR_1, gcMap);
-
-        gcMap = Maps.newHashMap();
-        gcMap.put(gc4.id(), gc4.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        gcMap.put(gc5.id(), gc5.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        finder.addChromosomeGeneCollections(CHR_2, gcMap);
 
         final List<ReadGroup> chimericReadGroups = Lists.newArrayList();
 
@@ -327,12 +304,6 @@ public class FusionDataTest
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
         final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
 
-        Map<Integer,List<EnsemblGeneData>> gcMap = Maps.newHashMap();
-
-        gcMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        gcMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        finder.addChromosomeGeneCollections(CHR_1, gcMap);
-
         final List<ReadGroup> chimericReadGroups = Lists.newArrayList();
 
         // a spliced fragment to establish the fusion
@@ -469,24 +440,19 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
-
         int gcId = 0;
 
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
         final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
 
-        final List<ReadGroup> chimericReadGroups = Lists.newArrayList();
+        // handle reads from GC 1 and then 2 as the BamFragmentReader would
 
         int readId = 0;
         ReadRecord read1 = createMappedRead(readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
         read1.setGeneCollection(SE_START, gc1.id(), true);
-        read1.setGeneCollection(SE_END, gc2.id(), true);
 
         ReadRecord read2 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read2.setStrand(true, false);
-
-        chimericReadGroups.add(new ReadGroup(read1, read2));
 
         // realigned and discordant reads which support it
 
@@ -494,33 +460,52 @@ public class FusionDataTest
         String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10209);
 
+        // first on GC1
         ReadRecord read3 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
         ReadRecord read4 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read4.setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(read3, read4));
 
+        // then on GC2
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10229);
         ReadRecord read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
         ReadRecord read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read6.setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(read5, read6));
 
         // and a discordant fragment
-        read3 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
-        read4 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
-        read4.setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(read3, read4));
+        ReadRecord read7 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        ReadRecord read8 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        read8.setStrand(true, false);
 
-        finder.addChimericReads(chimericReadGroups);
+        // another split read with both reads in the first GC
+        ReadRecord read9 = createMappedRead(++readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
+        ReadRecord read10 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
+        read10.setStrand(true, false);
 
-        // populate the chr-gene-collection map
-        Map<Integer,List<EnsemblGeneData>> gcGeneMap = Maps.newHashMap();
-        gcGeneMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        gcGeneMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        finder.addChromosomeGeneCollections(CHR_1, gcGeneMap);
+        FusionTask finder = new FusionTask("1", config, geneTransCache, new FusionGeneFilters(config, geneTransCache), new FusionWriter(config));
 
-        finder.findFusions();
+        final Map<String,ReadGroup> chimericReadGroups = Maps.newHashMap();
+
+        chimericReadGroups.put(read1.Id, new ReadGroup(read1));
+        chimericReadGroups.put(read3.Id, new ReadGroup(read3, read4));
+        chimericReadGroups.put(read7.Id, new ReadGroup(read7));
+        chimericReadGroups.put(read9.Id, new ReadGroup(read9, read10));
+
+        BaseDepth baseDepth = new BaseDepth();
+
+        List<ReadGroup> completeGroups = finder.processNewChimericReadGroups(gc1, baseDepth, chimericReadGroups);
+        assertEquals(2, finder.getSpanningReadGroups().size());
+        finder.processReadGroups(gc1.id(), completeGroups); // will result in an unassigned RA fragment from reads 3 & 4
+
+        // GC 2 read handling
+        chimericReadGroups.clear();
+        chimericReadGroups.put(read2.Id, new ReadGroup(read2));
+        chimericReadGroups.put(read5.Id, new ReadGroup(read5, read6));
+        chimericReadGroups.put(read8.Id, new ReadGroup(read8));
+
+        completeGroups = finder.processNewChimericReadGroups(gc2, baseDepth, chimericReadGroups);
+        assertEquals(0, finder.getSpanningReadGroups().size());
+        finder.processReadGroups(gc2.id(), completeGroups);
 
         assertEquals(1, finder.getFusionCandidates().size());
         List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
@@ -528,7 +513,7 @@ public class FusionDataTest
 
         FusionReadData fusion = fusions.stream().filter(x -> x.isKnownSpliced()).findFirst().orElse(null);
         assertTrue(fusion != null);
-        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
+        assertEquals(2, fusion.getFragments(MATCHED_JUNCTION).size());
         assertEquals(2, fusion.getFragments(REALIGNED).size());
         assertEquals(1, fusion.getFragments(DISCORDANT).size());
         assertEquals(20, fusion.getMaxSplitLengths()[SE_START]);
@@ -622,12 +607,6 @@ public class FusionDataTest
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
         final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
 
-        Map<Integer,List<EnsemblGeneData>> gcMap = Maps.newHashMap();
-
-        gcMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        gcMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        finder.addChromosomeGeneCollections(CHR_1, gcMap);
-
         final List<ReadGroup> chimericReadGroups = Lists.newArrayList();
 
         // a spliced fragment to establish the fusion
@@ -706,12 +685,6 @@ public class FusionDataTest
 
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
         final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
-
-        Map<Integer,List<EnsemblGeneData>> gcMap = Maps.newHashMap();
-
-        gcMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        gcMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
-        finder.addChromosomeGeneCollections(CHR_1, gcMap);
 
         final List<ReadGroup> chimericReadGroups = Lists.newArrayList();
 
