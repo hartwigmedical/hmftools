@@ -122,7 +122,6 @@ public final class PatientReporterTestFactory {
                 .hgvsProtein(Strings.EMPTY)
                 .alleleReadCount(0)
                 .totalReadCount(0)
-                .adjustedCopyNumber(0)
                 .biallelic(false);
     }
 

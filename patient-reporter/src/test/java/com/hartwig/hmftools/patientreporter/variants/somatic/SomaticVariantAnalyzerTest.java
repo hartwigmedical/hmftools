@@ -33,16 +33,16 @@ public class SomaticVariantAnalyzerTest {
         DriverGenePanel driverGenePanel = PatientReporterTestFactory.createTestDriverGenePanel(RIGHT_GENE, "PTEN");
 
         List<SomaticVariant> variants =
-                Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
-                        builder().gene(RIGHT_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build(),
-                        builder().gene(RIGHT_GENE).canonicalCodingEffect(SPLICE).worstCodingEffect(SPLICE).build(),
+                Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).reported(true).build(),
+                        builder().gene(RIGHT_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).reported(true).build(),
+                        builder().gene(RIGHT_GENE).canonicalCodingEffect(SPLICE).worstCodingEffect(SPLICE).reported(false).build(),
                         builder().gene(RIGHT_GENE)
                                 .canonicalCodingEffect(SYNONYMOUS)
                                 .worstCodingEffect(SYNONYMOUS)
-                                .hotspot(Hotspot.HOTSPOT)
+                                .hotspot(Hotspot.HOTSPOT).reported(false)
                                 .build(),
-                        builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
-                        builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
+                        builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).reported(false).build(),
+                        builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).reported(false).build());
 
         SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, driverGenePanel, Collections.emptyList());
 

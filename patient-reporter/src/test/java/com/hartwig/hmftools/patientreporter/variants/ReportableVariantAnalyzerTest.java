@@ -44,7 +44,8 @@ public class ReportableVariantAnalyzerTest {
         List<ReportableGermlineVariantExtended> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
 
         ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                TEST_DRIVER_CATALOG, TEST_DRIVER_GENE_PANEL,
+                TEST_DRIVER_CATALOG,
+                TEST_DRIVER_GENE_PANEL,
                 germlineVariantsToReport,
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
                 LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
@@ -68,7 +69,8 @@ public class ReportableVariantAnalyzerTest {
         List<SomaticVariant> variantsToReport = Lists.newArrayList(variant1, variant2);
 
         ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                TEST_DRIVER_CATALOG, TEST_DRIVER_GENE_PANEL,
+                TEST_DRIVER_CATALOG,
+                TEST_DRIVER_GENE_PANEL,
                 Lists.newArrayList(),
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
                 LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
@@ -95,7 +97,8 @@ public class ReportableVariantAnalyzerTest {
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
         ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                TEST_DRIVER_CATALOG, TEST_DRIVER_GENE_PANEL,
+                TEST_DRIVER_CATALOG,
+                TEST_DRIVER_GENE_PANEL,
                 germlineVariantsToReport,
                 germlineReportingModel,
                 LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
@@ -126,7 +129,8 @@ public class ReportableVariantAnalyzerTest {
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
         ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                TEST_DRIVER_CATALOG, TEST_DRIVER_GENE_PANEL,
+                TEST_DRIVER_CATALOG,
+                TEST_DRIVER_GENE_PANEL,
                 germlineVariantsToReport,
                 germlineReportingModel,
                 LimsGermlineReportingLevel.NO_REPORTING,
@@ -160,11 +164,21 @@ public class ReportableVariantAnalyzerTest {
     @NotNull
     private static List<ReportableGermlineVariantExtended> createBiallelicGermlineVariantsOnOncoAndTSG() {
         ReportableGermlineVariantExtended germlineVariant1 = ImmutableReportableGermlineVariantExtended.builder()
-                .variant(PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCO).biallelic(true).adjustedVaf(0).build())
+                .variant(PatientReporterTestFactory.createTestGermlineVariantBuilder()
+                        .gene(ONCO)
+                        .biallelic(true)
+                        .adjustedVaf(0)
+                        .adjustedCopyNumber(0)
+                        .build())
                 .driverLikelihood(1.0)
                 .build();
         ReportableGermlineVariantExtended germlineVariant2 = ImmutableReportableGermlineVariantExtended.builder()
-                .variant(PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(TSG).biallelic(false).adjustedVaf(0).build())
+                .variant(PatientReporterTestFactory.createTestGermlineVariantBuilder()
+                        .gene(TSG)
+                        .biallelic(false)
+                        .adjustedVaf(0)
+                        .adjustedCopyNumber(0)
+                        .build())
                 .driverLikelihood(0.5)
                 .build();
         return Lists.newArrayList(germlineVariant1, germlineVariant2);

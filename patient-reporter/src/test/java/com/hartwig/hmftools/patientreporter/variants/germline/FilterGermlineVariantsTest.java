@@ -152,12 +152,12 @@ public class FilterGermlineVariantsTest {
 
     @NotNull
     private static List<ReportableGermlineVariant> createTestGermlineVariantsONCOGeneSubclonal() {
-        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(ONCOGENE).adjustedVaf(0).build());
+        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(ONCOGENE).adjustedVaf(0).adjustedCopyNumber(0.1).build());
     }
 
     @NotNull
     private static List<ReportableGermlineVariant> createTestGermlineVariantsONCOGeneNonSubclonal() {
-        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(ONCOGENE).adjustedVaf(0.6).build());
+        return Lists.newArrayList(createTestGermlineVariantBuilder().gene(ONCOGENE).adjustedVaf(0.6).adjustedCopyNumber(1).build());
     }
 
     @NotNull
