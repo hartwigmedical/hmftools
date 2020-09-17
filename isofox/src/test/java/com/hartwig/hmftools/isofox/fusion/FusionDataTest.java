@@ -15,13 +15,13 @@ import static com.hartwig.hmftools.isofox.TestUtils.TRANS_1;
 import static com.hartwig.hmftools.isofox.TestUtils.TRANS_2;
 import static com.hartwig.hmftools.isofox.TestUtils.TRANS_3;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
+import static com.hartwig.hmftools.isofox.TestUtils.createFusionFinder;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
-import static com.hartwig.hmftools.isofox.TestUtils.generateRandomBases;
 import static com.hartwig.hmftools.isofox.TestUtils.overrideRefGenome;
 import static com.hartwig.hmftools.isofox.TestUtils.populateRefGenome;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
@@ -37,12 +37,10 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -65,7 +63,7 @@ public class FusionDataTest
 
         IsofoxConfig config = new IsofoxConfig();
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
+        FusionFinder finder = createFusionFinder(config, geneTransCache);
 
         int gcId = 0;
 
@@ -77,44 +75,9 @@ public class FusionDataTest
 
         final List<ReadGroup> chimericReadGroups = Lists.newArrayList();
         chimericReadGroups.add(new ReadGroup(read1, read2));
-        finder.addChimericReads(chimericReadGroups);
-
-        finder.findFusions();
+        finder.processReadGroups(chimericReadGroups);
 
         assertTrue(finder.getFusionCandidates().isEmpty());
-    }
-
-    @Test
-    public void testTransExonComparisons()
-    {
-        List<TransExonRef> transExons1 = Lists.newArrayList();
-        List<TransExonRef> transExons2 = Lists.newArrayList();
-
-        transExons1.add(new TransExonRef(GENE_ID_1, TRANS_1, "TRANS1", 1));
-        transExons1.add(new TransExonRef(GENE_ID_2, TRANS_2, "TRANS2", 4));
-
-        transExons2.add(new TransExonRef(GENE_ID_3, TRANS_3, "TRANS3", 3));
-        transExons2.add(new TransExonRef(GENE_ID_1, TRANS_1, "TRANS1", 1));
-
-        assertTrue(hasTranscriptExonMatch(transExons1, transExons2));
-
-        transExons2.clear();
-
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
-        transExons2.add(new TransExonRef(GENE_ID_2, TRANS_2, "TRANS2", 2));
-
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, -1));
-        assertTrue(hasTranscriptExonMatch(transExons1, transExons2, -2));
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, 2));
-
-        transExons2.clear();
-        transExons2.add(new TransExonRef(GENE_ID_2, TRANS_2, "TRANS2", 6));
-
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, 1));
-        assertTrue(hasTranscriptExonMatch(transExons1, transExons2, 2));
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, -2));
     }
 
     @Test
@@ -128,7 +91,7 @@ public class FusionDataTest
         addTestTranscripts(geneTransCache);
 
         IsofoxConfig config = new IsofoxConfig();
-        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
+        FusionTaskManager finder = new FusionTaskManager(config, geneTransCache);
 
         int gcId = 0;
 
@@ -297,7 +260,7 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
+        FusionTaskManager finder = new FusionTaskManager(config, geneTransCache);
 
         int gcId = 0;
 
@@ -362,7 +325,7 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
+        FusionTaskManager finder = new FusionTaskManager(config, geneTransCache);
 
         int gcId = 0;
 
@@ -482,7 +445,7 @@ public class FusionDataTest
         ReadRecord read10 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read10.setStrand(true, false);
 
-        FusionTask finder = new FusionTask("1", config, geneTransCache, new FusionGeneFilters(config, geneTransCache), new FusionWriter(config));
+        FusionFinder finder = new FusionFinder("1", config, geneTransCache, new FusionGeneFilters(config, geneTransCache), new FusionWriter(config));
 
         final Map<String,ReadGroup> chimericReadGroups = Maps.newHashMap();
 
@@ -495,7 +458,7 @@ public class FusionDataTest
 
         List<ReadGroup> completeGroups = finder.processNewChimericReadGroups(gc1, baseDepth, chimericReadGroups);
         assertEquals(2, finder.getSpanningReadGroups().size());
-        finder.processReadGroups(gc1.id(), completeGroups); // will result in an unassigned RA fragment from reads 3 & 4
+        finder.processReadGroups(completeGroups); // will result in an unassigned RA fragment from reads 3 & 4
 
         // GC 2 read handling
         chimericReadGroups.clear();
@@ -505,7 +468,7 @@ public class FusionDataTest
 
         completeGroups = finder.processNewChimericReadGroups(gc2, baseDepth, chimericReadGroups);
         assertEquals(0, finder.getSpanningReadGroups().size());
-        finder.processReadGroups(gc2.id(), completeGroups);
+        finder.processReadGroups(completeGroups);
 
         assertEquals(1, finder.getFusionCandidates().size());
         List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
@@ -531,7 +494,7 @@ public class FusionDataTest
 
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
-        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
+        FusionTaskManager finder = new FusionTaskManager(config, geneTransCache);
 
         int gcId = 0;
 
@@ -601,7 +564,7 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
-        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
+        FusionTaskManager finder = new FusionTaskManager(config, geneTransCache);
 
         int gcId = 0;
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
@@ -679,7 +642,7 @@ public class FusionDataTest
         addTestTranscripts(geneTransCache);
 
         IsofoxConfig config = new IsofoxConfig();
-        FusionFinder finder = new FusionFinder(config, geneTransCache, new FusionWriter(config));
+        FusionTaskManager finder = new FusionTaskManager(config, geneTransCache);
 
         int gcId = 0;
 

@@ -28,6 +28,9 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.fusion.FusionFinder;
+import com.hartwig.hmftools.isofox.fusion.FusionGeneFilters;
+import com.hartwig.hmftools.isofox.fusion.FusionWriter;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -409,6 +412,11 @@ public class TestUtils
         }
 
         return String.valueOf(str);
+    }
+
+    public static FusionFinder createFusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
+    {
+        return new FusionFinder("FF", config, geneTransCache, new FusionGeneFilters(config, geneTransCache), new FusionWriter(config));
     }
 
 }

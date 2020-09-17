@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.isofox;
 
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
@@ -10,23 +9,18 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.fusion.FusionFinder.mergeDuplicateReadIds;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
-import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionTaskManager.mergeDuplicateReadIds;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -45,9 +39,9 @@ import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
-import com.hartwig.hmftools.isofox.fusion.FusionFragment;
-import com.hartwig.hmftools.isofox.fusion.FusionGeneFilters;
-import com.hartwig.hmftools.isofox.fusion.FusionTask;
+import com.hartwig.hmftools.isofox.fusion.FusionFragmentCache;
+import com.hartwig.hmftools.isofox.fusion.FusionFinder;
+import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.fusion.ReadGroup;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
@@ -72,7 +66,8 @@ public class BamFragmentReader implements Callable
     private int mGenesProcessed;
 
     // fusion state cached across all gene collections
-    private final FusionTask mFusionFinder;
+    private final FusionTaskManager mFusionTaskManager;
+    private final FusionFinder mFusionFinder;
     private final Set<String> mChimericDuplicateReadIds;
     private final ChimericStats mChimericStats;
 
@@ -98,7 +93,7 @@ public class BamFragmentReader implements Callable
 
     public BamFragmentReader(
             final IsofoxConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
-            final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final FusionGeneFilters fusionGeneFilters,
+            final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final FusionTaskManager fusionManager,
             final ExpectedCountsCache expectedCountsCache, final GcTranscriptCalculator transcriptGcCalcs)
     {
         mConfig = config;
@@ -133,8 +128,8 @@ public class BamFragmentReader implements Callable
         mChimericDuplicateReadIds = Sets.newHashSet();
         mChimericStats = new ChimericStats();
 
-        mFusionFinder = mConfig.runFunction(FUSIONS) ?
-                new FusionTask(mChromosome, mConfig, mGeneTransCache, fusionGeneFilters, resultsWriter.getFusionWriter()) : null;
+        mFusionTaskManager = fusionManager;
+        mFusionFinder = mFusionTaskManager != null ? mFusionTaskManager.createFusionFinder(mChromosome) : null;
 
         mPerfCounters = new PerformanceCounter[PERF_MAX];
         mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
@@ -273,10 +268,16 @@ public class BamFragmentReader implements Callable
             }
         }
 
-        if(mConfig.runFunction(FUSIONS) && nextLogCount > 100)
+        if(mConfig.runFunction(FUSIONS))
         {
-            ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
-            ISF_LOGGER.info("chr({}) chimeric data: {} dups={}", mChromosome, mChimericStats, mChimericDuplicateReadIds.size());
+            if(nextLogCount > 100)
+            {
+                ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
+                ISF_LOGGER.info("chr({}) chimeric data: {} dups={}", mChromosome, mChimericStats, mChimericDuplicateReadIds.size());
+            }
+
+            // handle fragments spanning multiple chromosomes
+            //mFusionFinder
         }
     }
 
@@ -470,7 +471,7 @@ public class BamFragmentReader implements Callable
                 geneCollection, mBamFragmentAllocator.getBaseDepth(),
                 mBamFragmentAllocator.getChimericReadTracker().getReadMap());
 
-        mFusionFinder.processReadGroups(geneCollection.id(), completeReadGroups);
+        mFusionFinder.processReadGroups(completeReadGroups);
 
         mergeDuplicateReadIds(mChimericDuplicateReadIds, mBamFragmentAllocator.getChimericDuplicateReadIds());
         mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());

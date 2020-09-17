@@ -336,29 +336,6 @@ public class ChimericReadCache
             {
                 basesStr += c;
             }
-
-            /*
-            if(c == CigarOperator.M.toString().charAt(0))
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), CigarOperator.M));
-            else if(c == CigarOperator.I.toString().charAt(0))
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), CigarOperator.I));
-            else if(c == CigarOperator.D.toString().charAt(0))
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), CigarOperator.D));
-            else if(c == CigarOperator.N.toString().charAt(0))
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), CigarOperator.N));
-            else if(c == CigarOperator.S.toString().charAt(0))
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), CigarOperator.S));
-            else if(c == CigarOperator.H.toString().charAt(0))
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), CigarOperator.H));
-            else if(c == CigarOperator.P.toString().charAt(0))
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), CigarOperator.P));
-            else if(c == CigarOperator.X.toString().charAt(0))
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), CigarOperator.X));
-            else
-                basesStr += c;
-
-            */
-
             ++index;
         }
 

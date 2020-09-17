@@ -49,7 +49,8 @@ import com.hartwig.hmftools.isofox.expression.ExpressionCacheTask;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadCache;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
-import com.hartwig.hmftools.isofox.fusion.FusionFinder;
+import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
+import com.hartwig.hmftools.isofox.fusion.FusionFragmentCache;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
@@ -69,7 +70,7 @@ public class Isofox
     private final EnsemblDataCache mGeneTransCache;
     private final ExpectedCountsCache mExpectedCountsCache;
     private final GcTranscriptCalculator mGcTranscriptCalcs;
-    private final FusionFinder mFusionFinder;
+    private final FusionTaskManager mFusionTaskManager;
 
     private final List<int[]> mFragmentLengthDistribution;
 
@@ -94,7 +95,7 @@ public class Isofox
         mGcTranscriptCalcs = mConfig.runFunction(EXPECTED_GC_COUNTS) || mConfig.ApplyGcBiasAdjust ?
                 new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
 
-        mFusionFinder = mConfig.runFunction(FUSIONS) ? new FusionFinder(mConfig, mGeneTransCache, mResultsWriter.getFusionWriter()) : null;
+        mFusionTaskManager = mConfig.runFunction(FUSIONS) ? new FusionTaskManager(mConfig, mGeneTransCache) : null;
 
         mFragmentLengthDistribution = Lists.newArrayList();
     }
@@ -103,8 +104,8 @@ public class Isofox
     {
         if(mConfig.runFunction(FUSIONS) && mConfig.Fusions.ChimericReadsFile != null)
         {
-            mFusionFinder.addChimericReads(ChimericReadCache.loadChimericReads(mConfig.Fusions.ChimericReadsFile));
-            mFusionFinder.findFusions();
+            mFusionTaskManager.addChimericReads(ChimericReadCache.loadChimericReads(mConfig.Fusions.ChimericReadsFile));
+            mFusionTaskManager.findFusions();
             return true;
         }
 
@@ -166,7 +167,7 @@ public class Isofox
         {
             BamFragmentReader bamReaderTask = new BamFragmentReader(
                     mConfig, entry.getKey(), entry.getValue(), mGeneTransCache, mResultsWriter,
-                    mFusionFinder != null ? mFusionFinder.getGeneFilters() : null, mExpectedCountsCache, mGcTranscriptCalcs);
+                    mFusionTaskManager, mExpectedCountsCache, mGcTranscriptCalcs);
 
             chrTasks.add(bamReaderTask);
             callableList.add(bamReaderTask);
@@ -192,8 +193,8 @@ public class Isofox
             ChimericStats chimericStats = new ChimericStats();
             for(BamFragmentReader chrTask : chrTasks)
             {
-                mFusionFinder.addChimericReads(chrTask.getChimericPartialReadGroups());
-                mFusionFinder.addDuplicateReadIds(chrTask.getChimericDuplicateReadIds());
+                mFusionTaskManager.addChimericReads(chrTask.getChimericPartialReadGroups());
+                mFusionTaskManager.addDuplicateReadIds(chrTask.getChimericDuplicateReadIds());
                 chimericStats.merge(chrTask.getChimericStats());
             }
 
@@ -205,7 +206,7 @@ public class Isofox
 
         if(mConfig.runFunction(FUSIONS))
         {
-            mFusionFinder.findFusions();
+            mFusionTaskManager.findFusions();
         }
 
         logPerformanceStats(perfCounters);

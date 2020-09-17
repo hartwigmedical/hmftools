@@ -13,12 +13,16 @@ import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_5;
+import static com.hartwig.hmftools.isofox.TestUtils.TRANS_1;
+import static com.hartwig.hmftools.isofox.TestUtils.TRANS_2;
+import static com.hartwig.hmftools.isofox.TestUtils.TRANS_3;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
+import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 
@@ -26,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
+import static junit.framework.TestCase.assertFalse;
 
 import java.util.List;
 
@@ -33,9 +38,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 
 import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class FusionFragmentsTest
 {
@@ -471,5 +479,38 @@ public class FusionFragmentsTest
 //        assertEquals(-1, fragment.junctionOrientations()[SE_END]);
 //        assertEquals(DEL, fragment.getImpliedSvType());
 
+    }
+
+    @Test
+    public void testTransExonComparisons()
+    {
+        List<TransExonRef> transExons1 = Lists.newArrayList();
+        List<TransExonRef> transExons2 = Lists.newArrayList();
+
+        transExons1.add(new TransExonRef(GENE_ID_1, TRANS_1, "TRANS1", 1));
+        transExons1.add(new TransExonRef(GENE_ID_2, TRANS_2, "TRANS2", 4));
+
+        transExons2.add(new TransExonRef(GENE_ID_3, TRANS_3, "TRANS3", 3));
+        transExons2.add(new TransExonRef(GENE_ID_1, TRANS_1, "TRANS1", 1));
+
+        TestCase.assertTrue(hasTranscriptExonMatch(transExons1, transExons2));
+
+        transExons2.clear();
+
+        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
+        transExons2.add(new TransExonRef(GENE_ID_2, TRANS_2, "TRANS2", 2));
+
+        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
+        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, -1));
+        TestCase.assertTrue(hasTranscriptExonMatch(transExons1, transExons2, -2));
+        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, 2));
+
+        transExons2.clear();
+        transExons2.add(new TransExonRef(GENE_ID_2, TRANS_2, "TRANS2", 6));
+
+        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
+        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, 1));
+        TestCase.assertTrue(hasTranscriptExonMatch(transExons1, transExons2, 2));
+        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, -2));
     }
 }
