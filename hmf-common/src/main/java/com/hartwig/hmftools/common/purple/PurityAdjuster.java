@@ -46,6 +46,11 @@ public class PurityAdjuster {
         return HumanChromosome.fromString(chromosome).isDiploid(gender) ? 2 : 1;
     }
 
+    public double typicalRatio(@NotNull String contig) {
+        final Chromosome chromosome = HumanChromosome.fromString(contig);
+        return  chromosome.isDiploid(gender) ? 1 : 0.5;
+    }
+
     @SuppressWarnings("unused")
     public double impliedPloidy() {
         // Don't delete per request of Mr Jon Baber!!!
@@ -53,8 +58,7 @@ public class PurityAdjuster {
     }
 
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {
-        final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-        final double typicalRatio = chromosome.isDiploid(gender) ? 1 : 0.5;
+        final double typicalRatio = typicalRatio(chromosomeName);
         return purityAdjustedCopyNumber(ratio, typicalRatio);
     }
 
