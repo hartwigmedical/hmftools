@@ -15,73 +15,57 @@ import com.hartwig.hmftools.common.fusion.Transcript;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-public abstract class LinxFusion {
+public abstract class LinxFusion
+{
     public abstract int fivePrimeBreakendId();
-
     public abstract int threePrimeBreakendId();
-
     public abstract String name();
-
     public abstract boolean reported();
-
     public abstract String reportedType();
-
     public abstract boolean phased();
-
     public abstract int chainLength();
-
     public abstract int chainLinks();
-
     public abstract boolean chainTerminated();
-
     public abstract String domainsKept();
-
     public abstract String domainsLost();
-
     public abstract int skippedExonsUp();
-
     public abstract int skippedExonsDown();
-
     public abstract int fusedExonUp();
-
     public abstract int fusedExonDown();
 
     // for patient report
     public abstract String geneStart();
-
     public abstract String geneContextStart();
-
     public abstract String geneTranscriptStart();
-
     public abstract String geneEnd();
-
     public abstract String geneContextEnd();
-
     public abstract String geneTranscriptEnd();
-
     public abstract Double junctionCopyNumber();
 
     private static final String FILE_EXTENSION = ".linx.fusion.tsv";
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
     @NotNull
-    public static List<LinxFusion> read(final String filePath) throws IOException {
+    public static List<LinxFusion> read(final String filePath) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxFusion> fusions) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull List<LinxFusion> fusions) throws IOException
+    {
         Files.write(new File(filename).toPath(), toLines(fusions));
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<LinxFusion> fusions) {
+    private static List<String> toLines(@NotNull final List<LinxFusion> fusions)
+    {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         fusions.stream().map(x -> toString(x)).forEach(lines::add);
@@ -89,21 +73,16 @@ public abstract class LinxFusion {
     }
 
     @NotNull
-    private static List<LinxFusion> fromLines(@NotNull List<String> lines) {
-        List<String> fusionList = Lists.newArrayList();
-        if (lines.get(0).startsWith("geneStart")) {
-            for (String line : lines.subList(1, lines.size())) {
-                fusionList.add(line);
-            }
-            return fusionList.stream().map(LinxFusion::fromString).collect(toList());
-        } else {
-            return Lists.newArrayList();
-        }
+    private static List<LinxFusion> fromLines(@NotNull List<String> lines)
+    {
+        return lines.stream().filter(x -> !x.startsWith("FivePrimeBreakendId")).map(LinxFusion::fromString).collect(toList());
     }
 
     @NotNull
-    private static String header() {
-        return new StringJoiner(DELIMITER).add("FivePrimeBreakendId")
+    private static String header()
+    {
+        return new StringJoiner(DELIMITER)
+                .add("FivePrimeBreakendId")
                 .add("ThreePrimeBreakendId")
                 .add("Name")
                 .add("Reported")
@@ -129,8 +108,10 @@ public abstract class LinxFusion {
     }
 
     @NotNull
-    private static String toString(@NotNull final LinxFusion fusion) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(fusion.fivePrimeBreakendId()))
+    private static String toString(@NotNull final LinxFusion fusion)
+    {
+        return new StringJoiner(DELIMITER)
+                .add(String.valueOf(fusion.fivePrimeBreakendId()))
                 .add(String.valueOf(fusion.threePrimeBreakendId()))
                 .add(String.valueOf(fusion.name()))
                 .add(String.valueOf(fusion.reported()))
@@ -156,7 +137,8 @@ public abstract class LinxFusion {
     }
 
     @NotNull
-    private static LinxFusion fromString(@NotNull final String fusion) {
+    private static LinxFusion fromString(@NotNull final String fusion)
+    {
         String[] values = fusion.split(DELIMITER, -1);
         int index = 0;
 
@@ -200,7 +182,8 @@ public abstract class LinxFusion {
         return String.format("ERROR: %s", transcript.regionType());
     }
 
-    public static double fusionJcn(double downstreamJcn, double upstreamJcn) {
+    public static double fusionJcn(double downstreamJcn, double upstreamJcn)
+    {
         return (upstreamJcn + downstreamJcn) * 0.5;
     }
 }
