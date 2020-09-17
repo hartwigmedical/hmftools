@@ -457,7 +457,6 @@ public class FusionTask implements Callable
             if(fusions.size() == 1)
                 continue;
 
-            // annotate similar fusions for post-run analysis
             for(int i = 0; i < fusions.size() - 1; ++i)
             {
                 FusionReadData fusion1 = fusions.get(i);

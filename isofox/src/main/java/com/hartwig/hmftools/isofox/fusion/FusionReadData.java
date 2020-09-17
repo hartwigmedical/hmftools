@@ -139,16 +139,6 @@ public class FusionReadData
         return mTransExonRefs[fs];
     }
 
-    public final List<FusionFragment> getAllFragments()
-    {
-        if(mFragments.size() == 1)
-            return mFragments.values().iterator().next();
-
-        final List<FusionFragment> fragments = Lists.newArrayList();
-        mFragments.values().forEach(x -> fragments.addAll(x));
-        return fragments;
-    }
-
     public final Map<FusionFragmentType,List<FusionFragment>> getFragments() { return mFragments; }
     public final List<FusionFragment> getFragments(FusionFragmentType type)
     {

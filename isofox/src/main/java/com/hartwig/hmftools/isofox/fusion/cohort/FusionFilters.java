@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -64,10 +65,14 @@ public class FusionFilters
     private static final int MIN_ANCHOR_DISTANCE = 20;
     private static final double AF_KNOWN_TIER = 0.005;
     private static final double AF_UNKNOWN_TIER = 0.05;
+    private static final int LOCAL_FUSION_THRESHOLD = 1000000;
 
     public boolean isPassingFusion(final FusionData fusion)
     {
-        if(fusion.getKnownFusionType() == KNOWN_PAIR)
+        boolean isShort = fusion.Chromosomes[SE_START].equals(fusion.Chromosomes[SE_END]) &&
+                abs(fusion.JunctionPositions[SE_END] - fusion.JunctionPositions[SE_START]) < LOCAL_FUSION_THRESHOLD;
+
+        if(fusion.getKnownFusionType() == KNOWN_PAIR && !isShort)
         {
             int requiredFragments = hasKnownSpliceSite(fusion) ? KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS : KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS;
 
