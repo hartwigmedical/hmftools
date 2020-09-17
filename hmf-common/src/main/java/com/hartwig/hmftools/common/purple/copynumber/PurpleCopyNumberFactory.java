@@ -33,10 +33,10 @@ public class PurpleCopyNumberFactory {
     private final int minTumorRatioCountAtCentromere;
     private final PurityAdjuster purityAdjuster;
 
-    public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere, int averageReadDepth, double ploidy,
+    public PurpleCopyNumberFactory(Gender gender, int minTumorRatioCount, int minTumorRatioCountAtCentromere, int averageReadDepth, double ploidy,
             @NotNull final PurityAdjuster purityAdjuster) {
         this.purityAdjuster = purityAdjuster;
-        this.gender = purityAdjuster.gender();
+        this.gender = gender;
         this.minTumorRatioCount = minTumorRatioCount;
         this.minTumorRatioCountAtCentromere = minTumorRatioCountAtCentromere;
         this.averageReadDepth = averageReadDepth;

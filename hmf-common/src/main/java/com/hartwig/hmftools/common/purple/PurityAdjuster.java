@@ -29,11 +29,6 @@ public class PurityAdjuster {
         this.normFactor = normFactor;
     }
 
-    @NotNull
-    public Gender gender() {
-        return gender;
-    }
-
     public double purity() {
         return purity;
     }
@@ -72,9 +67,8 @@ public class PurityAdjuster {
     }
 
     public double purityAdjustedBAFSimple(final String chromosome, final double copyNumber, final double observedFrequency) {
-        boolean isDiploid = HumanChromosome.fromString(chromosome).isDiploid(gender);
-
-        if (!isDiploid || Doubles.lessOrEqual(copyNumber, 1)) {
+        int typicalCopyNumber = typicalCopyNumber(chromosome);
+        if (typicalCopyNumber < 2 || Doubles.lessOrEqual(copyNumber, 1)) {
             return 1;
         }
         return purityAdjustedFrequency(2, 1, copyNumber, observedFrequency);
