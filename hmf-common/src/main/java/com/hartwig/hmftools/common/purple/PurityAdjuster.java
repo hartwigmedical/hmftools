@@ -32,14 +32,14 @@ public abstract class PurityAdjuster {
         return normFactor;
     }
 
-    public abstract int germlineCopyNumber(@NotNull String contig);
-
-    public double typicalRatio(@NotNull String contig) {
-        return germlineCopyNumber(contig) / 2.0;
+    public double germlineCopyNumber(@NotNull String contig) {
+        return germlineRatio(contig) * 2;
     }
 
+    public abstract double germlineRatio(@NotNull String contig);
+
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {
-        final double typicalRatio = typicalRatio(chromosomeName);
+        final double typicalRatio = germlineRatio(chromosomeName);
         return purityAdjustedCopyNumber(ratio, typicalRatio);
     }
 
@@ -48,31 +48,31 @@ public abstract class PurityAdjuster {
     }
 
     public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
-        int typicalCopyNumber = germlineCopyNumber(chromosome);
+        double typicalCopyNumber = germlineCopyNumber(chromosome);
         return purityAdjustedFrequency(typicalCopyNumber, 0, copyNumber, observedFrequency);
     }
 
     public double purityAdjustedBAFSimple(final String chromosome, final double copyNumber, final double observedFrequency) {
-        int typicalCopyNumber = germlineCopyNumber(chromosome);
+        double typicalCopyNumber = germlineCopyNumber(chromosome);
         if (typicalCopyNumber < 2 || Doubles.lessOrEqual(copyNumber, 1)) {
             return 1;
         }
         return purityAdjustedFrequency(2, 1, copyNumber, observedFrequency);
     }
 
-    double purityAdjustedFrequency(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+    double purityAdjustedFrequency(final double normalCopyNumber, final double normalPloidy, final double tumorCopyNumber,
             final double observedFrequency) {
         return purityAdjustedPloidy(normalCopyNumber, normalPloidy, tumorCopyNumber, observedFrequency) / tumorCopyNumber;
     }
 
-    public double purityAdjustedPloidy(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+    public double purityAdjustedPloidy(final double normalCopyNumber, final double normalPloidy, final double tumorCopyNumber,
             final double observedFrequency) {
         double totalObservations = purity * tumorCopyNumber + normalCopyNumber * (1 - purity);
         double normalObservations = normalPloidy * (1 - purity);
         return (observedFrequency * totalObservations - normalObservations) / purity;
     }
 
-    public double expectedFrequency(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+    public double expectedFrequency(final double normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
             final double tumorPloidy) {
         if (Doubles.lessOrEqual(tumorCopyNumber, 0)) {
             return 0;
@@ -87,13 +87,13 @@ public abstract class PurityAdjuster {
 
     public double purityAdjustedVAFWithHeterozygousNormal(@NotNull final String chromosome, final double copyNumber,
             final double observedFrequency) {
-        int typicalCopyNumber = germlineCopyNumber(chromosome);
+        double typicalCopyNumber = germlineCopyNumber(chromosome);
         return purityAdjustedFrequency(typicalCopyNumber, 1, copyNumber, observedFrequency);
     }
 
     public double purityAdjustedVAFWithHomozygousNormal(@NotNull final String chromosome, final double copyNumber,
             final double observedFrequency) {
-        int typicalCopyNumber = germlineCopyNumber(chromosome);
+        double typicalCopyNumber = germlineCopyNumber(chromosome);
         return purityAdjustedFrequency(typicalCopyNumber, 2, copyNumber, observedFrequency);
     }
 }

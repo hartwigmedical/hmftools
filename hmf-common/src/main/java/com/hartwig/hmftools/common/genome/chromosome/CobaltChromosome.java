@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.genome.chromosome;
 
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -12,14 +13,14 @@ public interface CobaltChromosome extends Chromosome {
 
     String contig();
 
-    int typicalCopies();
+    double typicalRatio();
 
-    int impliedCopies();
+    double observedRatio();
 
     boolean mosiac();
 
     @Override
     default boolean isDiploid(@NotNull Gender gender) {
-        return typicalCopies() == 2;
+        return Doubles.equal(typicalRatio(), 1.0);
     }
 }

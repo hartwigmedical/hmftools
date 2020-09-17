@@ -1,51 +1,87 @@
 package com.hartwig.hmftools.common.genome.chromosome;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class CobaltChromosomes {
 
     static final int MIN_RATIO_COUNT = 1000;
-    private static final double TWO_X_CUTOFF = 0.65;
-    private static final double Y_CUTOFF = 0.05;
-    private static final double MOSIAC_CUTOFF = 0.2;
+    static final double TWO_X_CUTOFF = 0.65;
+    static final double TWO_Y_CUTOFF = 0.75;
+    static final double Y_CUTOFF = 0.05;
+    static final double MOSIAC_X_CUTOFF = 0.8;
+    static final double TRISOMY_CUTOFF = 1.4;
 
-    private final List<Chromosome> chromosomeList;
     private final Map<String, CobaltChromosome> chromosomeMap;
-    private final boolean isFemale;
+    private final Set<ChromosomalAberration> aberrations;
+    private final Gender gender;
 
-    public CobaltChromosomes(final List<MedianRatio> ratios) {
-        this.chromosomeList = Lists.newArrayList();
+    /**
+     * Gender:
+     * FEMALE := X >= 0.65 && Y < 0.05
+     * MALE := !FEMALE
+     * <p>
+     * <p>
+     * Chromosomal Aberrations:
+     * MOSAIC_X := FEMALE && X < min(0.8, minAutosomeMedianDepthRatio*)
+     * KLINEFELTER (XXY) := MALE && X >= 0.65
+     * XYY SYNDROME := MALE && Y >= 0.75
+     * TRISOMY_[X,21,13,18,15] := CHR >= 1.4
+     * <p>
+     * Expected Ratios:
+     * FEMALE -> autosome = 1, X = 1, Y = 0
+     * MALE -> autosome = 1, allosome = 0.5
+     * MOSAIC_X -> X = median X ratio
+     * KLINEFELTER (XXY) -> X = 1, Y = 0.5
+     * XYY -> X = 0.5, Y = 1
+     * TRISOMY_[X,21,13,18,15] -> CHR >= 1.5
+     */
+
+    public CobaltChromosomes(final Collection<MedianRatio> unfiltered) {
+        final List<MedianRatio> ratios = unfiltered.stream().filter(x -> x.count() >= MIN_RATIO_COUNT).collect(Collectors.toList());
+
         this.chromosomeMap = Maps.newHashMap();
+        this.aberrations = Sets.newHashSet();
+        final double minAutosomeRatio =
+                ratios.stream().filter(x -> isAutosome(x.chromosome())).mapToDouble(MedianRatio::medianRatio).min().orElse(1);
 
         final double yMedian = contigRatio("Y", ratios);
         final double xMedian = contigRatio("X", ratios);
-        isFemale = Doubles.greaterOrEqual(xMedian, TWO_X_CUTOFF) && Doubles.lessOrEqual(yMedian, Y_CUTOFF);
+        final boolean isFemale = Doubles.greaterOrEqual(xMedian, TWO_X_CUTOFF) && Doubles.lessThan(yMedian, Y_CUTOFF);
+        gender = (isFemale) ? Gender.FEMALE : Gender.MALE;
 
         for (MedianRatio ratio : ratios) {
             final String contig = ratio.chromosome();
-            boolean isX = contig.equals("X") || contig.equals("chrX");
-            boolean isY = contig.equals("Y") || contig.equals("chrY");
+            boolean isX = isContig(contig, "X");
+            boolean isY = isContig(contig, "Y");
 
-            int typicalCopies = typical(ratio.chromosome());
+            final ChromosomalAberration aberration = aberration(isFemale, contig, ratio.medianRatio(), minAutosomeRatio);
+            final double typicalRatio = typicalRatio(isFemale, contig);
+            final double observedRatio = observedRatio(aberration, typicalRatio, ratio.medianRatio());
 
-            double ratioImpliedCopies = ratio.medianRatio() * 2;
-            double distanceFromCommonRatio = Math.abs(ratioImpliedCopies - Math.round(ratioImpliedCopies)) / 2.0;
-            boolean isMosiac = Doubles.greaterThan(distanceFromCommonRatio, MOSIAC_CUTOFF);
-            if (typicalCopies > 0) {
+            if (aberration != ChromosomalAberration.NONE) {
+                aberrations.add(aberration);
+            }
+
+            if (Doubles.positive(typicalRatio)) {
                 CobaltChromosome chromosome = ImmutableCobaltChromosome.builder()
                         .contig(ratio.chromosome())
-                        .impliedCopies((int) Math.round(ratioImpliedCopies))
+                        .typicalRatio(typicalRatio)
+                        .observedRatio(observedRatio)
                         .isAllosome(isX || isY)
                         .isAutosome(!isX && !isY)
-                        .mosiac(isMosiac)
+                        .mosiac(aberration == ChromosomalAberration.MOSAIC_X)
                         .build();
 
                 chromosomeMap.put(contig, chromosome);
@@ -53,31 +89,12 @@ public class CobaltChromosomes {
         }
     }
 
-    public int typical(String contig) {
-        boolean isX = contig.equals("X") || contig.equals("chrX");
-        boolean isY = contig.equals("Y") || contig.equals("chrY");
-
-        if (isMale() && (isX || isY)) {
-            return 1;
-        }
-
-        if (isFemale() && isY) {
-            return 0;
-        }
-
-        return 2;
+    public Set<ChromosomalAberration> aberrations() {
+        return aberrations;
     }
 
-    public boolean isFemale() {
-        return isFemale;
-    }
-
-    public boolean isMale() {
-        return !isFemale;
-    }
-
-    public boolean contains(@NotNull final String contig) {
-        return chromosomeMap.containsKey(contig);
+    public Gender gender() {
+        return gender;
     }
 
     @NotNull
@@ -86,17 +103,110 @@ public class CobaltChromosomes {
     }
 
     @NotNull
-    public List<Chromosome> chromosomes() {
-        return chromosomeList;
+    public Collection<CobaltChromosome> chromosomes() {
+        return chromosomeMap.values();
     }
 
-    private double contigRatio(@NotNull final String contig, @NotNull final List<MedianRatio> ratios) {
+    private static double observedRatio(ChromosomalAberration aberration, double typicalRatio, double medianRatio) {
+        switch (aberration) {
+            case TRISOMY_X:
+            case TRISOMY_13:
+            case TRISOMY_15:
+            case TRISOMY_18:
+            case TRISOMY_21:
+                return 1.5;
+            case MOSAIC_X:
+                return medianRatio;
+            case XYY:
+            case KLINEFELTER:
+                return 1;
+            default:
+                return typicalRatio;
+        }
+    }
+
+    private static ChromosomalAberration aberration(boolean isFemale, String contig, double medianRatio, double minAutosomeRatio) {
+
+        if (isTrisomy(contig, medianRatio, "X")) {
+            return ChromosomalAberration.TRISOMY_X;
+        }
+
+        if (isTrisomy(contig, medianRatio, "13")) {
+            return ChromosomalAberration.TRISOMY_13;
+        }
+
+        if (isTrisomy(contig, medianRatio, "15")) {
+            return ChromosomalAberration.TRISOMY_15;
+        }
+
+        if (isTrisomy(contig, medianRatio, "18")) {
+            return ChromosomalAberration.TRISOMY_18;
+        }
+
+        if (isTrisomy(contig, medianRatio, "21")) {
+            return ChromosomalAberration.TRISOMY_21;
+        }
+
+        if (isXYY(isFemale, contig, medianRatio)) {
+            return ChromosomalAberration.XYY;
+        }
+
+        if (isMosiacX(isFemale, contig, medianRatio, minAutosomeRatio)) {
+            return ChromosomalAberration.MOSAIC_X;
+        }
+
+        if (isKlinefelterXXY(isFemale, contig, medianRatio)) {
+            return ChromosomalAberration.KLINEFELTER;
+        }
+
+        return ChromosomalAberration.NONE;
+    }
+
+    private static boolean isKlinefelterXXY(boolean isFemale, String contig, double medianRatio) {
+        return !isFemale && isContig(contig, "X") && Doubles.greaterOrEqual(medianRatio, TWO_X_CUTOFF);
+    }
+
+    private static boolean isXYY(boolean isFemale, String contig, double medianRatio) {
+        return !isFemale && isContig(contig, "Y") && Doubles.greaterOrEqual(medianRatio, TWO_Y_CUTOFF);
+    }
+
+    private static boolean isMosiacX(boolean isFemale, String contig, double medianRatio, double minAutosomeRatio) {
+        return isFemale && Doubles.lessThan(medianRatio, Math.min(minAutosomeRatio, MOSIAC_X_CUTOFF)) && isContig(contig, "X");
+    }
+
+    private static boolean isTrisomy(String contig, double medianRatio, String trisomyContig) {
+        return Doubles.greaterOrEqual(medianRatio, TRISOMY_CUTOFF) && isContig(contig, trisomyContig);
+    }
+
+    private static double typicalRatio(boolean isFemale, String contig) {
+        boolean isX = isContig(contig, "X");
+        boolean isY = isContig(contig, "Y");
+
+        if (isFemale) {
+            return isY ? 0d : 1d;
+        }
+
+        return isX || isY ? 0.5 : 1d;
+    }
+
+    public boolean contains(@NotNull final String contig) {
+        return chromosomeMap.containsKey(contig);
+    }
+
+    static boolean isAutosome(@NotNull final String contig) {
+        return !isContig(contig, "X") && !isContig(contig, "Y");
+    }
+
+    static boolean isContig(@NotNull final String victim, @NotNull final String contig) {
+        return victim.equals(contig) || victim.equals("chr" + contig);
+    }
+
+    private double contigRatio(@NotNull final String contig, @NotNull final Collection<MedianRatio> ratios) {
         return ratios.stream()
                 .filter(x -> x.count() >= MIN_RATIO_COUNT)
-                .filter(x -> x.chromosome().equals(contig) || x.chromosome().equals("chr" + contig))
+                .filter(x -> isContig(x.chromosome(), contig))
                 .mapToDouble(MedianRatio::medianRatio)
                 .findFirst()
                 .orElse(0);
     }
-
 }

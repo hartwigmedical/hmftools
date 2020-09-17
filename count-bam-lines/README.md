@@ -106,6 +106,7 @@ TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regi
 ## Version History and Download Links
 - Upcoming
   - Alert user that gc_profile should be un-compressed before use
+  - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.8)
   - Added `validation_stringency` parameter.
   - Added explicit `stringsAsFactors = T` to R script

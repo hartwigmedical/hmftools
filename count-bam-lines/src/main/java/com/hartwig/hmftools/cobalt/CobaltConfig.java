@@ -10,6 +10,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +32,7 @@ public interface CobaltConfig {
     String TUMOR_BAM = "tumor_bam";
     String REF_GENOME = "ref_genome";
     String OUTPUT_DIR = "output_dir";
+    String INPUT_DIR = "input_dir";
     String GC_PROFILE = "gc_profile";
     String MIN_MAPPING_QUALITY = "min_quality";
     String VALIDATION_STRINGENCY = "validation_stringency";
@@ -43,6 +45,7 @@ public interface CobaltConfig {
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
         options.addOption(TUMOR, true, "Name of tumor sample");
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
+        options.addOption(INPUT_DIR, true, "Input directory (used for migration only)");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(MIN_MAPPING_QUALITY, true, "Min quality [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
         options.addOption(GC_PROFILE, true, "Location of GC Profile");
@@ -67,6 +70,9 @@ public interface CobaltConfig {
 
     @NotNull
     String refGenomePath();
+
+    @NotNull
+    String inputDirectory();
 
     @NotNull
     String outputDirectory();
@@ -96,6 +102,10 @@ public interface CobaltConfig {
             throw new ParseException("Please supply un-compressed " + GC_PROFILE + " file");
         }
 
+        if (cmd.hasOption(INPUT_DIR)) {
+            throw new ParseException(INPUT_DIR + " not applicable to COBALT");
+        }
+
         final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
         final String referenceBamPath = parameter(cmd, REFERENCE_BAM, missingJoiner);
         final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
@@ -123,6 +133,44 @@ public interface CobaltConfig {
                 .build();
     }
 
+    @NotNull
+    static CobaltConfig createMigrationConfig(@NotNull final CommandLine cmd) throws ParseException {
+
+        final StringJoiner missingJoiner = new StringJoiner(", ");
+
+        final String gcProfilePath = parameter(cmd, GC_PROFILE, missingJoiner);
+        if (gcProfilePath.endsWith("gz")) {
+            throw new ParseException("Please supply un-compressed " + GC_PROFILE + " file");
+        }
+
+        final String normal = parameter(cmd, REFERENCE, missingJoiner);
+        final String tumor = parameter(cmd, TUMOR, missingJoiner);
+        final String inputDirectory = parameter(cmd, INPUT_DIR, missingJoiner);
+        final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
+        final String missing = missingJoiner.toString();
+
+        if (!missing.isEmpty()) {
+            throw new ParseException("Missing the following parameters: " + missing);
+        }
+
+        if (inputDirectory.equals(outputDirectory)) {
+            throw new ParseException("Input and output directories must be difference");
+        }
+
+        return ImmutableCobaltConfig.builder()
+                .threadCount(1)
+                .minMappingQuality(0)
+                .gcProfilePath(gcProfilePath)
+                .tumorBamPath(Strings.EMPTY)
+                .referenceBamPath(Strings.EMPTY)
+                .refGenomePath(Strings.EMPTY)
+                .inputDirectory(inputDirectory)
+                .outputDirectory(outputDirectory)
+                .reference(normal)
+                .tumor(tumor)
+                .validationStringency(ValidationStringency.DEFAULT_STRINGENCY)
+                .build();
+    }
 
     @NotNull
     static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing) {
@@ -133,5 +181,4 @@ public interface CobaltConfig {
         }
         return value;
     }
-
 }

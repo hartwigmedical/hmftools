@@ -21,8 +21,8 @@ public class PurityAdjusterTypicalChromosome extends PurityAdjuster {
     }
 
     @Override
-    public int germlineCopyNumber(@NotNull String chromosome) {
-        return HumanChromosome.fromString(chromosome).isDiploid(gender) ? 2 : 1;
+    public double germlineRatio(@NotNull final String contig) {
+        return HumanChromosome.fromString(contig).isDiploid(gender) ? 1 : 0.5;
     }
 
 }

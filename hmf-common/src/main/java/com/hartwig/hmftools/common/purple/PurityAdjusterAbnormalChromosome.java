@@ -10,15 +10,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurityAdjusterAbnormalChromosome extends PurityAdjuster {
 
-    private final Map<String, Integer> chromosomeMap;
+    private final Map<String, Double> observedRatioMap;
 
     public PurityAdjusterAbnormalChromosome(final double purity, final double normFactor, final List<CobaltChromosome> chromosomeList) {
         super(purity, normFactor);
-        this.chromosomeMap = chromosomeList.stream().collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::impliedCopies));
+        this.observedRatioMap =
+                chromosomeList.stream().collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::observedRatio));
     }
 
     @Override
-    public int germlineCopyNumber(@NotNull final String contig) {
-        return chromosomeMap.getOrDefault(contig, 0);
+    public double germlineRatio(@NotNull final String contig) {
+        return observedRatioMap.getOrDefault(contig, 0d);
     }
 }
