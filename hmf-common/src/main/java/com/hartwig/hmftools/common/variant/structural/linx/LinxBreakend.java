@@ -78,7 +78,15 @@ public abstract class LinxBreakend
     @NotNull
     private static List<LinxBreakend> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("Id")).map(LinxBreakend::fromString).collect(toList());
+        List<String> breakendList = Lists.newArrayList();
+        if (lines.get(0).startsWith("id")) {
+            for (String line : lines.subList(1, lines.size())) {
+                breakendList.add(line);
+            }
+            return breakendList.stream().map(LinxBreakend::fromString).collect(toList());
+        } else {
+            return Lists.newArrayList();
+        }
     }
 
     @NotNull
