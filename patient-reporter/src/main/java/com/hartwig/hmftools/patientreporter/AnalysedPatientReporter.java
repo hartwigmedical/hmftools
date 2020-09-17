@@ -17,9 +17,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.fusion.ReportableDisruption;
-import com.hartwig.hmftools.common.fusion.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
@@ -39,6 +37,8 @@ import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisru
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalyzer;
+import com.hartwig.hmftools.patientreporter.structural.ReportableDisruptionFile;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;

@@ -35,7 +35,7 @@ public abstract class ReportableGeneFusion {
     @Nullable
     public abstract Double junctionCopyNumber();
 
-    public static final List<ReportableGeneFusion> from(final List<LinxFusion> linxFusions)
+    public static List<ReportableGeneFusion> from(final List<LinxFusion> linxFusions)
     {
         return linxFusions.stream()
                 .filter(x -> x.reported())

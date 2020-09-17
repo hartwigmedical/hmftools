@@ -41,7 +41,7 @@ public abstract class ReportableDisruption
 
     public abstract double undisruptedCopyNumber();
 
-    public static final List<ReportableDisruption> from(final List<LinxBreakend> linxBreakends)
+    public static List<ReportableDisruption> from(final List<LinxBreakend> linxBreakends)
     {
         return linxBreakends.stream()
                 .filter(x -> x.reportedDisruption())
