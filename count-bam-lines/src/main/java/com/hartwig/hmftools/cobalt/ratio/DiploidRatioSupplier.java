@@ -28,6 +28,7 @@ class DiploidRatioSupplier {
             if (chromosome.equals(HumanChromosome._Y)) {
                 adjustedRatios = ratios;
             } else {
+                // TODO: Support all chromosomal abnormalities
                 double expectedRatio = chromosome.equals(HumanChromosome._X) && !stats.containsTwoXChromosomes() ? 0.5 : 1;
                 adjustedRatios = new DiploidRatioNormalization(expectedRatio,
                         ROLLING_MEDIAN_MAX_DISTANCE,
