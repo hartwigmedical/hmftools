@@ -224,11 +224,13 @@ class AnalysedPatientReporter {
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         // TODO Below code can be used once linx v1.11 is in production.
         // List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
+        // List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusionTsv);
         List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
         LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
 
         // TODO Below code can be used once linx v1.11 is in production.
-        //List<LinxBreakend> linxBreakends = LinxBreakend.read(linxDisruptionsTsv);
+        // List<LinxBreakend> linxBreakends = LinxBreakend.read(linxDisruptionsTsv);
+        // List<ReportableDisruption> disruptions = ReportableDisruption.from(linxBreakends);
         List<ReportableDisruption> disruptions = ReportableDisruptionFile.read(linxDisruptionsTsv);
         LOGGER.info("Loaded {} disruptions from {}", disruptions.size(), linxDisruptionsTsv);
 
