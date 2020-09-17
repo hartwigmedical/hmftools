@@ -84,7 +84,7 @@ public final class FilterGermlineVariants {
 
     private static boolean filterSubclonalGermlineVariants(@NotNull ReportableGermlineVariant germlineVariant) {
         //Filter germline variants out when it is subclonal
-        if (germlineVariant.adjustedVaf() >= 0.5) {
+        if (germlineVariant.adjustedCopyNumber() * germlineVariant.adjustedVaf() >= 0.5) {
             return true;
         } else {
             return false;
