@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
-import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
-import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.fusion.ReportableDisruption;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -182,7 +180,12 @@ class AnalysedPatientReporter {
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        return PurpleAnalyzer.run(purityContext, purpleQC, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation, reportData.driverGenePanel());
+        return PurpleAnalyzer.run(purityContext,
+                purpleQC,
+                exomeGeneCopyNumbers,
+                reportData.actionabilityAnalyzer(),
+                patientTumorLocation,
+                reportData.driverGenePanel());
     }
 
     @NotNull
@@ -195,10 +198,9 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<ReportableGermlineVariantExtended> analyzeGermlineVariants(@NotNull String bachelorTsv, @NotNull PurpleAnalysis purpleAnalysis,
-            @NotNull SomaticVariantAnalysis somaticVariantAnalysis, @NotNull ChordStatus chordStatus,
-            @NotNull LimsGermlineReportingLevel germlineChoice) throws IOException {
-
+    private List<ReportableGermlineVariantExtended> analyzeGermlineVariants(@NotNull String bachelorTsv,
+            @NotNull PurpleAnalysis purpleAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
+            @NotNull ChordStatus chordStatus, @NotNull LimsGermlineReportingLevel germlineChoice) throws IOException {
         List<ReportableGermlineVariant> variants = ReportableGermlineVariantFile.read(bachelorTsv);
 
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
@@ -220,17 +222,12 @@ class AnalysedPatientReporter {
     @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxBreakendsTsv,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-
-        final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-
-        final List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
-
+        List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
+        List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
         LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
 
-        final List<LinxBreakend> linxBreakends = LinxBreakend.read(linxBreakendsTsv);
-
+        List<LinxBreakend> linxBreakends = LinxBreakend.read(linxBreakendsTsv);
         List<ReportableDisruption> disruptions = ReportableDisruption.from(linxBreakends);
-
         LOGGER.info("Loaded {} disruptions from {}", disruptions.size(), linxBreakendsTsv);
 
         return SvAnalyzer.run(fusions, disruptions, reportData.actionabilityAnalyzer(), patientTumorLocation);
