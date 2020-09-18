@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -113,15 +112,6 @@ public class FusionTaskManager
     public void addDuplicateReadIds(final Set<String> readIds)
     {
         mergeDuplicateReadIds(mDuplicateReadIds, readIds);
-    }
-
-    public static void addChimericReads(final Map<String,ReadGroup> chimericReadMap, final ReadRecord read)
-    {
-        ReadGroup chimericReads = chimericReadMap.get(read.Id);
-        if (chimericReads == null)
-            chimericReadMap.put(read.Id, new ReadGroup(read));
-        else
-            chimericReads.Reads.add(read);
     }
 
     private static final String LOG_READ_ID = "";

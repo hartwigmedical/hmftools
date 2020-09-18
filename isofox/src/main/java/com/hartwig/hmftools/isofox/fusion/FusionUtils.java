@@ -207,6 +207,15 @@ public class FusionUtils
         return false;
     }
 
+    public static void addChimericReads(final Map<String,ReadGroup> chimericReadMap, final ReadRecord read)
+    {
+        ReadGroup chimericReads = chimericReadMap.get(read.Id);
+        if (chimericReads == null)
+            chimericReadMap.put(read.Id, new ReadGroup(read));
+        else
+            chimericReads.Reads.add(read);
+    }
+
     public static void checkMissingGeneData(final ReadRecord read, final List<TranscriptData> transDataList)
     {
         if(!read.getIsGenicRegion()[SE_END])
