@@ -19,7 +19,8 @@ final class ExtractReportableGainsAndLosses {
     }
 
     @NotNull
-    static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull DriverGenePanel genePanel, @NotNull List<GeneCopyNumber> geneCopyNumbers, double ploidy) {
+    static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull DriverGenePanel genePanel,
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, double ploidy) {
         CNADrivers copyNumberDriverModel = new CNADrivers(genePanel);
         List<DriverCatalog> drivers = Lists.newArrayList();
         drivers.addAll(copyNumberDriverModel.amplifications(ploidy, geneCopyNumbers));
