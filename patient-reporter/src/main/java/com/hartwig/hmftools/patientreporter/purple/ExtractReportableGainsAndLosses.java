@@ -19,22 +19,21 @@ final class ExtractReportableGainsAndLosses {
     }
 
     @NotNull
-    static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull DriverGenePanel genePanel,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, double ploidy) {
-        CNADrivers copyNumberDriverModel = new CNADrivers(genePanel);
-        List<DriverCatalog> drivers = Lists.newArrayList();
-        drivers.addAll(copyNumberDriverModel.amplifications(ploidy, geneCopyNumbers));
-        drivers.addAll(copyNumberDriverModel.deletions(geneCopyNumbers));
-
+    static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<DriverCatalog> driverCatalog,
+            @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         List<ReportableGainLoss> reportableGainsAndLosses = Lists.newArrayList();
-        for (DriverCatalog driver : drivers) {
-            boolean includeInReport = true;
-            if (driver.driver() == DriverType.DEL) {
+
+        for (DriverCatalog driver : driverCatalog) {
+            boolean includeInReport = false;
+            if (driver.driver() == DriverType.AMP) {
+                includeInReport = true;
+            } else if (driver.driver() == DriverType.DEL) {
                 GeneCopyNumber geneCopyNumber = findByGeneName(geneCopyNumbers, driver.gene());
                 // Exclude DELs which are partially germline (see INC-34)
                 if (geneCopyNumber.germlineHet2HomRegions() > 0 || geneCopyNumber.germlineHomRegions() > 0) {
                     includeInReport = false;
                 }
+                includeInReport = true;
             }
 
             if (includeInReport) {
