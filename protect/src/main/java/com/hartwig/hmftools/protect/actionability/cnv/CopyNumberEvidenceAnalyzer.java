@@ -38,16 +38,13 @@ public class CopyNumberEvidenceAnalyzer {
     public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, double averageTumorPloidy,
             @Nullable String primaryTumorLocation, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
-        if (SignificantGeneCopyNumberFilter.isSignificant(averageTumorPloidy, geneCopyNumber.minCopyNumber())) {
-            for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
-                if (typeMatches(geneCopyNumber, actionableCopyNumber) && actionableCopyNumber.gene().equals(geneCopyNumber.gene())) {
-                    ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
-                    evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
-                    evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableCopyNumber.cancerType(),
-                            primaryTumorLocation));
+        for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
+            if (typeMatches(geneCopyNumber, actionableCopyNumber) && actionableCopyNumber.gene().equals(geneCopyNumber.gene())) {
+                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
+                evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
+                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableCopyNumber.cancerType(), primaryTumorLocation));
 
-                    evidenceItems.add(evidenceBuilder.build());
-                }
+                evidenceItems.add(evidenceBuilder.build());
             }
         }
         return evidenceItems;

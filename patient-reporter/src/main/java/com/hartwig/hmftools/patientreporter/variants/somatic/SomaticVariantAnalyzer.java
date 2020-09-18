@@ -25,13 +25,8 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static SomaticVariantAnalysis run(@NotNull List<SomaticVariant> variants, @NotNull DriverGenePanel driverGenePanel,
-            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) {
+    public static SomaticVariantAnalysis run(@NotNull List<SomaticVariant> variants, @NotNull List<DriverCatalog> driverCatalog) {
         List<SomaticVariant> variantsToReport = variants.stream().filter(x -> x.reported()).collect(Collectors.toList());
-
-        SomaticVariantDrivers drivers = new SomaticVariantDrivers(driverGenePanel);
-        variants.forEach(drivers::add);
-        List<DriverCatalog> driverCatalog = drivers.build(exomeGeneCopyNumbers);
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport, driverCatalog);
     }

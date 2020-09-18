@@ -82,10 +82,12 @@ class AnalysedPatientReporter {
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
 
+        List<DriverCatalog> driverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
+
         PurpleAnalysis purpleAnalysis =
-                analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation, purpleDriverCatalogTsv);
+                analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation, driverCatalog);
         SomaticVariantAnalysis somaticVariantAnalysis =
-                analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, purpleAnalysis.exomeGeneCopyNumbers());
+                analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, driverCatalog);
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
         ChordStatus chordStatus = ChordStatus.fromHRD(chordAnalysis.hrdValue());
@@ -159,6 +161,13 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
+    public static List<DriverCatalog> readDriverCatalog(@NotNull String purpleDriverCatalogTsv) throws IOException {
+        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
+        LOGGER.info("Loaded {} driver catalog records", driverCatalog.size());
+        return driverCatalog;
+    }
+
+    @NotNull
     @VisibleForTesting
     static String determineForNumber(@NotNull PurpleAnalysis purpleAnalysis) {
         return purpleAnalysis.hasReliablePurity() && purpleAnalysis.purity() > ReportResources.PURITY_CUTOFF
@@ -168,7 +177,7 @@ class AnalysedPatientReporter {
 
     @NotNull
     private PurpleAnalysis analyzePurple(@NotNull String purplePurityTsv, @NotNull String purpleQCFile, @NotNull String purpleGeneCnvTsv,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull String purpleDriverCatalogTsv) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> driverCatalog) throws IOException {
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
@@ -183,9 +192,6 @@ class AnalysedPatientReporter {
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
-        LOGGER.info("Loaded {} driver catalog records", driverCatalog.size());
-
         return PurpleAnalyzer.run(purityContext,
                 purpleQC,
                 exomeGeneCopyNumbers,
@@ -195,11 +201,11 @@ class AnalysedPatientReporter {
 
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
-            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) throws IOException {
+             @NotNull List<DriverCatalog> driverCatalog) throws IOException {
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        return SomaticVariantAnalyzer.run(variants, reportData.driverGenePanel(), exomeGeneCopyNumbers);
+        return SomaticVariantAnalyzer.run(variants, driverCatalog);
     }
 
     @NotNull
