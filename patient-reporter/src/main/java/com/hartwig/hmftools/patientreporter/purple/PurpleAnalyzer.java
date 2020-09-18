@@ -34,10 +34,7 @@ public final class PurpleAnalyzer {
         Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainsAndLosses, primaryTumorLocation, bestFit.ploidy());
 
-        Map<ReportableGainLoss, List<EvidenceItem>> filteredEvidenceItemMap =
-                CheckEvidenceCnv.checkAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber);
-
-        List<EvidenceItem> filteredEvidenceItems = ReportableEvidenceItemFactory.toReportableFlatList(filteredEvidenceItemMap);
+        List<EvidenceItem> filteredEvidenceItems = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerGeneCopyNumber);
 
         PurpleSignatures purpleSignatures = ImmutablePurpleSignatures.builder()
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
