@@ -38,7 +38,7 @@ import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomoz
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.ReportableDisruptionFile;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.variant.structural.linx.ReportableGeneFusionFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;

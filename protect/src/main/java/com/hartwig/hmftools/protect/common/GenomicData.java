@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.ReportableGeneFusionFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,8 +66,11 @@ public class GenomicData {
     @NotNull
     public static List<ReportableGeneFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
         LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
-        final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
+        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
+        // TODO Below code can be used once linx v1.11 is in production.
+        // final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
+      //  List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
+
         LOGGER.info(" Loaded {} fusions", fusions.size());
         return fusions;
     }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.structural;
+package com.hartwig.hmftools.common.variant.structural.linx;
 
 import static java.util.stream.Collectors.toList;
 
