@@ -7,13 +7,9 @@ import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
-import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_4;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_5;
 import static com.hartwig.hmftools.isofox.TestUtils.NEG_STRAND;
 import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
-import static com.hartwig.hmftools.isofox.TestUtils.TRANS_1;
-import static com.hartwig.hmftools.isofox.TestUtils.TRANS_2;
-import static com.hartwig.hmftools.isofox.TestUtils.TRANS_3;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
 import static com.hartwig.hmftools.isofox.TestUtils.createFusionFinder;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
@@ -24,7 +20,6 @@ import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.overrideRefGenome;
 import static com.hartwig.hmftools.isofox.TestUtils.populateRefGenome;
-import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
@@ -75,7 +70,7 @@ public class FusionDataTest
 
         final List<ReadGroup> chimericReadGroups = Lists.newArrayList();
         chimericReadGroups.add(new ReadGroup(read1, read2));
-        finder.processReadGroups(chimericReadGroups);
+        finder.processLocalReadGroups(chimericReadGroups);
 
         assertTrue(finder.getFusionCandidates().isEmpty());
     }
@@ -83,7 +78,7 @@ public class FusionDataTest
     @Test
     public void testFusionFragmentAssignment()
     {
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         final EnsemblDataCache geneTransCache = createGeneDataCache();
 
@@ -91,17 +86,15 @@ public class FusionDataTest
         addTestTranscripts(geneTransCache);
 
         IsofoxConfig config = new IsofoxConfig();
-        FusionTaskManager finder = new FusionTaskManager(config, geneTransCache);
+        // FusionTaskManager finder = new FusionTaskManager(config, geneTransCache);
+        FusionFinder finder = createFusionFinder(config, geneTransCache);
 
         int gcId = 0;
 
-        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
-        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
-        final GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
-        final GeneCollection gc4 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_4)));
-        final GeneCollection gc5 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
-
-        final List<ReadGroup> chimericReadGroups = Lists.newArrayList();
+        final GeneCollection gc1 =
+                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        final GeneCollection gc2 =
+                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
 
         // 2 spliced fragments
         int readId = 0;
@@ -112,7 +105,11 @@ public class FusionDataTest
 
         readPair[1].setStrand(true, false);
 
-        chimericReadGroups.add(new ReadGroup(Lists.newArrayList(read1, readPair[0], readPair[1])));
+        final Map<String, ReadGroup> readGroups1 = Maps.newHashMap();
+        final Map<String, ReadGroup> readGroups2 = Maps.newHashMap();
+
+        readGroups1.put(read1.Id, new ReadGroup(read1, readPair[0]));
+        readGroups2.put(read1.Id, new ReadGroup(readPair[1]));
 
         readPair = createSupplementaryReadPair(++readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0), true);
@@ -122,7 +119,8 @@ public class FusionDataTest
         readPair[1].setStrand(true, false);
         read3.setStrand(true, false);
 
-        chimericReadGroups.add(new ReadGroup(Lists.newArrayList(readPair[0], readPair[1], read3)));
+        readGroups1.put(read3.Id, new ReadGroup(readPair[0]));
+        readGroups2.put(read3.Id, new ReadGroup(readPair[1], read3));
 
         // 1 unspliced fragment - will remain its own fusion
         read1 = createMappedRead(++readId, gc1, 1110, 1149, createCigar(0, 40, 0));
@@ -132,23 +130,34 @@ public class FusionDataTest
 
         readPair[1].setStrand(true, false);
 
-        chimericReadGroups.add(new ReadGroup(Lists.newArrayList(read1, readPair[0], readPair[1])));
+        readGroups1.put(read1.Id, new ReadGroup(read1, readPair[0]));
+        readGroups2.put(read1.Id, new ReadGroup(readPair[1]));
 
         // 1 discordant fragment supporting the spliced fusion
         read1 = createMappedRead(++readId, gc1, 1055, 1084, createCigar(0, 40, 0));
         ReadRecord read2 = createMappedRead(readId, gc2, 10220, 10259, createCigar(0, 40, 0));
         read2.setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(read1, read2));
+
+        readGroups1.put(read1.Id, new ReadGroup(read1));
+        readGroups2.put(read1.Id, new ReadGroup(read2));
 
         // and 1 discordant fragment supporting the unspliced fusion
         read1 = createMappedRead(++readId, gc1, 1110, 1149, createCigar(0, 40, 0));
         read2 = createMappedRead(readId, gc2, 10160, 10199, createCigar(0, 40, 0));
         read2.setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(read1, read2));
 
-        finder.addChimericReads(chimericReadGroups);
+        readGroups1.put(read1.Id, new ReadGroup(read1));
+        readGroups2.put(read1.Id, new ReadGroup(read2));
 
-        finder.findFusions();
+        BaseDepth baseDepth = new BaseDepth();
+        List<ReadGroup> completeGroups = finder.processNewChimericReadGroups(gc1, baseDepth, readGroups1);
+        assertEquals(5, finder.getChimericPartialReadGroups().size());
+        finder.processLocalReadGroups(completeGroups);
+
+        // and the second GC's reads
+        completeGroups = finder.processNewChimericReadGroups(gc2, baseDepth, readGroups2);
+        assertTrue(finder.getChimericPartialReadGroups().isEmpty());
+        finder.processLocalReadGroups(completeGroups);
 
         assertEquals(1, finder.getFusionCandidates().size());
         List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
@@ -168,7 +177,8 @@ public class FusionDataTest
 
         // check again with the discordant read having to fall within the correct transcript & exon
         finder.clearState();
-        chimericReadGroups.clear();
+        readGroups1.clear();
+        readGroups2.clear();
 
         read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
@@ -176,30 +186,43 @@ public class FusionDataTest
                 createCigar(0, 20, 20), createCigar(20, 20, 0), true);
 
         readPair[1].setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(Lists.newArrayList(read1, readPair[0], readPair[1])));
+
+        readGroups1.put(read1.Id, new ReadGroup(read1, readPair[0]));
+        readGroups2.put(read1.Id, new ReadGroup(readPair[1]));
 
         // 1 discordant read in a valid location
         read1 = createMappedRead(++readId, gc1, 1020, 1059, createCigar(0, 40, 0));
         read2 = createMappedRead(readId, gc2, 10220, 10259, createCigar(0, 40, 0));
         read2.setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(read1, read2));
+
+        readGroups1.put(read1.Id, new ReadGroup(read1));
+        readGroups2.put(read1.Id, new ReadGroup(read2));
 
         // and another too many exons away
         read1 = createMappedRead(++readId, gc1, 1020, 1059, createCigar(0, 40, 0));
         read2 = createMappedRead(readId, gc2, 10820, 10859, createCigar(0, 40, 0));
         read2.setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(read1, read2));
+
+        readGroups1.put(read1.Id, new ReadGroup(read1));
+        readGroups2.put(read1.Id, new ReadGroup(read2));
 
         // and another too far away
         config.MaxFragmentLength = 200;
         read1 = createMappedRead(++readId, gc1, 1020, 1059, createCigar(0, 40, 0));
         read2 = createMappedRead(readId, gc2, 10720, 10759, createCigar(0, 40, 0));
         read2.setStrand(true, false);
-        chimericReadGroups.add(new ReadGroup(read1, read2));
 
-        finder.addChimericReads(chimericReadGroups);
+        readGroups1.put(read1.Id, new ReadGroup(read1));
+        readGroups2.put(read1.Id, new ReadGroup(read2));
 
-        finder.findFusions();
+        completeGroups = finder.processNewChimericReadGroups(gc1, baseDepth, readGroups1);
+        assertEquals(4, finder.getChimericPartialReadGroups().size());
+        finder.processLocalReadGroups(completeGroups);
+
+        // and the second GC's reads
+        completeGroups = finder.processNewChimericReadGroups(gc2, baseDepth, readGroups2);
+        assertTrue(finder.getChimericPartialReadGroups().isEmpty());
+        finder.processLocalReadGroups(completeGroups);
 
         fusions = finder.getFusionCandidates().values().iterator().next();
         assertEquals(1, fusions.size());
@@ -207,42 +230,119 @@ public class FusionDataTest
         assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
         assertEquals(1, fusion.getFragments(DISCORDANT).size());
         assertEquals(2, finder.getUnfusedFragments().get(fusion.locationId()).size());
+    }
 
-        // test again but with 2 -ve strand genes
-        finder.clearState();
-        chimericReadGroups.clear();
+    @Test
+    public void testInterChromosomalFusion()
+    {
+        // test with 2 -ve strand genes across chromosomes
 
-        read2 = createMappedRead(readId, gc5, 10210, 10249, createCigar(0, 40, 20));
+        final EnsemblDataCache geneTransCache = createGeneDataCache();
 
-        readPair = createSupplementaryReadPair(readId, gc5, gc3, 10200, 10219, 20281, 20300,
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = new IsofoxConfig();
+        populateRefGenome(config.RefGenome);
+
+        int gcId = 0;
+
+        final GeneCollection gc3 =
+                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
+        final GeneCollection gc5 =
+                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
+
+        FusionTaskManager fusionTaskManager = new FusionTaskManager(config, geneTransCache);
+        FusionFinder finder = fusionTaskManager.createFusionFinder(gc3.chromosome());
+
+        // 2 spliced fragments
+        int readId = 0;
+        final Map<String, ReadGroup> readGroups1 = Maps.newHashMap();
+        final Map<String, ReadGroup> readGroups2 = Maps.newHashMap();
+
+        ReadRecord read1 = createMappedRead(readId, gc5, 10210, 10249, createCigar(0, 40, 20));
+
+        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc5, gc3, 10200, 10219, 20281, 20300,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
         readPair[0].setStrand(true, false);
 
-        chimericReadGroups.add(new ReadGroup(Lists.newArrayList(readPair[0], read2, readPair[1])));
+        readGroups1.put(read1.Id, new ReadGroup(read1, readPair[0]));
+        readGroups2.put(read1.Id, new ReadGroup(readPair[1]));
+
+        // RAC fragment for GC3
+
+        String junctionBases = config.RefGenome.getBaseString(gc3.chromosome(), 20264, 20300)
+                + config.RefGenome.getBaseString(gc5.chromosome(), 10200, 10202);
+
+        read1 = createMappedRead(++readId, gc3, 20264, 20300, createCigar(0, 37, 3), junctionBases);
+        ReadRecord read2 = createMappedRead(readId, gc3, 20250, 20289, createCigar(0, 40, 0));
+        read2.setStrand(true, false);
+
+        readGroups1.put(read1.Id, new ReadGroup(read1, read2));
+
+        // RAC fragment for GC5
+        junctionBases = config.RefGenome.getBaseString(gc5.chromosome(), 20298, 20300)
+                + config.RefGenome.getBaseString(gc3.chromosome(), 10200, 10236);
+
+        read1 = createMappedRead(++readId, gc5, 10200, 10236, createCigar(3, 37, 0), junctionBases);
+        read2 = createMappedRead(readId, gc5, 10210, 10259, createCigar(0, 40, 0));
+        read2.setStrand(true, false);
+
+        readGroups2.put(read1.Id, new ReadGroup(read1, read2));
 
         // 1 intronic discordant read
         ReadRecord[] discordantReads = createReadPair(++readId, gc3, gc5, 20150, 20189, 10320, 10359,
                 createCigar(0, 40, 0),  createCigar(0, 40, 0), POS_STRAND, NEG_STRAND);
 
-        chimericReadGroups.add(new ReadGroup(discordantReads[0], discordantReads[1]));
+        readGroups1.put(discordantReads[0].Id, new ReadGroup(discordantReads[1]));
+        readGroups2.put(discordantReads[0].Id, new ReadGroup(discordantReads[0]));
 
         // 1 exonic discordant read
         discordantReads = createReadPair(++readId, gc3, gc5, 20250, 20289, 10210, 10249,
                 createCigar(0, 40, 0),  createCigar(0, 40, 0), POS_STRAND, NEG_STRAND);
 
-        chimericReadGroups.add(new ReadGroup(discordantReads[0], discordantReads[1]));
-
-        finder.addChimericReads(chimericReadGroups);
+        readGroups1.put(discordantReads[0].Id, new ReadGroup(discordantReads[1]));
+        readGroups2.put(discordantReads[0].Id, new ReadGroup(discordantReads[0]));
 
         config.MaxFragmentLength = 500;
-        finder.findFusions();
 
-        fusions = finder.getFusionCandidates().values().iterator().next();
+        // test our inter-chromosomal fusion calling
+
+        BaseDepth baseDepth = new BaseDepth();
+        List<ReadGroup> completeGroups = finder.processNewChimericReadGroups(gc3, baseDepth, readGroups1);
+        assertEquals(3, finder.getChimericPartialReadGroups().size());
+        finder.processLocalReadGroups(completeGroups);
+        assertEquals(1, finder.getRealignCandidateFragments().size());
+
+        List<ReadGroup> interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
+                gc3.chromosome(), finder.getChimericPartialReadGroups(), finder.getRealignCandidateFragments());
+
+        assertTrue(interChromosomalGroups.isEmpty());
+
+        // and the second GC's reads (using the same FusionFinder is ok)
+        FusionFinder finder2 = fusionTaskManager.createFusionFinder(gc5.chromosome());
+
+        completeGroups = finder2.processNewChimericReadGroups(gc5, baseDepth, readGroups2);
+        assertEquals(3, finder2.getChimericPartialReadGroups().size());
+        finder2.processLocalReadGroups(completeGroups);
+        assertEquals(1, finder2.getRealignCandidateFragments().size());
+
+        interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
+                gc5.chromosome(), finder2.getChimericPartialReadGroups(), finder2.getRealignCandidateFragments());
+
+        finder2.processInterChromosomalReadGroups(interChromosomalGroups);
+
+        assertEquals(3, interChromosomalGroups.size());
+
+        finder2.assignInterChromosomalRacFragments(fusionTaskManager.getRealignCandidateMap());
+
+        List<FusionReadData> fusions = finder2.getFusionCandidates().values().iterator().next();
         assertEquals(1, fusions.size());
-        fusion = fusions.get(0);
+        FusionReadData fusion = fusions.get(0);
         assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
         assertEquals(2, fusion.getFragments(DISCORDANT).size());
+        assertEquals(2, fusion.getFragments(REALIGNED).size());
         assertEquals(20, fusion.getMaxSplitLengths()[SE_START]);
         assertEquals(20, fusion.getMaxSplitLengths()[SE_END]);
     }
@@ -250,7 +350,7 @@ public class FusionDataTest
     @Test
     public void testSoftClippedFragmentRealignment()
     {
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         final EnsemblDataCache geneTransCache = createGeneDataCache();
 
@@ -458,7 +558,7 @@ public class FusionDataTest
 
         List<ReadGroup> completeGroups = finder.processNewChimericReadGroups(gc1, baseDepth, chimericReadGroups);
         assertEquals(2, finder.getSpanningReadGroups().size());
-        finder.processReadGroups(completeGroups); // will result in an unassigned RA fragment from reads 3 & 4
+        finder.processLocalReadGroups(completeGroups); // will result in an unassigned RA fragment from reads 3 & 4
 
         // GC 2 read handling
         chimericReadGroups.clear();
@@ -468,7 +568,7 @@ public class FusionDataTest
 
         completeGroups = finder.processNewChimericReadGroups(gc2, baseDepth, chimericReadGroups);
         assertEquals(0, finder.getSpanningReadGroups().size());
-        finder.processReadGroups(completeGroups);
+        finder.processLocalReadGroups(completeGroups);
 
         assertEquals(1, finder.getFusionCandidates().size());
         List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
@@ -554,7 +654,7 @@ public class FusionDataTest
     @Test
     public void testHomologyMerging()
     {
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         final EnsemblDataCache geneTransCache = createGeneDataCache();
 
@@ -634,7 +734,7 @@ public class FusionDataTest
     @Test
     public void testCloseMatchFiltering()
     {
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         final EnsemblDataCache geneTransCache = createGeneDataCache();
 

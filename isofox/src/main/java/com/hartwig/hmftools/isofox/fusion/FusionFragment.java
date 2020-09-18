@@ -93,6 +93,7 @@ public class FusionFragment
     public final int[] geneCollections() { return mGeneCollections; }
     public final byte[] orientations() { return mOrientations; }
     public final String[] locationIds() { return mLocationIds; }
+    public ChrGeneCollectionPair chrGeneCollection(int se) { return new ChrGeneCollectionPair(mChromosomes[se], mGeneCollections[se]); }
 
     public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 

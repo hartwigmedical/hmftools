@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -39,6 +40,10 @@ public class FusionTaskManager
     private final FusionFragmentCache mFragmentCache;
     private final FusionGeneFilters mGeneFilters;
 
+    // private final Map<String,Map<String,List<FusionFragment>>> mChrRealignCandidates;
+    private final Map<String,List<FusionFragment>> mRealignCandidateMap; // ConcurrentHashMap
+    private final Map<String,ReadGroup> mIncompleteReadGroups;
+
     private final PerformanceCounter mPerfCounter;
 
     public FusionTaskManager(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
@@ -54,6 +59,10 @@ public class FusionTaskManager
         mGeneFilters = new FusionGeneFilters(config, geneTransCache);
         mFragmentCache = new FusionFragmentCache(config);
 
+        //mChrRealignCandidates = Maps.newHashMap();
+        mRealignCandidateMap = Maps.newHashMap(); // new ConcurrentHashMap()
+        mIncompleteReadGroups = Maps.newHashMap();
+
         mPerfCounter = new PerformanceCounter("Fusions");
         mFusionWriter = new FusionWriter(mConfig);
     }
@@ -62,6 +71,39 @@ public class FusionTaskManager
     {
         return new FusionFinder(id, mConfig, mGeneTransCache, mGeneFilters, mFusionWriter);
     }
+
+    public synchronized List<ReadGroup> addIncompleteReadGroup(
+            final String chromosome, final Map<String,ReadGroup> incompleteGroups, final Map<String,List<FusionFragment>> racFragments)
+    {
+        final List<ReadGroup> completeGroups = Lists.newArrayList();
+        mergeChimericReadMaps(mIncompleteReadGroups, completeGroups, incompleteGroups);
+
+        mRealignCandidateMap.putAll(racFragments);
+        // mChrRealignCandidates.put(chromosome, racFragments);
+
+        // any newly complete groups will span 2 chromosomes
+        return completeGroups;
+    }
+
+    public synchronized final Map<String,List<FusionFragment>> getRealignCandidateMap() { return mRealignCandidateMap; }
+
+    /*
+    public Map<String,List<FusionFragment>> getRacFragments(final Set<String> chrGenePairSet)
+    {
+        // take a set of chr-geneCollection pairs and find all matching RAC fragments
+        final Map<String,List<FusionFragment>> racFragsMap = Maps.newHashMap();
+
+        for(String chrGenePair : chrGenePairSet)
+        {
+            List<FusionFragment> racFrags = mRealignCandidateMap.get(chrGenePair);
+
+            if(racFrags != null && !racFrags.isEmpty())
+                racFragsMap.put(chrGenePair, racFrags);
+        }
+
+        return racFragsMap;
+    }
+    */
 
     public void addChimericReads(final Map<String,ReadGroup> partialReadGroups)
     {

@@ -39,6 +39,7 @@ import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
+import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 import com.hartwig.hmftools.isofox.fusion.FusionFragmentCache;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
@@ -277,7 +278,15 @@ public class BamFragmentReader implements Callable
             }
 
             // handle fragments spanning multiple chromosomes
-            //mFusionFinder
+            final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
+                    mChromosome, mFusionFinder.getChimericPartialReadGroups(), mFusionFinder.getRealignCandidateFragments());
+
+            mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
+
+            //final Map<String,List<FusionFragment>> racFragaments = mFusionTaskManager.getRacFragments(mFusionFinder.extractChrGeneCollectionPairs());
+
+            // finally assign RAC fragements from the global cache
+            mFusionFinder.assignInterChromosomalRacFragments(mFusionTaskManager.getRealignCandidateMap());
         }
     }
 
@@ -471,7 +480,7 @@ public class BamFragmentReader implements Callable
                 geneCollection, mBamFragmentAllocator.getBaseDepth(),
                 mBamFragmentAllocator.getChimericReadTracker().getReadMap());
 
-        mFusionFinder.processReadGroups(completeReadGroups);
+        mFusionFinder.processLocalReadGroups(completeReadGroups);
 
         mergeDuplicateReadIds(mChimericDuplicateReadIds, mBamFragmentAllocator.getChimericDuplicateReadIds());
         mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
