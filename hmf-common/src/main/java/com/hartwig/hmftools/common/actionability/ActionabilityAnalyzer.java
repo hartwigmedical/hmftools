@@ -12,12 +12,11 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.common.actionability.cnv.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
@@ -104,21 +103,21 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public Map<GeneCopyNumber, List<EvidenceItem>> evidenceForCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers,
+    public Map<ReportableGainLoss, List<EvidenceItem>> evidenceForCopyNumbers(@NotNull List<ReportableGainLoss> reportableGainsAndLosses,
             @Nullable String primaryTumorLocation, double averageTumorPloidy) {
-        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerCopyNumber = Maps.newHashMap();
+        Map<ReportableGainLoss, List<EvidenceItem>> evidencePerCopyNumber = Maps.newHashMap();
 
-        List<GeneCopyNumber> geneCopyNumbersOnActionableGenes = geneCopyNumbers.stream()
-                .filter(geneCopyNumber -> copyNumberAnalyzer.actionableGenes().contains(geneCopyNumber.gene()))
+        List<ReportableGainLoss> geneCopyNumbersOnActionableGenes = reportableGainsAndLosses.stream()
+                .filter(reportableGainAndLoss -> copyNumberAnalyzer.actionableGenes().contains(reportableGainAndLoss.gene()))
                 .collect(Collectors.toList());
 
         // Filtering on significant events is not necessary but just to avoid unnecessary keys with empty evidence
-        List<GeneCopyNumber> significantGeneCopyNumbersOnActionableGenes =
-                SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbersOnActionableGenes, averageTumorPloidy);
+//        List<GeneCopyNumber> significantGeneCopyNumbersOnActionableGenes =
+//                SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbersOnActionableGenes, averageTumorPloidy);
 
-        for (GeneCopyNumber geneCopyNumber : significantGeneCopyNumbersOnActionableGenes) {
-            evidencePerCopyNumber.put(geneCopyNumber,
-                    copyNumberAnalyzer.evidenceForCopyNumber(geneCopyNumber, averageTumorPloidy, primaryTumorLocation, cancerTypeAnalyzer));
+        for (ReportableGainLoss reportableGainLoss : geneCopyNumbersOnActionableGenes) {
+            evidencePerCopyNumber.put(reportableGainLoss,
+                    copyNumberAnalyzer.evidenceForCopyNumber(reportableGainLoss, averageTumorPloidy, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerCopyNumber;

@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.patientreporter.purple;
-
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

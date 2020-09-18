@@ -1,25 +1,22 @@
-package com.hartwig.hmftools.patientreporter.purple;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class ExtractReportableGainsAndLosses {
+public final class ExtractReportableGainsAndLosses {
 
     private ExtractReportableGainsAndLosses() {
     }
 
     @NotNull
-    static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<DriverCatalog> driverCatalog,
+    public static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<DriverCatalog> driverCatalog,
             @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         List<ReportableGainLoss> reportableGainsAndLosses = Lists.newArrayList();
 

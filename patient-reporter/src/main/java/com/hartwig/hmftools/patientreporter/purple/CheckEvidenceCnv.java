@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,20 +22,20 @@ final class CheckEvidenceCnv {
     }
 
     @NotNull
-    static Map<GeneCopyNumber, List<EvidenceItem>> checkAndFilterForEvidenceInDriverCatalog(
+    static Map<ReportableGainLoss, List<EvidenceItem>> checkAndFilterForEvidenceInDriverCatalog(
             @NotNull List<ReportableGainLoss> reportableGainLosses,
-            @NotNull Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber) {
+            @NotNull Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber) {
         Set<String> reportableGenes = Sets.newHashSet();
         for (ReportableGainLoss gainLoss : reportableGainLosses) {
             reportableGenes.add(gainLoss.gene());
         }
 
-        Map<GeneCopyNumber, List<EvidenceItem>> filteredEvidenceMap = Maps.newHashMap();
-        Map<GeneCopyNumber, List<EvidenceItem>> evidenceMapNonReportable = Maps.newHashMap();
+        Map<ReportableGainLoss, List<EvidenceItem>> filteredEvidenceMap = Maps.newHashMap();
+        Map<ReportableGainLoss, List<EvidenceItem>> evidenceMapNonReportable = Maps.newHashMap();
 
         // Remove evidence for not reportable CNV
-        for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
-            GeneCopyNumber geneCopyNumber = entry.getKey();
+        for (Map.Entry<ReportableGainLoss, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
+            ReportableGainLoss geneCopyNumber = entry.getKey();
             if (reportableGenes.contains(geneCopyNumber.gene())) {
                 filteredEvidenceMap.put(entry.getKey(), evidencePerGeneCopyNumber.get(geneCopyNumber));
             } else {
@@ -45,7 +45,7 @@ final class CheckEvidenceCnv {
 
         // Report a warning for all events that are filtered out with A or B level evidence.
         Set<String> uniqueEventsNonReportableEvidence = Sets.newHashSet();
-        for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidenceMapNonReportable.entrySet()) {
+        for (Map.Entry<ReportableGainLoss, List<EvidenceItem>> entry : evidenceMapNonReportable.entrySet()) {
             for (EvidenceItem item : entry.getValue()) {
                 if (item.level() == EvidenceLevel.LEVEL_A || item.level() == EvidenceLevel.LEVEL_B) {
                     uniqueEventsNonReportableEvidence.add(item.event());

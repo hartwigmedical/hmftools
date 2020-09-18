@@ -14,8 +14,12 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -23,7 +27,6 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.ReportableGeneFusionFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -49,6 +52,7 @@ public class LoadEvidenceData {
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
+    private static final String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
@@ -65,6 +69,7 @@ public class LoadEvidenceData {
         String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
         String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
         String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
+        String purpleDriverCatalogTsv = cmd.getOptionValue(PURPLE_DRIVER_CATALOG_TSV);
         String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
 
         if (Utils.anyNull(sampleId,
@@ -73,6 +78,7 @@ public class LoadEvidenceData {
                 somaticVariantVcf,
                 purplePurityTsv,
                 purpleGeneCnvTsv,
+                purpleDriverCatalogTsv,
                 linxFusionTsv,
                 cmd.getOptionValue(DB_USER),
                 cmd.getOptionValue(DB_PASS),
@@ -89,14 +95,14 @@ public class LoadEvidenceData {
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, sampleId);
         List<? extends Variant> passSomaticVariants = readPassSomaticVariants(sampleId, somaticVariantVcf);
         double ploidy = extractPloidy(purplePurityTsv);
-        List<GeneCopyNumber> geneCopyNumbers = readGeneCopyNumbers(purpleGeneCnvTsv);
+        List<ReportableGainLoss> reportableGainLosses = readGeneCopyNumbers(purpleDriverCatalogTsv, purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = readGeneFusions(linxFusionTsv);
 
         List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
                 patientPrimaryTumorLocation,
                 passSomaticVariants,
                 ploidy,
-                geneCopyNumbers,
+                reportableGainLosses,
                 geneFusions);
 
         LOGGER.info("Writing evidence items into db");
@@ -122,11 +128,16 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<GeneCopyNumber> readGeneCopyNumbers(@NotNull String purpleGeneCnvTsv) throws IOException {
+    private static List<ReportableGainLoss> readGeneCopyNumbers(@NotNull String purpleDriverCatalogTsv, @NotNull String purpleGeneCnvTsv)
+            throws IOException {
         LOGGER.info("Reading gene copy numbers from {}", purpleGeneCnvTsv);
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info(" Loaded {} gene copy numbers", geneCopyNumbers.size());
-        return geneCopyNumbers;
+
+        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
+        LOGGER.info("Loaded {} driver catalog records", driverCatalog.size());
+        return ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, geneCopyNumbers);
+
     }
 
     @NotNull
@@ -163,7 +174,7 @@ public class LoadEvidenceData {
     @NotNull
     private static List<EvidenceItem> createEvidenceForAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @NotNull String patientPrimaryTumorLocation, @NotNull List<? extends Variant> variants, double ploidy,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<ReportableGeneFusion> geneFusions) {
+            @NotNull List<ReportableGainLoss> reportableGainLosses, @NotNull List<ReportableGeneFusion> geneFusions) {
         LOGGER.info("Extracting all evidence");
 
         List<EvidenceItem> evidenceForVariants =
@@ -171,8 +182,8 @@ public class LoadEvidenceData {
         LOGGER.info(" Found {} evidence items for {} somatic variants.", evidenceForVariants.size(), variants.size());
 
         List<EvidenceItem> evidenceForGeneCopyNumbers =
-                toList(actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy));
-        LOGGER.info(" Found {} evidence items for {} copy numbers.", evidenceForGeneCopyNumbers.size(), geneCopyNumbers.size());
+                toList(actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainLosses, patientPrimaryTumorLocation, ploidy));
+        LOGGER.info(" Found {} evidence items for {} copy numbers.", evidenceForGeneCopyNumbers.size(), reportableGainLosses.size());
 
         List<EvidenceItem> evidenceForGeneFusions =
                 toList(actionabilityAnalyzer.evidenceForFusions(geneFusions, patientPrimaryTumorLocation));
@@ -212,6 +223,7 @@ public class LoadEvidenceData {
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
+        options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
 
         addDatabaseCmdLineArgs(options);
