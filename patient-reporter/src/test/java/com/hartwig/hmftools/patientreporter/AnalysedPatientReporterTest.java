@@ -29,8 +29,8 @@ public class AnalysedPatientReporterTest {
     private static final String PURPLE_GENE_CNV_TSV = BASE_DIRECTORY + "/purple/sample.purple.cnv.gene.tsv";
     private static final String SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String BACHELOR_TSV = BASE_DIRECTORY + "/bachelor/sample.reportable_germline_variants.tsv";
-    private static final String LINX_FUSIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.fusion.tsv";
-    private static final String LINX_DISRUPTIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.breakend.tsv";
+    private static final String LINX_FUSIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.reported_fusion.tsv";
+    private static final String LINX_DISRUPTIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.disruptions.tsv";
     private static final String LINX_VIRAL_INSERTION_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
     private static final String LINX_DRIVERS_TSV = BASE_DIRECTORY + "/linx/sample.drivers.catalog.tsv";
     private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";

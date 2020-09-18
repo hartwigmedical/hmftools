@@ -12,8 +12,8 @@ class DndsMutationTest {
         val GENE = "AR"
 
         fun dndsMutation(gene: String, hotspot: Boolean, biallelic: Boolean, repeatCount: Int, impact: Impact): DndsMutation {
-            val biallelicString = if (biallelic) "1" else "0"
-            val hotspotString = if (hotspot) "HOTSPOT" else "NON_HOTSPOT"
+            val biallelicString = biallelic.toString()
+            val hotspotString = hotspot.toString()
             val dndImpactString = when (impact) {
                 Impact.INFRAME, Impact.FRAMESHIFT -> "no-SNV"
                 Impact.MISSENSE -> "Missense"
@@ -35,21 +35,21 @@ class DndsMutationTest {
         }
     }
 
-    private val inframe = DndsMutation.fromString("SAMPLE\tX\t66766353\tT\tTGGTGGCGGC\tMISSENSE\tMISSENSE\t2\t0\tNON_HOTSPOT\tAR\tno-SNV")
-    private val worstInframe = DndsMutation.fromString("SAMPLE\t19\t45853980\tGG\tAA\tMISSENSE\tNONE\t2\t0\tNON_HOTSPOT\tKLC3\tno-SNV")
-    private val canonicalInframe = DndsMutation.fromString("SAMPLE\t8\t145743003\tGCCGCCTCCACGTCGT\tG\tNONE\tMISSENSE\t2\t0\tNON_HOTSPOT\tRECQL4\tno-SNV")
+    private val inframe = DndsMutation.fromString("SAMPLE\tX\t66766353\tT\tTGGTGGCGGC\tMISSENSE\tMISSENSE\t2\tfalse\tfalse\tAR\tno-SNV")
+    private val worstInframe = DndsMutation.fromString("SAMPLE\t19\t45853980\tGG\tAA\tMISSENSE\tNONE\t2\tfalse\tfalse\tKLC3\tno-SNV")
+    private val canonicalInframe = DndsMutation.fromString("SAMPLE\t8\t145743003\tGCCGCCTCCACGTCGT\tG\tNONE\tMISSENSE\t2\tfalse\tfalse\tRECQL4\tno-SNV")
 
-    private val frameshift = DndsMutation.fromString("SAMPLE\tX\t66766423\tGC\tG\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t5\t0\tNON_HOTSPOT\tAR\tno-SNV")
-    private val worstFrameshift = DndsMutation.fromString("SAMPLE\tX\t70357238\tAG\tA\tNONSENSE_OR_FRAMESHIFT\tNONE\t0\t0\tNON_HOTSPOT\tMED12\tno-SNV")
+    private val frameshift = DndsMutation.fromString("SAMPLE\tX\t66766423\tGC\tG\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t5\tfalse\tfalse\tAR\tno-SNV")
+    private val worstFrameshift = DndsMutation.fromString("SAMPLE\tX\t70357238\tAG\tA\tNONSENSE_OR_FRAMESHIFT\tNONE\t0\tfalse\tfalse\tMED12\tno-SNV")
 
-    private val missense = DndsMutation.fromString("SAMPLE\tX\t66766561\tG\tT\tMISSENSE\tMISSENSE\t3\t0\tNON_HOTSPOT\tAR\tMissense")
-    private val nonsense = DndsMutation.fromString("SAMPLE\tX\t66765547\tG\tT\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t0\t0\tNON_HOTSPOT\tAR\tNonsense")
-    private val splice = DndsMutation.fromString("SAMPLE\t19\t7795746\tC\tA\tSPLICE\tSPLICE\t2\t0\tNON_HOTSPOT\tCLEC4G\tEssential_Splice")
-    private val synonymous = DndsMutation.fromString("SAMPLE\tX\t66766206\tC\tT\tSYNONYMOUS\tSYNONYMOUS\t2\t0\tNON_HOTSPOT\tAR\tSynonymous")
-    private val unknown = DndsMutation.fromString("SAMPLE\tX\t53576468\tTG\tT\tNONE\tNONE\t2\t0\tNON_HOTSPOT\tHUWE1\tno-SNV")
+    private val missense = DndsMutation.fromString("SAMPLE\tX\t66766561\tG\tT\tMISSENSE\tMISSENSE\t3\tfalse\tfalse\tAR\tMissense")
+    private val nonsense = DndsMutation.fromString("SAMPLE\tX\t66765547\tG\tT\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t0\tfalse\tfalse\tAR\tNonsense")
+    private val splice = DndsMutation.fromString("SAMPLE\t19\t7795746\tC\tA\tSPLICE\tSPLICE\t2\tfalse\tfalse\tCLEC4G\tEssential_Splice")
+    private val synonymous = DndsMutation.fromString("SAMPLE\tX\t66766206\tC\tT\tSYNONYMOUS\tSYNONYMOUS\t2\tfalse\tfalse\tAR\tSynonymous")
+    private val unknown = DndsMutation.fromString("SAMPLE\tX\t53576468\tTG\tT\tNONE\tNONE\t2\tfalse\tfalse\tHUWE1\tno-SNV")
 
-    private val hotspotFrameshift = DndsMutation.fromString("SAMPLE\tX\t66766423\tGC\tG\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t5\t0\tHOTSPOT\tAR\tno-SNV")
-    private val biallelicNonsense = DndsMutation.fromString("SAMPLE\tX\t66765547\tG\tT\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t0\t1\tNON_HOTSPOT\tAR\tNonsense")
+    private val hotspotFrameshift = DndsMutation.fromString("SAMPLE\tX\t66766423\tGC\tG\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t5\tfalse\ttrue\tAR\tno-SNV")
+    private val biallelicNonsense = DndsMutation.fromString("SAMPLE\tX\t66765547\tG\tT\tNONSENSE_OR_FRAMESHIFT\tNONSENSE_OR_FRAMESHIFT\t0\ttrue\tfalse\tAR\tNonsense")
 
     @Test
     fun testImpact() {

@@ -27,13 +27,8 @@ public class BiopsySiteCurator {
     @NotNull
     private final Map<Key, CuratedBiopsyType> curationMap = Maps.newHashMap();
 
-    @NotNull
-    public static BiopsySiteCurator fromProductionResource(@NotNull String biopsyMappingCSV) throws IOException {
-        return new BiopsySiteCurator(biopsyMappingCSV);
-    }
-
     @VisibleForTesting
-    BiopsySiteCurator(@NotNull String mappingInput) throws IOException {
+    public BiopsySiteCurator(@NotNull String mappingInput) throws IOException {
         BufferedReader file = new BufferedReader(new FileReader(mappingInput));
         CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
 

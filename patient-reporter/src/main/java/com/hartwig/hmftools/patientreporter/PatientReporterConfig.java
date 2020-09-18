@@ -22,10 +22,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface PatientReporterConfig {
-
     // General params needed for every report
-    String REF_SAMPLE_ID = "ref_sample_id";
-    String REF_SAMPLE_BARCODE = "ref_sample_barcode";
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
     String OUTPUT_DIRECTORY_REPORT = "output_dir_report";
@@ -38,6 +35,10 @@ public interface PatientReporterConfig {
     String RVA_LOGO = "rva_logo";
     String COMPANY_LOGO = "company_logo";
     String SIGNATURE = "signature";
+
+    // General params needed for every report but for QC fail it could be null
+    String REF_SAMPLE_ID = "ref_sample_id";
+    String REF_SAMPLE_BARCODE = "ref_sample_barcode";
 
     // Params specific for QC Fail reports
     String QC_FAIL = "qc_fail";
@@ -70,10 +71,7 @@ public interface PatientReporterConfig {
     static Options createOptions() {
         Options options = new Options();
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
-        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which we are generating a report.");
-        options.addOption(REF_SAMPLE_BARCODE,
-                true,
-                "The reference sample barcode for the tumor sample for which we are generating a report.");
+
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY_REPORT, true, "Path to where the PDF report will be written to.");
@@ -86,6 +84,11 @@ public interface PatientReporterConfig {
         options.addOption(RVA_LOGO, true, "Path towards an image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
         options.addOption(SIGNATURE, true, "Path towards an image file containing the signature to be appended at the end of the report.");
+
+        options.addOption(REF_SAMPLE_ID, false, "The reference sample ID for the tumor sample for which we are generating a report.");
+        options.addOption(REF_SAMPLE_BARCODE,
+                false,
+                "The reference sample barcode for the tumor sample for which we are generating a report.");
 
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
@@ -113,10 +116,10 @@ public interface PatientReporterConfig {
         return options;
     }
 
-    @NotNull
+    @Nullable
     String refSampleId();
 
-    @NotNull
+    @Nullable
     String refSampleBarcode();
 
     @NotNull
@@ -257,8 +260,8 @@ public interface PatientReporterConfig {
         }
 
         return ImmutablePatientReporterConfig.builder()
-                .refSampleId(nonOptionalValue(cmd, REF_SAMPLE_ID))
-                .refSampleBarcode(nonOptionalValue(cmd, REF_SAMPLE_BARCODE))
+                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? optionalValue(cmd, REF_SAMPLE_ID) : null )
+                .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? optionalValue(cmd, REF_SAMPLE_BARCODE): null)
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
@@ -300,6 +303,11 @@ public interface PatientReporterConfig {
         }
 
         return value;
+    }
+
+    @NotNull
+    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
+        return cmd.getOptionValue(param);
     }
 
     @NotNull

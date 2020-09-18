@@ -13,11 +13,6 @@ import org.junit.Test;
 public class BiopsySiteCuratorTest {
 
     @Test
-    public void canCreateFromProductionResource() throws IOException {
-        assertNotNull(BiopsySiteCurator.fromProductionResource(TestCuratorFactory.BIOPSY_SITE_MAPPING_CSV));
-    }
-
-    @Test
     public void canCurateOnTestResource() {
         BiopsySiteCurator curator = TestCuratorFactory.biopsySiteCurator();
 

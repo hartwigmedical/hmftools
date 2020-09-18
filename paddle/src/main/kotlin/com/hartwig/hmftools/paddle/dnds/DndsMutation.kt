@@ -5,7 +5,7 @@ import com.hartwig.hmftools.paddle.Impact
 import java.io.File
 import java.nio.file.Files
 
-private val EXCLUDE_HOTSPOT = setOf( Impact.SYNONYMOUS, Impact.UNKNOWN)
+private val EXCLUDE_HOTSPOT = setOf(Impact.SYNONYMOUS, Impact.UNKNOWN)
 private val EXCLUDE_BIALLELIC = setOf(Impact.MISSENSE, Impact.SYNONYMOUS, Impact.UNKNOWN)
 
 data class DndsMutation(
@@ -28,7 +28,7 @@ data class DndsMutation(
     val isBiallelic = biallelic && impact !in EXCLUDE_BIALLELIC
     val isHotspot = hotspot && impact !in EXCLUDE_HOTSPOT
     val isKnownOncoDriver = isHotspot || impact == Impact.INFRAME && repeatCount < 8
-    val isKnownTsgDriver =  isHotspot || isBiallelic
+    val isKnownTsgDriver = isHotspot || isBiallelic
 
     fun impact(dndsImpact: String, canonicalCodingEffect: String, worstCodingEffect: String): Impact {
         if (dndsImpact == "no-SNV" || dndsImpact == "NA") {
@@ -73,8 +73,8 @@ data class DndsMutation(
                     array[5],
                     array[6],
                     array[7].toInt(),
-                    array[8] == "1",
-                    array[9] == "HOTSPOT",
+                    array[8].toBoolean(),
+                    array[9].toBoolean(),
                     array[10],
                     array[11])
         }

@@ -1007,6 +1007,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History and Download Links
 - Upcoming
   - Do not produce somatic variant rainfall plot if >100000 variants
+  - Refreshed DNDS values with larger cohort (4404 samples)
 - [2.47](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.47) 
   - Add hg38 support for driver gene panel
   - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT

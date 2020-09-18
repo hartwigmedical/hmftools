@@ -328,11 +328,11 @@ min_af | min(AFUp, AFDown) | 0 | 0.005 | 0.005 | 0.005 | 0.05
 min_anchor | min(maxAnchorLengthUp, maxAnchorLengthDown) | 0 | 20 | 20 | 20 | 20 
 max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if either gene known | 2 | 2 | 2 | 2
 
-'* For known pair fusions supporting fragments are cumulative aross all novel junctions
+'* For known pair fusions (excluding DEL / DUP <1M bases) supporting fragments are cumulative aross all novel junctions
 
-'** 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs. 
+'** 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs (excluding DEL / DUP <1M bases). 
 
-'** see below for cohort frequency calculation
+'*** see below for cohort frequency calculation
 
 ### 10. Cohort frequency <TO DO>
 

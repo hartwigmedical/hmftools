@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.fusion.Transcript;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 public abstract class LinxFusion

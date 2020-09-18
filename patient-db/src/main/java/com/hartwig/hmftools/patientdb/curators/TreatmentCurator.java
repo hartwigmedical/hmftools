@@ -86,13 +86,8 @@ public class TreatmentCurator implements CleanableCurator {
     @NotNull
     private final IndexSearcher indexSearcher;
 
-    @NotNull
-    public static TreatmentCurator fromProductionResource(@NotNull String treatmentMappingCSV) throws IOException {
-        return new TreatmentCurator(treatmentMappingCSV);
-    }
-
     @VisibleForTesting
-    TreatmentCurator(@NotNull String mappingInputStream) throws IOException {
+    public TreatmentCurator(@NotNull String mappingInputStream) throws IOException {
         List<DrugEntry> drugEntries = readEntries(mappingInputStream);
         Directory index = createIndex(drugEntries);
         IndexReader reader = DirectoryReader.open(index);

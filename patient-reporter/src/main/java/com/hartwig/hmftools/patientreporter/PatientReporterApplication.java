@@ -24,6 +24,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReporterApplication {
@@ -116,9 +117,28 @@ public class PatientReporterApplication {
 
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
+        String refSampleId;
+        String refSampleBarcode;
+
+        // if ref sample barcode is null change to N/A
+        if (config.refSampleBarcode() == null) {
+            LOGGER.warn("Ref sample barcode is unknown: {}", config.refSampleBarcode());
+            refSampleBarcode = "N/A";
+        } else {
+            refSampleBarcode = config.refSampleBarcode();
+        }
+
+        // if ref sample Id is null change to N/A
+        if (config.refSampleId() == null) {
+            LOGGER.warn("Ref sample Id is unknown: {}", config.refSampleId());
+            refSampleId = "N/A";
+        } else {
+            refSampleId = config.refSampleId();
+        }
+
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId(config.refSampleId())
-                .refSampleBarcode(config.refSampleBarcode())
+                .refSampleId(refSampleId) // null is changed to N/A
+                .refSampleBarcode(refSampleBarcode) // null is changed to N/A
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
                 .build();

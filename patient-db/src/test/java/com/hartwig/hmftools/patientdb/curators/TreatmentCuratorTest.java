@@ -16,11 +16,6 @@ import org.junit.Test;
 public class TreatmentCuratorTest {
 
     @Test
-    public void canCreateFromProductionResource() throws IOException {
-        assertNotNull(TreatmentCurator.fromProductionResource(TestCuratorFactory.TREATMENT_MAPPING_CSV));
-    }
-
-    @Test
     public void matchesExactSingleWord() {
         TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         Optional<CuratedDrug> curatedTreatment = curator.matchSingle("Zocor");
