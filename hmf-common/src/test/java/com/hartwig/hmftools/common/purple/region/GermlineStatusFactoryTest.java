@@ -9,15 +9,15 @@ import static com.hartwig.hmftools.common.purple.region.GermlineStatus.UNKNOWN;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomesTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GermlineStatusFactoryTest {
 
-    private final GermlineStatusFactory maleVictim = new GermlineStatusFactory(Gender.MALE);
-    private final GermlineStatusFactory femaleVictim = new GermlineStatusFactory(Gender.FEMALE);
+    private final GermlineStatusFactory maleVictim = new GermlineStatusFactory(CobaltChromosomesTest.male());
+    private final GermlineStatusFactory femaleVictim = new GermlineStatusFactory(CobaltChromosomesTest.female());
 
     @Test
     public void testAutosome() {
@@ -74,7 +74,12 @@ public class GermlineStatusFactoryTest {
 
     private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expected) {
         assertEquals(expected, maleVictim.fromRatio(chromosome, ratio, 0.01));
-        assertEquals(expected, femaleVictim.fromRatio(chromosome, ratio, 0.01));
+        if (chromosome.equals("Y")) {
+            assertEquals(UNKNOWN, femaleVictim.fromRatio(chromosome, ratio, 0.01));
+        } else {
+            assertEquals(expected, femaleVictim.fromRatio(chromosome, ratio, 0.01));
+        }
+
     }
 
     private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expectedMale,

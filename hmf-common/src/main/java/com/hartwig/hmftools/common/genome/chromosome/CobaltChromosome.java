@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.genome.chromosome;
 
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.immutables.value.Value;
@@ -19,9 +18,8 @@ public interface CobaltChromosome extends Chromosome {
 
     boolean mosiac();
 
-    @Override
-    default boolean isDiploid(@NotNull Gender gender) {
-        return Doubles.equal(typicalRatio(), 1.0);
+    default boolean isNormal() {
+        return Doubles.equal(typicalRatio(), actualRatio());
     }
 
     default boolean isDiploid() {

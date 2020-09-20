@@ -149,7 +149,7 @@ public class PurityPloidyEstimateApplication {
                     : allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
             LOGGER.info("Applying segmentation");
-            final Segmentation segmentation = new Segmentation(configSupplier, cobaltGender);
+            final Segmentation segmentation = new Segmentation(configSupplier);
             final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants.variants());
 
             LOGGER.info("Fitting purity");

@@ -11,7 +11,8 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
@@ -19,7 +20,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.genome.window.Window;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -30,14 +30,14 @@ public class ObservedRegionFactory {
 
     private final int windowSize;
     @NotNull
-    private final Gender gender;
+    private final CobaltChromosomes cobaltChromosomes;
     @NotNull
     private final GermlineStatusFactory statusFactory;
 
-    public ObservedRegionFactory(final int windowSize, @NotNull final Gender gender) {
+    public ObservedRegionFactory(final int windowSize, @NotNull final CobaltChromosomes cobaltChromosomes) {
         this.windowSize = windowSize;
-        this.gender = gender;
-        this.statusFactory = new GermlineStatusFactory(gender);
+        this.cobaltChromosomes = cobaltChromosomes;
+        this.statusFactory = new GermlineStatusFactory(cobaltChromosomes);
     }
 
     @NotNull
@@ -110,9 +110,12 @@ public class ObservedRegionFactory {
 
         @Override
         public void accept(final AmberBAF baf) {
-            if (HumanChromosome.valueOf(baf).isDiploid(gender) && !Double.isNaN(baf.tumorModifiedBAF())) {
-                count++;
-                bafs.add(baf.tumorModifiedBAF());
+            if (cobaltChromosomes.contains(baf.chromosome())) {
+                CobaltChromosome cobaltChromosome = cobaltChromosomes.get(baf.chromosome());
+                if (cobaltChromosome.isNormal() && cobaltChromosome.isDiploid() && !Double.isNaN(baf.tumorModifiedBAF())) {
+                    count++;
+                    bafs.add(baf.tumorModifiedBAF());
+                }
             }
         }
 

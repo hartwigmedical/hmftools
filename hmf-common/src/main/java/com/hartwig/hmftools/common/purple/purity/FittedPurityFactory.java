@@ -110,7 +110,7 @@ public class FittedPurityFactory {
         }
 
         CobaltChromosome chromosome = cobaltChromosomes.get(region.chromosome());
-        return Doubles.equal(chromosome.actualRatio(), chromosome.typicalRatio()) && chromosome.isDiploid();
+        return chromosome.isNormal() && chromosome.isDiploid();
     }
 
     public List<FittedPurity> bestFitPerPurity() {

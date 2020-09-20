@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -90,8 +91,8 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
             return 1;
         }
 
-        boolean isHomologous = cobaltChromosomes.get(chromosome).isDiploid();
-        if (!isHomologous || Doubles.lessOrEqual(copyNumber, 1)) {
+        CobaltChromosome cobaltChromosome = cobaltChromosomes.get(chromosome);
+        if (!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid()  || Doubles.lessOrEqual(copyNumber, 1)) {
             return 1;
         }
 
