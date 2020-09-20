@@ -56,6 +56,7 @@ public class FusionReadData
     private final FusionFragment mFragment; // the one which establishes this fusion and whose junction data is used
 
     private final Map<FusionFragmentType,List<FusionFragment>> mFragments;
+    private final Map<FusionFragmentType,Integer> mFragmentCounts;
 
     private boolean mIncompleteData;
 
@@ -95,7 +96,7 @@ public class FusionReadData
         mAdjacentJunctionBases = new String[] {"", ""};
 
         mFragments = Maps.newHashMap();
-        addFusionFragment(fragment);
+        mFragmentCounts = Maps.newHashMap();
 
         mLocationId = fragment.locationPair();
 
@@ -128,6 +129,8 @@ public class FusionReadData
         mTransExonRefs = new List[FS_PAIR];
         mTransExonRefs[SE_START] = Lists.newArrayList();
         mTransExonRefs[SE_END] = Lists.newArrayList();
+
+        addFusionFragment(fragment, true);
     }
 
     public int id() { return mId; }
@@ -155,23 +158,51 @@ public class FusionReadData
     }
 
     public final Map<FusionFragmentType,List<FusionFragment>> getFragments() { return mFragments; }
+
     public final List<FusionFragment> getFragments(FusionFragmentType type)
     {
         return mFragments.containsKey(type) ? mFragments.get(type) : Lists.newArrayList();
     }
 
-    public void addFusionFragment(final FusionFragment fragment)
+    public int getFragmentTypeCount(FusionFragmentType type)
     {
-        fragment.assignedFusions().add(this);
-        List<FusionFragment> fragments = mFragments.get(fragment.type());
+        return mFragmentCounts.containsKey(type) ? mFragmentCounts.get(type) : 0;
+    }
 
-        if (fragments == null)
+    public void addFragmentTypeCount(FusionFragmentType type, int count)
+    {
+        Integer existingCount = mFragmentCounts.get(type);
+        if(existingCount == null)
+            mFragmentCounts.put(type, count);
+        else
+            mFragmentCounts.put(type, existingCount + count);
+    }
+
+    public void addFusionFragment(final FusionFragment fragment, boolean cacheFragment)
+    {
+        try
         {
-            mFragments.put(fragment.type(), Lists.newArrayList(fragment));
-            return;
+            if(fragment.type() == MATCHED_JUNCTION)
+                updateMaxSplitMappedLength(fragment);
+        }
+        catch(Exception e)
+        {
+            ISF_LOGGER.error("{}", e.toString());
         }
 
-        fragments.add(fragment);
+        addFragmentTypeCount(fragment.type(), 1);
+
+        if(cacheFragment)
+        {
+            fragment.assignedFusions().add(this);
+
+            List<FusionFragment> fragments = mFragments.get(fragment.type());
+
+            if (fragments == null)
+                mFragments.put(fragment.type(), Lists.newArrayList(fragment));
+            else
+                fragments.add(fragment);
+        }
     }
 
     public boolean isKnownSpliced() { return getInitialFragment().isSpliced(); }
@@ -304,8 +335,7 @@ public class FusionReadData
                return false;
         }
 
-        double fragmentsRatio = getFragments(MATCHED_JUNCTION).size() / (double)other.getFragments(MATCHED_JUNCTION).size();
-
+        double fragmentsRatio = getFragmentTypeCount(MATCHED_JUNCTION) / (double)other.getFragmentTypeCount(MATCHED_JUNCTION);
         return fragmentsRatio >= 1/CLOSE_MATCH_FRAG_RATIO || fragmentsRatio <= CLOSE_MATCH_FRAG_RATIO;
     }
 
@@ -523,59 +553,52 @@ public class FusionReadData
         }
     }
 
-    public void calcMaxSplitMappedLength()
+    private void updateMaxSplitMappedLength(final FusionFragment fragment)
     {
         // find the longest section mapped across the junction
-        final List<FusionFragment> fragments = mFragments.get(MATCHED_JUNCTION);
-
-        if(fragments == null)
-            return;
-
         for (int se = SE_START; se <= SE_END; ++se)
         {
             final int seIndex = se;
-            for(final FusionFragment fragment : fragments)
+
+            final List<ReadRecord> reads = fragment.readsByLocation(se).stream()
+                    .filter(x -> positionWithin(mJunctionPositions[seIndex], x.PosStart, x.PosEnd)).collect(Collectors.toList());
+
+            if(reads.isEmpty()) // can occur with the fragments from a fusion merged in due to homology
+                continue;
+
+            List<int[]> mappedCoords;
+
+            if(reads.size() == 1)
             {
-                final List<ReadRecord> reads = fragment.readsByLocation(se).stream()
-                        .filter(x -> positionWithin(mJunctionPositions[seIndex], x.PosStart, x.PosEnd)).collect(Collectors.toList());
+                mappedCoords = reads.get(0).getMappedRegionCoords(false);
+            }
+            else
+            {
+                mappedCoords = deriveCommonRegions(
+                        reads.get(0).getMappedRegionCoords(false), reads.get(1).getMappedRegionCoords(false));
+            }
 
-                if(reads.isEmpty()) // can occur with the fragments from a fusion merged in due to homology
-                    continue;
+            int mappedBases = 0;
 
-                List<int[]> mappedCoords;
-
-                if(reads.size() == 1)
+            for(int[] coord : mappedCoords)
+            {
+                if(mJunctionOrientations[se] == NEG_ORIENT)
                 {
-                    mappedCoords = reads.get(0).getMappedRegionCoords(false);
+                    if(coord[SE_END] < mJunctionPositions[se])
+                        continue;
+
+                    mappedBases += coord[SE_END] - max(mJunctionPositions[se], coord[SE_START]) + 1;
                 }
                 else
                 {
-                    mappedCoords = deriveCommonRegions(
-                            reads.get(0).getMappedRegionCoords(false), reads.get(1).getMappedRegionCoords(false));
+                    if(coord[SE_START] > mJunctionPositions[se])
+                        break;
+
+                    mappedBases += min(mJunctionPositions[se], coord[SE_END]) - coord[SE_START] + 1;
                 }
-
-                int mappedBases = 0;
-
-                for(int[] coord : mappedCoords)
-                {
-                    if(mJunctionOrientations[se] == NEG_ORIENT)
-                    {
-                        if(coord[SE_END] < mJunctionPositions[se])
-                            continue;
-
-                        mappedBases += coord[SE_END] - max(mJunctionPositions[se], coord[SE_START]) + 1;
-                    }
-                    else
-                    {
-                        if(coord[SE_START] > mJunctionPositions[se])
-                            break;
-
-                        mappedBases += min(mJunctionPositions[se], coord[SE_END]) - coord[SE_START] + 1;
-                    }
-                }
-
-                mMaxSplitLengths[se] = max(mappedBases, mMaxSplitLengths[se]);
             }
+
+            mMaxSplitLengths[se] = max(mappedBases, mMaxSplitLengths[se]);
         }
     }
 
@@ -592,7 +615,7 @@ public class FusionReadData
         return String.format("%d: chr(%s-%s) junc(%d-%d %d/%d %s) genes(%s-%s) frags(%d)",
                 mId, mChromosomes[SE_START], mChromosomes[SE_END], mJunctionPositions[SE_START], mJunctionPositions[SE_END],
                 mJunctionOrientations[SE_START], mJunctionOrientations[SE_END], getImpliedSvType(),
-                getGeneName(FS_UPSTREAM), getGeneName(FS_DOWNSTREAM), mFragments.values().stream().mapToInt(x -> x.size()).sum());
+                getGeneName(FS_UPSTREAM), getGeneName(FS_DOWNSTREAM), mFragmentCounts.values().stream().mapToInt(x -> x).sum());
     }
 
     public static String csvHeader()
@@ -640,14 +663,14 @@ public class FusionReadData
         int realignedFragments = 0;
         int discordantFragments = 0;
 
-        for(Map.Entry<FusionFragmentType,List<FusionFragment>> entry : mFragments.entrySet())
+        for(Map.Entry<FusionFragmentType,Integer> entry : mFragmentCounts.entrySet())
         {
             if(entry.getKey() == MATCHED_JUNCTION)
-                splitFragments = entry.getValue().size();
+                splitFragments = entry.getValue();
             else if(entry.getKey() == DISCORDANT)
-                discordantFragments = entry.getValue().size();
+                discordantFragments = entry.getValue();
             else if(entry.getKey() == REALIGNED)
-                realignedFragments = entry.getValue().size();
+                realignedFragments = entry.getValue();
         }
 
         int totalFragments = splitFragments + realignedFragments + discordantFragments;

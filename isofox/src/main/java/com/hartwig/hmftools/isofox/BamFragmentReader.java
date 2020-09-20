@@ -268,6 +268,8 @@ public class BamFragmentReader implements Callable
                 ISF_LOGGER.info("chr({}) chimeric data: {}", mChromosome, mChimericStats);
             }
 
+            mPerfCounters[PERF_FUSIONS].stop();
+
             mPerfCounters[PERF_FUSIONS].start();
 
             // handle fragments spanning multiple chromosomes
@@ -471,7 +473,10 @@ public class BamFragmentReader implements Callable
         if(!mConfig.runFunction(FUSIONS) || mFusionFinder == null)
             return;
 
-        mPerfCounters[PERF_FUSIONS].start();
+        if(!mPerfCounters[PERF_FUSIONS].isRunning())
+            mPerfCounters[PERF_FUSIONS].start();
+        else
+            mPerfCounters[PERF_FUSIONS].resume();
 
         // pass any complete chimeric read groups to the fusion finder
         // and add to this any groups which are now complete (ie which were partially complete before)
@@ -483,7 +488,7 @@ public class BamFragmentReader implements Callable
         mFusionFinder.processLocalReadGroups(completeReadGroups);
 
         mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
-        mPerfCounters[PERF_FUSIONS].stop();
+        mPerfCounters[PERF_FUSIONS].pause();
     }
 
     public void applyGcAdjustment()

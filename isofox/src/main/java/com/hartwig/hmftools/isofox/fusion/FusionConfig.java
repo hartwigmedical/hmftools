@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 
@@ -13,6 +14,7 @@ public class FusionConfig
     public final boolean WriteChimericFragments;
     public final boolean PerformanceStats;
     public final String ChimericReadsFile;
+    public final boolean CacheFragments;
 
     public final KnownFusionCache KnownFusions;
 
@@ -31,6 +33,7 @@ public class FusionConfig
         ChimericReadsFile = cmd.getOptionValue(CHIMERIC_READ_FILE);
         KnownFusions = new KnownFusionCache();
         KnownFusions.loadFromFile(cmd);
+        CacheFragments = WriteChimericFragments || WriteChimericReads || cmd.hasOption(LOG_DEBUG);
 
         PerformanceStats = true;
     }
@@ -40,8 +43,9 @@ public class FusionConfig
         WriteChimericReads = false;
         WriteChimericFragments = false;
         ChimericReadsFile = null;
-        PerformanceStats = false;
+        CacheFragments = true;
         KnownFusions = new KnownFusionCache();
+        PerformanceStats = false;
     }
 
     public static void addCommandLineOptions(final Options options)

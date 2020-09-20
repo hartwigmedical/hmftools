@@ -334,14 +334,6 @@ public class FusionFinder implements Callable
     private void annotateFusions()
     {
         markRelatedFusions();
-
-        for (List<FusionReadData> fusions : mFusionCandidates.values())
-        {
-            for (FusionReadData fusionData : fusions)
-            {
-                fusionData.calcMaxSplitMappedLength();
-            }
-        }
     }
 
     private void writeData()
@@ -373,7 +365,7 @@ public class FusionFinder implements Callable
 
         if(existingFusion != null)
         {
-            existingFusion.addFusionFragment(fragment);
+            existingFusion.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
 
             // mark donor-acceptor types whether strands are known or not
             fragment.junctionTypes()[SE_START] = existingFusion.getInitialFragment().junctionTypes()[SE_START];
@@ -648,7 +640,12 @@ public class FusionFinder implements Callable
                                 fusion2.junctionBases()[SE_END], fusion2.adjacentJunctionBases()[SE_END]);
 
                         final FusionReadData fusion1Const = fusion1;
-                        fusion2.getFragments(MATCHED_JUNCTION).forEach(x -> fusion1Const.addFusionFragment(x));
+
+                        if(mConfig.Fusions.CacheFragments)
+                            fusion2.getFragments(MATCHED_JUNCTION).forEach(x -> fusion1Const.addFusionFragment(x, mConfig.Fusions.CacheFragments));
+                        else
+                            fusion1Const.addFragmentTypeCount(MATCHED_JUNCTION, fusion2.getFragmentTypeCount(MATCHED_JUNCTION));
+
                         fusions.remove(j);
                         continue;
                     }
@@ -656,7 +653,7 @@ public class FusionFinder implements Callable
                     if(fusion1.isCloseMatch(fusion2))
                     {
                         // keep the fusion with more support, discard the other
-                        if(fusion1.getFragments(MATCHED_JUNCTION).size() < fusion2.getFragments(MATCHED_JUNCTION).size())
+                        if(fusion1.getFragmentTypeCount(MATCHED_JUNCTION) < fusion2.getFragmentTypeCount(MATCHED_JUNCTION))
                         {
                             fusions.set(i, fusion2);
                             fusion1 = fusion2;
@@ -774,7 +771,7 @@ public class FusionFinder implements Callable
                             fragment.setType(DISCORDANT);
                         }
 
-                        fusionData.addFusionFragment(fragment);
+                        fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
                         allocatedFragments.add(fragment);
                     }
                 }
@@ -844,7 +841,7 @@ public class FusionFinder implements Callable
                             fragment.setType(DISCORDANT);
                         }
 
-                        fusionData.addFusionFragment(fragment);
+                        fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
                         allocatedFragments.add(fragment);
                     }
                 }
@@ -889,7 +886,7 @@ public class FusionFinder implements Callable
                     if(fusionData.canRelignFragmentToJunction(fragment))
                     {
                         fragment.setType(REALIGNED);
-                        fusionData.addFusionFragment(fragment);
+                        fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
                     }
                 }
             }
