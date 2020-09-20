@@ -17,7 +17,7 @@ public enum ResolvedType
     INV,
     INS,
     UNBAL_TRANS,
-    SIMPLE_GRP, // group of DUPs, INS and DELs - later split up
+    SIMPLE_GRP, // group of DUPs, INS and DELs - always dissolved in final classification
 
     // 2-SV types:
     RECIP_TRANS,

@@ -231,7 +231,7 @@ public class SyntheticTest
         assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(false));
         assertEquals(getSyntheticTiLength(cluster), var2.position(true) - var1.position(true));
 
-        // 2 DUPs next to each other - since the short TI ovelaps the chain ends, it's not considered a synthetic
+        // 2 DUPs next to each other - since the short TI overlaps the chain ends, it's not considered a synthetic
         var1 = createDup(tester.nextVarId(), "1", 100, 2200);
         var2 = createDup(tester.nextVarId(), "1", 300, 2400);
 
@@ -240,11 +240,7 @@ public class SyntheticTest
 
         tester.addAndCluster(var1, var2);
 
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == SIMPLE_GRP);
+        assertEquals(2, tester.Analyser.getClusters().size());
 
         // 2 DUPs with an overlap
         var1 = createDup(tester.nextVarId(), "1", 100, 300);

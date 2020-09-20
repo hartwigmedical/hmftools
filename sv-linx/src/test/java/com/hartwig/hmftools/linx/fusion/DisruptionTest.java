@@ -78,7 +78,7 @@ public class DisruptionTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(10, tester.Analyser.getClusters().size());
+        assertEquals(8, tester.Analyser.getClusters().size());
 
         final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
         disruptionFinder.addDisruptionGene(geneId);

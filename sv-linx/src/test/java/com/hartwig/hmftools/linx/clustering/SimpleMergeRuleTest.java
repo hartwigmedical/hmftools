@@ -93,7 +93,7 @@ public class SimpleMergeRuleTest
     @Test
     public void testSimpleSVsDemerge()
     {
-        // simple clustered SVs are split out in the final routine except for the SVs joined by assembly
+        // simple clustered SVs of 2 SVs are split out in the final routine, 3+ are kept as COMPLEX
         LinxTester tester = new LinxTester();
 
         tester.clearClustersAndSVs();
@@ -107,7 +107,6 @@ public class SimpleMergeRuleTest
         SvVarData del3 = createDel(tester.nextVarId(), "2", 3500, 8000);
         tester.AllVariants.add(del3);
 
-        // another group remains a cluster due to assembly linking the variants
         SvVarData var1 = createDel(tester.nextVarId(), "1", 20000, 25000);
         SvVarData var2 = createDel(tester.nextVarId(), "1", 26500, 50000);
 
@@ -120,11 +119,11 @@ public class SimpleMergeRuleTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(4, tester.getClusters().size());
+        assertEquals(3, tester.getClusters().size());
 
-        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(del1, del2, del3));
         assertTrue(cluster != null);
-        assertEquals(ResolvedType.SIMPLE_GRP, cluster.getResolvedType());
+        assertEquals(ResolvedType.COMPLEX, cluster.getResolvedType());
     }
 
     @Test

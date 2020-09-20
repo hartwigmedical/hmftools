@@ -21,15 +21,13 @@ import static com.hartwig.hmftools.linx.chaining.LinkFinder.createAssemblyLinked
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.types.ArmCluster.buildArmClusters;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,7 +67,7 @@ public class ClusterAnalyser {
     PerformanceCounter mPcClustering;
     PerformanceCounter mPcChaining;
 
-    public static int SMALL_CLUSTER_SIZE = 3;
+    private static final int SMALL_CLUSTER_SIZE = 3;
 
     public ClusterAnalyser(final LinxConfig config)
     {
@@ -202,8 +200,8 @@ public class ClusterAnalyser {
         mPcClustering.stop();
 
         mPcChaining.resume();
-        dissolveSimpleGroups();
         findLinksAndChains();
+        dissolveSimpleGroups();
         mPcChaining.stop();
 
         if(mRunValidationChecks)
@@ -326,92 +324,15 @@ public class ClusterAnalyser {
     private void dissolveSimpleGroups()
     {
         // break apart any clusters of simple SVs which aren't likely or required to be chained
-        // based on the presence of assmebled links and linking LOH events
         List<SvCluster> simpleGroups = mClusters.stream().filter(x -> x.getResolvedType() == SIMPLE_GRP).collect(Collectors.toList());
 
-        // if all links are assembled or joined in an LOH or have a short DB then keep the group
+        final List<SvVarData> discardSVs = Lists.newArrayList();
+
         for(SvCluster cluster : simpleGroups)
         {
-            final List<LohEvent> lohEvents = cluster.getLohEvents().stream()
-                    .filter(x -> x.doubleSvEvent() && x.isValid())
-                    .filter(x -> x.StartSV != x.EndSV)
-                    .collect(Collectors.toList());
-
-            int assemblyLinks = 0;
-            int lohLinks = 0;
-            int dbLinks = 0;
-
-            final List<SvVarData> discardSVs = Lists.newArrayList();
-
-            for(SvVarData var : cluster.getSVs())
-            {
-                // assembled
-                if(!var.getAssembledLinkedPairs(true).isEmpty() || !var.getAssembledLinkedPairs(false).isEmpty())
-                {
-                    ++assemblyLinks;
-                    continue;
-                }
-
-                // in an LOH
-                if(!lohEvents.isEmpty() && lohEvents.stream().anyMatch(x -> x.StartSV == var.id() || x.EndSV == var.id()))
-                {
-                    ++lohLinks;
-                    continue;
-                }
-
-                // in a short DB with another SV in this cluster
-                boolean inShortDB = false;
-
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    boolean isStart = isStart(se);
-
-                    if (var.getDBLink(isStart) != null && var.getDBLink(isStart).length() <= SHORT_DB_LENGTH
-                            && cluster.getSVs().contains(var.getDBLink(isStart).getOtherSV(var)))
-                    {
-                        inShortDB = true;
-                        break;
-                    }
-                }
-
-                if(inShortDB)
-                {
-                    ++dbLinks;
-                    continue;
-                }
-
-                discardSVs.add(var);
-            }
-
-            if(discardSVs.isEmpty())
-            {
-                LNX_LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({}) shortDB({})",
-                        cluster.id(), cluster.getDesc(), assemblyLinks, lohLinks, dbLinks);
-                continue;
-            }
-
-            if(discardSVs.size() >= cluster.getSvCount() - 1) // cannot just leave a single SV in a cluster
-            {
-                LNX_LOGGER.debug("cluster({}: {}) de-merging {} simple SVs", cluster.id(), cluster.getDesc(), discardSVs.size());
-                mClusters.remove(cluster);
-
-                if(discardSVs.size() < cluster.getSvCount())
-                {
-                    cluster.getSVs().stream().filter(x -> !discardSVs.contains(x)).forEach(x -> discardSVs.add(x));
-                }
-            }
-            else
-            {
-                LNX_LOGGER.debug("cluster({}: {}) de-merging {} simple SVs from total({})",
-                        cluster.id(), cluster.getDesc(), discardSVs.size(), cluster.getSvCount());
-
-                for(SvVarData var : discardSVs)
-                {
-                    cluster.removeVariant(var);
-                }
-
-                cluster.logDetails();
-            }
+            LNX_LOGGER.debug("cluster({}: {}) de-merging {} simple SVs", cluster.id(), cluster.getDesc(), discardSVs.size());
+            mClusters.remove(cluster);
+            discardSVs.addAll(cluster.getSVs());
 
             for(SvVarData var : discardSVs)
             {

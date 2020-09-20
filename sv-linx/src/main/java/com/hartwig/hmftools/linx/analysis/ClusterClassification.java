@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.classifyPairClusters;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterPairType;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterReciprocalType;
@@ -142,7 +141,7 @@ public class ClusterClassification
             return;
         }
 
-        if (smallSimpleSVs(cluster))
+        if (cluster.getSvCount() <= 2 && !cluster.getSVs().stream().anyMatch(x -> !x.isSimpleType()))
         {
             if(cluster.getChains().size() == 1)
             {
@@ -236,20 +235,6 @@ public class ClusterClassification
 
             cluster.setResolved(false, COMPLEX);
         }
-    }
-
-    private static boolean smallSimpleSVs(final SvCluster cluster)
-    {
-        if(cluster.getSvCount() > SMALL_CLUSTER_SIZE)
-            return false;
-
-        for(final SvVarData var : cluster.getSVs())
-        {
-            if(!var.isSimpleType())
-                return false;
-        }
-
-        return true;
     }
 
     public static int getSyntheticLength(final SvCluster cluster)
