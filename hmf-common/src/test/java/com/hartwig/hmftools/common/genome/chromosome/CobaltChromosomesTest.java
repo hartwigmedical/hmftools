@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.TW
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.Y_CUTOFF;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -33,6 +34,17 @@ public class CobaltChromosomesTest {
         return new CobaltChromosomes(ratios);
     }
 
+    public static CobaltChromosomes male() {
+        List<MedianRatio> ratios = Lists.newArrayList();
+        for (int i = 0; i < 22; i++) {
+            ratios.add(create(String.valueOf(i), 1));
+        }
+
+        ratios.add(create("X", 0.5));
+        ratios.add(create("Y", 0.5));
+        return new CobaltChromosomes(ratios);
+    }
+
     @Test
     public void testFemale() {
         MedianRatio chrX = create("X", 1, MIN_RATIO_COUNT);
@@ -43,6 +55,7 @@ public class CobaltChromosomesTest {
         assertEquals(0, victim.aberrations().size());
 
         assertEquals(1, victim.get("X").actualRatio(), 0.01);
+        assertFalse(victim.contains("Y"));
     }
 
     @Test

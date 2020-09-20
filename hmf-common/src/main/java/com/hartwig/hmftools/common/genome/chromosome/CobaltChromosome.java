@@ -23,4 +23,8 @@ public interface CobaltChromosome extends Chromosome {
     default boolean isDiploid(@NotNull Gender gender) {
         return Doubles.equal(typicalRatio(), 1.0);
     }
+
+    default boolean isDiploid() {
+        return Doubles.equal(typicalRatio(), 1.0);
+    }
 }

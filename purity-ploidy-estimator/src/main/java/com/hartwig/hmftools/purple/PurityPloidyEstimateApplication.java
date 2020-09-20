@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
@@ -131,6 +132,7 @@ public class PurityPloidyEstimateApplication {
 
             // Load Cobalt Data
             final Gender cobaltGender = configSupplier.cobaltData().gender();
+            final CobaltChromosomes cobaltChromosomes = configSupplier.cobaltData().cobaltChromosomes();
 
             // Gender
             if (cobaltGender.equals(amberGender)) {
@@ -152,13 +154,13 @@ public class PurityPloidyEstimateApplication {
 
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
-            final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltGender, fitScoreConfig);
+            final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltChromosomes, fitScoreConfig);
             final BestFit bestFit =
                     fitPurity(executorService, configSupplier, cobaltGender, fittingSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
             final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(fittedPurity.purity(),
                     fittedPurity.normFactor(),
-                    configSupplier.cobaltData().cobaltChromosomes().chromosomes());
+                    cobaltChromosomes.chromosomes());
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
@@ -329,9 +331,9 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final Gender cobaltGender,
+    private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes,
             final FitScoreConfig fitScoreConfig) {
-        return new FittedRegionFactoryV2(cobaltGender,
+        return new FittedRegionFactoryV2(cobaltChromosomes,
                 averageTumorDepth,
                 fitScoreConfig.ploidyPenaltyFactor(),
                 fitScoreConfig.ploidyPenaltyStandardDeviation(),
