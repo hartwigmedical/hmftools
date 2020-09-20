@@ -156,7 +156,7 @@ public class PurityPloidyEstimateApplication {
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
             final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltChromosomes, fitScoreConfig);
             final BestFit bestFit =
-                    fitPurity(executorService, configSupplier, cobaltGender, fittingSomatics, observedRegions, fittedRegionFactory);
+                    fitPurity(executorService, configSupplier, cobaltChromosomes, fittingSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
             final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(fittedPurity.purity(),
                     fittedPurity.normFactor(),
@@ -299,13 +299,13 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier, final Gender cobaltGender,
+    private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier, final CobaltChromosomes cobaltChromosomes,
             final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
             final FittedRegionFactory fittedRegionFactory) throws ExecutionException, InterruptedException {
         final FittingConfig fittingConfig = configSupplier.fittingConfig();
         final SomaticConfig somaticConfig = configSupplier.somaticConfig();
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
-                cobaltGender,
+                cobaltChromosomes,
                 fittingConfig.maxPloidy(),
                 fittingConfig.minPurity(),
                 fittingConfig.maxPurity(),

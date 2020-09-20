@@ -25,6 +25,6 @@ public interface CobaltChromosome extends Chromosome {
     }
 
     default boolean isDiploid() {
-        return Doubles.equal(typicalRatio(), 1.0);
+        return Doubles.equal(actualRatio(), 1.0);
     }
 }

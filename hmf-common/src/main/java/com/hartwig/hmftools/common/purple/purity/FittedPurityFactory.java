@@ -12,14 +12,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -36,7 +36,6 @@ public class FittedPurityFactory {
     private static final double MAX_TUMOR_RATIO_TO_FIT = 3;
 
     private final int maxPloidy;
-    private final Gender gender;
     private final double minPurity;
     private final double maxPurity;
     private final int totalBAFCount;
@@ -45,6 +44,7 @@ public class FittedPurityFactory {
     private final double minNormFactor;
     private final double maxNormFactor;
     private final double somaticPenaltyWeight;
+    private final CobaltChromosomes cobaltChromosomes;
 
     @NotNull
     private final FittedRegionFactory fittedRegionFactory;
@@ -55,7 +55,7 @@ public class FittedPurityFactory {
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
     private final List<ObservedRegion> filteredRegions = Lists.newArrayList();
 
-    public FittedPurityFactory(final ExecutorService executorService, final Gender gender, final int maxPloidy, final double minPurity,
+    public FittedPurityFactory(final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes, final int maxPloidy, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minNormFactor, final double maxNormFactor,
             final double normFactorIncrements, final double somaticPenaltyWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
             @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final Collection<SomaticVariant> variants)
@@ -70,17 +70,13 @@ public class FittedPurityFactory {
         this.normFactorIncrements = normFactorIncrements;
         this.somaticPenaltyWeight = somaticPenaltyWeight;
         this.fittedRegionFactory = fittedRegionFactory;
-        this.gender = gender;
+        this.cobaltChromosomes = cobaltChromosomes;
 
         final List<SomaticVariant> filteredVariants = Lists.newArrayList();
         final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
 
         for (final ObservedRegion region : observedRegions) {
-            final Chromosome chromosome = HumanChromosome.valueOf(region);
-
-            if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && chromosome.isAutosome()
-                    && region.status() == GermlineStatus.DIPLOID && Doubles.lessOrEqual(region.observedTumorRatio(),
-                    MAX_TUMOR_RATIO_TO_FIT)) {
+            if (useRegionToFitPurity(cobaltChromosomes, region)) {
                 filteredRegions.add(region);
                 variantSelector.select(region, filteredVariants::add);
             }
@@ -89,6 +85,32 @@ public class FittedPurityFactory {
         this.totalBAFCount = filteredRegions.stream().mapToInt(ObservedRegion::bafCount).sum();
 
         fitPurity();
+    }
+
+    @VisibleForTesting
+    static boolean useRegionToFitPurity(@NotNull final CobaltChromosomes cobaltChromosomes, @NotNull final ObservedRegion region) {
+        if (region.bafCount() <= 0) {
+            return false;
+        }
+
+        if (!positiveOrZero(region.observedTumorRatio())) {
+            return false;
+        }
+
+        if (region.status() != GermlineStatus.DIPLOID) {
+            return false;
+        }
+
+        if (Doubles.greaterThan(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT)) {
+            return false;
+        }
+
+        if (!cobaltChromosomes.contains(region.chromosome())) {
+            return false;
+        }
+
+        CobaltChromosome chromosome = cobaltChromosomes.get(region.chromosome());
+        return Doubles.equal(chromosome.actualRatio(), chromosome.typicalRatio()) && chromosome.isDiploid();
     }
 
     public List<FittedPurity> bestFitPerPurity() {
@@ -163,9 +185,10 @@ public class FittedPurityFactory {
             fittedRegions.add(fittedRegion);
         }
 
-        final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(gender, purity, normFactor);
-        final double somaticPenalty = Doubles.greaterThan(somaticPenaltyWeight, 0)
-                ? somaticPenaltyWeight * SomaticPenaltyFactory.penalty(purityAdjuster, fittedRegions,
+        final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(purity, normFactor, cobaltChromosomes.chromosomes());
+        final double somaticPenalty = Doubles.greaterThan(somaticPenaltyWeight, 0) ? somaticPenaltyWeight * SomaticPenaltyFactory.penalty(
+                purityAdjuster,
+                fittedRegions,
                 variants) : 0;
 
         return builder.score(eventPenalty * deviationPenalty + somaticPenalty)
