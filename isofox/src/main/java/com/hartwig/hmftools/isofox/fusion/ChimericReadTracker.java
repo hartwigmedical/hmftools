@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -225,6 +226,9 @@ public class ChimericReadTracker
         mGeneCollection.addCount(TOTAL, chimericCount);
         mGeneCollection.addCount(CHIMERIC, chimericCount);
 
+        addRealignCandidates();
+
+        /*
         for(final ReadGroup readGroup : mCandidateRealignedReadMap.values())
         {
             boolean addRead = false;
@@ -251,6 +255,7 @@ public class ChimericReadTracker
                     break;
             }
         }
+        */
 
         // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
         // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
@@ -356,6 +361,61 @@ public class ChimericReadTracker
             mPostGeneReadMap.put(reads.get(0).Id, postGeneReads);
 
         return false;
+    }
+
+    private void addRealignCandidates()
+    {
+        // in addition to the group having a least one read with the requires soft-clipping, the other read cannot extend past this
+        // possible point of junction support
+        Set<Integer>[] supportedJunctions = new Set[SE_PAIR];
+        supportedJunctions[SE_START] = Sets.newHashSetWithExpectedSize(2); // from start boundaries, orientation -1
+        supportedJunctions[SE_END] = Sets.newHashSetWithExpectedSize(2); // from end boundaries, orientation +1
+
+        for(final ReadGroup readGroup : mCandidateRealignedReadMap.values())
+        {
+            supportedJunctions[SE_START].clear();
+            supportedJunctions[SE_END].clear();
+
+            for(ReadRecord read : readGroup.Reads)
+            {
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    final int seIndex = se;
+                    if(!read.isSoftClipped(se))
+                        continue;
+
+                    int readBoundary = read.getCoordsBoundary(seIndex);
+
+                    if(mJunctionPositions.stream().anyMatch(x -> positionWithin(readBoundary,
+                            x - SOFT_CLIP_JUNC_BUFFER, x + SOFT_CLIP_JUNC_BUFFER)))
+                    {
+                        supportedJunctions[se].add(readBoundary);
+                    }
+                }
+            }
+
+            if(supportedJunctions[SE_START].isEmpty() && supportedJunctions[SE_END].isEmpty())
+                continue;
+
+            boolean validGroup = true;
+
+            if(!supportedJunctions[SE_START].isEmpty()
+            && readGroup.Reads.stream().anyMatch(x -> supportedJunctions[SE_START].stream().anyMatch(y -> x.PosStart < y - SOFT_CLIP_JUNC_BUFFER)))
+            {
+                validGroup = false;
+            }
+            else if(!supportedJunctions[SE_END].isEmpty()
+            && readGroup.Reads.stream().anyMatch(x -> supportedJunctions[SE_END].stream().anyMatch(y -> x.PosEnd > y + SOFT_CLIP_JUNC_BUFFER)))
+            {
+                validGroup = false;
+            }
+
+            if(validGroup)
+            {
+                mChimericReadMap.put(readGroup.id(), readGroup);
+                ++mChimericStats.CandidateRealignFrags;
+            }
+        }
     }
 
     private void collectCandidateJunctions(final List<ReadRecord> reads)

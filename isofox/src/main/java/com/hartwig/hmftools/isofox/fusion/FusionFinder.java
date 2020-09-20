@@ -862,8 +862,6 @@ public class FusionFinder implements Callable
             fragments.add(fragment);
     }
 
-    public Set<String> extractChrGeneCollectionPairs() { return mFusionsByGene.keySet(); }
-
     private void assignRealignCandidateFragments(final Map<String,List<FusionFragment>> racFragments)
     {
         if(racFragments.isEmpty())

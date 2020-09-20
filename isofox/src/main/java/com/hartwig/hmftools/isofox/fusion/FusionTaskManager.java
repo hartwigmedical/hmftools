@@ -32,8 +32,7 @@ public class FusionTaskManager
     private final FusionWriter mFusionWriter;
     private final FusionGeneFilters mGeneFilters;
 
-    // private final Map<String,Map<String,List<FusionFragment>>> mChrRealignCandidates;
-    private final Map<String,List<FusionFragment>> mRealignCandidateMap; // ConcurrentHashMap
+    private final Map<String,List<FusionFragment>> mRealignCandidateMap;
     private final Map<String,ReadGroup> mIncompleteReadGroups;
 
     private final PerformanceCounter mPerfCounter;
@@ -47,7 +46,7 @@ public class FusionTaskManager
 
         mGeneFilters = new FusionGeneFilters(config, geneTransCache);
 
-        mRealignCandidateMap = Maps.newHashMap(); // new ConcurrentHashMap()
+        mRealignCandidateMap = Maps.newHashMap();
         mIncompleteReadGroups = Maps.newHashMap();
 
         mPerfCounter = new PerformanceCounter("Fusions");
@@ -85,31 +84,11 @@ public class FusionTaskManager
 
     public synchronized final Map<String,List<FusionFragment>> getRealignCandidateMap() { return mRealignCandidateMap; }
 
-    /*
-    public Map<String,List<FusionFragment>> getRacFragments(final Set<String> chrGenePairSet)
-    {
-        // take a set of chr-geneCollection pairs and find all matching RAC fragments
-        final Map<String,List<FusionFragment>> racFragsMap = Maps.newHashMap();
-
-        for(String chrGenePair : chrGenePairSet)
-        {
-            List<FusionFragment> racFrags = mRealignCandidateMap.get(chrGenePair);
-
-            if(racFrags != null && !racFrags.isEmpty())
-                racFragsMap.put(chrGenePair, racFrags);
-        }
-
-        return racFragsMap;
-    }
-    */
-
     public void close()
     {
         // write any unassigned RAC fragments
         mFusionWriter.writeUnfusedFragments(mRealignCandidateMap);
         mFusionWriter.close();
-
-        // report fusion performance
     }
 
     private static final int LOG_COUNT = 100000;
