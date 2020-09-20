@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSuperType;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
@@ -313,7 +313,7 @@ public class CohortDataWriter
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,SuperType,ResolvedType,Synthetic,FullyChained,ChainCount");
+            writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,Category,ResolvedType,Synthetic,FullyChained,ChainCount");
             writer.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
             writer.write(",ClusterReasons,Consistency,IsLINE,Replication,MinJcn,MaxJcn,Foldbacks");
             writer.write(",ArmCount,OriginArms,FragmentArms,ConsistentArms,ComplexArms,Annotations,AlleleValidPerc");
@@ -356,11 +356,11 @@ public class CohortDataWriter
 
                 ResolvedType resolvedType = cluster.getResolvedType();
 
-                final String superType = getSuperType(cluster);
+                final String category = getClusterCategory(cluster);
 
                 mClusterFileWriter.write(String.format("%s,%d,%s,%d,%s,%s,%s,%s,%d",
                         sampleId, cluster.id(), cluster.getDesc(), clusterSvCount,
-                        superType, resolvedType, cluster.isSyntheticType(),
+                        category, resolvedType, cluster.isSyntheticType(),
                         cluster.isFullyChained(false), cluster.getChains().size()));
 
                 mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",

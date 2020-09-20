@@ -58,14 +58,14 @@ public class ClusterClassification
     public static final String SUPER_TYPE_INCOMPLETE = "INCOMPLETE";
     public static final String SUPER_TYPE_ARTIFACT = "ARTIFACT";
 
-    public static String getSuperType(SvCluster cluster)
+    public static String getClusterCategory(SvCluster cluster)
     {
         ResolvedType resolvedType = cluster.getResolvedType();
 
         if (resolvedType == LINE)
             return SUPER_TYPE_INSERTION;
 
-        if (resolvedType.isSimple())
+        if (resolvedType.isSimple() || resolvedType == UNBAL_TRANS)
             return SUPER_TYPE_SIMPLE;
 
         if(isFilteredResolvedType(resolvedType))
@@ -80,7 +80,7 @@ public class ClusterClassification
         if(resolvedType == DOUBLE_MINUTE)
             return SUPER_TYPE_DOUBLE_MINUTE;
 
-        if(isIncompleteType(resolvedType))
+        if(isIncompleteType(resolvedType) || resolvedType == PAIR_OTHER)
             return SUPER_TYPE_INCOMPLETE;
 
         return SUPER_TYPE_COMPLEX;

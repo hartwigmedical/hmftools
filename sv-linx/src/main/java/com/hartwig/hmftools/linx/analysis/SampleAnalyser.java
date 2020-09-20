@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.analysis;
 import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSuperType;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
@@ -539,7 +539,7 @@ public class SampleAnalyser
 
         for(final SvCluster cluster : getClusters())
         {
-            final String superType = getSuperType(cluster);
+            final String superType = getClusterCategory(cluster);
 
                 clusterData.add(ImmutableLinxCluster.builder()
                         .clusterId(cluster.id())
