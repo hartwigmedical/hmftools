@@ -2,12 +2,16 @@ package com.hartwig.hmftools.purple.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.cobalt.MedianRatio;
+import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
@@ -28,6 +32,9 @@ public interface CobaltData {
 
     @NotNull
     Gender gender();
+
+    @NotNull
+    CobaltChromosomes cobaltChromosomes();
 
     @NotNull
     ListMultimap<Chromosome, CobaltRatio> ratios();
@@ -68,9 +75,13 @@ public interface CobaltData {
         final Multimap<Chromosome, PCFPosition> tumorSegments =
                 PCFFile.readPositions(commonConfig.windowSize(), PCFSource.TUMOR_RATIO, tumorSegmentFile);
 
+        final List<MedianRatio> medianRatios = MedianRatioFactory.create(ratios);
+        final CobaltChromosomes cobaltChromosomes = new CobaltChromosomes(medianRatios);
+
         return ImmutableCobaltData.builder()
                 .ratios(ratios)
                 .gender(gender)
+                .cobaltChromosomes(cobaltChromosomes)
                 .tumorSegments(tumorSegments)
                 .referenceSegments(referenceSegments)
                 .build();

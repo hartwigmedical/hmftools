@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -12,10 +12,11 @@ public class PurityAdjusterAbnormalChromosome extends PurityAdjuster {
 
     private final Map<String, Double> observedRatioMap;
 
-    public PurityAdjusterAbnormalChromosome(final double purity, final double normFactor, final List<CobaltChromosome> chromosomeList) {
+    public PurityAdjusterAbnormalChromosome(final double purity, final double normFactor,
+            final Collection<CobaltChromosome> chromosomeList) {
         super(purity, normFactor);
         this.observedRatioMap =
-                chromosomeList.stream().collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::observedRatio));
+                chromosomeList.stream().collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::actualRatio));
     }
 
     @Override

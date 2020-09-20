@@ -9,5 +9,5 @@ public enum ChromosomalAberration {
     TRISOMY_13,
     TRISOMY_15,
     TRISOMY_18,
-    TRISOMY_21;
+    TRISOMY_21
 }

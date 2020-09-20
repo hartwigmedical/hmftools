@@ -15,7 +15,7 @@ public interface CobaltChromosome extends Chromosome {
 
     double typicalRatio();
 
-    double observedRatio();
+    double actualRatio();
 
     boolean mosiac();
 

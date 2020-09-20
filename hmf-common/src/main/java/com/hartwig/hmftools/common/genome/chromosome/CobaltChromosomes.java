@@ -68,7 +68,7 @@ public class CobaltChromosomes {
 
             final ChromosomalAberration aberration = aberration(isFemale, contig, ratio.medianRatio(), minAutosomeRatio);
             final double typicalRatio = typicalRatio(isFemale, contig);
-            final double observedRatio = observedRatio(aberration, typicalRatio, ratio.medianRatio());
+            final double actualRatio = actualRatio(aberration, typicalRatio, ratio.medianRatio());
 
             if (aberration != ChromosomalAberration.NONE) {
                 aberrations.add(aberration);
@@ -78,7 +78,7 @@ public class CobaltChromosomes {
                 CobaltChromosome chromosome = ImmutableCobaltChromosome.builder()
                         .contig(ratio.chromosome())
                         .typicalRatio(typicalRatio)
-                        .observedRatio(observedRatio)
+                        .actualRatio(actualRatio)
                         .isAllosome(isX || isY)
                         .isAutosome(!isX && !isY)
                         .mosiac(aberration == ChromosomalAberration.MOSAIC_X)
@@ -107,7 +107,7 @@ public class CobaltChromosomes {
         return chromosomeMap.values();
     }
 
-    private static double observedRatio(ChromosomalAberration aberration, double typicalRatio, double medianRatio) {
+    private static double actualRatio(ChromosomalAberration aberration, double typicalRatio, double medianRatio) {
         switch (aberration) {
             case TRISOMY_X:
             case TRISOMY_13:

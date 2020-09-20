@@ -29,7 +29,7 @@ class DiploidRatioSupplier {
                 if (chromosome.equals(HumanChromosome._Y)) {
                     adjustedRatios = ratios;
                 } else {
-                    double expectedRatio = cobaltChromosome.observedRatio();
+                    double expectedRatio = cobaltChromosome.actualRatio();
                     adjustedRatios = new DiploidRatioNormalization(expectedRatio,
                             ROLLING_MEDIAN_MAX_DISTANCE,
                             ROLLING_MEDIAN_MIN_COVERAGE,

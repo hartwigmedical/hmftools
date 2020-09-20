@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
+import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -86,7 +86,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-public class PurityPloidyEstimateApplication   {
+public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
     private static final int THREADS_DEFAULT = 2;
@@ -156,14 +156,17 @@ public class PurityPloidyEstimateApplication   {
             final BestFit bestFit =
                     fitPurity(executorService, configSupplier, cobaltGender, fittingSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
-            final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(cobaltGender, fittedPurity);
+            final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(fittedPurity.purity(),
+                    fittedPurity.normFactor(),
+                    configSupplier.cobaltData().cobaltChromosomes().chromosomes());
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
-            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(cobaltGender, smoothingConfig.minDiploidTumorRatioCount(),
+            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
                     configSupplier.amberData().averageTumorDepth(),
                     fittedPurity.ploidy(),
-                    purityAdjuster);
+                    purityAdjuster,
+                    configSupplier.cobaltData().cobaltChromosomes());
 
             LOGGER.info("Calculating copy number");
             List<FittedRegion> fittedRegions =

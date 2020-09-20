@@ -2,18 +2,17 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
 final class PopulateUnknown {
 
-    private final Gender gender;
+    private final CobaltChromosomes cobaltChromosomes;
 
-    PopulateUnknown(final Gender gender) {
-        this.gender = gender;
+    PopulateUnknown(final CobaltChromosomes cobaltChromosomes) {
+        this.cobaltChromosomes = cobaltChromosomes;
     }
 
     @NotNull
@@ -24,7 +23,7 @@ final class PopulateUnknown {
 
             if (region.copyNumberMethod() == CopyNumberMethod.UNKNOWN) {
 
-                double normalCopyNumber = HumanChromosome.fromString(region.chromosome()).isDiploid(gender) ? 2 : 1;
+                double normalCopyNumber = 2 * cobaltChromosomes.get(region.chromosome()).actualRatio();
                 region.setTumorCopyNumber(CopyNumberMethod.UNKNOWN, normalCopyNumber);
 
                 if (region.support() == SegmentSupport.NONE && i > 0) {

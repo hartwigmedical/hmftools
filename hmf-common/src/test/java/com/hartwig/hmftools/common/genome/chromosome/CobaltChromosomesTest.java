@@ -18,9 +18,20 @@ import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
+import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
 
 public class CobaltChromosomesTest {
+
+    public static CobaltChromosomes female() {
+        List<MedianRatio> ratios = Lists.newArrayList();
+        for (int i = 0; i < 22; i++) {
+            ratios.add(create(String.valueOf(i), 1));
+        }
+
+        ratios.add(create("X", 1));
+        return new CobaltChromosomes(ratios);
+    }
 
     @Test
     public void testFemale() {
@@ -31,7 +42,7 @@ public class CobaltChromosomesTest {
         assertEquals(Gender.FEMALE, victim.gender());
         assertEquals(0, victim.aberrations().size());
 
-        assertEquals(1, victim.get("X").observedRatio(), 0.01);
+        assertEquals(1, victim.get("X").actualRatio(), 0.01);
     }
 
     @Test
@@ -43,8 +54,8 @@ public class CobaltChromosomesTest {
         assertEquals(Gender.MALE, victim.gender());
         assertEquals(0, victim.aberrations().size());
 
-        assertEquals(0.5, victim.get("X").observedRatio(), 0.01);
-        assertEquals(0.5, victim.get("Y").observedRatio(), 0.01);
+        assertEquals(0.5, victim.get("X").actualRatio(), 0.01);
+        assertEquals(0.5, victim.get("Y").actualRatio(), 0.01);
     }
 
     @Test
@@ -57,8 +68,8 @@ public class CobaltChromosomesTest {
         assertEquals(1, victim.aberrations().size());
         assertTrue(victim.aberrations().contains(ChromosomalAberration.KLINEFELTER));
 
-        assertEquals(1, victim.get("X").observedRatio(), 0.01);
-        assertEquals(0.5, victim.get("Y").observedRatio(), 0.01);
+        assertEquals(1, victim.get("X").actualRatio(), 0.01);
+        assertEquals(0.5, victim.get("Y").actualRatio(), 0.01);
     }
 
     @Test
@@ -92,8 +103,8 @@ public class CobaltChromosomesTest {
         assertEquals(1, victim.aberrations().size());
         assertTrue(victim.aberrations().contains(ChromosomalAberration.MOSAIC_X));
 
-        assertEquals(1, victim.get("1").observedRatio(), 0.01);
-        assertEquals(TWO_X_CUTOFF, victim.get("X").observedRatio(), 0.01);
+        assertEquals(1, victim.get("1").actualRatio(), 0.01);
+        assertEquals(TWO_X_CUTOFF, victim.get("X").actualRatio(), 0.01);
     }
 
     @Test
@@ -118,9 +129,9 @@ public class CobaltChromosomesTest {
         assertEquals(1, victim.aberrations().size());
         assertTrue(victim.aberrations().contains(ChromosomalAberration.XYY));
 
-        assertEquals(1, victim.get("1").observedRatio(), 0.01);
-        assertEquals(0.5, victim.get("X").observedRatio(), 0.01);
-        assertEquals(1, victim.get("Y").observedRatio(), 0.01);
+        assertEquals(1, victim.get("1").actualRatio(), 0.01);
+        assertEquals(0.5, victim.get("X").actualRatio(), 0.01);
+        assertEquals(1, victim.get("Y").actualRatio(), 0.01);
     }
 
     @Test
@@ -142,12 +153,12 @@ public class CobaltChromosomesTest {
         assertTrue(victim.aberrations().contains(ChromosomalAberration.TRISOMY_21));
         assertTrue(victim.aberrations().contains(ChromosomalAberration.TRISOMY_X));
 
-        assertEquals(1.5, victim.get("13").observedRatio(), 0.01);
-        assertEquals(1.5, victim.get("15").observedRatio(), 0.01);
-        assertEquals(1.5, victim.get("18").observedRatio(), 0.01);
-        assertEquals(1.5, victim.get("21").observedRatio(), 0.01);
-        assertEquals(1, victim.get("22").observedRatio(), 0.01);
-        assertEquals(1.5, victim.get("X").observedRatio(), 0.01);
+        assertEquals(1.5, victim.get("13").actualRatio(), 0.01);
+        assertEquals(1.5, victim.get("15").actualRatio(), 0.01);
+        assertEquals(1.5, victim.get("18").actualRatio(), 0.01);
+        assertEquals(1.5, victim.get("21").actualRatio(), 0.01);
+        assertEquals(1, victim.get("22").actualRatio(), 0.01);
+        assertEquals(1.5, victim.get("X").actualRatio(), 0.01);
     }
 
 
