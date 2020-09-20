@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.LOG_COUNT;
+import static com.hartwig.hmftools.isofox.fusion.FusionConfig.LOG_READ_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
@@ -189,6 +189,8 @@ public class FusionFinder implements Callable
         processReadGroups(readGroups, true);
     }
 
+    private static final int LOG_COUNT = 10000;
+
     private void processReadGroups(final List<ReadGroup> readGroups, boolean isInterChromosomal)
     {
         // read groups are guaranteed to be complete
@@ -201,7 +203,8 @@ public class FusionFinder implements Callable
         mPerfCounter.start();
 
         // first turn them into fragments, then look for fusions
-        ISF_LOGGER.info("processing {} chimeric read groups", readGroups.size());
+        ISF_LOGGER.debug("chr({}) processing {} {} chimeric read groups",
+                mTaskId, readGroups.size(), isInterChromosomal ? "inter-chromosome" : "local");
 
         int readGroupCount = 0;
         int nextLog = LOG_COUNT;
@@ -213,26 +216,19 @@ public class FusionFinder implements Callable
             if(readGroupCount >= nextLog)
             {
                 nextLog += LOG_COUNT;
-                ISF_LOGGER.info("processed {} chimeric read groups", readGroupCount);
+                ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups",
+                        mTaskId, isInterChromosomal ? "inter-chromosome" : "local", readGroupCount);
             }
 
             final List<ReadRecord> reads = readGroup.Reads;
 
-            if(reads.stream().anyMatch(x -> mGeneFilters.skipRead(x.mateChromosome(), x.mateStartPosition())))
+            if(reads.get(0).Id.equals(LOG_READ_ID))
             {
-                continue;
+                ISF_LOGGER.debug("specific read: {}", reads.get(0));
             }
 
-            if(isInterChromosomal)
-            {
-                /*
-                if(mDuplicateReadIds.contains(reads.get(0).Id) || reads.stream().anyMatch(x -> x.isDuplicate()))
-                {
-                    ++duplicates;
-                    continue;
-                }
-                */
-            }
+            if(reads.stream().anyMatch(x -> mGeneFilters.skipRead(x.mateChromosome(), x.mateStartPosition())))
+                continue;
 
             FusionFragment fragment = new FusionFragment(readGroup);
 
@@ -253,6 +249,14 @@ public class FusionFinder implements Callable
             writeFusionSummary();
         }
 
+        if(readGroupCount > LOG_COUNT)
+        {
+            ISF_LOGGER.info("{}: fusion task complete, fusions({}) unassigned(disc={} realgn={})",
+                    mTaskId, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
+                    mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
+                    mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum());
+        }
+
         mPerfCounter.stop();
     }
 
@@ -270,15 +274,13 @@ public class FusionFinder implements Callable
 
     private void processFragments()
     {
-        int initialFragmentCount = mAllFragments.size();
-
-        ISF_LOGGER.info("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
+        // ISF_LOGGER.debug("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
 
         formInitialFusions();
         reconcileFusions();
 
         // assign any discordant reads
-        ISF_LOGGER.debug("{}: assigning unfused fragments", mTaskId);
+        // ISF_LOGGER.debug("{}: assigning unfused fragments", mTaskId);
         assignDiscordantFragments();
         createLocalFusions();
     }
@@ -286,13 +288,7 @@ public class FusionFinder implements Callable
     private void writeFusionSummary()
     {
         annotateFusions();
-
         writeData();
-
-        ISF_LOGGER.info("{}: fusion task complete, fusions({}) unassigned(disc={} realgn={})",
-                mTaskId, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
-                mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
-                mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum());
     }
 
     public final PerformanceCounter getPerfCounter() { return mPerfCounter; }
@@ -325,7 +321,7 @@ public class FusionFinder implements Callable
             }
         }
 
-        ISF_LOGGER.info("{}: chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
+        ISF_LOGGER.debug("{}: chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
@@ -337,8 +333,6 @@ public class FusionFinder implements Callable
 
     private void annotateFusions()
     {
-        ISF_LOGGER.debug("{}: annotating fusions", mTaskId);
-
         markRelatedFusions();
 
         for (List<FusionReadData> fusions : mFusionCandidates.values())
@@ -355,9 +349,6 @@ public class FusionFinder implements Callable
         // write results
         mFusionWriter.writeFusionData(mFusionCandidates);
         mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
-
-        // TODO
-        //mFusionWriter.writeUnfusedFragments(mRealignCandidateFragments);
     }
 
     private FusionReadData findExistingFusion(final FusionFragment fragment)
@@ -422,7 +413,7 @@ public class FusionFinder implements Callable
         // add to the cache by gene for later assignment or realigned fragments
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            if(se == SE_END && fragment.geneCollections()[SE_START] == fragment.geneCollections()[SE_END])
+            if(se == SE_END && fragment.isSingleGeneCollection())
                 break;
 
             final String chrGenePair = fragment.chrGeneCollection(se).toString();

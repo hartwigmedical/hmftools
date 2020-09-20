@@ -38,8 +38,7 @@ public class ChimericReadTracker
     private GeneCollection mGeneCollection; // the current collection being processed
     private final Map<String,ReadGroup> mChimericReadMap;
 
-    // junction position from fusion junction candidate reads are cached to a) identify candidate realignable reads and b)
-    // to guide the storage of base depth
+    // junction position from fusion junction candidate reads are cached to identify candidate realignable reads
     private final Set<Integer> mJunctionPositions;
 
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
@@ -69,7 +68,6 @@ public class ChimericReadTracker
     public final Map<String,ReadGroup> getReadMap() { return mChimericReadMap; }
     public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
     public final List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
-    public Set<String> getDuplicateReadIds() { return mDuplicateReadIds; }
     public ChimericStats getStats() { return mChimericStats; }
     public void addKnownPairGeneIds(final List<String[]> geneIds) { mKnownPairGeneIds.addAll(geneIds); }
 

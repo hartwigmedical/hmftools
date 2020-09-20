@@ -163,7 +163,6 @@ public class BamFragmentAllocator
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
     public BaseDepth getBaseDepth() { return mBaseDepth; }
     public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
-    public final Set<String> getChimericDuplicateReadIds() { return mChimericReads.getDuplicateReadIds(); }
 
     private static int GENE_LOG_COUNT = 100000;
 
@@ -298,8 +297,8 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "A00624:105:HFC2TDSXY:3:2429:20464:16611";
-    // private static final int LOG_READ_POS = 117642557;
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:12403:2301:11039";
+    private static final int LOG_READ_POS = 117642557;
 
     private void processRead(ReadRecord read)
     {

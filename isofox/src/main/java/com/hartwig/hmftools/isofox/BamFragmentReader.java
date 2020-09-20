@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.fusion.FusionTaskManager.mergeDuplicateReadIds;
 
 import java.util.List;
 import java.util.Map;
@@ -39,8 +38,6 @@ import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
-import com.hartwig.hmftools.isofox.fusion.FusionFragment;
-import com.hartwig.hmftools.isofox.fusion.FusionFragmentCache;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.fusion.ReadGroup;
@@ -69,7 +66,6 @@ public class BamFragmentReader implements Callable
     // fusion state cached across all gene collections
     private final FusionTaskManager mFusionTaskManager;
     private final FusionFinder mFusionFinder;
-    private final Set<String> mChimericDuplicateReadIds;
     private final ChimericStats mChimericStats;
 
     // cache of results
@@ -88,7 +84,8 @@ public class BamFragmentReader implements Callable
     private static final int PERF_NOVEL_LOCATIONS = 2;
     public static final int PERF_FIT = 3;
     public static final int PERF_GC_ADJUST = 4;
-    private static final int PERF_MAX = PERF_GC_ADJUST+1;
+    public static final int PERF_FUSIONS = 5;
+    private static final int PERF_MAX = PERF_FUSIONS+1;
 
     private final PerformanceCounter[] mPerfCounters;
 
@@ -126,7 +123,6 @@ public class BamFragmentReader implements Callable
         mTotalReadsProcessed = 0;
         mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
-        mChimericDuplicateReadIds = Sets.newHashSet();
         mChimericStats = new ChimericStats();
 
         mFusionTaskManager = fusionManager;
@@ -137,6 +133,7 @@ public class BamFragmentReader implements Callable
         mPerfCounters[PERF_READS] = new PerformanceCounter("ReadCounts");
         mPerfCounters[PERF_NOVEL_LOCATIONS] = new PerformanceCounter("NovelLocations");
         mPerfCounters[PERF_FIT] = new PerformanceCounter("ExpressFit");
+        mPerfCounters[PERF_FUSIONS] = new PerformanceCounter("Fusions");
         mPerfCounters[PERF_GC_ADJUST] = new PerformanceCounter("GcAdjust");
 
         if(mConfig.RunPerfChecks)
@@ -149,12 +146,6 @@ public class BamFragmentReader implements Callable
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
 
-    public final Map<String,ReadGroup> getChimericPartialReadGroups()
-    {
-        return mFusionFinder != null ? mFusionFinder.getChimericPartialReadGroups() : null;
-    }
-
-    public final Set<String> getChimericDuplicateReadIds() { return mChimericDuplicateReadIds; }
     public final ChimericStats getChimericStats() { return mChimericStats; }
     public boolean isValid() { return mIsValid; }
     public int totalReadCount() { return mTotalReadsProcessed; }
@@ -199,7 +190,7 @@ public class BamFragmentReader implements Callable
         int nextLogCount = 100;
         int lastGeneCollectionEndPosition = 1;
 
-        boolean genesFiltered = !mConfig.RestrictedGeneIds.isEmpty();
+        boolean genesFiltered = !mConfig.RestrictedGeneIds.isEmpty() || !mConfig.SpecificRegions.isEmpty();
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
@@ -274,19 +265,26 @@ public class BamFragmentReader implements Callable
             if(nextLogCount > 100)
             {
                 ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
-                ISF_LOGGER.info("chr({}) chimeric data: {} dups={}", mChromosome, mChimericStats, mChimericDuplicateReadIds.size());
+                ISF_LOGGER.info("chr({}) chimeric data: {}", mChromosome, mChimericStats);
             }
+
+            mPerfCounters[PERF_FUSIONS].start();
 
             // handle fragments spanning multiple chromosomes
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
                     mChromosome, mFusionFinder.getChimericPartialReadGroups(), mFusionFinder.getRealignCandidateFragments());
 
-            mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
+            if(!interChromosomalGroups.isEmpty())
+            {
+                ISF_LOGGER.info("chr({}) processing {} inter-chromosomal group", mChromosome, interChromosomalGroups.size());
 
-            //final Map<String,List<FusionFragment>> racFragaments = mFusionTaskManager.getRacFragments(mFusionFinder.extractChrGeneCollectionPairs());
+                mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
 
-            // finally assign RAC fragements from the global cache
-            mFusionFinder.assignInterChromosomalRacFragments(mFusionTaskManager.getRealignCandidateMap());
+                // assign RAC fragements from the global cache
+                mFusionFinder.assignInterChromosomalRacFragments(mFusionTaskManager.getRealignCandidateMap());
+            }
+
+            mPerfCounters[PERF_FUSIONS].stop();
         }
     }
 
@@ -473,6 +471,8 @@ public class BamFragmentReader implements Callable
         if(!mConfig.runFunction(FUSIONS) || mFusionFinder == null)
             return;
 
+        mPerfCounters[PERF_FUSIONS].start();
+
         // pass any complete chimeric read groups to the fusion finder
         // and add to this any groups which are now complete (ie which were partially complete before)
         // cache any incomplete groups, either for later gene collections or from other chromosomes
@@ -482,16 +482,14 @@ public class BamFragmentReader implements Callable
 
         mFusionFinder.processLocalReadGroups(completeReadGroups);
 
-        mergeDuplicateReadIds(mChimericDuplicateReadIds, mBamFragmentAllocator.getChimericDuplicateReadIds());
         mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
+        mPerfCounters[PERF_FUSIONS].stop();
     }
 
     public void applyGcAdjustment()
     {
         mPerfCounters[PERF_GC_ADJUST].start();
-
         mTranscriptGcRatios.generateGcCountsFromFit(mGeneCollectionSummaryData);
-
         mPerfCounters[PERF_GC_ADJUST].pause();
     }
 

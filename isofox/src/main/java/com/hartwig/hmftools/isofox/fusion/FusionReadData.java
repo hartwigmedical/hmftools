@@ -162,6 +162,7 @@ public class FusionReadData
 
     public void addFusionFragment(final FusionFragment fragment)
     {
+        fragment.assignedFusions().add(this);
         List<FusionFragment> fragments = mFragments.get(fragment.type());
 
         if (fragments == null)

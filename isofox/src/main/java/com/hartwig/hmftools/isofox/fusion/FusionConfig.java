@@ -20,6 +20,10 @@ public class FusionConfig
     private static final String WRITE_CHIMERIC_FRAGS = "write_chimeric_frags";
     private static final String CHIMERIC_READ_FILE = "chimeric_reads_file";
 
+    // debug
+    public static final String LOG_READ_ID = "";
+    // public static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:23308:18394:18413";
+
     public FusionConfig(final CommandLine cmd)
     {
         WriteChimericReads = cmd.hasOption(WRITE_CHIMERIC_READS);

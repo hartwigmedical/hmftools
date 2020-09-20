@@ -126,13 +126,13 @@ public class FusionFragmentBuilder
                 setSplitReadJunctionData(fragment, splitRead);
                 return;
             }
-        }
 
-        // set single junction info for candidate realignable reads
-        if(fragment.reads().stream().anyMatch(x -> isRealignedFragmentCandidate(x)))
-        {
-            setSingleSoftClipJunctionData(fragment);
-            return;
+            // set single junction info for candidate realignable reads
+            if(fragment.reads().stream().anyMatch(x -> isRealignedFragmentCandidate(x)))
+            {
+                setSingleSoftClipJunctionData(fragment);
+                return;
+            }
         }
 
         // set gene collection and orientation for discordant reads

@@ -50,7 +50,6 @@ import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadCache;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
-import com.hartwig.hmftools.isofox.fusion.FusionFragmentCache;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
@@ -104,8 +103,7 @@ public class Isofox
     {
         if(mConfig.runFunction(FUSIONS) && mConfig.Fusions.ChimericReadsFile != null)
         {
-            mFusionTaskManager.addChimericReads(ChimericReadCache.loadChimericReads(mConfig.Fusions.ChimericReadsFile));
-            mFusionTaskManager.findFusions();
+            mFusionTaskManager.processCachedFragments(ChimericReadCache.loadChimericReads(mConfig.Fusions.ChimericReadsFile));
             return true;
         }
 
@@ -191,23 +189,13 @@ public class Isofox
         {
             // extract all chimeric reads and associated data for fusion calling
             ChimericStats chimericStats = new ChimericStats();
-            for(BamFragmentReader chrTask : chrTasks)
-            {
-                mFusionTaskManager.addChimericReads(chrTask.getChimericPartialReadGroups());
-                mFusionTaskManager.addDuplicateReadIds(chrTask.getChimericDuplicateReadIds());
-                chimericStats.merge(chrTask.getChimericStats());
-            }
-
-            ISF_LOGGER.info("chimeric stats: {}", chimericStats);
+            chrTasks.forEach(x -> chimericStats.merge(x.getChimericStats()));
+            ISF_LOGGER.info("overall chimeric stats: {}", chimericStats);
+            mFusionTaskManager.close();
         }
 
         final List<PerformanceCounter[]> perfCounters = chrTasks.stream().map(x -> x.getPerfCounters()).collect(Collectors.toList());
         chrTasks.clear();
-
-        if(mConfig.runFunction(FUSIONS))
-        {
-            mFusionTaskManager.findFusions();
-        }
 
         logPerformanceStats(perfCounters);
         return true;

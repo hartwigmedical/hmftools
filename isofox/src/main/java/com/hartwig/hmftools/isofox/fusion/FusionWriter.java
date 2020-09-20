@@ -22,6 +22,7 @@ public class FusionWriter
     private BufferedWriter mFragmentWriter;
     private final ChimericReadCache mChimericReadCache;
     private final boolean mWriteReads;
+    private final boolean mWriteFragments;
 
     private int mNextFusionId;
 
@@ -29,6 +30,7 @@ public class FusionWriter
     {
         mConfig = config;
         mWriteReads = mConfig.Fusions.WriteChimericReads;
+        mWriteFragments = mConfig.Fusions.WriteChimericFragments;
 
         mFusionWriter = null;
         mFragmentWriter = null;
@@ -85,7 +87,7 @@ public class FusionWriter
                 }
             }
 
-            if(mWriteReads)
+            if(mWriteReads || mWriteFragments)
             {
                 for (List<FusionReadData> fusions : fusionCandidates.values())
                 {
@@ -95,8 +97,11 @@ public class FusionWriter
                         {
                             for (FusionFragment fragment : entry.getValue())
                             {
-                                writeFragmentData(fragment, fusionId(fusion.id()), entry.getKey());
-                                writeReadData(fragment.reads(), fusionId(fusion.id()));
+                                if(mWriteFragments)
+                                    writeFragmentData(fragment, fusionId(fusion.id()), entry.getKey());
+
+                                if(mWriteReads)
+                                    writeReadData(fragment.reads(), fusionId(fusion.id()));
                             }
                         }
                     }
@@ -111,18 +116,22 @@ public class FusionWriter
 
     public synchronized void writeReadData(final List<ReadRecord> reads, final String groupStatus)
     {
-        mChimericReadCache.writeReadData(reads, groupStatus);
+        if(mWriteReads)
+            mChimericReadCache.writeReadData(reads, groupStatus);
     }
 
     public synchronized void writeUnfusedFragments(final Map<String,List<FusionFragment>> unfusedFragments)
     {
-        if(!mWriteReads)
+        if(!mWriteFragments)
             return;
 
         for(List<FusionFragment> fragments : unfusedFragments.values())
         {
             for(FusionFragment fragment : fragments)
             {
+                if(!fragment.assignedFusions().isEmpty())
+                    continue;
+
                 writeFragmentData(fragment, "UNFUSED", fragment.type());
                 writeReadData(fragment.reads(), "UNFUSED");
             }
@@ -131,7 +140,7 @@ public class FusionWriter
 
     private void initialiseFragmentWriter()
     {
-        if(!mWriteReads)
+        if(!mWriteFragments)
             return;
 
         try
@@ -165,7 +174,7 @@ public class FusionWriter
 
     public synchronized void writeFragmentData(final FusionFragment fragment, final String fusionId, FusionFragmentType type)
     {
-        if(!mWriteReads)
+        if(!mWriteFragments)
             return;
 
         try

@@ -20,9 +20,11 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -48,6 +50,8 @@ public class FusionFragment
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
     private final List<TransExonRef>[] mTransExonRefs;
 
+    private final Set<FusionReadData> mFusions;
+
     public FusionFragment(final ReadGroup readGroup)
     {
         mReadGroup = readGroup;
@@ -65,6 +69,8 @@ public class FusionFragment
         mTransExonRefs = new List[SE_PAIR];
         mTransExonRefs[SE_START] = Lists.newArrayList();
         mTransExonRefs[SE_END] = Lists.newArrayList();
+
+        mFusions = Sets.newHashSet();
 
         mType = UNKNOWN;
 
@@ -92,8 +98,8 @@ public class FusionFragment
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
     public final byte[] orientations() { return mOrientations; }
-    public final String[] locationIds() { return mLocationIds; }
     public ChrGeneCollectionPair chrGeneCollection(int se) { return new ChrGeneCollectionPair(mChromosomes[se], mGeneCollections[se]); }
+    public final Set<FusionReadData> assignedFusions() { return mFusions; }
 
     public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 

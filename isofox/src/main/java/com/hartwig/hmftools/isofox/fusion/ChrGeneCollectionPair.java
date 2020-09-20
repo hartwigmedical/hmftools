@@ -18,4 +18,9 @@ public class ChrGeneCollectionPair
         final String[] items = chrGenePair.split("_");
         return items.length == 2 ? new ChrGeneCollectionPair(items[0], Integer.parseInt(items[1])) : null;
     }
+
+    public boolean equals(final ChrGeneCollectionPair other)
+    {
+        return Chromosome.equals(other.Chromosome) && GeneCollectionId == other.GeneCollectionId;
+    }
 }

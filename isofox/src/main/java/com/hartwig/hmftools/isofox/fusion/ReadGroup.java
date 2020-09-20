@@ -42,6 +42,8 @@ public class ReadGroup
         return reads.stream().anyMatch(x -> x.hasSuppAlignment());
     }
 
+    public boolean isDuplicate() { return Reads.stream().anyMatch(x -> x.isDuplicate()); }
+
     public void merge(final ReadGroup other)
     {
         Reads.addAll(other.Reads);
