@@ -2,22 +2,11 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelAssembly;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -37,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PatientReporterTestFactory {
 
-    public static final String ONCOGENE = "AR";
+    public static final String ONCOGENE = "KIT";
     public static final String TSG = "PTEN";
 
     private PatientReporterTestFactory() {
@@ -139,10 +128,9 @@ public final class PatientReporterTestFactory {
                 .clonalLikelihood(1D)
                 .alleleReadCount(0)
                 .totalReadCount(0)
-                .allelePloidy(0D)
-                .totalPloidy(0)
+                .alleleCopyNumber(0D)
+                .totalCopyNumber(0)
                 .biallelic(false)
-                .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0D)
                 .notifyClinicalGeneticist(false);
     }
@@ -174,49 +162,5 @@ public final class PatientReporterTestFactory {
     public static GermlineReportingModel createTestEmptyGermlineGenesReporting() {
         Map<String, Boolean> germlineGenesReportingMap = Maps.newHashMap();
         return GermlineReportingModelTestFactory.buildFromMap(germlineGenesReportingMap);
-    }
-
-    @NotNull
-    public static DriverGenePanel createTestDriverGenePanel(@NotNull String oncogene, @NotNull String tsg) {
-        DriverGene oncoGene = createTestDriverGene(oncogene, DriverCategory.ONCO);
-        DriverGene tsgGene = createTestDriverGene(tsg, DriverCategory.TSG);
-        return DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, Lists.newArrayList(oncoGene, tsgGene));
-    }
-
-    @NotNull
-    public static DriverCatalog createTestDriverCatalogEntry(@NotNull String gene) {
-        return ImmutableDriverCatalog.builder()
-                .gene(gene)
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .category(DriverCategory.ONCO)
-                .driver(DriverType.MUTATION)
-                .likelihoodMethod(LikelihoodMethod.NONE)
-                .driverLikelihood(0D)
-                .dndsLikelihood(0D)
-                .missense(0)
-                .nonsense(0)
-                .splice(0)
-                .inframe(0)
-                .frameshift(0)
-                .biallelic(false)
-                .minCopyNumber(0)
-                .maxCopyNumber(0)
-                .build();
-    }
-
-    @NotNull
-    private static DriverGene createTestDriverGene(@NotNull final String gene, @NotNull final DriverCategory type) {
-        return ImmutableDriverGene.builder()
-                .gene(gene)
-                .reportMissenseAndInframe(true)
-                .reportNonsenseAndFrameshift(false)
-                .reportSplice(false)
-                .reportDeletion(false)
-                .reportDisruption(false)
-                .reportAmplification(false)
-                .reportHotspot(false)
-                .likelihoodType(type)
-                .build();
     }
 }

@@ -34,11 +34,12 @@ public class CopyNumberEvidenceAnalyzerTest {
 
         CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", "4159");
 
-        assertEquals(1, cnvAnalyzer.evidenceForCopyNumber(createTestReportableGainsAndLosses("ERBB2"), 2D, "Breast", cancerTypeAnalyzer).size());
+        assertEquals(1,
+                cnvAnalyzer.evidenceForCopyNumber(createTestReportableGainsAndLosses("ERBB2"), "Breast", cancerTypeAnalyzer).size());
     }
 
     @NotNull
-    private static ReportableGainLoss createTestReportableGainsAndLosses (@NotNull String gene){
+    private static ReportableGainLoss createTestReportableGainsAndLosses(@NotNull String gene) {
         return createTestReportableGainLossBuilder().gene(gene).build();
     }
 
@@ -51,5 +52,4 @@ public class CopyNumberEvidenceAnalyzerTest {
                 .copies(10)
                 .interpretation(CopyNumberInterpretation.GAIN);
     }
-
 }

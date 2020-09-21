@@ -301,7 +301,7 @@ public class QCFailChapter implements ReportChapter {
         return createContentParagraphTwice("This experiment is performed on the blood sample which arrived on ",
                 DataUtil.formatDate(failReport.sampleReport().refArrivalDate()),
                 " with internal blood barcode ",
-                failReport.sampleReport().refSampleBarcode());
+                DataUtil.formatNullableString(failReport.sampleReport().refSampleBarcode()));
     }
 
     @NotNull
@@ -366,7 +366,6 @@ public class QCFailChapter implements ReportChapter {
         div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
         return div;
     }
-
 
     @NotNull
     private static Paragraph createContentParagraphRed(@NotNull String text) {

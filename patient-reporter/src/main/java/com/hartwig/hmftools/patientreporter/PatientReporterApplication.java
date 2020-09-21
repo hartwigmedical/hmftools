@@ -24,7 +24,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReporterApplication {
@@ -34,7 +33,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //                public static final String VERSION = "7.14";
+    //                public static final String VERSION = "7.15";
 
     public static void main(@NotNull String[] args) throws IOException {
         Options options = PatientReporterConfig.createOptions();
@@ -60,15 +59,20 @@ public class PatientReporterApplication {
                     config.purplePurityTsv(),
                     config.comments(),
                     config.correctedReport());
+
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
-            generateJsonFileOfData(config.outputDirData(),
-                    report.sampleReport().tumorSampleId(),
-                    report.sampleReport().tumorSampleBarcode(),
-                    report);
+            if (!config.onlyCreatePDF()) {
+                LOGGER.debug("Updating additional files and databases");
 
-            ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+                writeReportDataToJson(config.outputDirData(),
+                        report.sampleReport().tumorSampleId(),
+                        report.sampleReport().tumorSampleBarcode(),
+                        report);
+
+                ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+            }
         } else {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(config));
@@ -87,22 +91,26 @@ public class PatientReporterApplication {
                     config.chordPredictionTxt(),
                     config.circosFile(),
                     config.comments(),
-                    config.correctedReport(),
-                    config.unofficialReport());
+                    config.correctedReport());
+
             String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
 
-            generateJsonFileOfData(config.outputDirData(),
-                    report.sampleReport().sampleMetadata().tumorSampleId(),
-                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                    report);
+            if (!config.onlyCreatePDF()) {
+                LOGGER.debug("Updating additional files and databases");
 
-            ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
+                writeReportDataToJson(config.outputDirData(),
+                        report.sampleReport().sampleMetadata().tumorSampleId(),
+                        report.sampleReport().sampleMetadata().tumorSampleBarcode(),
+                        report);
+
+                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
+            }
         }
     }
 
-    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId,
-            @NotNull String tumorBarcode, @NotNull PatientReport report) throws IOException {
+    private static void writeReportDataToJson(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
+            @NotNull PatientReport report) throws IOException {
         String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
         Gson gson = new Gson();
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
@@ -118,28 +126,9 @@ public class PatientReporterApplication {
 
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
-        String refSampleId;
-        String refSampleBarcode;
-
-        // if ref sample barcode is null change to N/A
-        if (config.refSampleBarcode() == null) {
-            LOGGER.warn("Ref sample barcode is unknown: {}", config.refSampleBarcode());
-            refSampleBarcode = "N/A";
-        } else {
-            refSampleBarcode = config.refSampleBarcode();
-        }
-
-        // if ref sample Id is null change to N/A
-        if (config.refSampleId() == null) {
-            LOGGER.warn("Ref sample Id is unknown: {}", config.refSampleId());
-            refSampleId = "N/A";
-        } else {
-            refSampleId = config.refSampleId();
-        }
-
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId(refSampleId) // null is changed to N/A
-                .refSampleBarcode(refSampleBarcode) // null is changed to N/A
+                .refSampleId(config.refSampleId())
+                .refSampleBarcode(config.refSampleBarcode())
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
                 .build();
@@ -177,8 +166,7 @@ public class PatientReporterApplication {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.knowledgebaseDir(),
                 config.germlineGenesCsv(),
-                config.sampleSummaryTsv(),
-                config.driverGenePanelTsv());
+                config.sampleSummaryTsv());
     }
 
     @NotNull

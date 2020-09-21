@@ -28,4 +28,9 @@ public final class DataUtil {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         return date != null ? formatter.format(date) : NA_STRING;
     }
+
+    @NotNull
+    public static String formatNullableString(@Nullable String string) {
+        return string != null ? string : NA_STRING;
+    }
 }

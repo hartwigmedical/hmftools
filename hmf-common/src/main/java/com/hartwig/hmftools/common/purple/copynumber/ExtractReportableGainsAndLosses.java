@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ExtractReportableGainsAndLosses {
@@ -26,18 +25,16 @@ public final class ExtractReportableGainsAndLosses {
                 includeInReport = true;
             } else if (driver.driver() == DriverType.DEL) {
                 GeneCopyNumber geneCopyNumber = findByGeneName(geneCopyNumbers, driver.gene());
+
                 // Exclude DELs which are partially germline (see INC-34)
-                if (geneCopyNumber.germlineHet2HomRegions() > 0 || geneCopyNumber.germlineHomRegions() > 0) {
-                    includeInReport = false;
-                }
-                includeInReport = true;
+                includeInReport = geneCopyNumber.germlineHet2HomRegions() == 0 && geneCopyNumber.germlineHomRegions() == 0;
             }
 
             if (includeInReport) {
                 reportableGainsAndLosses.add(ImmutableReportableGainLoss.builder()
                         .chromosome(driver.chromosome())
                         .chromosomeBand(driver.chromosomeBand())
-                        .gene(isCentromereOrTelomere(driver) ? Strings.EMPTY : driver.gene())
+                        .gene(driver.gene())
                         .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
                         .copies(Math.round(Math.max(0, driver.minCopyNumber())))
                         .build());
@@ -56,10 +53,5 @@ public final class ExtractReportableGainsAndLosses {
         }
 
         throw new IllegalStateException("Could not find gene across gene copy numbers: " + gene);
-    }
-
-    private static boolean isCentromereOrTelomere(@NotNull DriverCatalog driver) {
-        String band = driver.chromosomeBand().toLowerCase();
-        return band.contains("centromere") || band.contains("telomere");
     }
 }

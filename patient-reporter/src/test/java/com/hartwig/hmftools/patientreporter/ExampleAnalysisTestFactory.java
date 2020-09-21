@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
@@ -26,14 +25,14 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -137,7 +136,6 @@ public final class ExampleAnalysisTestFactory {
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctionReport)
-                .isUnofficialReport(false)
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
@@ -168,7 +166,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<ReportableGeneFusion> fusions = createTestFusions();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<ViralInsertion> viralInsertions = Lists.newArrayList();
+        List<ViralInsertion> viralInsertions = createTestViralInsertions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -201,7 +199,6 @@ public final class ExampleAnalysisTestFactory {
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(false)
-                .isUnofficialReport(false)
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
@@ -510,12 +507,11 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
                 .notifyClinicalGeneticist(false)
-                .driverCategory(DriverCategory.ONCO)
                 .gDNA("7:140453136")
                 .alleleReadCount(150)
                 .totalReadCount(221)
-                .allelePloidy(4.08)
-                .totalPloidy(6.0)
+                .alleleCopyNumber(4.08)
+                .totalCopyNumber(6.0)
                 .hotspot(Hotspot.HOTSPOT)
                 .biallelic(false)
                 .driverLikelihood(1D)
@@ -532,12 +528,11 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalHgvsCodingImpact("c.203_204delCG")
                 .canonicalHgvsProteinImpact("p.Ala68fs")
                 .notifyClinicalGeneticist(reportGermlineVariant)
-                .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
                 .alleleReadCount(99)
                 .totalReadCount(99)
-                .allelePloidy(1.99)
-                .totalPloidy(1.99)
+                .alleleCopyNumber(1.99)
+                .totalCopyNumber(1.99)
                 .hotspot(Hotspot.NEAR_HOTSPOT)
                 .biallelic(true)
                 .clonalLikelihood(1D)
@@ -554,14 +549,13 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .notifyClinicalGeneticist(false)
-                .driverCategory(DriverCategory.ONCO)
                 .gDNA("5:1295228")
                 .alleleReadCount(56)
                 .totalReadCount(65)
-                .allelePloidy(1.74)
-                .totalPloidy(2.0)
+                .alleleCopyNumber(1.74)
+                .totalCopyNumber(2.0)
                 .hotspot(Hotspot.HOTSPOT)
-                .biallelic(false)
+                .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.85)
                 .build();
@@ -576,12 +570,11 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalHgvsCodingImpact("c.2153C>T")
                 .canonicalHgvsProteinImpact("p.Pro718Leu")
                 .notifyClinicalGeneticist(false)
-                .driverCategory(DriverCategory.ONCO)
                 .gDNA("2:198266779")
                 .alleleReadCount(74)
                 .totalReadCount(111)
-                .allelePloidy(2.01)
-                .totalPloidy(3.02)
+                .alleleCopyNumber(2.01)
+                .totalCopyNumber(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .biallelic(false)
                 .clonalLikelihood(1D)
@@ -598,12 +591,11 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
                 .notifyClinicalGeneticist(false)
-                .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
                 .alleleReadCount(47)
                 .totalReadCount(112)
-                .allelePloidy(1.67)
-                .totalPloidy(3.98)
+                .alleleCopyNumber(1.67)
+                .totalCopyNumber(3.98)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .biallelic(false)
                 .clonalLikelihood(1D)
@@ -625,12 +617,11 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
                 .notifyClinicalGeneticist(false)
-                .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
                 .alleleReadCount(48)
                 .totalReadCount(103)
-                .allelePloidy(2.1)
-                .totalPloidy(4.1)
+                .alleleCopyNumber(2.1)
+                .totalCopyNumber(4.1)
                 .biallelic(false)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(0.47)
@@ -647,12 +638,11 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
                 .notifyClinicalGeneticist(true)
-                .driverCategory(DriverCategory.TSG)
                 .gDNA("3:81627197")
                 .alleleReadCount(48)
                 .totalReadCount(103)
-                .allelePloidy(1.3)
-                .totalPloidy(2.5)
+                .alleleCopyNumber(1.3)
+                .totalCopyNumber(2.5)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .biallelic(true)
                 .clonalLikelihood(0.68)
@@ -706,7 +696,7 @@ public final class ExampleAnalysisTestFactory {
                 .gene("PTEN")
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
-                .ploidy(2D)
+                .junctionCopyNumber(2D)
                 .undisruptedCopyNumber(0)
                 .build();
 

@@ -6,8 +6,8 @@ import java.util.Objects;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.fusion.ReportableDisruption;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -34,9 +34,9 @@ final class ReportableGeneDisruptionFactory {
                 double lowestUndisruptedCopyNumber =
                         Math.min(primaryDisruptionLeft.undisruptedCopyNumber(), primaryDisruptionRight.undisruptedCopyNumber());
 
-                Double ploidyLeft = primaryDisruptionLeft.junctionCopyNumber();
-                Double ploidyRight = primaryDisruptionRight.junctionCopyNumber();
-                if (ploidyLeft != null && ploidyRight != null && !Doubles.equal(ploidyLeft, ploidyRight)) {
+                Double copyNumberLeft = primaryDisruptionLeft.junctionCopyNumber();
+                Double copyNumberRight = primaryDisruptionRight.junctionCopyNumber();
+                if (copyNumberLeft != null && copyNumberRight != null && !Doubles.equal(copyNumberLeft, copyNumberRight)) {
                     LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryDisruptionLeft.gene());
                 }
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
@@ -44,7 +44,7 @@ final class ReportableGeneDisruptionFactory {
                         .gene(primaryDisruptionLeft.gene())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
-                        .ploidy(primaryDisruptionLeft.junctionCopyNumber())
+                        .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, lowestUndisruptedCopyNumber))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());
@@ -54,7 +54,7 @@ final class ReportableGeneDisruptionFactory {
                         .gene(primaryDisruptionLeft.gene())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
-                        .ploidy(primaryDisruptionLeft.junctionCopyNumber())
+                        .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, primaryDisruptionLeft.undisruptedCopyNumber()))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());

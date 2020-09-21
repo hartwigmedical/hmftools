@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public enum DriverInterpretation {
     HIGH("High"),
@@ -20,12 +19,8 @@ public enum DriverInterpretation {
         return display;
     }
 
-    @Nullable
-    public static DriverInterpretation interpret(@Nullable Double driverLikelihood) {
-        if (driverLikelihood == null) {
-            return null;
-        }
-
+    @NotNull
+    public static DriverInterpretation interpret(double driverLikelihood) {
         if (driverLikelihood > 0.8) {
             return HIGH;
         } else if (driverLikelihood > 0.2) {

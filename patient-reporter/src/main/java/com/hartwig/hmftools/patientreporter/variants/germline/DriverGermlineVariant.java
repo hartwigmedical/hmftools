@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 
@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ReportableGermlineVariantExtended
-{
+public abstract class DriverGermlineVariant {
+
     @NotNull
     public abstract ReportableGermlineVariant variant();
 

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.Variant;
@@ -54,20 +53,16 @@ public abstract class ReportableVariant implements Variant {
     @NotNull
     public abstract String gDNA();
 
-    public abstract double totalPloidy();
+    public abstract double totalCopyNumber();
 
-    public abstract double allelePloidy();
+    public abstract double alleleCopyNumber();
 
     @NotNull
     public abstract Hotspot hotspot();
 
     public abstract double clonalLikelihood();
 
-    @Nullable
-    public abstract DriverCategory driverCategory();
-
-    @Nullable
-    public abstract Double driverLikelihood();
+    public abstract double driverLikelihood();
 
     public abstract boolean biallelic();
 

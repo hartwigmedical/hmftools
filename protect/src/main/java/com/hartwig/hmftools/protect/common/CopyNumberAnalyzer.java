@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
@@ -28,7 +28,7 @@ public class CopyNumberAnalyzer {
 
     @NotNull
     public static CopyNumberAnalysis analyzeCopyNumbers(@NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleGeneCnvTsv, @NotNull DriverGenePanel genePanel) throws IOException {
+            @NotNull String purpleGeneCnvTsv, @NotNull List<DriverCatalog> driverCatalog) throws IOException {
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
 
@@ -45,7 +45,7 @@ public class CopyNumberAnalyzer {
 
         FittedPurity bestFit = purityContext.bestFit();
         List<ReportableGainLoss> reportableGainsAndLosses =
-                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(genePanel, exomeGeneCopyNumbers, bestFit.ploidy());
+                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, exomeGeneCopyNumbers);
 
         return ImmutableCopyNumberAnalysis.builder()
                 .purity(bestFit.purity())

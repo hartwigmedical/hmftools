@@ -16,9 +16,9 @@ import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -104,20 +104,18 @@ public class ActionabilityAnalyzer {
 
     @NotNull
     public Map<ReportableGainLoss, List<EvidenceItem>> evidenceForCopyNumbers(@NotNull List<ReportableGainLoss> reportableGainsAndLosses,
-            @Nullable String primaryTumorLocation, double averageTumorPloidy) {
+            @Nullable String primaryTumorLocation) {
         Map<ReportableGainLoss, List<EvidenceItem>> evidencePerCopyNumber = Maps.newHashMap();
 
         List<ReportableGainLoss> geneCopyNumbersOnActionableGenes = reportableGainsAndLosses.stream()
                 .filter(reportableGainAndLoss -> copyNumberAnalyzer.actionableGenes().contains(reportableGainAndLoss.gene()))
                 .collect(Collectors.toList());
 
-        // Filtering on significant events is not necessary but just to avoid unnecessary keys with empty evidence
-//        List<GeneCopyNumber> significantGeneCopyNumbersOnActionableGenes =
-//                SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbersOnActionableGenes, averageTumorPloidy);
-
         for (ReportableGainLoss reportableGainLoss : geneCopyNumbersOnActionableGenes) {
             evidencePerCopyNumber.put(reportableGainLoss,
-                    copyNumberAnalyzer.evidenceForCopyNumber(reportableGainLoss, averageTumorPloidy, primaryTumorLocation, cancerTypeAnalyzer));
+                    copyNumberAnalyzer.evidenceForCopyNumber(reportableGainLoss,
+                            primaryTumorLocation,
+                            cancerTypeAnalyzer));
         }
 
         return evidencePerCopyNumber;

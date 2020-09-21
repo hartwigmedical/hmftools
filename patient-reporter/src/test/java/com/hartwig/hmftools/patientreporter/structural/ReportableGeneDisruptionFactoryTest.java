@@ -38,19 +38,22 @@ public class ReportableGeneDisruptionFactoryTest {
         assertEquals(3, disruption.firstAffectedExon());
         assertEquals(2.1, disruption.undisruptedCopyNumber(), EPSILON);
 
-        Double ploidy = disruption.ploidy();
-        assertNotNull(ploidy);
-        assertEquals(1.12, ploidy, EPSILON);
+        Double copyNumber = disruption.junctionCopyNumber();
+        assertNotNull(copyNumber);
+        assertEquals(1.12, copyNumber, EPSILON);
     }
 
     @Test
     public void doesNotPairDisruptionsOnDifferentGenes() {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
 
-        List<ReportableDisruption> pairedDisruptions =
-                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(1.0).build(),
-                        pairedDisruptionBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(2.3).build(),
-                        pairedDisruptionBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(1.7).build());
+        List<ReportableDisruption> pairedDisruptions = Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B")
+                        .svId(1)
+                        .junctionCopyNumber(1.0)
+                        .undisruptedCopyNumber(1.0)
+                        .build(),
+                pairedDisruptionBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(2.3).build(),
+                pairedDisruptionBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(1.7).build());
 
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
 

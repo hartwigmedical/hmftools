@@ -50,18 +50,9 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        ReportChapter[] chapters;
-        if (!report.isUnofficialReport()) {
-            chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
-                    new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
-                    new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
-                    new DetailsAndDisclaimerChapter(report) };
-        } else {
-            // For unofficial reports we don't want to render the details and disclaimers.
-            chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
-                    new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
-                    new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter() };
-        }
+        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
+                new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report), new TumorCharacteristicsChapter(report),
+                new CircosChapter(report), new ExplanationChapter(), new DetailsAndDisclaimerChapter(report) };
 
         writeReport(report, chapters, outputFilePath);
     }

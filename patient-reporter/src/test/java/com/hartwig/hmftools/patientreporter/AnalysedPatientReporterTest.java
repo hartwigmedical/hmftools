@@ -62,7 +62,6 @@ public class AnalysedPatientReporterTest {
                 CHORD_PREDICTION_TXT,
                 CIRCOS_FILE,
                 null,
-                false,
                 false));
     }
 

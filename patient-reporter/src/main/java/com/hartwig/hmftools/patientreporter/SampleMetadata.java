@@ -9,10 +9,10 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class SampleMetadata {
 
-    @NotNull
+    @Nullable
     public abstract String refSampleId();
 
-    @NotNull
+    @Nullable
     public abstract String refSampleBarcode();
 
     @NotNull

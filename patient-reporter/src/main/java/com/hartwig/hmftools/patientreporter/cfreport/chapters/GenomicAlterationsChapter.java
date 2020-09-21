@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.util.List;
 
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
@@ -14,7 +15,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
@@ -99,13 +99,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.ploidyString(variant.totalPloidy(), hasReliablePurity))
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.copyNumberString(variant.totalCopyNumber(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.vafString(variant, hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
-                    variant.driverCategory(),
-                    hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(), hasReliablePurity))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.hotspotString(variant.hotspot()))
                     .setTextAlignment(TextAlignment.CENTER));
             if (DISPLAY_CLONAL_COLUMN) {
@@ -219,8 +218,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
             contentTable.addCell(TableUtil.createContentCell(disruption.range()));
             contentTable.addCell(TableUtil.createContentCell(disruption.type()));
-            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.ploidy(), hasReliablePurity))
-                    .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.junctionCopyNumber(),
+                    hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.undisruptedCopyNumber(),
                     hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
         }

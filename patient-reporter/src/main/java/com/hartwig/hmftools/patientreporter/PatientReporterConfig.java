@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
-
 import java.io.File;
 import java.nio.file.Files;
 
@@ -22,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface PatientReporterConfig {
+
     // General params needed for every report
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
@@ -36,7 +34,7 @@ public interface PatientReporterConfig {
     String COMPANY_LOGO = "company_logo";
     String SIGNATURE = "signature";
 
-    // General params needed for every report but for QC fail it could be null
+    // General params needed for every report but for QC fail it could be missing
     String REF_SAMPLE_ID = "ref_sample_id";
     String REF_SAMPLE_BARCODE = "ref_sample_barcode";
 
@@ -45,7 +43,7 @@ public interface PatientReporterConfig {
     String QC_FAIL_REASON = "qc_fail_reason";
 
     // Params specific for actual patient reports
-    String PURPLE_PURITY_TSV = "purple_purity_tsv";
+    String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
@@ -65,13 +63,12 @@ public interface PatientReporterConfig {
     // Some additional optional params and flags
     String COMMENTS = "comments";
     String CORRECTED_REPORT = "corrected_report";
-    String UNOFFICIAL_REPORT = "unofficial_report";
     String LOG_DEBUG = "log_debug";
+    String ONLY_CREATE_PDF = "only_create_pdf";
 
     @NotNull
     static Options createOptions() {
         Options options = new Options();
-        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
@@ -86,9 +83,9 @@ public interface PatientReporterConfig {
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
         options.addOption(SIGNATURE, true, "Path towards an image file containing the signature to be appended at the end of the report.");
 
-        options.addOption(REF_SAMPLE_ID, false, "The reference sample ID for the tumor sample for which we are generating a report.");
+        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which we are generating a report.");
         options.addOption(REF_SAMPLE_BARCODE,
-                false,
+                true,
                 "The reference sample barcode for the tumor sample for which we are generating a report.");
 
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
@@ -113,8 +110,9 @@ public interface PatientReporterConfig {
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
-        options.addOption(UNOFFICIAL_REPORT, false, "If provided, generates a report with potentially some sections altered.");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
+        options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
+
         return options;
     }
 
@@ -204,15 +202,12 @@ public interface PatientReporterConfig {
     @NotNull
     String sampleSummaryTsv();
 
-    @NotNull
-    String driverGenePanelTsv();
-
     @Nullable
     String comments();
 
     boolean correctedReport();
 
-    boolean unofficialReport();
+    boolean onlyCreatePDF();
 
     @NotNull
     static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
@@ -267,8 +262,8 @@ public interface PatientReporterConfig {
         }
 
         return ImmutablePatientReporterConfig.builder()
-                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? optionalValue(cmd, REF_SAMPLE_ID) : null )
-                .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? optionalValue(cmd, REF_SAMPLE_BARCODE): null)
+                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null )
+                .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? nonOptionalValue(cmd, REF_SAMPLE_BARCODE): null)
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
@@ -279,7 +274,6 @@ public interface PatientReporterConfig {
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
-                .driverGenePanelTsv(nonOptionalFile(cmd, DRIVER_GENE_PANEL_OPTION))
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
                 .purplePurityTsv(purplePurityTsv)
@@ -299,7 +293,7 @@ public interface PatientReporterConfig {
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .correctedReport(cmd.hasOption(CORRECTED_REPORT))
-                .unofficialReport(cmd.hasOption(UNOFFICIAL_REPORT))
+                .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
                 .build();
     }
 
@@ -311,11 +305,6 @@ public interface PatientReporterConfig {
         }
 
         return value;
-    }
-
-    @NotNull
-    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
-        return cmd.getOptionValue(param);
     }
 
     @NotNull

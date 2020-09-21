@@ -37,8 +37,8 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForCopyNumber(@NotNull ReportableGainLoss reportableGainLoss, double averageTumorPloidy,
-            @Nullable String primaryTumorLocation, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
+    public List<EvidenceItem> evidenceForCopyNumber(@NotNull ReportableGainLoss reportableGainLoss, @Nullable String primaryTumorLocation,
+            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
             if (typeMatches(reportableGainLoss, actionableCopyNumber) && actionableCopyNumber.gene().equals(reportableGainLoss.gene())) {

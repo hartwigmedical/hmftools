@@ -53,7 +53,7 @@ public abstract class SampleReport {
     @Nullable
     public abstract String hospitalPathologySampleId();
 
-    @NotNull
+    @Nullable
     @Value.Derived
     public String refSampleBarcode() {
         return sampleMetadata().refSampleBarcode();

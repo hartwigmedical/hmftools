@@ -29,11 +29,15 @@ public final class SampleReportFactory {
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
         String tumorSampleId = sampleMetadata.tumorSampleId();
 
-        lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
+        LocalDate arrivalDateRefSample = null;
 
-        LocalDate arrivalDateRefSample = lims.arrivalDate(refSampleBarcode, refSampleId);
-        if (arrivalDateRefSample == null) {
-            LOGGER.warn("Could not find arrival date for ref sample: {}", refSampleId);
+        if (refSampleBarcode != null && refSampleId != null) {
+            lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
+
+            arrivalDateRefSample = lims.arrivalDate(refSampleBarcode, refSampleId);
+            if (arrivalDateRefSample == null) {
+                LOGGER.warn("Could not find arrival date for ref sample: {}", refSampleId);
+            }
         }
 
         LocalDate arrivalDateTumorSample = lims.arrivalDate(tumorSampleBarcode, tumorSampleId);

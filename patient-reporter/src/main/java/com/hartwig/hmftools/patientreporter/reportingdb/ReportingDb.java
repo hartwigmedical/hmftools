@@ -30,7 +30,7 @@ public final class ReportingDb {
     private ReportingDb() {
     }
 
-    public static void addSequenceReportToReportingDb(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
+    public static void addAnalysedReportToReportingDb(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
             throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
 

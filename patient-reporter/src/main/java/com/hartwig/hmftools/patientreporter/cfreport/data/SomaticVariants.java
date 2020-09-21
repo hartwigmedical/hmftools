@@ -6,14 +6,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariants {
 
@@ -23,14 +21,8 @@ public final class SomaticVariants {
     @NotNull
     public static List<ReportableVariant> sort(@NotNull List<ReportableVariant> variants) {
         return variants.stream().sorted((variant1, variant2) -> {
-            Double variant1DriverLikelihood = variant1.driverLikelihood();
-            Double variant2DriverLikelihood = variant2.driverLikelihood();
-
-            // Force any variant outside of driver catalog to the bottom of table.
-            double driverLikelihood1 = variant1DriverLikelihood != null ? variant1DriverLikelihood : -1;
-            double driverLikelihood2 = variant2DriverLikelihood != null ? variant2DriverLikelihood : -1;
-            if (Math.abs(driverLikelihood1 - driverLikelihood2) > 0.001) {
-                return (driverLikelihood1 - driverLikelihood2) < 0 ? 1 : -1;
+            if (Math.abs(variant1.driverLikelihood() - variant2.driverLikelihood()) > 0.001) {
+                return (variant1.driverLikelihood() - variant2.driverLikelihood()) < 0 ? 1 : -1;
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on codon position if gene is the same
@@ -65,7 +57,7 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String ploidyString(double ploidy, boolean hasReliablePurity) {
+    public static String copyNumberString(double ploidy, boolean hasReliablePurity) {
         if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         }
@@ -78,7 +70,7 @@ public final class SomaticVariants {
         if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         }
-        double vaf = variant.allelePloidy() / variant.totalPloidy();
+        double vaf = variant.alleleCopyNumber() / variant.totalCopyNumber();
 
         return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }
@@ -113,15 +105,11 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String biallelicString(boolean biallelic, @Nullable DriverCategory driverCategory, boolean hasReliablePurity) {
-        if (driverCategory == DriverCategory.TSG) {
-            if (hasReliablePurity) {
-                return biallelic ? "Yes" : "No";
-            } else {
-                return DataUtil.NA_STRING;
-            }
+    public static String biallelicString(boolean biallelic, boolean hasReliablePurity) {
+        if (hasReliablePurity) {
+            return biallelic ? "Yes" : "No";
         } else {
-            return Strings.EMPTY;
+            return DataUtil.NA_STRING;
         }
     }
 
@@ -155,10 +143,8 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String driverString(@Nullable Double driverLikelihood) {
-        DriverInterpretation interpretation = DriverInterpretation.interpret(driverLikelihood);
-
-        return interpretation != null ? interpretation.display() : Strings.EMPTY;
+    public static String driverString(double driverLikelihood) {
+        return DriverInterpretation.interpret(driverLikelihood).display();
     }
 
     @NotNull
