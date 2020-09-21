@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple.qc;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,12 +24,11 @@ public class PurpleQCTest {
         assertEquals(PurpleQCStatus.PASS, create(Gender.MALE, Gender.MALE).status());
         assertEquals(PurpleQCStatus.PASS, create(Gender.FEMALE, Gender.FEMALE).status());
 
-
         assertEquals(PurpleQCStatus.FAIL_GENDER, create(Gender.MALE, Gender.FEMALE).status());
         assertEquals(PurpleQCStatus.FAIL_GENDER, create(Gender.FEMALE, Gender.MALE).status());
 
-        assertEquals(PurpleQCStatus.PASS, create(Gender.FEMALE, Gender.MALE_KLINEFELTER).status());
-        assertEquals(PurpleQCStatus.PASS, create(Gender.MALE, Gender.MALE_KLINEFELTER).status());
+        assertEquals(PurpleQCStatus.PASS, create(Gender.FEMALE, Gender.MALE, GermlineAberration.KLINEFELTER).status());
+        assertEquals(PurpleQCStatus.PASS, create(Gender.MALE, Gender.MALE).status());
     }
 
     @Test
@@ -60,7 +60,15 @@ public class PurpleQCTest {
     }
 
     @NotNull
-    private static PurpleQC create(@NotNull final Gender amberGender, @NotNull final Gender cobaltGender) {
-        return ImmutablePurpleQC.builder().unsupportedSegments(1).ploidy(1).amberGender(amberGender).cobaltGender(cobaltGender).deletedGenes(1).build();
+    private static PurpleQC create(@NotNull final Gender amberGender, @NotNull final Gender cobaltGender,
+            @NotNull final GermlineAberration... aberrations) {
+        return ImmutablePurpleQC.builder()
+                .unsupportedSegments(1)
+                .ploidy(1)
+                .amberGender(amberGender)
+                .cobaltGender(cobaltGender)
+                .deletedGenes(1)
+                .addGermlineAberrations(aberrations)
+                .build();
     }
 }

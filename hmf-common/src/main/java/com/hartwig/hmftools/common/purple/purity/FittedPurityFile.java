@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -50,28 +51,16 @@ public final class FittedPurityFile {
                 .status(status(values))
                 .polyClonalProportion(polyClonalProportion(values))
                 .version(values[14])
-                .microsatelliteIndelsPerMb(0)
-                .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
-                .tumorMutationalLoad(0)
-                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
-                .tumorMutationalBurdenPerMb(0)
-                .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
-                .wholeGenomeDuplication(false);
+                .wholeGenomeDuplication(Boolean.parseBoolean(values[16]))
+                .microsatelliteIndelsPerMb(Double.parseDouble(values[17]))
+                .microsatelliteStatus(MicrosatelliteStatus.valueOf(values[18]))
+                .tumorMutationalLoad(tumorMutationalLoad(values[19]))
+                .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(values[20]))
+                .tumorMutationalBurdenPerMb(Double.parseDouble(values[21]))
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]));
 
-        if (values.length > 16) {
-            builder.wholeGenomeDuplication(Boolean.parseBoolean(values[16]));
-        }
-
-        if (values.length > 18) {
-            builder.microsatelliteIndelsPerMb(Double.parseDouble(values[17]));
-            builder.microsatelliteStatus(MicrosatelliteStatus.valueOf(values[18]));
-        }
-
-        if (values.length > 22) {
-            builder.tumorMutationalLoad(tumorMutationalLoad(values[19]));
-            builder.tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(values[20]));
-            builder.tumorMutationalBurdenPerMb(Double.parseDouble(values[21]));
-            builder.tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]));
+        if (values.length == 24) {
+            builder.germlineAberrations(GermlineAberration.fromString(values[23]));
         }
 
         return builder.build();
@@ -124,6 +113,7 @@ public final class FittedPurityFile {
                 .add("tmlStatus")
                 .add("tmbPerMb")
                 .add("tmbStatus")
+                .add("germlineAberrations")
                 .toString();
     }
 
@@ -154,6 +144,7 @@ public final class FittedPurityFile {
                 .add(String.valueOf(context.tumorMutationalLoadStatus()))
                 .add(String.valueOf(context.tumorMutationalBurdenPerMb()))
                 .add(String.valueOf(context.tumorMutationalBurdenStatus()))
+                .add(GermlineAberration.toString(context.germlineAberrations()))
                 .toString();
     }
 

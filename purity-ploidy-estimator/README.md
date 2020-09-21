@@ -582,7 +582,7 @@ Score | 0.68 | Score of fit (lower is better)
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
 WholeGenomeDuplication | true | True if more than 10 autosomes have major allele copy number > 1.5
-[Gender](#1-sex-determination) | MALE | One of `MALE`, `FEMALE` or `MALE_KLINEFELTER`
+[Gender](#1-sex-determination) | MALE | One of `MALE` or `FEMALE`
 [Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 MinPurity | 0.95 | Minimum purity with score within 10% of best
 MaxPurity | 1.00 | Maximum purity with score within 10% of best
@@ -1008,6 +1008,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Do not produce somatic variant rainfall plot if >100000 variants
   - Refreshed DNDS values with larger cohort (4404 samples)
+  - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X germline aberrations. Requires [patch](../patient-db/src/main/resources/patches/purple/purple2.47_to_2.48_migration.sql) to load to data base.
+  - Removed MALE_KLINEFELTER as a gender. Gender will instead be MALE and KLINEFELTER will be added to the germline abberations field.
 - [2.47](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.47) 
   - Add hg38 support for driver gene panel
   - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT

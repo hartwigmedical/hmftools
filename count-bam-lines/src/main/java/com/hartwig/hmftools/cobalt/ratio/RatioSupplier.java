@@ -46,8 +46,8 @@ public class RatioSupplier {
 
         final List<MedianRatio> medianRatios = MedianRatioFactory.createFromReadRatio(referenceGCRatio);
         final CobaltChromosomes chromosomes = new CobaltChromosomes(medianRatios);
-        if (!chromosomes.aberrations().isEmpty()) {
-            LOGGER.info("Found evidence of chromosomal aberrations: " + chromosomes.aberrations()
+        if (chromosomes.hasGermlineAberrations()) {
+            LOGGER.info("Found evidence of germline chromosomal aberrations: " + chromosomes.germlineAberrations()
                     .stream()
                     .map(Enum::toString)
                     .collect(Collectors.joining(",")));

@@ -52,7 +52,11 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
-        assertEquals(0, victim.aberrations().size());
+        assertFalse(victim.hasGermlineAberrations());
+
+        CobaltChromosome victimX = victim.get("X");
+        assertTrue(victimX.isNormal());
+        assertTrue(victimX.isDiploid());
 
         assertEquals(1, victim.get("X").actualRatio(), 0.01);
         assertFalse(victim.contains("Y"));
@@ -65,7 +69,11 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.MALE, victim.gender());
-        assertEquals(0, victim.aberrations().size());
+        assertFalse(victim.hasGermlineAberrations());
+
+        CobaltChromosome victimX = victim.get("X");
+        assertTrue(victimX.isNormal());
+        assertFalse(victimX.isDiploid());
 
         assertEquals(0.5, victim.get("X").actualRatio(), 0.01);
         assertEquals(0.5, victim.get("Y").actualRatio(), 0.01);
@@ -78,8 +86,8 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.MALE, victim.gender());
-        assertEquals(1, victim.aberrations().size());
-        assertTrue(victim.aberrations().contains(ChromosomalAberration.KLINEFELTER));
+        assertEquals(1, victim.germlineAberrations().size());
+        assertTrue(victim.germlineAberrations().contains(GermlineAberration.KLINEFELTER));
 
         assertEquals(1, victim.get("X").actualRatio(), 0.01);
         assertEquals(0.5, victim.get("Y").actualRatio(), 0.01);
@@ -92,7 +100,7 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
-        assertEquals(0, victim.aberrations().size());
+        assertFalse(victim.hasGermlineAberrations());
     }
 
     @Test
@@ -102,7 +110,7 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
-        assertEquals(0, victim.aberrations().size());
+        assertFalse(victim.hasGermlineAberrations());
     }
 
     @Test
@@ -113,8 +121,8 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chrX);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
-        assertEquals(1, victim.aberrations().size());
-        assertTrue(victim.aberrations().contains(ChromosomalAberration.MOSAIC_X));
+        assertEquals(1, victim.germlineAberrations().size());
+        assertTrue(victim.germlineAberrations().contains(GermlineAberration.MOSAIC_X));
 
         assertEquals(1, victim.get("1").actualRatio(), 0.01);
         assertEquals(TWO_X_CUTOFF, victim.get("X").actualRatio(), 0.01);
@@ -128,7 +136,7 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chrX);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
-        assertEquals(0, victim.aberrations().size());
+        assertFalse(victim.hasGermlineAberrations());
     }
 
     @Test
@@ -139,8 +147,8 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.MALE, victim.gender());
-        assertEquals(1, victim.aberrations().size());
-        assertTrue(victim.aberrations().contains(ChromosomalAberration.XYY));
+        assertEquals(1, victim.germlineAberrations().size());
+        assertTrue(victim.germlineAberrations().contains(GermlineAberration.XYY));
 
         assertEquals(1, victim.get("1").actualRatio(), 0.01);
         assertEquals(0.5, victim.get("X").actualRatio(), 0.01);
@@ -159,12 +167,12 @@ public class CobaltChromosomesTest {
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chr13, chr15, chr18, chr21, chr22, chrX);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
-        assertEquals(5, victim.aberrations().size());
-        assertTrue(victim.aberrations().contains(ChromosomalAberration.TRISOMY_13));
-        assertTrue(victim.aberrations().contains(ChromosomalAberration.TRISOMY_15));
-        assertTrue(victim.aberrations().contains(ChromosomalAberration.TRISOMY_18));
-        assertTrue(victim.aberrations().contains(ChromosomalAberration.TRISOMY_21));
-        assertTrue(victim.aberrations().contains(ChromosomalAberration.TRISOMY_X));
+        assertEquals(5, victim.germlineAberrations().size());
+        assertTrue(victim.germlineAberrations().contains(GermlineAberration.TRISOMY_13));
+        assertTrue(victim.germlineAberrations().contains(GermlineAberration.TRISOMY_15));
+        assertTrue(victim.germlineAberrations().contains(GermlineAberration.TRISOMY_18));
+        assertTrue(victim.germlineAberrations().contains(GermlineAberration.TRISOMY_21));
+        assertTrue(victim.germlineAberrations().contains(GermlineAberration.TRISOMY_X));
 
         assertEquals(1.5, victim.get("13").actualRatio(), 0.01);
         assertEquals(1.5, victim.get("15").actualRatio(), 0.01);

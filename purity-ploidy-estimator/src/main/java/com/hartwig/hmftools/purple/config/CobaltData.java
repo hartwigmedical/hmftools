@@ -31,9 +31,6 @@ public interface CobaltData {
     Logger LOGGER = LogManager.getLogger(CobaltData.class);
 
     @NotNull
-    Gender gender();
-
-    @NotNull
     CobaltChromosomes cobaltChromosomes();
 
     @NotNull
@@ -44,6 +41,11 @@ public interface CobaltData {
 
     @NotNull
     Multimap<Chromosome, PCFPosition> referenceSegments();
+
+    @NotNull
+    default Gender gender() {
+        return cobaltChromosomes().gender();
+    }
 
     @NotNull
     static CobaltData createCobaltData(@NotNull final CommonConfig commonConfig) throws ParseException, IOException {
@@ -65,7 +67,6 @@ public interface CobaltData {
 
         LOGGER.info("Reading cobalt ratios from {}", cobaltFilename);
         final ListMultimap<Chromosome, CobaltRatio> ratios = CobaltRatioFile.read(cobaltFilename);
-        final Gender gender = Gender.fromCobalt(ratios);
 
         LOGGER.info("Reading cobalt reference segments from {}", referenceSegmentFile);
         final Multimap<Chromosome, PCFPosition> referenceSegments =
@@ -80,7 +81,6 @@ public interface CobaltData {
 
         return ImmutableCobaltData.builder()
                 .ratios(ratios)
-                .gender(gender)
                 .cobaltChromosomes(cobaltChromosomes)
                 .tumorSegments(tumorSegments)
                 .referenceSegments(referenceSegments)

@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.StringJoiner;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -51,7 +52,7 @@ public class FittedPurityFileTest {
 
     @Test
     public void testCompatibilityWith2_14() throws IOException {
-        FittedPurityFile.fromLine(Resources.readLines(Resources.getResource("purple/v2-14.purple.purity"), Charset.defaultCharset())
+        FittedPurityFile.fromLine(Resources.readLines(Resources.getResource("purple/v2-47.purple.purity"), Charset.defaultCharset())
                 .get(1));
     }
 
@@ -70,6 +71,8 @@ public class FittedPurityFileTest {
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.HIGH)
                 .tumorMutationalLoad(random.nextInt(100_000_000))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
+                .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
+                .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
                 .build();
     }
 

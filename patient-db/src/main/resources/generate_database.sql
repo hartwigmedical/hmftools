@@ -348,6 +348,7 @@ CREATE TABLE purity
     tmbStatus varchar(10) not null,
     tml INT not null,
     tmlStatus varchar(10) not null,
+    germlineAberration varchar(255) not null DEFAULT "NONE",
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

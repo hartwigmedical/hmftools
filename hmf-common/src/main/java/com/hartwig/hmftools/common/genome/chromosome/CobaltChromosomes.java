@@ -23,9 +23,9 @@ public class CobaltChromosomes {
     static final double MOSIAC_X_CUTOFF = 0.8;
     static final double TRISOMY_CUTOFF = 1.4;
 
-    private final Map<String, CobaltChromosome> chromosomeMap;
-    private final Set<ChromosomalAberration> aberrations;
     private final Gender gender;
+    private final Set<GermlineAberration> aberrations;
+    private final Map<String, CobaltChromosome> chromosomeMap;
 
     /**
      * Gender:
@@ -66,11 +66,11 @@ public class CobaltChromosomes {
             boolean isX = isContig(contig, "X");
             boolean isY = isContig(contig, "Y");
 
-            final ChromosomalAberration aberration = aberration(isFemale, contig, ratio.medianRatio(), minAutosomeRatio);
+            final GermlineAberration aberration = aberration(isFemale, contig, ratio.medianRatio(), minAutosomeRatio);
             final double typicalRatio = typicalRatio(isFemale, contig);
             final double actualRatio = actualRatio(aberration, typicalRatio, ratio.medianRatio());
 
-            if (aberration != ChromosomalAberration.NONE) {
+            if (aberration != GermlineAberration.NONE) {
                 aberrations.add(aberration);
             }
 
@@ -81,18 +81,28 @@ public class CobaltChromosomes {
                         .actualRatio(actualRatio)
                         .isAllosome(isX || isY)
                         .isAutosome(!isX && !isY)
-                        .mosiac(aberration == ChromosomalAberration.MOSAIC_X)
+                        .mosiac(aberration == GermlineAberration.MOSAIC_X)
                         .build();
 
                 chromosomeMap.put(contig, chromosome);
             }
         }
+
+        if (aberrations.isEmpty()) {
+            aberrations.add(GermlineAberration.NONE);
+        }
     }
 
-    public Set<ChromosomalAberration> aberrations() {
+    public boolean hasGermlineAberrations() {
+        return !noAberrations();
+    }
+
+    @NotNull
+    public Set<GermlineAberration> germlineAberrations() {
         return aberrations;
     }
 
+    @NotNull
     public Gender gender() {
         return gender;
     }
@@ -107,7 +117,7 @@ public class CobaltChromosomes {
         return chromosomeMap.values();
     }
 
-    private static double actualRatio(ChromosomalAberration aberration, double typicalRatio, double medianRatio) {
+    private static double actualRatio(GermlineAberration aberration, double typicalRatio, double medianRatio) {
         switch (aberration) {
             case TRISOMY_X:
             case TRISOMY_13:
@@ -125,41 +135,41 @@ public class CobaltChromosomes {
         }
     }
 
-    private static ChromosomalAberration aberration(boolean isFemale, String contig, double medianRatio, double minAutosomeRatio) {
+    private static GermlineAberration aberration(boolean isFemale, String contig, double medianRatio, double minAutosomeRatio) {
 
         if (isTrisomy(contig, medianRatio, "X")) {
-            return ChromosomalAberration.TRISOMY_X;
+            return GermlineAberration.TRISOMY_X;
         }
 
         if (isTrisomy(contig, medianRatio, "13")) {
-            return ChromosomalAberration.TRISOMY_13;
+            return GermlineAberration.TRISOMY_13;
         }
 
         if (isTrisomy(contig, medianRatio, "15")) {
-            return ChromosomalAberration.TRISOMY_15;
+            return GermlineAberration.TRISOMY_15;
         }
 
         if (isTrisomy(contig, medianRatio, "18")) {
-            return ChromosomalAberration.TRISOMY_18;
+            return GermlineAberration.TRISOMY_18;
         }
 
         if (isTrisomy(contig, medianRatio, "21")) {
-            return ChromosomalAberration.TRISOMY_21;
+            return GermlineAberration.TRISOMY_21;
         }
 
         if (isXYY(isFemale, contig, medianRatio)) {
-            return ChromosomalAberration.XYY;
+            return GermlineAberration.XYY;
         }
 
         if (isMosiacX(isFemale, contig, medianRatio, minAutosomeRatio)) {
-            return ChromosomalAberration.MOSAIC_X;
+            return GermlineAberration.MOSAIC_X;
         }
 
         if (isKlinefelterXXY(isFemale, contig, medianRatio)) {
-            return ChromosomalAberration.KLINEFELTER;
+            return GermlineAberration.KLINEFELTER;
         }
 
-        return ChromosomalAberration.NONE;
+        return GermlineAberration.NONE;
     }
 
     private static boolean isKlinefelterXXY(boolean isFemale, String contig, double medianRatio) {
@@ -209,4 +219,9 @@ public class CobaltChromosomes {
                 .findFirst()
                 .orElse(0);
     }
+
+    private boolean noAberrations() {
+        return aberrations.isEmpty() || (aberrations.size() == 1 && aberrations.contains(GermlineAberration.NONE));
+    }
+
 }

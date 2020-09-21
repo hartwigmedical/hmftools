@@ -158,9 +158,8 @@ public class PurityPloidyEstimateApplication {
             final BestFit bestFit =
                     fitPurity(executorService, configSupplier, cobaltChromosomes, fittingSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
-            final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(fittedPurity.purity(),
-                    fittedPurity.normFactor(),
-                    cobaltChromosomes.chromosomes());
+            final PurityAdjuster purityAdjuster =
+                    new PurityAdjusterAbnormalChromosome(fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
@@ -198,7 +197,12 @@ public class PurityPloidyEstimateApplication {
                     GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
 
             LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
+            final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(),
+                    copyNumbers,
+                    amberGender,
+                    cobaltGender,
+                    geneCopyNumbers,
+                    cobaltChromosomes.germlineAberrations());
 
             LOGGER.info("Modelling somatic peaks");
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
@@ -211,6 +215,7 @@ public class PurityPloidyEstimateApplication {
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
+                    .germlineAberrations(cobaltChromosomes.germlineAberrations())
                     .version(version.version())
                     .bestFit(bestFit.fit())
                     .status(bestFit.status())
@@ -299,8 +304,8 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier, final CobaltChromosomes cobaltChromosomes,
-            final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
+    private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier,
+            final CobaltChromosomes cobaltChromosomes, final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
             final FittedRegionFactory fittedRegionFactory) throws ExecutionException, InterruptedException {
         final FittingConfig fittingConfig = configSupplier.fittingConfig();
         final SomaticConfig somaticConfig = configSupplier.somaticConfig();
