@@ -75,9 +75,15 @@ public class FusionFilters
 
     public boolean isPassingFusion(final FusionData fusion)
     {
-        if(fusion.getKnownFusionType() == KNOWN_PAIR && !isShortLocalFusion(fusion))
+        return isPassingFusion(fusion, fusion.getKnownFusionType(), fusion.hasKnownSpliceSites());
+    }
+
+    public boolean isPassingFusion(final FusionData fusion, final KnownGeneType knownType, boolean hasKnownSpliceSites)
+    {
+        if(knownType == KNOWN_PAIR && !isShortLocalFusion(fusion))
         {
-            int requiredFragments = hasKnownSpliceSite(fusion) ? KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS : KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS;
+            int requiredFragments = (hasKnownSpliceSites || hasKnownSpliceSite(fusion)) ?
+                    KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS : KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS;
 
             if(fusion.totalFragments() < requiredFragments)
             {
@@ -97,7 +103,7 @@ public class FusionFilters
         double requiredAF;
         int requiredFragments;
 
-        if(fusion.hasKnownSpliceSites())
+        if(hasKnownSpliceSites)
         {
             requiredAF = AF_KNOWN_TIER;
             requiredFragments = 2;
@@ -131,7 +137,7 @@ public class FusionFilters
             return false;
         }
 
-        int cohortFreqLimit = hasKnownPairGene(fusion.getKnownFusionType()) ? 5 : 2;
+        int cohortFreqLimit = hasKnownPairGene(knownType) ? 5 : 2;
 
         if(fusion.cohortFrequency() >= cohortFreqLimit)
         {

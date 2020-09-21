@@ -3,6 +3,8 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
@@ -160,11 +162,13 @@ public class FusionCohortTask implements Callable
             }
             else
             {
-                if(!fusion.relatedFusionIds().isEmpty())
+                boolean isShortLocal = isShortLocalFusion(fusion);
+
+                if(!isShortLocal && !fusion.relatedFusionIds().isEmpty())
                     nonPassingFusionsWithRelated.add(fusion);
 
                 // combine fragment support for non-local known-pair fusions
-                if(fusion.getKnownFusionType() == KnownGeneType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT && !isShortLocalFusion(fusion))
+                if(fusion.getKnownFusionType() == KnownGeneType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT && !isShortLocal)
                 {
                     List<FusionData> fusions = lowSupportKnownFusions.get(fusion.name());
                     if(fusions == null)
@@ -189,12 +193,12 @@ public class FusionCohortTask implements Callable
             boolean matchesPassing = false;
             for(FusionData passingFusion : passingFusions)
             {
-                if(fusion.isRelated(passingFusion))
+                if(fusion.isRelated(passingFusion) && passingFusion.hasKnownSpliceSites())
                 {
-                    matchesPassing = true;
-
-                    if(passingFusion.hasKnownSpliceSites())
+                    // use the same filters as for the passing fusion by using it's known and splice types
+                    if(mFilters.isPassingFusion(fusion, passingFusion.getKnownFusionType(), passingFusion.hasKnownSpliceSites()))
                     {
+                        matchesPassing = true;
                         fusion.setHasRelatedKnownSpliceSites();
                         break;
                     }
