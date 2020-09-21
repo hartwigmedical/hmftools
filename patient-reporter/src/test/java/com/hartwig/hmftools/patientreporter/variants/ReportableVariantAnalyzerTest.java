@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testA
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -12,7 +11,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.DriverGermlineVariant;
@@ -23,7 +21,6 @@ import com.hartwig.hmftools.patientreporter.variants.somatic.DriverSomaticVarian
 import com.hartwig.hmftools.patientreporter.variants.somatic.ImmutableDriverSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class ReportableVariantAnalyzerTest {
@@ -31,10 +28,6 @@ public class ReportableVariantAnalyzerTest {
     private static final double EPSILON = 1.0e-10;
     private static final String ONCO = "KIT";
     private static final String TSG = "PTEN";
-
-    private static final List<DriverCatalog> TEST_DRIVER_CATALOG =
-            Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalogEntry(ONCO),
-                    PatientReporterTestFactory.createTestDriverCatalogEntry(TSG));
 
     @Test
     public void overruleDriverLikelihoodOfSomaticVariants() {
@@ -60,10 +53,10 @@ public class ReportableVariantAnalyzerTest {
         List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
 
         assertEquals(4, reportableVariants.size());
-        assertNullableEquals(1.0, reportableVariants.get(0).driverLikelihood(), EPSILON);
-        assertNullableEquals(0.5, reportableVariants.get(1).driverLikelihood(), EPSILON);
-        assertNullableEquals(1.0, reportableVariants.get(2).driverLikelihood(), EPSILON);
-        assertNullableEquals(0.5, reportableVariants.get(3).driverLikelihood(), EPSILON);
+        assertEquals(1.0, reportableVariants.get(0).driverLikelihood(), EPSILON);
+        assertEquals(0.5, reportableVariants.get(1).driverLikelihood(), EPSILON);
+        assertEquals(1.0, reportableVariants.get(2).driverLikelihood(), EPSILON);
+        assertEquals(0.5, reportableVariants.get(3).driverLikelihood(), EPSILON);
     }
 
     @Test
@@ -194,10 +187,5 @@ public class ReportableVariantAnalyzerTest {
                 .driverLikelihood(0.5)
                 .build();
         return Lists.newArrayList(germlineVariant1, germlineVariant2);
-    }
-
-    private void assertNullableEquals(double expected, @Nullable Double actual, double epsilon) {
-        assertNotNull(actual);
-        assertEquals(expected, actual, epsilon);
     }
 }

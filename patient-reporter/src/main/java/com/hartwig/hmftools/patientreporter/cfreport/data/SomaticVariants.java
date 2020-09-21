@@ -64,7 +64,7 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String ploidyString(double ploidy, boolean hasReliablePurity) {
+    public static String copyNumberString(double ploidy, boolean hasReliablePurity) {
         if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         }
@@ -77,7 +77,7 @@ public final class SomaticVariants {
         if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         }
-        double vaf = variant.allelePloidy() / variant.totalPloidy();
+        double vaf = variant.alleleCopyNumber() / variant.totalCopyNumber();
 
         return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }

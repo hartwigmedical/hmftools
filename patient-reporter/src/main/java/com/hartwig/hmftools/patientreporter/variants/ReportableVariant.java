@@ -53,9 +53,9 @@ public abstract class ReportableVariant implements Variant {
     @NotNull
     public abstract String gDNA();
 
-    public abstract double totalPloidy();
+    public abstract double totalCopyNumber();
 
-    public abstract double allelePloidy();
+    public abstract double alleleCopyNumber();
 
     @NotNull
     public abstract Hotspot hotspot();

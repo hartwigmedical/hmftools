@@ -3,9 +3,6 @@ package com.hartwig.hmftools.patientreporter.variants;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -15,7 +12,6 @@ import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingM
 import com.hartwig.hmftools.patientreporter.variants.somatic.DriverSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 final class ReportableVariantFactory {
 
@@ -57,26 +53,6 @@ final class ReportableVariantFactory {
         return allReportableVariants;
     }
 
-    @Nullable
-    private static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull String gene) {
-        for (DriverCatalog entry : driverCatalogList) {
-            if (entry.gene().equals(gene)) {
-                return entry;
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    private static DriverCategory catalogDriverGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
-        for (DriverGene driverGene : driverGenes) {
-            if (driverGene.gene().equals(gene)) {
-                return driverGene.likelihoodType();
-            }
-        }
-        return null;
-    }
-
     @NotNull
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant) {
         return ImmutableReportableVariant.builder()
@@ -91,8 +67,8 @@ final class ReportableVariantFactory {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .gDNA(toGDNA(variant.chromosome(), variant.position()))
-                .totalPloidy(variant.adjustedCopyNumber())
-                .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVaf()))
+                .totalCopyNumber(variant.adjustedCopyNumber())
+                .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
                 .biallelic(variant.biallelic());
@@ -112,8 +88,8 @@ final class ReportableVariantFactory {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .gDNA(toGDNA(variant.chromosome(), variant.position()))
-                .totalPloidy(variant.adjustedCopyNumber())
-                .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVAF()))
+                .totalCopyNumber(variant.adjustedCopyNumber())
+                .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic());
@@ -124,7 +100,7 @@ final class ReportableVariantFactory {
         return chromosome + ":" + position;
     }
 
-    private static double calcAllelePloidy(double adjustedCopyNumber, double adjustedVAF) {
+    private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {
         return adjustedCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
     }
 }

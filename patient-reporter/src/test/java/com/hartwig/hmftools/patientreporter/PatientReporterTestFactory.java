@@ -133,8 +133,8 @@ public final class PatientReporterTestFactory {
                 .clonalLikelihood(1D)
                 .alleleReadCount(0)
                 .totalReadCount(0)
-                .allelePloidy(0D)
-                .totalPloidy(0)
+                .alleleCopyNumber(0D)
+                .totalCopyNumber(0)
                 .biallelic(false)
                 .driverLikelihood(0D)
                 .notifyClinicalGeneticist(false);

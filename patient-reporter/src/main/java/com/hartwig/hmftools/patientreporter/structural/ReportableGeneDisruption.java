@@ -22,7 +22,7 @@ public abstract class ReportableGeneDisruption {
     public abstract String type();
 
     @Nullable
-    public abstract Double ploidy();
+    public abstract Double junctionCopyNumber();
 
     public abstract double undisruptedCopyNumber();
 
