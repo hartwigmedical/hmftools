@@ -3,10 +3,8 @@ package com.hartwig.hmftools.protect.common;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
@@ -37,17 +35,17 @@ public class ExtractReportableGainsAndLosses {
             }
 
             if (includeInReport) {
-//                reportableGainsAndLosses.add(com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss.builder()
-//                        .chromosome(driver.chromosome())
-//                        .chromosomeBand(driver.chromosomeBand())
-//                        .gene(isCentromereOrTelomere(driver) ? Strings.EMPTY : driver.gene())
-//                        .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
-//                        .copies(Math.round(Math.max(0, driver.minCopyNumber())))
-//                        .build());
+                reportableGainsAndLosses.add(ImmutableReportableGainLoss.builder()
+                        .chromosome(driver.chromosome())
+                        .chromosomeBand(driver.chromosomeBand())
+                        .gene(isCentromereOrTelomere(driver) ? Strings.EMPTY : driver.gene())
+                        .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
+                        .copies(Math.round(Math.max(0, driver.minCopyNumber())))
+                        .build());
             }
         }
 
-        
+
 
         return reportableGainsAndLosses;
     }
