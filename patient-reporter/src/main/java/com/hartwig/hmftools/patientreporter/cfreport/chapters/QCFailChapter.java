@@ -367,7 +367,6 @@ public class QCFailChapter implements ReportChapter {
         return div;
     }
 
-
     @NotNull
     private static Paragraph createContentParagraphRed(@NotNull String text) {
         return new Paragraph(text).addStyle(ReportResources.smallBodyTextStyleRed()).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
