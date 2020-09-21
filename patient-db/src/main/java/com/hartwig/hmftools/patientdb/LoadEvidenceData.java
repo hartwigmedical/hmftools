@@ -119,8 +119,9 @@ public class LoadEvidenceData {
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info(" Loaded {} gene copy numbers", geneCopyNumbers.size());
 
+        LOGGER.info("Reading driver catalog from {}", purpleDriverCatalogTsv);
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
-        LOGGER.info("Loaded {} driver catalog records", driverCatalog.size());
+        LOGGER.info(" Loaded {} driver catalog records", driverCatalog.size());
         return ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, geneCopyNumbers);
     }
 
