@@ -81,7 +81,7 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported.",
-                        "Fusions are restricted to those in a known fusion list based on CIViC, OncoKB, CGI and COSMIC",
+                        "Fusions are restricted to those in the HMF known fusion list",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
