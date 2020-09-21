@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelAssembly;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -29,7 +28,6 @@ import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
-import com.hartwig.hmftools.patientreporter.purple.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
@@ -147,16 +145,6 @@ public final class PatientReporterTestFactory {
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0D)
                 .notifyClinicalGeneticist(false);
-    }
-
-    @NotNull
-    public static ImmutableReportableGainLoss.Builder createTestReportableGainLossBuilder() {
-        return ImmutableReportableGainLoss.builder()
-                .chromosome("1")
-                .chromosomeBand("band")
-                .gene(Strings.EMPTY)
-                .copies(0)
-                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS);
     }
 
     @NotNull

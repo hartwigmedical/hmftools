@@ -12,7 +12,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.protect.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.protect.actionability.cnv.CopyNumberEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.protect.actionability.cnv.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.protect.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.protect.actionability.fusion.FusionEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.protect.actionability.variant.VariantEvidenceAnalyzer;
@@ -111,11 +110,7 @@ public class ActionabilityAnalyzer {
                     .filter(geneCopyNumber -> copyNumberAnalyzer.actionableGenes().contains(geneCopyNumber.gene()))
                     .collect(Collectors.toList());
 
-            // Filtering on significant events is not necessary but just to avoid unnecessary keys with empty evidence
-            List<GeneCopyNumber> significantGeneCopyNumbersOnActionableGenes =
-                    SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbersOnActionableGenes, averageTumorPloidy);
-
-            for (GeneCopyNumber geneCopyNumber : significantGeneCopyNumbersOnActionableGenes) {
+            for (GeneCopyNumber geneCopyNumber : geneCopyNumbersOnActionableGenes) {
                 evidencePerCopyNumber.put(geneCopyNumber,
                         copyNumberAnalyzer.evidenceForCopyNumber(geneCopyNumber, averageTumorPloidy, primaryTumorLocation, cancerTypeAnalyzer));
             }

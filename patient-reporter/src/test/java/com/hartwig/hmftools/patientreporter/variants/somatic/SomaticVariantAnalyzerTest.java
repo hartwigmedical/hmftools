@@ -44,7 +44,7 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).reported(false).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).reported(false).build());
 
-        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, driverGenePanel, Collections.emptyList());
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, Collections.emptyList());
 
         // Report the missense variant on RIGHT_GENE plus the synonymous hotspot.
         assertEquals(2, analysis.variantsToReport().size());

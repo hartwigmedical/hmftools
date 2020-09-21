@@ -5,9 +5,11 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
+import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -25,18 +27,14 @@ public final class PurpleAnalyzer {
     @NotNull
     public static PurpleAnalysis run(@NotNull PurityContext purityContext, @NotNull PurpleQC purpleQC,
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull DriverGenePanel genePanel) {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> driverCatalog) {
         FittedPurity bestFit = purityContext.bestFit();
-        List<ReportableGainLoss> reportableGainsAndLosses =
-                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(genePanel, exomeGeneCopyNumbers, bestFit.ploidy());
+        List<ReportableGainLoss> reportableGainsAndLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, exomeGeneCopyNumbers);
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
-        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                actionabilityAnalyzer.evidenceForCopyNumbers(exomeGeneCopyNumbers, primaryTumorLocation, bestFit.ploidy());
+        Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
+                actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainsAndLosses, primaryTumorLocation, bestFit.ploidy());
 
-        Map<GeneCopyNumber, List<EvidenceItem>> filteredEvidenceItemMap =
-                CheckEvidenceCnv.checkAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber);
-
-        List<EvidenceItem> filteredEvidenceItems = ReportableEvidenceItemFactory.toReportableFlatList(filteredEvidenceItemMap);
+        List<EvidenceItem> filteredEvidenceItems = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerGeneCopyNumber);
 
         PurpleSignatures purpleSignatures = ImmutablePurpleSignatures.builder()
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())

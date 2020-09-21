@@ -77,6 +77,7 @@ public class PatientReporterApplication {
                     config.purplePurityTsv(),
                     config.purpleQcFile(),
                     config.purpleGeneCnvTsv(),
+                    config.purpleDriverCatalogTsv(),
                     config.somaticVariantVcf(),
                     config.bachelorTsv(),
                     config.linxFusionTsv(),

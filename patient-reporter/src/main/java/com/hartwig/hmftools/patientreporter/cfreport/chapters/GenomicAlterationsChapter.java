@@ -14,7 +14,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.patientreporter.purple.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
