@@ -22,15 +22,10 @@ final class ReportableVariantFactory {
 
     @NotNull
     static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull List<DriverGene> driverGenes,
-            @NotNull List<ReportableGermlineVariantExtended> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull List<ReportableGermlineVariantExtended> germlineVariantsToReport,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
-            DriverCategory category = catalogDriverGene(driverGenes, variant.gene());
-
-            assert category != null;
-
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
             Double adjustedDriverLikelihood = null;
             if (catalog != null) {
@@ -42,21 +37,18 @@ final class ReportableVariantFactory {
                 }
             }
 
-            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(category)
-                    .driverLikelihood(adjustedDriverLikelihood)
+            allReportableVariants.add(fromSomaticVariant(variant).driverLikelihood(adjustedDriverLikelihood)
                     .notifyClinicalGeneticist(false)
                     .build());
         }
 
         for (ReportableGermlineVariantExtended germlineVariant : germlineVariantsToReport) {
-            DriverCategory category = catalogDriverGene(driverGenes, germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
             double adjustedDriverLikelihood = germlineVariant.driverLikelihood();
             if (catalog != null) {
                 adjustedDriverLikelihood = Math.max(adjustedDriverLikelihood, catalog.driverLikelihood());
             }
-            allReportableVariants.add(fromGermlineVariant(germlineVariant.variant()).driverCategory(category)
-                    .driverLikelihood(adjustedDriverLikelihood)
+            allReportableVariants.add(fromGermlineVariant(germlineVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
                     .notifyClinicalGeneticist(germlineReportingChoice == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                             && germlineReportingModel.notifyAboutGene(germlineVariant.variant().gene()))
                     .build());
@@ -77,7 +69,7 @@ final class ReportableVariantFactory {
 
     @Nullable
     private static DriverCategory catalogDriverGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
-        for (DriverGene driverGene: driverGenes) {
+        for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
                 return driverGene.likelihoodType();
             }

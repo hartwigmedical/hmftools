@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
@@ -14,8 +12,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -35,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PatientReporterTestFactory {
 
-    public static final String ONCOGENE = "AR";
+    public static final String ONCOGENE = "KIT";
     public static final String TSG = "PTEN";
 
     private PatientReporterTestFactory() {
@@ -140,7 +136,6 @@ public final class PatientReporterTestFactory {
                 .allelePloidy(0D)
                 .totalPloidy(0)
                 .biallelic(false)
-                .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0D)
                 .notifyClinicalGeneticist(false);
     }
@@ -175,13 +170,6 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static List<DriverGene> createTestDriverGenePanel(@NotNull String oncogene, @NotNull String tsg) {
-        DriverGene oncoGene = createTestDriverGene(oncogene, DriverCategory.ONCO);
-        DriverGene tsgGene = createTestDriverGene(tsg, DriverCategory.TSG);
-        return Lists.newArrayList(oncoGene, tsgGene);
-    }
-
-    @NotNull
     public static DriverCatalog createTestDriverCatalogEntry(@NotNull String gene) {
         return ImmutableDriverCatalog.builder()
                 .gene(gene)
@@ -200,21 +188,6 @@ public final class PatientReporterTestFactory {
                 .biallelic(false)
                 .minCopyNumber(0)
                 .maxCopyNumber(0)
-                .build();
-    }
-
-    @NotNull
-    private static DriverGene createTestDriverGene(@NotNull final String gene, @NotNull final DriverCategory type) {
-        return ImmutableDriverGene.builder()
-                .gene(gene)
-                .reportMissenseAndInframe(true)
-                .reportNonsenseAndFrameshift(false)
-                .reportSplice(false)
-                .reportDeletion(false)
-                .reportDisruption(false)
-                .reportAmplification(false)
-                .reportHotspot(false)
-                .likelihoodType(type)
                 .build();
     }
 }

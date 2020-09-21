@@ -26,11 +26,9 @@ public final class ExtractReportableGainsAndLosses {
                 includeInReport = true;
             } else if (driver.driver() == DriverType.DEL) {
                 GeneCopyNumber geneCopyNumber = findByGeneName(geneCopyNumbers, driver.gene());
+
                 // Exclude DELs which are partially germline (see INC-34)
-                if (geneCopyNumber.germlineHet2HomRegions() > 0 || geneCopyNumber.germlineHomRegions() > 0) {
-                    includeInReport = false;
-                }
-                includeInReport = true;
+                includeInReport = geneCopyNumber.germlineHet2HomRegions() == 0 && geneCopyNumber.germlineHomRegions() == 0;
             }
 
             if (includeInReport) {

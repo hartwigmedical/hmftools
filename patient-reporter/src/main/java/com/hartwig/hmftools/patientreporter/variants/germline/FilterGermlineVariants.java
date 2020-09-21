@@ -5,8 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
@@ -14,39 +12,25 @@ import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableGermline
 import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariantExtended;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class FilterGermlineVariants {
 
     private FilterGermlineVariants() {
     }
 
-    @Nullable
-    private static DriverCategory catalogDriverGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
-        for (DriverGene driverGene: driverGenes) {
-            if (driverGene.gene().equals(gene)) {
-                return driverGene.likelihoodType();
-            }
-        }
-        return null;
-    }
-
     @NotNull
     public static List<ReportableGermlineVariantExtended> filterGermlineVariantsForReporting(
-            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull List<DriverGene> driverGenes,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
-            @NotNull List<SomaticVariant> variantsToReport, @NotNull ChordStatus chordStatus) {
+            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport,
+            @NotNull ChordStatus chordStatus) {
         List<ReportableGermlineVariantExtended> reportableGermlineVariants = Lists.newArrayList();
 
         Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
-        for (ReportableGermlineVariant germlineVariant : germlineVariants) {
+        for (ReportableGermlineVariant germlineVariant : presentInTumorOnly(germlineVariants)) {
             if (reportableGermlineGenes.contains(germlineVariant.gene())) {
-                // Note: Reportable germline genes may not necessarily be present in driverGeneView!
-                if (catalogDriverGene(driverGenes, germlineVariant.gene()) == DriverCategory.ONCO) {
-                    // Report all germline variants on reportable oncogenes.
-                    if (filterSubclonalGermlineVariants(germlineVariant)) {
-                        reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
-                    }
+                // TODO: This will be cleaned up in upcoming germline variant reporting logic
+                if (germlineVariant.gene().equals("KIT")) {
+                    reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                 } else {
                     // Only report germline variants on TSGs if there is a 2nd hit or CHORD suggests HRD
                     boolean filterBiallelic = germlineVariant.biallelic();
@@ -72,13 +56,9 @@ public final class FilterGermlineVariants {
                     }
 
                     if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
-                        if (filterSubclonalGermlineVariants(germlineVariant)) {
-                            reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
-                        }
+                        reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                     } else if (filterMinCopyNumberTumor || chordStatus == ChordStatus.HRD) {
-                        if (filterSubclonalGermlineVariants(germlineVariant)) {
-                            reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
-                        }
+                        reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                     }
                 }
             }
@@ -88,18 +68,24 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
+    private static List<ReportableGermlineVariant> presentInTumorOnly(@NotNull List<ReportableGermlineVariant> variants) {
+        List<ReportableGermlineVariant> variantsInTumor = Lists.newArrayList();
+        for (ReportableGermlineVariant variant : variants) {
+            if (isPresentInTumor(variant)) {
+                variantsInTumor.add(variant);
+            }
+        }
+        return variantsInTumor;
+    }
+
+    private static boolean isPresentInTumor(@NotNull ReportableGermlineVariant germlineVariant) {
+        return germlineVariant.adjustedCopyNumber() * germlineVariant.adjustedVaf() >= 0.5;
+    }
+
+    @NotNull
     private static ReportableGermlineVariantExtended reportableGermlineVariantWithDriverLikelihood(
             @NotNull ReportableGermlineVariant germlineVariant, double driverLikelihood) {
         return ImmutableReportableGermlineVariantExtended.builder().variant(germlineVariant).driverLikelihood(driverLikelihood).build();
-    }
-
-    private static boolean filterSubclonalGermlineVariants(@NotNull ReportableGermlineVariant germlineVariant) {
-        //Filter germline variants out when it is subclonal
-        if (germlineVariant.adjustedCopyNumber() * germlineVariant.adjustedVaf() >= 0.5) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     @NotNull

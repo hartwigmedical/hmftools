@@ -61,21 +61,18 @@ public class PatientReporterApplication {
                     config.correctedReport());
 
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+            reportWriter.writeQCFailReport(report, outputFilePath);
 
-            if (config.onlyReport()) {
-                LOGGER.info("Genrating only patient report");
-                reportWriter.writeQCFailReport(report, outputFilePath);
-            } else {
-                LOGGER.info("Generating patient report and additional files");
-                reportWriter.writeQCFailReport(report, outputFilePath);
-                generateJsonFileOfData(config.outputDirData(),
+            if (!config.onlyCreatePDF()) {
+                LOGGER.debug("Updating additional files and databases");
+
+                writeReportDataToJson(config.outputDirData(),
                         report.sampleReport().tumorSampleId(),
                         report.sampleReport().tumorSampleBarcode(),
                         report);
 
                 ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
             }
-
         } else {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(config));
@@ -95,26 +92,24 @@ public class PatientReporterApplication {
                     config.circosFile(),
                     config.comments(),
                     config.correctedReport());
-            String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
 
-            if (config.onlyReport()) {
-                LOGGER.info("Genrating only patient report");
-                reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
-            } else {
-                LOGGER.info("Generating patient report and additional files");
-                reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
-                generateJsonFileOfData(config.outputDirData(),
+            String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+            reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
+
+            if (!config.onlyCreatePDF()) {
+                LOGGER.debug("Updating additional files and databases");
+
+                writeReportDataToJson(config.outputDirData(),
                         report.sampleReport().sampleMetadata().tumorSampleId(),
                         report.sampleReport().sampleMetadata().tumorSampleBarcode(),
                         report);
 
                 ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
             }
-
         }
     }
 
-    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
+    private static void writeReportDataToJson(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
             @NotNull PatientReport report) throws IOException {
         String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
         Gson gson = new Gson();
@@ -171,8 +166,7 @@ public class PatientReporterApplication {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.knowledgebaseDir(),
                 config.germlineGenesCsv(),
-                config.sampleSummaryTsv(),
-                config.driverGenePanelTsv());
+                config.sampleSummaryTsv());
     }
 
     @NotNull

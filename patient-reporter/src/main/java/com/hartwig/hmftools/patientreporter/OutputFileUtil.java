@@ -13,17 +13,17 @@ public final class OutputFileUtil {
 
     @NotNull
     public static String generateOutputFileNameForReport(@NotNull PatientReport report) {
-            SampleReport sampleReport = report.sampleReport();
-            LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
+        SampleReport sampleReport = report.sampleReport();
+        LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
-            String filePrefix = study == LimsStudy.CORE
-                    ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
-                    : sampleReport.tumorSampleId();
+        String filePrefix = study == LimsStudy.CORE
+                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
+                : sampleReport.tumorSampleId();
 
-            String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
+        String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
 
-            String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
+        String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
 
-            return filePrefix + failPrefix + "_dna_analysis_report" + fileSuffix;
-        }
+        return filePrefix + failPrefix + "_dna_analysis_report" + fileSuffix;
+    }
 }

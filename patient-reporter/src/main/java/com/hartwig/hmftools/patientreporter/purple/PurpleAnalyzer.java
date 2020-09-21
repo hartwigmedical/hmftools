@@ -29,10 +29,11 @@ public final class PurpleAnalyzer {
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> driverCatalog) {
         FittedPurity bestFit = purityContext.bestFit();
-        List<ReportableGainLoss> reportableGainsAndLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, exomeGeneCopyNumbers);
+        List<ReportableGainLoss> reportableGainsAndLosses =
+                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, exomeGeneCopyNumbers);
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainsAndLosses, primaryTumorLocation, bestFit.ploidy());
+                actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainsAndLosses, primaryTumorLocation);
 
         List<EvidenceItem> filteredEvidenceItems = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerGeneCopyNumber);
 

@@ -83,9 +83,7 @@ class AnalysedPatientReporter {
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
 
         List<DriverCatalog> driverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
-
-        PurpleAnalysis purpleAnalysis =
-                analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation, driverCatalog);
+        PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation, driverCatalog);
         SomaticVariantAnalysis somaticVariantAnalysis =
                 analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, driverCatalog);
 
@@ -99,7 +97,6 @@ class AnalysedPatientReporter {
         ReportVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        reportData.driverGene(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
                         germlineChoice,
@@ -162,7 +159,7 @@ class AnalysedPatientReporter {
     @NotNull
     public static List<DriverCatalog> readDriverCatalog(@NotNull String purpleDriverCatalogTsv) throws IOException {
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
-        LOGGER.info("Loaded {} driver catalog records", driverCatalog.size());
+        LOGGER.info("Loaded {} purple driver catalog records", driverCatalog.size());
         return driverCatalog;
     }
 
@@ -195,12 +192,13 @@ class AnalysedPatientReporter {
                 purpleQC,
                 exomeGeneCopyNumbers,
                 reportData.actionabilityAnalyzer(),
-                patientTumorLocation, driverCatalog);
+                patientTumorLocation,
+                driverCatalog);
     }
 
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
-             @NotNull List<DriverCatalog> driverCatalog) throws IOException {
+            @NotNull List<DriverCatalog> driverCatalog) throws IOException {
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
@@ -213,12 +211,11 @@ class AnalysedPatientReporter {
             @NotNull ChordStatus chordStatus, @NotNull LimsGermlineReportingLevel germlineChoice) throws IOException {
         List<ReportableGermlineVariant> variants = ReportableGermlineVariantFile.read(bachelorTsv);
 
-        LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
+        LOGGER.info("Loaded {} reportable germline variants from {}", variants.size(), bachelorTsv);
 
         if (germlineChoice != LimsGermlineReportingLevel.NO_REPORTING) {
             LOGGER.info(" Patient has given the following germline consent: '{}'", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                    reportData.driverGene(),
                     reportData.germlineReportingModel(),
                     purpleAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport(),

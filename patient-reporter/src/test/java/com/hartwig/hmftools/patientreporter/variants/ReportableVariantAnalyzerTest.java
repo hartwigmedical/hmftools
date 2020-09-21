@@ -13,7 +13,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
@@ -30,7 +29,6 @@ public class ReportableVariantAnalyzerTest {
     private static final String ONCO = "AR";
     private static final String TSG = "PTEN";
 
-    private static final List<DriverGene> TEST_DRIVER_GENE_PANEL = PatientReporterTestFactory.createTestDriverGenePanel(ONCO, TSG);
     private static final List<DriverCatalog> TEST_DRIVER_CATALOG =
             Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalogEntry(ONCO),
                     PatientReporterTestFactory.createTestDriverCatalogEntry(TSG));
@@ -45,7 +43,6 @@ public class ReportableVariantAnalyzerTest {
 
         ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
                 TEST_DRIVER_CATALOG,
-                TEST_DRIVER_GENE_PANEL,
                 germlineVariantsToReport,
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
                 LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
@@ -70,7 +67,6 @@ public class ReportableVariantAnalyzerTest {
 
         ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
                 TEST_DRIVER_CATALOG,
-                TEST_DRIVER_GENE_PANEL,
                 Lists.newArrayList(),
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
                 LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
@@ -98,7 +94,6 @@ public class ReportableVariantAnalyzerTest {
 
         ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
                 TEST_DRIVER_CATALOG,
-                TEST_DRIVER_GENE_PANEL,
                 germlineVariantsToReport,
                 germlineReportingModel,
                 LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
@@ -130,7 +125,6 @@ public class ReportableVariantAnalyzerTest {
 
         ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
                 TEST_DRIVER_CATALOG,
-                TEST_DRIVER_GENE_PANEL,
                 germlineVariantsToReport,
                 germlineReportingModel,
                 LimsGermlineReportingLevel.NO_REPORTING,

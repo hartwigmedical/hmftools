@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
-
 import java.io.File;
 import java.nio.file.Files;
 
@@ -67,12 +64,11 @@ public interface PatientReporterConfig {
     String COMMENTS = "comments";
     String CORRECTED_REPORT = "corrected_report";
     String LOG_DEBUG = "log_debug";
-    String ONLY_REPORT = "only_report";
+    String ONLY_CREATE_PDF = "only_create_pdf";
 
     @NotNull
     static Options createOptions() {
         Options options = new Options();
-        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
@@ -115,8 +111,7 @@ public interface PatientReporterConfig {
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
-        options.addOption(ONLY_REPORT, false, "If provided, create only report");
-
+        options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
 
         return options;
     }
@@ -207,15 +202,12 @@ public interface PatientReporterConfig {
     @NotNull
     String sampleSummaryTsv();
 
-    @NotNull
-    String driverGenePanelTsv();
-
     @Nullable
     String comments();
 
     boolean correctedReport();
 
-    boolean onlyReport();
+    boolean onlyCreatePDF();
 
     @NotNull
     static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
@@ -282,7 +274,6 @@ public interface PatientReporterConfig {
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
-                .driverGenePanelTsv(nonOptionalFile(cmd, DRIVER_GENE_PANEL_OPTION))
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
                 .purplePurityTsv(purplePurityTsv)
@@ -302,7 +293,7 @@ public interface PatientReporterConfig {
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .correctedReport(cmd.hasOption(CORRECTED_REPORT))
-                .onlyReport(cmd.hasOption(ONLY_REPORT))
+                .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
                 .build();
     }
 
