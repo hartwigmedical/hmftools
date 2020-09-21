@@ -103,9 +103,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.vafString(variant, hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
-                    variant.driverCategory(),
-                    hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(), hasReliablePurity))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.hotspotString(variant.hotspot()))
                     .setTextAlignment(TextAlignment.CENTER));
             if (DISPLAY_CLONAL_COLUMN) {

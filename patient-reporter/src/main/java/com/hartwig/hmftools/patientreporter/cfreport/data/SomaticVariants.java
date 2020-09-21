@@ -113,15 +113,11 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String biallelicString(boolean biallelic, @Nullable DriverCategory driverCategory, boolean hasReliablePurity) {
-        if (driverCategory == DriverCategory.TSG) {
-            if (hasReliablePurity) {
-                return biallelic ? "Yes" : "No";
-            } else {
-                return DataUtil.NA_STRING;
-            }
+    public static String biallelicString(boolean biallelic, boolean hasReliablePurity) {
+        if (hasReliablePurity) {
+            return biallelic ? "Yes" : "No";
         } else {
-            return Strings.EMPTY;
+            return DataUtil.NA_STRING;
         }
     }
 
