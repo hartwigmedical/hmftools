@@ -30,7 +30,6 @@ public class SomaticVariantAnalyzerTest {
 
     @Test
     public void onlyReportsAndCountsRelevantVariants() {
-        DriverGenePanel driverGenePanel = PatientReporterTestFactory.createTestDriverGenePanel(RIGHT_GENE, "PTEN");
 
         List<SomaticVariant> variants =
                 Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).reported(true).build(),

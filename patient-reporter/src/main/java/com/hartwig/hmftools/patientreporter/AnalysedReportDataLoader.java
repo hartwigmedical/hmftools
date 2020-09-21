@@ -30,12 +30,9 @@ final class AnalysedReportDataLoader {
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGenePanelFile);
 
-        //TODO: Remove dependency on DriverGenePanelAssembly when patient report reads driver catalog directly from PURPLE.
-        DriverGenePanel genePanel = DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, driverGenes);
-
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)
-                .driverGenePanel(genePanel)
+                .driverGene(driverGenes)
                 .actionabilityAnalyzer(actionabilityAnalyzer)
                 .germlineReportingModel(germlineReportingModel)
                 .summaryModel(summaryModel)

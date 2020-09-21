@@ -6,6 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -14,15 +15,26 @@ import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableGermline
 import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariantExtended;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class FilterGermlineVariants {
 
     private FilterGermlineVariants() {
     }
 
+    @Nullable
+    private static DriverCategory catalogDriverGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
+        for (DriverGene driverGene: driverGenes) {
+            if (driverGene.gene().equals(gene)) {
+                return driverGene.likelihoodType();
+            }
+        }
+        return null;
+    }
+
     @NotNull
     public static List<ReportableGermlineVariantExtended> filterGermlineVariantsForReporting(
-            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull DriverGenePanel driverGenePanel,
+            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull List<DriverGene> driverGenes,
             @NotNull GermlineReportingModel germlineReportingModel, @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
             @NotNull List<SomaticVariant> variantsToReport, @NotNull ChordStatus chordStatus) {
         List<ReportableGermlineVariantExtended> reportableGermlineVariants = Lists.newArrayList();
@@ -31,7 +43,7 @@ public final class FilterGermlineVariants {
         for (ReportableGermlineVariant germlineVariant : germlineVariants) {
             if (reportableGermlineGenes.contains(germlineVariant.gene())) {
                 // Note: Reportable germline genes may not necessarily be present in driverGeneView!
-                if (driverGenePanel.category(germlineVariant.gene()) == DriverCategory.ONCO) {
+                if (catalogDriverGene(driverGenes, germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
                     if (filterSubclonalGermlineVariants(germlineVariant)) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));

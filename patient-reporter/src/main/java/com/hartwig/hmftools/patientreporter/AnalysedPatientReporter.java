@@ -99,7 +99,7 @@ class AnalysedPatientReporter {
         ReportVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        reportData.driverGenePanel(),
+                        reportData.driverGene(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
                         germlineChoice,
@@ -219,7 +219,7 @@ class AnalysedPatientReporter {
         if (germlineChoice != LimsGermlineReportingLevel.NO_REPORTING) {
             LOGGER.info(" Patient has given the following germline consent: '{}'", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                    reportData.driverGenePanel(),
+                    reportData.driverGene(),
                     reportData.germlineReportingModel(),
                     purpleAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport(),

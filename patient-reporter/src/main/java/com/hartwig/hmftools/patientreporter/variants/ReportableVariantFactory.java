@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -22,12 +23,13 @@ final class ReportableVariantFactory {
 
     @NotNull
     static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGenePanel driverGenePanel,
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull List<DriverGene> driverGenes,
             @NotNull List<ReportableGermlineVariantExtended> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
-            DriverCategory category = driverGenePanel.category(variant.gene());
+            DriverCategory category = catalogDriverGene(driverGenes, variant.gene());
+
             assert category != null;
 
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
@@ -48,7 +50,7 @@ final class ReportableVariantFactory {
         }
 
         for (ReportableGermlineVariantExtended germlineVariant : germlineVariantsToReport) {
-            DriverCategory category = driverGenePanel.category(germlineVariant.variant().gene());
+            DriverCategory category = catalogDriverGene(driverGenes, germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
             double adjustedDriverLikelihood = germlineVariant.driverLikelihood();
             if (catalog != null) {
@@ -69,6 +71,16 @@ final class ReportableVariantFactory {
         for (DriverCatalog entry : driverCatalogList) {
             if (entry.gene().equals(gene)) {
                 return entry;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private static DriverCategory catalogDriverGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
+        for (DriverGene driverGene: driverGenes) {
+            if (driverGene.gene().equals(gene)) {
+                return driverGene.likelihoodType();
             }
         }
         return null;

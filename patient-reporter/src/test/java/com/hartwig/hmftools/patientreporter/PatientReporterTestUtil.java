@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -51,11 +52,11 @@ public final class PatientReporterTestUtil {
         try {
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
-            DriverGenePanel panel = DriverGenePanelFactory.empty();
+            List<DriverGene> driverGenes = Lists.newArrayList();
 
             return ImmutableAnalysedReportData.builder()
                     .from(testReportData())
-                    .driverGenePanel(panel)
+                    .driverGene(driverGenes)
                     .actionabilityAnalyzer(testActionabilityAnalyzer())
                     .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)

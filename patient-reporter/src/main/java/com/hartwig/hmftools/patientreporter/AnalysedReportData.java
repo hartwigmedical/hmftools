@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
@@ -15,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AnalysedReportData implements ReportData {
 
     @NotNull
-    public abstract DriverGenePanel driverGenePanel();
+    public abstract List<DriverGene> driverGene();
 
     @NotNull
     public abstract ActionabilityAnalyzer actionabilityAnalyzer();

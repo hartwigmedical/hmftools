@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -177,10 +178,10 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static DriverGenePanel createTestDriverGenePanel(@NotNull String oncogene, @NotNull String tsg) {
+    public static List<DriverGene> createTestDriverGenePanel(@NotNull String oncogene, @NotNull String tsg) {
         DriverGene oncoGene = createTestDriverGene(oncogene, DriverCategory.ONCO);
         DriverGene tsgGene = createTestDriverGene(tsg, DriverCategory.TSG);
-        return DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, Lists.newArrayList(oncoGene, tsgGene));
+        return Lists.newArrayList(oncoGene, tsgGene);
     }
 
     @NotNull

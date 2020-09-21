@@ -13,6 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -30,7 +31,7 @@ public class ReportableVariantAnalyzerTest {
     private static final String ONCO = "AR";
     private static final String TSG = "PTEN";
 
-    private static final DriverGenePanel TEST_DRIVER_GENE_PANEL = PatientReporterTestFactory.createTestDriverGenePanel(ONCO, TSG);
+    private static final List<DriverGene> TEST_DRIVER_GENE_PANEL = PatientReporterTestFactory.createTestDriverGenePanel(ONCO, TSG);
     private static final List<DriverCatalog> TEST_DRIVER_CATALOG =
             Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalogEntry(ONCO),
                     PatientReporterTestFactory.createTestDriverCatalogEntry(TSG));

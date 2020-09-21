@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -78,7 +79,7 @@ public class GenomicData {
     @NotNull
     public static List<ReportableGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
-            @NotNull ChordAnalysis chordAnalysis, @NotNull DriverGenePanel driverGenePanel, @NotNull Lims lims,
+            @NotNull ChordAnalysis chordAnalysis, @NotNull List<DriverGene> driverGenes, @NotNull Lims lims,
             @NotNull GermlineReportingModel germlineReportingModel) throws IOException {
 
         List<GermlineVariant> variants =
@@ -92,7 +93,7 @@ public class GenomicData {
         } else {
             LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
             return filterGermlineVariantsForReporting(variants,
-                    driverGenePanel,
+                    driverGenes,
                     germlineReportingModel,
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport(),
@@ -102,7 +103,7 @@ public class GenomicData {
 
     @NotNull
     public static List<ReportableGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<GermlineVariant> germlineVariants,
-            @NotNull DriverGenePanel driverGenePanel, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull List<DriverGene> driverGenes, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport,
             @NotNull ChordAnalysis chordAnalysis) {
         List<ReportableGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
@@ -113,7 +114,7 @@ public class GenomicData {
 
             if (reportableGermlineGenes.contains(germlineVariant.gene())) {
                 // Note: Reportable germline genes may not necessarily be present in driverGeneView!
-                if (driverGenePanel.category(germlineVariant.gene()) == DriverCategory.ONCO) {
+                if (catalogDriverGene(driverGenes, germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
                     reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                 } else {
@@ -170,12 +171,12 @@ public class GenomicData {
 
     @NotNull
     public static ReportableVariantAnalysis somaticAndGermlineVariantsTogether(@NotNull List<SomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGenePanel driverGenePanel,
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull List<DriverGene> driverGenes,
             @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = mergeSomaticAndGermlineVariants(somaticVariantsReport,
                 driverCatalog,
-                driverGenePanel,
+                driverGenes,
                 germlineVariantsToReport,
                 germlineReportingModel,
                 germlineReportingChoice);
@@ -184,14 +185,24 @@ public class GenomicData {
 
     }
 
+    @Nullable
+    private static DriverCategory catalogDriverGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
+        for (DriverGene driverGene: driverGenes) {
+            if (driverGene.gene().equals(gene)) {
+                return driverGene.likelihoodType();
+            }
+        }
+        return null;
+    }
+
     @NotNull
     private static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGenePanel driverGenePanel,
+            @NotNull List<DriverCatalog> driverCatalog, List<DriverGene> driverGenes,
             @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
-            DriverCategory category = driverGenePanel.category(variant.gene());
+            DriverCategory category = catalogDriverGene(driverGenes, variant.gene());
             assert category != null;
 
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
@@ -213,7 +224,7 @@ public class GenomicData {
 
         boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION;
         for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
-            DriverCategory category = driverGenePanel.category(germlineVariant.variant().gene());
+            DriverCategory category = catalogDriverGene(driverGenes, germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
             double driverLikelihood = germlineVariant.driverLikelihood();
             if (catalog != null) {

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.protect;
 
+import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -13,8 +16,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
@@ -76,6 +81,7 @@ public class ProtectActionability {
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String GERMLINE_VARIANT_VCF = "germline_variant_vcf";
 
+    private static final String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String PURPLE_QC_TSV = "purple_qc_tsv";
@@ -113,6 +119,8 @@ public class ProtectActionability {
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
         final String chordTxt = cmd.getOptionValue(CHORD_TXT);
 
+        final String driverGenePanelFile = cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION);
+
         // Params output file
         final String outputDatabaseTsv = cmd.getOptionValue(OUTPUT_DATABASE_TSV);
         final String outputReportTsv = cmd.getOptionValue(OUTPUT_REPORT_TSV);
@@ -148,16 +156,16 @@ public class ProtectActionability {
         double purity = purityContext.bestFit().purity();
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
 
-        DriverGenePanel driverGenePanel = DriverGenePanelFactory.empty(); //TODO: Make configurable
+        List<DriverGene> driverGenes = DriverGeneFile.read(driverGenePanelFile);
+        List<DriverCatalog> driverCatalog = readDriverCatalog(cmd.getOptionValue(PURPLE_DRIVER_CATALOG_TSV));
 
         // Gene Fusion reportable
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
         // Copy Number all + reportable
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
-        List<ReportableGainLoss> reportableGainsAndLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverGenePanel,
-                geneCopyNumbers,
-                purityContext.bestFit().ploidy());
+        List<ReportableGainLoss> reportableGainsAndLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog,
+                geneCopyNumbers);
 
         // Germline variants
         List<GermlineVariant> germlineVariant =
@@ -166,13 +174,12 @@ public class ProtectActionability {
 
         // only reportable variants
         CopyNumberAnalysis copyNumberAnalysis =
-                CopyNumberAnalyzer.analyzeCopyNumbers(purplePurityTsv, purpleQCTsv, purpleGeneCnvTsv, driverGenePanel);
+                CopyNumberAnalyzer.analyzeCopyNumbers(purplePurityTsv, purpleQCTsv, purpleGeneCnvTsv, driverCatalog);
         //
 
         SomaticVariantAnalysis somaticVariantAnalysis = SomaticVariantAnalyzer.analyzeSomaticVariants(tumorSampleId,
                 somaticVariantVcf,
-                copyNumberAnalysis.exomeGeneCopyNumbers(),
-                driverGenePanel);
+                driverCatalog);
         ChordAnalysis chordAnalysis = ChordFileReader.read(chordTxt);
         final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
 
@@ -181,14 +188,14 @@ public class ProtectActionability {
                 copyNumberAnalysis,
                 somaticVariantAnalysis,
                 chordAnalysis,
-                driverGenePanel,
+                driverGenes,
                 lims,
                 germlineReportingModel);
 
         ReportableVariantAnalysis reportableVariantsAnalysis =
                 GenomicData.somaticAndGermlineVariantsTogether(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        driverGenePanel,
+                        driverGenes,
                         germlineVariantsToReport,
                         germlineReportingModel,
                         lims.germlineReportingChoice(tumorBarcodeId));
@@ -239,6 +246,13 @@ public class ProtectActionability {
         //TODO create knwon amplifications and deletions
 
         writeConclusionOfSample(OutputConclusionTsv, conclusion);
+    }
+
+    @NotNull
+    public static List<DriverCatalog> readDriverCatalog(@NotNull String purpleDriverCatalogTsv) throws IOException {
+        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
+        LOGGER.info("Loaded {} driver catalog records", driverCatalog.size());
+        return driverCatalog;
     }
 
     private static void writeConclusionOfSample(@NotNull String OutputConclusionTsv, @NotNull StringBuilder conclusion) throws IOException {
@@ -405,6 +419,8 @@ public class ProtectActionability {
     private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
 
+        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
+
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_BARCODE_ID, true, "The barcode ID for which a patient report will be generated.");
 
@@ -419,6 +435,7 @@ public class ProtectActionability {
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(GERMLINE_VARIANT_VCF, true, "Path towards the germline variant VCF.");
 
+        options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_TSV, true, "Path towards the purple qc TSV.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
