@@ -104,7 +104,7 @@ public class PatientReporterApplication {
                         report.sampleReport().sampleMetadata().tumorSampleBarcode(),
                         report);
 
-                ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
+                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
             }
         }
     }

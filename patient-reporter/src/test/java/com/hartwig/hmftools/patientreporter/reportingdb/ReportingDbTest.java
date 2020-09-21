@@ -62,7 +62,7 @@ public class ReportingDbTest {
                 writer.close();
             }
 
-            ReportingDb.addSequenceReportToReportingDb(reportDatesTsv.getPath(),
+            ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
                     ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS", null));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),

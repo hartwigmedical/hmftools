@@ -16,9 +16,9 @@ public final class SummaryFile {
 
     private static final Logger LOGGER = LogManager.getLogger(SummaryFile.class);
 
-    private static final String LINE_BREAK_STRING = " <enter> ";
-
     private static final String SEPARATOR = "\t";
+
+    private static final String LINE_BREAK_STRING = " <enter> ";
 
     private SummaryFile() {
     }

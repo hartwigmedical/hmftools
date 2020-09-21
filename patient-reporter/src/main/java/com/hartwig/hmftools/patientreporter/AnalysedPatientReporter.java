@@ -91,12 +91,12 @@ class AnalysedPatientReporter {
         ChordStatus chordStatus = ChordStatus.fromHRD(chordAnalysis.hrdValue());
 
         LimsGermlineReportingLevel germlineChoice = reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode());
-        List<DriverGermlineVariant> germlineVariantsToReport =
+        List<DriverGermlineVariant> driverGermlineVariants =
                 analyzeGermlineVariants(bachelorTsv, purpleAnalysis, driverSomaticVariants, chordStatus, germlineChoice);
 
         ReportableVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(driverSomaticVariants,
-                        germlineVariantsToReport,
+                        driverGermlineVariants,
                         reportData.germlineReportingModel(),
                         germlineChoice,
                         reportData.actionabilityAnalyzer(),

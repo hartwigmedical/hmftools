@@ -12,7 +12,6 @@ import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariants {
 
@@ -22,14 +21,8 @@ public final class SomaticVariants {
     @NotNull
     public static List<ReportableVariant> sort(@NotNull List<ReportableVariant> variants) {
         return variants.stream().sorted((variant1, variant2) -> {
-            Double variant1DriverLikelihood = variant1.driverLikelihood();
-            Double variant2DriverLikelihood = variant2.driverLikelihood();
-
-            // Force any variant outside of driver catalog to the bottom of table.
-            double driverLikelihood1 = variant1DriverLikelihood != null ? variant1DriverLikelihood : -1;
-            double driverLikelihood2 = variant2DriverLikelihood != null ? variant2DriverLikelihood : -1;
-            if (Math.abs(driverLikelihood1 - driverLikelihood2) > 0.001) {
-                return (driverLikelihood1 - driverLikelihood2) < 0 ? 1 : -1;
+            if (Math.abs(variant1.driverLikelihood() - variant2.driverLikelihood()) > 0.001) {
+                return (variant1.driverLikelihood() - variant2.driverLikelihood()) < 0 ? 1 : -1;
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on codon position if gene is the same
@@ -150,10 +143,8 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String driverString(@Nullable Double driverLikelihood) {
-        DriverInterpretation interpretation = DriverInterpretation.interpret(driverLikelihood);
-
-        return interpretation != null ? interpretation.display() : Strings.EMPTY;
+    public static String driverString(double driverLikelihood) {
+        return DriverInterpretation.interpret(driverLikelihood).display();
     }
 
     @NotNull
