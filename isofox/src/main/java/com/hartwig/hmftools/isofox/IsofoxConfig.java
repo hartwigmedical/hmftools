@@ -168,6 +168,11 @@ public class IsofoxConfig
             loadGeneIdsFile(inputFile, ExcludedGeneIds);
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
+        else
+        {
+            // explicitly ignore POLY-G region LINC00486
+            ExcludedGeneIds.add("ENSG00000230876");
+        }
 
         Functions = Lists.newArrayList();
 

@@ -264,7 +264,6 @@ public class BamFragmentReader implements Callable
         {
             if(nextLogCount > 100)
             {
-                ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
                 ISF_LOGGER.info("chr({}) chimeric data: {}", mChromosome, mChimericStats);
             }
 
