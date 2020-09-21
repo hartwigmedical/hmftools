@@ -115,7 +115,7 @@ public interface PatientReporterConfig {
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
-        options.addOption(LOG_DEBUG, false, "If provided, create only report");
+        options.addOption(ONLY_REPORT, false, "If provided, create only report");
 
 
         return options;

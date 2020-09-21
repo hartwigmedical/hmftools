@@ -63,8 +63,10 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
 
             if (config.onlyReport()) {
+                LOGGER.info("Genrating only patient report");
                 reportWriter.writeQCFailReport(report, outputFilePath);
             } else {
+                LOGGER.info("Generating patient report and additional files");
                 reportWriter.writeQCFailReport(report, outputFilePath);
                 generateJsonFileOfData(config.outputDirData(),
                         report.sampleReport().tumorSampleId(),
@@ -96,10 +98,11 @@ public class PatientReporterApplication {
             String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
 
             if (config.onlyReport()) {
+                LOGGER.info("Genrating only patient report");
                 reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
             } else {
+                LOGGER.info("Generating patient report and additional files");
                 reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
-
                 generateJsonFileOfData(config.outputDirData(),
                         report.sampleReport().sampleMetadata().tumorSampleId(),
                         report.sampleReport().sampleMetadata().tumorSampleBarcode(),
