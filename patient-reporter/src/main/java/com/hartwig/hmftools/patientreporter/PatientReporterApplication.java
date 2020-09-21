@@ -59,10 +59,13 @@ public class PatientReporterApplication {
                     config.purplePurityTsv(),
                     config.comments(),
                     config.correctedReport());
+
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-            reportWriter.writeQCFailReport(report, outputFilePath);
 
             if (config.onlyReport()) {
+                reportWriter.writeQCFailReport(report, outputFilePath);
+            } else {
+                reportWriter.writeQCFailReport(report, outputFilePath);
                 generateJsonFileOfData(config.outputDirData(),
                         report.sampleReport().tumorSampleId(),
                         report.sampleReport().tumorSampleBarcode(),
@@ -91,9 +94,12 @@ public class PatientReporterApplication {
                     config.comments(),
                     config.correctedReport());
             String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-            reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
 
             if (config.onlyReport()) {
+                reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
+            } else {
+                reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
+
                 generateJsonFileOfData(config.outputDirData(),
                         report.sampleReport().sampleMetadata().tumorSampleId(),
                         report.sampleReport().sampleMetadata().tumorSampleBarcode(),
@@ -101,6 +107,7 @@ public class PatientReporterApplication {
 
                 ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
             }
+
         }
     }
 
