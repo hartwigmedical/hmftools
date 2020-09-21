@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.writeCombin
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.FRAGMENT_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.PASS;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilters.hasSufficientKnownFusionFragments;
+import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilters.isShortLocalFusion;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 
@@ -162,7 +163,8 @@ public class FusionCohortTask implements Callable
                 if(!fusion.relatedFusionIds().isEmpty())
                     nonPassingFusionsWithRelated.add(fusion);
 
-                if(fusion.getKnownFusionType() == KnownGeneType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT)
+                // combine fragment support for non-local known-pair fusions
+                if(fusion.getKnownFusionType() == KnownGeneType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT && !isShortLocalFusion(fusion))
                 {
                     List<FusionData> fusions = lowSupportKnownFusions.get(fusion.name());
                     if(fusions == null)
@@ -173,7 +175,6 @@ public class FusionCohortTask implements Callable
             }
         }
 
-        // tally up fragment count across known-pairs for a joint
         for(final List<FusionData> fusions : lowSupportKnownFusions.values())
         {
             if(hasSufficientKnownFusionFragments(fusions))

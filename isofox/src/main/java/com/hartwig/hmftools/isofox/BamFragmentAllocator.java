@@ -297,8 +297,7 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:4:12403:2301:11039";
-    private static final int LOG_READ_POS = 117642557;
+    // private static final String LOG_READ_ID = "A00260:30:HGL2NDSXX:3:1104:4806:20838";
 
     private void processRead(ReadRecord read)
     {
@@ -306,13 +305,6 @@ public class BamFragmentAllocator
         {
             ISF_LOGGER.debug("specific read by ID: {}", read.toString());
         }
-        /*
-        //else if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(LOG_READ_POS, x[SE_START], x[SE_END])))
-        else if(read.getMappedRegionCoords().stream().anyMatch(x -> x[SE_START] == LOG_READ_POS || x[SE_END] == LOG_READ_POS))
-        {
-            ISF_LOGGER.debug("specific read by position: {}", read.toString());
-        }
-        */
 
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene

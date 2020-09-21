@@ -67,12 +67,15 @@ public class FusionFilters
     private static final double AF_UNKNOWN_TIER = 0.05;
     private static final int LOCAL_FUSION_THRESHOLD = 1000000;
 
+    public static boolean isShortLocalFusion(final FusionData fusion)
+    {
+        return fusion.Chromosomes[SE_START].equals(fusion.Chromosomes[SE_END]) &&
+                abs(fusion.JunctionPositions[SE_END] - fusion.JunctionPositions[SE_START]) < LOCAL_FUSION_THRESHOLD;
+    }
+
     public boolean isPassingFusion(final FusionData fusion)
     {
-        boolean isShort = fusion.Chromosomes[SE_START].equals(fusion.Chromosomes[SE_END]) &&
-                abs(fusion.JunctionPositions[SE_END] - fusion.JunctionPositions[SE_START]) < LOCAL_FUSION_THRESHOLD;
-
-        if(fusion.getKnownFusionType() == KNOWN_PAIR && !isShort)
+        if(fusion.getKnownFusionType() == KNOWN_PAIR && !isShortLocalFusion(fusion))
         {
             int requiredFragments = hasKnownSpliceSite(fusion) ? KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS : KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS;
 
