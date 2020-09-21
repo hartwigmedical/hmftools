@@ -62,12 +62,15 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
-            generateJsonFileOfData(config.outputDirData(),
-                    report.sampleReport().tumorSampleId(),
-                    report.sampleReport().tumorSampleBarcode(),
-                    report);
+            if (config.onlyReport()) {
+                generateJsonFileOfData(config.outputDirData(),
+                        report.sampleReport().tumorSampleId(),
+                        report.sampleReport().tumorSampleBarcode(),
+                        report);
 
-            ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+                ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+            }
+
         } else {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(config));
@@ -90,12 +93,14 @@ public class PatientReporterApplication {
             String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
 
-            generateJsonFileOfData(config.outputDirData(),
-                    report.sampleReport().sampleMetadata().tumorSampleId(),
-                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                    report);
+            if (config.onlyReport()) {
+                generateJsonFileOfData(config.outputDirData(),
+                        report.sampleReport().sampleMetadata().tumorSampleId(),
+                        report.sampleReport().sampleMetadata().tumorSampleBarcode(),
+                        report);
 
-            ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
+                ReportingDb.addSequenceReportToReportingDb(config.reportingDbTsv(), report);
+            }
         }
     }
 

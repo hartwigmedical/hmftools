@@ -67,6 +67,7 @@ public interface PatientReporterConfig {
     String COMMENTS = "comments";
     String CORRECTED_REPORT = "corrected_report";
     String LOG_DEBUG = "log_debug";
+    String ONLY_REPORT = "only_report";
 
     @NotNull
     static Options createOptions() {
@@ -114,6 +115,8 @@ public interface PatientReporterConfig {
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
+        options.addOption(LOG_DEBUG, false, "If provided, create only report");
+
 
         return options;
     }
@@ -212,6 +215,8 @@ public interface PatientReporterConfig {
 
     boolean correctedReport();
 
+    boolean onlyReport();
+
     @NotNull
     static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         if (cmd.hasOption(LOG_DEBUG)) {
@@ -297,6 +302,7 @@ public interface PatientReporterConfig {
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .correctedReport(cmd.hasOption(CORRECTED_REPORT))
+                .onlyReport(cmd.hasOption(ONLY_REPORT))
                 .build();
     }
 
