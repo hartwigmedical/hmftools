@@ -32,6 +32,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
@@ -177,6 +178,33 @@ public class FusionFinder implements Callable
 
         mSpanningReadGroups.addAll(spanningReadGroups);
         return completeGroups;
+    }
+
+    public Map<String,Map<String,ReadGroup>> extractIncompleteReadGroups(final String chromosome)
+    {
+        Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = Maps.newHashMap();
+        for(ReadGroup readGroup : mChimericPartialReadGroups.values())
+        {
+            String otherChromosome = readGroup.findOtherChromosome(chromosome);
+
+            if(otherChromosome != null)
+            {
+                if(!HumanChromosome.contains(otherChromosome))
+                    continue;
+
+                Map<String, ReadGroup> readGroupMap = chrIncompleteReadsGroups.get(otherChromosome);
+                if(readGroupMap == null)
+                {
+                    readGroupMap = Maps.newHashMap();
+                    chrIncompleteReadsGroups.put(otherChromosome, readGroupMap);
+                }
+
+                readGroupMap.put(readGroup.id(), readGroup);
+            }
+        }
+
+        mChimericPartialReadGroups.clear();
+        return chrIncompleteReadsGroups;
     }
 
     public void processLocalReadGroups(final List<ReadGroup> readGroups)

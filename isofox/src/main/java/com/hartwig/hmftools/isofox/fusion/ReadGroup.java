@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.suppAlignmentChromosome;
+
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +52,20 @@ public class ReadGroup
     }
 
     public String toString() { return String.format("%s reads(%d) complete(%s)", id(), Reads.size(), isComplete()); }
+
+    public String findOtherChromosome(final String chromosome)
+    {
+        for(ReadRecord read : Reads)
+        {
+            if(!read.mateChromosome().equals(chromosome))
+                return read.mateChromosome();
+
+            if(read.hasSuppAlignment())
+                return suppAlignmentChromosome(read.getSuppAlignment());
+        }
+
+        return null;
+    }
 
     public static void mergeChimericReadMaps(
             final Map<String,ReadGroup> partialGroups, final List<ReadGroup> completeGroups, final Map<String,ReadGroup> sourceMap)

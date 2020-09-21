@@ -153,6 +153,7 @@ public class ReadRecord
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
+
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
     public String mateChromosome() { return mMateChromosome; }

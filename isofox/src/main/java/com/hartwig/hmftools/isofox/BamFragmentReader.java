@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -272,8 +273,12 @@ public class BamFragmentReader implements Callable
             mPerfCounters[PERF_FUSIONS].start();
 
             // handle fragments spanning multiple chromosomes
+
+            // first organise incomplete reads into the chromosomes which they want to link to
+            Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
+
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, mFusionFinder.getChimericPartialReadGroups(), mFusionFinder.getRealignCandidateFragments());
+                    mChromosome, chrIncompleteReadsGroups, mFusionFinder.getRealignCandidateFragments());
 
             if(!interChromosomalGroups.isEmpty())
             {

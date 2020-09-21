@@ -266,4 +266,25 @@ public class FusionUtils
         }
     }
 
+    public static final String SUPP_ALIGNMENT_DELIM = ",";
+
+    public static Integer suppAlignmentPosition(final String suppAlignment)
+    {
+        // 21,39794900,-,33M43S,255,0;
+        if(suppAlignment == null)
+            return null;
+
+        final String[] items = suppAlignment.split(SUPP_ALIGNMENT_DELIM);
+        return items.length >= 5 ? Integer.parseInt(items[1]) : null;
+    }
+
+    public static String suppAlignmentChromosome(final String suppAlignment)
+    {
+        if(suppAlignment == null)
+            return null;
+
+        final String[] items = suppAlignment.split(SUPP_ALIGNMENT_DELIM);
+        return items.length >= 5 ? items[0] : null;
+    }
+
 }
