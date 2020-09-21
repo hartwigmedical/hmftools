@@ -23,7 +23,7 @@ public final class ReportableVariantAnalyzer {
     }
 
     @NotNull
-    public static ReportVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
+    public static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
             @NotNull List<DriverGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
@@ -37,7 +37,7 @@ public final class ReportableVariantAnalyzer {
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
                 filterHighDriverLikelihood(actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation));
 
-        return ImmutableReportVariantAnalysis.of(allReportableVariants,
+        return ImmutableReportableVariantAnalysis.of(allReportableVariants,
                 ReportableEvidenceItemFactory.toReportableFlatList(evidencePerVariant));
     }
 

@@ -43,8 +43,8 @@ import com.hartwig.hmftools.patientreporter.purple.PurpleAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.ReportableDisruptionFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.germline.DriverGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
@@ -94,7 +94,7 @@ class AnalysedPatientReporter {
         List<DriverGermlineVariant> germlineVariantsToReport =
                 analyzeGermlineVariants(bachelorTsv, purpleAnalysis, driverSomaticVariants, chordStatus, germlineChoice);
 
-        ReportVariantAnalysis reportableVariantsAnalysis =
+        ReportableVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(driverSomaticVariants,
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),

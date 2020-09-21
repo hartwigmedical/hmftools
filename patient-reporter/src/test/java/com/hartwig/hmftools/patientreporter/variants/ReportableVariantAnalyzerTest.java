@@ -49,7 +49,7 @@ public class ReportableVariantAnalyzerTest {
         List<DriverSomaticVariant> somaticVariantsToReport = Lists.newArrayList(variant1, variant2);
         List<DriverGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
 
-        ReportVariantAnalysis reportableVariantsAnalysis =
+        ReportableVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantsToReport,
                         germlineVariantsToReport,
                         PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
@@ -79,7 +79,7 @@ public class ReportableVariantAnalyzerTest {
 
         List<DriverSomaticVariant> somaticVariantsToReport = Lists.newArrayList(variant1, variant2);
 
-        ReportVariantAnalysis reportableVariantsAnalysis =
+        ReportableVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantsToReport,
                         Lists.newArrayList(),
                         PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
@@ -108,7 +108,7 @@ public class ReportableVariantAnalyzerTest {
         List<DriverGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
-        ReportVariantAnalysis reportableVariantsAnalysis =
+        ReportableVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantsToReport,
                         germlineVariantsToReport,
                         germlineReportingModel,
@@ -141,7 +141,7 @@ public class ReportableVariantAnalyzerTest {
         List<DriverGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
-        ReportVariantAnalysis reportableVariantsAnalysis =
+        ReportableVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantsToReport,
                         germlineVariantsToReport,
                         germlineReportingModel,
