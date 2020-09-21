@@ -44,11 +44,11 @@ import com.hartwig.hmftools.patientreporter.structural.ReportableDisruptionFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;
-import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariantExtended;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.germline.DriverGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
-import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
+import com.hartwig.hmftools.patientreporter.variants.somatic.DriverSomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertionAnalyzer;
@@ -84,19 +84,18 @@ class AnalysedPatientReporter {
 
         List<DriverCatalog> driverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
         PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation, driverCatalog);
-        SomaticVariantAnalysis somaticVariantAnalysis =
+        List<DriverSomaticVariant> driverSomaticVariants =
                 analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, driverCatalog);
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
         ChordStatus chordStatus = ChordStatus.fromHRD(chordAnalysis.hrdValue());
 
         LimsGermlineReportingLevel germlineChoice = reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode());
-        List<ReportableGermlineVariantExtended> germlineVariantsToReport =
-                analyzeGermlineVariants(bachelorTsv, purpleAnalysis, somaticVariantAnalysis, chordStatus, germlineChoice);
+        List<DriverGermlineVariant> germlineVariantsToReport =
+                analyzeGermlineVariants(bachelorTsv, purpleAnalysis, driverSomaticVariants, chordStatus, germlineChoice);
 
         ReportVariantAnalysis reportableVariantsAnalysis =
-                ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
-                        somaticVariantAnalysis.driverCatalog(),
+                ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(driverSomaticVariants,
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
                         germlineChoice,
@@ -197,7 +196,7 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
+    private static List<DriverSomaticVariant> analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
             @NotNull List<DriverCatalog> driverCatalog) throws IOException {
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
@@ -206,8 +205,8 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<ReportableGermlineVariantExtended> analyzeGermlineVariants(@NotNull String bachelorTsv,
-            @NotNull PurpleAnalysis purpleAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
+    private List<DriverGermlineVariant> analyzeGermlineVariants(@NotNull String bachelorTsv,
+            @NotNull PurpleAnalysis purpleAnalysis, @NotNull List<DriverSomaticVariant> driverSomaticVariants,
             @NotNull ChordStatus chordStatus, @NotNull LimsGermlineReportingLevel germlineChoice) throws IOException {
         List<ReportableGermlineVariant> variants = ReportableGermlineVariantFile.read(bachelorTsv);
 
@@ -218,7 +217,7 @@ class AnalysedPatientReporter {
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
                     reportData.germlineReportingModel(),
                     purpleAnalysis.exomeGeneCopyNumbers(),
-                    somaticVariantAnalysis.variantsToReport(),
+                    driverSomaticVariants,
                     chordStatus);
         } else {
             LOGGER.info(" No consent has been given for germline reporting. No germline variants will be reported!");

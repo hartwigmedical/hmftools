@@ -2,8 +2,7 @@ package com.hartwig.hmftools.patientreporter.variants.somatic;
 
 import java.util.List;
 
-import java.util.stream.Collectors;
-
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
@@ -15,10 +14,30 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static SomaticVariantAnalysis run(@NotNull List<SomaticVariant> variants, @NotNull List<DriverCatalog> driverCatalog) {
-        List<SomaticVariant> variantsToReport = variants.stream().filter(x -> x.reported()).collect(Collectors.toList());
+    public static List<DriverSomaticVariant> run(@NotNull List<SomaticVariant> variants, @NotNull List<DriverCatalog> driverCatalog) {
+        List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
 
-        return ImmutableSomaticVariantAnalysis.of(variantsToReport, driverCatalog);
+        for (SomaticVariant variant : variants) {
+            if (variant.reported()) {
+                DriverCatalog entry = catalogEntryForGene(driverCatalog, variant.gene());
+                driverSomaticVariants.add(ImmutableDriverSomaticVariant.builder()
+                        .variant(variant)
+                        .driverLikelihood(entry.driverLikelihood())
+                        .build());
+            }
+        }
+
+        return driverSomaticVariants;
     }
 
+    @NotNull
+    private static DriverCatalog catalogEntryForGene(@NotNull List<DriverCatalog> driverCatalogList, @NotNull String gene) {
+        for (DriverCatalog entry : driverCatalogList) {
+            if (entry.gene().equals(gene)) {
+                return entry;
+            }
+        }
+
+        throw new IllegalStateException("Could not find driver catalog entry for " + gene);
+    }
 }

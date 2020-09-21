@@ -62,8 +62,7 @@ public abstract class ReportableVariant implements Variant {
 
     public abstract double clonalLikelihood();
 
-    @Nullable
-    public abstract Double driverLikelihood();
+    public abstract double driverLikelihood();
 
     public abstract boolean biallelic();
 
