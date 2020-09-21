@@ -555,7 +555,7 @@ public final class ExampleAnalysisTestFactory {
                 .alleleCopyNumber(1.74)
                 .totalCopyNumber(2.0)
                 .hotspot(Hotspot.HOTSPOT)
-                .biallelic(false)
+                .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.85)
                 .build();
