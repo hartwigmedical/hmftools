@@ -24,7 +24,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReporterApplication {
@@ -87,8 +86,7 @@ public class PatientReporterApplication {
                     config.chordPredictionTxt(),
                     config.circosFile(),
                     config.comments(),
-                    config.correctedReport(),
-                    config.unofficialReport());
+                    config.correctedReport());
             String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
 
@@ -101,8 +99,8 @@ public class PatientReporterApplication {
         }
     }
 
-    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId,
-            @NotNull String tumorBarcode, @NotNull PatientReport report) throws IOException {
+    private static void generateJsonFileOfData(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
+            @NotNull PatientReport report) throws IOException {
         String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
         Gson gson = new Gson();
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
@@ -118,28 +116,9 @@ public class PatientReporterApplication {
 
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
-        String refSampleId;
-        String refSampleBarcode;
-
-        // if ref sample barcode is null change to N/A
-        if (config.refSampleBarcode() == null) {
-            LOGGER.warn("Ref sample barcode is unknown: {}", config.refSampleBarcode());
-            refSampleBarcode = "N/A";
-        } else {
-            refSampleBarcode = config.refSampleBarcode();
-        }
-
-        // if ref sample Id is null change to N/A
-        if (config.refSampleId() == null) {
-            LOGGER.warn("Ref sample Id is unknown: {}", config.refSampleId());
-            refSampleId = "N/A";
-        } else {
-            refSampleId = config.refSampleId();
-        }
-
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId(refSampleId) // null is changed to N/A
-                .refSampleBarcode(refSampleBarcode) // null is changed to N/A
+                .refSampleId(config.refSampleId())
+                .refSampleBarcode(config.refSampleBarcode())
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
                 .build();

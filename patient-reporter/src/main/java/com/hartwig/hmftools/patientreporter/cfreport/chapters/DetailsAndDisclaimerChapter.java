@@ -77,7 +77,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraphTwice("This experiment is performed on the blood sample which arrived on ",
                 DataUtil.formatDate(sampleReport.refArrivalDate()),
                 " with internal blood barcode ",
-                sampleReport.refSampleBarcode()));
+                DataUtil.formatNullableString(sampleReport.refSampleBarcode())));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         String whoVerified = "This report is generated and verified by: " + patientReport.user();
         if (!patientReport.clinicalSummary().isEmpty()) {
