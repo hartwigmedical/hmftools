@@ -4,8 +4,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -14,10 +13,10 @@ import org.jetbrains.annotations.NotNull;
 
 class ExtractGermlineDeletions {
 
-    private final Gender gender;
+    private final CobaltChromosomes cobaltChromosomes;
 
-    ExtractGermlineDeletions(final Gender gender) {
-        this.gender = gender;
+    ExtractGermlineDeletions(final CobaltChromosomes cobaltChromosomes) {
+        this.cobaltChromosomes = cobaltChromosomes;
     }
 
     @NotNull
@@ -96,7 +95,7 @@ class ExtractGermlineDeletions {
     }
 
     private double upperBound(@NotNull final FittedRegion region) {
-        double expectedNormalRatio = HumanChromosome.fromString(region.chromosome()).isDiploid(gender) ? 1 : 0.5;
+        double expectedNormalRatio = cobaltChromosomes.get(region.chromosome()).actualRatio();
         return Math.max(region.tumorCopyNumber(), region.refNormalisedCopyNumber()) / (2 * Math.min(expectedNormalRatio,
                 region.observedNormalRatio()));
     }

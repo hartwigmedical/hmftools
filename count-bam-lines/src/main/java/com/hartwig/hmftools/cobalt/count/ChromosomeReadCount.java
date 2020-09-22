@@ -61,10 +61,12 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
         return this;
     }
 
+    @NotNull
     Chromosome chromosome() {
         return HumanChromosome.fromString(chromosome);
     }
 
+    @NotNull
     List<ReadCount> readCount() {
         addReadCount(start, count);
 

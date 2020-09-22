@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.purple.qc;
 
+import java.util.Set;
+
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.immutables.value.Value;
@@ -35,7 +38,7 @@ public abstract class PurpleQC {
     }
 
     boolean genderPass() {
-        return cobaltGender().equals(amberGender()) || cobaltGender().equals(Gender.MALE_KLINEFELTER);
+        return cobaltGender().equals(amberGender()) || germlineAberrations().contains(GermlineAberration.KLINEFELTER);
     }
 
     boolean deletedGenesPass() {
@@ -57,4 +60,7 @@ public abstract class PurpleQC {
 
     @NotNull
     public abstract Gender amberGender();
+
+    @NotNull
+    public abstract Set<GermlineAberration> germlineAberrations();
 }

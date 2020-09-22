@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 public final class GCMedianReadCountFile {
 
     private static final String DELIMITER = "\t";
-    private static final String EXTENSION = ".cobalt.gc.median";
+    private static final String EXTENSION = ".cobalt.gc.median.tsv";
 
     private GCMedianReadCountFile() {
     }

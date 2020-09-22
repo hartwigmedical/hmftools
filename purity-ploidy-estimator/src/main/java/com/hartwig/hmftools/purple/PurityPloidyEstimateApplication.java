@@ -23,8 +23,10 @@ import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -85,7 +87,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-public class PurityPloidyEstimateApplication   {
+public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
     private static final int THREADS_DEFAULT = 2;
@@ -130,6 +132,7 @@ public class PurityPloidyEstimateApplication   {
 
             // Load Cobalt Data
             final Gender cobaltGender = configSupplier.cobaltData().gender();
+            final CobaltChromosomes cobaltChromosomes = configSupplier.cobaltData().cobaltChromosomes();
 
             // Gender
             if (cobaltGender.equals(amberGender)) {
@@ -146,23 +149,25 @@ public class PurityPloidyEstimateApplication   {
                     : allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
             LOGGER.info("Applying segmentation");
-            final Segmentation segmentation = new Segmentation(configSupplier, cobaltGender);
+            final Segmentation segmentation = new Segmentation(configSupplier);
             final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants.variants());
 
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
-            final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltGender, fitScoreConfig);
+            final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltChromosomes, fitScoreConfig);
             final BestFit bestFit =
-                    fitPurity(executorService, configSupplier, cobaltGender, fittingSomatics, observedRegions, fittedRegionFactory);
+                    fitPurity(executorService, configSupplier, cobaltChromosomes, fittingSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
-            final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, fittedPurity);
+            final PurityAdjuster purityAdjuster =
+                    new PurityAdjusterAbnormalChromosome(fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
                     configSupplier.amberData().averageTumorDepth(),
                     fittedPurity.ploidy(),
-                    purityAdjuster);
+                    purityAdjuster,
+                    configSupplier.cobaltData().cobaltChromosomes());
 
             LOGGER.info("Calculating copy number");
             List<FittedRegion> fittedRegions =
@@ -192,7 +197,12 @@ public class PurityPloidyEstimateApplication   {
                     GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
 
             LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
+            final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(),
+                    copyNumbers,
+                    amberGender,
+                    cobaltGender,
+                    geneCopyNumbers,
+                    cobaltChromosomes.germlineAberrations());
 
             LOGGER.info("Modelling somatic peaks");
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
@@ -205,6 +215,7 @@ public class PurityPloidyEstimateApplication   {
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
+                    .germlineAberrations(cobaltChromosomes.germlineAberrations())
                     .version(version.version())
                     .bestFit(bestFit.fit())
                     .status(bestFit.status())
@@ -293,13 +304,13 @@ public class PurityPloidyEstimateApplication   {
     }
 
     @NotNull
-    private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier, final Gender cobaltGender,
-            final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
+    private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier,
+            final CobaltChromosomes cobaltChromosomes, final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
             final FittedRegionFactory fittedRegionFactory) throws ExecutionException, InterruptedException {
         final FittingConfig fittingConfig = configSupplier.fittingConfig();
         final SomaticConfig somaticConfig = configSupplier.somaticConfig();
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
-                cobaltGender,
+                cobaltChromosomes,
                 fittingConfig.maxPloidy(),
                 fittingConfig.minPurity(),
                 fittingConfig.maxPurity(),
@@ -325,9 +336,9 @@ public class PurityPloidyEstimateApplication   {
     }
 
     @NotNull
-    private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final Gender cobaltGender,
+    private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes,
             final FitScoreConfig fitScoreConfig) {
-        return new FittedRegionFactoryV2(cobaltGender,
+        return new FittedRegionFactoryV2(cobaltChromosomes,
                 averageTumorDepth,
                 fitScoreConfig.ploidyPenaltyFactor(),
                 fitScoreConfig.ploidyPenaltyStandardDeviation(),

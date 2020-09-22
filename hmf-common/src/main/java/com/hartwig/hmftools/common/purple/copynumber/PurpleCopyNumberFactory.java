@@ -9,11 +9,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.tolerance.AlleleTolerance;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -28,34 +28,34 @@ public class PurpleCopyNumberFactory {
 
     private final double ploidy;
     private final int averageReadDepth;
-    private final Gender gender;
     private final int minTumorRatioCount;
     private final int minTumorRatioCountAtCentromere;
     private final PurityAdjuster purityAdjuster;
+    private final CobaltChromosomes cobaltChromosomes;
 
     public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere, int averageReadDepth, double ploidy,
-            @NotNull final PurityAdjuster purityAdjuster) {
+            @NotNull final PurityAdjuster purityAdjuster, @NotNull final CobaltChromosomes cobaltChromosomes) {
         this.purityAdjuster = purityAdjuster;
-        this.gender = purityAdjuster.gender();
         this.minTumorRatioCount = minTumorRatioCount;
         this.minTumorRatioCountAtCentromere = minTumorRatioCountAtCentromere;
         this.averageReadDepth = averageReadDepth;
         this.ploidy = ploidy;
-
+        this.cobaltChromosomes = cobaltChromosomes;
     }
 
     public void invoke(final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants) {
         somaticCopyNumbers.clear();
         germlineDeletions.clear();
 
-        final ExtractGermlineDeletions extendGermline = new ExtractGermlineDeletions(gender);
+        final ExtractGermlineDeletions extendGermline = new ExtractGermlineDeletions(cobaltChromosomes);
         final ExtendDiploid extendDiploid =
                 new ExtendDiploid(new AlleleTolerance(purityAdjuster), minTumorRatioCount, minTumorRatioCountAtCentromere);
-        final PopulateUnknown populateUnknownFactory = new PopulateUnknown(gender);
+        final PopulateUnknown populateUnknownFactory = new PopulateUnknown(cobaltChromosomes);
 
         final ListMultimap<Chromosome, CombinedRegion> diploidExtension = ArrayListMultimap.create();
         for (HumanChromosome chromosome : HumanChromosome.values()) {
-            final List<FittedRegion> chromosomeFittedRegions = fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
+            final List<FittedRegion> chromosomeFittedRegions =
+                    fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
 
             final List<CombinedRegion> diploidExtended = extendDiploid.extendDiploid(chromosomeFittedRegions);
             final List<CombinedRegion> nonDiploidExtended = ExtendNonDiploid.nonDiploid(diploidExtended);

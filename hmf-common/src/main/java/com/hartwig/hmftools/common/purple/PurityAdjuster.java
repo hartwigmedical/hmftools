@@ -1,37 +1,27 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurityAdjuster {
+public abstract class PurityAdjuster {
 
     public static double impliedSamplePloidy(final double purity, final double normFactor) {
-        return new PurityAdjuster(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
+        return new PurityAdjusterTypicalChromosome(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
     }
 
-    @NotNull
-    private final Gender gender;
     private final double purity;
     private final double normFactor;
 
-    public PurityAdjuster(@NotNull final Gender gender, @NotNull final FittedPurity fittedPurity) {
-        this(gender, fittedPurity.purity(), fittedPurity.normFactor());
+    public PurityAdjuster(@NotNull final FittedPurity fittedPurity) {
+        this(fittedPurity.purity(), fittedPurity.normFactor());
     }
 
-    public PurityAdjuster(@NotNull final Gender gender, final double purity, final double normFactor) {
-        this.gender = gender;
+    public PurityAdjuster(final double purity, final double normFactor) {
         this.purity = purity;
         this.normFactor = normFactor;
-    }
-
-    @NotNull
-    public Gender gender() {
-        return gender;
     }
 
     public double purity() {
@@ -42,19 +32,14 @@ public class PurityAdjuster {
         return normFactor;
     }
 
-    public int typicalCopyNumber(@NotNull String chromosome) {
-        return HumanChromosome.fromString(chromosome).isDiploid(gender) ? 2 : 1;
+    public double germlineCopyNumber(@NotNull String contig) {
+        return germlineRatio(contig) * 2;
     }
 
-    @SuppressWarnings("unused")
-    public double impliedPloidy() {
-        // Don't delete per request of Mr Jon Baber!!!
-        return (1 - normFactor) / purity / normFactor * 2 + 2;
-    }
+    public abstract double germlineRatio(@NotNull String contig);
 
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {
-        final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-        final double typicalRatio = chromosome.isDiploid(gender) ? 1 : 0.5;
+        final double typicalRatio = germlineRatio(chromosomeName);
         return purityAdjustedCopyNumber(ratio, typicalRatio);
     }
 
@@ -63,32 +48,31 @@ public class PurityAdjuster {
     }
 
     public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
-        int typicalCopyNumber = typicalCopyNumber(chromosome);
+        double typicalCopyNumber = germlineCopyNumber(chromosome);
         return purityAdjustedFrequency(typicalCopyNumber, 0, copyNumber, observedFrequency);
     }
 
     public double purityAdjustedBAFSimple(final String chromosome, final double copyNumber, final double observedFrequency) {
-        boolean isDiploid = HumanChromosome.fromString(chromosome).isDiploid(gender);
-
-        if (!isDiploid || Doubles.lessOrEqual(copyNumber, 1)) {
+        double typicalCopyNumber = germlineCopyNumber(chromosome);
+        if (typicalCopyNumber < 2 || Doubles.lessOrEqual(copyNumber, 1)) {
             return 1;
         }
         return purityAdjustedFrequency(2, 1, copyNumber, observedFrequency);
     }
 
-    double purityAdjustedFrequency(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+    double purityAdjustedFrequency(final double normalCopyNumber, final double normalPloidy, final double tumorCopyNumber,
             final double observedFrequency) {
         return purityAdjustedPloidy(normalCopyNumber, normalPloidy, tumorCopyNumber, observedFrequency) / tumorCopyNumber;
     }
 
-    public double purityAdjustedPloidy(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+    public double purityAdjustedPloidy(final double normalCopyNumber, final double normalPloidy, final double tumorCopyNumber,
             final double observedFrequency) {
         double totalObservations = purity * tumorCopyNumber + normalCopyNumber * (1 - purity);
         double normalObservations = normalPloidy * (1 - purity);
         return (observedFrequency * totalObservations - normalObservations) / purity;
     }
 
-    public double expectedFrequency(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
+    public double expectedFrequency(final double normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
             final double tumorPloidy) {
         if (Doubles.lessOrEqual(tumorCopyNumber, 0)) {
             return 0;
@@ -103,13 +87,13 @@ public class PurityAdjuster {
 
     public double purityAdjustedVAFWithHeterozygousNormal(@NotNull final String chromosome, final double copyNumber,
             final double observedFrequency) {
-        int typicalCopyNumber = typicalCopyNumber(chromosome);
+        double typicalCopyNumber = germlineCopyNumber(chromosome);
         return purityAdjustedFrequency(typicalCopyNumber, 1, copyNumber, observedFrequency);
     }
 
     public double purityAdjustedVAFWithHomozygousNormal(@NotNull final String chromosome, final double copyNumber,
             final double observedFrequency) {
-        int typicalCopyNumber = typicalCopyNumber(chromosome);
+        double typicalCopyNumber = germlineCopyNumber(chromosome);
         return purityAdjustedFrequency(typicalCopyNumber, 2, copyNumber, observedFrequency);
     }
 }

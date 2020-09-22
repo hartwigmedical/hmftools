@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
@@ -40,13 +41,19 @@ public final class PurpleQCFile {
     @VisibleForTesting
     static PurpleQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
         try {
-            return ImmutablePurpleQC.builder()
+
+            ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder()
                     .unsupportedSegments(Integer.parseInt(getValue(lines.get(5))))
                     .ploidy(Double.parseDouble(getValue(lines.get(6))))
                     .amberGender(Gender.valueOf(getValue(lines.get(7))))
                     .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
-                    .deletedGenes(Integer.parseInt(getValue(lines.get(9))))
-                    .build();
+                    .deletedGenes(Integer.parseInt(getValue(lines.get(9))));
+
+            if (lines.size() == 11) {
+                builder.germlineAberrations(GermlineAberration.fromString(getValue(lines.get(10))));
+            }
+
+            return builder.build();
         } catch (Exception e) {
             throw new MalformedFileException("Unable to parse purple qc file.");
         }
@@ -72,6 +79,7 @@ public final class PurpleQCFile {
         result.add("AmberGender" + DELIMITER + check.amberGender());
         result.add("CobaltGender" + DELIMITER + check.cobaltGender());
         result.add("DeletedGenes" + DELIMITER + check.deletedGenes());
+        result.add("GermlineAberrations" + DELIMITER + GermlineAberration.toString(check.germlineAberrations()));
         return result;
     }
 }

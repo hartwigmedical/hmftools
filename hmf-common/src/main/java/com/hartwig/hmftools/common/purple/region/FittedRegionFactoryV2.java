@@ -6,27 +6,28 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
-    private final Gender gender;
     private final double ambiguousBaf;
     private final double ploidyPenaltyFactor;
     private final PloidyDeviation ploidyDeviation;
+    private final CobaltChromosomes cobaltChromosomes;
 
-    public FittedRegionFactoryV2(final Gender gender, final int averageReadDepth, double ploidyPenaltyFactor,
+    public FittedRegionFactoryV2(final CobaltChromosomes cobaltChromosomes, final int averageReadDepth, double ploidyPenaltyFactor,
             double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy,
             final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty,
             final double baselineDeviation) {
-        this.gender = gender;
+        this.cobaltChromosomes = cobaltChromosomes;
         this.ploidyPenaltyFactor = ploidyPenaltyFactor;
         ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation,
                 ploidyPenaltyMinStandardDeviationPerPloidy,
@@ -38,25 +39,20 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
     @Override
     @NotNull
-    public List<FittedRegion> fitRegion(final double purity, final double normFactor,
-            @NotNull final Collection<ObservedRegion> observedRegions) {
-        final Predicate<ObservedRegion> valid = observedRegion -> isFittableRegion(gender, observedRegion);
+    public List<FittedRegion> fitRegion(double purity, double normFactor, @NotNull final Collection<ObservedRegion> observedRegions) {
+        final Predicate<ObservedRegion> valid = observedRegion -> isAllowedRegion(cobaltChromosomes, observedRegion);
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
     @VisibleForTesting
-    static boolean isFittableRegion(@NotNull final Gender gender, @NotNull final GenomeRegion region) {
-        if (!HumanChromosome.contains(region.chromosome())) {
-            return false;
-        }
-
-        return gender != Gender.FEMALE || HumanChromosome.fromString(region.chromosome()) != HumanChromosome._Y;
+    static boolean isAllowedRegion(@NotNull final CobaltChromosomes cobaltChromosomes, @NotNull final GenomeRegion region) {
+        return cobaltChromosomes.contains(region.chromosome());
     }
 
     @Override
     @NotNull
     public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion) {
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
+        final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(purity, normFactor, cobaltChromosomes.chromosomes());
 
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
@@ -91,9 +87,12 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
             final double observedBAF) {
-        boolean isHomologous = HumanChromosome.fromString(chromosome).isDiploid(gender);
+        if (!cobaltChromosomes.contains(chromosome)) {
+            return 1;
+        }
 
-        if (!isHomologous || Doubles.lessOrEqual(copyNumber, 1)) {
+        CobaltChromosome cobaltChromosome = cobaltChromosomes.get(chromosome);
+        if (!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid()  || Doubles.lessOrEqual(copyNumber, 1)) {
             return 1;
         }
 

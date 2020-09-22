@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -27,7 +29,7 @@ public final class PurpleQCFactory {
 
     @NotNull
     public static PurpleQC create(@NotNull FittedPurity purity, @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull Gender amberGender,
-            @NotNull Gender cobaltGender, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+            @NotNull Gender cobaltGender, @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull final Set<GermlineAberration> aberrations) {
         boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleQCFactory::isStructuralVariantBreak);
 
         int unsupportedSegments = containsAnySvSupport ? (int) copyNumbers.stream()
@@ -44,6 +46,7 @@ public final class PurpleQCFactory {
                 .ploidy(purity.ploidy())
                 .unsupportedSegments(unsupportedSegments)
                 .deletedGenes(deletedGenes)
+                .germlineAberrations(aberrations)
                 .build();
     }
 

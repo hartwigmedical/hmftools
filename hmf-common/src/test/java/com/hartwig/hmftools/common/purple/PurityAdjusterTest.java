@@ -18,13 +18,13 @@ public class PurityAdjusterTest {
 
     private void assertPurityAdjustment(final double expectedAdjustedCopyNumber, final double purity, final double normFactor,
             final double ratio) {
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
+        final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(Gender.MALE, purity, normFactor);
         assertEquals(expectedAdjustedCopyNumber, purityAdjuster.purityAdjustedCopyNumber("1", ratio), EPSILON);
     }
 
     @Test
     public void testPurityAdjustedFrequency() {
-        final PurityAdjuster victim = new PurityAdjuster(Gender.FEMALE, 0.9, 1d);
+        final PurityAdjuster victim = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 0.9, 1d);
 
         victim.purityAdjustedFrequency(2, 1, 3.0, 0.33);
 
@@ -34,14 +34,14 @@ public class PurityAdjusterTest {
 
     @Test
     public void testPureTumor() {
-        final PurityAdjuster victim = new PurityAdjuster(Gender.FEMALE, 1, 1d);
+        final PurityAdjuster victim = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 1d);
         assertFrequencyMatchesPloidy(victim, 2, 1, 3, 2);
         assertFrequencyMatchesPloidy(victim, 2, 0, 3, 2);
     }
 
     @Test
     public void testExpectedFrequencyWithNegativeTumorCopyNumber() {
-        final PurityAdjuster victim = new PurityAdjuster(Gender.FEMALE, 1, 1d);
+        final PurityAdjuster victim = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 1d);
         assertEquals(0, victim.expectedFrequency(2, 1, -0.2, -0.1), EPSILON);
     }
 

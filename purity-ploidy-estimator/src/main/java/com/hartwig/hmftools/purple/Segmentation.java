@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
@@ -30,16 +29,14 @@ class Segmentation {
     private static final Logger LOGGER = LogManager.getLogger(Segmentation.class);
 
     private final CommonConfig config;
-    private final Gender gender;
     private final Multimap<Chromosome, AmberBAF> bafs;
     private final Multimap<Chromosome, PCFPosition> pcfPositions;
     private final Multimap<Chromosome, GCProfile> gcProfiles;
     private final ListMultimap<Chromosome, CobaltRatio> ratios;
     private final ConfigSupplier configSupplier;
 
-    public Segmentation(@NotNull final ConfigSupplier configSupplier, @NotNull final Gender gender) throws IOException {
+    public Segmentation(@NotNull final ConfigSupplier configSupplier) throws IOException {
         this.config = configSupplier.commonConfig();
-        this.gender = gender;
         this.ratios = configSupplier.cobaltData().ratios();
         this.bafs = configSupplier.amberData().bafs();
         this.pcfPositions = PCFPositionsSupplier.createPositions(configSupplier);
@@ -57,7 +54,8 @@ class Segmentation {
 
         final List<PurpleSegment> segments = factory.segment(structuralVariants, pcfPositions, ratios);
 
-        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), gender);
+        final ObservedRegionFactory observedRegionFactory =
+                new ObservedRegionFactory(config.windowSize(), configSupplier.cobaltData().cobaltChromosomes());
         return observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);
     }
 }

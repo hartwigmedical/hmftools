@@ -38,7 +38,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
 
     public double deviationFromMax(@NotNull final PurityAdjuster purityAdjuster, @NotNull final FittedRegion region,
             @NotNull final SomaticVariant variant) {
-        int normalCopyNumber = purityAdjuster.typicalCopyNumber(region.chromosome());
+        double normalCopyNumber = purityAdjuster.germlineCopyNumber(region.chromosome());
         double constrainedMajorAllelePloidy = Math.max(0, region.majorAlleleCopyNumber());
         double constrainedTumorCopyNumber = Math.max(0, region.tumorCopyNumber());
 
@@ -46,7 +46,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
     }
 
     @VisibleForTesting
-    double deviationFromMax(@NotNull final PurityAdjuster purityAdjuster, int normalCopyNumber, @NotNull final AllelicDepth depth,
+    double deviationFromMax(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy) {
         double maxConceivablePloidy =
                 maxConceivablePloidy(purityAdjuster, normalCopyNumber, depth, tumorCopyNumber, tumorMajorAllelePloidy);
@@ -56,7 +56,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
     }
 
     @VisibleForTesting
-    double maxConceivablePloidy(@NotNull final PurityAdjuster purityAdjuster, int normalCopyNumber, @NotNull final AllelicDepth depth,
+    double maxConceivablePloidy(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy) {
         final int maxConceivableReads =
                 maxConceivableReads(purityAdjuster, normalCopyNumber, depth, tumorCopyNumber, tumorMajorAllelePloidy);
@@ -66,7 +66,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
     }
 
     @VisibleForTesting
-    int maxConceivableReads(@NotNull final PurityAdjuster purityAdjuster, int normalCopyNumber, @NotNull final AllelicDepth depth,
+    int maxConceivableReads(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy) {
         double expectedVAF = purityAdjuster.expectedFrequency(normalCopyNumber, 0, tumorCopyNumber, tumorMajorAllelePloidy);
         double p = 1d * Math.round(expectedVAF * depth.totalReadCount() * 100) / 100 / TRIALS;

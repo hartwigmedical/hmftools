@@ -32,6 +32,7 @@ import com.hartwig.hmftools.bachelor.types.GermlineVariant;
 import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
 import com.hartwig.hmftools.bachelor.types.ImmutableGermlineVariant;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -264,7 +265,7 @@ class VariantEnricher
         }
 
         final PurityAdjuster purityAdjuster =
-                new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
+                new PurityAdjusterTypicalChromosome(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
         final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
                 new PurityAdjustedSomaticVariantFactory(sampleId, purityAdjuster, copyNumbers);

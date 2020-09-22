@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.purple.purity;
 
+import java.util.Set;
+
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -31,6 +34,9 @@ public abstract class PurityContext {
     public abstract double tumorMutationalBurdenPerMb();
 
     public abstract int tumorMutationalLoad();
+
+    @NotNull
+    public abstract Set<GermlineAberration> germlineAberrations();
 
     @NotNull
     public abstract MicrosatelliteStatus microsatelliteStatus();

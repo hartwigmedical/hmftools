@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -19,7 +19,7 @@ public class AlleleToleranceTest {
 
     @Before
     public void setup() {
-        victim = new AlleleTolerance(new PurityAdjuster(Gender.FEMALE, 1, 1));
+        victim = new AlleleTolerance(new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 1));
     }
 
     @Test

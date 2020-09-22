@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.genome.chromosome;
 
-import com.hartwig.hmftools.common.purple.gender.Gender;
-
 import org.jetbrains.annotations.NotNull;
 
 public enum MitochondrialChromosome implements Chromosome {
@@ -14,11 +12,6 @@ public enum MitochondrialChromosome implements Chromosome {
 
     @Override
     public boolean isAllosome() {
-        return false;
-    }
-
-    @Override
-    public boolean isDiploid(@NotNull final Gender gender) {
         return false;
     }
 

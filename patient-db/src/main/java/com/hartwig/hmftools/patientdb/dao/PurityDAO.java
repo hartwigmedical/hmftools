@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
@@ -99,6 +100,7 @@ class PurityDAO {
                 .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
                 .status(FittedPurityStatus.valueOf(result.getValue(PURITY.STATUS)))
+                .germlineAberrations(GermlineAberration.fromString(result.getValue(PURITY.GERMLINEABERRATION)))
                 .build();
     }
 
@@ -166,6 +168,7 @@ class PurityDAO {
                 PURITY.TMBSTATUS,
                 PURITY.TML,
                 PURITY.TMLSTATUS,
+                PURITY.GERMLINEABERRATION,
                 PURITY.MODIFIED)
                 .values(purity.version(),
                         sample,
@@ -192,6 +195,7 @@ class PurityDAO {
                         purity.tumorMutationalBurdenStatus().toString(),
                         DatabaseUtil.decimal(purity.tumorMutationalLoad()),
                         purity.tumorMutationalLoadStatus().toString(),
+                        GermlineAberration.toString(purity.germlineAberrations()),
                         timestamp)
                 .execute();
     }
