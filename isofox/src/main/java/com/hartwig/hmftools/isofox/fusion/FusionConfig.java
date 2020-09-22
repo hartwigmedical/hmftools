@@ -24,7 +24,7 @@ public class FusionConfig
 
     // debug
     public static final String LOG_READ_ID = "";
-    // public static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:23308:18394:18413";
+    // public static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:21110:4641:1335";
 
     public FusionConfig(final CommandLine cmd)
     {

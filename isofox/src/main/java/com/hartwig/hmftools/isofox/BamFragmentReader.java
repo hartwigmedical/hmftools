@@ -278,6 +278,7 @@ public class BamFragmentReader implements Callable
             // first organise incomplete reads into the chromosomes which they want to link to
             final Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
             final Map<String,List<FusionFragment>> racFragments = mFusionFinder.extractRealignCandidateFragments(chrIncompleteReadsGroups);
+            // final Map<String,List<FusionFragment>> racFragments = mFusionFinder.getRealignCandidateFragments();
 
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
                     mChromosome, chrIncompleteReadsGroups, racFragments);

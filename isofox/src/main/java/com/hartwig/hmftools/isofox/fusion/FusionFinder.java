@@ -216,48 +216,42 @@ public class FusionFinder implements Callable
         // extract any RAC fragment which supports an (incomplete) inter-chromosomal read group
         final Map<String,List<FusionFragment>> matchingRacFragments = Maps.newHashMap();
 
-        for(Map.Entry<String,List<FusionFragment>> racEntry : mRealignCandidateFragments.entrySet())
+        for(Map<String,ReadGroup> readGroupMap : chrReadGroups.values())
         {
-            for(FusionFragment fragment : racEntry.getValue())
+            for(ReadGroup readGroup : readGroupMap.values())
             {
-                boolean matchesJunction = false;
+                ReadRecord saRead = readGroup.Reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
 
-                for(Map<String,ReadGroup> readGroupMap : chrReadGroups.values())
+                if(saRead == null)
+                    continue;
+
+                final int scIndex = saRead.longestSoftClippedEnd();
+                int junctionPosition = saRead.getCoordsBoundary(scIndex);
+                byte junctionOrientation = scIndex == SE_START ? NEG_ORIENT : POS_ORIENT;
+
+                // now find any potentially supporting RAC fragments
+                ChrGeneCollectionPair chrGenePair = new ChrGeneCollectionPair(saRead.Chromosome, saRead.getGeneCollectons()[SE_START]);
+
+                final List<FusionFragment> fragments = mRealignCandidateFragments.get(chrGenePair.toString());
+
+                if(fragments == null)
+                    continue;
+
+                List<FusionFragment> matchingFragments = null;
+
+                for(FusionFragment fragment : fragments)
                 {
-                    for(ReadGroup readGroup : readGroupMap.values())
+                    if(fragment.reads().stream().
+                            anyMatch(x -> softClippedReadSupportsJunction(x, scIndex, junctionPosition, junctionOrientation, null)))
                     {
-                        ReadRecord saRead = readGroup.Reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
-
-                        if(saRead == null)
-                            continue;
-
-                        final int scIndex = saRead.longestSoftClippedEnd();
-                        int junctionPosition = saRead.getCoordsBoundary(scIndex);
-                        byte junctionOrientation = scIndex == SE_START ? NEG_ORIENT : POS_ORIENT;
-
-                        if(fragment.reads().stream().
-                                anyMatch(x -> softClippedReadSupportsJunction(x, scIndex, junctionPosition, junctionOrientation, null)))
+                        if(matchingFragments == null)
                         {
-                            matchesJunction = true;
-                            break;
+                            matchingFragments = Lists.newArrayList();
+                            matchingRacFragments.put(chrGenePair.toString(), matchingFragments);
                         }
+
+                        matchingFragments.add(fragment);
                     }
-
-                    if(matchesJunction)
-                        break;
-                }
-
-                if(matchesJunction)
-                {
-                    List<FusionFragment> gcFragments = matchingRacFragments.get(racEntry.getKey());
-
-                    if(gcFragments == null)
-                    {
-                        gcFragments = Lists.newArrayList();
-                        matchingRacFragments.put(racEntry.getKey(), gcFragments);
-                    }
-
-                    gcFragments.add(fragment);
                 }
             }
         }
