@@ -57,12 +57,12 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String copyNumberString(double ploidy, boolean hasReliablePurity) {
+    public static String copyNumberString(double copyNumber, boolean hasReliablePurity) {
         if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         }
 
-        return String.valueOf(Math.round(Math.max(0, ploidy)));
+        return String.valueOf(Math.round(Math.max(0, copyNumber)));
     }
 
     @NotNull

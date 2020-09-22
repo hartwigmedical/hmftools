@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.homozygousdisruption;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -21,18 +22,19 @@ public final class HomozygousDisruptionAnalyzer {
 
     @NotNull
     public static List<ReportableHomozygousDisruption> extractFromLinxDriversTsv(@NotNull String linxDriversTsv) throws IOException {
-        List<DriverCatalog> allDriversCatalog = DriverCatalogFile.read(linxDriversTsv);
-        LOGGER.info("Loaded {} driver catalog records from {}", allDriversCatalog.size(), linxDriversTsv);
+        List<DriverCatalog> linxDriversCatalog = DriverCatalogFile.read(linxDriversTsv);
+        LOGGER.info("Loaded {} linx driver catalog records from {}", linxDriversCatalog.size(), linxDriversTsv);
 
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptions(allDriversCatalog);
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptions(linxDriversCatalog);
         LOGGER.info("Extracted {} homozygous disruptions from linx drivers", reportableHomozygousDisruptions.size());
         return reportableHomozygousDisruptions;
     }
 
     @NotNull
-    public static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> allDriversCatalog) {
+    @VisibleForTesting
+    static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
-        for (DriverCatalog driverCatalog : allDriversCatalog) {
+        for (DriverCatalog driverCatalog : linxDriversCatalog) {
             if (driverCatalog.driver().equals(DriverType.HOM_DISRUPTION)) {
                 reportableHomozygousDisruptions.add(ImmutableReportableHomozygousDisruption.builder()
                         .chromosome(driverCatalog.chromosome())
@@ -41,6 +43,7 @@ public final class HomozygousDisruptionAnalyzer {
                         .build());
             }
         }
+
         return reportableHomozygousDisruptions;
     }
 }

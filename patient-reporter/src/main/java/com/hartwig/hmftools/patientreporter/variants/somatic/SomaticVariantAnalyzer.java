@@ -14,12 +14,12 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static List<DriverSomaticVariant> run(@NotNull List<SomaticVariant> variants, @NotNull List<DriverCatalog> driverCatalog) {
+    public static List<DriverSomaticVariant> run(@NotNull List<SomaticVariant> variants, @NotNull List<DriverCatalog> purpleDriverCatalog) {
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
 
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
-                DriverCatalog entry = catalogEntryForGene(driverCatalog, variant.gene());
+                DriverCatalog entry = catalogEntryForGene(purpleDriverCatalog, variant.gene());
                 driverSomaticVariants.add(ImmutableDriverSomaticVariant.builder()
                         .variant(variant)
                         .driverLikelihood(entry.driverLikelihood())
