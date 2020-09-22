@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,21 +31,17 @@ public final class LoadChordData {
     public static void main(@NotNull String[] args) throws ParseException, SQLException {
         Options options = createOptions();
         CommandLine cmd = createCommandLine(args, options);
-        String userName = cmd.getOptionValue(DB_USER);
-        String password = cmd.getOptionValue(DB_PASS);
-        String databaseUrl = cmd.getOptionValue(DB_URL);
 
         String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
         String sample = cmd.getOptionValue(SAMPLE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, predictionFile, sample)) {
+        if (Utils.anyNull(predictionFile, sample)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load chord data", options);
         } else {
             File fileObject = new File(predictionFile);
             if (fileObject.isFile()) {
-                String jdbcUrl = "jdbc:" + databaseUrl;
-                DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+                DatabaseAccess dbWriter = databaseAccess(cmd);
 
                 LOGGER.info("Extracting and writing chord for {}", predictionFile);
                 try {

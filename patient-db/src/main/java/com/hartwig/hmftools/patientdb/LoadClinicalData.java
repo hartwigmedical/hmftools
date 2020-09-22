@@ -377,7 +377,7 @@ public final class LoadClinicalData {
         dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
         dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
 
-        LOGGER.info("Finished!");
+        LOGGER.info("Complete");
     }
 
     @NotNull

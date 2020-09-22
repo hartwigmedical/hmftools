@@ -31,27 +31,26 @@ public class RefreshAmberPatient {
         Options options = createBasicOptions();
         CommandLine cmd = createCommandLine(args, options);
 
-        try (final DatabaseAccess dbAccess = databaseAccess(cmd)) {
-
+        try (DatabaseAccess dbAccess = databaseAccess(cmd)) {
             LOGGER.info("Reading sample data");
-            final List<AmberPatient> previousPatients = dbAccess.readAmberPatients();
-            final List<AmberSample> allSamples = dbAccess.readAmberSamples();
-            final List<AmberMapping> allMappings = Lists.newArrayList();
+            List<AmberPatient> previousPatients = dbAccess.readAmberPatients();
+            List<AmberSample> allSamples = dbAccess.readAmberSamples();
+            List<AmberMapping> allMappings = Lists.newArrayList();
 
             for (int i = 0; i < allSamples.size(); i++) {
-                final AmberSample victim = allSamples.get(i);
+                AmberSample victim = allSamples.get(i);
 
                 LOGGER.info("Processing " + (i + 1) + " of " + allSamples.size() + ": " + victim.sampleId());
                 for (int j = i + 1; j < allSamples.size(); j++) {
-                    final AmberMapping match = AmberMappingFactory.create(victim, allSamples.get(j));
+                    AmberMapping match = AmberMappingFactory.create(victim, allSamples.get(j));
                     if (match.likelihood() > 0.8) {
                         allMappings.add(match);
                     }
                 }
             }
 
-            final AmberPatientFactory patientFactory = new AmberPatientFactory(previousPatients, allMappings);
-            final List<AmberPatient> patients = allSamples.stream().map(patientFactory::createPatient).collect(Collectors.toList());
+            AmberPatientFactory patientFactory = new AmberPatientFactory(previousPatients, allMappings);
+            List<AmberPatient> patients = allSamples.stream().map(patientFactory::createPatient).collect(Collectors.toList());
 
             LOGGER.info("Truncating AMBER mappings and patients");
             dbAccess.truncateAmberPatients();

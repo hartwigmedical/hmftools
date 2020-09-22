@@ -23,8 +23,8 @@ import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLo
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.linx.ReportableGeneFusionFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -88,8 +88,8 @@ public class LoadEvidenceData {
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, sampleId);
-        List<? extends Variant> passSomaticVariants = readPassSomaticVariants(sampleId, somaticVariantVcf);
-        List<ReportableGainLoss> reportableGainLosses = readGeneCopyNumbers(purpleDriverCatalogTsv, purpleGeneCnvTsv);
+        List<SomaticVariant> passSomaticVariants = readPassSomaticVariants(sampleId, somaticVariantVcf);
+        List<ReportableGainLoss> reportableGainLosses = getReportableGainsAndLosses(purpleDriverCatalogTsv, purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = readGeneFusions(linxFusionTsv);
 
         List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
@@ -98,31 +98,33 @@ public class LoadEvidenceData {
                 reportableGainLosses,
                 geneFusions);
 
-        LOGGER.info("Writing evidence items into db");
+        LOGGER.info("Writing {} evidence items into db for {}", combinedEvidence.size(), sampleId);
         dbAccess.writeClinicalEvidence(sampleId, combinedEvidence);
-        LOGGER.info("Finished");
+        LOGGER.info("Complete");
     }
 
     @NotNull
-    private static List<? extends Variant> readPassSomaticVariants(@NotNull String sampleId, @NotNull String somaticVariantVcf)
+    private static List<SomaticVariant> readPassSomaticVariants(@NotNull String sampleId, @NotNull String somaticVariantVcf)
             throws IOException {
         LOGGER.info("Reading somatic variants from {}", somaticVariantVcf);
-        List<? extends Variant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sampleId, somaticVariantVcf);
+        List<SomaticVariant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sampleId, somaticVariantVcf);
         LOGGER.info(" Loaded {} PASS somatic variants", passSomaticVariants.size());
         return passSomaticVariants;
     }
 
     @NotNull
-    private static List<ReportableGainLoss> readGeneCopyNumbers(@NotNull String purpleDriverCatalogTsv, @NotNull String purpleGeneCnvTsv)
-            throws IOException {
+    private static List<ReportableGainLoss> getReportableGainsAndLosses(@NotNull String purpleDriverCatalogTsv,
+            @NotNull String purpleGeneCnvTsv) throws IOException {
         LOGGER.info("Reading gene copy numbers from {}", purpleGeneCnvTsv);
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info(" Loaded {} gene copy numbers", geneCopyNumbers.size());
 
-        LOGGER.info("Reading driver catalog from {}", purpleDriverCatalogTsv);
+        LOGGER.info("Reading purple driver catalog from {}", purpleDriverCatalogTsv);
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
-        LOGGER.info(" Loaded {} driver catalog records", driverCatalog.size());
-        return ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, geneCopyNumbers);
+        LOGGER.info(" Loaded {} purple driver catalog records", driverCatalog.size());
+        List<ReportableGainLoss> gainsLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, geneCopyNumbers);
+        LOGGER.info(" Extracted {} gains and losses from drivers", gainsLosses.size());
+        return gainsLosses;
     }
 
     @NotNull
@@ -133,7 +135,7 @@ public class LoadEvidenceData {
         // final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
         //  List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
 
-        LOGGER.info(" Loaded {} fusions", fusions.size());
+        LOGGER.info(" Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
         return fusions;
     }
 
@@ -158,7 +160,7 @@ public class LoadEvidenceData {
 
     @NotNull
     private static List<EvidenceItem> createEvidenceForAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @NotNull String patientPrimaryTumorLocation, @NotNull List<? extends Variant> variants,
+            @NotNull String patientPrimaryTumorLocation, @NotNull List<SomaticVariant> variants,
             @NotNull List<ReportableGainLoss> reportableGainLosses, @NotNull List<ReportableGeneFusion> geneFusions) {
         LOGGER.info("Extracting all evidence");
 

@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -35,34 +33,29 @@ public class LoadPgxData {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
-        String userName = cmd.getOptionValue(DB_USER);
-        String password = cmd.getOptionValue(DB_PASS);
-        String databaseUrl = cmd.getOptionValue(DB_URL);
-
         String sample = cmd.getOptionValue(SAMPLE);
 
         String pgxCallsFileName = cmd.getOptionValue(PGX_CALLS_TXT);
         String pgxGenotypeFileName = cmd.getOptionValue(PGX_GENOTYPE_TXT);
 
-        if (Utils.anyNull(userName, password, databaseUrl, sample, pgxCallsFileName, pgxGenotypeFileName)) {
+        if (Utils.anyNull(sample, pgxCallsFileName, pgxGenotypeFileName)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load metrics data", options);
         } else {
-             String jdbcUrl = "jdbc:" + databaseUrl;
-             DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+            DatabaseAccess dbWriter = databaseAccess(cmd);
 
             LOGGER.info("Reading pgx calls file {}", pgxCallsFileName);
             List<PGXCalls> pgxCalls = PGXCallsFile.read(pgxCallsFileName);
+            LOGGER.info(" Read {} pgx calls", pgxCalls.size());
 
             LOGGER.info("Reading pgx genotype file {}", pgxGenotypeFileName);
             List<PGXGenotype> pgxGenotype = PGXGenotypeFile.read(pgxGenotypeFileName);
+            LOGGER.info(" Read {} pgx genotypes", pgxGenotype.size());
 
-            LOGGER.info("Writing pgx into database");
+            LOGGER.info("Writing pgx into database for {}", sample);
             dbWriter.writePGX(sample, pgxGenotype, pgxCalls);
-
-            LOGGER.info("Pgx data is written into database for sample {}", sample);
+            LOGGER.info("Complete");
         }
-
     }
 
     @NotNull
