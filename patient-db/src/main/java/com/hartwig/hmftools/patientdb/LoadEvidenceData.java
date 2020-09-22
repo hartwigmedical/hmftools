@@ -110,14 +110,15 @@ public class LoadEvidenceData {
         List<SomaticVariant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sampleId, somaticVariantVcf);
         LOGGER.info(" Loaded {} PASS somatic variants", passSomaticVariants.size());
 
-        return extractReportedVariants(passSomaticVariants);
+        List<SomaticVariant> reportedVariants = extractReportedVariants(passSomaticVariants);
+        LOGGER.info(" {} variants remaining after filtering on reporting", reportedVariants.size());
+        return reportedVariants;
     }
 
     @NotNull
-    private static List<SomaticVariant> extractReportedVariants(@NotNull List<SomaticVariant> passSomaticVariants) {
+    private static List<SomaticVariant> extractReportedVariants(@NotNull List<SomaticVariant> somaticVariants) {
         List<SomaticVariant> onlyReportedSomaticVariant = Lists.newArrayList();
-        LOGGER.info("Extract only reported variants");
-        for (SomaticVariant variant : passSomaticVariants) {
+        for (SomaticVariant variant : somaticVariants) {
             if (variant.reported()) {
                 onlyReportedSomaticVariant.add(variant);
             }
