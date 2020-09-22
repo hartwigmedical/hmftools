@@ -17,7 +17,6 @@ public class SampleReportFactoryTest {
         String cpctSampleId = "CPCT020000001T";
         String coreSampleId = "CORE020000001T";
 
-
         String correctIdT = "T20-72346";
         String correctIdC = "C18-00124";
         String wrongId = "BGr-12111";

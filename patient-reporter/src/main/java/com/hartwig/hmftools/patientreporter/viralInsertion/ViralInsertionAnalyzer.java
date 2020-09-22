@@ -19,7 +19,6 @@ public final class ViralInsertionAnalyzer {
             Sets.newHashSet("Human immunodeficiency virus", "Human immunodeficiency virus 1", "Human immunodeficiency virus 2");
 
     private ViralInsertionAnalyzer() {
-
     }
 
     @Nullable

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.homozygousdisruption;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -31,8 +30,7 @@ public final class HomozygousDisruptionAnalyzer {
     }
 
     @NotNull
-    @VisibleForTesting
-    static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
+    private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         for (DriverCatalog driverCatalog : linxDriversCatalog) {
             if (driverCatalog.driver().equals(DriverType.HOM_DISRUPTION)) {
