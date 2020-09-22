@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -34,9 +35,12 @@ public interface AmberData {
     @NotNull
     Multimap<Chromosome, AmberBAF> bafs();
 
+    @NotNull
     Multimap<Chromosome, PCFPosition> tumorSegments();
 
     int averageTumorDepth();
+
+    double contamination();
 
     @NotNull
     static AmberData createAmberData(@NotNull final CommonConfig commonConfig)
@@ -51,6 +55,14 @@ public interface AmberData {
         if (!new File(pcfFilename).exists()) {
             throw new ParseException("Unable to open amber pcf file: " + pcfFilename);
         }
+
+        final String qcFile = AmberQCFile.generateFilename(amberDirectory, commonConfig.tumorSample());
+        if (!new File(qcFile).exists()) {
+            throw new ParseException("Unable to open amber qc file: " + qcFile);
+        }
+
+        LOGGER.info("Reading amber QC from {}", qcFile);
+        final double contamination = AmberQCFile.read(qcFile).contamination();
 
         LOGGER.info("Reading amber bafs from {}", amberFilename);
         final Multimap<Chromosome, AmberBAF> bafs = AmberBAFFile.read(amberFilename);
@@ -72,6 +84,7 @@ public interface AmberData {
         final Gender gender = Gender.fromAmber(bafs);
 
         return ImmutableAmberData.builder()
+                .contamination(contamination)
                 .averageTumorDepth(averageTumorDepth)
                 .bafs(bafs)
                 .tumorSegments(tumorSegments)
