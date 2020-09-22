@@ -45,7 +45,7 @@ public final class LoadChordData {
 
                 LOGGER.info("Extracting and writing chord for {}", predictionFile);
                 try {
-                    ChordAnalysis chordAnalysis = generateChordForRun(predictionFile);
+                    ChordAnalysis chordAnalysis = ChordFileReader.read(predictionFile);
                     dbWriter.writeChord(sample, chordAnalysis);
                 } catch (IOException e) {
                     LOGGER.warn("Cannot extract chord for {}", predictionFile);
@@ -58,11 +58,6 @@ public final class LoadChordData {
                 formatter.printHelp("patient-db - load chord data", options);
             }
         }
-    }
-
-    @NotNull
-    private static ChordAnalysis generateChordForRun(@NotNull String chordFile) throws IOException {
-        return ChordFileReader.read(chordFile);
     }
 
     @NotNull
