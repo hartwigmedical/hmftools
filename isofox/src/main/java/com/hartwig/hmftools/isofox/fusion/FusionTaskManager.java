@@ -99,48 +99,29 @@ public class FusionTaskManager
         mRealignCandidateMap.putAll(racFragments);
         int totalRacFrags = mRealignCandidateMap.values().stream().mapToInt(x -> x.size()).sum();
         int newRacFrags = racFragments.values().stream().mapToInt(x -> x.size()).sum();
-        // mChrRealignCandidates.put(chromosome, racFragments);
+        int newIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
         // exclude duplicate reads now that group is known (since not all reads are marked as duplicates)
         completeGroups = completeGroups.stream().filter(x -> !x.isDuplicate()).collect(Collectors.toList());
 
         ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {}) racFrags({} new={})",
-                chromosome, chrIncompleteGroups.size(), completeGroups.size(), prevIncomplete, mIncompleteReadGroups.size(),
+                chromosome, chrIncompleteGroups.size(), completeGroups.size(), prevIncomplete, newIncomplete,
                 totalRacFrags, newRacFrags);
 
         return completeGroups;
     }
-
-    /*
-    public synchronized List<ReadGroup> addIncompleteReadGroup(
-            final String chromosome, final Map<String,ReadGroup> incompleteGroups, final Map<String,List<FusionFragment>> racFragments)
-    {
-        List<ReadGroup> completeGroups = Lists.newArrayList();
-
-        int prevIncomplete = mIncompleteReadGroups.size();
-
-        mergeChimericReadMaps(mIncompleteReadGroups, completeGroups, incompleteGroups);
-
-        mRealignCandidateMap.putAll(racFragments);
-        int totalRacFrags = mRealignCandidateMap.values().stream().mapToInt(x -> x.size()).sum();
-        int newRacFrags = racFragments.values().stream().mapToInt(x -> x.size()).sum();
-        // mChrRealignCandidates.put(chromosome, racFragments);
-
-        // exclude duplicate reads now that group is known (since not all reads are marked as duplicates)
-        completeGroups = completeGroups.stream().filter(x -> !x.isDuplicate()).collect(Collectors.toList());
-
-        ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {}) racFrags({} new={})",
-                chromosome, incompleteGroups.size(), completeGroups.size(), prevIncomplete, mIncompleteReadGroups.size(),
-                totalRacFrags, newRacFrags);
-
-        return completeGroups;
-    }
-    */
 
     public synchronized final Map<String,List<FusionFragment>> getRealignCandidateMap() { return mRealignCandidateMap; }
 
     public void close()
     {
+        long unfusedRacFrags = mRealignCandidateMap.values().stream()
+                .mapToLong(x -> x.stream().filter(y -> y.assignedFusions().isEmpty()).count()).sum();
+
+        int incompleteGroups = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+
+        ISF_LOGGER.info("all fusion tasks complete - unfused RAC frags({}) incompleteGroups({})", unfusedRacFrags, incompleteGroups);
+
         // write any unassigned RAC fragments
         mFusionWriter.writeUnfusedFragments(mRealignCandidateMap);
         mFusionWriter.close();

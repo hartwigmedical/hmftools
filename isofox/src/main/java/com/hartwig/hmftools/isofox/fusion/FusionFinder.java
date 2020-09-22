@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
@@ -16,6 +18,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.softClippedReadSupportsJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
@@ -89,8 +92,9 @@ public class FusionFinder implements Callable
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
     public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mDiscordantFragments; }
-    public final Map<String,List<FusionFragment>> getRealignCandidateFragments() { return mRealignCandidateFragments; }
     public final Map<String,ReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
+    public final Map<String,List<FusionFragment>> getRealignCandidateFragments() { return mRealignCandidateFragments; }
+
     public final List<FusionFragment> getFragments() { return mAllFragments; }
     public final List<ReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
 
@@ -205,6 +209,60 @@ public class FusionFinder implements Callable
 
         mChimericPartialReadGroups.clear();
         return chrIncompleteReadsGroups;
+    }
+
+    public final Map<String,List<FusionFragment>> extractRealignCandidateFragments(final Map<String,Map<String,ReadGroup>> chrReadGroups)
+    {
+        // extract any RAC fragment which supports an (incomplete) inter-chromosomal read group
+        final Map<String,List<FusionFragment>> matchingRacFragments = Maps.newHashMap();
+
+        for(Map.Entry<String,List<FusionFragment>> racEntry : mRealignCandidateFragments.entrySet())
+        {
+            for(FusionFragment fragment : racEntry.getValue())
+            {
+                boolean matchesJunction = false;
+
+                for(Map<String,ReadGroup> readGroupMap : chrReadGroups.values())
+                {
+                    for(ReadGroup readGroup : readGroupMap.values())
+                    {
+                        ReadRecord saRead = readGroup.Reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
+
+                        if(saRead == null)
+                            continue;
+
+                        final int scIndex = saRead.longestSoftClippedEnd();
+                        int junctionPosition = saRead.getCoordsBoundary(scIndex);
+                        byte junctionOrientation = scIndex == SE_START ? NEG_ORIENT : POS_ORIENT;
+
+                        if(fragment.reads().stream().
+                                anyMatch(x -> softClippedReadSupportsJunction(x, scIndex, junctionPosition, junctionOrientation, null)))
+                        {
+                            matchesJunction = true;
+                            break;
+                        }
+                    }
+
+                    if(matchesJunction)
+                        break;
+                }
+
+                if(matchesJunction)
+                {
+                    List<FusionFragment> gcFragments = matchingRacFragments.get(racEntry.getKey());
+
+                    if(gcFragments == null)
+                    {
+                        gcFragments = Lists.newArrayList();
+                        matchingRacFragments.put(racEntry.getKey(), gcFragments);
+                    }
+
+                    gcFragments.add(fragment);
+                }
+            }
+        }
+
+        return matchingRacFragments;
     }
 
     public void processLocalReadGroups(final List<ReadGroup> readGroups)

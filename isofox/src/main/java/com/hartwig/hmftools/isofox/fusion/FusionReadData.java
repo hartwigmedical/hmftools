@@ -498,9 +498,16 @@ public class FusionReadData
 
     private boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)
     {
+        return softClippedReadSupportsJunction(
+                read, juncSeIndex, mJunctionPositions[juncSeIndex], mJunctionOrientations[juncSeIndex], mJunctionBases);
+    }
+
+    public static boolean softClippedReadSupportsJunction(
+            final ReadRecord read, int juncSeIndex, int junctionPosition, byte junctionOrientation, final String[] junctionBases)
+    {
         // compare a minimum number of soft-clipped bases to the other side of the exon junction
         // if the read extends past break junction, include these bases in what is compared against the next junction to account for homology
-        if(mJunctionOrientations[juncSeIndex] == 1)
+        if(junctionOrientation == POS_ORIENT)
         {
             if(!read.isSoftClipped(SE_END))
                 return false;
@@ -508,7 +515,7 @@ public class FusionReadData
             int readBoundary = read.getCoordsBoundary(SE_END);
 
             // the fragment is limited to how far past the junction (into the other fused gene) it can overhang by a mis-map
-            if(!positionWithin(readBoundary, mJunctionPositions[juncSeIndex], mJunctionPositions[juncSeIndex] + SOFT_CLIP_JUNC_BUFFER))
+            if(!positionWithin(readBoundary, junctionPosition, junctionPosition + SOFT_CLIP_JUNC_BUFFER))
                 return false;
 
             // test that soft-clipped bases match the other junction's bases
@@ -517,15 +524,18 @@ public class FusionReadData
             if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
                 return false;
 
+            if(junctionBases == null)
+                return true;
+
             // if the junction is 1 base higher, then take 1 base off the soft-clipped bases
-            int posAdjust = readBoundary > mJunctionPositions[juncSeIndex] ? readBoundary - mJunctionPositions[juncSeIndex] : 0;
+            int posAdjust = readBoundary > junctionPosition ? readBoundary - junctionPosition : 0;
 
             String extraBases = read.ReadBases.substring(read.Length - scLength - posAdjust, read.Length);
 
             if(extraBases.length() > JUNCTION_BASE_LENGTH)
                 extraBases = extraBases.substring(0, JUNCTION_BASE_LENGTH);
 
-            return junctionBases()[switchIndex(juncSeIndex)].startsWith(extraBases);
+            return junctionBases[switchIndex(juncSeIndex)].startsWith(extraBases);
         }
         else
         {
@@ -534,7 +544,7 @@ public class FusionReadData
 
             int readBoundary = read.getCoordsBoundary(SE_START);
 
-            if(!positionWithin(readBoundary, mJunctionPositions[juncSeIndex] - SOFT_CLIP_JUNC_BUFFER, mJunctionPositions[juncSeIndex]))
+            if(!positionWithin(readBoundary, junctionPosition - SOFT_CLIP_JUNC_BUFFER, junctionPosition))
                 return false;
 
             int scLength = read.Cigar.getFirstCigarElement().getLength();
@@ -542,14 +552,17 @@ public class FusionReadData
             if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
                 return false;
 
-            int posAdjust = readBoundary < mJunctionPositions[juncSeIndex] ? mJunctionPositions[juncSeIndex] - readBoundary : 0;
+            if(junctionBases == null)
+                return true;
+
+            int posAdjust = readBoundary < junctionPosition ? junctionPosition - readBoundary : 0;
 
             String extraBases = read.ReadBases.substring(0, scLength + posAdjust);
 
             if(extraBases.length() > JUNCTION_BASE_LENGTH)
                 extraBases = extraBases.substring(extraBases.length() - JUNCTION_BASE_LENGTH, extraBases.length());
 
-            return junctionBases()[switchIndex(juncSeIndex)].endsWith(extraBases);
+            return junctionBases[switchIndex(juncSeIndex)].endsWith(extraBases);
         }
     }
 

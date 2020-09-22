@@ -40,6 +40,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
+import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.fusion.ReadGroup;
 import com.hartwig.hmftools.isofox.results.GeneResult;
@@ -275,14 +276,15 @@ public class BamFragmentReader implements Callable
             // handle fragments spanning multiple chromosomes
 
             // first organise incomplete reads into the chromosomes which they want to link to
-            Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
+            final Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
+            final Map<String,List<FusionFragment>> racFragments = mFusionFinder.extractRealignCandidateFragments(chrIncompleteReadsGroups);
 
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, chrIncompleteReadsGroups, mFusionFinder.getRealignCandidateFragments());
+                    mChromosome, chrIncompleteReadsGroups, racFragments);
 
             if(!interChromosomalGroups.isEmpty())
             {
-                ISF_LOGGER.info("chr({}) processing {} inter-chromosomal group", mChromosome, interChromosomalGroups.size());
+                ISF_LOGGER.info("chr({}) processing {} inter-chromosomal groups", mChromosome, interChromosomalGroups.size());
 
                 mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
 

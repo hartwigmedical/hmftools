@@ -161,17 +161,9 @@ public class FusionFragmentBuilder
             if (scLeft > 0 && scRight > 0)
             {
                 if (scLeft >= scRight)
-                {
                     useLeft = true;
-                }
-                else if (scRight > scLeft)
-                {
-                    useLeft = false;
-                }
                 else
-                {
-                    continue;
-                }
+                    useLeft = false;
             }
             else
             {
