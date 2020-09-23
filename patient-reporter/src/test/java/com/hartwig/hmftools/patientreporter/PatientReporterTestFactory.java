@@ -7,6 +7,10 @@ import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -162,5 +166,25 @@ public final class PatientReporterTestFactory {
     public static GermlineReportingModel createTestEmptyGermlineGenesReporting() {
         Map<String, Boolean> germlineGenesReportingMap = Maps.newHashMap();
         return GermlineReportingModelTestFactory.buildFromMap(germlineGenesReportingMap);
+    }
+
+    @NotNull
+    public static ImmutableDriverCatalog.Builder createTestDriverCatalogBuilder() {
+        return ImmutableDriverCatalog.builder().biallelic(false)
+                .category(DriverCategory.ONCO)
+                .gene(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
+                .driver(DriverType.MUTATION)
+                .driverLikelihood(1.0)
+                .dndsLikelihood(1.0)
+                .likelihoodMethod(LikelihoodMethod.DNDS)
+                .minCopyNumber(0D)
+                .maxCopyNumber(0D)
+                .missense(0)
+                .nonsense(0)
+                .splice(0)
+                .inframe(0)
+                .frameshift(0);
     }
 }

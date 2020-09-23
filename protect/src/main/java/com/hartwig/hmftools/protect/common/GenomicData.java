@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.linx.ReportableGeneFusionFile;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,15 +41,6 @@ public class GenomicData {
         double ploidy = purityContext.bestFit().ploidy();
         LOGGER.info(" Sample ploidy: {}", ploidy);
         return ploidy;
-    }
-
-    @NotNull
-    public static List<? extends Variant> readPassSomaticVariants(@NotNull String sampleId, @NotNull String somaticVariantVcf)
-            throws IOException {
-        LOGGER.info("Reading somatic variants from {}", somaticVariantVcf);
-        List<? extends Variant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sampleId, somaticVariantVcf);
-        LOGGER.info(" Loaded {} PASS somatic variants", passSomaticVariants.size());
-        return passSomaticVariants;
     }
 
     @NotNull

@@ -25,6 +25,8 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunction
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -36,13 +38,11 @@ import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.common.BachelorFile;
 import com.hartwig.hmftools.protect.common.CopyNumberAnalysis;
 import com.hartwig.hmftools.protect.common.CopyNumberAnalyzer;
-import com.hartwig.hmftools.protect.common.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.protect.common.GenomicData;
 import com.hartwig.hmftools.protect.common.GermlineReportingFile;
 import com.hartwig.hmftools.protect.common.GermlineReportingModel;
 import com.hartwig.hmftools.protect.common.GermlineVariant;
 import com.hartwig.hmftools.protect.common.HomozygousDisruptionAnalyzer;
-import com.hartwig.hmftools.protect.common.ReportableGainLoss;
 import com.hartwig.hmftools.protect.common.ReportableGermlineVariant;
 import com.hartwig.hmftools.protect.common.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.common.ReportableVariantAnalysis;
@@ -65,6 +65,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ProtectActionability {
+
     private static final Logger LOGGER = LogManager.getLogger(ProtectActionability.class);
 
     private static final String TUMOR_SAMPLE_ID = "tumor_sample_id";

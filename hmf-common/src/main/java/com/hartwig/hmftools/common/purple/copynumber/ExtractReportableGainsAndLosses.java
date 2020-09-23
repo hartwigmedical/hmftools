@@ -27,6 +27,7 @@ public final class ExtractReportableGainsAndLosses {
                 GeneCopyNumber geneCopyNumber = findByGeneName(geneCopyNumbers, driver.gene());
 
                 // Exclude DELs which are partially germline (see INC-34)
+                // TODO Filter can be removed once we upgraded prod to purple v2.48
                 includeInReport = geneCopyNumber.germlineHet2HomRegions() == 0 && geneCopyNumber.germlineHomRegions() == 0;
             }
 

@@ -324,7 +324,7 @@ The filters and thresholds per tier are as follows:
 Filter | definition | Known pathogenic fusions* | Splice Site-Splice Site** | Splice Site-Canonical | Canonical-Canonical | Other
 ---|---|---|---|---|---|---
 min_fragment_support | total fragments supporting fusion | Splice Site-Splice Site or Splice Site-Canonical: 2; Other: 4  | 2 | 3 | 4 | 10
-min_af | min(AFUp, AFDown) | 0 | 0.005 | 0.005 | 0.005 | 0.05
+min_af | min(AFUp, AFDown) | 0 | 0.002 | 0.005 | 0.005 | 0.05
 min_anchor | min(maxAnchorLengthUp, maxAnchorLengthDown) | 0 | 20 | 20 | 20 | 20 
 max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if either gene known | 2 | 2 | 2 | 2
 
@@ -362,7 +362,6 @@ DuplicateFragments | Count of fragments marked as duplicates
 SplicedFragmentPerc | % of total fragments supporting 1 or more known transcripts
 UnsplicedFragmentPerc | % of total fragments not containing a splice junction and not supporting any known transcript 
 AltFragmentPerc | % of total fragments supporting an alternate splice junction within a gene
-ReadThroughFragmentPerc | % of total fragments supporting a read through transcript
 ChimericFragmentPerc | % of total fragments supporting a chimeric junction
 ReadLength | Raw read length of fragments
 FragLength5th | 5th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)

@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -35,20 +34,15 @@ public final class LoadMetricsData {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
-        String userName = cmd.getOptionValue(DB_USER);
-        String password = cmd.getOptionValue(DB_PASS);
-        String databaseUrl = cmd.getOptionValue(DB_URL);
-
         String sample = cmd.getOptionValue(SAMPLE);
         String refMetricsFile = cmd.getOptionValue(REF_METRICS_FILE);
         String tumorMetricsFile = cmd.getOptionValue(TUMOR_METRICS_FILE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, sample, refMetricsFile, tumorMetricsFile)) {
+        if (Utils.anyNull(sample, refMetricsFile, tumorMetricsFile)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load metrics data", options);
         } else {
-            String jdbcUrl = "jdbc:" + databaseUrl;
-            DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+            DatabaseAccess dbWriter = databaseAccess(cmd);
 
             LOGGER.info("Extracting and writing metrics for {}", sample);
 
@@ -65,9 +59,7 @@ public final class LoadMetricsData {
         options.addOption(REF_METRICS_FILE, true, "Path towards the metrics file holding the ref sample metrics");
         options.addOption(TUMOR_METRICS_FILE, true, "Path towards the metrics file holding the tumor sample metrics");
 
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
+        addDatabaseCmdLineArgs(options);
 
         return options;
     }

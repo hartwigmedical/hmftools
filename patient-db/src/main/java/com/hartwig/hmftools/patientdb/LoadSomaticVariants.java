@@ -31,8 +31,6 @@ public class LoadSomaticVariants {
     private static final String RNA = "rna";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
-    private static final String HOTSPOT_TSV = "hotspot_tsv";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     private static final String PASS_FILTER = "pass_filter";
     private static final String SOMATIC_FILTER = "somatic_filter";
@@ -45,6 +43,7 @@ public class LoadSomaticVariants {
         String referenceSample = cmd.getOptionValue(REFERENCE, null);
         String rnaSample = cmd.getOptionValue(RNA, null);
         DatabaseAccess dbAccess = databaseAccess(cmd);
+
         CompoundFilter filter = new CompoundFilter(true);
         if (cmd.hasOption(PASS_FILTER)) {
             filter.add(new PassingVariantFilter());
@@ -73,8 +72,6 @@ public class LoadSomaticVariants {
         options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
         options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
         addDatabaseCmdLineArgs(options);
-        options.addOption(HOTSPOT_TSV, true, "Deprecated.");
-        options.addOption(HIGH_CONFIDENCE_BED, true, "Deprecated.");
 
         return options;
     }

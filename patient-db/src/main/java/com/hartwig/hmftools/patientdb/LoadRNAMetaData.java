@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -36,7 +33,7 @@ public class LoadRNAMetaData {
 
         String rnaSamplesTsv = cmd.getOptionValue(RNA_SAMPLES_TSV);
 
-        if (Utils.anyNull(rnaSamplesTsv, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), cmd.getOptionValue(DB_URL))) {
+        if (Utils.anyNull(rnaSamplesTsv)) {
             printUsageAndExit(options);
         }
 
@@ -48,7 +45,6 @@ public class LoadRNAMetaData {
 
         LOGGER.info("Persisting to db");
         dbAccess.writeRNA(samples);
-
         LOGGER.info("Complete");
     }
 
@@ -61,7 +57,7 @@ public class LoadRNAMetaData {
     @NotNull
     private static Options createBasicOptions() {
         Options options = new Options();
-        options.addOption(RNA_SAMPLES_TSV, true, "RNA samples csv.");
+        options.addOption(RNA_SAMPLES_TSV, true, "RNA samples TSV.");
         addDatabaseCmdLineArgs(options);
         return options;
     }

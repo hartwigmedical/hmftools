@@ -46,7 +46,7 @@ public class LoadStructuralVariants {
         String vcfPath = cmd.getOptionValue(SV_VCF);
         String svDataOutputDir = cmd.getOptionValue(SV_DATA_DIRECTORY);
 
-        LOGGER.info("Reading data from {}", vcfPath);
+        LOGGER.info("Reading SV data from {}", vcfPath);
         List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfPath, new AlwaysPassFilter());
         List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
@@ -67,7 +67,7 @@ public class LoadStructuralVariants {
                 String svFilename = StructuralVariantFile.generateFilename(svDataOutputDir, tumorSample);
                 StructuralVariantFile.write(svFilename, svDataList);
             } catch (IOException e) {
-                LOGGER.error("failed to write SV data: {}", e.toString());
+                LOGGER.error("Failed to write SV data: {}", e.toString());
             }
         }
 

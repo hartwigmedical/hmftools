@@ -86,7 +86,7 @@ public class SummaryChapter implements ReportChapter {
                 text = "Of note, WGS analysis indicated a very low abundance of genomic aberrations, which can be caused "
                         + "by a low tumor percentage in the received tumor material or due to genomic very stable/normal tumor type. "
                         + "As a consequence no reliable tumor purity assessment is possible and no information regarding "
-                        + "mutation ploidy and tVAF can be provided.";
+                        + "mutation copy number and tVAF can be provided.";
             } else if (report.impliedPurity() < ReportResources.PURITY_CUTOFF) {
                 double impliedPurityPercentage =
                         MathUtil.mapPercentage(report.impliedPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
@@ -156,7 +156,7 @@ public class SummaryChapter implements ReportChapter {
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Average tumor ploidy").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.ploidyToCopiesString(patientReport.averageTumorPloidy(),
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.copyNumberToString(patientReport.averageTumorPloidy(),
                 hasReliablePurity)).addStyle(dataStyle)));
 
         String mutationalLoadString = hasReliablePurity ? patientReport.tumorMutationalLoadStatus().display() : DataUtil.NA_STRING;

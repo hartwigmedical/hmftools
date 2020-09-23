@@ -24,7 +24,6 @@ const val DISCORDANT_PAIR_SUPPORT = "discordantPairSupport"
 const val MAX_HOM_LENGTH_SHORT_INV = "maxHomLengthShortInv"
 const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
 
-const val MATE = "mate"
 const val PASS = "PASS"
 const val MIN_LENGTH = "minLength"
 
@@ -41,7 +40,6 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
     fun writeHeader(version:String, header: VCFHeader) {
         header.addMetaDataLine(VCFHeaderLine("gripssVersion", version))
 
-        header.addMetaDataLine(VCFFilterHeaderLine(MATE, "Mate is filtered"))
         header.addMetaDataLine(VCFFilterHeaderLine(DEDUP, "Event is duplicate of another"))
         header.addMetaDataLine(VCFFilterHeaderLine(MIN_LENGTH, "Event is too short"))
         header.addMetaDataLine(VCFFilterHeaderLine(MAX_INEXACT_HOM_LENGTH_SHORT_DEL, "Short deletion that appears to be a ligation artifact"))

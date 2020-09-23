@@ -9,8 +9,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
@@ -22,6 +24,33 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReportableEvidenceItemFactoryTest {
+
+    @Test
+    public void reportableFactoryWorksForTrivialCase() {
+        EvidenceItem item1 =
+                testEvidenceBuilder().event("A").drug("A").level(EvidenceLevel.LEVEL_A).source(ActionabilitySource.CIVIC).build();
+        EvidenceItem item2 =
+                testEvidenceBuilder().event("A").drug("A").level(EvidenceLevel.LEVEL_A).source(ActionabilitySource.CGI).build();
+        EvidenceItem item3 =
+                testEvidenceBuilder().event("B").drug("B").level(EvidenceLevel.LEVEL_A).source(ActionabilitySource.ICLUSION).build();
+        EvidenceItem item4 =
+                testEvidenceBuilder().event("C").drug("C").level(EvidenceLevel.LEVEL_C).source(ActionabilitySource.CGI).build();
+
+        Map<Object, List<EvidenceItem>> evidenceMap = Maps.newHashMap();
+        evidenceMap.put("Irrelevant", Lists.newArrayList(item1, item2, item3, item4));
+
+        List<EvidenceItem> reportable = ReportableEvidenceItemFactory.toReportableFlatList(evidenceMap);
+        assertTrue(reportable.contains(item1));
+        assertFalse(reportable.contains(item2));
+        assertTrue(reportable.contains(item3));
+        assertFalse(reportable.contains(item4));
+
+        List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(Lists.newArrayList(item1, item2, item3, item4));
+        assertTrue(nonTrials.contains(item1));
+        assertTrue(nonTrials.contains(item2));
+        assertFalse(nonTrials.contains(item3));
+        assertTrue(nonTrials.contains(item4));
+    }
 
     @Test
     public void higherLevelWorks() {

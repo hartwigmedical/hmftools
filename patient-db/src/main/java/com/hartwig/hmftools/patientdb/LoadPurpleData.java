@@ -63,7 +63,7 @@ public class LoadPurpleData {
                 ? PurpleCopyNumberFile.read(germlineCopyNumberFilename)
                 : Lists.newArrayList();
 
-        LOGGER.info("Persisting to db");
+        LOGGER.info("Persisting purple data to db for {}", tumorSample);
         persistToDatabase(dbAccess,
                 tumorSample,
                 bestFitPerPurity,

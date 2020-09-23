@@ -23,13 +23,11 @@ public class SomaticVariantAnalyzer {
     @NotNull
     public static SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
             @NotNull List<DriverCatalog> driverCatalog) throws IOException {
-
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
         List<SomaticVariant> variantsToReport = variants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport, driverCatalog);
-
     }
 }

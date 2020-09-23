@@ -58,9 +58,11 @@ public class CNADrivers {
 
     @NotNull
     public List<DriverCatalog> deletions(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+
         return geneCopyNumbers.stream()
                 .filter(x -> x.minCopyNumber() < MAX_COPY_NUMBER_DEL)
                 .filter(x -> tsGenes.contains(x.gene()) | deletionTargets.contains(x.gene()))
+                .filter(x -> x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0)
                 .map(x -> ImmutableDriverCatalog.builder()
                         .chromosome(x.chromosome())
                         .chromosomeBand(x.chromosomeBand())

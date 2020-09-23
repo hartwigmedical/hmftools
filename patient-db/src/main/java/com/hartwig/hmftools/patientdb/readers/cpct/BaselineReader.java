@@ -114,7 +114,7 @@ class BaselineReader {
     }
 
     private void setPrimaryTumorData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
-            @NotNull String patientId) {
+            @SuppressWarnings("unused") @NotNull String patientId) {
         String primaryTumorLocationSelcrit = null;
         FormStatus primaryTumorLocationSelcritStatus = null;
         String primaryTumorLocationCarcinoma = null;

@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.gripss.store
 
 import com.hartwig.hmftools.common.gripss.GripssFilters.DEDUP
-import com.hartwig.hmftools.gripss.*
+import com.hartwig.hmftools.gripss.ContigComparator
+import com.hartwig.hmftools.gripss.GripssFilterConfig
+import com.hartwig.hmftools.gripss.PON
+import com.hartwig.hmftools.gripss.StructuralVariantContext
 import java.util.*
 
 class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     companion object {
-        private val mateFiltered = setOf(MATE)
-
         operator fun invoke(config: GripssFilterConfig, comparator: ContigComparator, variants: List<StructuralVariantContext>, ponFiltered: Set<String>, hotspots: Set<String>): SoftFilterStore {
             val filters = mutableMapOf<String, Set<String>>()
             for (variant in variants) {
@@ -33,13 +34,7 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
     }
 
     fun filters(vcfId: String, mateId: String?): Set<String> {
-        val result = get(vcfId)
-        val isMateFiltered = mateId?.let { isPassing(it) } == false
-
-        if (result.isEmpty() && isMateFiltered) {
-            return mateFiltered
-        }
-        return result
+        return get(vcfId) + (mateId?.let { get(it) } ?: setOf())
     }
 
     fun duplicates(): Set<String> {

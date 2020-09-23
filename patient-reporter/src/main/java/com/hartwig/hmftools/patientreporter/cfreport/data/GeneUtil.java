@@ -12,11 +12,11 @@ public final class GeneUtil {
     }
 
     @NotNull
-    public static String ploidyToCopiesString(@Nullable Double ploidy, boolean hasReliablePurity) {
+    public static String copyNumberToString(@Nullable Double copyNumber, boolean hasReliablePurity) {
         if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         } else {
-            return ploidy != null ? ReportResources.decimalFormat("#.#").format(ploidy) : Strings.EMPTY;
+            return copyNumber != null ? ReportResources.decimalFormat("#.#").format(copyNumber) : Strings.EMPTY;
         }
     }
 

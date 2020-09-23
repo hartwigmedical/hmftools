@@ -21,10 +21,14 @@ public class CNADriversTest {
 
     @Test
     public void testDeletionsInGermlineAsStillReportable() {
-        GeneCopyNumber del = createTestCopyNumberBuilder("APC").germlineHet2HomRegions(1).germlineHomRegions(1).build();
-        List<DriverCatalog> drivers = new CNADrivers(genePanel).deletions(Lists.newArrayList(del));
+        List<String> driverGenes = Lists.newArrayList(genePanel.deletionTargets());
+        GeneCopyNumber somatic = createTestCopyNumberBuilder(driverGenes.get(0)).germlineHet2HomRegions(0).germlineHomRegions(0).build();
+        GeneCopyNumber germline1 = createTestCopyNumberBuilder(driverGenes.get(1)).germlineHet2HomRegions(1).germlineHomRegions(0).build();
+        GeneCopyNumber germline2 = createTestCopyNumberBuilder(driverGenes.get(2)).germlineHet2HomRegions(0).germlineHomRegions(1).build();
+
+        List<DriverCatalog> drivers = new CNADrivers(genePanel).deletions(Lists.newArrayList(somatic, germline1, germline2));
         assertEquals(1, drivers.size());
-        assertEquals("APC", drivers.get(0).gene());
+        assertEquals(somatic.gene(), drivers.get(0).gene());
     }
 
     @NotNull

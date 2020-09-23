@@ -21,18 +21,18 @@ public final class HomozygousDisruptionAnalyzer {
 
     @NotNull
     public static List<ReportableHomozygousDisruption> extractFromLinxDriversTsv(@NotNull String linxDriversTsv) throws IOException {
-        List<DriverCatalog> allDriversCatalog = DriverCatalogFile.read(linxDriversTsv);
-        LOGGER.info("Loaded {} driver catalog records from {}", allDriversCatalog.size(), linxDriversTsv);
+        List<DriverCatalog> linxDriversCatalog = DriverCatalogFile.read(linxDriversTsv);
+        LOGGER.info("Loaded {} linx driver catalog records from {}", linxDriversCatalog.size(), linxDriversTsv);
 
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptions(allDriversCatalog);
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptions(linxDriversCatalog);
         LOGGER.info("Extracted {} homozygous disruptions from linx drivers", reportableHomozygousDisruptions.size());
         return reportableHomozygousDisruptions;
     }
 
     @NotNull
-    public static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> allDriversCatalog) {
+    private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
-        for (DriverCatalog driverCatalog : allDriversCatalog) {
+        for (DriverCatalog driverCatalog : linxDriversCatalog) {
             if (driverCatalog.driver().equals(DriverType.HOM_DISRUPTION)) {
                 reportableHomozygousDisruptions.add(ImmutableReportableHomozygousDisruption.builder()
                         .chromosome(driverCatalog.chromosome())
@@ -41,6 +41,7 @@ public final class HomozygousDisruptionAnalyzer {
                         .build());
             }
         }
+
         return reportableHomozygousDisruptions;
     }
 }

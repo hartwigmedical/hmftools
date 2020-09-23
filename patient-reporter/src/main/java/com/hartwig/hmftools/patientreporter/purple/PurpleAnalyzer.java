@@ -27,10 +27,10 @@ public final class PurpleAnalyzer {
     @NotNull
     public static PurpleAnalysis run(@NotNull PurityContext purityContext, @NotNull PurpleQC purpleQC,
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> driverCatalog) {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> purpleDriverCatalog) {
         FittedPurity bestFit = purityContext.bestFit();
         List<ReportableGainLoss> reportableGainsAndLosses =
-                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, exomeGeneCopyNumbers);
+                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(purpleDriverCatalog, exomeGeneCopyNumbers);
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainsAndLosses, primaryTumorLocation);
