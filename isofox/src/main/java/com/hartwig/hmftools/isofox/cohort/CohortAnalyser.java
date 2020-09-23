@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.isofox.expression.cohort.ExternalExpressionCompare;
 import com.hartwig.hmftools.isofox.expression.cohort.GeneExpressionDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
 import com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution;
@@ -93,6 +94,13 @@ public class CohortAnalyser
                 {
                     SampleRoutines sampleRoutines = new SampleRoutines(mConfig);
                     sampleRoutines.convertMutationCohortFile(mConfig.SampleMutationsFile);
+                    break;
+                }
+
+                case EXTERNAL_EXPRESSION_COMPARE:
+                {
+                    ExternalExpressionCompare expExpressionCompare = new ExternalExpressionCompare(mConfig);
+                    expExpressionCompare.processSampleTranscriptFiles();
                     break;
                 }
 

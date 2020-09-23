@@ -227,7 +227,7 @@ public class ExternalFusionCompare
                         {
                             final String otherData = String.format("reason=%s anchorDistance=%d af=%.3f",
                                     unfilteredFusion.getFilter().toString(),
-                                    min(unfilteredFusion.AnchorDistance[SE_START], unfilteredFusion.AnchorDistance[SE_START]),
+                                    min(unfilteredFusion.AnchorDistance[SE_START], unfilteredFusion.AnchorDistance[SE_END]),
                                     unfilteredFusion.alleleFrequency());
 
                             cacheMatchResults(sampleId, getMatchType(MT_FILT_IN_ISOFOX), unfilteredFusion.Id,

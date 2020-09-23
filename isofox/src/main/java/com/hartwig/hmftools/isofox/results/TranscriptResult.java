@@ -162,6 +162,7 @@ public class TranscriptResult
     }
 
     public static final String FLD_FITTED_FRAGMENTS = "FittedFragments";
+    public static final String FLD_RAW_FRAGMENTS = "RawFittedFragments";
     public static final String FLD_EFFECTIVE_LENGTH = "EffectiveLength";
     public static final String FLD_TPM = "AdjTPM";
 
@@ -176,7 +177,7 @@ public class TranscriptResult
                 .add("TranscriptLength")
                 .add(FLD_EFFECTIVE_LENGTH)
                 .add(FLD_FITTED_FRAGMENTS)
-                .add("RawFittedFragments")
+                .add(FLD_RAW_FRAGMENTS)
                 .add(FLD_TPM)
                 .add("RawTPM")
                 .add("TranscriptBasesCovered")

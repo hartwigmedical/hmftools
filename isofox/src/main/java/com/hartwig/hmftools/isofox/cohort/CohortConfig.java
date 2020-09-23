@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.EXTERNAL_EXPRESSION_COMPARE;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_DISTRIBUTION;
@@ -118,12 +119,12 @@ public class CohortConfig
 
         ConvertUnmatchedCancerToOther = true;
 
-
         SampleMutationsFile = cmd.getOptionValue(SAMPLE_MUT_FILE);
 
         Fusions = LoadTypes.contains(FUSION) ? new FusionCohortConfig(cmd) : null;
 
-        Expression = LoadTypes.contains(GENE_DISTRIBUTION) || LoadTypes.contains(TRANSCRIPT_DISTRIBUTION) ? new ExpressionCohortConfig(cmd) : null;
+        Expression = LoadTypes.contains(GENE_DISTRIBUTION) || LoadTypes.contains(TRANSCRIPT_DISTRIBUTION)
+                || LoadTypes.contains(EXTERNAL_EXPRESSION_COMPARE) ? new ExpressionCohortConfig(cmd) : null;
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
@@ -213,6 +214,7 @@ public class CohortConfig
 
         AltSpliceJunctionCohort.addCmdLineOptions(options);
         FusionCohortConfig.addCmdLineOptions(options);
+        ExpressionCohortConfig.addCmdLineOptions(options);
 
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(THREADS, true, "Number of threads for task execution, default is 0 (off)");

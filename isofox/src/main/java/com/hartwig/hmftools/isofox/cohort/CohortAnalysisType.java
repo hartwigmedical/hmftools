@@ -17,7 +17,8 @@ public enum CohortAnalysisType
     FUSION,
     PASSING_FUSION,
     RETAINED_INTRON,
-    SAMPLE_ROUTINES;
+    SAMPLE_ROUTINES,
+    EXTERNAL_EXPRESSION_COMPARE;
 
     public static String getFileId(CohortAnalysisType type)
     {

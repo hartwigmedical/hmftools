@@ -9,15 +9,16 @@ import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_D
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.EXT_SOURCE_RSEM;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.EXT_SOURCE_SALMON;
-import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.SOURCE_ISOFOX;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromIsofoxGene;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromIsofoxTranscript;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromSalmon;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FITTED_FRAGMENTS;
+import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_RAW_FRAGMENTS;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedWriter;
@@ -31,7 +32,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
@@ -45,7 +45,6 @@ public class ExternalExpressionCompare
     private final boolean mTransScope;
 
     private BufferedWriter mWriter;
-
 
     public ExternalExpressionCompare(final CohortConfig config)
     {
@@ -68,7 +67,7 @@ public class ExternalExpressionCompare
             for(Map.Entry<String,List<TranscriptData>> entry : mGeneTransCache.getTranscriptDataMap().entrySet())
             {
                 final String geneId = entry.getKey();
-                final String geneName = mGeneTransCache.getGeneDataByName(geneId).GeneName;
+                final String geneName = mGeneTransCache.getGeneDataById(geneId).GeneName;
 
                 for(TranscriptData transData : entry.getValue())
                 {
@@ -83,7 +82,7 @@ public class ExternalExpressionCompare
 
             for(final String geneId : mConfig.RestrictedGeneIds)
             {
-                final String geneName = mGeneTransCache.getGeneDataByName(geneId).GeneName;
+                final String geneName = mGeneTransCache.getGeneDataById(geneId).GeneName;
 
                 for(TranscriptData transData : mGeneTransCache.getTranscripts(geneId))
                 {
@@ -108,39 +107,77 @@ public class ExternalExpressionCompare
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path transcriptsFile = filenames.get(i);
 
-            final Map<String,ExpressionData> isofoData = loadIsofoxFile(transcriptsFile);
-            final Map<String,ExpressionData> externalData = loadFile(sampleId, mConfig.Expression.ExternalSource);
+            final Map<String,ExpressionData> isofoxExpMap = loadIsofoxFile(transcriptsFile);
+            final Map<String,ExpressionData> externalExpMap = loadFile(sampleId, mConfig.Expression.ExternalSource);
 
-            ISF_LOGGER.debug("{}: sample({}) loaded transcript data", i, sampleId);
+            ISF_LOGGER.debug("{}: sample({}) loaded expression data", i, sampleId);
+
+            processExpressionData(sampleId, isofoxExpMap, externalExpMap);
         }
 
-        ISF_LOGGER.info("loaded {} samples transcript files", mConfig.SampleData.SampleIds.size());
-
+        ISF_LOGGER.info("processed {} samples transcript files", mConfig.SampleData.SampleIds.size());
 
         closeBufferedWriter(mWriter);
+    }
+
+    private void processExpressionData(final String sampleId, final Map<String,ExpressionData> isofoxExpMap, final Map<String,ExpressionData> externalExpMap)
+    {
+        for(Map.Entry<String,ExpressionData> entry : isofoxExpMap.entrySet())
+        {
+            final String id = entry.getKey();
+            final ExpressionData isofoxExpData = entry.getValue();
+            final ExpressionData externalExpData = externalExpMap.get(id);
+
+            // apply any filters..
+
+            writeComparisonData(sampleId, isofoxExpData, externalExpData);
+        }
     }
 
     private void initialiseWriter()
     {
         try
         {
-            final String outputFileName = mTransScope ? 
+            final String outputFileName = mTransScope ?
                     mConfig.formCohortFilename("trans_exp_compare.csv") : mConfig.formCohortFilename("gene_exp_compare.csv");
-            
+
             mWriter = createBufferedWriter(outputFileName, false);
 
-            mWriter.write("GeneId,GeneName,TransName");
+            mWriter.write("SampleId,GeneId,GeneName");
 
             if(mTransScope)
                 mWriter.write(",TransName");
 
-            mWriter.write(String.format(",ISOFOX_TPM,%s_TPM,", mConfig.Expression.ExternalSource));
+            final String sourceName = mConfig.Expression.ExternalSource;
+            mWriter.write(String.format(",ISOFOX_TPM,%s_TPM,RawFrags,FittedFrags,%s_Reads,EffectiveLength", sourceName, sourceName));
 
             mWriter.newLine();
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to write transcript data file: {}", e.toString());
+            ISF_LOGGER.error("failed to write expression comparison data file: {}", e.toString());
+        }
+    }
+
+    private void writeComparisonData(final String sampleId, final ExpressionData isofoxExpData, final ExpressionData externalExpData)
+    {
+        try
+        {
+            mWriter.write(String.format("%s,%s,%s", sampleId, isofoxExpData.GeneId, isofoxExpData.GeneName));
+
+            if(mTransScope)
+                mWriter.write(String.format(",%s", isofoxExpData.TransName));
+
+            mWriter.write(String.format(",%.3g,%.3g,%.1f,%.1f,%d,%d",
+                    isofoxExpData.tpm(), externalExpData != null ? externalExpData.tpm() : -1,
+                    isofoxExpData.rawFragment(), isofoxExpData.fittedFragments(),
+                    externalExpData != null ? externalExpData.readCount() : -1, isofoxExpData.EffectiveLength));
+
+            mWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write expression comparison data file: {}", e.toString());
         }
     }
 
@@ -157,17 +194,23 @@ public class ExternalExpressionCompare
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
-            int transIdIndex = fieldsMap.get(FLD_TRANS_ID);
-            int readCountIndex = fieldsMap.get(FLD_FITTED_FRAGMENTS);
+            int transNameIndex = fieldsMap.get(FLD_TRANS_NAME);
+            int fittedFragsIndex = fieldsMap.get(FLD_FITTED_FRAGMENTS);
+            int rawFragsIndex = fieldsMap.get(FLD_RAW_FRAGMENTS);
             int tpmIndex = fieldsMap.get(FLD_TPM);
+            int effectiveLengthIndex = fieldsMap.get(FLD_EFFECTIVE_LENGTH);
 
             for(final String data : lines)
             {
                 ExpressionData expData = mTransScope ?
-                        fromIsofoxTranscript(data, geneIdIndex, geneNameIndex, transIdIndex, readCountIndex, tpmIndex) :
-                        fromIsofoxGene(data, geneIdIndex, geneNameIndex, readCountIndex, tpmIndex);
+                        fromIsofoxTranscript(
+                                data, geneIdIndex, geneNameIndex, transNameIndex, fittedFragsIndex, rawFragsIndex, tpmIndex, effectiveLengthIndex) :
+                        fromIsofoxGene(data, geneIdIndex, geneNameIndex, fittedFragsIndex, rawFragsIndex, tpmIndex);
 
                 if(expData == null)
+                    continue;
+
+                if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(expData.GeneId))
                     continue;
 
                 if(mTransScope)
@@ -187,7 +230,9 @@ public class ExternalExpressionCompare
     private Map<String,ExpressionData> loadFile(final String sampleId, final String source)
     {
         final Map<String,ExpressionData> expressionDataMap = Maps.newHashMap();
-        final String filename = source.equals(EXT_SOURCE_SALMON) ? String.format("%s.salmon.tsv", sampleId) : null;
+
+        final String filename = source.equals(EXT_SOURCE_SALMON) ?
+                String.format("%s/%s.salmon.tsv", mConfig.RootDataDir, sampleId) : null;
 
         try
         {
@@ -221,12 +266,13 @@ public class ExternalExpressionCompare
 
                     if(geneExpData == null)
                     {
-                        geneExpData = new ExpressionData(source, expData.GeneId, expData.GeneName, "", expData.readCount(), expData.tpm());
+                        geneExpData = new ExpressionData(source, expData.GeneId, expData.GeneName, "",
+                                0, 0, expData.readCount(), expData.tpm(), 0);
                         expressionDataMap.put(expData.GeneId, geneExpData);
                     }
                     else
                     {
-                        geneExpData.addCounts(expData.tpm(), expData.readCount());
+                        geneExpData.addCounts(expData.tpm(), 0, 0, expData.readCount());
                     }
                 }
             }

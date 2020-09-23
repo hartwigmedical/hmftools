@@ -11,46 +11,64 @@ public class ExpressionData
     public final String GeneId;
     public final String GeneName;
     public final String TransName;
+    public final int EffectiveLength;
 
+    private double mFittedFragmentCount;
+    private double mRawFragmentCount;
     private int mReadCount;
     private double mTPM;
 
-    public ExpressionData(final String source, final String geneId, final String geneName, final String transName, int readCount, double tpm)
+    public ExpressionData(
+            final String source, final String geneId, final String geneName, final String transName,
+            double fittedFrags, double rawFrags, int readCount, double tpm, int effectiveLength)
     {
         Source = source;
         GeneId = geneId;
         GeneName = geneName;
         TransName = transName;
+
+        mFittedFragmentCount = fittedFrags;
+        mRawFragmentCount = rawFrags;
         mReadCount = readCount;
         mTPM = tpm;
+        EffectiveLength = effectiveLength;
     }
 
-    public void addCounts(double tpm, int readCount)
+    public void addCounts(double tpm, double fittedFrags, double rawFrags, int reads)
     {
         mTPM += tpm;
-        mReadCount += readCount;
+        mReadCount += reads;
+        mRawFragmentCount += rawFrags;
+        mFittedFragmentCount += fittedFrags;
     }
 
     public void setTpm(double tpm) { mTPM = tpm; }
     public double tpm() { return mTPM; }
     public int readCount() { return mReadCount; }
+    public double fittedFragments() { return mFittedFragmentCount; }
+    public double rawFragment() { return mRawFragmentCount; }
 
-    public static ExpressionData fromIsofoxTranscript(final String data, int geneIdIndex, int geneNameIndex, int transIndex, int readCountIndex, int tpmIndex)
+    public static ExpressionData fromIsofoxTranscript(
+            final String data, int geneIdIndex, int geneNameIndex, int transIndex,
+            int fittedFragIndex, int rawFragsIndex, int tpmIndex, int effectiveLengthIndex)
     {
         final String[] items = data.split(",");
 
         return new ExpressionData(
                 SOURCE_ISOFOX, items[geneIdIndex], items[geneNameIndex], items[transIndex],
-                Integer.parseInt(items[readCountIndex]), Double.parseDouble(items[tpmIndex]));
+                Double.parseDouble(items[fittedFragIndex]), Double.parseDouble(items[rawFragsIndex]),
+                0, Double.parseDouble(items[tpmIndex]), Integer.parseInt(items[effectiveLengthIndex]));
     }
 
-    public static ExpressionData fromIsofoxGene(final String data, int geneIdIndex, int geneNameIndex, int readCountIndex, int tpmIndex)
+    public static ExpressionData fromIsofoxGene(
+            final String data, int geneIdIndex, int geneNameIndex, int fittedFragIndex, int rawFragsIndex, int tpmIndex)
     {
         final String[] items = data.split(",");
 
         return new ExpressionData(
                 SOURCE_ISOFOX, items[geneIdIndex], items[geneNameIndex], "",
-                Integer.parseInt(items[readCountIndex]), Double.parseDouble(items[tpmIndex]));
+                Double.parseDouble(items[fittedFragIndex]), Double.parseDouble(items[rawFragsIndex]),
+                0, Double.parseDouble(items[tpmIndex]), 0);
     }
 
     public static ExpressionData fromSalmon(final String data, final Map<String,String[]> geneTransMap)
@@ -75,7 +93,8 @@ public class ExpressionData
 
         double tpm = Double.parseDouble(items[3]);
         int readCount = (int)Double.parseDouble(items[4]);
+        int effectiveLength = (int)Double.parseDouble(items[2]);
 
-        return new ExpressionData(EXT_SOURCE_SALMON, geneId, geneName, transName, readCount, tpm);
+        return new ExpressionData(EXT_SOURCE_SALMON, geneId, geneName, transName, 0, 0, readCount, tpm, effectiveLength);
     }
 }
