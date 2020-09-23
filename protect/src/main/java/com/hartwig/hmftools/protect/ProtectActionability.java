@@ -28,8 +28,8 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
@@ -153,9 +153,8 @@ public class ProtectActionability {
         String patientCancerSubtype = extractCancerSubtype(tumorLocationCsv, tumorSampleId);
 
         LOGGER.info("Extracting genomic alteration from sample {}", tumorSampleId);
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+        PurityContext purityContext = PurityContextFile.readWithQC(purpleQCTsv, purplePurityTsv);
         double purity = purityContext.bestFit().purity();
-        double ploidy = GenomicData.extractPloidy(purplePurityTsv);
 
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGenePanelFile);
         List<DriverCatalog> driverCatalog = readDriverCatalog(cmd.getOptionValue(PURPLE_DRIVER_CATALOG_TSV));

@@ -38,13 +38,12 @@ import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.common.purple.purity.BestFitFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFactory;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
@@ -216,7 +215,6 @@ public class PurityPloidyEstimateApplication {
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
-                    .germlineAberrations(cobaltChromosomes.germlineAberrations())
                     .version(version.version())
                     .bestFit(bestFit.fit())
                     .method(bestFit.method())
@@ -230,17 +228,13 @@ public class PurityPloidyEstimateApplication {
                     .tumorMutationalLoadStatus(somaticStream.tumorMutationalLoadStatus())
                     .tumorMutationalBurdenPerMb(somaticStream.tumorMutationalBurdenPerMb())
                     .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
-                    .contamination(configSupplier.amberData().contamination())
                     .svTumorMutationalBurden(structuralVariants.passingBnd())
-                    .deletedGenes(qcChecks.deletedGenes())
-                    .copyNumberSegments(copyNumbers.size())
-                    .unsupportedCopyNumberSegments(qcChecks.unsupportedCopyNumberSegments())
+                    .qc(qcChecks)
                     .build();
 
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);
             version.write(outputDirectory);
-            PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
-            FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
+            PurityContextFile.write(outputDirectory, tumorSample, purityContext);
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), copyNumbers);

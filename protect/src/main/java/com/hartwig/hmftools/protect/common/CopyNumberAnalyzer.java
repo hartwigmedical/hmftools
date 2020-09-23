@@ -9,10 +9,9 @@ import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,8 +28,8 @@ public class CopyNumberAnalyzer {
     @NotNull
     public static CopyNumberAnalysis analyzeCopyNumbers(@NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleGeneCnvTsv, @NotNull List<DriverCatalog> driverCatalog) throws IOException {
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
+        PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
+        PurpleQC purpleQC = purityContext.qc();
 
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));

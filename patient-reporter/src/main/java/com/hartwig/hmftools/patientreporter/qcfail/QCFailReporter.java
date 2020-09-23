@@ -9,8 +9,8 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunction
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
@@ -29,7 +29,7 @@ public class QCFailReporter {
 
     @NotNull
     public QCFailReport run(@NotNull QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
-            @Nullable String comments, boolean correctedReport) throws IOException {
+            @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport) throws IOException {
         LimsStudy study = LimsStudy.fromSampleId(sampleMetadata.tumorSampleId());
 
         if (study == LimsStudy.NON_CANCER_STUDY) {
@@ -42,7 +42,7 @@ public class QCFailReporter {
 
         String wgsPurityString = null;
         if (reason.isDeepWGSDataAvailable()) {
-            PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+            PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 

@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.ImmutableSamplePurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.SamplePurity;
+import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -68,8 +69,10 @@ class PurityDAO {
             return null;
         }
 
+        final double actualPurity = result.getValue(PURITY.PURITY_);
+
         FittedPurity purity = ImmutableFittedPurity.builder()
-                .purity(result.getValue(PURITY.PURITY_))
+                .purity(actualPurity)
                 .normFactor(result.getValue(PURITY.NORMFACTOR))
                 .score(result.getValue(PURITY.SCORE))
                 .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
@@ -86,9 +89,24 @@ class PurityDAO {
                 .maxDiploidProportion(result.getValue(PURITY.MAXDIPLOIDPROPORTION))
                 .build();
 
+        final FittedPurityMethod method = FittedPurityMethod.valueOf(result.getValue(PURITY.STATUS));
+        final Gender cobaltGender = Gender.valueOf(result.getValue(PURITY.GENDER));
+        PurpleQC purpleQC = ImmutablePurpleQC.builder()
+                .copyNumberSegments(result.getValue(PURITY.COPYNUMBERSEGMENTS))
+                .unsupportedCopyNumberSegments(result.getValue(PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS))
+                .purity(actualPurity)
+                .amberGender(cobaltGender)
+                .cobaltGender(cobaltGender)
+                .deletedGenes(result.getValue(PURITY.DELETEDGENES))
+                .contamination(result.getValue(PURITY.CONTAMINATION))
+                .method(method)
+                .addAllGermlineAberrations(GermlineAberration.fromString(result.getValue(PURITY.GERMLINEABERRATION)))
+                .build();
+
         return ImmutablePurityContext.builder()
                 .bestFit(purity)
                 .score(score)
+                .qc(purpleQC)
                 .wholeGenomeDuplication(result.getValue(PURITY.WHOLEGENOMEDUPLICATION) == 1)
                 .microsatelliteStatus(MicrosatelliteStatus.valueOf(result.getValue(PURITY.MSSTATUS)))
                 .microsatelliteIndelsPerMb(result.getValue(PURITY.MSINDELSPERMB))
@@ -97,15 +115,10 @@ class PurityDAO {
                 .tumorMutationalLoad(result.getValue(PURITY.TML))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(result.getValue(PURITY.TMLSTATUS)))
                 .version(result.getValue(PURITY.VERSION))
-                .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
+                .gender(cobaltGender)
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
-                .method(FittedPurityMethod.valueOf(result.getValue(PURITY.STATUS)))
+                .method(method)
                 .svTumorMutationalBurden(result.getValue(PURITY.SVTMB))
-                .deletedGenes(result.getValue(PURITY.DELETEDGENES))
-                .copyNumberSegments(result.getValue(PURITY.COPYNUMBERSEGMENTS))
-                .unsupportedCopyNumberSegments(result.getValue(PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS))
-                .contamination(result.getValue(PURITY.CONTAMINATION))
-                .germlineAberrations(GermlineAberration.fromString(result.getValue(PURITY.GERMLINEABERRATION)))
                 .build();
     }
 
@@ -206,11 +219,11 @@ class PurityDAO {
                         DatabaseUtil.decimal(purity.tumorMutationalLoad()),
                         purity.tumorMutationalLoadStatus().toString(),
                         purity.svTumorMutationalBurden(),
-                        purity.deletedGenes(),
-                        purity.copyNumberSegments(),
-                        purity.unsupportedCopyNumberSegments(),
-                        purity.contamination(),
-                        GermlineAberration.toString(purity.germlineAberrations()),
+                        purity.qc().deletedGenes(),
+                        purity.qc().copyNumberSegments(),
+                        purity.qc().unsupportedCopyNumberSegments(),
+                        purity.qc().contamination(),
+                        GermlineAberration.toString(purity.qc().germlineAberrations()),
                         timestamp)
                 .execute();
     }

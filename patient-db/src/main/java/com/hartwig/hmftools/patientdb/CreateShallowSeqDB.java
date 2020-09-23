@@ -11,10 +11,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.ImmutableLimsShallowSeqData;
 import com.hartwig.hmftools.common.lims.LimsShallowSeqData;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
@@ -92,8 +91,8 @@ public class CreateShallowSeqDB {
             String fullPurplePurityTsvPath = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purplePurityTsvExt;
             String fullPurpleQCFilePath = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purpleQCFile;
 
-            PurityContext purityContext = FittedPurityFile.read(fullPurplePurityTsvPath);
-            PurpleQC purpleQC = PurpleQCFile.read(fullPurpleQCFilePath);
+            PurityContext purityContext = PurityContextFile.readWithQC(fullPurpleQCFilePath, fullPurplePurityTsvPath);
+            PurpleQC purpleQC = purityContext.qc();
 
             boolean hasReliableQuality = purpleQC.pass();
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);

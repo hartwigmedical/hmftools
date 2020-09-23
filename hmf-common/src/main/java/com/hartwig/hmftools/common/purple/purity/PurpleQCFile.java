@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.qc;
+package com.hartwig.hmftools.common.purple.purity;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,12 +10,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
-import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
+import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleQCFile {
+ public final class PurpleQCFile {
 
     private static final DecimalFormat FORMATTER = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
@@ -39,37 +39,32 @@ public final class PurpleQCFile {
     }
 
     @NotNull
-    @VisibleForTesting
-    static PurpleQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
-        try {
-            final ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder();
+    static PurpleQC fromLines(@NotNull final List<String> lines) {
+        final ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder();
 
-            if (lines.get(1).startsWith("SegmentPass")) {
-                // PURPLE 2.47
-                builder.unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines.get(5))))
-                        .amberGender(Gender.valueOf(getValue(lines.get(7))))
-                        .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
-                        .deletedGenes(Integer.parseInt(getValue(lines.get(9))))
-                        .copyNumberSegments(0)
-                        .purity(1)
-                        .method(FittedPurityMethod.NORMAL)
-                        .contamination(0);
-            } else {
-                builder.method(FittedPurityMethod.valueOf(getValue(lines.get(1))))
-                        .copyNumberSegments(Integer.parseInt(getValue(lines.get(2))))
-                        .unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines.get(3))))
-                        .purity(Double.parseDouble(getValue(lines.get(4))))
-                        .amberGender(Gender.valueOf(getValue(lines.get(5))))
-                        .cobaltGender(Gender.valueOf(getValue(lines.get(6))))
-                        .deletedGenes(Integer.parseInt(getValue(lines.get(7))))
-                        .contamination(Double.parseDouble(getValue(lines.get(8))))
-                        .germlineAberrations(GermlineAberration.fromString(getValue(lines.get(9))));
-            }
-
-            return builder.build();
-        } catch (Exception e) {
-            throw new MalformedFileException("Unable to parse purple qc file: " + e.toString());
+        if (lines.get(1).startsWith("SegmentPass")) {
+            // PURPLE 2.47
+            builder.unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines.get(5))))
+                    .amberGender(Gender.valueOf(getValue(lines.get(7))))
+                    .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
+                    .deletedGenes(Integer.parseInt(getValue(lines.get(9))))
+                    .copyNumberSegments(0)
+                    .purity(1)
+                    .method(FittedPurityMethod.NORMAL)
+                    .contamination(0);
+        } else {
+            builder.method(FittedPurityMethod.valueOf(getValue(lines.get(1))))
+                    .copyNumberSegments(Integer.parseInt(getValue(lines.get(2))))
+                    .unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines.get(3))))
+                    .purity(Double.parseDouble(getValue(lines.get(4))))
+                    .amberGender(Gender.valueOf(getValue(lines.get(5))))
+                    .cobaltGender(Gender.valueOf(getValue(lines.get(6))))
+                    .deletedGenes(Integer.parseInt(getValue(lines.get(7))))
+                    .contamination(Double.parseDouble(getValue(lines.get(8))))
+                    .germlineAberrations(GermlineAberration.fromString(getValue(lines.get(9))));
         }
+
+        return builder.build();
     }
 
     @NotNull

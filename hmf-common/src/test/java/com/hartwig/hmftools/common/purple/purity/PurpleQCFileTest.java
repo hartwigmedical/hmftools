@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.qc;
+package com.hartwig.hmftools.common.purple.purity;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,7 +9,8 @@ import java.util.Random;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -17,9 +18,10 @@ import org.junit.Test;
 public class PurpleQCFileTest {
 
     @Test
-    public void testReadWrite() throws IOException {
-        final PurpleQC expected = create();
-        assertEquals(expected.toString(), PurpleQCFile.fromLines(PurpleQCFile.toLines(expected)).toString());
+    public void testReadWrite() {
+        final Random random = new Random();
+        final PurpleQC expected = create(random);
+        assertEquals(expected, PurpleQCFile.fromLines(PurpleQCFile.toLines(expected)));
     }
 
     @Test
@@ -28,16 +30,15 @@ public class PurpleQCFileTest {
     }
 
     @NotNull
-    private static PurpleQC create() {
-        final Random random = new Random();
+    public static PurpleQC create(final Random random ) {
         return ImmutablePurpleQC.builder()
                 .copyNumberSegments(random.nextInt())
                 .unsupportedCopyNumberSegments(random.nextInt())
-                .purity(random.nextDouble())
+                .purity(random.nextInt(5))
                 .amberGender(Gender.values()[random.nextInt(Gender.values().length)])
                 .cobaltGender(Gender.values()[random.nextInt(Gender.values().length)])
                 .deletedGenes(random.nextInt())
-                .contamination(random.nextDouble())
+                .contamination(random.nextInt(5))
                 .method(FittedPurityMethod.values()[random.nextInt(FittedPurityMethod.values().length)])
                 .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
                 .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])

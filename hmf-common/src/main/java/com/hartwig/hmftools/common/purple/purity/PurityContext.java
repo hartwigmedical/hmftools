@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import java.util.Set;
-
-import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
@@ -25,6 +23,8 @@ public abstract class PurityContext {
 
     public abstract FittedPurityScore score();
 
+    public abstract PurpleQC qc();
+
     public abstract double polyClonalProportion();
 
     public abstract boolean wholeGenomeDuplication();
@@ -36,17 +36,6 @@ public abstract class PurityContext {
     public abstract int tumorMutationalLoad();
 
     public abstract int svTumorMutationalBurden();
-
-    public abstract int deletedGenes();
-
-    public abstract int copyNumberSegments();
-
-    public abstract int unsupportedCopyNumberSegments();
-
-    public abstract double contamination();
-
-    @NotNull
-    public abstract Set<GermlineAberration> germlineAberrations();
 
     @NotNull
     public abstract MicrosatelliteStatus microsatelliteStatus();

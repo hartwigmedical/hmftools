@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFileTest.createRandomPurityBuilder;
+import static com.hartwig.hmftools.common.purple.purity.PurityContextFileTest.createRandomPurityBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

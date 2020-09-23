@@ -24,6 +24,8 @@ import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
@@ -260,6 +262,17 @@ public class CnSegmentBuilder
                 .minPloidy(2)
                 .build();
 
+        PurpleQC qc = ImmutablePurpleQC.builder()
+                .amberGender(gender)
+                .cobaltGender(gender)
+                .purity(purity)
+                .contamination(0)
+                .deletedGenes(0)
+                .copyNumberSegments(0)
+                .unsupportedCopyNumberSegments(0)
+                .method(NORMAL)
+                .build();
+
         PurityContext purityContext = ImmutablePurityContext.builder()
                 .bestFit(fittedPurity)
                 .gender(gender)
@@ -275,10 +288,7 @@ public class CnSegmentBuilder
                 .tumorMutationalBurdenPerMb(0)
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0)
-                .deletedGenes(0)
-                .copyNumberSegments(0)
-                .unsupportedCopyNumberSegments(0)
-                .contamination(0)
+                .qc(qc)
                 .build();
 
         cnDataLoader.setPurityContext(purityContext);
