@@ -144,6 +144,8 @@ public class FusionData
                 Integer.parseInt(items[fieldIndexMap.get("DiscordantFrags")]),
                 coverage, anchorDistance, cohortCount);
 
+        fusion.setFilter(FusionFilterType.valueOf(items[fieldIndexMap.get("Filter")]));
+
         final String[] relatedFusionIdStr = fieldIndexMap.containsKey("RelatedSplicedIds") ?
                 items[fieldIndexMap.get("RelatedSplicedIds")].split(ITEM_DELIM, -1) :
                 items[fieldIndexMap.get("RelatedFusions")].split(ITEM_DELIM, -1);

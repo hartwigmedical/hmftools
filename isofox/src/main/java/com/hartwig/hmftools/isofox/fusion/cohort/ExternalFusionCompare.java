@@ -225,7 +225,8 @@ public class ExternalFusionCompare
                         if(junctionMatch(
                                 extFusion.Chromosomes, unfilteredFusion.Chromosomes, extFusion.JunctionPositions, unfilteredFusion.JunctionPositions))
                         {
-                            final String otherData = String.format("anchorDistance=%d af=%.3f",
+                            final String otherData = String.format("reason=%s anchorDistance=%d af=%.3f",
+                                    unfilteredFusion.getFilter().toString(),
                                     min(unfilteredFusion.AnchorDistance[SE_START], unfilteredFusion.AnchorDistance[SE_START]),
                                     unfilteredFusion.alleleFrequency());
 

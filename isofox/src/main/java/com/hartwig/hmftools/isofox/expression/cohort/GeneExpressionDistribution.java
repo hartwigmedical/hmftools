@@ -179,7 +179,7 @@ public class GeneExpressionDistribution
                 else if (geneData != null)
                 {
                     double tpm = Double.parseDouble(items[tpmIndex]);
-                    geneData.addSampleData(sampleId, roundValues ? roundTPM(tpm, mConfig.TpmRounding) : tpm);
+                    geneData.addSampleData(sampleId, roundValues ? roundTPM(tpm, mConfig.Expression.TpmRounding) : tpm);
                 }
             }
 
@@ -216,7 +216,7 @@ public class GeneExpressionDistribution
 
             geneData.addSampleData(
                     sampleId,
-                    roundValues ? roundTPM(fpmData[FPM_FPM], mConfig.TpmRounding) : fpmData[FPM_FPM]);
+                    roundValues ? roundTPM(fpmData[FPM_FPM], mConfig.Expression.TpmRounding) : fpmData[FPM_FPM]);
         }
     }
 

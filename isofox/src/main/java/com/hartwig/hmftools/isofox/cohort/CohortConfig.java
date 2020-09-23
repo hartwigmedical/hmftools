@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_DISTRIBUTION;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.getFileId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSpliceJunctionCohort;
 
@@ -36,17 +39,6 @@ public class CohortConfig
     public static final String ALL_AVAILABLE_FILES = "all_available_files";
     public static final String LOAD_TYPES = "load_types";
     public static final String FAIL_MISSING = "fail_on_missing_file";
-
-    public static final String TPM_LOG_THRESHOLD = "tpm_log_threshold";
-    public static final String TPM_ROUNDING = "tpm_rounding";
-
-    public static final String WRITE_SAMPLE_GENE_DISTRIBUTION_DATA = "write_sample_gene_dist";
-
-
-    public static final String CANCER_GENE_FILES = "cancer_gene_files";
-
-    public static final String COHORT_TRANS_FILE = "cohort_trans_file";
-    public static final String CANCER_TRANS_FILE = "cancer_trans_file";
 
     public static final String SAMPLE_MUT_FILE = "sample_mut_file";
     private static final String THREADS = "threads";
@@ -64,20 +56,13 @@ public class CohortConfig
 
     public final List<CohortAnalysisType> LoadTypes;
 
-    // routine specifics
     public final String EnsemblDataCache;
 
-    public final boolean WriteSampleGeneDistributionData;
-
-    public final String CohortTransFile;
-    public final String CancerTransFile;
     public final String SampleMutationsFile;
 
-    public final String CancerGeneFiles;
-    public final double TpmLogThreshold;
-    public final double TpmRounding;
-
     public final FusionCohortConfig Fusions;
+
+    public final ExpressionCohortConfig Expression;
 
     public final int Threads;
 
@@ -112,7 +97,6 @@ public class CohortConfig
         LoadTypes = Arrays.stream(cmd.getOptionValue(LOAD_TYPES).split(ITEM_DELIM))
                 .map(x -> CohortAnalysisType.valueOf(x)).collect(Collectors.toList());
 
-        CancerGeneFiles = cmd.getOptionValue(CANCER_GENE_FILES);
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
 
@@ -134,15 +118,12 @@ public class CohortConfig
 
         ConvertUnmatchedCancerToOther = true;
 
-        TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
-        TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
 
-        WriteSampleGeneDistributionData = cmd.hasOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
-        CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
-        CancerTransFile = cmd.getOptionValue(CANCER_TRANS_FILE);
         SampleMutationsFile = cmd.getOptionValue(SAMPLE_MUT_FILE);
 
         Fusions = LoadTypes.contains(FUSION) ? new FusionCohortConfig(cmd) : null;
+
+        Expression = LoadTypes.contains(GENE_DISTRIBUTION) || LoadTypes.contains(TRANSCRIPT_DISTRIBUTION) ? new ExpressionCohortConfig(cmd) : null;
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
@@ -228,13 +209,7 @@ public class CohortConfig
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
 
 
-        options.addOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, false, "Write per-sample gene distribution data file");
-        options.addOption(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
-        options.addOption(COHORT_TRANS_FILE, true, "Cohort transcript distribution file");
-        options.addOption(CANCER_TRANS_FILE, true, "Cancer transcript distribution file");
         options.addOption(SAMPLE_MUT_FILE, true, "Sample mutations by gene and cancer type");
-        options.addOption(TPM_ROUNDING, true, "TPM/FPM rounding factor, base-10 integer (default=2, ie 1%)");
-        options.addOption(TPM_LOG_THRESHOLD, true, "Only write transcripts with TPM greater than this");
 
         AltSpliceJunctionCohort.addCmdLineOptions(options);
         FusionCohortConfig.addCmdLineOptions(options);

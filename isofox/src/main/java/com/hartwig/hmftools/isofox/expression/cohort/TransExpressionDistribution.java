@@ -57,16 +57,16 @@ public class TransExpressionDistribution
 
         mTransDistributionWriter = null;
 
-        if(mConfig.CohortTransFile != null)
+        if(mConfig.Expression.CohortTransFile != null)
         {
             loadCohortDistribution(
-                    mConfig.CohortTransFile, mCohortTranscriptDistribution,
+                    mConfig.Expression.CohortTransFile, mCohortTranscriptDistribution,
                     "transcript", DISTRIBUTION_SIZE + 1, Lists.newArrayList());
         }
 
-        if(mConfig.CancerTransFile != null)
+        if(mConfig.Expression.CancerTransFile != null)
         {
-            loadCohortDistribution(mConfig.CancerTransFile, mCancerTypeTranscriptDistribution,
+            loadCohortDistribution(mConfig.Expression.CancerTransFile, mCancerTypeTranscriptDistribution,
                     "transcript", DISTRIBUTION_SIZE + 1, Lists.newArrayList());
         }
     }
@@ -136,7 +136,7 @@ public class TransExpressionDistribution
                 calcPercentileValues(tmpDataList, percentileValues);
 
                 // skip a transcript if its 100th percentile TPM is below the threshold
-                if(percentileValues[percentileValues.length - 1] < mConfig.TpmLogThreshold)
+                if(percentileValues[percentileValues.length - 1] < mConfig.Expression.TpmLogThreshold)
                     continue;
 
                 mTransDistributionWriter.write(String.format("%s,%s,%s",
@@ -193,7 +193,7 @@ public class TransExpressionDistribution
 
                 if(roundValues)
                 {
-                    transPerMill = roundTPM(transPerMill, mConfig.TpmRounding);
+                    transPerMill = roundTPM(transPerMill, mConfig.Expression.TpmRounding);
                 }
 
                 transExpData.addSampleData(sampleId, transPerMill);

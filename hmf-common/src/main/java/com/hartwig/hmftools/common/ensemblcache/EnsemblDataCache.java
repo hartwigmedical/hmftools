@@ -33,9 +33,9 @@ public class EnsemblDataCache
     private final String mDataPath;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    private final Map<String, List<TranscriptData>> mTranscriptDataMap;
-    private final Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
-    private final Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
+    private final Map<String,List<TranscriptData>> mTranscriptDataMap; // transcripts keyed by geneId
+    private final Map<String,List<EnsemblGeneData>> mChrGeneDataMap; // genes keyed by chromosome
+    private final Map<Integer,List<TranscriptProteinData>> mEnsemblProteinDataMap;
     private final Map<Integer,Integer> mTransSpliceAcceptorPosDataMap;
     private final Map<String,EnsemblGeneData> mGeneDataMap; // keyed by geneId
     private final Map<String,EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name

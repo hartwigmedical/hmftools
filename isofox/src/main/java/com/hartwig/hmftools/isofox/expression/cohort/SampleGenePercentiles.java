@@ -46,9 +46,9 @@ public class SampleGenePercentiles
         mConfig = config;
         mCancerTypesGeneDistribution = Maps.newHashMap();
 
-        if(mConfig.CancerGeneFiles != null)
+        if(mConfig.Expression.CancerGeneFiles != null)
         {
-            final Map<String, String> cancerGeneFilenames = loadCancerGeneDistributionFilenames(mConfig.CancerGeneFiles);
+            final Map<String, String> cancerGeneFilenames = loadCancerGeneDistributionFilenames(mConfig.Expression.CancerGeneFiles);
 
             for(Map.Entry<String, String> entry : cancerGeneFilenames.entrySet())
             {
@@ -129,7 +129,7 @@ public class SampleGenePercentiles
 
                 double tpm = Double.parseDouble(items[tpmIndex]);
 
-                if(tpm < mConfig.TpmLogThreshold)
+                if(tpm < mConfig.Expression.TpmLogThreshold)
                     continue;
 
                 final String geneName = items[geneNameIndex];
