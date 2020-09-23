@@ -234,7 +234,7 @@ Note that reads which marginally overhang an exon boundary or are soft clipped a
 
 For each group of transcripts considered together we aim to fit the relative abundance. Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximisation algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
 
-<TO DO: Add a step which improves on this by removing or limiting allocation to transcripts where fitted fragments >> observed fragments for private allocations >
+<TO DO: Add a step which improves on this by removing or limiting allocation to transcripts where fitted fragments are greater than observed fragments for private allocations >
 
 ### 6. Bias Estimation and Correction
 
@@ -247,15 +247,15 @@ Expected GC distribution for sample is calculated as the sum of the estimated di
 
 ##### B. Fragment Length Bias
 
-<TO DO - Add>
+<TO DO: Add>
 
 #### C. Sequence Start Specific Bias
 
-<TO DO - Add>
+<TO DO: Add>
 
 #### D. 5' Cap bias
 
-<TO DO - Add>
+<TO DO: Add>
 
 #### E. Adjust expected rates for biases and re-estimate abundances per transcript
 
