@@ -63,6 +63,7 @@ public class FusionFilters
     private static final int KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS = 2;
     private static final int KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS = 4;
     private static final int MIN_ANCHOR_DISTANCE = 20;
+    private static final double AF_KNOWN_SPLICED_TIER = 0.002;
     private static final double AF_KNOWN_TIER = 0.005;
     private static final double AF_UNKNOWN_TIER = 0.05;
     private static final int LOCAL_FUSION_THRESHOLD = 1000000;
@@ -105,7 +106,7 @@ public class FusionFilters
 
         if(hasKnownSpliceSites)
         {
-            requiredAF = AF_KNOWN_TIER;
+            requiredAF = AF_KNOWN_SPLICED_TIER;
             requiredFragments = 2;
         }
         else if((fusion.JunctionTypes[SE_START] == FusionJunctionType.CANONICAL && fusion.JunctionTypes[SE_END] == FusionJunctionType.KNOWN)
