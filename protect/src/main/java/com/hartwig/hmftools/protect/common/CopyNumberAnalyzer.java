@@ -35,10 +35,10 @@ public class CopyNumberAnalyzer {
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
-        LOGGER.info(" Purple status: {}", purityContext.status());
+        LOGGER.info(" Purple fit method: {}", purityContext.method());
         LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
         LOGGER.info("Loaded purple QC data from {}", purpleQCFile);
-        LOGGER.info(" Purple QC status: {}", purpleQC.status());
+        LOGGER.info(" Purple QC status: {}", purpleQC.toString());
 
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
@@ -50,7 +50,7 @@ public class CopyNumberAnalyzer {
         return ImmutableCopyNumberAnalysis.builder()
                 .purity(bestFit.purity())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
-                .hasReliableQuality(CheckPurpleQuality.checkHasReliableQuality(purpleQC))
+                .hasReliableQuality(purpleQC.pass())
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)

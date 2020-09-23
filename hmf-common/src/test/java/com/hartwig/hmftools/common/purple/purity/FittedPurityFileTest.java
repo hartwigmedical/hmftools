@@ -51,7 +51,7 @@ public class FittedPurityFileTest {
     }
 
     @Test
-    public void testCompatibilityWith2_14() throws IOException {
+    public void testCompatibilityWith2_47() throws IOException {
         FittedPurityFile.fromLine(Resources.readLines(Resources.getResource("purple/v2-47.purple.purity"), Charset.defaultCharset())
                 .get(1));
     }
@@ -62,7 +62,7 @@ public class FittedPurityFileTest {
                 .bestFit(createRandomPurity(random))
                 .score(createRandomScore(random))
                 .gender(Gender.values()[random.nextInt(Gender.values().length)])
-                .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])
+                .method(FittedPurityMethod.values()[random.nextInt(FittedPurityMethod.values().length)])
                 .polyClonalProportion(nextDouble(random))
                 .wholeGenomeDuplication(random.nextBoolean())
                 .microsatelliteIndelsPerMb(random.nextDouble())

@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,21 +42,33 @@ public final class PurpleQCFile {
     @VisibleForTesting
     static PurpleQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
         try {
+            final ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder();
 
-            ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder()
-                    .unsupportedSegments(Integer.parseInt(getValue(lines.get(5))))
-                    .ploidy(Double.parseDouble(getValue(lines.get(6))))
-                    .amberGender(Gender.valueOf(getValue(lines.get(7))))
-                    .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
-                    .deletedGenes(Integer.parseInt(getValue(lines.get(9))));
-
-            if (lines.size() == 11) {
-                builder.germlineAberrations(GermlineAberration.fromString(getValue(lines.get(10))));
+            if (lines.get(1).startsWith("SegmentPass")) {
+                // PURPLE 2.47
+                builder.unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines.get(5))))
+                        .amberGender(Gender.valueOf(getValue(lines.get(7))))
+                        .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
+                        .deletedGenes(Integer.parseInt(getValue(lines.get(9))))
+                        .copyNumberSegments(0)
+                        .purity(1)
+                        .method(FittedPurityMethod.NORMAL)
+                        .contamination(0);
+            } else {
+                builder.method(FittedPurityMethod.valueOf(getValue(lines.get(1))))
+                        .copyNumberSegments(Integer.parseInt(getValue(lines.get(2))))
+                        .unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines.get(3))))
+                        .purity(Double.parseDouble(getValue(lines.get(4))))
+                        .amberGender(Gender.valueOf(getValue(lines.get(5))))
+                        .cobaltGender(Gender.valueOf(getValue(lines.get(6))))
+                        .deletedGenes(Integer.parseInt(getValue(lines.get(7))))
+                        .contamination(Double.parseDouble(getValue(lines.get(8))))
+                        .germlineAberrations(GermlineAberration.fromString(getValue(lines.get(9))));
             }
 
             return builder.build();
         } catch (Exception e) {
-            throw new MalformedFileException("Unable to parse purple qc file.");
+            throw new MalformedFileException("Unable to parse purple qc file: " + e.toString());
         }
     }
 
@@ -69,16 +82,15 @@ public final class PurpleQCFile {
     static List<String> toLines(@NotNull final PurpleQC check) {
         final List<String> result = Lists.newArrayList();
 
-        result.add("QCStatus" + DELIMITER + check.status());
-        result.add("SegmentPass" + DELIMITER + check.segmentPass());
-        result.add("GenderPass" + DELIMITER + check.genderPass());
-        result.add("DeletedGenesPass" + DELIMITER + check.deletedGenesPass());
-        result.add("SegmentScore" + DELIMITER + check.segmentScore());
-        result.add("UnsupportedSegments" + DELIMITER + check.unsupportedSegments());
-        result.add("Ploidy" + DELIMITER + FORMATTER.format(check.ploidy()));
+        result.add("QCStatus" + DELIMITER + check.toString());
+        result.add("Method" + DELIMITER + check.method());
+        result.add("CopyNumberSegments" + DELIMITER + check.copyNumberSegments());
+        result.add("UnsupportedCopyNumberSegments" + DELIMITER + check.unsupportedCopyNumberSegments());
+        result.add("Purity" + DELIMITER + FORMATTER.format(check.purity()));
         result.add("AmberGender" + DELIMITER + check.amberGender());
         result.add("CobaltGender" + DELIMITER + check.cobaltGender());
         result.add("DeletedGenes" + DELIMITER + check.deletedGenes());
+        result.add("Contamination" + DELIMITER + check.contamination());
         result.add("GermlineAberrations" + DELIMITER + GermlineAberration.toString(check.germlineAberrations()));
         return result;
     }

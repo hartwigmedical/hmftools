@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityStatus.NO_TUMOR;
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NO_TUMOR;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYRANGE;
 
@@ -12,8 +12,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
@@ -99,7 +99,7 @@ class PurityDAO {
                 .version(result.getValue(PURITY.VERSION))
                 .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
-                .status(FittedPurityStatus.valueOf(result.getValue(PURITY.STATUS)))
+                .method(FittedPurityMethod.valueOf(result.getValue(PURITY.STATUS)))
                 .svTumorMutationalBurden(result.getValue(PURITY.SVTMB))
                 .deletedGenes(result.getValue(PURITY.DELETEDGENES))
                 .copyNumberSegments(result.getValue(PURITY.COPYNUMBERSEGMENTS))
@@ -184,8 +184,8 @@ class PurityDAO {
                         sample,
                         DatabaseUtil.decimal(bestFit.purity()),
                         purity.gender().toString(),
-                        purity.status().toString(),
-                        checks.status().toString(),
+                        purity.method().toString(),
+                        checks.toString(),
                         DatabaseUtil.decimal(bestFit.normFactor()),
                         DatabaseUtil.decimal(bestFit.score()),
                         DatabaseUtil.decimal(bestFit.somaticPenalty()),

@@ -196,13 +196,12 @@ public class PurityPloidyEstimateApplication {
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
 
-            int deletedGenes = CNADrivers.deletedGenes(geneCopyNumbers);
-
             LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(),
-                    copyNumbers,
+            final PurpleQC qcChecks = PurpleQCFactory.create(configSupplier.amberData().contamination(),
+                    bestFit,
                     amberGender,
                     cobaltGender,
+                    copyNumbers,
                     geneCopyNumbers,
                     cobaltChromosomes.germlineAberrations());
 
@@ -220,7 +219,7 @@ public class PurityPloidyEstimateApplication {
                     .germlineAberrations(cobaltChromosomes.germlineAberrations())
                     .version(version.version())
                     .bestFit(bestFit.fit())
-                    .status(bestFit.status())
+                    .method(bestFit.method())
                     .gender(cobaltGender)
                     .score(bestFit.score())
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
@@ -233,9 +232,9 @@ public class PurityPloidyEstimateApplication {
                     .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
                     .contamination(configSupplier.amberData().contamination())
                     .svTumorMutationalBurden(structuralVariants.passingBnd())
-                    .deletedGenes(deletedGenes)
+                    .deletedGenes(qcChecks.deletedGenes())
                     .copyNumberSegments(copyNumbers.size())
-                    .unsupportedCopyNumberSegments((int) copyNumbers.stream().filter(x -> !x.svSupport()).count())
+                    .unsupportedCopyNumberSegments(qcChecks.unsupportedCopyNumberSegments())
                     .build();
 
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);

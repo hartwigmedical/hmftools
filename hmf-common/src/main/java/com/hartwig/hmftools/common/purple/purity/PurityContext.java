@@ -21,7 +21,7 @@ public abstract class PurityContext {
 
     public abstract FittedPurity bestFit();
 
-    public abstract FittedPurityStatus status();
+    public abstract FittedPurityMethod method();
 
     public abstract FittedPurityScore score();
 
@@ -35,13 +35,13 @@ public abstract class PurityContext {
 
     public abstract int tumorMutationalLoad();
 
+    public abstract int svTumorMutationalBurden();
+
     public abstract int deletedGenes();
 
     public abstract int copyNumberSegments();
 
     public abstract int unsupportedCopyNumberSegments();
-
-    public abstract int svTumorMutationalBurden();
 
     public abstract double contamination();
 

@@ -48,7 +48,7 @@ public final class FittedPurityFile {
                 .score(score(values))
                 .bestFit(bestFit(values))
                 .gender(gender(values))
-                .status(status(values))
+                .method(method(values))
                 .polyClonalProportion(polyClonalProportion(values))
                 .version(values[14])
                 .wholeGenomeDuplication(Boolean.parseBoolean(values[16]))
@@ -142,7 +142,7 @@ public final class FittedPurityFile {
                 .add(FORMAT.format(purity.diploidProportion()))
                 .add(FORMAT.format(purity.ploidy()))
                 .add(String.valueOf(context.gender()))
-                .add(String.valueOf(context.status()))
+                .add(String.valueOf(context.method()))
                 .add(FORMAT.format(context.polyClonalProportion()))
                 .add(FORMAT.format(score.minPurity()))
                 .add(FORMAT.format(score.maxPurity()))
@@ -191,8 +191,8 @@ public final class FittedPurityFile {
     }
 
     @NotNull
-    private static FittedPurityStatus status(@NotNull final String[] values) {
-        return FittedPurityStatus.valueOf(values[6]);
+    private static FittedPurityMethod method(@NotNull final String[] values) {
+        return FittedPurityMethod.valueOf(values[6]);
     }
 
     @NotNull

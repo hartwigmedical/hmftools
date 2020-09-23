@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.common.purple.qc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -11,64 +13,84 @@ import org.junit.Test;
 public class PurpleQCTest {
 
     @Test
-    public void testSegmentScore() {
-        assertEquals(PurpleQCStatus.PASS, create(220, 2d).status());
-        assertEquals(PurpleQCStatus.FAIL_SEGMENT, create(221, 2d).status());
-
-        assertEquals(PurpleQCStatus.PASS, create(220, 1d).status());
-        assertEquals(PurpleQCStatus.FAIL_SEGMENT, create(221, 1d).status());
+    public void testDefault() {
+        ImmutablePurpleQC.Builder template = builder();
+        assertTrue(template.build().pass());
+        assertStatus(template, PurpleQCStatus.PASS);
     }
 
     @Test
-    public void testGenderCheck() {
-        assertEquals(PurpleQCStatus.PASS, create(Gender.MALE, Gender.MALE).status());
-        assertEquals(PurpleQCStatus.PASS, create(Gender.FEMALE, Gender.FEMALE).status());
+    public void testOldGender() {
+        ImmutablePurpleQC.Builder template = builder().amberGender(Gender.FEMALE).cobaltGender(Gender.MALE_KLINEFELTER);
+        assertStatus(template, PurpleQCStatus.PASS);
+    }
 
-        assertEquals(PurpleQCStatus.FAIL_GENDER, create(Gender.MALE, Gender.FEMALE).status());
-        assertEquals(PurpleQCStatus.FAIL_GENDER, create(Gender.FEMALE, Gender.MALE).status());
+    @Test
+    public void testGender() {
+        ImmutablePurpleQC.Builder template = builder().amberGender(Gender.FEMALE).cobaltGender(Gender.FEMALE);
+        assertStatus(template, PurpleQCStatus.PASS);
+        assertStatus(template.cobaltGender(Gender.MALE), PurpleQCStatus.WARN_GENDER_MISMATCH);
+        assertStatus(template.addGermlineAberrations(GermlineAberration.KLINEFELTER), PurpleQCStatus.PASS);
+    }
 
-        assertEquals(PurpleQCStatus.PASS, create(Gender.FEMALE, Gender.MALE, GermlineAberration.KLINEFELTER).status());
-        assertEquals(PurpleQCStatus.PASS, create(Gender.MALE, Gender.MALE).status());
+    @Test
+    public void testNoTumor() {
+        assertStatus(builder().method(FittedPurityMethod.NO_TUMOR), PurpleQCStatus.FAIL_NO_TUMOR);
+    }
+
+    @Test
+    public void testContamination() {
+        assertStatus(builder().contamination(PurpleQC.MAX_CONTAMINATION), PurpleQCStatus.PASS);
+        assertStatus(builder().contamination(PurpleQC.MAX_CONTAMINATION + 0.01), PurpleQCStatus.FAIL_CONTAMINATION);
     }
 
     @Test
     public void testDeletedGenes() {
-        assertEquals(PurpleQCStatus.PASS, create(280).status());
-        assertEquals(PurpleQCStatus.FAIL_DELETED_GENES, create(281).status());
+        assertStatus(builder().deletedGenes(PurpleQC.MAX_DELETED_GENES), PurpleQCStatus.PASS);
+        assertStatus(builder().deletedGenes(PurpleQC.MAX_DELETED_GENES + 1), PurpleQCStatus.WARN_DELETED_GENES);
+    }
+
+    @Test
+    public void testHighCopyNumberNoise() {
+        assertStatus(builder().unsupportedCopyNumberSegments(PurpleQC.MAX_UNSUPPORTED_SEGMENTS), PurpleQCStatus.PASS);
+        assertStatus(builder().unsupportedCopyNumberSegments(PurpleQC.MAX_UNSUPPORTED_SEGMENTS + 1),
+                PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
+    }
+
+    @Test
+    public void testLowPurity() {
+        assertStatus(builder().purity(PurpleQC.MIN_PURITY), PurpleQCStatus.PASS);
+        assertStatus(builder().purity(PurpleQC.MIN_PURITY - 0.01), PurpleQCStatus.WARN_LOW_PURITY);
+    }
+
+    @Test
+    public void testMultiple() {
+        PurpleQC victim = builder().purity(PurpleQC.MIN_PURITY - 0.01).contamination(PurpleQC.MAX_CONTAMINATION + 0.01).build();
+        assertStatus(victim, PurpleQCStatus.WARN_LOW_PURITY, PurpleQCStatus.FAIL_CONTAMINATION);
+    }
+
+    private void assertStatus(ImmutablePurpleQC.Builder victim, PurpleQCStatus... status) {
+        assertStatus(victim.build(), status);
+    }
+
+    private void assertStatus(PurpleQC victim, PurpleQCStatus... status) {
+        assertEquals(victim.status().size(), status.length);
+        for (PurpleQCStatus purpleQCStatus : status) {
+            assertTrue(victim.status().contains(purpleQCStatus));
+        }
     }
 
     @NotNull
-    private static PurpleQC create(int deletedGenes) {
+    private static ImmutablePurpleQC.Builder builder() {
         return ImmutablePurpleQC.builder()
-                .unsupportedSegments(1)
-                .ploidy(2)
+                .contamination(0)
+                .copyNumberSegments(100)
+                .unsupportedCopyNumberSegments(0)
+                .purity(1)
                 .amberGender(Gender.MALE)
                 .cobaltGender(Gender.MALE)
-                .deletedGenes(deletedGenes)
-                .build();
+                .deletedGenes(0)
+                .method(FittedPurityMethod.NORMAL);
     }
 
-    @NotNull
-    private static PurpleQC create(int unsupportedSegments, double ploidy) {
-        return ImmutablePurpleQC.builder()
-                .unsupportedSegments(unsupportedSegments)
-                .ploidy(ploidy)
-                .amberGender(Gender.MALE)
-                .cobaltGender(Gender.MALE)
-                .deletedGenes(1)
-                .build();
-    }
-
-    @NotNull
-    private static PurpleQC create(@NotNull final Gender amberGender, @NotNull final Gender cobaltGender,
-            @NotNull final GermlineAberration... aberrations) {
-        return ImmutablePurpleQC.builder()
-                .unsupportedSegments(1)
-                .ploidy(1)
-                .amberGender(amberGender)
-                .cobaltGender(cobaltGender)
-                .deletedGenes(1)
-                .addGermlineAberrations(aberrations)
-                .build();
-    }
 }

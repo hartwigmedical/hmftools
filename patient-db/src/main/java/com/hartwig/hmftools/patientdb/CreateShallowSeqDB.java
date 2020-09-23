@@ -95,7 +95,7 @@ public class CreateShallowSeqDB {
             PurityContext purityContext = FittedPurityFile.read(fullPurplePurityTsvPath);
             PurpleQC purpleQC = PurpleQCFile.read(fullPurpleQCFilePath);
 
-            boolean hasReliableQuality = CheckPurpleQuality.checkHasReliableQuality(purpleQC);
+            boolean hasReliableQuality = purpleQC.pass();
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
             String purity = new DecimalFormat("0.00").format(purityContext.bestFit().purity());
 

@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.common.purple.qc;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -13,47 +17,65 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleQC {
 
-    private static final int SEGMENT_THRESHOLD = 220;
-    private static final int DELETED_GENES_THRESHOLD = 280;
+    static final int MAX_UNSUPPORTED_SEGMENTS = 220;
+    static final int MAX_DELETED_GENES = 280;
+    static final double MAX_CONTAMINATION = 0.1;
+    static final double MIN_PURITY = 0.2;
 
-    @NotNull
-    public PurpleQCStatus status() {
-        if (!segmentPass()) {
-            return PurpleQCStatus.FAIL_SEGMENT;
-        }
+    public Set<PurpleQCStatus> status() {
+        Set<PurpleQCStatus> result = Sets.newHashSet();
 
         if (!genderPass()) {
-            return PurpleQCStatus.FAIL_GENDER;
+            result.add(PurpleQCStatus.WARN_GENDER_MISMATCH);
         }
 
-        if (!deletedGenesPass()) {
-            return PurpleQCStatus.FAIL_DELETED_GENES;
+        if (unsupportedCopyNumberSegments() > MAX_UNSUPPORTED_SEGMENTS) {
+            result.add(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
         }
 
-        return PurpleQCStatus.PASS;
+        if (deletedGenes() > MAX_DELETED_GENES) {
+            result.add(PurpleQCStatus.WARN_DELETED_GENES);
+        }
+
+        if (Doubles.lessThan(purity(), MIN_PURITY)) {
+            result.add(PurpleQCStatus.WARN_LOW_PURITY);
+        }
+
+        if (Doubles.greaterThan(contamination(), MAX_CONTAMINATION)) {
+            result.add(PurpleQCStatus.FAIL_CONTAMINATION);
+        }
+
+        if (method().equals(FittedPurityMethod.NO_TUMOR)) {
+            result.add(PurpleQCStatus.FAIL_NO_TUMOR);
+        }
+
+        if (result.isEmpty()) {
+            result.add(PurpleQCStatus.PASS);
+        }
+
+        return result;
     }
 
-    boolean segmentPass() {
-        return segmentScore() <= SEGMENT_THRESHOLD;
+    public abstract FittedPurityMethod method();
+
+    public boolean pass() {
+        return status().size() == 1 && status().contains(PurpleQCStatus.PASS);
     }
 
     boolean genderPass() {
-        return cobaltGender().equals(amberGender()) || germlineAberrations().contains(GermlineAberration.KLINEFELTER);
+        return cobaltGender().equals(amberGender()) || germlineAberrations().contains(GermlineAberration.KLINEFELTER)
+                || cobaltGender().equals(Gender.MALE_KLINEFELTER);
     }
 
-    boolean deletedGenesPass() {
-        return deletedGenes() <= DELETED_GENES_THRESHOLD;
-    }
+    public abstract int copyNumberSegments();
 
-    public int segmentScore() {
-        return unsupportedSegments();
-    }
-
-    abstract int unsupportedSegments();
+    public abstract int unsupportedCopyNumberSegments();
 
     public abstract int deletedGenes();
 
-    public abstract double ploidy();
+    public abstract double purity();
+
+    public abstract double contamination();
 
     @NotNull
     public abstract Gender cobaltGender();
@@ -63,4 +85,9 @@ public abstract class PurpleQC {
 
     @NotNull
     public abstract Set<GermlineAberration> germlineAberrations();
+
+    @Override
+    public String toString() {
+        return status().stream().map(Enum::toString).collect(Collectors.joining(","));
+    }
 }

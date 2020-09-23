@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.cn;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityStatus.NORMAL;
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NORMAL;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -267,7 +267,7 @@ public class CnSegmentBuilder
                 .microsatelliteStatus(UNKNOWN)
                 .polyClonalProportion(0)
                 .score(purityScore)
-                .status(NORMAL)
+                .method(NORMAL)
                 .version("1.0")
                 .wholeGenomeDuplication(false)
                 .tumorMutationalLoad(0)
