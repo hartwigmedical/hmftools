@@ -22,6 +22,7 @@ final class HealthCheckEvaluation {
     private static final double MAX_AMBER_CONTAMINATION = 0.1;
 
     private static final String PURPLE_QC_PASS = "PASS";
+    private static final String PURPLE_QC_FAIL = "FAIL";
 
     private HealthCheckEvaluation() {
     }
@@ -104,9 +105,12 @@ final class HealthCheckEvaluation {
         if (value.equals(PURPLE_QC_PASS)) {
             LOGGER.info("PASS - Purple QC value is {}", value);
             return true;
-        } else {
+        } else if (value.contains(PURPLE_QC_FAIL)) {
             LOGGER.info("FAIL - Purple QC value is {}", value);
             return false;
+        } else {
+            LOGGER.warn("WARN - Purple QC value is {}", value);
+            return true;
         }
     }
 }
