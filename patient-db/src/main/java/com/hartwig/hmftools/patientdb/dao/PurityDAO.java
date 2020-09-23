@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NO_TUMOR;
+import static com.hartwig.hmftools.common.purple.qc.PurpleQCStatus.PASS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYRANGE;
 
@@ -48,8 +49,8 @@ class PurityDAO {
         Result<Record> result = context.select()
                 .from(PURITY)
                 .where(PURITY.PURITY_.ge(minPurity))
-                .and(PURITY.STATUS.ne(NO_TUMOR.toString()))
-                .and(PURITY.QCSTATUS.eq("PASS"))
+                .and(PURITY.FITMETHOD.ne(NO_TUMOR.toString()))
+                .and(PURITY.QCSTATUS.eq(PASS.toString()))
                 .fetch();
 
         for (Record record : result) {
@@ -89,13 +90,14 @@ class PurityDAO {
                 .maxDiploidProportion(result.getValue(PURITY.MAXDIPLOIDPROPORTION))
                 .build();
 
-        final FittedPurityMethod method = FittedPurityMethod.valueOf(result.getValue(PURITY.STATUS));
+        final FittedPurityMethod method = FittedPurityMethod.valueOf(result.getValue(PURITY.FITMETHOD));
         final Gender cobaltGender = Gender.valueOf(result.getValue(PURITY.GENDER));
+        final Gender amberGender = Gender.valueOf(result.getValue(PURITY.AMBERGENDER));
         PurpleQC purpleQC = ImmutablePurpleQC.builder()
                 .copyNumberSegments(result.getValue(PURITY.COPYNUMBERSEGMENTS))
                 .unsupportedCopyNumberSegments(result.getValue(PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS))
                 .purity(actualPurity)
-                .amberGender(cobaltGender)
+                .amberGender(amberGender)
                 .cobaltGender(cobaltGender)
                 .deletedGenes(result.getValue(PURITY.DELETEDGENES))
                 .contamination(result.getValue(PURITY.CONTAMINATION))
@@ -129,8 +131,8 @@ class PurityDAO {
         Result<Record> result = context.select()
                 .from(PURITY)
                 .where(PURITY.PURITY_.ge(minPurity))
-                .and(PURITY.STATUS.ne(NO_TUMOR.toString()))
-                .and(PURITY.QCSTATUS.eq("PASS"))
+                .and(PURITY.FITMETHOD.ne(NO_TUMOR.toString()))
+                .and(PURITY.QCSTATUS.eq(PASS.toString()))
                 .fetch();
 
         for (Record record : result) {
@@ -165,7 +167,7 @@ class PurityDAO {
                 PURITY.SAMPLEID,
                 PURITY.PURITY_,
                 PURITY.GENDER,
-                PURITY.STATUS,
+                PURITY.FITMETHOD,
                 PURITY.QCSTATUS,
                 PURITY.NORMFACTOR,
                 PURITY.SCORE,
@@ -192,6 +194,7 @@ class PurityDAO {
                 PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS,
                 PURITY.CONTAMINATION,
                 PURITY.GERMLINEABERRATION,
+                PURITY.AMBERGENDER,
                 PURITY.MODIFIED)
                 .values(purity.version(),
                         sample,
@@ -224,6 +227,7 @@ class PurityDAO {
                         purity.qc().unsupportedCopyNumberSegments(),
                         purity.qc().contamination(),
                         GermlineAberration.toString(purity.qc().germlineAberrations()),
+                        purity.qc().amberGender(),
                         timestamp)
                 .execute();
     }
