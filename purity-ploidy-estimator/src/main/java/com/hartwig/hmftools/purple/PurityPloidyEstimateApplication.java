@@ -196,6 +196,8 @@ public class PurityPloidyEstimateApplication {
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
 
+            int deletedGenes = CNADrivers.deletedGenes(geneCopyNumbers);
+
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(),
                     copyNumbers,
@@ -229,6 +231,11 @@ public class PurityPloidyEstimateApplication {
                     .tumorMutationalLoadStatus(somaticStream.tumorMutationalLoadStatus())
                     .tumorMutationalBurdenPerMb(somaticStream.tumorMutationalBurdenPerMb())
                     .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
+                    .contamination(configSupplier.amberData().contamination())
+                    .svTumorMutationalBurden(structuralVariants.passingBnd())
+                    .deletedGenes(deletedGenes)
+                    .copyNumberSegments(copyNumbers.size())
+                    .unsupportedCopyNumberSegments((int) copyNumbers.stream().filter(x -> !x.svSupport()).count())
                     .build();
 
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);

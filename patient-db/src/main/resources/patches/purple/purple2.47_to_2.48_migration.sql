@@ -1,4 +1,9 @@
 ALTER TABLE purity
+    ADD COLUMN svTmb INT not null DEFAULT 0,
+    ADD COLUMN deletedGenes INT not null DEFAULT 0,
+    ADD COLUMN copyNumberSegments INT not null DEFAULT 0,
+    ADD COLUMN unsupportedCopyNumberSegments INT not null DEFAULT 0,
+    ADD COLUMN contamination DOUBLE PRECISION not null DEFAULT 0,
     ADD COLUMN germlineAberration varchar(255) not null DEFAULT "NONE";
 
 UPDATE purity set germlineAberration = "KLINEFELTER" where gender = "MALE_KLINEFELTER";

@@ -35,6 +35,16 @@ public abstract class PurityContext {
 
     public abstract int tumorMutationalLoad();
 
+    public abstract int deletedGenes();
+
+    public abstract int copyNumberSegments();
+
+    public abstract int unsupportedCopyNumberSegments();
+
+    public abstract int svTumorMutationalBurden();
+
+    public abstract double contamination();
+
     @NotNull
     public abstract Set<GermlineAberration> germlineAberrations();
 

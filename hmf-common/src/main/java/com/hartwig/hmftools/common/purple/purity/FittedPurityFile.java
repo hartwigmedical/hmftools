@@ -57,10 +57,20 @@ public final class FittedPurityFile {
                 .tumorMutationalLoad(tumorMutationalLoad(values[19]))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(values[20]))
                 .tumorMutationalBurdenPerMb(Double.parseDouble(values[21]))
-                .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]));
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]))
+                .deletedGenes(0)
+                .svTumorMutationalBurden(0)
+                .copyNumberSegments(0)
+                .unsupportedCopyNumberSegments(0)
+                .contamination(0);
 
-        if (values.length == 24) {
-            builder.germlineAberrations(GermlineAberration.fromString(values[23]));
+        if (values.length == 29) {
+            builder.svTumorMutationalBurden(Integer.parseInt(values[23]))
+                    .deletedGenes(Integer.parseInt(values[24]))
+                    .copyNumberSegments(Integer.parseInt(values[25]))
+                    .unsupportedCopyNumberSegments(Integer.parseInt(values[26]))
+                    .contamination(Double.parseDouble(values[27]))
+                    .germlineAberrations(GermlineAberration.fromString(values[28]));
         }
 
         return builder.build();
@@ -113,6 +123,11 @@ public final class FittedPurityFile {
                 .add("tmlStatus")
                 .add("tmbPerMb")
                 .add("tmbStatus")
+                .add("svTumorMutationalBurden")
+                .add("deletedGenes")
+                .add("copyNumberSegments")
+                .add("unsupportedCopyNumberSegments")
+                .add("contamination")
                 .add("germlineAberrations")
                 .toString();
     }
@@ -144,6 +159,11 @@ public final class FittedPurityFile {
                 .add(String.valueOf(context.tumorMutationalLoadStatus()))
                 .add(String.valueOf(context.tumorMutationalBurdenPerMb()))
                 .add(String.valueOf(context.tumorMutationalBurdenStatus()))
+                .add(String.valueOf(context.svTumorMutationalBurden()))
+                .add(String.valueOf(context.deletedGenes()))
+                .add(String.valueOf(context.copyNumberSegments()))
+                .add(String.valueOf(context.unsupportedCopyNumberSegments()))
+                .add(FORMAT.format(context.contamination()))
                 .add(GermlineAberration.toString(context.germlineAberrations()))
                 .toString();
     }

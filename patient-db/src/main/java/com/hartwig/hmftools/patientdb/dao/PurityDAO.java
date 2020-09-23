@@ -100,6 +100,11 @@ class PurityDAO {
                 .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
                 .status(FittedPurityStatus.valueOf(result.getValue(PURITY.STATUS)))
+                .svTumorMutationalBurden(result.getValue(PURITY.SVTMB))
+                .deletedGenes(result.getValue(PURITY.DELETEDGENES))
+                .copyNumberSegments(result.getValue(PURITY.COPYNUMBERSEGMENTS))
+                .unsupportedCopyNumberSegments(result.getValue(PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS))
+                .contamination(result.getValue(PURITY.CONTAMINATION))
                 .germlineAberrations(GermlineAberration.fromString(result.getValue(PURITY.GERMLINEABERRATION)))
                 .build();
     }
@@ -168,6 +173,11 @@ class PurityDAO {
                 PURITY.TMBSTATUS,
                 PURITY.TML,
                 PURITY.TMLSTATUS,
+                PURITY.SVTMB,
+                PURITY.DELETEDGENES,
+                PURITY.COPYNUMBERSEGMENTS,
+                PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS,
+                PURITY.CONTAMINATION,
                 PURITY.GERMLINEABERRATION,
                 PURITY.MODIFIED)
                 .values(purity.version(),
@@ -195,6 +205,11 @@ class PurityDAO {
                         purity.tumorMutationalBurdenStatus().toString(),
                         DatabaseUtil.decimal(purity.tumorMutationalLoad()),
                         purity.tumorMutationalLoadStatus().toString(),
+                        purity.svTumorMutationalBurden(),
+                        purity.deletedGenes(),
+                        purity.copyNumberSegments(),
+                        purity.unsupportedCopyNumberSegments(),
+                        purity.contamination(),
                         GermlineAberration.toString(purity.germlineAberrations()),
                         timestamp)
                 .execute();

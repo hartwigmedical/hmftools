@@ -5,7 +5,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,6 +30,13 @@ public class CNADrivers {
         this.tsGenes = panel.tsGenes();
         this.deletionTargets = panel.deletionTargets();
         this.amplificationTargets = panel.amplificationTargets();
+    }
+
+    public static int deletedGenes(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+        return (int) geneCopyNumbers.stream()
+                .filter(x -> !HumanChromosome.fromString(x.chromosome()).equals(HumanChromosome._Y) && x.germlineHet2HomRegions() == 0
+                        && x.germlineHomRegions() == 0 && Doubles.lessThan(x.minCopyNumber(), MAX_COPY_NUMBER_DEL))
+                .count();
     }
 
     @NotNull

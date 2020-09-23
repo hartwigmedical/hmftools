@@ -348,6 +348,11 @@ CREATE TABLE purity
     tmbStatus varchar(10) not null,
     tml INT not null,
     tmlStatus varchar(10) not null,
+    svTmb INT not null DEFAULT 0,
+    deletedGenes INT not null DEFAULT 0,
+    copyNumberSegments INT not null DEFAULT 0,
+    unsupportedCopyNumberSegments INT not null DEFAULT 0,
+    contamination DOUBLE PRECISION not null DEFAULT 0,
     germlineAberration varchar(255) not null DEFAULT "NONE",
     PRIMARY KEY (id),
     INDEX(sampleId)

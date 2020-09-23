@@ -71,6 +71,11 @@ public class FittedPurityFileTest {
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.HIGH)
                 .tumorMutationalLoad(random.nextInt(100_000_000))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
+                .svTumorMutationalBurden(random.nextInt())
+                .deletedGenes(random.nextInt())
+                .copyNumberSegments(random.nextInt())
+                .unsupportedCopyNumberSegments(random.nextInt())
+                .contamination(nextDouble(random))
                 .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
                 .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
                 .build();

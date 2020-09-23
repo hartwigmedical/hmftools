@@ -5,13 +5,13 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityStatus.NORMAL;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
@@ -274,6 +274,11 @@ public class CnSegmentBuilder
                 .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
                 .tumorMutationalBurdenPerMb(0)
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
+                .svTumorMutationalBurden(0)
+                .deletedGenes(0)
+                .copyNumberSegments(0)
+                .unsupportedCopyNumberSegments(0)
+                .contamination(0)
                 .build();
 
         cnDataLoader.setPurityContext(purityContext);
