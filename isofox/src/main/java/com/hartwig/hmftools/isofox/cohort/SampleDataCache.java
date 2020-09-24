@@ -92,6 +92,9 @@ public class SampleDataCache
 
             for(String item : items)
             {
+                if(item.startsWith("#"))
+                    continue;
+
                 final String[] data = item.split(DELIMITER);
 
                 final String sampleId = data[COL_SAMPLE_ID];

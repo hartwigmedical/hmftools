@@ -11,7 +11,10 @@ import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConf
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.EXT_SOURCE_SALMON;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromIsofoxGene;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromIsofoxTranscript;
+import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromRsemGene;
+import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromRsemTranscript;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromSalmon;
+import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.getExternalSourceFilename;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
@@ -231,8 +234,10 @@ public class ExternalExpressionCompare
     {
         final Map<String,ExpressionData> expressionDataMap = Maps.newHashMap();
 
-        final String filename = source.equals(EXT_SOURCE_SALMON) ?
-                String.format("%s/%s.salmon.tsv", mConfig.RootDataDir, sampleId) : null;
+        final String filename = String.format("%s/%s", mConfig.RootDataDir, getExternalSourceFilename(source, sampleId, mTransScope));
+
+        if(filename == null)
+            return expressionDataMap;
 
         try
         {
@@ -247,34 +252,47 @@ public class ExternalExpressionCompare
                 if(source.equals(EXT_SOURCE_SALMON))
                 {
                     expData = fromSalmon(data, mGeneTransMap);
-                }
-                if(source.equals(EXT_SOURCE_RSEM))
-                {
-                    // expData = fromSalmon(data, mGeneTransMap);
-                }
 
-                if(expData == null)
-                    continue;
+                    if(expData == null)
+                        continue;
 
-                if(mTransScope)
-                {
-                    expressionDataMap.put(expData.TransName, expData);
-                }
-                else
-                {
-                    ExpressionData geneExpData = expressionDataMap.get(expData.GeneId);
-
-                    if(geneExpData == null)
+                    if(mTransScope)
                     {
-                        geneExpData = new ExpressionData(source, expData.GeneId, expData.GeneName, "",
-                                0, 0, expData.readCount(), expData.tpm(), 0);
-                        expressionDataMap.put(expData.GeneId, geneExpData);
+                        expressionDataMap.put(expData.TransName, expData);
                     }
                     else
                     {
-                        geneExpData.addCounts(expData.tpm(), 0, 0, expData.readCount());
+                        // build up gene data from transcripts
+                        ExpressionData geneExpData = expressionDataMap.get(expData.GeneId);
+
+                        if(geneExpData == null)
+                        {
+                            geneExpData = new ExpressionData(source, expData.GeneId, expData.GeneName, "",
+                                    0, 0, expData.readCount(), expData.tpm(), 0);
+                            expressionDataMap.put(expData.GeneId, geneExpData);
+                        }
+                        else
+                        {
+                            geneExpData.addCounts(expData.tpm(), 0, 0, expData.readCount());
+                        }
                     }
                 }
+                else if(source.equals(EXT_SOURCE_RSEM))
+                {
+                    if(mTransScope)
+                        expData = fromRsemTranscript(data, mGeneTransMap);
+                    else
+                        expData = fromRsemGene(data, mGeneTransCache);
+
+                    if(expData == null)
+                        continue;
+
+                    if(mTransScope)
+                        expressionDataMap.put(expData.TransName, expData);
+                    else
+                        expressionDataMap.put(expData.GeneId, expData);
+                }
+
             }
         }
         catch(IOException e)
