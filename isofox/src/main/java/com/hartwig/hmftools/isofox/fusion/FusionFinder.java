@@ -700,6 +700,8 @@ public class FusionFinder implements Callable
             {
                 FusionReadData fusion1 = fusions.get(i);
 
+                boolean knownSpliceJunction = fusion1.isKnownSpliced();
+
                 int j = i + 1;
                 while(j < fusions.size())
                 {
@@ -730,7 +732,7 @@ public class FusionFinder implements Callable
                         continue;
                     }
 
-                    if(fusion1.isCloseMatch(fusion2))
+                    if(!(knownSpliceJunction && fusion2.isKnownSpliced()) && fusion1.isCloseMatch(fusion2))
                     {
                         // keep the fusion with more support, discard the other
                         if(fusion1.getFragmentTypeCount(MATCHED_JUNCTION) < fusion2.getFragmentTypeCount(MATCHED_JUNCTION))
