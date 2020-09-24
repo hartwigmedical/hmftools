@@ -2,11 +2,15 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,17 +19,16 @@ public class CNADrivers {
 
     private static final double MIN_COPY_NUMBER_RELATIVE_INCREASE = 3;
     private static final double MAX_COPY_NUMBER_DEL = 0.5;
+    private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
-    @NotNull
+    private final Set<PurpleQCStatus> qcStatus;
     private final Set<String> oncoGenes;
-    @NotNull
     private final Set<String> tsGenes;
-    @NotNull
     private final Set<String> amplificationTargets;
-    @NotNull
     private final Set<String> deletionTargets;
 
-    public CNADrivers(DriverGenePanel panel) {
+    public CNADrivers(Set<PurpleQCStatus> qcStatus, DriverGenePanel panel) {
+        this.qcStatus = qcStatus;
         this.oncoGenes = panel.oncoGenes();
         this.tsGenes = panel.tsGenes();
         this.deletionTargets = panel.deletionTargets();
@@ -41,9 +44,14 @@ public class CNADrivers {
 
     @NotNull
     public List<DriverCatalog> amplifications(final double ploidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+        Predicate<GeneCopyNumber> qcStatusPredicate = qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE)
+                ? CNADrivers::supportedByOneSV
+                : x -> true;
+
         return geneCopyNumbers.stream()
                 .filter(x -> x.minCopyNumber() / ploidy > MIN_COPY_NUMBER_RELATIVE_INCREASE)
                 .filter(x -> oncoGenes.contains(x.gene()) | amplificationTargets.contains(x.gene()))
+                .filter(qcStatusPredicate)
                 .map(x -> ImmutableDriverCatalog.builder()
                         .chromosome(x.chromosome())
                         .chromosomeBand(x.chromosomeBand())
@@ -67,11 +75,15 @@ public class CNADrivers {
 
     @NotNull
     public List<DriverCatalog> deletions(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+        Predicate<GeneCopyNumber> qcStatusPredicate = qcStatus.contains(PurpleQCStatus.WARN_DELETED_GENES) || qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE)
+                ? x -> supportedByTwoSVs(x) || shortAndSupportedByOneSVAndMere(x)
+                : x -> true;
 
         return geneCopyNumbers.stream()
                 .filter(x -> x.minCopyNumber() < MAX_COPY_NUMBER_DEL)
                 .filter(x -> tsGenes.contains(x.gene()) | deletionTargets.contains(x.gene()))
                 .filter(x -> x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0)
+                .filter(qcStatusPredicate)
                 .map(x -> ImmutableDriverCatalog.builder()
                         .chromosome(x.chromosome())
                         .chromosomeBand(x.chromosomeBand())
@@ -91,5 +103,29 @@ public class CNADrivers {
                         .maxCopyNumber(x.maxCopyNumber())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    static boolean supportedByOneSV(@NotNull final GeneCopyNumber geneCopyNumber) {
+        return geneCopyNumber.minRegionStartSupport().isSV() || geneCopyNumber.minRegionEndSupport().isSV();
+    }
+
+    static boolean supportedByTwoSVs(@NotNull final GeneCopyNumber geneCopyNumber) {
+        return geneCopyNumber.minRegionStartSupport().isSV() && geneCopyNumber.minRegionEndSupport().isSV();
+    }
+
+    static boolean shortAndSupportedByOneSVAndMere(@NotNull final GeneCopyNumber geneCopyNumber) {
+        if (geneCopyNumber.minRegionBases() >= 10_000_000) {
+            return false;
+        }
+
+        if (MERE.contains(geneCopyNumber.minRegionStartSupport())) {
+            return geneCopyNumber.minRegionEndSupport().isSV();
+        }
+
+        if (MERE.contains(geneCopyNumber.minRegionEndSupport())) {
+            return geneCopyNumber.minRegionStartSupport().isSV();
+        }
+
+        return false;
     }
 }

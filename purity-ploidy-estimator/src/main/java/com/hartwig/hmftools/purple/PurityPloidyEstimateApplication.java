@@ -248,7 +248,7 @@ public class PurityPloidyEstimateApplication {
             final List<DriverCatalog> driverCatalog = Lists.newArrayList();
             if (configSupplier.driverCatalogConfig().enabled()) {
                 LOGGER.info("Generating driver catalog");
-                final CNADrivers cnaDrivers = new CNADrivers(configSupplier.driverCatalogConfig().genePanel());
+                final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), configSupplier.driverCatalogConfig().genePanel());
                 driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
                 driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
                 driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));

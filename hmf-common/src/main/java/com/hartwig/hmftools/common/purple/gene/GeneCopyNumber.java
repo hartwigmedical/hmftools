@@ -28,6 +28,10 @@ public interface GeneCopyNumber extends TranscriptRegion {
 
     long minRegionEnd();
 
+    default long minRegionBases() {
+        return minRegionEnd() - minRegionStart() + 1;
+    }
+
     SegmentSupport minRegionStartSupport();
 
     SegmentSupport minRegionEndSupport();

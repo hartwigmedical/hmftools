@@ -1,11 +1,7 @@
 package com.hartwig.hmftools.common.purple.qc;
 
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.INF;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -15,13 +11,10 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.BestFit;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class PurpleQCFactory {
-
-    private static final EnumSet<SegmentSupport> INTERNAL = EnumSet.of(NONE, CENTROMERE, TELOMERE, INF);
 
     private PurpleQCFactory() {
     }
@@ -30,8 +23,11 @@ public final class PurpleQCFactory {
     public static PurpleQC create(double contamination, @NotNull BestFit bestFit, @NotNull Gender amberGender, @NotNull Gender cobaltGender,
             @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull List<GeneCopyNumber> geneCopyNumbers,
             @NotNull final Set<GermlineAberration> aberrations) {
+        boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleCopyNumber::svSupport);
 
-        int unsupportedCopyNumberSegments = (int) copyNumbers.stream().filter(x -> !x.svSupport()).count();
+        int unsupportedCopyNumberSegments = containsAnySvSupport ? (int) copyNumbers.stream()
+                .filter(x -> x.segmentStartSupport() == NONE && x.segmentEndSupport() == NONE)
+                .count() : 0;
         int deletedGenes = CNADrivers.deletedGenes(geneCopyNumbers);
 
         return ImmutablePurpleQC.builder()

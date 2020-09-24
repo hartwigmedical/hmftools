@@ -2,14 +2,18 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,9 +30,103 @@ public class CNADriversTest {
         GeneCopyNumber germline1 = createTestCopyNumberBuilder(driverGenes.get(1)).germlineHet2HomRegions(1).germlineHomRegions(0).build();
         GeneCopyNumber germline2 = createTestCopyNumberBuilder(driverGenes.get(2)).germlineHet2HomRegions(0).germlineHomRegions(1).build();
 
-        List<DriverCatalog> drivers = new CNADrivers(genePanel).deletions(Lists.newArrayList(somatic, germline1, germline2));
+        List<DriverCatalog> drivers = new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).deletions(Lists.newArrayList(somatic,
+                germline1,
+                germline2));
         assertEquals(1, drivers.size());
         assertEquals(somatic.gene(), drivers.get(0).gene());
+    }
+
+    @Test
+    public void testAmpWithWarn() {
+        String gene = Lists.newArrayList(genePanel.amplificationTargets()).get(0);
+        GeneCopyNumber ampNoSupport = createTestCopyNumberBuilder(gene).gene(gene)
+                .minCopyNumber(100)
+                .minRegionStartSupport(SegmentSupport.NONE)
+                .minRegionEndSupport(SegmentSupport.NONE)
+                .build();
+
+        GeneCopyNumber ampStartSupport =
+                ImmutableGeneCopyNumber.builder().from(ampNoSupport).minRegionStartSupport(SegmentSupport.BND).build();
+        GeneCopyNumber ampEndSupport = ImmutableGeneCopyNumber.builder().from(ampNoSupport).minRegionEndSupport(SegmentSupport.BND).build();
+        GeneCopyNumber ampBothSupport = ImmutableGeneCopyNumber.builder()
+                .from(ampNoSupport)
+                .minRegionStartSupport(SegmentSupport.BND)
+                .minRegionEndSupport(SegmentSupport.BND)
+                .build();
+
+        Set<PurpleQCStatus> warnDeletedGenes = Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES);
+        assertEquals(1, new CNADrivers(warnDeletedGenes, genePanel).amplifications(1, Collections.singletonList(ampNoSupport)).size());
+
+        Set<PurpleQCStatus> warnCopyNumber = Sets.newHashSet(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
+        assertEquals(0, new CNADrivers(warnCopyNumber, genePanel).amplifications(1, Collections.singletonList(ampNoSupport)).size());
+        assertEquals(1, new CNADrivers(warnCopyNumber, genePanel).amplifications(1, Collections.singletonList(ampStartSupport)).size());
+        assertEquals(1, new CNADrivers(warnCopyNumber, genePanel).amplifications(1, Collections.singletonList(ampEndSupport)).size());
+        assertEquals(1, new CNADrivers(warnCopyNumber, genePanel).amplifications(1, Collections.singletonList(ampBothSupport)).size());
+    }
+
+    @Test
+    public void testDelWithWarn() {
+        String gene = Lists.newArrayList(genePanel.deletionTargets()).get(0);
+        GeneCopyNumber longDelNoSupport = createTestCopyNumberBuilder(gene).gene(gene)
+                .minRegionStart(1)
+                .minRegionEnd(100_000_000)
+                .minCopyNumber(0.01)
+                .minRegionStartSupport(SegmentSupport.NONE)
+                .minRegionEndSupport(SegmentSupport.NONE)
+                .build();
+
+        GeneCopyNumber longDelStartSupport = ImmutableGeneCopyNumber.builder()
+                .from(longDelNoSupport)
+                .minRegionStartSupport(SegmentSupport.BND)
+                .minRegionEndSupport(SegmentSupport.TELOMERE)
+                .build();
+        GeneCopyNumber longDelEndSupport =ImmutableGeneCopyNumber.builder()
+                .from(longDelNoSupport)
+                .minRegionStartSupport(SegmentSupport.CENTROMERE)
+                .minRegionStartSupport(SegmentSupport.BND)
+                .build();
+
+        GeneCopyNumber shortDelStartSupport = ImmutableGeneCopyNumber.builder()
+                .from(longDelNoSupport)
+                .minRegionStartSupport(SegmentSupport.BND)
+                .minRegionEndSupport(SegmentSupport.TELOMERE)
+                .minRegionStart(1)
+                .minRegionEnd(100)
+                .build();
+
+        GeneCopyNumber shortDelEndSupport =ImmutableGeneCopyNumber.builder()
+                .from(longDelNoSupport)
+                .minRegionStartSupport(SegmentSupport.CENTROMERE)
+                .minRegionEndSupport(SegmentSupport.BND)
+                .minRegionStart(1)
+                .minRegionEnd(100)
+                .build();
+
+        GeneCopyNumber longDelBothSupport = ImmutableGeneCopyNumber.builder()
+                .from(longDelNoSupport)
+                .minRegionStartSupport(SegmentSupport.BND)
+                .minRegionEndSupport(SegmentSupport.BND)
+                .build();
+
+        Set<PurpleQCStatus> noWarn = Sets.newHashSet();
+        assertEquals(1, new CNADrivers(noWarn, genePanel).deletions(Collections.singletonList(longDelNoSupport)).size());
+
+        Set<PurpleQCStatus> warnDeletedGenes = Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES);
+        assertEquals(0, new CNADrivers(warnDeletedGenes, genePanel).deletions(Collections.singletonList(longDelNoSupport)).size());
+        assertEquals(0, new CNADrivers(warnDeletedGenes, genePanel).deletions(Collections.singletonList(longDelStartSupport)).size());
+        assertEquals(0, new CNADrivers(warnDeletedGenes, genePanel).deletions(Collections.singletonList(longDelEndSupport)).size());
+        assertEquals(1, new CNADrivers(warnDeletedGenes, genePanel).deletions(Collections.singletonList(shortDelStartSupport)).size());
+        assertEquals(1, new CNADrivers(warnDeletedGenes, genePanel).deletions(Collections.singletonList(shortDelEndSupport)).size());
+        assertEquals(1, new CNADrivers(warnDeletedGenes, genePanel).deletions(Collections.singletonList(longDelBothSupport)).size());
+
+        Set<PurpleQCStatus> warnCopyNumber = Sets.newHashSet(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
+        assertEquals(0, new CNADrivers(warnCopyNumber, genePanel).deletions(Collections.singletonList(longDelNoSupport)).size());
+        assertEquals(0, new CNADrivers(warnCopyNumber, genePanel).deletions(Collections.singletonList(longDelStartSupport)).size());
+        assertEquals(0, new CNADrivers(warnCopyNumber, genePanel).deletions(Collections.singletonList(longDelEndSupport)).size());
+        assertEquals(1, new CNADrivers(warnCopyNumber, genePanel).deletions(Collections.singletonList(shortDelStartSupport)).size());
+        assertEquals(1, new CNADrivers(warnCopyNumber, genePanel).deletions(Collections.singletonList(shortDelEndSupport)).size());
+        assertEquals(1, new CNADrivers(warnCopyNumber, genePanel).deletions(Collections.singletonList(longDelBothSupport)).size());
     }
 
     @NotNull
