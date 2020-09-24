@@ -324,8 +324,7 @@ class ExtendDiploidBAF {
         return isSmallRegionFlankedByLOH(inferRegion, regions) && distance > LOH_MAX_NEAREST_DISTANCE;
     }
 
-    private static boolean isSmallRegionFlankedByLOH(@NotNull final InferRegion inferRegion,
-            @NotNull final List<CombinedRegion> regions) {
+    private static boolean isSmallRegionFlankedByLOH(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         return isSmallRegion(LOH_SMALL_REGION_SIZE, inferRegion, regions) && isFlankedByLOH(inferRegion, regions);
     }
 

@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,8 +25,10 @@ class ExtractGermlineDeletions {
         final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
 
         final List<CombinedRegion> result = Lists.newArrayList();
-        for (final CombinedRegion parent : regions) {
-            result.addAll(extractChildren(eligibleStatus, parent));
+        for (int i = 0; i < regions.size(); i++) {
+            final CombinedRegion parent = regions.get(i);
+            final SegmentSupport next = i == regions.size() - 1 ? SegmentSupport.TELOMERE : regions.get(i + 1).support();
+            result.addAll(extractChildren(eligibleStatus, parent, next));
         }
 
         return result;
@@ -33,24 +36,25 @@ class ExtractGermlineDeletions {
 
     @NotNull
     private List<CombinedRegion> extractChildren(@NotNull final EnumSet<GermlineStatus> eligibleStatus,
-            @NotNull final CombinedRegion parent) {
+            @NotNull final CombinedRegion parent, @NotNull final SegmentSupport parentNext) {
         final List<CombinedRegion> children = Lists.newArrayList();
 
         double baf = parent.tumorBAF();
         double copyNumber = parent.tumorCopyNumber();
         for (int i = 0; i < parent.regions().size(); i++) {
             final FittedRegion child = parent.regions().get(i);
+            final SegmentSupport childNext = i == parent.regions().size() - 1 ? parentNext : parent.regions().get(i + 1).support();
 
             if (eligibleStatus.contains(child.status())) {
                 if (child.status().equals(GermlineStatus.HET_DELETION)) {
                     final double upperBound = upperBound(child);
                     if (Doubles.lessThan(upperBound, Math.min(0.5, copyNumber))) {
-                        children.add(createChild(child, upperBound, baf));
+                        children.add(createChild(child, upperBound, baf, childNext));
                     }
                 }
 
                 if (child.status().equals(GermlineStatus.HOM_DELETION)) {
-                    children.add(createChild(child, child.refNormalisedCopyNumber(), baf));
+                    children.add(createChild(child, child.refNormalisedCopyNumber(), baf, childNext));
                 }
             }
         }
@@ -59,10 +63,11 @@ class ExtractGermlineDeletions {
     }
 
     @NotNull
-    private static CombinedRegion createChild(@NotNull final FittedRegion child, double newCopyNumber, double newBaf) {
-        final CombinedRegion result = new CombinedRegionImpl(child);
+    private static CombinedRegion createChild(@NotNull final FittedRegion child, double newCopyNumber, double newBaf, SegmentSupport next) {
+        final CombinedRegionImpl result = new CombinedRegionImpl(child);
         result.setTumorCopyNumber(method(child), newCopyNumber);
         result.setInferredTumorBAF(newBaf);
+        result.setGermlineEndSupport(next);
         return result;
     }
 
