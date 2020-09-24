@@ -7,13 +7,15 @@ public class FeaturePrevData
     public final String CancerType;
     public final String Gene;
     public final FeatureType Type;
-    public double Prevalence; // can be adjusted
+    public final double RawPrevalence;
+    public double Prevalence;
 
     public FeaturePrevData(final String cancerType, final String gene, final FeatureType type, final double prevalence)
     {
         CancerType = cancerType;
         Gene = gene;
         Type = type;
+        RawPrevalence = prevalence;
         Prevalence = prevalence;
     }
 
@@ -26,6 +28,7 @@ public class FeaturePrevData
         return new FeaturePrevData(items[0], items[1], FeatureType.valueOf(items[2]), Double.parseDouble(items[3]));
     }
 
-    public String toString() { return String.format("ct(%s) gene(%s) type(%s) prev(%.4f)", CancerType, Gene, Type, Prevalence); }
+    public String toString() { return String.format("ct(%s) gene(%s) type(%s) prev(%.4f adj=%.4f)",
+            CancerType, Gene, Type, RawPrevalence, Prevalence); }
 
 }

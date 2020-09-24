@@ -111,7 +111,7 @@ public class FeatureAnnotation
                 final FeaturePrevData driverPrev = driverPrevalences.stream()
                         .filter(x -> x.Gene.equals(feature.Name)).findFirst().orElse(null);
 
-                cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.Prevalence : 0);
+                cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.RawPrevalence : 0);
             }
 
             final String featureName = feature.Likelihood == 1 ?
@@ -197,7 +197,6 @@ public class FeatureAnnotation
     {
         // taking the set of drivers as a group, report on the combined probability for each cancer type
         final Map<String, Double> cancerProbTotals = Maps.newHashMap();
-        double allCancerProbTotal = 0;
 
         final Set<String> allGenes = Sets.newHashSet();
         allSampleFeatures.forEach(x -> allGenes.add(x.Name));
@@ -266,7 +265,6 @@ public class FeatureAnnotation
             probabilityTotal *= getFeaturesPerSampleRatio(cancerType);
 
             cancerProbTotals.put(cancerType, probabilityTotal);
-            allCancerProbTotal += probabilityTotal;
         }
 
         SampleResult result = new SampleResult(
