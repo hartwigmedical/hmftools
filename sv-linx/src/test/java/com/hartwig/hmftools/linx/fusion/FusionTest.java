@@ -319,7 +319,7 @@ public class FusionTest
 
         // set known fusion genes
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
-                .addData(new KnownFusionData(KNOWN_PAIR, geneName1, geneName2, "", "", ""));
+                .addData(new KnownFusionData(KNOWN_PAIR, geneName1, geneName2, "", ""));
 
         // test 1: create a chain of DELs with a single-SV fusion which link between exon 2-3 of upstream to 2-3 of downstream
 

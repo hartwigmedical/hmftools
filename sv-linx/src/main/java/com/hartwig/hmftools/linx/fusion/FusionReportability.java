@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
@@ -52,7 +51,7 @@ public class FusionReportability
 
         if(upTrans.gene().type() == SGL || downTrans.gene().type() == SGL)
         {
-            if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != KNOWN_PAIR_UNMAPPABLE_3)
+            if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != IG_KNOWN_PAIR)
                 return false;
         }
 
@@ -194,8 +193,7 @@ public class FusionReportability
 
     private static boolean allowExonSkipping(final KnownFusionType type)
     {
-        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS
-                || type == KNOWN_PAIR_UNMAPPABLE_3 || type == EXON_DEL_DUP);
+        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS || type == EXON_DEL_DUP);
     }
 
 }

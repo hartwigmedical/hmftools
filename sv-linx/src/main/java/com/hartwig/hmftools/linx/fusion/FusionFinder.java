@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
@@ -472,15 +471,15 @@ public class FusionFinder
         final List<Transcript> candidateTranscripts = downGene.transcripts().stream()
                 .filter(x -> x.codingType().equals(UTR_5P)).collect(Collectors.toList());
 
-        KnownFusionData knownFusionData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
+        KnownFusionData kfData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
                 .filter(x -> x.ThreeGene.equals(downGene.GeneName))
                 .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
                 .findFirst().orElse(null);
 
-        if(knownFusionData != null)
+        if(kfData != null)
         {
             // a known IG-partner gene
-            if(knownFusionData.downstreamDistance() > 0)
+            if(kfData.downstreamDistance(FS_DOWNSTREAM) > 0)
             {
                 candidateTranscripts.addAll(downGene.transcripts().stream().filter(x -> x.postCoding()).collect(Collectors.toList()));
             }
@@ -489,30 +488,18 @@ public class FusionFinder
         }
         else
         {
-            knownFusionData = mKnownFusionCache.getDataByType(KNOWN_PAIR_UNMAPPABLE_3).stream()
-                    .filter(x -> x.ThreeGene.equals(downGene.GeneName))
+            kfData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
                     .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
                     .findFirst().orElse(null);
 
-            if(knownFusionData != null)
-            {
-                knownType = KNOWN_PAIR_UNMAPPABLE_3;
-            }
-            else
-            {
-                knownFusionData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
-                        .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
-                        .findFirst().orElse(null);
+            // check within the promiscuous region bounds
+            if(kfData == null)
+                return;
 
-                // check within the promiscuous region bounds
-                if(knownFusionData == null)
-                    return;
-
-                knownType = IG_PROMISCUOUS;
-            }
+            knownType = IG_PROMISCUOUS;
         }
 
-        final Transcript upTrans = generateIgTranscript(igGene, knownFusionData);
+        final Transcript upTrans = generateIgTranscript(igGene, kfData);
 
         if(!candidateTranscripts.isEmpty())
         {
@@ -688,11 +675,6 @@ public class FusionFinder
         if(mKnownFusionCache.hasKnownFusion(upGene, downGene))
         {
             geneFusion.setKnownType(KNOWN_PAIR);
-            return;
-        }
-        else if(mKnownFusionCache.hasKnownUnmappable3Fusion(upGene, downGene))
-        {
-            geneFusion.setKnownType(KNOWN_PAIR_UNMAPPABLE_3);
             return;
         }
 

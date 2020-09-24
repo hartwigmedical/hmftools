@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
@@ -229,45 +230,40 @@ public class FusionDisruptionAnalyser
 
     public void cacheSpecialFusionGenes()
     {
-        for(final KnownFusionData knownPair : mFusionFinder.getKnownFusionCache().getDataByType(KNOWN_PAIR))
+        for(final KnownFusionData kfData : mFusionFinder.getKnownFusionCache().getData())
         {
-            if(knownPair.downstreamDistance() > 0)
+            if(kfData.downstreamDistance(FS_UPSTREAM) > 0)
             {
-                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(knownPair.FiveGene);
+                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(kfData.FiveGene);
                 if(geneData != null)
                 {
-                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, knownPair.downstreamDistance());
+                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_UPSTREAM));
                 }
             }
-        }
 
-        for(final KnownFusionData igDownstreamGene : mFusionFinder.getKnownFusionCache().getDataByType(IG_KNOWN_PAIR))
-        {
-            if(igDownstreamGene.downstreamDistance() > 0)
+            if(kfData.downstreamDistance(FS_DOWNSTREAM) > 0)
             {
-                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(igDownstreamGene.ThreeGene);
+                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
                 if(geneData != null)
                 {
-                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, igDownstreamGene.downstreamDistance());
+                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_DOWNSTREAM));
                 }
             }
-        }
 
-        for(final KnownFusionData altMappingGene : mFusionFinder.getKnownFusionCache().getDataByType(KNOWN_PAIR_UNMAPPABLE_3))
-        {
-            final String geneName = altMappingGene.ThreeGene;
-
-            final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(geneName);
-
-            if(geneData != null)
+            if(!kfData.getThreeGeneAltRegions().isEmpty())
             {
-                if(mGeneDataCache.getAlternativeGeneData().stream().anyMatch(x -> x.GeneId.equals(geneData.GeneId)))
-                    continue;
+                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
 
-                for(final SvRegion altRegion : altMappingGene.getThreeGeneAltRegions())
+                if(geneData != null)
                 {
-                    mGeneDataCache.getAlternativeGeneData().add(new EnsemblGeneData(
-                            geneData.GeneId, geneData.GeneName, altRegion.Chromosome, geneData.Strand, altRegion.start(), altRegion.end(), ""));
+                    if(mGeneDataCache.getAlternativeGeneData().stream().anyMatch(x -> x.GeneId.equals(geneData.GeneId)))
+                        continue;
+
+                    for(final SvRegion altRegion : kfData.getThreeGeneAltRegions())
+                    {
+                        mGeneDataCache.getAlternativeGeneData().add(new EnsemblGeneData(
+                                geneData.GeneId, geneData.GeneName, altRegion.Chromosome, geneData.Strand, altRegion.start(), altRegion.end(), ""));
+                    }
                 }
             }
         }
@@ -841,7 +837,7 @@ public class FusionDisruptionAnalyser
         {
             // limit to known fusion genes
             final List<GeneAnnotation> genesList = var.getGenesList(false);
-            return genesList.stream().filter(x -> mFusionFinder.getKnownFusionCache().matchesKnownFusionGene(x)).collect(Collectors.toList());
+            return genesList.stream().filter(x -> mFusionFinder.getKnownFusionCache().isSingleBreakendCandidate(x)).collect(Collectors.toList());
         }
 
         if(mRestrictedGenes.isEmpty())

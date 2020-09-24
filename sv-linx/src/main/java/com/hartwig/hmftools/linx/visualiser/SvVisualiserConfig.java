@@ -322,7 +322,7 @@ public interface SvVisualiserConfig
             if (currentExons.stream().anyMatch(x -> x.gene().equals(geneName)))
                 continue;
 
-            LOGGER.info("loading exon data for additional gene({}}", geneName);
+            LOGGER.info("loading exon data for additional gene({})", geneName);
 
             if(geneTransCache != null)
             {

@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -66,7 +65,7 @@ public class SpecialFusionsTest
 
         // mark as 3' promiscuous
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
-                .addData(new KnownFusionData(PROMISCUOUS_3, "", GENE_NAME_1, "", "", ""));
+                .addData(new KnownFusionData(PROMISCUOUS_3, "", GENE_NAME_1, "", ""));
 
         List<GeneAnnotation> upGenes = Lists.newArrayList();
         int upPos = 1950;
@@ -109,9 +108,11 @@ public class SpecialFusionsTest
 
         String transName = generateTransName(TRANS_1);
 
-        String knownDelRegion = String.format("%s;%d;%d;%d;%d", transName, 2, 3, 5, 6);
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
-                new KnownFusionData(EXON_DEL_DUP, GENE_NAME_1, GENE_NAME_1, "", "", knownDelRegion));
+        // String knownDelRegion = String.format("%s;%d;%d;%d;%d", transName, 2, 3, 5, 6);
+
+        KnownFusionData kfData = new KnownFusionData(EXON_DEL_DUP, GENE_NAME_1, GENE_NAME_1, "", "");
+        kfData.setKnownExonData(transName, "2;3", "5;6");
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
         FusionParameters params = new FusionParameters();
         params.RequirePhaseMatch = true;
@@ -173,9 +174,11 @@ public class SpecialFusionsTest
 
         transName = generateTransName(transId);
 
-        knownDelRegion = String.format("%s;%d;%d;%d;%d", transName, 2, 5, 10, 14);
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
-                new KnownFusionData(EXON_DEL_DUP, geneId, geneId, "", "", knownDelRegion));
+        kfData = new KnownFusionData(EXON_DEL_DUP, geneId, geneId, "", "");
+        kfData.setKnownExonData(transName, "2;5", "10;14");
+
+        // knownDelRegion = String.format("%s;%d;%d;%d;%d", transName, 2, 5, 10, 14);
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
         upGenes.clear();
         downGenes.clear();
@@ -256,13 +259,17 @@ public class SpecialFusionsTest
 
         addTransExonData(geneTransCache, geneId3, transDataList);
 
-        final String igRegion = String.format("%d;%s;%d;%d;%d", NEG_STRAND, chromosome, 50, 2000, 0);
+        final String igRegion = String.format("IG_RANGE=%d;%s;%d;%d", NEG_STRAND, chromosome, 50, 2000);
 
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
-                new KnownFusionData(IG_KNOWN_PAIR, geneName, geneName2, "", "", igRegion));
+        KnownFusionData kfData = new KnownFusionData(IG_KNOWN_PAIR, geneName, geneName2, "", "");
+        kfData.applyOverrides(igRegion);
 
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(
-                new KnownFusionData(IG_PROMISCUOUS, geneName, "", "", "", igRegion));
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
+
+        kfData = new KnownFusionData(IG_PROMISCUOUS, geneName, "", "", "");
+        kfData.applyOverrides(igRegion);
+
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
         FusionParameters params = new FusionParameters();
         params.RequirePhaseMatch = true;
@@ -324,8 +331,9 @@ public class SpecialFusionsTest
         PRE_GENE_PROMOTOR_DISTANCE = 200;
 
         // set known fusion gene for the SGL breakend
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
-                .addData(new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, GENE_NAME_2, "", "", ""));
+
+        KnownFusionData kfData = new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, GENE_NAME_2, "", "");
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
         // test 1: a SGL by itself
         int varId = 1;
@@ -357,7 +365,6 @@ public class SpecialFusionsTest
         sgl1 = createSgl(varId++, CHR_1, 10150, NEG_ORIENT);
 
         sgl1.getSglMappings().add(new SglMapping(CHR_1, 1150, POS_ORIENT, "", 1));
-
 
         SvVarData var1 = createDel(varId++, CHR_1, 14000,15000);
 
@@ -490,17 +497,19 @@ public class SpecialFusionsTest
 
         addTransExonData(geneTransCache, igGeneId, transDataList);
 
-        final String igRegionStr = String.format("%d;%s;%d;%d;%d", POS_STRAND, CHR_4, 50, 2000, 0);
+        final String igRegionStr = String.format("IG_RANGE=%d;%s;%d;%d", POS_STRAND, CHR_4, 50, 2000);
 
         // set known fusion gene for the SGL breakend
-        final String threeAltMapping = String.format("ALT;1;20000;25000;ALT;GS;50000;60000");
+        final String threeAltMapping = String.format("ALTS=ALT;1;20000;25000;ALT;GS;50000;60000");
 
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
-                .addData(new KnownFusionData(KNOWN_PAIR_UNMAPPABLE_3, GENE_NAME_1, GENE_NAME_3, "", "", threeAltMapping));
+        KnownFusionData kfData = new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, GENE_NAME_3, "", "");
+        kfData.applyOverrides(threeAltMapping);
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
-        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
-                .addData(new KnownFusionData(KNOWN_PAIR_UNMAPPABLE_3, igGeneName, GENE_NAME_3, "", "",
-                        String.format("%s;%s", igRegionStr, threeAltMapping)));
+        kfData = new KnownFusionData(IG_KNOWN_PAIR, igGeneName, GENE_NAME_3, "", "");
+        kfData.applyOverrides(String.format("%s %s", igRegionStr, threeAltMapping));
+
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
         tester.FusionAnalyser.cacheSpecialFusionGenes();
 
@@ -525,7 +534,9 @@ public class SpecialFusionsTest
         assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
         assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
         assertTrue(fusion.reportable());
-        assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
+
+        assertEquals(KNOWN_PAIR, fusion.knownType());
+        //assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
 
         // try again but to an alternate mapping location
 
@@ -550,7 +561,9 @@ public class SpecialFusionsTest
         assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
         assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
         assertTrue(fusion.reportable());
-        assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
+
+        assertEquals(KNOWN_PAIR, fusion.knownType());
+        // assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
 
         // test again but using an IG region for the 5' gene
         tester.clearClustersAndSVs();
@@ -572,7 +585,7 @@ public class SpecialFusionsTest
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
         assertTrue(fusion.reportable());
-        assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
+        assertEquals(IG_KNOWN_PAIR, fusion.knownType());
         assertEquals(igGeneName, fusion.upstreamTrans().geneName());
         assertEquals(GENE_NAME_3, fusion.downstreamTrans().geneName());
     }

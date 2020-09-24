@@ -4,9 +4,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR_UNMAPPABLE_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
@@ -34,18 +32,20 @@ public class KnownFusionCache
     private final List<KnownFusionData> mData;
     private final Map<KnownFusionType,List<KnownFusionData>> mDataByType;
 
+    private final List<KnownFusionData> mKnownPairData; // cached since so commonly checked
     private final List<KnownFusionData> mIgRegionData;
 
     public static final String KNOWN_FUSIONS_FILE = "known_fusion_file";
     private static final String FILE_DELIMITER = ",";
 
-    private static final Logger LOGGER = LogManager.getLogger(KnownFusionCache.class);
+    public static final Logger KF_LOGGER = LogManager.getLogger(KnownFusionCache.class);
 
     public KnownFusionCache()
     {
         mData = Lists.newArrayList();
         mDataByType = Maps.newHashMap();
         mIgRegionData = Lists.newArrayList();
+        mKnownPairData = Lists.newArrayList();
 
         // initialise to avoid having to check for null
         Arrays.stream(KnownFusionType.values()).filter(x -> x != NONE).forEach(x -> mDataByType.put(x, Lists.newArrayList()));
@@ -61,19 +61,22 @@ public class KnownFusionCache
 
     public boolean hasKnownUnmappable3Fusion(final String fiveGene, final String threeGene)
     {
-        return mDataByType.get(KNOWN_PAIR_UNMAPPABLE_3).stream().anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
+        return mKnownPairData.stream()
+                .filter(x -> !x.getThreeGeneAltRegions().isEmpty())
+                .anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
     }
 
-    public boolean matchesKnownFusionGene(final GeneAnnotation gene)
+    public boolean isSingleBreakendCandidate(final GeneAnnotation gene)
     {
-        if(mDataByType.get(KNOWN_PAIR).stream()
-            .anyMatch(x -> (gene.isUpstream() && x.FiveGene.equals(gene.GeneName))
+        if(mKnownPairData.stream()
+                .anyMatch(x -> (gene.isUpstream() && x.FiveGene.equals(gene.GeneName))
                     || (!gene.isUpstream() && x.ThreeGene.equals(gene.GeneName))))
         {
             return true;
         }
 
-        if(mDataByType.get(KNOWN_PAIR_UNMAPPABLE_3).stream()
+        if(mDataByType.get(IG_KNOWN_PAIR).stream()
+                .filter(x -> !x.getThreeGeneAltRegions().isEmpty())
                 .anyMatch(x -> !gene.isUpstream() && x.ThreeGene.equals(gene.GeneName)))
         {
             return true;
@@ -94,19 +97,19 @@ public class KnownFusionCache
 
     public boolean hasKnownPairGene(final String gene)
     {
-        return mDataByType.get(KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(gene) || x.ThreeGene.equals(gene));
+        return mKnownPairData.stream().anyMatch(x -> x.FiveGene.equals(gene) || x.ThreeGene.equals(gene));
     }
 
     public boolean isExonDelDupTrans(final String transName)
     {
-        return mDataByType.get(EXON_DEL_DUP).stream().anyMatch(x -> x.specificTransName().equals(transName));
+        return mDataByType.get(EXON_DEL_DUP).stream().anyMatch(x -> x.specificExonsTransName().equals(transName));
     }
 
     public boolean isExonDelDup(final String geneName, final String transName, int fusedExonUp, int fusedExonDown)
     {
         for(final KnownFusionData knownData : mDataByType.get(EXON_DEL_DUP))
         {
-            if(!knownData.FiveGene.equals(geneName) || !knownData.specificTransName().equals(transName))
+            if(!knownData.FiveGene.equals(geneName) || !knownData.specificExonsTransName().equals(transName))
                 continue;
 
             if(fusedExonUp >= knownData.minFusedExons()[FS_UPSTREAM] && fusedExonUp <= knownData.maxFusedExons()[FS_UPSTREAM]
@@ -147,7 +150,7 @@ public class KnownFusionCache
             }
         }
 
-        LOGGER.info("loaded known fusion data: {}", refDataStr.toString());
+        KF_LOGGER.info("loaded known fusion data: {}", refDataStr.toString());
         return true;
     }
 
@@ -155,6 +158,9 @@ public class KnownFusionCache
     {
         mData.add(data);
         mDataByType.get(data.Type).add(data);
+
+        if(data.Type == KNOWN_PAIR)
+            mKnownPairData.add(data);
 
         if(data.igRegion() != null)
             mIgRegionData.add(data);
@@ -164,7 +170,7 @@ public class KnownFusionCache
     {
         if (!Files.exists(Paths.get(filename)))
         {
-            LOGGER.error("file({}) not found", filename);
+            KF_LOGGER.error("file({}) not found", filename);
             return false;
         }
 
@@ -187,13 +193,13 @@ public class KnownFusionCache
                 }
                 catch (Exception e)
                 {
-                    LOGGER.error("file({}) invalid known fusion data will be skipped: {}", filename, data);
+                    KF_LOGGER.error("file({}) invalid known fusion data will be skipped: {}", filename, data);
                 }
             }
         }
         catch (IOException e)
         {
-            LOGGER.error("file({}) invalid known fusion data: {}", filename, e.toString());
+            KF_LOGGER.error("file({}) invalid known fusion data: {}", filename, e.toString());
             return false;
         }
 

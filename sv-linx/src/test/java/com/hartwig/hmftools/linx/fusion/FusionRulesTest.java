@@ -219,7 +219,7 @@ public class FusionRulesTest
         assertTrue(checkFusionLogic(trans1, trans2, params) != null);
 
         FusionFinder fusionFinder = new FusionFinder(null, null);
-        fusionFinder.getKnownFusionCache().addData(new KnownFusionData(KNOWN_PAIR, gene1.GeneName, gene2.GeneName, "", "", ""));
+        fusionFinder.getKnownFusionCache().addData(new KnownFusionData(KNOWN_PAIR, gene1.GeneName, gene2.GeneName, "", ""));
         gene1.addTranscript(trans1);
         gene2.addTranscript(trans2);
         final List<GeneFusion> fusions = fusionFinder.findFusions(Lists.newArrayList(gene1), Lists.newArrayList(gene2), params, false);
