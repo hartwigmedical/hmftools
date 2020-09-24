@@ -597,7 +597,7 @@ tml | 182 | Tumor mutational load (# of missense variants in sample)
 tmlStatus | HIGH | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
 germlineAbberation | NONE | Any germline chromosomal abberations detected.  Can be one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X}
 fitMethod | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
-qcStatus | PASS | Either PASS or one or more warning or fail statuss.  Warnings include 'WARN_DELETED_GENES' (Deleted Genes > X), 'WARN_HIGH_COPY_NUMBER_NOISE' (Count), 'FAIL_CONTAMINATION' (contamination > 10%), FAIL_NO_TUMOR (no tumor detected), 'WARN_GENDER_MISMATCH' (amber and cobalt determined gender don't match) or 'WARN_LOW_PURITY' (purity < 20%) 
+qcStatus | PASS | Either PASS or one or more warning or fail statuss.  Warnings include 'WARN_DELETED_GENES', 'WARN_HIGH_COPY_NUMBER_NOISE', 'FAIL_CONTAMINATION', FAIL_NO_TUMOR, 'WARN_GENDER_MISMATCH' or 'WARN_LOW_PURITY
 copyNumberSegments | 462 | Total number of copy number segments in sample
 unsupportedCopyNumberSegments | 256 | Count of copy number segments with no SV support on either side.  A high number is an indicator of poor sample quality
 svTmb | 168 | Total number of non inferred, non single passing structural variants detected in sample
