@@ -8,8 +8,5 @@ public enum CopyNumberMethod {
     HOMOZYGOUS_DELETION,
     GERMLINE_HOM_DELETION,
     GERMLINE_HET2HOM_DELETION,
-    NON_DIPLOID,
-
-
-    GERMLINE_AMPLIFICATION // TODO: Delete after next database reload
+    NON_DIPLOID
 }
