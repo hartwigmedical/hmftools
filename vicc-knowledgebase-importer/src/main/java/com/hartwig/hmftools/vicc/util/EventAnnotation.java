@@ -10,7 +10,6 @@ public enum EventAnnotation {
     GENE_LEVEL,
     GENE_RANGE_CODON,
     GENE_RANGE_EXON,
-    UNMAPPED_EVENT,
     IGNORED_EVENT,
-    UNKNOWN
+    UNMAPPED_EVENT
 }

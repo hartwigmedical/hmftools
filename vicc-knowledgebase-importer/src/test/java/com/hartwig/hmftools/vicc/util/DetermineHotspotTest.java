@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.vicc.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -9,49 +10,49 @@ public class DetermineHotspotTest {
 
     @Test
     public void canAssessWhetherFeatureIsProteinAnnotation() {
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("K5N"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("L2230V"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("V5del"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("L755_T759del"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("L755_T756delinsPP"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("D770delinsGY"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("G10dup"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("G10fs"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("G10fs*"));
-        assertTrue(DetermineHotspot.isResolvableProteinAnnotation("*10L"));
+        assertTrue(DetermineHotspot.isHotspot("K5N"));
+        assertTrue(DetermineHotspot.isHotspot("L2230V"));
+        assertTrue(DetermineHotspot.isHotspot("V5del"));
+        assertTrue(DetermineHotspot.isHotspot("L755_T759del"));
+        assertTrue(DetermineHotspot.isHotspot("L755_T756delinsPP"));
+        assertTrue(DetermineHotspot.isHotspot("D770delinsGY"));
+        assertTrue(DetermineHotspot.isHotspot("G10dup"));
+        assertTrue(DetermineHotspot.isHotspot("G10fs"));
+        assertTrue(DetermineHotspot.isHotspot("G10fs*"));
+        assertTrue(DetermineHotspot.isHotspot("*10L"));
 
         // Just plain wrong protein annotations
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation(Strings.EMPTY));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("truncating"));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("20LtoV"));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("L20"));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("LP"));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("L"));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("L2"));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("L20Pdel5"));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("fs"));
+        assertFalse(DetermineHotspot.isHotspot(Strings.EMPTY));
+        assertFalse(DetermineHotspot.isHotspot("truncating"));
+        assertFalse(DetermineHotspot.isHotspot("20LtoV"));
+        assertFalse(DetermineHotspot.isHotspot("L20"));
+        assertFalse(DetermineHotspot.isHotspot("LP"));
+        assertFalse(DetermineHotspot.isHotspot("L"));
+        assertFalse(DetermineHotspot.isHotspot("L2"));
+        assertFalse(DetermineHotspot.isHotspot("L20Pdel5"));
+        assertFalse(DetermineHotspot.isHotspot("fs"));
 
         // Splice variants are ignored by hotspot extractor:
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("963_D1010splice"));
+        assertFalse(DetermineHotspot.isHotspot("963_D1010splice"));
 
         // Frameshifts which also change the codon in which the frame is shifted are ignored.
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("G20Pfs"));
+        assertFalse(DetermineHotspot.isHotspot("G20Pfs"));
 
         // Frameshifts which are preceded by stop codon are ignored.
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("G20*fs"));
+        assertFalse(DetermineHotspot.isHotspot("G20*fs"));
 
         // Not a correctly formatted insert (position not clear)
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("T599insTT"));
+        assertFalse(DetermineHotspot.isHotspot("T599insTT"));
 
         // Inframe event is too long
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("L4_T40del"));
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("L698_S1037dup"));
+        assertFalse(DetermineHotspot.isHotspot("L4_T40del"));
+        assertFalse(DetermineHotspot.isHotspot("L698_S1037dup"));
 
         // Wild-type mutations are ignored
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("V600X"));
+        assertFalse(DetermineHotspot.isHotspot("V600X"));
 
         // Mutations with logical OR are ignored
-        assertFalse(DetermineHotspot.isResolvableProteinAnnotation("V600E/K"));
+        assertFalse(DetermineHotspot.isHotspot("V600E/K"));
     }
 
 }

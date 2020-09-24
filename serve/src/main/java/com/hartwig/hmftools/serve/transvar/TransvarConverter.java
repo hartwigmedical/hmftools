@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.serve.transvar;
 
-import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_DELETION;
-import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_DUPLICATION;
-import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_INSERTION;
-import static com.hartwig.hmftools.vicc.util.HgvsConstants.HGVS_RANGE_INDICATOR;
+import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_DELETION;
+import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_DUPLICATION;
+import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_INSERTION;
+import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_RANGE_INDICATOR;
 
 import java.util.Arrays;
 import java.util.List;
