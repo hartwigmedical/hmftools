@@ -583,7 +583,6 @@ Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
 WholeGenomeDuplication | true | True if more than 10 autosomes have major allele copy number > 1.5
 [Gender](#1-sex-determination) | MALE | One of `MALE` or `FEMALE`
-[Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 MinPurity | 0.95 | Minimum purity with score within 10% of best
 MaxPurity | 1.00 | Maximum purity with score within 10% of best
 MinPloidy | 3.08 | Minimum ploidy with score within 10% of best 
@@ -594,6 +593,16 @@ tmbPerMb | 13.6352 | Tumor mutational burden (#passing variants per Mb) per mega
 tmbStatus | HIGH | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb
 tml | 182 | Tumor mutational load (# of missense variants in sample)
 tmlStatus | HIGH | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
+germlineAbberation | NONE | Any germline chromosomal abberations detected.  Can be one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X}
+fitMethod | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
+qcStatus | PASS | Either PASS or one or more warning or fail statuss.  Warnings include 'WARN_DELETED_GENES' (Deleted Genes > X), 'WARN_HIGH_COPY_NUMBER_NOISE' (Count), 'FAIL_CONTAMINATION' (contamination > 10%), FAIL_NO_TUMOR (no tumor detected), 'WARN_GENDER_MISMATCH' (amber and cobalt determined gender don't match),
+'WARN_LOW_PURITY' (purity < 20%) 
+copyNumberSegments | 462 | Total number of copy number segments in sample
+unsupportedCopyNumberSegments | 256 | Count of copy number segments with no SV support on either side.  A high number is an indicator of poor sample quality
+svTmb | 168 | Total number of non inferred, non single passing structural variants detected in sample
+contamination | 0.003 | rate of contamination in tumor sample as determined by Amber.
+
+
 
 #### Purity Range File
 
