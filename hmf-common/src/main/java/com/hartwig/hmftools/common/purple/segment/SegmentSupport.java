@@ -27,7 +27,17 @@ public enum SegmentSupport {
     }
 
     public static SegmentSupport fromVariant(StructuralVariantType type) {
-        return SegmentSupport.valueOf(type.toString());
+        switch (type) {
+            case INF: return INF;
+            case BND: return BND;
+            case DEL: return DEL;
+            case INS: return INS;
+            case DUP: return DUP;
+            case INV: return INV;
+            case SGL: return SGL;
+        }
+
+        throw new IllegalArgumentException("Unknown variant type: " + type);
     }
 
 }
