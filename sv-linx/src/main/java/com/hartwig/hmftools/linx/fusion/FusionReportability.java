@@ -27,12 +27,18 @@ public class FusionReportability
 {
     public static boolean couldBeReportable(GeneFusion fusion)
     {
+        if(fusion.alwaysReport())
+            return true;
+
         if(fusion.neoEpitopeOnly())
             return false;
 
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         if (fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
             return false;
+
+        if(fusion.knownExons() && (fusion.knownType() == PROMISCUOUS_5 || fusion.knownType() == PROMISCUOUS_3))
+            return true;
 
         final Transcript upTrans = fusion.upstreamTrans();
         final Transcript downTrans = fusion.downstreamTrans();

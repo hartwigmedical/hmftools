@@ -24,7 +24,8 @@ public abstract class LinxFusion
     public abstract String name();
     public abstract boolean reported();
     public abstract String reportedType();
-    public abstract boolean phased();
+    public abstract FusionPhasedType phased();
+    public abstract FusionLikelihoodType likelihood();
     public abstract int chainLength();
     public abstract int chainLinks();
     public abstract boolean chainTerminated();
@@ -88,6 +89,7 @@ public abstract class LinxFusion
                 .add("Reported")
                 .add("ReportedType")
                 .add("Phased")
+                .add("Likelihood")
                 .add("ChainLength")
                 .add("ChainLinks")
                 .add("ChainTerminated")
@@ -117,6 +119,7 @@ public abstract class LinxFusion
                 .add(String.valueOf(fusion.reported()))
                 .add(String.valueOf(fusion.reportedType()))
                 .add(String.valueOf(fusion.phased()))
+                .add(String.valueOf(fusion.likelihood()))
                 .add(String.valueOf(fusion.chainLength()))
                 .add(String.valueOf(fusion.chainLinks()))
                 .add(String.valueOf(fusion.chainTerminated()))
@@ -148,7 +151,8 @@ public abstract class LinxFusion
                 .name(values[index++])
                 .reported(Boolean.parseBoolean(values[index++]))
                 .reportedType(values[index++])
-                .phased(Boolean.parseBoolean(values[index++]))
+                .phased(FusionPhasedType.valueOf(values[index++]))
+                .likelihood(FusionLikelihoodType.valueOf(values[index++]))
                 .chainLength(Integer.parseInt(values[index++]))
                 .chainLinks(Integer.parseInt(values[index++]))
                 .chainTerminated(Boolean.parseBoolean(values[index++]))

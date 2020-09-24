@@ -13,6 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep17;
+import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -120,7 +122,7 @@ public class StructuralVariantFusionDAO {
         }
 
         for (List<LinxFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep17 fusionInserter = context.insertInto(SVFUSION,
+            InsertValuesStep18 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
                     SVFUSION.FIVEPRIMEBREAKENDID,
@@ -129,6 +131,7 @@ public class StructuralVariantFusionDAO {
                     SVFUSION.REPORTED,
                     SVFUSION.REPORTEDTYPE,
                     SVFUSION.PHASED,
+                    SVFUSION.LIKELIHOOD,
                     SVFUSION.CHAINLENGTH,
                     SVFUSION.CHAINLINKS,
                     SVFUSION.CHAINTERMINATED,
@@ -154,7 +157,8 @@ public class StructuralVariantFusionDAO {
                         fusion.name(),
                         fusion.reported(),
                         fusion.reportedType(),
-                        fusion.phased(),
+                        fusion.phased().toString(),
+                        fusion.likelihood().toString(),
                         fusion.chainLength(),
                         fusion.chainLinks(),
                         fusion.chainTerminated(),
@@ -185,7 +189,7 @@ public class StructuralVariantFusionDAO {
                     .name(record.getValue(SVFUSION.NAME))
                     .reported(record.getValue(SVFUSION.REPORTED) == 1)
                     .reportedType(record.getValue(SVFUSION.REPORTEDTYPE))
-                    .phased(record.getValue(SVFUSION.PHASED) == 1)
+                    .phased(FusionPhasedType.valueOf(record.getValue(SVFUSION.PHASED)))
                     .chainLength(record.getValue(SVFUSION.CHAINLENGTH))
                     .chainLinks(record.getValue(SVFUSION.CHAINLINKS))
                     .chainTerminated(record.getValue(SVFUSION.CHAINTERMINATED) == 1)

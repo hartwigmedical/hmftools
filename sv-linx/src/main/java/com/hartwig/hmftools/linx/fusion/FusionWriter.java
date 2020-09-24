@@ -88,7 +88,8 @@ public class FusionWriter
                     .name(geneFusion.name())
                     .reported(geneFusion.reportable())
                     .reportedType(geneFusion.knownTypeStr())
-                    .phased(geneFusion.phaseMatched())
+                    .phased(geneFusion.phaseType())
+                    .likelihood(geneFusion.likelihoodType())
                     .chainLength(geneFusion.getChainLength())
                     .chainLinks(geneFusion.getChainLinks())
                     .chainTerminated(geneFusion.isTerminated())
@@ -135,7 +136,7 @@ public class FusionWriter
             {
                 mFusionWriter = createBufferedWriter(mOutputDir + "LNX_FUSIONS.csv", false);
 
-                mFusionWriter.write("SampleId,Reportable,KnownType,PhaseMatched,ClusterId,ClusterCount,ResolvedType");
+                mFusionWriter.write("SampleId,Reportable,KnownType,Phased,KnownExons,ClusterId,ClusterCount,ResolvedType");
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
@@ -202,8 +203,9 @@ public class FusionWriter
             writer.write(String.format("%s,%s,%s",
                     sampleId, fusion.reportable(), fusion.knownTypeStr()));
 
-            writer.write(String.format(",%s,%d,%d,%s",
-                    fusion.phaseMatched(), annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
+            writer.write(String.format(",%s,%s,%d,%d,%s",
+                    fusion.phaseType(), fusion.knownExons(),
+                    annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
 
             // write upstream SV, transcript and exon info
             for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)

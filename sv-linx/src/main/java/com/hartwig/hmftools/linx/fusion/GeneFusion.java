@@ -9,15 +9,21 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.UPSTREAM_STR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOTH;
+import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.INFRAME;
+import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.OUT_OF_FRAME;
+import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.SKIPPED_EXONS;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 
 public class GeneFusion
 {
@@ -28,6 +34,8 @@ public class GeneFusion
     private int[] mExonsSkipped;
     private KnownFusionType mKnownFusionType;
     private final boolean[] mIsPromiscuous;
+    private boolean mKnownExons;
+    private boolean mAlwaysReport;
     private boolean mNeoEpitopeOnly;
 
     private FusionAnnotations mAnnotations;
@@ -44,6 +52,8 @@ public class GeneFusion
         mIsPromiscuous = new boolean[] { false, false };
         mPhaseMatched = phaseMatched;
         mExonsSkipped = new int[] { 0, 0 };
+        mKnownExons = false;
+        mAlwaysReport = false;
         mNeoEpitopeOnly = false;
         mAnnotations = null;
         mPriority = 0;
@@ -91,12 +101,31 @@ public class GeneFusion
     public KnownFusionType knownType() { return mKnownFusionType; }
     public boolean[] isPromiscuous() { return mIsPromiscuous; }
 
-    public void setKnownType(KnownFusionType type)
+    public void setKnownType(KnownFusionType type) { mKnownFusionType = type; }
+
+    public boolean phaseMatched() { return mPhaseMatched; }
+
+    public FusionPhasedType phaseType()
     {
-        mKnownFusionType = type;
+        if(!mPhaseMatched)
+            return OUT_OF_FRAME;
+
+        return mExonsSkipped[FS_UPSTREAM] > 0 || mExonsSkipped[FS_DOWNSTREAM] > 0 ? SKIPPED_EXONS : INFRAME;
     }
 
-    public boolean phaseMatched(){ return mPhaseMatched; }
+    public FusionLikelihoodType likelihoodType()
+    {
+        if(mKnownFusionType == KNOWN_PAIR || mKnownFusionType == EXON_DEL_DUP || mKnownFusionType == IG_KNOWN_PAIR || mKnownExons)
+            return FusionLikelihoodType.HIGH;
+        else
+            return FusionLikelihoodType.LOW;
+    }
+
+    public void setKnownExons() { mKnownExons = true; }
+    public boolean knownExons() { return mKnownExons; }
+
+    public void setAlwaysReport() { mAlwaysReport = true; }
+    public boolean alwaysReport() { return mAlwaysReport; }
 
     public void setExonsSkipped(int exonsUp, int exonsDown)
     {

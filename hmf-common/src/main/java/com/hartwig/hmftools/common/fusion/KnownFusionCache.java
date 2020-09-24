@@ -34,6 +34,7 @@ public class KnownFusionCache
 
     private final List<KnownFusionData> mKnownPairData; // cached since so commonly checked
     private final List<KnownFusionData> mIgRegionData;
+    private final List<KnownFusionData> mAlwaysReportedData;
 
     public static final String KNOWN_FUSIONS_FILE = "known_fusion_file";
     private static final String FILE_DELIMITER = ",";
@@ -46,6 +47,7 @@ public class KnownFusionCache
         mDataByType = Maps.newHashMap();
         mIgRegionData = Lists.newArrayList();
         mKnownPairData = Lists.newArrayList();
+        mAlwaysReportedData = Lists.newArrayList();
 
         // initialise to avoid having to check for null
         Arrays.stream(KnownFusionType.values()).filter(x -> x != NONE).forEach(x -> mDataByType.put(x, Lists.newArrayList()));
@@ -105,18 +107,49 @@ public class KnownFusionCache
         return mDataByType.get(EXON_DEL_DUP).stream().anyMatch(x -> x.specificExonsTransName().equals(transName));
     }
 
-    public boolean isExonDelDup(final String geneName, final String transName, int fusedExonUp, int fusedExonDown)
+    public boolean isKnownExonRange(final KnownFusionType knownType, final String transName, int fusedExonUp, int fusedExonDown)
     {
-        for(final KnownFusionData knownData : mDataByType.get(EXON_DEL_DUP))
+        for(final KnownFusionData knownData : mDataByType.get(knownType))
         {
-            if(!knownData.FiveGene.equals(geneName) || !knownData.specificExonsTransName().equals(transName))
+            if(!knownData.specificExonsTransName().equals(transName))
                 continue;
+
+            if(knownType == PROMISCUOUS_5 && fusedExonUp >= knownData.minFusedExons()[FS_UPSTREAM]
+            && fusedExonUp <= knownData.maxFusedExons()[FS_UPSTREAM])
+                return true;
+
+            if(knownType == PROMISCUOUS_3 && fusedExonDown >= knownData.minFusedExons()[FS_DOWNSTREAM]
+            && fusedExonDown <= knownData.maxFusedExons()[FS_DOWNSTREAM])
+                return true;
 
             if(fusedExonUp >= knownData.minFusedExons()[FS_UPSTREAM] && fusedExonUp <= knownData.maxFusedExons()[FS_UPSTREAM]
             && fusedExonDown >= knownData.minFusedExons()[FS_DOWNSTREAM] && fusedExonDown <= knownData.maxFusedExons()[FS_DOWNSTREAM])
             {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    public boolean alwaysReport(final KnownFusionType knownType, final String fiveGene, final String threeGene)
+    {
+        for(final KnownFusionData knownData : mAlwaysReportedData)
+        {
+            if(knownData.Type != knownType)
+                continue;
+
+            if(knownData.Type == KNOWN_PAIR && knownData.FiveGene.equals(fiveGene) && knownData.ThreeGene.equals(threeGene))
+                return true;
+
+            if(knownData.Type == EXON_DEL_DUP && knownData.FiveGene.equals(fiveGene))
+                return true;
+
+            if(knownData.Type == PROMISCUOUS_5 && knownData.FiveGene.equals(fiveGene))
+                return true;
+
+            if((knownData.Type == PROMISCUOUS_3 || knownData.Type == IG_KNOWN_PAIR) && knownData.ThreeGene.equals(threeGene))
+                return true;
         }
 
         return false;
@@ -164,6 +197,9 @@ public class KnownFusionCache
 
         if(data.igRegion() != null)
             mIgRegionData.add(data);
+
+        if(data.alwaysReport())
+            mAlwaysReportedData.add(data);
     }
 
     private boolean loadFile(final String filename)

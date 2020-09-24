@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType.HIGH;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
@@ -165,6 +166,7 @@ public class FusionFinder
                             continue;
 
                         setKnownFusionType(geneFusion);
+                        setAlwaysReport(geneFusion);
                         potentialFusions.add(geneFusion);
                     }
                 }
@@ -507,7 +509,7 @@ public class FusionFinder
             {
                 GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
                 fusion.setKnownType(knownType);
-                potentialFusions.add(fusion);
+                    potentialFusions.add(fusion);
             }
         }
     }
@@ -680,11 +682,12 @@ public class FusionFinder
 
         if(upGene.equals(downGene))
         {
-            if(mKnownFusionCache.isExonDelDup(
-                    upGene, geneFusion.transcripts()[FS_UPSTREAM].StableId,
+            if(mKnownFusionCache.isKnownExonRange(
+                    EXON_DEL_DUP, geneFusion.transcripts()[FS_UPSTREAM].StableId,
                     geneFusion.getFusedExon(true), geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownType(EXON_DEL_DUP);
+                geneFusion.setKnownExons();
                 return;
             }
 
@@ -697,6 +700,13 @@ public class FusionFinder
         {
             geneFusion.setKnownType(PROMISCUOUS_3);
             geneFusion.isPromiscuous()[FS_DOWNSTREAM] = true;
+
+            if(mKnownFusionCache.isKnownExonRange(
+                    PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWNSTREAM].StableId,
+                    geneFusion.getFusedExon(true), geneFusion.getFusedExon(false)))
+            {
+                geneFusion.setKnownExons();
+            }
         }
 
         if(mKnownFusionCache.hasPromiscuousFiveGene(upGene))
@@ -704,6 +714,23 @@ public class FusionFinder
             // will override promiscuous 3 but will show as PROM_BOTH in subsequent output
             geneFusion.setKnownType(PROMISCUOUS_5);
             geneFusion.isPromiscuous()[FS_UPSTREAM] = true;
+
+            if(mKnownFusionCache.isKnownExonRange(
+                    PROMISCUOUS_5, geneFusion.transcripts()[FS_UPSTREAM].StableId,
+                    geneFusion.getFusedExon(true), geneFusion.getFusedExon(false)))
+            {
+                geneFusion.setKnownExons();
+            }
         }
     }
+
+    private void setAlwaysReport(GeneFusion geneFusion)
+    {
+        if(geneFusion.knownType() == NONE)
+            return;
+
+        if(mKnownFusionCache.alwaysReport(geneFusion.knownType(), geneFusion.geneName(FS_UPSTREAM), geneFusion.geneName(FS_DOWNSTREAM)))
+            geneFusion.setAlwaysReport();
+    }
+
 }
