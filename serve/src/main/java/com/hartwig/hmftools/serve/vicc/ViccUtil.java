@@ -115,7 +115,7 @@ public final class ViccUtil {
                 writer.write(EventAnnotation.UNMAPPED_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                         + feature + "\n");
             } else {
-                writer.write(EventAnnotation.IGNORE_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                writer.write(EventAnnotation.IGNORED_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                         + feature + "\n");
             }
         }

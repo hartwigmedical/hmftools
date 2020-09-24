@@ -5,36 +5,26 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
-import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
-import com.hartwig.hmftools.vicc.util.DetermineHotspot;
+import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class DocmExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(DocmExtractor.class);
-
     @NotNull
-    private final ProteinToHotspotConverter proteinToHotspotConverter;
+    private final ProteinResolver proteinResolver;
 
-    public DocmExtractor(@NotNull final ProteinToHotspotConverter proteinToHotspotConverter) {
-        this.proteinToHotspotConverter = proteinToHotspotConverter;
+    public DocmExtractor(@NotNull final ProteinResolver proteinResolver) {
+        this.proteinResolver = proteinResolver;
     }
 
     @NotNull
     public Map<DocmEntry, List<VariantHotspot>> extractFromDocmEntries(@NotNull List<DocmEntry> entries) {
         Map<DocmEntry, List<VariantHotspot>> hotspotsPerEntry = Maps.newHashMap();
         for (DocmEntry entry : entries) {
-            if (DetermineHotspot.isResolvableProteinAnnotation(entry.proteinAnnotation())) {
-                hotspotsPerEntry.put(entry,
-                        proteinToHotspotConverter.resolveProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
-            } else {
-                LOGGER.warn("Cannot resolve DoCM protein annotation: '{}''",
-                        ProteinKeyFormatter.toProteinKey(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
-            }
-        } return hotspotsPerEntry;
+            hotspotsPerEntry.put(entry,
+                    proteinResolver.extractHotspotsFromProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
+        }
+        return hotspotsPerEntry;
     }
 }
