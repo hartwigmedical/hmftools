@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve;
+package com.hartwig.hmftools.serve.hotspot.tools;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -26,13 +26,13 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class AnnotatedVCFSimplifier {
+public class AnnotatedHotspotVCFSimplifier {
 
-    private static final Logger LOGGER = LogManager.getLogger(AnnotatedVCFSimplifier.class);
+    private static final Logger LOGGER = LogManager.getLogger(AnnotatedHotspotVCFSimplifier.class);
 
     public static void main(String[] args) throws IOException {
         String annotatedInputVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots.vcf";
-        new AnnotatedVCFSimplifier().run(annotatedInputVcf);
+        new AnnotatedHotspotVCFSimplifier().run(annotatedInputVcf);
     }
 
     public void run(@NotNull String annotatedInputVcf) throws IOException {

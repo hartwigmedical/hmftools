@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve;
+package com.hartwig.hmftools.serve.hotspot.tools;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,9 +25,9 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class ServeAnnotatedHotspotVCFChecker {
+public class AnnotatedHotspotVCFChecker {
 
-    private static final Logger LOGGER = LogManager.getLogger(ServeAnnotatedHotspotVCFChecker.class);
+    private static final Logger LOGGER = LogManager.getLogger(AnnotatedHotspotVCFChecker.class);
     private static final boolean LOG_DEBUG = false;
 
     private static final String NO_INPUT_PROTEIN = "-";
@@ -42,7 +42,7 @@ public class ServeAnnotatedHotspotVCFChecker {
         }
 
         String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots.vcf";
-        new ServeAnnotatedHotspotVCFChecker().run(annotatedHotspotVcf);
+        new AnnotatedHotspotVCFChecker().run(annotatedHotspotVcf);
     }
 
     public void run(@NotNull String annotatedVcfFilePath) throws IOException {

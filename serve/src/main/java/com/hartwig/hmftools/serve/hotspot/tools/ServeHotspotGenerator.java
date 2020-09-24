@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve;
+package com.hartwig.hmftools.serve.hotspot.tools;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -11,6 +11,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.docm.DocmEntry;
 import com.hartwig.hmftools.serve.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.docm.DocmFileReader;
