@@ -88,7 +88,6 @@ public final class LoadClinicalData {
 
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
-    private static final String TUMOR_LOCATION_SYMLINK = "tumor_location_symlink";
 
     private static final String TUMOR_LOCATION_MAPPING_CSV = "tumor_location_mapping_csv";
     private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
@@ -141,7 +140,6 @@ public final class LoadClinicalData {
         if (cmd.hasOption(DO_CURATE_TUMOR_LOCATIONS)) {
 
             DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
-                    Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
                     patients.values());
         }
 
@@ -597,7 +595,6 @@ public final class LoadClinicalData {
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
         options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");
-        options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of tumor location csv symlink.");
 
         options.addOption(TUMOR_LOCATION_MAPPING_CSV, true, "Path towards to the CSV of mapping the tumor location.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");
