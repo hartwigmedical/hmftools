@@ -30,9 +30,9 @@ For coding mutations the driver likelihood algorithm depends on the configured '
 
 Characteristic | "ONCO" | "TSG"
 ---|---|---
-Pathogenic variants (assigned driver likelihood 1) | Hotspot; Inframe (excluding repeat count > 8)
+Pathogenic variants (assigned driver likelihood 1) | Hotspot; Inframe (excluding repeat count > 8) | Hotspot; Biallelic splice, indel and nonsense
 Biallelic mutations | Ignored in dnds calculations | For bialllelic mutations, biallelic TMB only used in passenger likelihood. For non biallelic, the full TMB is used
-Multi-hit | Maximum likelihood used. Highest ranked variant used only in dnds calculation (missense & Inframe ranked first) | Multiple mutations are additive (product of probabilities used).  For non bialllelic variants highest 2 ranked variants used in dnds calcluations (nonsense & splice ranked first)
+Multi-hit | Maximum likelihood used. Highest ranked variant used only in dnds calculation (missense & inframe ranked first) | Multiple mutations are additive (product of probabilities used).  For non bialllelic variants highest 2 ranked variants used in dnds calcluations (nonsense & splice ranked first)
 Non-biallelic frameshift/Splice/Nonsense | No special treatment | driverLikelihood=max(selflikelihood,missenseDriverLikelihood)
 
 For point mutations, we first determine a list of variants hat are highly likely to be drivers and/or highly unlikely to have occurred as passengers as driver likelihood of 1 as per the table above.   For the remaining point mutation variants these are only assigned a > 0 driver likelihood where there is a remaining excess of unallocated drivers based on the calculated dNdS rates in that gene across the cohort after applying the above rules. Any remaining point mutations are assigned a driver likelihood between 0 and 1 using a bayesian statistic to calculate a sample specific likelihood of each gene based on the type of variant observed (missense, nonsense, splice or INDEL) and taking into account the mutational load of the sample.   
