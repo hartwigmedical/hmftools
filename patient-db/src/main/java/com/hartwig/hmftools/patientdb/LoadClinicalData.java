@@ -138,6 +138,7 @@ public final class LoadClinicalData {
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
 
         if (cmd.hasOption(DO_CURATE_TUMOR_LOCATIONS)) {
+            LOGGER.info("Curate tumor locations");
 
             DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
             DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
