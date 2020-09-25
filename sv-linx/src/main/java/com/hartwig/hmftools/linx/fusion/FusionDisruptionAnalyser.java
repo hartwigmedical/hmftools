@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.couldBeReportable;
-import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportableFusion;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -906,10 +906,10 @@ public class FusionDisruptionAnalyser
 
     private final List<GeneFusion> extractUniqueFusions()
     {
-        // from the list of all potential fusions, collect up all reportable ones, and then the highest priority fusion
+        // from the list of all potential fusions, find the highest priority fusion
         // from amongst the those with the same gene-pairing and/or SV Id
-        List<GeneFusion> uniqueFusions = mFusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
 
+        List<GeneFusion> uniqueFusions = Lists.newArrayList();
         List<String> genePairs = Lists.newArrayList();
 
         if(!mLogRepeatedGenePairs)
@@ -924,7 +924,7 @@ public class FusionDisruptionAnalyser
 
         for(GeneFusion fusion : mFusions)
         {
-            if(fusion.reportable() || genePairs.contains(fusion.name()))
+            if(genePairs.contains(fusion.name()))
                 continue;
 
             if(usedSvIds.contains(fusion.upstreamTrans().gene().id()) || usedSvIds.contains(fusion.downstreamTrans().gene().id()))
@@ -938,7 +938,6 @@ public class FusionDisruptionAnalyser
             List<GeneFusion> similarFusions = Lists.newArrayList(fusion);
 
             similarFusions.addAll(mFusions.stream()
-                    .filter(x -> !x.reportable())
                     .filter(x -> persistFusion(x) && !x.neoEpitopeOnly())
                     .filter(x -> x != fusion)
                     .filter(x -> x.name().equals(fusion.name()))
@@ -948,7 +947,7 @@ public class FusionDisruptionAnalyser
             if(!mLogRepeatedGenePairs)
                 genePairs.add(fusion.name());
 
-            GeneFusion topFusion = determineReportableFusion(similarFusions, false);
+            GeneFusion topFusion = findTopPriorityFusion(similarFusions, false);
 
             if(topFusion != null)
             {

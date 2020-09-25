@@ -15,11 +15,10 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
-import static com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType.HIGH;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
-import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportableFusion;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 
 import java.util.List;
 import java.util.Map;
@@ -166,7 +165,7 @@ public class FusionFinder
                             continue;
 
                         setKnownFusionType(geneFusion);
-                        setAlwaysReport(geneFusion);
+                        checkAlwaysReport(geneFusion);
                         potentialFusions.add(geneFusion);
                     }
                 }
@@ -565,25 +564,31 @@ public class FusionFinder
         if(fusions.isEmpty())
             return;
 
-        GeneFusion reportableFusion = determineReportableFusion(fusions, true);
+        GeneFusion reportableFusion = findTopPriorityFusion(fusions, true);
 
         if(reportableFusion == null)
             return;
 
-        reportableFusion.setReportable(true);
-
         // check impact on protein regions
         setFusionProteinFeatures(reportableFusion);
 
-        if (checkProteinDomains(reportableFusion.knownType()))
+        if(reportableFusion.reportable())
+            return;
+
+        if(checkProteinDomains(reportableFusion.knownType()))
         {
             final Transcript downTrans = reportableFusion.downstreamTrans();
-            long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
-            long requiredLostButKept = mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
+            long requiredKeptButLost =
+                    mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
+            long requiredLostButKept =
+                    mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
 
-            if (requiredKeptButLost > 0 || requiredLostButKept > 0)
-                reportableFusion.setReportable(false);
+            if(requiredKeptButLost > 0 || requiredLostButKept > 0)
+                return; // prevents a fusion being reported
         }
+
+        // if already reportable (from always-report) then leave that way
+        reportableFusion.setReportable(true);
     }
 
     public void setFusionProteinFeatures(GeneFusion fusion)
@@ -724,13 +729,16 @@ public class FusionFinder
         }
     }
 
-    private void setAlwaysReport(GeneFusion geneFusion)
+    private void checkAlwaysReport(GeneFusion geneFusion)
     {
         if(geneFusion.knownType() == NONE)
             return;
 
         if(mKnownFusionCache.alwaysReport(geneFusion.knownType(), geneFusion.geneName(FS_UPSTREAM), geneFusion.geneName(FS_DOWNSTREAM)))
+        {
+            geneFusion.setReportable(true);
             geneFusion.setAlwaysReport();
+        }
     }
 
 }

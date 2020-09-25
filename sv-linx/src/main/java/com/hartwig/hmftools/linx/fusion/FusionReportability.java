@@ -88,9 +88,9 @@ public class FusionReportability
         return true;
     }
 
-    public static GeneFusion determineReportableFusion(final List<GeneFusion> fusions, boolean requireReportable)
+    public static GeneFusion findTopPriorityFusion(final List<GeneFusion> fusions, boolean requireReportable)
     {
-        GeneFusion reportableFusion = null;
+        GeneFusion topFusion = null;
 
         // form a score by allocating 0/1 or length value to each power of 10 descending
         double highestScore = 0;
@@ -105,12 +105,12 @@ public class FusionReportability
 
             if(fusionPriorityScore > highestScore)
             {
-                reportableFusion = fusion;
+                topFusion = fusion;
                 highestScore = fusionPriorityScore;
             }
         }
 
-        return reportableFusion;
+        return topFusion;
     }
 
     private static double calcFusionPriority(final GeneFusion fusion)
@@ -120,6 +120,7 @@ public class FusionReportability
         final Transcript downTrans = fusion.downstreamTrans();
 
             /* prioritisation rules:
+            0. reportable (because there can be more than 1)
             1. inframe
             2. chain not terminated for known fusions
             3. 3’ partner biotype is protein_coding
