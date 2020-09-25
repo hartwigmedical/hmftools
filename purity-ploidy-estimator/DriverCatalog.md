@@ -16,7 +16,7 @@ Report Nonsense | T/F | Report if any nonsense or frameshift variant is found in
 Report Splice | T/F |  Report if any canonical splice acceptor or donor variant is found in the gene [+1,+2,+5,-1,-2]
 Report Amplification | T/F | Report if gene copy number > 3x sample ploidy
 Report Deletion | T/F | Report if gene copy number < 0.5
-Report Disruption - LINX will report ‘homozygous disruptions’ - ie disruptions where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain
+Report Disruption | T/F | LINX will report ‘homozygous disruptions’ - ie disruptions where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain
 Report Hotspot | T/F | Report a hotspot mutation regardless 
 Likelihood Type | ONCO/TSG | Calculate driver likelihood as a tumor supressor gene or onco gene
 
@@ -28,7 +28,8 @@ A driver likelihood estimate between 0 and 1 is calculated for each variant in t
 
 For coding mutations the driver likelihood algorithm depends on the configured 'likelihood type' in the gene panel.  The impacts of confguring 'ONCO' vs 'TSG' type is the following
 
-Characteristic | "ONCO" | "TSG" |
+Characteristic | "ONCO" | "TSG"
+---|---|---
 Pathogenic variants (assigned driver likelihood 1) | Hotspot; Inframe (excluding repeat count > 8)
 Biallelic mutations | Ignored in dnds calculations | For bialllelic mutations, biallelic TMB only used in passenger likelihood. For non biallelic, the full TMB is used
 Multi-hit | Maximum likelihood used. Highest ranked variant used only in dnds calculation (missense & Inframe ranked first) | Multiple mutations are additive (product of probabilities used).  For non bialllelic variants highest 2 ranked variants used in dnds calcluations (nonsense & splice ranked first)
