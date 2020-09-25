@@ -27,7 +27,7 @@ final class DumpTumorLocationData {
 
     static void writeCuratedTumorLocationsToCSV(@NotNull String tumorLocationOutputDir,
             @NotNull Collection<Patient> patients) throws IOException {
-        String outputFile = fileLocation(tumorLocationOutputDir, "_curatedTumorLocations.csv");
+        String outputFile = fileLocation(tumorLocationOutputDir, "curatedTumorLocations.csv");
         List<PatientTumorLocation> tumorLocations = patients.stream()
                 .map(patient -> ImmutablePatientTumorLocation.of(patient.patientIdentifier(),
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().primaryTumorLocation()),
