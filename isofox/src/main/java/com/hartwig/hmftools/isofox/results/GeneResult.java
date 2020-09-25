@@ -28,6 +28,8 @@ public class GeneResult
     private double mAdjustedTpm;
     private double mFitResiduals;
 
+    private double mLowMapQualsAllocation;
+
     public GeneResult(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
         GeneData = geneReadData.GeneData;
@@ -58,6 +60,11 @@ public class GeneResult
 
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
+    public double getSplicedAlloc() { return mSplicedAlloc; }
+    public double getUnsplicedAlloc() { return mUnsplicedAlloc; }
+
+    public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
+    public double getLowMapQualsAllocation() { return mLowMapQualsAllocation; }
 
     public static final String FLD_SUPPORTING_TRANS = "SupportingTrans";
     public static final String FLD_SPLICED_FRAGS = "SplicedFragments";
@@ -78,6 +85,7 @@ public class GeneResult
                 .add(FLD_TPM)
                 .add("RawTPM")
                 .add("FitResiduals")
+                .add("LowMapQualFrags")
                 .toString();
     }
 
@@ -96,6 +104,7 @@ public class GeneResult
                 .add(String.format("%6.3e", mAdjustedTpm))
                 .add(String.format("%6.3e", mRawTpm))
                 .add(String.format("%.1f", getFitResiduals()))
+                .add(String.format("%.1f", mLowMapQualsAllocation))
                 .toString();
     }
 }

@@ -537,6 +537,7 @@ public class BamFragmentAllocator
 
                 CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
                 addGcCounts(catCounts, commonMappings);
+                checkLowMapQuality(read1, read2, catCounts);
             }
         }
         else
@@ -610,6 +611,7 @@ public class BamFragmentAllocator
 
             CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
             addGcCounts(catCounts, commonMappings);
+            checkLowMapQuality(read1, read2, catCounts);
         }
 
         mCurrentGenes.addCount(fragmentType, 1);
@@ -621,6 +623,17 @@ public class BamFragmentAllocator
                 writeReadData(mReadDataWriter, geneReadData, 0, read1, fragmentType, validTranscripts.size(), calcFragmentLength);
                 writeReadData(mReadDataWriter, geneReadData, 1, read2, fragmentType, validTranscripts.size(), calcFragmentLength);
             }
+        }
+    }
+
+    private static final int LOW_MAP_QUALITY = 10;
+
+    private void checkLowMapQuality(final ReadRecord read1, final ReadRecord read2, CategoryCountsData catCounts)
+    {
+        if(read1.mapQuality() < LOW_MAP_QUALITY || read2.mapQuality() < LOW_MAP_QUALITY)
+        {
+            // ISF_LOGGER.info("LOW_MAP_QUAL: gene({}) read({})", mCurrentGenes.geneNames(), read1);
+            catCounts.addLowMapQualityCount();
         }
     }
 
@@ -766,6 +779,7 @@ public class BamFragmentAllocator
 
         List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
         addGcCounts(catCounts, readRegions);
+        checkLowMapQuality(read1, read2, catCounts);
 
         mCurrentGenes.addCount(UNSPLICED, 1);
     }

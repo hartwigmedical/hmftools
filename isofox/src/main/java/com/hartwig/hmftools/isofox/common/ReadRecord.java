@@ -67,6 +67,7 @@ public class ReadRecord
     private int mFragmentInsertSize;
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
+    private short mMapQuality;
 
     private final Map<Integer,Integer> mJunctionDepth;
 
@@ -87,6 +88,7 @@ public class ReadRecord
                 record.getMateReferenceName(), record.getMateAlignmentStart());
 
         read.setSuppAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        read.setMapQuality((short)record.getMappingQuality());
         return read;
     }
 
@@ -123,6 +125,7 @@ public class ReadRecord
         mFragmentInsertSize = insertSize;
         mSupplementaryAlignment = null;
         mHasInterGeneSplit = false;
+        mMapQuality = 0;
         mJunctionDepth = Maps.newHashMap();
     }
 
@@ -153,6 +156,8 @@ public class ReadRecord
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
+    public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
+    public short mapQuality() { return mMapQuality; }
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 

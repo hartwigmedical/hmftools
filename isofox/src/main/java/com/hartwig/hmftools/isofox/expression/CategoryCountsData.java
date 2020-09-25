@@ -16,6 +16,7 @@ public class CategoryCountsData
     private double mFragmentCount;
     private int[] mFragmentCountsByLength;
     private double[] mFragmentCountsByGcRatio;
+    private int mLowMapQualityCount;
 
     private final String mCombinedKey;
 
@@ -29,6 +30,7 @@ public class CategoryCountsData
 
         mFragmentCountsByLength = null;
         mFragmentCountsByGcRatio = null;
+        mLowMapQualityCount = 0;
     }
 
     public CategoryCountsData(final String categoryStr, int fragLengths)
@@ -38,6 +40,7 @@ public class CategoryCountsData
         mUnsplicedGenes = Lists.newArrayList();
         mFragmentCount = 0;
         mFragmentCountsByLength = new int[fragLengths];
+        mLowMapQualityCount = 0;
 
         parseCombinedKey();
     }
@@ -194,6 +197,9 @@ public class CategoryCountsData
             }
         }
     }
+
+    public int lowMapQualityCount() { return mLowMapQualityCount; }
+    public void addLowMapQualityCount() { mLowMapQualityCount++; }
 
     public String toString()
     {
