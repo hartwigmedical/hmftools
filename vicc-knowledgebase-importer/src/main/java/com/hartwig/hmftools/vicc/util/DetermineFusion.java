@@ -3,10 +3,9 @@ package com.hartwig.hmftools.vicc.util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DetermineFusion {
+final class DetermineFusion {
 
-    private DetermineFusion(){
-
+    private DetermineFusion() {
     }
 
     public static boolean isFusion(@NotNull String feature, @Nullable String biomarkerType, @Nullable String provenanceRule,

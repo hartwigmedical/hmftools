@@ -234,7 +234,7 @@ Note that reads which marginally overhang an exon boundary or are soft clipped a
 
 For each group of transcripts considered together we aim to fit the relative abundance. Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximisation algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
 
-<TO DO: Add a step which improves on this by removing or limiting allocation to transcripts where fitted fragments >> observed fragments for private allocations >
+<TO DO: Add a step which improves on this by removing or limiting allocation to transcripts where fitted fragments are greater than observed fragments for private allocations >
 
 ### 6. Bias Estimation and Correction
 
@@ -242,22 +242,11 @@ For each group of transcripts considered together we aim to fit the relative abu
 
 Expected GC distribution for sample is calculated as the sum of the estimated distribution for each transcript (as calculated above) multiplied by the proportion of fragments in the sample which have been estimated (nb - this is similar to the methodology implemented in Salmon).  We also count the actual distribution across all genes per 1% GC content bucket. The GC bias for each percentile is the ratio of the actual to the estimated.
 
-<TO DO - decide on min max GC range and also max ratio change for GC Bias>
+<TO DO: decide on min max GC range and also max ratio change for GC Bias>
 
+<TO DO: Add Fragment Length Bias, Sequence Start Specific Bias & 5' CAP bias >
 
-##### B. Fragment Length Bias
-
-<TO DO - Add>
-
-#### C. Sequence Start Specific Bias
-
-<TO DO - Add>
-
-#### D. 5' Cap bias
-
-<TO DO - Add>
-
-#### E. Adjust expected rates for biases and re-estimate abundances per transcript
+#### B. Adjust expected rates for biases and re-estimate abundances per transcript
 
 The calculated biases are applied as a weighting to each raw fragment based on it's GC, positional and fragment length characteristics.  Steps 4 and 5 are then repeated.
 

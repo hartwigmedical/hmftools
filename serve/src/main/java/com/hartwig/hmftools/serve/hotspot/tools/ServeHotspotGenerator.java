@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve;
+package com.hartwig.hmftools.serve.hotspot.tools;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -11,6 +11,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.docm.DocmEntry;
 import com.hartwig.hmftools.serve.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.docm.DocmFileReader;
@@ -24,7 +25,8 @@ import com.hartwig.hmftools.serve.hartwig.curated.HartwigCuratedFileReader;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
-import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
+import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.vicc.ViccExtractionResult;
 import com.hartwig.hmftools.serve.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.vicc.ViccExtractorFactory;
@@ -99,16 +101,16 @@ public class ServeHotspotGenerator {
         LOGGER.debug("Configured '{}' as the hotspot output VCF", hotspotVcf);
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
-        ProteinToHotspotConverter proteinToHotspotConverter = generateHotspots
-                ? ProteinToHotspotConverter.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
-                : ProteinToHotspotConverter.dummy();
+        ProteinResolver proteinResolver = generateHotspots
+                ? ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
+                : ProteinResolverFactory.dummy();
 
-        Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, proteinToHotspotConverter);
-        Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, proteinToHotspotConverter);
+        Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, proteinResolver);
+        Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, proteinResolver);
         Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap =
-                hartwigCohortMap(hartwigCohortTsv, proteinToHotspotConverter, generateHotspots);
+                hartwigCohortMap(hartwigCohortTsv, proteinResolver, generateHotspots);
         Map<VariantHotspot, HotspotAnnotation> hartwigCuratedMap =
-                hartwigCuratedMap(hartwigCuratedTsv, proteinToHotspotConverter, generateHotspots);
+                hartwigCuratedMap(hartwigCuratedTsv, proteinResolver, generateHotspots);
 
         LOGGER.info("Merging {} VICC hotspots with {} DoCM hotspots and {} Hartwig Cohort hotspots and {} Hartwig Curated hotspots",
                 viccHotspotMap.size(),
@@ -122,7 +124,7 @@ public class ServeHotspotGenerator {
         if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, mergedMap);
 
-            Set<String> unresolvedProteinAnnotations = proteinToHotspotConverter.unresolvedProteinAnnotations();
+            Set<String> unresolvedProteinAnnotations = proteinResolver.unresolvedProteinAnnotations();
             if (!unresolvedProteinAnnotations.isEmpty()) {
                 LOGGER.warn("Protein resolver could not resolve {} protein annotations", unresolvedProteinAnnotations.size());
                 for (String unresolvedProteinAnnotation : unresolvedProteinAnnotations) {
@@ -136,9 +138,9 @@ public class ServeHotspotGenerator {
 
     @NotNull
     private static Map<VariantHotspot, HotspotAnnotation> viccHotspotMap(@NotNull String viccJson,
-            @NotNull ProteinToHotspotConverter proteinToHotspotConverter) throws IOException {
+            @NotNull ProteinResolver proteinResolver) throws IOException {
         List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinToHotspotConverter);
+        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
         return ViccUtil.convertToHotspotMap(resultsPerEntry);
@@ -146,7 +148,7 @@ public class ServeHotspotGenerator {
 
     @NotNull
     private static Map<VariantHotspot, HotspotAnnotation> docmHotspotMap(@NotNull String docmTsv,
-            @NotNull ProteinToHotspotConverter proteinToHotspotConverter) throws IOException {
+            @NotNull ProteinResolver proteinResolver) throws IOException {
         LOGGER.info("Reading DoCM TSV from '{}'", docmTsv);
         List<DocmEntry> docmEntries = DocmFileReader.readDcomFile(docmTsv);
         LOGGER.info(" Read {} entries", docmEntries.size());
@@ -159,7 +161,7 @@ public class ServeHotspotGenerator {
                 docmEntries.size() - curatedDocmEntries.size());
         curator.reportUnusedBlacklistEntries();
 
-        DocmExtractor docmExtractor = new DocmExtractor(proteinToHotspotConverter);
+        DocmExtractor docmExtractor = new DocmExtractor(proteinResolver);
         Map<DocmEntry, List<VariantHotspot>> docmHotspotsPerEntry = docmExtractor.extractFromDocmEntries(curatedDocmEntries);
 
         return HotspotFunctions.convertHotspots("docm", docmHotspotsPerEntry);
@@ -167,12 +169,12 @@ public class ServeHotspotGenerator {
 
     @NotNull
     private static Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap(@NotNull String hartwigCohortTsv,
-            @NotNull ProteinToHotspotConverter proteinToHotspotConverter, boolean addImpliedHotspots) throws IOException {
+            @NotNull ProteinResolver proteinResolver, boolean addExplicitHotspots) throws IOException {
         LOGGER.info("Reading Hartwig Cohort TSV from '{}'", hartwigCohortTsv);
         List<HartwigCohortEntry> hartwigCohortEntries = HartwigCohortFileReader.readCohortFile(hartwigCohortTsv);
         LOGGER.info(" Read {} entries", hartwigCohortEntries.size());
 
-        HartwigExtractor hartwigExtractor = new HartwigExtractor(proteinToHotspotConverter, addImpliedHotspots);
+        HartwigExtractor hartwigExtractor = new HartwigExtractor(proteinResolver, addExplicitHotspots);
         Map<HartwigEntry, List<VariantHotspot>> cohortHotspotsPerEntry = hartwigExtractor.extractFromHartwigEntries(hartwigCohortEntries);
 
         return HotspotFunctions.convertHotspots("hartwig_cohort", cohortHotspotsPerEntry);
@@ -180,12 +182,12 @@ public class ServeHotspotGenerator {
 
     @NotNull
     private static Map<VariantHotspot, HotspotAnnotation> hartwigCuratedMap(@NotNull String hartwigCuratedTsv,
-            @NotNull ProteinToHotspotConverter proteinToHotspotConverter, boolean addImpliedHotspots) throws IOException {
+            @NotNull ProteinResolver proteinResolver, boolean addExplicitHotspots) throws IOException {
         LOGGER.info("Reading Hartwig Curated TSV from '{}'", hartwigCuratedTsv);
         List<HartwigCuratedEntry> hartwigCuratedEntries = HartwigCuratedFileReader.readCuratedFile(hartwigCuratedTsv);
         LOGGER.info(" Read {} entries", hartwigCuratedEntries.size());
 
-        HartwigExtractor hartwigExtractor = new HartwigExtractor(proteinToHotspotConverter, addImpliedHotspots);
+        HartwigExtractor hartwigExtractor = new HartwigExtractor(proteinResolver, addExplicitHotspots);
         Map<HartwigEntry, List<VariantHotspot>> curatedHotspotsPerEntry = hartwigExtractor.extractFromHartwigEntries(hartwigCuratedEntries);
 
         return HotspotFunctions.convertHotspots("hartwig_curated", curatedHotspotsPerEntry);

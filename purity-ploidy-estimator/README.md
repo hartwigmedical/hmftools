@@ -501,16 +501,18 @@ During the smoothing process, regions that are homozygously or heterozygously de
 
 
 ### 9. Determine a QC Status for the tumor
-The status field reflects how we have determined the purity of the sample:
-- `NORMAL` - PURPLE fit the purity using COBALT and AMBER output.
-- `HIGHLY_DIPLOID` - The fitted purity solution is highly diploid (> 95%) with a large range of potential solutions, but somatic variants are unable to help either because they were not supplied or because their implied purity was too low.
-- `SOMATIC` - Somatic variants have improved the otherwise highly diploid solution.
-- `NO_TUMOR` - PURPLE failed to find any aneuploidy and somatic variants were supplied but there were fewer than 300 with observed VAF > 0.1.
 
-PURPLE also provides a qc status that can fail for the following 3 reasons:
-- `FAIL_SEGMENT` - We remove samples with more than 220 copy number segments unsupported at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, with differences in depth of up to or in excess of 10x between high and low GC regions. GC normalisation is unreliable when the corrections are so extreme so we filter.
-- `FAIL_DELETED_GENES` - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
-- `FAIL_GENDER` - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
+PURPLE will set QC status in 2 cases: 
+- FAIL_CONTAMINATION - if measured contamination in the tumor (by Amber) is >10%
+- FAIL_NO_TUMOR - if no evidence of tumor is found in the sample
+
+PURPLE may also report a warning if one of the following conditions is met:
+- WARN_DELETED_GENES - if the number of homozygously deleted genes (excluding chr Y) in the sample is > 280.   This sometimes occurs in samples with very high MB scale GC Bias, and particularly affects high GC content regions such as CHR 19.   It may also indicate a poor fit.
+- WARN_HIGH_COPY_NUMBER_NOISE - if the number of copy number segments unsupported on both sides is >220.   This can occur due to GC bias on both MB scale and KB scale and also due to other artefacts which may cause short regions to appear highly amplified.
+- WARN_GENDER_MISMATCH - if amber and cobalt report different genders
+- WARN_LOW_PURITY - if purity is less than 20%
+
+If no warning or fail criteria is met, PURPLE will set qcStatus = PASS
 
 ### 10. Somatic Enrichment
 
@@ -583,7 +585,6 @@ Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
 WholeGenomeDuplication | true | True if more than 10 autosomes have major allele copy number > 1.5
 [Gender](#1-sex-determination) | MALE | One of `MALE` or `FEMALE`
-[Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 MinPurity | 0.95 | Minimum purity with score within 10% of best
 MaxPurity | 1.00 | Maximum purity with score within 10% of best
 MinPloidy | 3.08 | Minimum ploidy with score within 10% of best 
@@ -594,6 +595,15 @@ tmbPerMb | 13.6352 | Tumor mutational burden (#passing variants per Mb) per mega
 tmbStatus | HIGH | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb
 tml | 182 | Tumor mutational load (# of missense variants in sample)
 tmlStatus | HIGH | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
+germlineAbberation | NONE | Any germline chromosomal abberations detected.  Can be one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X}
+fitMethod | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
+qcStatus | PASS | Either PASS or one or more warning or fail statuss.  Warnings include 'WARN_DELETED_GENES', 'WARN_HIGH_COPY_NUMBER_NOISE', 'FAIL_CONTAMINATION', FAIL_NO_TUMOR, 'WARN_GENDER_MISMATCH' or 'WARN_LOW_PURITY
+copyNumberSegments | 462 | Total number of copy number segments in sample
+unsupportedCopyNumberSegments | 256 | Count of copy number segments with no SV support on either side.  A high number is an indicator of poor sample quality
+svTmb | 168 | Total number of non inferred, non single passing structural variants detected in sample
+contamination | 0.003 | rate of contamination in tumor sample as determined by Amber.
+
+
 
 #### Purity Range File
 

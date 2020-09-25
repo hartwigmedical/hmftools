@@ -105,7 +105,7 @@ public final class EventAnnotationExtractor {
             }
         }
 
-        if (DetermineHotspot.isResolvableProteinAnnotation(proteinAnnotation)) {
+        if (DetermineHotspot.isHotspot(proteinAnnotation)) {
             return EventAnnotation.HOTSPOT;
         } else if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
             return EventAnnotation.SIGNATURE;
@@ -117,7 +117,7 @@ public final class EventAnnotationExtractor {
             return EventAnnotation.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
             return EventAnnotation.FUSION_PROMISCUOUS;
-        } else if (!DetermineHotspot.isResolvableProteinAnnotation(proteinAnnotation)) {
+        } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
             if (EventAnnotationExtractor.GENE_LEVEL.contains(biomarkerType) || EventAnnotationExtractor.GENE_LEVEL.contains(feature)
                     || EventAnnotationExtractor.GENE_LEVEL.contains(provenanceRule) || EventAnnotationExtractor.GENE_LEVEL.contains(
                     proteinAnnotation)) {
@@ -138,9 +138,9 @@ public final class EventAnnotationExtractor {
             return EventAnnotation.GENE_RANGE_CODON;
         } else {
             LOGGER.warn("No event annotation extracted from event!");
-            return EventAnnotation.UNKNOWN;
+            return EventAnnotation.UNMAPPED_EVENT;
         }
-        return EventAnnotation.UNKNOWN;
+        return EventAnnotation.UNMAPPED_EVENT;
 
     }
 

@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.serve.hotspot.ProteinToHotspotConverter;
+import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
@@ -20,10 +20,10 @@ public final class ViccExtractorFactory {
     }
 
     @NotNull
-    public static ViccExtractor buildViccExtractor(@NotNull ProteinToHotspotConverter proteinToHotspotConverter) {
+    public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver) {
         Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
 
-        return new ViccExtractor(new HotspotExtractor(proteinToHotspotConverter),
+        return new ViccExtractor(new HotspotExtractor(proteinResolver),
                 new CopyNumberExtractor(),
                 new FusionExtractor(),
                 new GeneLevelEventExtractor(),

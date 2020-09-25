@@ -10,15 +10,15 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import org.apache.commons.cli.CommandLine;
 
+import org.apache.commons.cli.CommandLine;
 import org.jetbrains.annotations.NotNull;
 
 public final class FileWriterUtils
 {
     public static final String OUTPUT_DIR = "output_dir";
 
-    public static final String parseOutputDir(@NotNull final CommandLine cmd)
+    public static String parseOutputDir(@NotNull final CommandLine cmd)
     {
         String outputDir = cmd.getOptionValue(OUTPUT_DIR);
         if(outputDir == null)
@@ -27,7 +27,7 @@ public final class FileWriterUtils
         return checkOutputDir(outputDir);
     }
 
-    public static final String checkOutputDir(@NotNull final String outputDir)
+    public static String checkOutputDir(@NotNull final String outputDir)
     {
         if(outputDir.endsWith(File.separator))
             return outputDir;
