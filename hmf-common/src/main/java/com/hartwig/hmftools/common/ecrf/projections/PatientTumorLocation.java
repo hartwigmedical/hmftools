@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -28,6 +30,8 @@ public abstract class PatientTumorLocation {
         cancerSubtype
     }
 
+    private static final String DELIMITER = "\t";
+
     @NotNull
     public abstract String patientIdentifier();
 
@@ -42,7 +46,7 @@ public abstract class PatientTumorLocation {
         return Lists.newArrayList(patientIdentifier(), primaryTumorLocation(), cancerSubtype());
     }
 
-    public static void writeRecords(@NotNull String outputPath, @NotNull List<PatientTumorLocation> patientTumorLocations)
+    public static void writeRecordsCSV(@NotNull String outputPath, @NotNull List<PatientTumorLocation> patientTumorLocations)
             throws IOException {
         CSVFormat format = CSVFormat.DEFAULT.withNullString(Strings.EMPTY).withHeader(Header.class);
         CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), format);
@@ -60,5 +64,31 @@ public abstract class PatientTumorLocation {
                         record.get(Header.primaryTumorLocation),
                         record.get(Header.cancerSubtype)))
                 .collect(Collectors.toList());
+    }
+
+    public static void writeRecordsTSV(@NotNull String outputPath, @NotNull List<PatientTumorLocation> patientTumorLocations)
+            throws IOException {
+        Files.write(new File(outputPath).toPath(), toLines(patientTumorLocations));
+    }
+
+    @NotNull
+    public static List<String> toLines(@NotNull final List<PatientTumorLocation> patientTumorLocations) {
+        final List<String> lines = Lists.newArrayList();
+        lines.add(header());
+        patientTumorLocations.stream().map(PatientTumorLocation::toString).forEach(lines::add);
+        return lines;
+    }
+
+    @NotNull
+    private static String header() {
+        return new StringJoiner(DELIMITER, "", "").add("patientIdentifier").add("primaryTumorLocation").add("cancerSubtype").toString();
+    }
+
+    @NotNull
+    private  String toString(@NotNull final PatientTumorLocation patientTumorLocation) {
+        return new StringJoiner(DELIMITER).add(patientTumorLocation.patientIdentifier())
+                .add(patientTumorLocation.primaryTumorLocation())
+                .add(patientTumorLocation.cancerSubtype())
+                .toString();
     }
 }

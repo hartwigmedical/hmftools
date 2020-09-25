@@ -78,6 +78,7 @@ public final class LoadClinicalData {
 
     private static final String DO_CURATE_TUMOR_LOCATIONS = "do_curate_tumor_location";
     private static final String CURATED_TUMOR_LOCATION_CSV = "curated_tumor_location_csv";
+    private static final String CURATED_TUMOR_LOCATION_TSV = "curated_tumor_location_tsv";
 
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
@@ -139,6 +140,8 @@ public final class LoadClinicalData {
         if (cmd.hasOption(DO_CURATE_TUMOR_LOCATIONS)) {
 
             DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
+            DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
+
         }
 
         writeClinicalData(dbWriter, lims, sequencedPatientIds, sampleDataPerPatient, patients, treatmentCurator, tumorLocationCurator);
@@ -581,6 +584,7 @@ public final class LoadClinicalData {
 
         options.addOption(DO_CURATE_TUMOR_LOCATIONS, false, "If set, curated tumor locations will be written to csv file");
         options.addOption(CURATED_TUMOR_LOCATION_CSV, true, "Path towards to the CSV of curated tumor locations.");
+        options.addOption(CURATED_TUMOR_LOCATION_TSV, true, "Path towards to the TSV of curated tumor locations.");
 
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,

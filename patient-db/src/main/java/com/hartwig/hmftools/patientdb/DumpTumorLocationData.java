@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,16 +21,25 @@ final class DumpTumorLocationData {
     private DumpTumorLocationData() {
     }
 
-    static void writeCuratedTumorLocationsToCSV(@NotNull String outputFile,
-            @NotNull Collection<Patient> patients) throws IOException {
+    static void writeCuratedTumorLocationsToCSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
         List<PatientTumorLocation> tumorLocations = patients.stream()
                 .map(patient -> ImmutablePatientTumorLocation.of(patient.patientIdentifier(),
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().primaryTumorLocation()),
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
 
-        PatientTumorLocation.writeRecords(outputFile, tumorLocations);
+        PatientTumorLocation.writeRecordsCSV(outputFile, tumorLocations);
         LOGGER.info(" Written {} tumor locations to {}.", tumorLocations.size(), outputFile);
     }
 
+    static void writeCuratedTumorLocationsToTSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
+        List<PatientTumorLocation> tumorLocations = patients.stream()
+                .map(patient -> ImmutablePatientTumorLocation.of(patient.patientIdentifier(),
+                        Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().primaryTumorLocation()),
+                        Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
+                .collect(Collectors.toList());
+
+        PatientTumorLocation.writeRecordsTSV(outputFile, tumorLocations);
+        LOGGER.info(" Written {} tumor locations to {}.", tumorLocations.size(), outputFile);
+    }
 }
