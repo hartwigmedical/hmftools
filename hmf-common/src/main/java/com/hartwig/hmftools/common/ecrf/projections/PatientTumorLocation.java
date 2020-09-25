@@ -86,9 +86,8 @@ public abstract class PatientTumorLocation {
 
     @NotNull
     public String toString(@NotNull final PatientTumorLocation patientTumorLocation) {
-        return new StringJoiner(DELIMITER, "", "").add(patientTumorLocation.patientIdentifier())
-                .add(patientTumorLocation.primaryTumorLocation())
-                .add(patientTumorLocation.cancerSubtype())
-                .toString();
+        return new StringJoiner(DELIMITER, "", "").add(
+                patientTumorLocation.patientIdentifier() + DELIMITER + patientTumorLocation.primaryTumorLocation() + DELIMITER
+                        + patientTumorLocation.cancerSubtype()).toString();
     }
 }
