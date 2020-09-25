@@ -30,7 +30,7 @@ For coding mutations the driver likelihood algorithm depends on the configured '
 
 Characteristic | "ONCO" | "TSG"
 ---|---|---
-Pathogenic variants (assigned driver likelihood 1) | Hotspot; Inframe (excluding repeat count > 8) | Hotspot; Biallelic splice, indel and nonsense
+High likelihood variants | Hotspot & Inframe (excluding repeat count > 8) assigned likelihood = 1 | Hotspot & Biallelic splice, indel and nonsense assigned likelihood = 1
 Biallelic mutations | Ignored in dnds calculations | For bialllelic mutations, biallelic TMB only used in passenger likelihood. For non biallelic, the full TMB is used
 Multi-hit | Maximum likelihood used. Highest ranked variant used only in dnds calculation (missense & inframe ranked first) | Multiple mutations are additive (product of probabilities used).  For non bialllelic variants highest 2 ranked variants used in dnds calcluations (nonsense & splice ranked first)
 Non-biallelic frameshift/Splice/Nonsense | No special treatment | driverLikelihood=max(selflikelihood,missenseDriverLikelihood)
