@@ -9,6 +9,7 @@ Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/sv-linx) e
 The gene panel is a configuration file of which genes to add to the driver catalog and which mutation types to report in each gene.  The format is:
 
 Field | Values | Description
+---|---|---
 Gene | | Name of gene
 Report Missense | T/F | Report if any missense variant is found in the gene
 Report Nonsense | T/F | Report if any nonsense or frameshift variant is found in the gene
