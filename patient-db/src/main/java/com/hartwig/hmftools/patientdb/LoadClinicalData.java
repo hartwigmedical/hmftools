@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
@@ -78,6 +77,7 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
     private static final String DO_CURATE_TUMOR_LOCATIONS = "do_curate_tumor_location";
+    private static final String CURATED_TUMOR_LOCATION_CSV = "curated_tumor_location_csv";
 
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
@@ -87,7 +87,6 @@ public final class LoadClinicalData {
     private static final String WIDE_FIVE_DAYS_CSV = "wide_five_days_csv";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
-    private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
 
     private static final String TUMOR_LOCATION_MAPPING_CSV = "tumor_location_mapping_csv";
     private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
@@ -139,8 +138,7 @@ public final class LoadClinicalData {
 
         if (cmd.hasOption(DO_CURATE_TUMOR_LOCATIONS)) {
 
-            DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
-                    patients.values());
+            DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
         }
 
         writeClinicalData(dbWriter, lims, sequencedPatientIds, sampleDataPerPatient, patients, treatmentCurator, tumorLocationCurator);
@@ -547,7 +545,6 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
                 cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
                 cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV),
                 cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV),
                 cmd.getOptionValue(WIDE_BIOPSY_CSV),
@@ -583,6 +580,7 @@ public final class LoadClinicalData {
         options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database");
 
         options.addOption(DO_CURATE_TUMOR_LOCATIONS, false, "If set, curated tumor locations will be written to csv file");
+        options.addOption(CURATED_TUMOR_LOCATION_CSV, true, "Path towards to the CSV of curated tumor locations.");
 
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
@@ -594,7 +592,6 @@ public final class LoadClinicalData {
         options.addOption(WIDE_FIVE_DAYS_CSV, true, "Path towards the wide five days csv.");
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
-        options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");
 
         options.addOption(TUMOR_LOCATION_MAPPING_CSV, true, "Path towards to the CSV of mapping the tumor location.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");

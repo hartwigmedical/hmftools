@@ -25,9 +25,8 @@ final class DumpTumorLocationData {
     private DumpTumorLocationData() {
     }
 
-    static void writeCuratedTumorLocationsToCSV(@NotNull String tumorLocationOutputDir,
+    static void writeCuratedTumorLocationsToCSV(@NotNull String outputFile,
             @NotNull Collection<Patient> patients) throws IOException {
-        String outputFile = fileLocation(tumorLocationOutputDir, "curatedTumorLocations.csv");
         List<PatientTumorLocation> tumorLocations = patients.stream()
                 .map(patient -> ImmutablePatientTumorLocation.of(patient.patientIdentifier(),
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().primaryTumorLocation()),
@@ -38,18 +37,4 @@ final class DumpTumorLocationData {
         LOGGER.info(" Written {} tumor locations to {}.", tumorLocations.size(), outputFile);
     }
 
-    @NotNull
-    private static String fileLocation(@NotNull String outputDir, @NotNull String fileName) {
-        return outputDir + File.separator + fileName;
-    }
-
-    private static void updateSymlink(@NotNull String linkName, @NotNull String fileName) {
-        Path linkPath = Paths.get(linkName);
-        try {
-            Files.deleteIfExists(linkPath);
-            Files.createSymbolicLink(linkPath, Paths.get(fileName));
-        } catch (IOException e) {
-            LOGGER.warn("Failed to update symlink {}. Cause: {}.", linkName, e.getMessage());
-        }
-    }
 }
