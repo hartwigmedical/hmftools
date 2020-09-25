@@ -176,7 +176,7 @@ The hotspot VCF used by HMF (KnownHotspots.hg19.vcf.gz) is available to download
 A HG38 equivalent is also available. The file is used to re-annotate all somatic variants with a HOTSPOT or NEAR_HOTSPOT flag if they are on or within 5 bases of a hotspot. 
 Hotspots are assigned a driver likelihood of 1. 
 
-The driver gene panel is also available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl)
+The driver gene panel (DriverGenePanel.hg19.tsv) and hg38 equivalent is also available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl)
 
 Note that generating the driver catalog for SNVs assumes that the VCF has been annotated with SNPEFF.
 
