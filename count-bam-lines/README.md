@@ -55,7 +55,6 @@ java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication 
     -gc_profile /path/to/GC_profile.hg19.1000bp.cnp
 ```
 
-
 ## Mandatory Arguments
 
 Argument  | Description
@@ -119,6 +118,18 @@ Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio |
 1|4004001|256|550|1.1144|0.9428|1.1371
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
+
+## Migration to 1.9
+
+As germline aberrations only effect the final normalization it is possible to migrate existing COBALT output from versions 1.4 to 1.8 to 1.9 without having to re-examine the bams using the following command:
+
+```
+java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMigration \
+    -reference COLO829R -tumor COLO829T \
+    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
+    -input_dir /path/to/existing/cobalt/data/ \
+    -output_dir /path/to/new/cobalt/data/ 
+```
 
 ## Version History and Download Links
 - Upcoming
