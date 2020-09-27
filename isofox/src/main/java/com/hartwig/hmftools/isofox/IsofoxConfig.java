@@ -85,6 +85,7 @@ public class IsofoxConfig
     private static final String APPLY_FRAG_LENGTH_ADJUSTMENT = "apply_calc_frag_lengths";
     private static final String APPLY_GC_BIAS_ADJUSTMENT = "apply_gc_bias_adjust";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
+    private static final String APPLY_MQ_ADJUST = "apply_map_qual_adjust";
 
     private static final String SPECIFIC_CHR = "specific_chr";
     private static final String SPECIFIC_REGIONS = "specific_regions";
@@ -121,6 +122,7 @@ public class IsofoxConfig
     public final String ExpGcRatiosFile;
     public final boolean ApplyExpectedRates;
     public final boolean ApplyFragmentLengthAdjust;
+    public final boolean ApplyMapQualityAdjust;
     public final boolean ApplyGcBiasAdjust;
     public int ReadLength;
     public final List<int[]> FragmentLengthData;
@@ -258,6 +260,7 @@ public class IsofoxConfig
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
         ApplyFragmentLengthAdjust = cmd.hasOption(APPLY_FRAG_LENGTH_ADJUSTMENT);
+        ApplyMapQualityAdjust = cmd.hasOption(APPLY_MQ_ADJUST);
         ApplyGcBiasAdjust = cmd.hasOption(APPLY_GC_BIAS_ADJUSTMENT);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
         FragmentLengthData = Lists.newArrayList();
@@ -504,6 +507,7 @@ public class IsofoxConfig
 
         WriteExpectedRates = false;
         ApplyFragmentLengthAdjust = false;
+        ApplyMapQualityAdjust = false;
         ApplyGcBiasAdjust = false;
         OutputIdentifier = null;
         WriteFragmentLengthsByGene = false;
@@ -552,6 +556,7 @@ public class IsofoxConfig
         options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");
+        options.addOption(APPLY_MQ_ADJUST, false, "Use read map quality to adjust expected counts");
         options.addOption(APPLY_GC_BIAS_ADJUSTMENT, false, "Use GC Bias adjustments in expected rate calcs");
 
         options.addOption(ER_FRAGMENT_LENGTHS, true,

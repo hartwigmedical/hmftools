@@ -17,15 +17,17 @@ import htsjdk.samtools.SamReader;
 public class BamSlicer
 {
     private final int mMinMappingQuality;
-    private boolean mDropDuplicates;
-    private boolean mDropSupplementaries;
+    private boolean mKeepDuplicates;
+    private boolean mKeepSupplementaries;
+    private boolean mKeepSecondaries;
     private boolean mConsumerHalt; // allow consumer to halt processing
 
-    public BamSlicer(int minMappingQuality, boolean dropDuplicates, boolean dropSecondSupps)
+    public BamSlicer(int minMappingQuality, boolean keepDuplicates, boolean keepSupplementaries, boolean keepSecondaries)
     {
         mMinMappingQuality = minMappingQuality;
-        mDropDuplicates = dropDuplicates;
-        mDropSupplementaries = dropSecondSupps;
+        mKeepDuplicates = keepDuplicates;
+        mKeepSupplementaries = keepSupplementaries;
+        mKeepSecondaries = keepSecondaries;
         mConsumerHalt = false;
     }
 
@@ -95,10 +97,13 @@ public class BamSlicer
         if(record.getMappingQuality() < mMinMappingQuality || record.getReadUnmappedFlag())
             return false;
 
-        if(mDropSupplementaries && (record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment()))
+        if(record.isSecondaryAlignment() && !mKeepSecondaries)
             return false;
 
-        if(mDropDuplicates && record.getDuplicateReadFlag())
+        if(record.getSupplementaryAlignmentFlag() && !mKeepSupplementaries)
+            return false;
+
+        if(record.getDuplicateReadFlag() && !mKeepDuplicates)
             return false;
 
         return true;

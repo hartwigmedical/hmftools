@@ -91,7 +91,7 @@ public class FragmentSizeCalcs implements Callable
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, false, false);
 
         mCurrentGenes = "";
         mCurrentGenesRange = new int[SE_PAIR];

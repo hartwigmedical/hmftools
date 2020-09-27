@@ -44,6 +44,7 @@ public class BamReadCounter implements Callable
     private int mTotalReadCount;
     private int mCurrentGeneReadCount;
     private int[] mReadTypeCounts;
+    private int mSecondaryReads;
     private String mChromosome;
     private final List<EnsemblGeneData> mGeneDataList;
     private String mCurrentGenes;
@@ -55,7 +56,7 @@ public class BamReadCounter implements Callable
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, false);
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true, true);
 
         mGeneDataList = Lists.newArrayList();
         mChromosome = "";
@@ -64,6 +65,7 @@ public class BamReadCounter implements Callable
         mTotalReadCount = 0;
         mCurrentGeneReadCount = 0;
         mCurrentGenes = "";
+        mSecondaryReads = 0;
         mReadTypeCounts = new int[typeAsInt(FragmentType.MAX)];
         mFragmentTracker = new FragmentTracker();
     }
@@ -128,8 +130,9 @@ public class BamReadCounter implements Callable
             mBamSlicer.slice(mSamReader, regions, this::processBamRead);
         }
 
-        ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({})",
-                mChromosome, mTotalReadCount, mReadTypeCounts[typeAsInt(DUPLICATE)], mReadTypeCounts[typeAsInt(CHIMERIC)]);
+        ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({}) secondaries({})",
+                mChromosome, mTotalReadCount, mReadTypeCounts[typeAsInt(DUPLICATE)],
+                mReadTypeCounts[typeAsInt(CHIMERIC)], mSecondaryReads);
     }
 
     private void processBamRead(@NotNull final SAMRecord read)
@@ -143,6 +146,9 @@ public class BamReadCounter implements Callable
 
         if((read.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0)
             ++mReadTypeCounts[typeAsInt(CHIMERIC)];
+
+        if(read.isSecondaryAlignment())
+            ++mSecondaryReads;
 
         if(mConfig.GeneReadLimit > 0 && mCurrentGeneReadCount > mConfig.GeneReadLimit)
         {

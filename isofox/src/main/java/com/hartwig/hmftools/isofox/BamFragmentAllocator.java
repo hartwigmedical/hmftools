@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
@@ -131,10 +132,11 @@ public class BamFragmentAllocator
 
         // duplicates aren't counted towards fusions so can be ignored if only running fusions
         // reads with supplementary alignment data are only used for fusions
-        boolean dropDuplicates = mFusionsOnly;
-        boolean dropSupplementaries = !mRunFusions;
+        boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
+        boolean keepSupplementaries = mRunFusions;
+        boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, dropDuplicates, dropSupplementaries);
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, keepDuplicates, keepSupplementaries, keepSecondaries);
 
         mDuplicateTracker = new DuplicateReadTracker(mConfig.MarkDuplicates);
 
