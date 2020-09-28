@@ -9,14 +9,14 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class FittedPurityFile {
+public final class PurityContextFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
@@ -26,7 +26,7 @@ public final class FittedPurityFile {
 
     @NotNull
     public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        return read(generateFilenameForReading(basePath, sample));
+        return readWithQC(PurpleQCFile.generateFilename(basePath, sample), generateFilenameForReading(basePath, sample));
     }
 
     @NotNull
@@ -36,19 +36,26 @@ public final class FittedPurityFile {
     }
 
     @NotNull
-    public static PurityContext read(@NotNull String filePath) throws IOException {
-        return fromLine(Files.readAllLines(new File(filePath).toPath()).get(1));
+    public static PurityContext readWithQC(@NotNull final String qcFilePath, @NotNull String filePath) throws IOException {
+        PurpleQC qc = PurpleQCFile.read(qcFilePath);
+        return fromLine(Files.readAllLines(new File(filePath).toPath()).get(1)).qc(qc).build();
     }
 
     @NotNull
     @VisibleForTesting
-    static PurityContext fromLine(@NotNull String line) {
+    static PurityContext fromLines(@NotNull List<String> qcLines, @NotNull List<String> fitLines)  {
+        final PurpleQC qc = PurpleQCFile.fromLines(qcLines);
+        return fromLine(fitLines.get(1)).qc(qc).build();
+    }
+
+    @NotNull
+    private static ImmutablePurityContext.Builder fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         ImmutablePurityContext.Builder builder = ImmutablePurityContext.builder()
                 .score(score(values))
                 .bestFit(bestFit(values))
                 .gender(gender(values))
-                .status(status(values))
+                .method(method(values))
                 .polyClonalProportion(polyClonalProportion(values))
                 .version(values[14])
                 .wholeGenomeDuplication(Boolean.parseBoolean(values[16]))
@@ -57,17 +64,19 @@ public final class FittedPurityFile {
                 .tumorMutationalLoad(tumorMutationalLoad(values[19]))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(values[20]))
                 .tumorMutationalBurdenPerMb(Double.parseDouble(values[21]))
-                .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]));
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]))
+                .svTumorMutationalBurden(0);
 
         if (values.length == 24) {
-            builder.germlineAberrations(GermlineAberration.fromString(values[23]));
+            builder.svTumorMutationalBurden(Integer.parseInt(values[23]));
         }
 
-        return builder.build();
+        return builder;
     }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)
             throws IOException {
+        PurpleQCFile.write(PurpleQCFile.generateFilename(basePath, sample), context.qc());
         writeBestPurity(basePath, sample, context);
     }
 
@@ -89,7 +98,7 @@ public final class FittedPurityFile {
     }
 
     @NotNull
-    private static String header() {
+    static String header() {
         return new StringJoiner(DELIMITER, "", "").add("purity")
                 .add("normFactor")
                 .add("score")
@@ -113,7 +122,7 @@ public final class FittedPurityFile {
                 .add("tmlStatus")
                 .add("tmbPerMb")
                 .add("tmbStatus")
-                .add("germlineAberrations")
+                .add("svTumorMutationalBurden")
                 .toString();
     }
 
@@ -127,7 +136,7 @@ public final class FittedPurityFile {
                 .add(FORMAT.format(purity.diploidProportion()))
                 .add(FORMAT.format(purity.ploidy()))
                 .add(String.valueOf(context.gender()))
-                .add(String.valueOf(context.status()))
+                .add(String.valueOf(context.method()))
                 .add(FORMAT.format(context.polyClonalProportion()))
                 .add(FORMAT.format(score.minPurity()))
                 .add(FORMAT.format(score.maxPurity()))
@@ -144,7 +153,7 @@ public final class FittedPurityFile {
                 .add(String.valueOf(context.tumorMutationalLoadStatus()))
                 .add(String.valueOf(context.tumorMutationalBurdenPerMb()))
                 .add(String.valueOf(context.tumorMutationalBurdenStatus()))
-                .add(GermlineAberration.toString(context.germlineAberrations()))
+                .add(String.valueOf(context.svTumorMutationalBurden()))
                 .toString();
     }
 
@@ -171,8 +180,8 @@ public final class FittedPurityFile {
     }
 
     @NotNull
-    private static FittedPurityStatus status(@NotNull final String[] values) {
-        return FittedPurityStatus.valueOf(values[6]);
+    private static FittedPurityMethod method(@NotNull final String[] values) {
+        return FittedPurityMethod.valueOf(values[6]);
     }
 
     @NotNull

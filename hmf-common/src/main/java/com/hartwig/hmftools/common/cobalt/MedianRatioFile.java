@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class MedianRatioFile {
 
-    private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".cobalt.ratio.median.tsv";
@@ -52,7 +52,7 @@ public final class MedianRatioFile {
     @NotNull
     private static String toString(@NotNull final MedianRatio position) {
         return new StringJoiner(DELIMITER).add(position.chromosome())
-                .add(String.valueOf(position.medianRatio()))
+                .add(FORMAT.format(position.medianRatio()))
                 .add(String.valueOf(position.count()))
                 .toString();
     }

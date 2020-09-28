@@ -16,11 +16,10 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -48,14 +47,14 @@ public class LoadPurpleData {
         String purplePath = cmd.getOptionValue(PURPLE_DIR);
 
         LOGGER.info("Reading data from {}", purplePath);
-        PurityContext purityContext = FittedPurityFile.read(purplePath, tumorSample);
+        PurityContext purityContext = PurityContextFile.read(purplePath, tumorSample);
         List<GeneCopyNumber> geneCopyNumbers =
                 GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
         List<PurpleCopyNumber> copyNumbers =
                 PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateFilename(purplePath, tumorSample));
 
-        PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
+        PurpleQC purpleQC = purityContext.qc();
         List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purplePath, tumorSample);
 
         String germlineCopyNumberFilename = PurpleCopyNumberFile.generateGermlineFilenameForReading(purplePath, tumorSample);

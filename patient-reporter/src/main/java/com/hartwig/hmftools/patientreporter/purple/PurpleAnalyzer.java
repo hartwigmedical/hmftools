@@ -48,7 +48,7 @@ public final class PurpleAnalyzer {
         return ImmutablePurpleAnalysis.builder()
                 .purity(bestFit.purity())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
-                .hasReliableQuality(CheckPurpleQuality.checkHasReliableQuality(purpleQC))
+                .hasReliableQuality(purpleQC.pass())
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)

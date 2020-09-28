@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
@@ -77,6 +76,10 @@ public final class LoadClinicalData {
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
+    private static final String DO_CURATE_TUMOR_LOCATIONS = "do_curate_tumor_location";
+    private static final String CURATED_TUMOR_LOCATION_CSV = "curated_tumor_location_csv";
+    private static final String CURATED_TUMOR_LOCATION_TSV = "curated_tumor_location_tsv";
+
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
     private static final String WIDE_BIOPSY_CSV = "wide_biopsy_csv";
@@ -85,8 +88,6 @@ public final class LoadClinicalData {
     private static final String WIDE_FIVE_DAYS_CSV = "wide_five_days_csv";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
-    private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
-    private static final String TUMOR_LOCATION_SYMLINK = "tumor_location_symlink";
 
     private static final String TUMOR_LOCATION_MAPPING_CSV = "tumor_location_mapping_csv";
     private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
@@ -130,16 +131,22 @@ public final class LoadClinicalData {
             writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
         }
 
-        writeClinicalData(dbWriter,
-                lims,
-                sequencedPatientIds,
-                sampleDataPerPatient,
-                ecrfModels,
-                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
-                Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
-                cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV),
-                cmd.getOptionValue(TREATMENT_MAPPING_CSV),
-                cmd.getOptionValue(BIOPSY_MAPPING_CSV));
+        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
+        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
+        TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
+        Map<String, Patient> patients =
+                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
+
+        if (cmd.hasOption(DO_CURATE_TUMOR_LOCATIONS)) {
+            LOGGER.info("Curate tumor locations");
+
+            DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
+            DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
+            LOGGER.info("Complete");
+
+        } else {
+            writeClinicalData(dbWriter, lims, sequencedPatientIds, sampleDataPerPatient, patients, treatmentCurator, tumorLocationCurator);
+        }
     }
 
     @NotNull
@@ -334,17 +341,8 @@ public final class LoadClinicalData {
     }
 
     private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Lims lims, @NotNull Set<String> sequencedPatientIds,
-            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull EcrfModels ecrfModels,
-            @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink, @NotNull String tumorLocationMappingCSV,
-            @NotNull String treatmentMappingCSV, @NotNull String biopsyMappingCSV) throws IOException {
-        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(tumorLocationMappingCSV);
-        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(biopsyMappingCSV);
-        TreatmentCurator treatmentCurator = new TreatmentCurator(treatmentMappingCSV);
-
-        Map<String, Patient> patients =
-                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
-
-        DumpTumorLocationData.writeCuratedTumorLocationsToCSV(tumorLocationOutputDir, tumorLocationSymlink, patients.values());
+            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull Map<String, Patient> patients,
+            @NotNull TreatmentCurator treatmentCurator, @NotNull TumorLocationCurator tumorLocationCurator) {
 
         LOGGER.info("Clearing interpreted clinical tables in database");
         dbAccess.clearClinicalTables();
@@ -552,7 +550,6 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
                 cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
                 cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV),
                 cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV),
                 cmd.getOptionValue(WIDE_BIOPSY_CSV),
@@ -587,6 +584,10 @@ public final class LoadClinicalData {
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database");
 
+        options.addOption(DO_CURATE_TUMOR_LOCATIONS, false, "If set, curated tumor locations will be written to csv file");
+        options.addOption(CURATED_TUMOR_LOCATION_CSV, true, "Path towards to the CSV of curated tumor locations.");
+        options.addOption(CURATED_TUMOR_LOCATION_TSV, true, "Path towards to the TSV of curated tumor locations.");
+
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
                 "if set, creates clinical timeline for wide patients and persists to database");
@@ -597,8 +598,6 @@ public final class LoadClinicalData {
         options.addOption(WIDE_FIVE_DAYS_CSV, true, "Path towards the wide five days csv.");
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
-        options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");
-        options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of tumor location csv symlink.");
 
         options.addOption(TUMOR_LOCATION_MAPPING_CSV, true, "Path towards to the CSV of mapping the tumor location.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");

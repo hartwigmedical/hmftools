@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.linx.ReportableGeneFusionFile;
@@ -33,14 +31,6 @@ public class GenomicData {
 
     private GenomicData() {
 
-    }
-
-    public static double extractPloidy(@NotNull String purplePurityTsv) throws IOException {
-        LOGGER.info("Reading purple purity from {}", purplePurityTsv);
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        double ploidy = purityContext.bestFit().ploidy();
-        LOGGER.info(" Sample ploidy: {}", ploidy);
-        return ploidy;
     }
 
     @NotNull

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -25,6 +26,7 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantL
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantHeader;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
 import com.hartwig.hmftools.purple.sv.VariantContextCollectionDummy;
 import com.hartwig.hmftools.purple.sv.VariantContextCollectionImpl;
@@ -217,6 +219,15 @@ class PurpleStructuralVariantSupplier {
     @NotNull
     List<StructuralVariant> variants() {
         return variants.segmentationVariants();
+    }
+
+    int passingBnd() {
+        return (int) variants.segmentationVariants()
+                .stream()
+                .filter(x -> x.filter() == null || Objects.equals(x.filter(), "PASS"))
+                .filter(x -> !x.type().equals(StructuralVariantType.INF))
+                .filter(x -> !x.type().equals(StructuralVariantType.SGL))
+                .count();
     }
 
     @NotNull

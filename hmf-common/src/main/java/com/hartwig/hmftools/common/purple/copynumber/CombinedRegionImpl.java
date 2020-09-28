@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +20,7 @@ class CombinedRegionImpl implements CombinedRegion {
     private final List<FittedRegion> regions = Lists.newArrayList();
     private int unweightedCount = 1;
     private final boolean isBafWeighted;
+    private SegmentSupport germlineEndSupport = SegmentSupport.UNKNOWN;
 
     CombinedRegionImpl(@NotNull final FittedRegion region) {
         this(true, region);
@@ -87,6 +89,16 @@ class CombinedRegionImpl implements CombinedRegion {
     @NotNull
     public FittedRegion region() {
         return combined;
+    }
+
+    @NotNull
+    @Override
+    public SegmentSupport germlineEndSupport() {
+        return germlineEndSupport;
+    }
+
+    public void setGermlineEndSupport(@NotNull final SegmentSupport germlineEndSupport) {
+        this.germlineEndSupport = germlineEndSupport;
     }
 
     public void extend(@NotNull final FittedRegion region) {

@@ -7,12 +7,29 @@ in the respective bam files with a mapping quality score of at least 10 that is 
 Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
 
 Next we apply a GC normalization to calculate the read ratios. 
-We divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the 
+To do this we divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the 
 ratio of the median to mean read count of all windows. 
+
+Post GC normalization, COBALT is able to detect the following germline chromosomal aberrations from the reference ratio:
+
+Aberration | Gender | Ratio Criteria
+---|---|---
+`MOSAIC_X` | FEMALE| X ratio < min(0.8, minAutosomeMedianDepthRatio*)
+`KLINEFELTER` (XXY) | MALE | X ratio >= 0.65
+`TRISOMY_[X,21,13,18,15]` | BOTH | chrmosome ratio >= 1.4
+
+*By checking against autosomes we rule out very high GC bias in the reference.  
 
 The reference sample ratios have a further ‘diploid’ normalization applied to them to remove megabase scale GC biases. 
 This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for 
-sex chromosomes in males in the germline sample.
+male sex chromosomes in addition to the following exceptions:
+
+Aberration | Chromosome | Normalized Ratio
+---|---|---
+`MOSAIC_X` | X | use median X ratio
+`KLINEFELTER` | X | 1
+`KLINEFELTER` | Y | 0.5
+`TRISOMY_[X,21,13,18,15]` | X,21,13,18,15 | 1.5
 
 Finally, the Bioconductor copy number package is used to generate segments from the ratio file.
 
@@ -37,7 +54,6 @@ java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication 
     -threads 16 \ 
     -gc_profile /path/to/GC_profile.hg19.1000bp.cnp
 ```
-
 
 ## Mandatory Arguments
 
@@ -103,8 +119,20 @@ Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio |
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
+## Migration to 1.9
+
+As germline aberrations only effect the final normalization it is possible to migrate existing COBALT output from versions 1.4 to 1.8 to 1.9 without having to re-examine the bams using the following command:
+
+```
+java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMigration \
+    -reference COLO829R -tumor COLO829T \
+    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
+    -input_dir /path/to/existing/cobalt/data/ \
+    -output_dir /path/to/new/cobalt/data/ 
+```
+
 ## Version History and Download Links
-- Upcoming
+- [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.9)
   - Alert user that gc_profile should be un-compressed before use
   - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.8)

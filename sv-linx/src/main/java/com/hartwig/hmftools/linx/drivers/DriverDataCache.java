@@ -2,17 +2,11 @@ package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.DEL;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.isMaleSample;
 import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,12 +21,10 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -132,7 +124,7 @@ public class DriverDataCache
 
         try
         {
-            final PurityContext purityContext = FittedPurityFile.read(purpleDataPath, mSampleId);
+            final PurityContext purityContext = PurityContextFile.read(purpleDataPath, mSampleId);
             setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
             mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateFilename(purpleDataPath, mSampleId)));

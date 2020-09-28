@@ -17,7 +17,7 @@ public interface BestFit {
     FittedPurityScore score();
 
     @NotNull
-    FittedPurityStatus status();
+    FittedPurityMethod method();
 
     @NotNull
     List<FittedPurity> bestFitPerPurity();

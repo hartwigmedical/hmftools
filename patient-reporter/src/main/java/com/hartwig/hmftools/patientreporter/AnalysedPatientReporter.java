@@ -23,10 +23,9 @@ import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
@@ -173,16 +172,16 @@ class AnalysedPatientReporter {
     @NotNull
     private PurpleAnalysis analyzePurple(@NotNull String purplePurityTsv, @NotNull String purpleQCFile, @NotNull String purpleGeneCnvTsv,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> purpleDriverCatalog) throws IOException {
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+        PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
-        LOGGER.info(" Purple status: {}", purityContext.status());
+        LOGGER.info(" Purple fit method: {}", purityContext.method());
         LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
 
-        PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
+        PurpleQC purpleQC = purityContext.qc();
         LOGGER.info("Loaded purple QC data from {}", purpleQCFile);
-        LOGGER.info(" Purple QC status: {}", purpleQC.status());
+        LOGGER.info(" Purple QC status: {}", purpleQC.toString());
 
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);

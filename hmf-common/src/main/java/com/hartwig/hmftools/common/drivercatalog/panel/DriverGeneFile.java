@@ -23,7 +23,7 @@ public final class DriverGeneFile {
     public static List<DriverGene> read(@NotNull final String filename) throws IOException {
         return Files.readAllLines(new File(filename).toPath())
                 .stream()
-                .filter(x -> !x.startsWith("gene"))
+                .filter(x -> !x.startsWith("gene") && !x.startsWith("HG"))
                 .map(DriverGeneFile::fromString)
                 .collect(Collectors.toList());
     }

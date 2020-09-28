@@ -78,7 +78,7 @@ public class PurpleCopyNumberFactory {
             final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(somatics);
 
             this.somaticCopyNumbers.addAll(toCopyNumber(somatics));
-            this.germlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN)).collect(toList()));
+            this.germlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, x.germlineEndSupport())).collect(toList()));
         }
     }
 

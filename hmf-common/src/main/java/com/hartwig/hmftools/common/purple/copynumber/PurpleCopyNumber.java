@@ -43,6 +43,10 @@ public abstract class PurpleCopyNumber implements GenomeRegion {
     }
 
     public abstract long minStart();
-    
+
     public abstract long maxStart();
+
+    public boolean svSupport() {
+        return segmentStartSupport().isSV() || segmentEndSupport().isSV();
+    }
 }

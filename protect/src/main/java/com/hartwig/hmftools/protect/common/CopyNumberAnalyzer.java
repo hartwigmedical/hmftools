@@ -9,10 +9,9 @@ import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,16 +28,16 @@ public class CopyNumberAnalyzer {
     @NotNull
     public static CopyNumberAnalysis analyzeCopyNumbers(@NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleGeneCnvTsv, @NotNull List<DriverCatalog> driverCatalog) throws IOException {
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
+        PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
+        PurpleQC purpleQC = purityContext.qc();
 
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
-        LOGGER.info(" Purple status: {}", purityContext.status());
+        LOGGER.info(" Purple fit method: {}", purityContext.method());
         LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
         LOGGER.info("Loaded purple QC data from {}", purpleQCFile);
-        LOGGER.info(" Purple QC status: {}", purpleQC.status());
+        LOGGER.info(" Purple QC status: {}", purpleQC.toString());
 
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
@@ -50,7 +49,7 @@ public class CopyNumberAnalyzer {
         return ImmutableCopyNumberAnalysis.builder()
                 .purity(bestFit.purity())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
-                .hasReliableQuality(CheckPurpleQuality.checkHasReliableQuality(purpleQC))
+                .hasReliableQuality(purpleQC.pass())
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)

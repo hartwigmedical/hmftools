@@ -38,13 +38,12 @@ import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.common.purple.purity.BestFitFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFactory;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
@@ -197,10 +196,11 @@ public class PurityPloidyEstimateApplication {
                     GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
 
             LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(),
-                    copyNumbers,
+            final PurpleQC qcChecks = PurpleQCFactory.create(configSupplier.amberData().contamination(),
+                    bestFit,
                     amberGender,
                     cobaltGender,
+                    copyNumbers,
                     geneCopyNumbers,
                     cobaltChromosomes.germlineAberrations());
 
@@ -215,10 +215,9 @@ public class PurityPloidyEstimateApplication {
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
-                    .germlineAberrations(cobaltChromosomes.germlineAberrations())
                     .version(version.version())
                     .bestFit(bestFit.fit())
-                    .status(bestFit.status())
+                    .method(bestFit.method())
                     .gender(cobaltGender)
                     .score(bestFit.score())
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
@@ -229,12 +228,13 @@ public class PurityPloidyEstimateApplication {
                     .tumorMutationalLoadStatus(somaticStream.tumorMutationalLoadStatus())
                     .tumorMutationalBurdenPerMb(somaticStream.tumorMutationalBurdenPerMb())
                     .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
+                    .svTumorMutationalBurden(structuralVariants.passingBnd())
+                    .qc(qcChecks)
                     .build();
 
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);
             version.write(outputDirectory);
-            PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
-            FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
+            PurityContextFile.write(outputDirectory, tumorSample, purityContext);
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), copyNumbers);
@@ -248,7 +248,7 @@ public class PurityPloidyEstimateApplication {
             final List<DriverCatalog> driverCatalog = Lists.newArrayList();
             if (configSupplier.driverCatalogConfig().enabled()) {
                 LOGGER.info("Generating driver catalog");
-                final CNADrivers cnaDrivers = new CNADrivers(configSupplier.driverCatalogConfig().genePanel());
+                final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), configSupplier.driverCatalogConfig().genePanel());
                 driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
                 driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
                 driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));

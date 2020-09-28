@@ -45,28 +45,28 @@ public class BestFitFactory {
         final FittedPurityScore score = FittedPurityScoreFactory.score(bestFitPerPurityCandidates);
 
         final FittedPurity fit;
-        final FittedPurityStatus status;
+        final FittedPurityMethod status;
         if (Doubles.greaterOrEqual(score.puritySpread(), minSomaticPuritySpread) && isHighlyDiploid(score)) {
             final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(bestFitPerPurityCandidates, somatics);
 
             if (noDetectableTumor(somaticsWithSufficientVafCount)) {
-                status = FittedPurityStatus.NO_TUMOR;
+                status = FittedPurityMethod.NO_TUMOR;
                 fit = somaticFit.orElse(lowestScore);
             } else if (somaticsWontHelp(somatics.size(), lowestScore.purity(), somaticFit)) {
-                status = FittedPurityStatus.HIGHLY_DIPLOID;
+                status = FittedPurityMethod.HIGHLY_DIPLOID;
                 fit = lowestScore;
             } else {
-                status = FittedPurityStatus.SOMATIC;
+                status = FittedPurityMethod.SOMATIC;
                 assert somaticFit.isPresent();
                 fit = somaticFit.get();
             }
 
         } else {
-            status = FittedPurityStatus.NORMAL;
+            status = FittedPurityMethod.NORMAL;
             fit = lowestScore;
         }
 
-        bestFit = ImmutableBestFit.builder().fit(fit).status(status).score(score).bestFitPerPurity(bestFitPerPurity).allFits(all).build();
+        bestFit = ImmutableBestFit.builder().fit(fit).method(status).score(score).bestFitPerPurity(bestFitPerPurity).allFits(all).build();
     }
 
     private long somaticsWithSufficientVaf(@NotNull Collection<SomaticVariant> variants) {

@@ -124,6 +124,7 @@ public interface CobaltConfig {
                 .minMappingQuality(minMappingQuality)
                 .gcProfilePath(gcProfilePath)
                 .tumorBamPath(tumorBamPath)
+                .inputDirectory(Strings.EMPTY)
                 .referenceBamPath(referenceBamPath)
                 .refGenomePath(refGenomePath)
                 .outputDirectory(outputDirectory)

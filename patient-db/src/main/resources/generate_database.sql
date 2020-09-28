@@ -326,7 +326,7 @@ CREATE TABLE purity
     version VARCHAR(255) NOT NULL,
     sampleId varchar(255) NOT NULL,
     gender varchar(255) NOT NULL,
-    status varchar(255) NOT NULL,
+    fitMethod varchar(255) NOT NULL,
     qcStatus varchar(255) NOT NULL,
     purity DOUBLE PRECISION not null,
     normFactor DOUBLE PRECISION not null,
@@ -348,7 +348,13 @@ CREATE TABLE purity
     tmbStatus varchar(10) not null,
     tml INT not null,
     tmlStatus varchar(10) not null,
+    svTmb INT not null DEFAULT 0,
+    deletedGenes INT not null DEFAULT 0,
+    copyNumberSegments INT not null DEFAULT 0,
+    unsupportedCopyNumberSegments INT not null DEFAULT 0,
+    contamination DOUBLE PRECISION not null DEFAULT 0,
     germlineAberration varchar(255) not null DEFAULT "NONE",
+    amberGender varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

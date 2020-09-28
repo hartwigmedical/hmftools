@@ -2,16 +2,16 @@ package com.hartwig.hmftools.linx.cn;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityStatus.NORMAL;
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NORMAL;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +24,8 @@ import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
@@ -260,6 +262,17 @@ public class CnSegmentBuilder
                 .minPloidy(2)
                 .build();
 
+        PurpleQC qc = ImmutablePurpleQC.builder()
+                .amberGender(gender)
+                .cobaltGender(gender)
+                .purity(purity)
+                .contamination(0)
+                .deletedGenes(0)
+                .copyNumberSegments(0)
+                .unsupportedCopyNumberSegments(0)
+                .method(NORMAL)
+                .build();
+
         PurityContext purityContext = ImmutablePurityContext.builder()
                 .bestFit(fittedPurity)
                 .gender(gender)
@@ -267,13 +280,15 @@ public class CnSegmentBuilder
                 .microsatelliteStatus(UNKNOWN)
                 .polyClonalProportion(0)
                 .score(purityScore)
-                .status(NORMAL)
+                .method(NORMAL)
                 .version("1.0")
                 .wholeGenomeDuplication(false)
                 .tumorMutationalLoad(0)
                 .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
                 .tumorMutationalBurdenPerMb(0)
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
+                .svTumorMutationalBurden(0)
+                .qc(qc)
                 .build();
 
         cnDataLoader.setPurityContext(purityContext);

@@ -9,7 +9,7 @@ Details on how to include these are available on the GRIDSS readme [here](https:
 # Usage
 
 ```
-java -Xms4G -Xmx16G -cp com.hartwig.hmftools.gripss.GripssApplicationKt \
+java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssApplicationKt \
    -ref_genome /path/to/Homo_sapiens_assembly.fasta \
    -breakend_pon /path/to/gridss_pon_single_breakend.bed \
    -breakpoint_pon /path/to/gridss_pon_breakpoint.bedpe \
@@ -21,7 +21,7 @@ java -Xms4G -Xmx16G -cp com.hartwig.hmftools.gripss.GripssApplicationKt \
 We typically then hard-filter all but PON filtered from the somatic file with the following command:
 
 ```
-java -Xms4G -Xmx16G -cp com.hartwig.hmftools.gripss.GripssHardFilterApplicationKt \
+java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssHardFilterApplicationKt \
    -input_vcf /path/to/SAMPLE.gridss.somatic.vcf.gz \
    -output_vcf /path/to/SAMPLE.gridss.somatic.filtered.vcf.gz 
 ```
@@ -137,7 +137,7 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
-- Upcoming
+- [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.8)
   - Legs of variant always have same filters
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.7)
   - Fix bug in BEALN interpretation

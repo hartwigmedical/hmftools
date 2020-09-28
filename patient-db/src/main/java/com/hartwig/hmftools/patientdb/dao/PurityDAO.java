@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityStatus.NO_TUMOR;
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NO_TUMOR;
+import static com.hartwig.hmftools.common.purple.qc.PurpleQCStatus.PASS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYRANGE;
 
@@ -12,14 +13,15 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.ImmutableSamplePurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.SamplePurity;
+import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -47,8 +49,8 @@ class PurityDAO {
         Result<Record> result = context.select()
                 .from(PURITY)
                 .where(PURITY.PURITY_.ge(minPurity))
-                .and(PURITY.STATUS.ne(NO_TUMOR.toString()))
-                .and(PURITY.QCSTATUS.eq("PASS"))
+                .and(PURITY.FITMETHOD.ne(NO_TUMOR.toString()))
+                .and(PURITY.QCSTATUS.eq(PASS.toString()))
                 .fetch();
 
         for (Record record : result) {
@@ -68,8 +70,10 @@ class PurityDAO {
             return null;
         }
 
+        final double actualPurity = result.getValue(PURITY.PURITY_);
+
         FittedPurity purity = ImmutableFittedPurity.builder()
-                .purity(result.getValue(PURITY.PURITY_))
+                .purity(actualPurity)
                 .normFactor(result.getValue(PURITY.NORMFACTOR))
                 .score(result.getValue(PURITY.SCORE))
                 .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
@@ -86,9 +90,25 @@ class PurityDAO {
                 .maxDiploidProportion(result.getValue(PURITY.MAXDIPLOIDPROPORTION))
                 .build();
 
+        final FittedPurityMethod method = FittedPurityMethod.valueOf(result.getValue(PURITY.FITMETHOD));
+        final Gender cobaltGender = Gender.valueOf(result.getValue(PURITY.GENDER));
+        final Gender amberGender = Gender.valueOf(result.getValue(PURITY.AMBERGENDER));
+        PurpleQC purpleQC = ImmutablePurpleQC.builder()
+                .copyNumberSegments(result.getValue(PURITY.COPYNUMBERSEGMENTS))
+                .unsupportedCopyNumberSegments(result.getValue(PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS))
+                .purity(actualPurity)
+                .amberGender(amberGender)
+                .cobaltGender(cobaltGender)
+                .deletedGenes(result.getValue(PURITY.DELETEDGENES))
+                .contamination(result.getValue(PURITY.CONTAMINATION))
+                .method(method)
+                .addAllGermlineAberrations(GermlineAberration.fromString(result.getValue(PURITY.GERMLINEABERRATION)))
+                .build();
+
         return ImmutablePurityContext.builder()
                 .bestFit(purity)
                 .score(score)
+                .qc(purpleQC)
                 .wholeGenomeDuplication(result.getValue(PURITY.WHOLEGENOMEDUPLICATION) == 1)
                 .microsatelliteStatus(MicrosatelliteStatus.valueOf(result.getValue(PURITY.MSSTATUS)))
                 .microsatelliteIndelsPerMb(result.getValue(PURITY.MSINDELSPERMB))
@@ -97,10 +117,10 @@ class PurityDAO {
                 .tumorMutationalLoad(result.getValue(PURITY.TML))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(result.getValue(PURITY.TMLSTATUS)))
                 .version(result.getValue(PURITY.VERSION))
-                .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
+                .gender(cobaltGender)
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
-                .status(FittedPurityStatus.valueOf(result.getValue(PURITY.STATUS)))
-                .germlineAberrations(GermlineAberration.fromString(result.getValue(PURITY.GERMLINEABERRATION)))
+                .method(method)
+                .svTumorMutationalBurden(result.getValue(PURITY.SVTMB))
                 .build();
     }
 
@@ -111,8 +131,8 @@ class PurityDAO {
         Result<Record> result = context.select()
                 .from(PURITY)
                 .where(PURITY.PURITY_.ge(minPurity))
-                .and(PURITY.STATUS.ne(NO_TUMOR.toString()))
-                .and(PURITY.QCSTATUS.eq("PASS"))
+                .and(PURITY.FITMETHOD.ne(NO_TUMOR.toString()))
+                .and(PURITY.QCSTATUS.eq(PASS.toString()))
                 .fetch();
 
         for (Record record : result) {
@@ -147,7 +167,7 @@ class PurityDAO {
                 PURITY.SAMPLEID,
                 PURITY.PURITY_,
                 PURITY.GENDER,
-                PURITY.STATUS,
+                PURITY.FITMETHOD,
                 PURITY.QCSTATUS,
                 PURITY.NORMFACTOR,
                 PURITY.SCORE,
@@ -168,14 +188,20 @@ class PurityDAO {
                 PURITY.TMBSTATUS,
                 PURITY.TML,
                 PURITY.TMLSTATUS,
+                PURITY.SVTMB,
+                PURITY.DELETEDGENES,
+                PURITY.COPYNUMBERSEGMENTS,
+                PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS,
+                PURITY.CONTAMINATION,
                 PURITY.GERMLINEABERRATION,
+                PURITY.AMBERGENDER,
                 PURITY.MODIFIED)
                 .values(purity.version(),
                         sample,
                         DatabaseUtil.decimal(bestFit.purity()),
                         purity.gender().toString(),
-                        purity.status().toString(),
-                        checks.status().toString(),
+                        purity.method().toString(),
+                        checks.toString(),
                         DatabaseUtil.decimal(bestFit.normFactor()),
                         DatabaseUtil.decimal(bestFit.score()),
                         DatabaseUtil.decimal(bestFit.somaticPenalty()),
@@ -195,7 +221,13 @@ class PurityDAO {
                         purity.tumorMutationalBurdenStatus().toString(),
                         DatabaseUtil.decimal(purity.tumorMutationalLoad()),
                         purity.tumorMutationalLoadStatus().toString(),
-                        GermlineAberration.toString(purity.germlineAberrations()),
+                        purity.svTumorMutationalBurden(),
+                        purity.qc().deletedGenes(),
+                        purity.qc().copyNumberSegments(),
+                        purity.qc().unsupportedCopyNumberSegments(),
+                        purity.qc().contamination(),
+                        GermlineAberration.toString(purity.qc().germlineAberrations()),
+                        purity.qc().amberGender(),
                         timestamp)
                 .execute();
     }

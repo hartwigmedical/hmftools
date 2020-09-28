@@ -57,6 +57,7 @@ public class PatientReporterApplication {
             QCFailReport report = reporter.run(config.qcFailReason(),
                     sampleMetadata,
                     config.purplePurityTsv(),
+                    config.purpleQcFile(),
                     config.comments(),
                     config.correctedReport());
 

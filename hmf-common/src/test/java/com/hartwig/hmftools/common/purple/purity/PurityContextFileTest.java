@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.fromLine;
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.toLines;
+import static com.hartwig.hmftools.common.purple.purity.PurityContextFile.toLines;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -12,8 +11,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -21,12 +20,12 @@ import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class FittedPurityFileTest {
+public class PurityContextFileTest {
 
     @Test
     public void testStripDecimalInTumorMutationalLoad() {
         PurityContext victim = createRandomContext(new Random());
-        String line = FittedPurityFile.toString(victim);
+        String line = PurityContextFile.toString(victim);
         String[] array = line.split("\t");
         array[19] = array[19] + ".9892ADV";
         StringJoiner joiner = new StringJoiner("\t");
@@ -34,7 +33,10 @@ public class FittedPurityFileTest {
             joiner.add(s);
         }
 
-        assertEquals(victim, FittedPurityFile.fromLine(joiner.toString()));
+        final List<String> qcLines = PurpleQCFile.toLines(victim.qc());
+        final List<String> lines = Lists.newArrayList(PurityContextFile.header(), joiner.toString());
+
+        assertEquals(victim, PurityContextFile.fromLines(qcLines, lines));
     }
 
     @Test
@@ -46,14 +48,16 @@ public class FittedPurityFileTest {
         assertEquals(2, lines.size());
         assertTrue(lines.get(0).startsWith("purity"));
 
-        final PurityContext output = fromLine(lines.get(1));
+        final List<String> qcLines = PurpleQCFile.toLines(input.qc());
+        final PurityContext output = PurityContextFile.fromLines(qcLines, lines);
         assertEquals(input, output);
     }
 
     @Test
-    public void testCompatibilityWith2_14() throws IOException {
-        FittedPurityFile.fromLine(Resources.readLines(Resources.getResource("purple/v2-47.purple.purity"), Charset.defaultCharset())
-                .get(1));
+    public void testCompatibilityWith2_47() throws IOException {
+        final List<String> qcLines = Resources.readLines(Resources.getResource("purple/v2-47.purple.qc"), Charset.defaultCharset());
+        final List<String> fitLines = Resources.readLines(Resources.getResource("purple/v2-47.purple.purity"), Charset.defaultCharset());
+        PurityContextFile.fromLines(qcLines, fitLines);
     }
 
     private static PurityContext createRandomContext(@NotNull Random random) {
@@ -62,7 +66,7 @@ public class FittedPurityFileTest {
                 .bestFit(createRandomPurity(random))
                 .score(createRandomScore(random))
                 .gender(Gender.values()[random.nextInt(Gender.values().length)])
-                .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])
+                .method(FittedPurityMethod.values()[random.nextInt(FittedPurityMethod.values().length)])
                 .polyClonalProportion(nextDouble(random))
                 .wholeGenomeDuplication(random.nextBoolean())
                 .microsatelliteIndelsPerMb(random.nextDouble())
@@ -71,8 +75,8 @@ public class FittedPurityFileTest {
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.HIGH)
                 .tumorMutationalLoad(random.nextInt(100_000_000))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
-                .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
-                .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
+                .svTumorMutationalBurden(random.nextInt())
+                .qc(PurpleQCFileTest.create(random))
                 .build();
     }
 

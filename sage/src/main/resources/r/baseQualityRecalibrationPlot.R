@@ -71,5 +71,13 @@ input <- args[1]
 output <- gsub("tsv","png", input)
 
 bqrData = prepare_data(input)
+
+uniqueBaseQuals = unique(bqrData$originalQual)
+if (length(uniqueBaseQuals) > 7) {
+  sampleBy = ceiling(length(uniqueBaseQuals)/7)
+  uniqueBaseQuals <- uniqueBaseQuals[seq(1, length(uniqueBaseQuals), sampleBy)]
+  bqrData = bqrData %>% filter(originalQual %in% uniqueBaseQuals)
+}
+
 bqrPlot = plot_data(bqrData)
 ggsave(filename = output, bqrPlot, units = "in", height = length(unique(bqrData$originalQual)), width = 12, scale = 1, dpi = 300)
