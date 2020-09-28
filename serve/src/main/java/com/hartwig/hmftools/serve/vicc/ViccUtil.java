@@ -19,6 +19,8 @@ import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.util.EventAnnotation;
+import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
+import com.hartwig.hmftools.vicc.util.ProteinAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,44 +63,43 @@ public final class ViccUtil {
                         && geneRangeForFeature == null && signatureForFeature == null) {
                     featuresWithoutGenomicEvents.add(feature);
                 } else {
+                    EventAnnotation eventAnnotation = EventAnnotationExtractor.toEventAnnotation(feature);
                     if (hotspotsForFeature != null) {
                         featuresWithHotspotsCount++;
                         totalHotspotsCount += hotspotsForFeature.size();
-                        writer.write(feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
-                                + feature + "\n");
+                        writer.write(eventAnnotation + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType()
+                                + "\t" + feature + "\n");
                     }
 
                     if (ampDelForFeature != null) {
-                        writer.write(feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
-                                + feature + "\n");
+                        writer.write(eventAnnotation + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType()
+                                + "\t" + feature + "\n");
 
                         featuresWithCopyNumberCount++;
                     }
 
                     if (fusionForFeature != null) {
-                        writer.write(feature.eventAnnotation() + "\t" + fusionForFeature.fusion() + "\t" + feature.name() + "\t"
-                                + feature.biomarkerType() + "\t" + feature + "\n");
+                        writer.write(
+                                eventAnnotation + "\t" + fusionForFeature.fusion() + "\t" + feature.name() + "\t" + feature.biomarkerType()
+                                        + "\t" + feature + "\n");
                         featuresWithFusionCount++;
                     }
 
                     if (geneLevelEventForFeature != null) {
-                        writer.write(
-                                feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
-                                        + feature + "\n");
+                        writer.write(eventAnnotation + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType()
+                                + "\t" + feature + "\n");
                         featuresWithGeneLevelEventCount++;
                     }
 
                     if (geneRangeForFeature != null) {
-                        writer.write(
-                                feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
-                                        + feature + "\n");
+                        writer.write(eventAnnotation + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType()
+                                + "\t" + feature + "\n");
                         featuresWithGeneRangeCount++;
                     }
 
                     if (signatureForFeature != null) {
-                        writer.write(
-                                feature.eventAnnotation() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
-                                        + feature + "\n");
+                        writer.write(eventAnnotation + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType()
+                                + "\t" + feature + "\n");
 
                         featuresWithSignatureCount++;
                     }
@@ -112,11 +113,12 @@ public final class ViccUtil {
         for (Feature feature : featuresWithoutGenomicEvents) {
             if (!FeatureIgnoreUtil.canIgnore(feature)) {
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-                writer.write(EventAnnotation.UNMAPPED_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
-                        + feature + "\n");
+                writer.write(EventAnnotation.UNMAPPED_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t"
+                        + feature.biomarkerType() + "\t" + feature + "\n");
             } else {
-                writer.write(EventAnnotation.IGNORED_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
-                        + feature + "\n");
+                writer.write(
+                        EventAnnotation.IGNORED_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType()
+                                + "\t" + feature + "\n");
             }
         }
 
@@ -144,7 +146,7 @@ public final class ViccUtil {
                     HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet(entry.source().display()),
                             feature.geneSymbol(),
                             entry.transcriptId(),
-                            feature.proteinAnnotation());
+                            ProteinAnnotationExtractor.toProteinAnnotation(feature));
                     if (currentAnnotation != null) {
                         convertedMap.put(hotspot, HotspotFunctions.mergeHotspotAnnotations(currentAnnotation, newAnnotation));
                     } else {

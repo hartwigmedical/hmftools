@@ -9,6 +9,8 @@ import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.util.EventAnnotation;
+import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
+import com.hartwig.hmftools.vicc.util.ProteinAnnotationExtractor;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,11 +27,12 @@ public class HotspotExtractor {
     public Map<Feature, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (feature.eventAnnotation().equals(EventAnnotation.HOTSPOT)) {
+            EventAnnotation eventAnnotation = EventAnnotationExtractor.toEventAnnotation(feature);
+            if (eventAnnotation == EventAnnotation.HOTSPOT) {
                 allHotspotsPerFeature.put(feature,
                         proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                                 viccEntry.transcriptId(),
-                                feature.proteinAnnotation()));
+                                ProteinAnnotationExtractor.toProteinAnnotation(feature)));
             }
         }
 

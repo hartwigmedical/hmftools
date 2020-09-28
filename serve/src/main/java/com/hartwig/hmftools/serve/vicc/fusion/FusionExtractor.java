@@ -39,10 +39,11 @@ public class FusionExtractor {
         Map<Feature, FusionAnnotation> fusionsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (feature.eventAnnotation().equals(EventAnnotation.FUSION_PAIR)) {
+            EventAnnotation eventAnnotation = EventAnnotationExtractor.toEventAnnotation(feature);
+            if (eventAnnotation == EventAnnotation.FUSION_PAIR) {
                 fusionsPerFeature.put(feature,
                         ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PAIR).build());
-            } else if (feature.eventAnnotation().equals(EventAnnotation.FUSION_PROMISCUOUS)) {
+            } else if (eventAnnotation == EventAnnotation.FUSION_PROMISCUOUS) {
                 fusionsPerFeature.put(feature,
                         ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PROMISCUOUS).build());
             }

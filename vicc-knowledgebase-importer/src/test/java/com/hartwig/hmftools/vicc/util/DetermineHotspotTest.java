@@ -53,6 +53,8 @@ public class DetermineHotspotTest {
 
         // Mutations with logical OR are ignored
         assertFalse(DetermineHotspot.isHotspot("V600E/K"));
+
+        // TODO Add case for V600D_K601insFGLAT
     }
 
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.vicc.util;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,6 +88,14 @@ public final class EventAnnotationExtractor {
             Sets.newHashSet("nonsense", "(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
+
+    @NotNull
+    public static EventAnnotation toEventAnnotation(@NotNull Feature feature) {
+        return toEventAnnotation(feature.name(),
+                feature.biomarkerType(),
+                feature.provenanceRule(),
+                ProteinAnnotationExtractor.toProteinAnnotation(feature));
+    }
 
     @NotNull
     public static EventAnnotation toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType,
