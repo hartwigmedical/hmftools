@@ -75,7 +75,7 @@ public abstract class PatientTumorLocation {
     public static List<String> toLines(@NotNull final List<PatientTumorLocation> patientTumorLocations) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        patientTumorLocations.stream().map(PatientTumorLocation::toString).forEach(lines::add);
+        patientTumorLocations.stream().map(PatientTumorLocation::toTumorLocationString).forEach(lines::add);
         return lines;
     }
 
@@ -85,9 +85,10 @@ public abstract class PatientTumorLocation {
     }
 
     @NotNull
-    public String toString(@NotNull final PatientTumorLocation patientTumorLocation) {
-        return new StringJoiner(DELIMITER, "", "").add(
-                patientTumorLocation.patientIdentifier() + DELIMITER + patientTumorLocation.primaryTumorLocation() + DELIMITER
-                        + patientTumorLocation.cancerSubtype()).toString();
+    private static String toTumorLocationString(@NotNull final PatientTumorLocation patientTumorLocation) {
+        return new StringJoiner(DELIMITER, "", "").add(patientTumorLocation.patientIdentifier())
+                .add(patientTumorLocation.primaryTumorLocation())
+                .add(patientTumorLocation.cancerSubtype())
+                .toString();
     }
 }
