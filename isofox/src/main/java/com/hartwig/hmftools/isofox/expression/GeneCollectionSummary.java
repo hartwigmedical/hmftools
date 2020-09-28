@@ -73,32 +73,6 @@ public class GeneCollectionSummary
         }
     }
 
-    public void assignLowMapQualityFragments()
-    {
-        int totalLowMqFragments = TransCategoryCounts.stream().mapToInt(x -> x.lowMapQualityCount()).sum();
-
-        if(totalLowMqFragments == 0)
-            return;
-
-        double totalTranscriptAlloc = TranscriptResults.stream().mapToDouble(x -> x.getFitAllocation()).sum();
-        double totalUnsplicedAlloc = GeneResults.stream().mapToDouble(x -> x.getUnsplicedAlloc()).sum();
-        double totalAlloc = totalTranscriptAlloc + totalUnsplicedAlloc;
-
-        if(totalAlloc == 0)
-            return;
-
-        double splicedLowMqFrags = totalLowMqFragments * totalTranscriptAlloc / totalAlloc;
-        double unsplicedLowMqFrags = totalLowMqFragments * totalUnsplicedAlloc / totalAlloc;
-
-        // and then amongst genes
-        for(final GeneResult geneResult : GeneResults)
-        {
-            double splicedAlloc = geneResult.getSplicedAlloc() / totalTranscriptAlloc * splicedLowMqFrags;
-            double unsplicedAlloc = geneResult.getUnsplicedAlloc() / totalUnsplicedAlloc * unsplicedLowMqFrags;
-            geneResult.setLowMapQualsAllocation(splicedAlloc + unsplicedAlloc);
-        }
-    }
-
     public void allocateResidualsToGenes()
     {
         if(GeneResults.size() == 1)

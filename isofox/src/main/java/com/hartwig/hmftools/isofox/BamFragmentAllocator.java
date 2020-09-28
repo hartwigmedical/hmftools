@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.HIGH_MAP_QUAL;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
@@ -42,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -135,7 +135,7 @@ public class BamFragmentAllocator
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
         boolean keepSupplementaries = mRunFusions;
         boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
-        int minMapQuality = keepSecondaries ? 0 : DEFAULT_MIN_MAPPING_QUALITY;
+        int minMapQuality = keepSecondaries ? 0 : HIGH_MAP_QUAL;
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
@@ -162,6 +162,7 @@ public class BamFragmentAllocator
     }
 
     public int totalReadCount() { return mTotalBamReadCount; }
+
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
     public BaseDepth getBaseDepth() { return mBaseDepth; }
@@ -271,9 +272,6 @@ public class BamFragmentAllocator
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
             return;
 
-        if(record.isSecondaryAlignment())
-            return;
-
         if(mDuplicateTracker.checkDuplicates(record))
         {
             if(mConfig.DropDuplicates)
@@ -369,7 +367,8 @@ public class BamFragmentAllocator
         */
 
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
-        boolean isMultiMapped = read1.isMultiMapped() || read2.isMultiMapped();
+        int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
+        boolean isMultiMapped = minMapQuality < HIGH_MAP_QUAL;
         boolean isChimeric = read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection();
 
         if(!isChimeric && !isDuplicate && !isMultiMapped && mRunFusions && (read1.containsSplit() || read2.containsSplit()))
@@ -542,8 +541,7 @@ public class BamFragmentAllocator
                 List<String> unsplicedGeneIds = overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
                 CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-                addGcCounts(catCounts, commonMappings);
-                checkLowMapQuality(read1, read2, catCounts);
+                addGcCounts(catCounts, commonMappings, minMapQuality);
             }
         }
         else
@@ -616,8 +614,7 @@ public class BamFragmentAllocator
                     overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
 
             CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-            addGcCounts(catCounts, commonMappings);
-            checkLowMapQuality(read1, read2, catCounts);
+            addGcCounts(catCounts, commonMappings, minMapQuality);
         }
 
         mCurrentGenes.addCount(fragmentType, 1);
@@ -633,15 +630,6 @@ public class BamFragmentAllocator
     }
 
     private static final int LOW_MAP_QUALITY = 10;
-
-    private void checkLowMapQuality(final ReadRecord read1, final ReadRecord read2, CategoryCountsData catCounts)
-    {
-        if(read1.mapQuality() < LOW_MAP_QUALITY || read2.mapQuality() < LOW_MAP_QUALITY)
-        {
-            // ISF_LOGGER.info("LOW_MAP_QUAL: gene({}) read({})", mCurrentGenes.geneNames(), read1);
-            catCounts.addLowMapQualityCount();
-        }
-    }
 
     private boolean checkDuplicateEnrichedReads(final SAMRecord record)
     {
@@ -784,13 +772,12 @@ public class BamFragmentAllocator
         CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
 
         List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
-        addGcCounts(catCounts, readRegions);
-        checkLowMapQuality(read1, read2, catCounts);
+        addGcCounts(catCounts, readRegions, min(read1.mapQuality(), read2.mapQuality()));
 
         mCurrentGenes.addCount(UNSPLICED, 1);
     }
 
-    private void addGcCounts(final CategoryCountsData catCounts, final List<int[]> readRegions)
+    private void addGcCounts(final CategoryCountsData catCounts, final List<int[]> readRegions, int minMapQuality)
     {
         int[] gcRatioIndices = { -1, -1 };
         double[] gcRatioCounts = { 0, 0 };
@@ -801,10 +788,24 @@ public class BamFragmentAllocator
             mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
         }
 
-        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, 1);
+        double fragmentCount = 1;
+
+        if(minMapQuality < HIGH_MAP_QUAL && mConfig.ApplyMapQualityAdjust)
+        {
+            if(minMapQuality == 3)
+                fragmentCount = 0.5;
+            else if(minMapQuality == 2)
+                fragmentCount = 0.33;
+            else if(minMapQuality == 1)
+                fragmentCount = 0.2;
+            else
+                fragmentCount = 0.1;
+        }
+
+        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, fragmentCount);
     }
 
-    private void addGcCounts(final CategoryCountsData catCounts, final int[] gcRatioIndices, double[] gcRatioCounts, int count)
+    private void addGcCounts(final CategoryCountsData catCounts, final int[] gcRatioIndices, double[] gcRatioCounts, double count)
     {
         if(mGcRatioCounts != null)
         {

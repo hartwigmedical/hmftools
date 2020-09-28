@@ -56,7 +56,7 @@ public class RetainedIntronFinder
         // reads must span an exon boundary without being exonic in another transcript
 
         // scenarios: exon-intron read plus:
-        // -  exonic read
+        // - exonic read
         // - intronic read
         // - spliced read
         // - another exon-intron read - same exon - dismissed as likely unspliced
