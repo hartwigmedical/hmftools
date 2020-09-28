@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.compress.utils.Lists;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -41,11 +43,16 @@ public class EnsemblDAO
     private final Set<String> mGeneIds;
     private final Set<Integer> mTranscriptIds;
 
+    private final List<String> IGNORED_TRANSCRIPTS;
+
     public EnsemblDAO(final CommandLine cmd)
     {
         mRefGenomeVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(HG19)));
         mGeneIds = Sets.newHashSet();
         mTranscriptIds = Sets.newHashSet();
+
+        IGNORED_TRANSCRIPTS = Lists.newArrayList();
+        populateTranscriptBlacklist();
 
         if(!connectDB(cmd))
         {
@@ -67,6 +74,11 @@ public class EnsemblDAO
 
     public boolean isValid() { return mDbContext != null && mCoordSystemId > 0; }
     public RefGenomeVersion refGenomeVersion() { return mRefGenomeVersion; }
+
+    private void populateTranscriptBlacklist()
+    {
+        IGNORED_TRANSCRIPTS.add("ENST00000467125"); // GOPC processed transcript which matches a ROS1 splice site
+    }
 
     private boolean connectDB(final CommandLine cmd)
     {
@@ -185,9 +197,9 @@ public class EnsemblDAO
                 + " inner join xref as display_xref on display_xref.xref_id = gene.display_xref_id"
                 + " inner join karyotype on gene.seq_region_id = karyotype.seq_region_id"
                 + " inner join seq_region on gene.seq_region_id = seq_region.seq_region_id"
-                + " left join xref as entrez_xref on (entrez_xref.xref_id = ox.xref_id and entrez_xref.external_db_id = 1300)"
+                + " left join xref as entrez_xref on (entrez_xref.xref_id = ox.xref_id and entrez_xref.external_db_id = 1100)"
                 + " inner join xref as syn_xref on syn_xref.xref_id = ox.xref_id"
-                + " where seq_region.name in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT')"
+                + " where seq_region.name in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y')"
                 + " and ((gene.seq_region_start >= karyotype.seq_region_start and gene.seq_region_start <= karyotype.seq_region_end)"
                 + " or (gene.seq_region_end >= karyotype.seq_region_start and gene.seq_region_end <= karyotype.seq_region_end))"
                 + " and seq_region.coord_system_id = " + mCoordSystemId
@@ -215,6 +227,11 @@ public class EnsemblDAO
 
             for(final Record record : results)
             {
+                String transName = (String)record.get("Trans");
+
+                if(IGNORED_TRANSCRIPTS.contains(transName))
+                    continue;
+
                 UInteger canTransId = (UInteger) record.get("CanonicalTranscriptId");
                 String geneId = (String)record.get("GeneId");
                 UInteger transId = (UInteger) record.get("TransId");
@@ -234,7 +251,7 @@ public class EnsemblDAO
 
                 writer.write(String.format("%s,%d,%d,%d,%s,%s,%d,%d",
                         geneId, canTransId.intValue(), strand, transId.intValue(),
-                        record.get("Trans"), record.get("BioType"), transStart.intValue(), transEnd.intValue()));
+                        transName, record.get("BioType"), transStart.intValue(), transEnd.intValue()));
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%s,%s",
                         exonRank.intValue(), exonStart.intValue(), exonEnd.intValue(), exonPhase, exonPhaseEnd,
