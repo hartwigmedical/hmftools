@@ -74,9 +74,14 @@ final class DetermineHotspot {
                 indexOfEvent = annotationEndPart.indexOf(HGVS_INSERTION);
             }
 
-            long start = Long.parseLong(annotationStartPart.substring(1));
-            long end = Long.parseLong(annotationEndPart.substring(1, indexOfEvent));
-            return 3 * (1 + end - start) <= MAX_INFRAME_BASE_LENGTH;
+            String startRange = annotationStartPart.substring(1);
+            String endRange = annotationEndPart.substring(1, indexOfEvent);
+
+            if (isLong(startRange) && isLong(endRange)) {
+                return 3 * (1 + Long.parseLong(endRange) - Long.parseLong(startRange)) <= MAX_INFRAME_BASE_LENGTH;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
@@ -129,6 +134,15 @@ final class DetermineHotspot {
         String newAminoAcid = proteinAnnotation.substring(firstNotDigit);
         // X is a wildcard that we don't support, and "/" indicates logical OR that we don't support.
         return !newAminoAcid.equals("X") && !newAminoAcid.contains("/");
+    }
+
+    private static boolean isLong(@NotNull String value) {
+        try {
+            Long.parseLong(value);
+            return true;
+        } catch (NumberFormatException exp) {
+            return false;
+        }
     }
 
     private static boolean isInteger(@NotNull String value) {

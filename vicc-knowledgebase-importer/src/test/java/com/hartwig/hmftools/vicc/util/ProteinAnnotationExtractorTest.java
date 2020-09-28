@@ -12,14 +12,14 @@ import org.junit.Test;
 public class ProteinAnnotationExtractorTest {
 
     @Test
-    public void canDeriveProteinAnnotation() {
+    public void canExtractProteinAnnotationFromFeature() {
         assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation(createFeatureWithName("E709K")));
         assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation(createFeatureWithName("EGFR E709K")));
         assertEquals("KIT", ProteinAnnotationExtractor.toProteinAnnotation(createFeatureWithName("KIT ")));
     }
 
     @Test
-    public void canConvertNameToProteinAnnotation() {
+    public void canConvertFeatureNameToProteinAnnotation() {
         assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("E709K"));
         assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("EGFR E709K "));
         assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("EGFR:E709K"));
