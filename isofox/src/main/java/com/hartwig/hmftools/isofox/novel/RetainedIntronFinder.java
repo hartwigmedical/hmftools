@@ -50,7 +50,7 @@ public class RetainedIntronFinder
 
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2)
     {
-        if(read1.isDuplicate() || read2.isDuplicate())
+        if(read1.isDuplicate() || read2.isDuplicate() || read1.isMultiMapped() || read2.isMultiMapped())
             return;
 
         // reads must span an exon boundary without being exonic in another transcript

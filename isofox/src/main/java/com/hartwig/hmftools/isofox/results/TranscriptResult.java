@@ -40,8 +40,6 @@ public class TranscriptResult
     private double mRawTpm;
     private double mAdjustedTpm;
 
-    private double mLowMapQualsAllocation;
-
     public TranscriptResult(
             final GeneCollection geneCollection, final GeneReadData geneReadData, final TranscriptData transData,
             final List<int[]> expRateFragmentLengths)
@@ -101,7 +99,6 @@ public class TranscriptResult
         mRawFitAllocation = 0;
         mRawTpm = 0;
         mAdjustedTpm = 0;
-        mLowMapQualsAllocation = 0;
     }
 
     public void setFitAllocation(double alloc) { mFitAllocation = alloc; }
@@ -114,9 +111,6 @@ public class TranscriptResult
     }
 
     public double getFitAllocation() { return mFitAllocation; }
-
-    public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
-    public double getLowMapQualsAllocation() { return mLowMapQualsAllocation; }
 
     public static double calcEffectiveLength(int transLength, final List<int[]> fragmentLengthData)
     {
@@ -191,7 +185,6 @@ public class TranscriptResult
                 .add("UniqueSJSupported")
                 .add("UniqueSJFragments")
                 .add("UniqueNonSJFragments")
-                .add("LowMapQualFrags")
                 .toString();
     }
 
@@ -214,7 +207,6 @@ public class TranscriptResult
                 .add(String.valueOf(UniqueSpliceJunctionsSupported))
                 .add(String.valueOf(UniqueSpliceJunctionFragments))
                 .add(String.valueOf(UniqueNonSJFragments))
-                .add(String.format("%.1f", mLowMapQualsAllocation))
                 .toString();
     }
 }

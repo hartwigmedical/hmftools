@@ -14,6 +14,4 @@ public class IsofoxConstants
     public static final int ENRICHED_GENE_BUFFER = 100000;
 
     public static final int MAX_NOVEL_SJ_DISTANCE = 500000; // beyond which a fragment will be considered chimeric
-
-
 }

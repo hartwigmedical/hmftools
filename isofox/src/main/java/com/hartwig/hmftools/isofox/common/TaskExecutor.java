@@ -26,7 +26,8 @@ public class TaskExecutor
                 }
                 catch(Exception e)
                 {
-                    ISF_LOGGER.error("task execution error: {}", e.toString());
+                    ISF_LOGGER.error("task execution error: {} stack: {}", e.toString());
+                    e.printStackTrace();
                 }
             }
 

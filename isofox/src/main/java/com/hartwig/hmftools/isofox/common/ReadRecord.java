@@ -79,6 +79,7 @@ public class ReadRecord
     private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
 
     public static final int NO_GENE_ID = -1;
+    public static final short HIGH_MAP_QUAL = 255;
 
     public static ReadRecord from(final SAMRecord record)
     {
@@ -156,8 +157,10 @@ public class ReadRecord
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
+
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }
+    public boolean isMultiMapped() { return mMapQuality < HIGH_MAP_QUAL; }
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 

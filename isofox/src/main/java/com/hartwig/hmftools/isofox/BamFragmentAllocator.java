@@ -135,8 +135,9 @@ public class BamFragmentAllocator
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
         boolean keepSupplementaries = mRunFusions;
         boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
+        int minMapQuality = keepSecondaries ? 0 : DEFAULT_MIN_MAPPING_QUALITY;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, keepDuplicates, keepSupplementaries, keepSecondaries);
+        mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
         mDuplicateTracker = new DuplicateReadTracker(mConfig.MarkDuplicates);
 
@@ -368,9 +369,10 @@ public class BamFragmentAllocator
         */
 
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
+        boolean isMultiMapped = read1.isMultiMapped() || read2.isMultiMapped();
         boolean isChimeric = read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection();
 
-        if(!isChimeric && !isDuplicate && (read1.containsSplit() || read2.containsSplit()))
+        if(!isChimeric && !isDuplicate && !isMultiMapped && mRunFusions && (read1.containsSplit() || read2.containsSplit()))
         {
             isChimeric = setHasMultipleKnownSpliceGenes(Lists.newArrayList(read1, read2), mKnownPairGeneIds);
         }
@@ -405,7 +407,9 @@ public class BamFragmentAllocator
         // some of these may be re-processed as alternative SJ candidates if they are within a single gene
         if(isChimeric)
         {
-            processChimericReadPair(read1, read2);
+            if(!isMultiMapped)
+                processChimericReadPair(read1, read2);
+
             return;
         }
 
