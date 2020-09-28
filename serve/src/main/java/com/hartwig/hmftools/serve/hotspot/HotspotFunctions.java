@@ -21,7 +21,7 @@ public final class HotspotFunctions {
     }
 
     @NotNull
-    public static Map<VariantHotspot, HotspotAnnotation> convertHotspots(@NotNull String source,
+    public static Map<VariantHotspot, HotspotAnnotation> convertHotspotMap(@NotNull String source,
             @NotNull Map<? extends HotspotSourceEntry, List<VariantHotspot>> hotspotsPerEntry) {
         Map<VariantHotspot, HotspotAnnotation> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
         for (Map.Entry<? extends HotspotSourceEntry, List<VariantHotspot>> entry : hotspotsPerEntry.entrySet()) {
@@ -46,7 +46,7 @@ public final class HotspotFunctions {
     }
 
     @NotNull
-    public static Map<VariantHotspot, HotspotAnnotation> mergeHotspots(@NotNull List<Map<VariantHotspot, HotspotAnnotation>> maps) {
+    public static Map<VariantHotspot, HotspotAnnotation> mergeHotspotMaps(@NotNull List<Map<VariantHotspot, HotspotAnnotation>> maps) {
         Map<VariantHotspot, HotspotAnnotation> mergedMap = Maps.newTreeMap(new VariantHotspotComparator());
         for (Map<VariantHotspot, HotspotAnnotation> map : maps) {
             for (Map.Entry<VariantHotspot, HotspotAnnotation> entry : map.entrySet()) {

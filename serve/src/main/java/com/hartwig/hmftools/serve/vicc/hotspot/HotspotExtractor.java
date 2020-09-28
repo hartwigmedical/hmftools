@@ -23,17 +23,16 @@ public class HotspotExtractor {
 
     @NotNull
     public Map<Feature, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) {
-        Map<Feature, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
+        Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == FeatureType.HOTSPOT) {
-                allHotspotsPerFeature.put(feature,
+                hotspotsPerFeature.put(feature,
                         proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                                 viccEntry.transcriptId(),
                                 feature.proteinAnnotation()));
             }
         }
 
-        return allHotspotsPerFeature;
+        return hotspotsPerFeature;
     }
-
 }

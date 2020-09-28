@@ -32,7 +32,7 @@ public class HotspotFunctionsTest {
         map.put(entry2, Lists.newArrayList(hotspot3));
 
         String source = "source";
-        Map<VariantHotspot, HotspotAnnotation> converted = HotspotFunctions.convertHotspots(source, map);
+        Map<VariantHotspot, HotspotAnnotation> converted = HotspotFunctions.convertHotspotMap(source, map);
 
         assertEquals(2, converted.size());
         HotspotAnnotation annotation1 = converted.get(hotspot1);
@@ -66,7 +66,7 @@ public class HotspotFunctionsTest {
         Map<VariantHotspot, HotspotAnnotation> source2Map = Maps.newHashMap();
         source2Map.put(hotspot1, source2Annotation1);
 
-        Map<VariantHotspot, HotspotAnnotation> mergedMap = HotspotFunctions.mergeHotspots(Lists.newArrayList(source1Map, source2Map));
+        Map<VariantHotspot, HotspotAnnotation> mergedMap = HotspotFunctions.mergeHotspotMaps(Lists.newArrayList(source1Map, source2Map));
 
         assertEquals(2, mergedMap.size());
         HotspotAnnotation mergedAnnotation1 = mergedMap.get(hotspot1);
