@@ -165,7 +165,6 @@ public class FusionFinder
                             continue;
 
                         setKnownFusionType(geneFusion);
-                        checkAlwaysReport(geneFusion);
                         potentialFusions.add(geneFusion);
                     }
                 }
@@ -572,9 +571,6 @@ public class FusionFinder
         // check impact on protein regions
         setFusionProteinFeatures(reportableFusion);
 
-        if(reportableFusion.reportable())
-            return;
-
         if(checkProteinDomains(reportableFusion.knownType()))
         {
             final Transcript downTrans = reportableFusion.downstreamTrans();
@@ -727,18 +723,13 @@ public class FusionFinder
                 geneFusion.setKnownExons();
             }
         }
-    }
 
-    private void checkAlwaysReport(GeneFusion geneFusion)
-    {
-        if(geneFusion.knownType() == NONE)
-            return;
-
-        if(mKnownFusionCache.alwaysReport(geneFusion.knownType(), geneFusion.geneName(FS_UPSTREAM), geneFusion.geneName(FS_DOWNSTREAM)))
+        if(geneFusion.knownType() == PROMISCUOUS_5 || geneFusion.knownType() == PROMISCUOUS_3)
         {
-            geneFusion.setReportable(true);
-            geneFusion.setAlwaysReport();
+            if(mKnownFusionCache.isHighImpactPromiscuous(geneFusion.knownType(), geneFusion.geneName(FS_UPSTREAM), geneFusion.geneName(FS_DOWNSTREAM)))
+            {
+                geneFusion.setHighImpactPromiscuous();
+            }
         }
     }
-
 }

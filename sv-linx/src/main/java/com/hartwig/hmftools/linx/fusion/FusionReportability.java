@@ -27,18 +27,12 @@ public class FusionReportability
 {
     public static boolean couldBeReportable(GeneFusion fusion)
     {
-        if(fusion.alwaysReport())
-            return true;
-
         if(fusion.neoEpitopeOnly())
             return false;
 
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         if (fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
             return false;
-
-        if(fusion.knownExons() && (fusion.knownType() == PROMISCUOUS_5 || fusion.knownType() == PROMISCUOUS_3))
-            return true;
 
         final Transcript upTrans = fusion.upstreamTrans();
         final Transcript downTrans = fusion.downstreamTrans();
@@ -62,7 +56,8 @@ public class FusionReportability
         }
 
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-        int maxUpstreamDistance = fusion.knownType() == KNOWN_PAIR ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
+        int maxUpstreamDistance = fusion.knownType() == KNOWN_PAIR || fusion.isHighImpactPromiscuous() ?
+                MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
 
         if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
             return false;
@@ -73,11 +68,8 @@ public class FusionReportability
         if(downTrans.hasNegativePrevSpliceAcceptorDistance())
             return false;
 
-        if(!allowExonSkipping(fusion.knownType()))
-        {
-            if(fusion.getExonsSkipped(true) > 0 || fusion.getExonsSkipped(false) > 0)
-                return false;
-        }
+        if(!permittedExonSkipping(fusion))
+            return false;
 
         if(fusion.isTerminated() && fusion.knownType() != KNOWN_PAIR)
             return false;
@@ -131,6 +123,12 @@ public class FusionReportability
 
         double fusionPriorityScore = 0;
         double factor = 1000000;
+
+        // 1. Known pair
+        if(fusion.knownType() == KNOWN_PAIR)
+            fusionPriorityScore += factor;
+
+        factor /= 10;
 
         // 1. Phase matched
         if(fusion.phaseMatched())
@@ -198,9 +196,21 @@ public class FusionReportability
         return (type == PROMISCUOUS_5 || type == PROMISCUOUS_3 || type == KNOWN_PAIR);
     }
 
-    private static boolean allowExonSkipping(final KnownFusionType type)
+    private static boolean permittedExonSkipping(final GeneFusion fusion)
     {
-        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS || type == EXON_DEL_DUP);
-    }
+        if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == IG_KNOWN_PAIR || fusion.knownType() == IG_PROMISCUOUS || fusion.knownType() == EXON_DEL_DUP)
+            return true;
 
+        if(fusion.knownExons())
+        {
+            if(fusion.knownType() == PROMISCUOUS_5 && fusion.getExonsSkipped(false) == 0)
+                return true;
+
+            if(fusion.knownType() == PROMISCUOUS_3 && fusion.getExonsSkipped(true) == 0)
+                return true;
+        }
+
+        // otherwise not allowed
+        return fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0;
+    }
 }

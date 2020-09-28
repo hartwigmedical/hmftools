@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
@@ -483,35 +484,26 @@ public class FusionDisruptionAnalyser
             LNX_LOGGER.trace("cluster({}) found {} chained fusions", cluster.id(), chainFusions.size());
 
             // consider fusions from amongst unique gene-pairings
-            List<String> genePairings = Lists.newArrayList();
+            final Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();
 
-            for(int i = 0; i < chainFusions.size(); ++i)
+            // allocate fusions to unique SV pairings
+            for(final GeneFusion fusion : chainFusions)
             {
-                GeneFusion fusion = chainFusions.get(i);
-                final String genePair = fusion.name();
+                final String name = fusion.name();
 
-                if(genePairings.contains(genePair))
-                    continue;
+                List<GeneFusion> fusions = genePairFusions.get(name);
 
-                genePairings.add(genePair);
+                if(fusions == null)
+                    genePairFusions.put(name, Lists.newArrayList(fusion));
+                else
+                    fusions.add(fusion);
+            }
 
-                // gather up all matching fusions
-                List<GeneFusion> genePairFusions = Lists.newArrayList();
-                genePairFusions.add(fusion);
-
-                for(int j = i+1; j < chainFusions.size(); ++j)
-                {
-                    GeneFusion nextFusion = chainFusions.get(j);
-                    String nextGenePair = nextFusion.name();
-
-                    if(nextGenePair.equals(genePair))
-                    {
-                        genePairFusions.add(nextFusion);
-                    }
-                }
-
+            // find top priority fusion amongst these fusions by SV-pair
+            for(Map.Entry<String,List<GeneFusion>> entry : genePairFusions.entrySet())
+            {
                 // only chained fusions with unterminated ends and valid traversal are considered as reportable
-                mFusionFinder.setReportableGeneFusions(genePairFusions);
+                mFusionFinder.setReportableGeneFusions(entry.getValue());
             }
 
             mFusions.addAll(chainFusions.stream()
@@ -904,26 +896,82 @@ public class FusionDisruptionAnalyser
         return true;
     }
 
+
     private final List<GeneFusion> extractUniqueFusions()
+    {
+        final Map<String,List<GeneFusion>> svIdPairFusions = Maps.newHashMap();
+        final Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();
+
+        // allocate fusions to unique SV pairings
+        for(final GeneFusion fusion : mFusions)
+        {
+            if(!persistFusion(fusion) || fusion.neoEpitopeOnly())
+                continue;
+
+            final String svIdPair = fusion.svIdPair();
+
+            List<GeneFusion> fusions = svIdPairFusions.get(svIdPair);
+
+            if(fusions == null)
+                svIdPairFusions.put(svIdPair, Lists.newArrayList(fusion));
+            else
+                fusions.add(fusion);
+        }
+
+        // find top priority fusion amongst these fusions by SV-pair
+        for(Map.Entry<String,List<GeneFusion>> entry : svIdPairFusions.entrySet())
+        {
+            List<GeneFusion> similarFusions = entry.getValue();
+
+            final GeneFusion topFusion = similarFusions.size() == 1 ? similarFusions.get(0) : findTopPriorityFusion(similarFusions, false);
+
+            if(topFusion == null)
+                continue;
+
+            List<GeneFusion> fusionsByName = genePairFusions.get(topFusion.name());
+
+            if(fusionsByName == null)
+                genePairFusions.put(topFusion.name(), Lists.newArrayList(topFusion));
+            else
+                fusionsByName.add(topFusion);
+        }
+
+        List<GeneFusion> uniqueFusions = Lists.newArrayList();
+
+        // if any gene-pair has multiple candidates, once again take the top one
+        for(Map.Entry<String,List<GeneFusion>> entry : genePairFusions.entrySet())
+        {
+            final List<GeneFusion> fusions = entry.getValue();
+            if(fusions.size() == 1)
+            {
+                uniqueFusions.add(fusions.get(0));
+            }
+            else
+            {
+                GeneFusion topFusion = findTopPriorityFusion(fusions, false);
+                if(topFusion != null)
+                    uniqueFusions.add(fusions.get(0));
+            }
+        }
+
+        return uniqueFusions;
+    }
+
+    private final List<GeneFusion> extractUniqueFusionsOld()
     {
         // from the list of all potential fusions, find the highest priority fusion
         // from amongst the those with the same gene-pairing and/or SV Id
 
         List<GeneFusion> uniqueFusions = Lists.newArrayList();
         List<String> genePairs = Lists.newArrayList();
+        final Set<Integer> usedSvIds = Sets.newHashSet();
 
         if(!mLogRepeatedGenePairs)
             uniqueFusions.stream().forEach(x -> genePairs.add(x.name()));
 
-        List<Integer> usedSvIds = Lists.newArrayList();
-        uniqueFusions.stream().forEach(x -> usedSvIds.add(x.upstreamTrans().gene().id()));
-
-        uniqueFusions.stream()
-                .filter(x -> !usedSvIds.contains(x.downstreamTrans().gene().id()))
-                .forEach(x -> usedSvIds.add(x.downstreamTrans().gene().id()));
-
         for(GeneFusion fusion : mFusions)
         {
+            // evaluate each unique fusion by gene pair and SV
             if(genePairs.contains(fusion.name()))
                 continue;
 
@@ -940,8 +988,8 @@ public class FusionDisruptionAnalyser
             similarFusions.addAll(mFusions.stream()
                     .filter(x -> persistFusion(x) && !x.neoEpitopeOnly())
                     .filter(x -> x != fusion)
-                    .filter(x -> x.name().equals(fusion.name()))
                     .filter(x -> !usedSvIds.contains(x.upstreamTrans().gene().id()) && !usedSvIds.contains(x.downstreamTrans().gene().id()))
+                    .filter(x -> x.name().equals(fusion.name()))
                     .collect(Collectors.toList()));
 
             if(!mLogRepeatedGenePairs)
@@ -954,9 +1002,7 @@ public class FusionDisruptionAnalyser
                 uniqueFusions.add(topFusion);
 
                 usedSvIds.add(topFusion.upstreamTrans().gene().id());
-
-                if(!usedSvIds.contains(topFusion.downstreamTrans().gene().id()))
-                    usedSvIds.add(topFusion.downstreamTrans().gene().id());
+                usedSvIds.add(topFusion.downstreamTrans().gene().id());
             }
         }
 

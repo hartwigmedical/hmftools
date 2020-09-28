@@ -4,10 +4,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KF_LOGGER;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +22,7 @@ public class KnownFusionData
     private boolean mValidData;
 
     // type-specific data:
-    public boolean mAlwaysReport;
+    public boolean mHighImpactPromiscuous;
 
     private int[] mDownstreamDistance; // used for some known pair 5' genes and IG 3' genes
 
@@ -50,7 +46,7 @@ public class KnownFusionData
     private static final String FLD_KNOWN_EXON_TRANS = "KnownExonTranscript";
     private static final String FLD_KNOWN_EXON_UP_RANGE = "KnownExonUpRange";
     private static final String FLD_KNOWN_EXON_DOWN_RANGE = "KnownExonDownRange";
-    private static final String FLD_ALWAYS_REPORT = "AlwaysReport";
+    private static final String FLD_HIGH_IMPACT_PROM = "HighImpactPromiscuous";
     private static final String FLD_OVERRIDES = "Overrides";
 
     public static final String OVERRIDE_IG_RANGE = "IG_RANGE";
@@ -73,7 +69,7 @@ public class KnownFusionData
         CancerTypes = cancerTypes;
         PubMedId = pubMedId;
 
-        mAlwaysReport = false;
+        mHighImpactPromiscuous = false;
         mSpecificExonsTransName = "";
         mMinFusedExons = new int[FS_PAIR];
         mMaxFusedExons = new int[FS_PAIR];
@@ -110,8 +106,8 @@ public class KnownFusionData
                 kfData.setKnownExonData(knownExonTrans, knownExonUpRange, knownExonDownRange);
             }
 
-            if(items[fieldIndexMap.get(FLD_ALWAYS_REPORT)].equalsIgnoreCase("TRUE"))
-                kfData.setAlwaysReport();
+            if(items[fieldIndexMap.get(FLD_HIGH_IMPACT_PROM)].equalsIgnoreCase("TRUE"))
+                kfData.setHighImpactPromiscuous();
 
             final String overrides = items[fieldIndexMap.get(FLD_OVERRIDES)];
 
@@ -188,8 +184,8 @@ public class KnownFusionData
         }
     }
 
-    public boolean alwaysReport() { return mAlwaysReport; }
-    public void setAlwaysReport() { mAlwaysReport = true; }
+    public boolean isHighImpactPromiscuous() { return mHighImpactPromiscuous; }
+    public void setHighImpactPromiscuous() { mHighImpactPromiscuous = true; }
 
     public int downstreamDistance(int stream) { return mDownstreamDistance[stream]; }
 

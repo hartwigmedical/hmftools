@@ -5,9 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.UPSTREAM_STR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
@@ -35,7 +33,7 @@ public class GeneFusion
     private KnownFusionType mKnownFusionType;
     private final boolean[] mIsPromiscuous;
     private boolean mKnownExons;
-    private boolean mAlwaysReport;
+    private boolean mHighImpactPromiscuous;
     private boolean mNeoEpitopeOnly;
 
     private FusionAnnotations mAnnotations;
@@ -53,7 +51,7 @@ public class GeneFusion
         mPhaseMatched = phaseMatched;
         mExonsSkipped = new int[] { 0, 0 };
         mKnownExons = false;
-        mAlwaysReport = false;
+        mHighImpactPromiscuous = false;
         mNeoEpitopeOnly = false;
         mAnnotations = null;
         mPriority = 0;
@@ -115,6 +113,9 @@ public class GeneFusion
 
     public FusionLikelihoodType likelihoodType()
     {
+        if(!mIsReportable)
+            return FusionLikelihoodType.NA;
+
         if(mKnownFusionType == KNOWN_PAIR || mKnownFusionType == EXON_DEL_DUP || mKnownFusionType == IG_KNOWN_PAIR || mKnownExons)
             return FusionLikelihoodType.HIGH;
         else
@@ -124,8 +125,8 @@ public class GeneFusion
     public void setKnownExons() { mKnownExons = true; }
     public boolean knownExons() { return mKnownExons; }
 
-    public void setAlwaysReport() { mAlwaysReport = true; }
-    public boolean alwaysReport() { return mAlwaysReport; }
+    public void setHighImpactPromiscuous() { mHighImpactPromiscuous = true; }
+    public boolean isHighImpactPromiscuous() { return mHighImpactPromiscuous; }
 
     public void setExonsSkipped(int exonsUp, int exonsDown)
     {
@@ -194,6 +195,11 @@ public class GeneFusion
             return mAnnotations.chainInfo().validTraversal();
         else
             return true;
+    }
+
+    public String svIdPair()
+    {
+        return String.format("%d_%d", mTranscripts[FS_UPSTREAM].gene().id(), mTranscripts[FS_DOWNSTREAM].gene().id());
     }
 
     public final String toString()
