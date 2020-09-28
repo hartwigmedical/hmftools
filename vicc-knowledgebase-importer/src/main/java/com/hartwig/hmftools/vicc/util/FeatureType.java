@@ -10,7 +10,5 @@ public enum FeatureType {
     FUSION_PAIR,
     FUSION_PROMISCUOUS,
     SIGNATURE,
-    UNKNOWN,
-    IGNORED_EVENT,
-    UNMAPPED_EVENT
+    UNKNOWN
 }

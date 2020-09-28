@@ -34,7 +34,7 @@ public final class ViccUtil {
     public static void writeFeatureTypesToTsv(@NotNull String featureTypeTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(featureTypeTsv));
-        writer.write("Mapped event" + "\t" + "Gene" + "\t" + "Name" + "\t" + "Event" + "\t" + "Feature" + "\n");
+        writer.write("Type" + "\t" + "Gene" + "\t" + "Name" + "\t" + "Event" + "\t" + "Feature" + "\n");
 
         List<Feature> featuresWithoutGenomicEvents = Lists.newArrayList();
         int totalFeatureCount = 0;
@@ -113,28 +113,22 @@ public final class ViccUtil {
 
         LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
-            if (!FeatureIgnoreUtil.canIgnore(feature)) {
-                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
-                writer.write(
-                        FeatureType.UNMAPPED_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType()
-                                + "\t" + feature + "\n");
-            } else {
-                writer.write(
-                        FeatureType.IGNORED_EVENT + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType()
-                                + "\t" + feature + "\n");
-            }
+            LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+            writer.write(
+                    FeatureType.UNKNOWN + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                            + feature + "\n");
         }
 
-        LOGGER.info("Extraction performed on {} features from {} entries", totalFeatureCount, resultsPerEntry.size());
-        LOGGER.info(" Extracted {} hotspots for {} features", totalHotspotsCount, featuresWithHotspotsCount);
-        LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
-        LOGGER.info(" Extracted {} fusions", featuresWithFusionCount);
-        LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
-        LOGGER.info(" Extracted {} gene ranges", featuresWithGeneRangeCount);
-        LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
+        LOGGER.info("Extraction performed on {} features from {} entries",totalFeatureCount,resultsPerEntry.size());
+        LOGGER.info(" Extracted {} hotspots for {} features",totalHotspotsCount,featuresWithHotspotsCount);
+        LOGGER.info(" Extracted {} known amps and dels",featuresWithCopyNumberCount);
+        LOGGER.info(" Extracted {} fusions",featuresWithFusionCount);
+        LOGGER.info(" Extracted {} gene level events",featuresWithGeneLevelEventCount);
+        LOGGER.info(" Extracted {} gene ranges",featuresWithGeneRangeCount);
+        LOGGER.info(" Extracted {} signatures",featuresWithSignatureCount);
 
         writer.close();
-    }
+}
 
     @NotNull
     public static Map<VariantHotspot, HotspotAnnotation> convertToHotspotMap(

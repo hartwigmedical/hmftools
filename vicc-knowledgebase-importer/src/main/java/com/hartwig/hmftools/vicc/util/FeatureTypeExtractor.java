@@ -98,8 +98,8 @@ public final class FeatureTypeExtractor {
     }
 
     @NotNull
-    public static FeatureType extractType(@NotNull String featureName, @Nullable String biomarkerType,
-            @Nullable String provenanceRule, @NotNull String proteinAnnotation) {
+    public static FeatureType extractType(@NotNull String featureName, @Nullable String biomarkerType, @Nullable String provenanceRule,
+            @NotNull String proteinAnnotation) {
         String feature = featureName;
         if (feature.contains(" ") && !feature.equals("Copy Number Loss")) {
             feature = feature.split(" ", 2)[1];
@@ -145,12 +145,10 @@ public final class FeatureTypeExtractor {
             return FeatureType.GENE_RANGE_CODON;
         } else if (proteinAnnotation.contains("del") && proteinAnnotation.contains("_")) {
             return FeatureType.GENE_RANGE_CODON;
-        } else {
-            LOGGER.warn("No feature type extracted from event!");
-            return FeatureType.UNMAPPED_EVENT;
         }
-        return FeatureType.UNMAPPED_EVENT;
 
+        LOGGER.warn("No feature type extracted from event!");
+        return FeatureType.UNKNOWN;
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String feature) {
