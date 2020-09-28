@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.util;
+package com.hartwig.hmftools.vicc.annotation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

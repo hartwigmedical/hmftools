@@ -3,9 +3,9 @@ package com.hartwig.hmftools.serve.vicc.signatures;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.util.FeatureType;
 
 import org.jetbrains.annotations.NotNull;
 

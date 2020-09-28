@@ -2,9 +2,9 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.util.FeatureType;
-import com.hartwig.hmftools.vicc.util.FeatureTypeExtractor;
-import com.hartwig.hmftools.vicc.util.ProteinAnnotationExtractor;
+import com.hartwig.hmftools.vicc.annotation.FeatureType;
+import com.hartwig.hmftools.vicc.annotation.FeatureTypeExtractor;
+import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.util;
+package com.hartwig.hmftools.vicc.annotation;
 
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_DELETION;
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_DUPLICATION;

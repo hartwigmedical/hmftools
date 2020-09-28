@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.util;
+package com.hartwig.hmftools.vicc.annotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

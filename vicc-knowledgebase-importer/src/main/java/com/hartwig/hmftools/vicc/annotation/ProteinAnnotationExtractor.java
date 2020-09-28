@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.util;
+package com.hartwig.hmftools.vicc.annotation;
 
 import java.util.Set;
 
