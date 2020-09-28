@@ -34,7 +34,10 @@ final class DetermineHotspot {
                 return isValidSingleCodonMutation(proteinAnnotation);
             }
         } catch (Exception exception) {
-            LOGGER.warn("Could not determine whether protein annotation is resolvable due to '{}'", exception.getMessage(), exception);
+            LOGGER.warn("Could not determine whether protein annotation '{}' is resolvable due to '{}'",
+                    proteinAnnotation,
+                    exception.getMessage(),
+                    exception);
             return false;
         }
     }
