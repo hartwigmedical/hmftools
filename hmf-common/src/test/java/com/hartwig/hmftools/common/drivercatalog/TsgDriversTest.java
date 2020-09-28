@@ -109,7 +109,7 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    private static DndsDriverImpactLikelihood createLikelihood(double pDriver, double pVariantNonDriver) {
+    static DndsDriverImpactLikelihood createLikelihood(double pDriver, double pVariantNonDriver) {
         return ImmutableDndsDriverImpactLikelihood.builder()
                 .dndsLikelihood(0)
                 .driversPerSample(pDriver)
@@ -118,7 +118,7 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    private static SomaticVariant create(@NotNull VariantType type, @NotNull CodingEffect codingEffect, boolean hotspot, double vaf) {
+    static SomaticVariant create(@NotNull VariantType type, @NotNull CodingEffect codingEffect, boolean hotspot, double vaf) {
         boolean biallelic = Doubles.greaterOrEqual(2 * vaf, 1.5);
         return SomaticVariantTestBuilderFactory.create()
                 .type(type)
@@ -132,7 +132,7 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    private static Map<VariantType, Long> countMap(int snp, int indel) {
+    static Map<VariantType, Long> countMap(int snp, int indel) {
         Map<VariantType, Long> countMap = Maps.newHashMap();
         countMap.put(VariantType.SNP, (long) snp);
         countMap.put(VariantType.INDEL, (long) indel);
