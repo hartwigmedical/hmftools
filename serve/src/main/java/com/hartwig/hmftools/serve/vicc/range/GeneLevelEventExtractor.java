@@ -5,8 +5,8 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.util.EventAnnotation;
-import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
+import com.hartwig.hmftools.vicc.util.FeatureType;
+import com.hartwig.hmftools.vicc.util.FeatureTypeExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,8 +22,8 @@ public class GeneLevelEventExtractor {
         Map<Feature, String> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            EventAnnotation eventAnnotation = EventAnnotationExtractor.toEventAnnotation(feature);
-            if (eventAnnotation == EventAnnotation.GENE_LEVEL) {
+            FeatureType featureType = FeatureTypeExtractor.extractType(feature);
+            if (featureType == FeatureType.GENE_LEVEL) {
                 geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
 
             }

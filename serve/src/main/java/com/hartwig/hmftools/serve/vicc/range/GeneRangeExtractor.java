@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.util.EventAnnotation;
-import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
+import com.hartwig.hmftools.vicc.util.FeatureType;
+import com.hartwig.hmftools.vicc.util.FeatureTypeExtractor;
 import com.hartwig.hmftools.vicc.util.ProteinAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,9 +54,9 @@ public class GeneRangeExtractor {
         List<GeneRangeAnnotation> geneRangeAnnotation = Lists.newArrayList();
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-            EventAnnotation eventAnnotation = EventAnnotationExtractor.toEventAnnotation(feature);
+            FeatureType featureType = FeatureTypeExtractor.extractType(feature);
 
-            if (eventAnnotation == EventAnnotation.GENE_RANGE_EXON) {
+            if (featureType == FeatureType.GENE_RANGE_EXON) {
                 String transcriptIdVicc = viccEntry.transcriptId();
 
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -89,7 +89,7 @@ public class GeneRangeExtractor {
                         //TODO how to solve this event?
                         //  LOGGER.warn("Skipped future for determine genomic positions of exon range '{}'", feature);
                     } else if (feature.name().contains("-")) {
-                        String exons = ProteinAnnotationExtractor.toProteinAnnotation(feature);
+                        String exons = ProteinAnnotationExtractor.extractProteinAnnotation(feature);
                         List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
 
                         if (exons.equals("mutation")) {
@@ -119,7 +119,7 @@ public class GeneRangeExtractor {
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     } else {
 
-                        String exonNumber = ProteinAnnotationExtractor.toProteinAnnotation(feature);
+                        String exonNumber = ProteinAnnotationExtractor.extractProteinAnnotation(feature);
 
                         if (exonNumber.equals("mutation")) {
                             exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
@@ -147,8 +147,8 @@ public class GeneRangeExtractor {
                     //                            feature);
                 }
 
-            } else if (eventAnnotation == EventAnnotation.GENE_RANGE_CODON) {
-                String proteinAnnotation = ProteinAnnotationExtractor.toProteinAnnotation(feature);
+            } else if (featureType == FeatureType.GENE_RANGE_CODON) {
+                String proteinAnnotation = ProteinAnnotationExtractor.extractProteinAnnotation(feature);
                 if (!proteinAnnotation.equals("T148HFSX9") && !proteinAnnotation.equals("L485_P490")) {
                     geneRangesPerFeature = determineRanges(viccEntry,
                             feature,
@@ -157,8 +157,8 @@ public class GeneRangeExtractor {
                             geneRangesPerFeature,
                             canonicalTranscript);
                 }
-            } else if (eventAnnotation == EventAnnotation.GENE_RANGE_CODON) {
-                String proteinAnnotation = ProteinAnnotationExtractor.toProteinAnnotation(feature);
+            } else if (featureType == FeatureType.GENE_RANGE_CODON) {
+                String proteinAnnotation = ProteinAnnotationExtractor.extractProteinAnnotation(feature);
                 if (!proteinAnnotation.equals("T148HFSX9") && !proteinAnnotation.equals("L485_P490")) {
                     geneRangesPerFeature = determineRanges(viccEntry,
                             feature,
@@ -167,8 +167,8 @@ public class GeneRangeExtractor {
                             geneRangesPerFeature,
                             canonicalTranscript);
                 }
-            } else if (eventAnnotation == EventAnnotation.GENE_RANGE_CODON) {
-                String proteinAnnotation = ProteinAnnotationExtractor.toProteinAnnotation(feature);
+            } else if (featureType == FeatureType.GENE_RANGE_CODON) {
+                String proteinAnnotation = ProteinAnnotationExtractor.extractProteinAnnotation(feature);
                 if (!proteinAnnotation.equals("T148HFSX9") && !proteinAnnotation.equals("L485_P490")) {
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,
@@ -186,8 +186,8 @@ public class GeneRangeExtractor {
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
-            } else if (eventAnnotation == EventAnnotation.GENE_RANGE_CODON) {
-                String proteinAnnotation = ProteinAnnotationExtractor.toProteinAnnotation(feature);
+            } else if (featureType == FeatureType.GENE_RANGE_CODON) {
+                String proteinAnnotation = ProteinAnnotationExtractor.extractProteinAnnotation(feature);
                 if (!proteinAnnotation.equals("T148HFSX9") && !proteinAnnotation.equals("L485_P490")) {
                     //                    geneRangesPerFeature = determineRanges(viccEntry,
                     //                            feature,
@@ -205,8 +205,8 @@ public class GeneRangeExtractor {
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
-            } else if (eventAnnotation == EventAnnotation.GENE_RANGE_CODON) {
-                String proteinAnnotation = ProteinAnnotationExtractor.toProteinAnnotation(feature);
+            } else if (featureType == FeatureType.GENE_RANGE_CODON) {
+                String proteinAnnotation = ProteinAnnotationExtractor.extractProteinAnnotation(feature);
                 int start = Integer.valueOf(proteinAnnotation.split("_")[0].replaceAll("\\D+",""));
                 int end = Integer.valueOf(proteinAnnotation.split("_")[1].replaceAll("\\D+",""));
                 int  count = end -start;

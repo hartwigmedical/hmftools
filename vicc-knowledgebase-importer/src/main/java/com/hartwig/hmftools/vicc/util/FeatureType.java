@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.vicc.util;
 
-public enum EventAnnotation {
-    SIGNATURE,
+public enum FeatureType {
+    HOTSPOT,
+    GENE_RANGE_CODON,
+    GENE_RANGE_EXON,
+    GENE_LEVEL,
     AMPLIFICATION,
     DELETION,
     FUSION_PAIR,
     FUSION_PROMISCUOUS,
-    HOTSPOT,
-    GENE_LEVEL,
-    GENE_RANGE_CODON,
-    GENE_RANGE_EXON,
+    SIGNATURE,
+    UNKNOWN,
     IGNORED_EVENT,
     UNMAPPED_EVENT
 }

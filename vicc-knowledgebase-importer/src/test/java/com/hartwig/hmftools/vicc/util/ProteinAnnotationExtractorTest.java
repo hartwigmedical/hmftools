@@ -13,27 +13,27 @@ public class ProteinAnnotationExtractorTest {
 
     @Test
     public void canExtractProteinAnnotationFromFeature() {
-        assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation(createFeatureWithName("E709K")));
-        assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation(createFeatureWithName("EGFR E709K")));
-        assertEquals("KIT", ProteinAnnotationExtractor.toProteinAnnotation(createFeatureWithName("KIT ")));
+        assertEquals("E709K", ProteinAnnotationExtractor.extractProteinAnnotation(createFeatureWithName("E709K")));
+        assertEquals("E709K", ProteinAnnotationExtractor.extractProteinAnnotation(createFeatureWithName("EGFR E709K")));
+        assertEquals("KIT", ProteinAnnotationExtractor.extractProteinAnnotation(createFeatureWithName("KIT ")));
     }
 
     @Test
     public void canConvertFeatureNameToProteinAnnotation() {
-        assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("E709K"));
-        assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("EGFR E709K "));
-        assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("EGFR:E709K"));
-        assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("EGFR:p.E709K"));
-        assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("EGFR p.E709K"));
-        assertEquals("E709K", ProteinAnnotationExtractor.toProteinAnnotation("E709K (c.2100A>c)"));
+        assertEquals("E709K", ProteinAnnotationExtractor.extractProteinAnnotation("E709K"));
+        assertEquals("E709K", ProteinAnnotationExtractor.extractProteinAnnotation("EGFR E709K "));
+        assertEquals("E709K", ProteinAnnotationExtractor.extractProteinAnnotation("EGFR:E709K"));
+        assertEquals("E709K", ProteinAnnotationExtractor.extractProteinAnnotation("EGFR:p.E709K"));
+        assertEquals("E709K", ProteinAnnotationExtractor.extractProteinAnnotation("EGFR p.E709K"));
+        assertEquals("E709K", ProteinAnnotationExtractor.extractProteinAnnotation("E709K (c.2100A>c)"));
 
-        assertEquals("G778_P780dup", ProteinAnnotationExtractor.toProteinAnnotation("G778_P780DUP"));
-        assertEquals("V560del", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560DEL"));
-        assertEquals("V560fs", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560FS"));
-        assertEquals("V560fs", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560FS*"));
-        assertEquals("V560insAYVM", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560INSAYVM"));
-        assertEquals("V560insINS", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560INSINS"));
-        assertEquals("V560delinsDEL", ProteinAnnotationExtractor.toProteinAnnotation("KIT:p.V560DELINSDEL"));
+        assertEquals("G778_P780dup", ProteinAnnotationExtractor.extractProteinAnnotation("G778_P780DUP"));
+        assertEquals("V560del", ProteinAnnotationExtractor.extractProteinAnnotation("KIT:p.V560DEL"));
+        assertEquals("V560fs", ProteinAnnotationExtractor.extractProteinAnnotation("KIT:p.V560FS"));
+        assertEquals("V560fs", ProteinAnnotationExtractor.extractProteinAnnotation("KIT:p.V560FS*"));
+        assertEquals("V560insAYVM", ProteinAnnotationExtractor.extractProteinAnnotation("KIT:p.V560INSAYVM"));
+        assertEquals("V560insINS", ProteinAnnotationExtractor.extractProteinAnnotation("KIT:p.V560INSINS"));
+        assertEquals("V560delinsDEL", ProteinAnnotationExtractor.extractProteinAnnotation("KIT:p.V560DELINSDEL"));
     }
 
     @NotNull
