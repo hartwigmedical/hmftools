@@ -162,6 +162,8 @@ Ensembl database URLs for 19/37 & 38 are:
 
 By default LINX will use HG19, but this can be overridden using the ref_genome_version config described above.
 
+Note that ENST00000467125 is blacklisted from ensembl (as it is shares a splice boundary with a chimeric pathogenic GOPC_ROS1 fusion transcript)
+
 ## Outputs
 
 Linx writes all output to tsv files, each of which is decribed below.
