@@ -2,6 +2,10 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
+import com.hartwig.hmftools.vicc.util.FeatureType;
+import com.hartwig.hmftools.vicc.util.FeatureTypeExtractor;
+import com.hartwig.hmftools.vicc.util.ProteinAnnotationExtractor;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,6 +13,18 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Feature {
+
+    @NotNull
+    @Value.Derived
+    public FeatureType type() {
+        return FeatureTypeExtractor.extractType(this);
+    }
+
+    @NotNull
+    @Value.Derived
+    public String proteinAnnotation() {
+        return ProteinAnnotationExtractor.extractProteinAnnotation(this);
+    }
 
     @NotNull
     public abstract String name();

@@ -9,7 +9,6 @@ import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.util.FeatureType;
-import com.hartwig.hmftools.vicc.util.FeatureTypeExtractor;
 import com.hartwig.hmftools.vicc.util.FusionEvent;
 
 import org.apache.logging.log4j.LogManager;
@@ -39,11 +38,10 @@ public class FusionExtractor {
         Map<Feature, FusionAnnotation> fusionsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            FeatureType featureType = FeatureTypeExtractor.extractType(feature);
-            if (featureType == FeatureType.FUSION_PAIR) {
+            if (feature.type() == FeatureType.FUSION_PAIR) {
                 fusionsPerFeature.put(feature,
                         ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PAIR).build());
-            } else if (featureType == FeatureType.FUSION_PROMISCUOUS) {
+            } else if (feature.type() == FeatureType.FUSION_PROMISCUOUS) {
                 fusionsPerFeature.put(feature,
                         ImmutableFusionAnnotation.builder().fusion(feature.name()).fusionEvent(FusionEvent.FUSION_PROMISCUOUS).build());
             }
