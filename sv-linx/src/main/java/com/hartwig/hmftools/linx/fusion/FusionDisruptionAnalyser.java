@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
@@ -157,7 +158,6 @@ public class FusionDisruptionAnalyser
     {
         return configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, REF_GENOME_FILE) && configPathValid(cmd, KNOWN_FUSIONS_FILE);
     }
-
 
     private void initialise(final CommandLine cmdLineArgs)
     {
@@ -334,7 +334,7 @@ public class FusionDisruptionAnalyser
         mUniqueFusions.addAll(extractUniqueFusions());
 
         // add protein information which won't have been set for unreported fusions
-        mUniqueFusions.stream().filter(x -> !x.reportable()).forEach(x -> mFusionFinder.setFusionProteinFeatures(x));
+        mUniqueFusions.stream().filter(x -> x.knownType() != NONE).forEach(x -> mFusionFinder.setFusionProteinFeatures(x));
 
         final List<Transcript> transcripts = getTranscriptList(svList, mUniqueFusions);
 
@@ -369,13 +369,13 @@ public class FusionDisruptionAnalyser
         {
             for(final GeneFusion fusion : mUniqueFusions)
             {
-                if(fusion.knownType() == KnownFusionType.NONE)
-                    continue;
-
-                LNX_LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
-                        fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
-                        fusion.knownTypeStr(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
-                        fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
+                if(fusion.knownType() != KnownFusionType.NONE)
+                {
+                    LNX_LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
+                            fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
+                            fusion.knownTypeStr(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
+                            fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
+                }
             }
         }
 
@@ -426,7 +426,7 @@ public class FusionDisruptionAnalyser
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
 
-            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams, true);
+            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams);
 
             if(mNeoEpitopeFinder != null)
                 mNeoEpitopeFinder.checkFusions(fusions, genesListStart, genesListEnd);
@@ -436,7 +436,7 @@ public class FusionDisruptionAnalyser
 
             if(mLogReportableOnly)
             {
-                fusions = fusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
+                fusions = fusions.stream().filter(x -> couldBeReportable(x)).collect(Collectors.toList());
             }
 
             final SvCluster cluster = var.getCluster();
@@ -497,13 +497,6 @@ public class FusionDisruptionAnalyser
                     genePairFusions.put(name, Lists.newArrayList(fusion));
                 else
                     fusions.add(fusion);
-            }
-
-            // find top priority fusion amongst these fusions by SV-pair
-            for(Map.Entry<String,List<GeneFusion>> entry : genePairFusions.entrySet())
-            {
-                // only chained fusions with unterminated ends and valid traversal are considered as reportable
-                mFusionFinder.setReportableGeneFusions(entry.getValue());
             }
 
             mFusions.addAll(chainFusions.stream()
@@ -620,7 +613,7 @@ public class FusionDisruptionAnalyser
                 }
 
                 // test the fusion between these 2 breakends
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, mFusionParams, false);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, mFusionParams);
 
                 if(mNeoEpitopeFinder != null)
                     mNeoEpitopeFinder.checkFusions(fusions, genesListLower, genesListUpper);
@@ -918,12 +911,12 @@ public class FusionDisruptionAnalyser
                 fusions.add(fusion);
         }
 
-        // find top priority fusion amongst these fusions by SV-pair
+        // find top priority fusion amongst these fusions by SV-pair, setting reportability at the same time
         for(Map.Entry<String,List<GeneFusion>> entry : svIdPairFusions.entrySet())
         {
             List<GeneFusion> similarFusions = entry.getValue();
 
-            final GeneFusion topFusion = similarFusions.size() == 1 ? similarFusions.get(0) : findTopPriorityFusion(similarFusions, false);
+            final GeneFusion topFusion = mFusionFinder.findTopReportableFusion(similarFusions);
 
             if(topFusion == null)
                 continue;
@@ -938,7 +931,7 @@ public class FusionDisruptionAnalyser
 
         List<GeneFusion> uniqueFusions = Lists.newArrayList();
 
-        // if any gene-pair has multiple candidates, once again take the top one
+        // if any gene-pair has multiple candidates, once again take the top one and
         for(Map.Entry<String,List<GeneFusion>> entry : genePairFusions.entrySet())
         {
             final List<GeneFusion> fusions = entry.getValue();
@@ -950,7 +943,7 @@ public class FusionDisruptionAnalyser
             {
                 GeneFusion topFusion = findTopPriorityFusion(fusions, false);
                 if(topFusion != null)
-                    uniqueFusions.add(fusions.get(0));
+                    uniqueFusions.add(topFusion);
             }
         }
 

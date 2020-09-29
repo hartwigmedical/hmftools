@@ -82,7 +82,7 @@ public class SpecialFusionsTest
         params.RequirePhaseMatch = true;
         params.AllowExonSkipping = true;
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
 
         assertEquals(1, fusions.size());
         final GeneFusion fusion = fusions.get(0);
@@ -131,7 +131,7 @@ public class SpecialFusionsTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
 
         // second one does
         upGenes.clear();
@@ -144,11 +144,12 @@ public class SpecialFusionsTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
-        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true));
+        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params));
 
         assertEquals(1, fusions.size());
-        GeneFusion fusion = fusions.stream().filter(x -> x.knownType() == EXON_DEL_DUP).findFirst().orElse(null);
+        GeneFusion fusion = tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
         assertTrue(fusion != null);
+        assertEquals(EXON_DEL_DUP, fusion.knownType());
 
         // the selected fusion is the longest for coding bases and without any exon skipping
         assertEquals(upPos, fusion.upstreamTrans().gene().position());
@@ -177,7 +178,6 @@ public class SpecialFusionsTest
         kfData = new KnownFusionData(EXON_DEL_DUP, geneId, geneId, "", "");
         kfData.setKnownExonData(transName, "2;5", "10;14");
 
-        // knownDelRegion = String.format("%s;%d;%d;%d;%d", transName, 2, 5, 10, 14);
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
         upGenes.clear();
@@ -191,11 +191,12 @@ public class SpecialFusionsTest
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
         fusions.clear();
-        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true));
+        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params));
 
         assertEquals(1, fusions.size());
-        fusion = fusions.stream().filter(x -> x.knownType() == EXON_DEL_DUP).findFirst().orElse(null);
+        fusion = tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
         assertTrue(fusion != null);
+        assertEquals(EXON_DEL_DUP, fusion.knownType());
 
         // the selected fusion is the longest for coding bases and without any exon skipping
         assertEquals(upPos, fusion.upstreamTrans().gene().position());
@@ -286,7 +287,7 @@ public class SpecialFusionsTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 9500, NEG_ORIENT, 1000));
         downGenes.get(0).setPositionalData(chromosome, 9500, NEG_ORIENT);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
 
         upGenes.clear();
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, chromosome, 200, NEG_ORIENT, 1000));
@@ -296,11 +297,13 @@ public class SpecialFusionsTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, chromosome, 19500, NEG_ORIENT, 1000));
         downGenes.get(0).setPositionalData(chromosome, 20100, NEG_ORIENT);
 
-        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true));
+        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params));
 
         assertEquals(2, fusions.size());
-        GeneFusion fusion = fusions.stream().filter(x -> x.knownType() == IG_KNOWN_PAIR).findFirst().orElse(null);
+
+        GeneFusion fusion = tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
         assertTrue(fusion != null);
+        assertEquals(IG_KNOWN_PAIR, fusion.knownType());
 
         // the selected fusion is the longest for coding bases and without any exon skipping
         assertEquals(200, fusion.upstreamTrans().gene().position());

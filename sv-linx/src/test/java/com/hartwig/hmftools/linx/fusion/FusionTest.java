@@ -121,9 +121,9 @@ public class FusionTest
         params.RequirePhaseMatch = true;
         params.AllowExonSkipping = true;
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
         fusions.forEach(x -> x.setKnownType(KNOWN_PAIR));
-        tester.FusionAnalyser.getFusionFinder().setReportableGeneFusions(fusions);
+        tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
 
         assertEquals(9, fusions.size());
         final GeneFusion fusion = fusions.get(0);

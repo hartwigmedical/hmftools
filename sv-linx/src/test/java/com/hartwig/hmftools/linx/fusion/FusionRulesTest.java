@@ -222,7 +222,7 @@ public class FusionRulesTest
         fusionFinder.getKnownFusionCache().addData(new KnownFusionData(KNOWN_PAIR, gene1.GeneName, gene2.GeneName, "", ""));
         gene1.addTranscript(trans1);
         gene2.addTranscript(trans2);
-        final List<GeneFusion> fusions = fusionFinder.findFusions(Lists.newArrayList(gene1), Lists.newArrayList(gene2), params, false);
+        final List<GeneFusion> fusions = fusionFinder.findFusions(Lists.newArrayList(gene1), Lists.newArrayList(gene2), params);
         assertEquals(1, fusions.size());
         assertTrue(fusions.get(0).phaseMatched());
     }

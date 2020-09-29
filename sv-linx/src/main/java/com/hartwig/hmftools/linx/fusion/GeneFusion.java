@@ -35,6 +35,7 @@ public class GeneFusion
     private boolean mKnownExons;
     private boolean mHighImpactPromiscuous;
     private boolean mNeoEpitopeOnly;
+    private boolean mProteinFeaturesSet;
 
     private FusionAnnotations mAnnotations;
 
@@ -53,6 +54,7 @@ public class GeneFusion
         mKnownExons = false;
         mHighImpactPromiscuous = false;
         mNeoEpitopeOnly = false;
+        mProteinFeaturesSet = false;
         mAnnotations = null;
         mPriority = 0;
     }
@@ -84,6 +86,9 @@ public class GeneFusion
 
     public boolean neoEpitopeOnly(){ return mNeoEpitopeOnly; }
     public void setNeoEpitopeOnly(boolean toggle) { mNeoEpitopeOnly = toggle; }
+
+    public boolean proteinFeaturesSet() { return mProteinFeaturesSet; }
+    public void setProteinFeaturesSet() { mProteinFeaturesSet = true; }
 
     public final String knownTypeStr()
     {
@@ -204,7 +209,12 @@ public class GeneFusion
 
     public final String toString()
     {
-        return String.format("%s %s phased(%s) type(%s)",
-                mTranscripts[FS_UPSTREAM].toString(), mTranscripts[FS_DOWNSTREAM].toString(), mPhaseMatched, knownTypeStr());
+        return String.format("%s type(%s) reported(%s) phased(%s) SVs(%d & %d) up(%s:%d:%d exon=%d) down(%s:%d:%d exon=%d)",
+                name(), knownTypeStr(), mIsReportable, mPhaseMatched,
+                mTranscripts[FS_UPSTREAM].gene().id(), mTranscripts[FS_DOWNSTREAM].gene().id(),
+                mTranscripts[FS_UPSTREAM].gene().chromosome(), mTranscripts[FS_UPSTREAM].gene().orientation(),
+                mTranscripts[FS_UPSTREAM].gene().position(), getFusedExon(true),
+                mTranscripts[FS_DOWNSTREAM].gene().chromosome(), mTranscripts[FS_DOWNSTREAM].gene().orientation(),
+                mTranscripts[FS_DOWNSTREAM].gene().position(), getFusedExon(false));
     }
 }

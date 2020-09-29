@@ -23,8 +23,13 @@ import java.util.List;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 
+import org.apache.commons.compress.utils.Lists;
+
 public class FusionReportability
 {
+    private static final List<String> mProteinsRequiredKept = Lists.newArrayList();
+    private static final List<String> mProteinsRequiredLost = Lists.newArrayList();
+
     public static boolean couldBeReportable(GeneFusion fusion)
     {
         if(fusion.neoEpitopeOnly())
@@ -107,12 +112,11 @@ public class FusionReportability
 
     private static double calcFusionPriority(final GeneFusion fusion)
     {
-        // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         final Transcript upTrans = fusion.upstreamTrans();
         final Transcript downTrans = fusion.downstreamTrans();
 
             /* prioritisation rules:
-            0. reportable (because there can be more than 1)
+            0. Known pair
             1. inframe
             2. chain not terminated for known fusions
             3. 3’ partner biotype is protein_coding
@@ -124,7 +128,7 @@ public class FusionReportability
         double fusionPriorityScore = 0;
         double factor = 1000000;
 
-        // 1. Known pair
+        // 0. Known pair
         if(fusion.knownType() == KNOWN_PAIR)
             fusionPriorityScore += factor;
 
@@ -196,6 +200,18 @@ public class FusionReportability
         return (type == PROMISCUOUS_5 || type == PROMISCUOUS_3 || type == KNOWN_PAIR);
     }
 
+    public static boolean validProteinDomains(final GeneFusion fusion)
+    {
+        final Transcript downTrans = fusion.downstreamTrans();
+
+        long requiredKeptButLost =
+                mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
+        long requiredLostButKept =
+                mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
+
+        return requiredKeptButLost == 0 && requiredLostButKept == 0;
+    }
+
     private static boolean permittedExonSkipping(final GeneFusion fusion)
     {
         if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == IG_KNOWN_PAIR || fusion.knownType() == IG_PROMISCUOUS || fusion.knownType() == EXON_DEL_DUP)
@@ -213,4 +229,18 @@ public class FusionReportability
         // otherwise not allowed
         return fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0;
     }
+
+    public static void populateRequiredProteins()
+    {
+        mProteinsRequiredLost.add("Raf-like Ras-binding");
+
+        mProteinsRequiredKept.add("Ets domain");
+        mProteinsRequiredKept.add("Protein kinase domain");
+        mProteinsRequiredKept.add("Epidermal growth factor-like domain");
+        mProteinsRequiredKept.add("Ankyrin repeat-containing domain");
+        mProteinsRequiredKept.add("Basic-leucine zipper domain");
+        mProteinsRequiredKept.add("High mobility group box domain");
+        mProteinsRequiredKept.add("Bromodomain");
+    }
+
 }
