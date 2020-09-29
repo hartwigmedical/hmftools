@@ -20,6 +20,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractor {
 
@@ -52,16 +53,18 @@ public final class ViccExtractor {
     @NotNull
     public Map<ViccEntry, ViccExtractionResult> extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) {
         Map<ViccEntry, ViccExtractionResult> extractionResultsPerEntry = Maps.newHashMap();
-        for (ViccEntry viccEntry : viccEntries) {
-            Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(viccEntry);
+        for (ViccEntry entry : viccEntries) {
+            Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
             Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature =
-                    copyNumberExtractor.extractKnownAmplificationsDeletions(viccEntry);
-            Map<Feature, FusionAnnotation> fusionsPerFeature = fusionExtractor.extractKnownFusions(viccEntry);
-            Map<Feature, String> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(viccEntry);
-            Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(viccEntry);
-            Map<Feature, String> signaturesPerFeature = signaturesExtractor.extractSignatures(viccEntry);
+                    copyNumberExtractor.extractKnownAmplificationsDeletions(entry);
+            Map<Feature, FusionAnnotation> fusionsPerFeature = fusionExtractor.extractKnownFusions(entry);
+            Map<Feature, String> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(entry);
+            Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
+            Map<Feature, String> signaturesPerFeature = signaturesExtractor.extractSignatures(entry);
 
-            extractionResultsPerEntry.put(viccEntry,
+            ActionableEvidence actionableEvidence = extractEvidence(entry);
+
+            extractionResultsPerEntry.put(entry,
                     ImmutableViccExtractionResult.builder()
                             .hotspotsPerFeature(hotspotsPerFeature)
                             .ampsDelsPerFeature(ampsDelsPerFeature)
@@ -69,6 +72,7 @@ public final class ViccExtractor {
                             .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
                             .geneRangesPerFeature(geneRangesPerFeature)
                             .signaturesPerFeature(signaturesPerFeature)
+                            .actionableEvidence(actionableEvidence)
                             .build());
         }
 
@@ -78,5 +82,11 @@ public final class ViccExtractor {
         LOGGER.info("Unique known fusion promiscuous: {}", fusionExtractor.uniqueFusionsPromiscuous().size());
 
         return extractionResultsPerEntry;
+    }
+
+    @Nullable
+    private static ActionableEvidence extractEvidence(@NotNull ViccEntry entry) {
+        // TODO implement
+        return null;
     }
 }

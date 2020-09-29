@@ -9,21 +9,19 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ActionableEvidence {
 
+    // TODO Should possibly turn into List<String> drug() and parse.
     @NotNull
-    public abstract String drug();
+    public abstract String drugs();
 
     @NotNull
-    public abstract String drugType();
-
-    @NotNull
-    public abstract String cancerType();
+    public abstract String cancerTypeString();
 
     @NotNull
     public abstract String cancerTypeDOID();
 
     @NotNull
-    public abstract String evidenceLevel();
+    public abstract String level();
 
     @NotNull
-    public abstract String evidenceDirection();
+    public abstract String direction();
 }
