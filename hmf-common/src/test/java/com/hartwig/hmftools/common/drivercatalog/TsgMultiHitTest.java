@@ -46,12 +46,14 @@ public class TsgMultiHitTest {
         SomaticVariant missense = create(VariantType.SNP, CodingEffect.MISSENSE, false, 0.5);;
         SomaticVariant frameshift = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);;
 
+        DriverCatalog multiFrameshift = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(frameshift, frameshift), counts, counts, null);
         DriverCatalog missenseAndFrameshift = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, frameshift), counts, counts, null);
         DriverCatalog singleFrameshift = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(frameshift), counts, counts, null);
         DriverCatalog multiMissense = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, missense), counts, counts, null);
 
         assertTrue(Doubles.lessThan(singleFrameshift.driverLikelihood(), missenseAndFrameshift.driverLikelihood()));
         assertTrue(Doubles.equal(multiMissense.driverLikelihood(), missenseAndFrameshift.driverLikelihood()));
+        assertTrue(Doubles.equal(multiMissense.driverLikelihood(), multiFrameshift.driverLikelihood()));
     }
 
 }
