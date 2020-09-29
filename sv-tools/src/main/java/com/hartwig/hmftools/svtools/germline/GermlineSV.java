@@ -3,11 +3,11 @@ package com.hartwig.hmftools.svtools.germline;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,12 +18,12 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -289,6 +289,7 @@ public class GermlineSV
                 .qualityScore(QualScore)
                 .insertSequence(InsertSequence)
                 .recovered(false)
+                .hotspot(false)
                 .build();
     }
 

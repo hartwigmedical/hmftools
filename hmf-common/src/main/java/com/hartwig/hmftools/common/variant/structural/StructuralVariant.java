@@ -103,4 +103,6 @@ public interface StructuralVariant {
 
     @Nullable
     String recoveryFilter();
+
+    boolean hotspot();
 }

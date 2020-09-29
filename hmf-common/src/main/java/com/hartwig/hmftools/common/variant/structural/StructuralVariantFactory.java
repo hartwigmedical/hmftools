@@ -48,6 +48,7 @@ public class StructuralVariantFactory {
     private static final String HOM_SEQ = "HOMSEQ";
     private static final String BPI_AF = "BPI_AF";
     private static final String TAF = "TAF";
+    private static final String HOTSPOT = "HOTSPOT";
     private static final String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     private static final String IHOMPOS = "IHOMPOS";
     private static final String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
@@ -328,7 +329,8 @@ public class StructuralVariantFactory {
         }
 
         builder.id(context.getID())
-                .recovered(context.hasAttribute(RECOVERED))
+                .recovered(context.getAttributeAsBoolean(RECOVERED, false))
+                .hotspot(context.getAttributeAsBoolean(HOTSPOT, false))
                 .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
                 .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
                 .event(context.getAttributeAsString(EVENT, null))
