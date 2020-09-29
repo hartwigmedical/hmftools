@@ -156,11 +156,11 @@ public class LoadEvidenceData {
     @NotNull
     private static String extractPatientTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
         LOGGER.info("Reading primary tumor location from {}", tumorLocationCsv);
-        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecordsCSV(tumorLocationCsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sampleId);
+                PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocations, sampleId);
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
         if (patientTumorLocation != null) {

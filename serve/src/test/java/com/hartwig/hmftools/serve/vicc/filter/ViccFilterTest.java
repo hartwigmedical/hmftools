@@ -11,6 +11,7 @@ import com.hartwig.hmftools.serve.vicc.ViccTestFactory;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.junit.Test;
 
@@ -33,10 +34,16 @@ public class ViccFilterTest {
     public void canFilterIndividualFeatures() {
         ViccFilter filter = new ViccFilter();
 
-        String featureToFilter = FilterFactory.FEATURE_KEYWORDS_TO_FILTER.iterator().next() + " filter me";
-        Feature featureWithFilterKeyword = ImmutableFeature.builder().name(featureToFilter).build();
+        String nameToFilter = FilterFactory.FEATURE_KEYWORDS_TO_FILTER.iterator().next() + " filter me";
+        Feature featureWithFilterKeyword = ImmutableFeature.builder().name(nameToFilter).build();
         Feature featureWithoutFilterKeyword = ImmutableFeature.builder().name("don't filter me").build();
-        assertFalse(filter.include(featureWithFilterKeyword));
-        assertTrue(filter.include(featureWithoutFilterKeyword));
+        assertFalse(filter.include(ViccSource.CIVIC, featureWithFilterKeyword));
+        assertTrue(filter.include(ViccSource.CIVIC, featureWithoutFilterKeyword));
+
+        FilterKey keyToFilter = FilterFactory.FEATURE_KEYS_TO_FILTER.iterator().next();
+        Feature featureToFilter = ImmutableFeature.builder().geneSymbol(keyToFilter.gene()).name(keyToFilter.name()).build();
+        assertFalse(filter.include(keyToFilter.source(), featureToFilter));
+
+        filter.reportUnusedFilterEntries();
     }
 }

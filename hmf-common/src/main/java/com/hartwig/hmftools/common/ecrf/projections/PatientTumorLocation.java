@@ -55,7 +55,7 @@ public abstract class PatientTumorLocation {
     }
 
     @NotNull
-    public static List<PatientTumorLocation> readRecords(@NotNull String filePath) throws IOException {
+    public static List<PatientTumorLocation> readRecordsCSV(@NotNull String filePath) throws IOException {
         CSVParser parser = CSVParser.parse(new File(filePath),
                 Charset.defaultCharset(),
                 CSVFormat.DEFAULT.withHeader(Header.class).withSkipHeaderRecord());

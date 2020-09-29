@@ -37,7 +37,7 @@ public class QCFailReporter {
         }
 
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
+                PatientTumorLocationFunctions.findTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
         String wgsPurityString = null;

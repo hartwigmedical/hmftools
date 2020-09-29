@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.vicc.filter;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 final class FilterFactory {
 
@@ -11,11 +12,11 @@ final class FilterFactory {
     static final Set<FilterKey> FEATURE_KEYS_TO_FILTER = Sets.newHashSet();
 
     static {
-        populateFeatureNameKeywordsToFilter();
+        populateFeatureKeywordsToFilter();
         populateFeatureKeysToFilter();
     }
 
-    private static void populateFeatureNameKeywordsToFilter() {
+    private static void populateFeatureKeywordsToFilter() {
         // We cannot determine methylation with WGS/WTS
         FEATURE_KEYWORDS_TO_FILTER.add("PROMOTER METHYLATION");
         FEATURE_KEYWORDS_TO_FILTER.add("PROMOTER DEMETHYLATION");
@@ -35,6 +36,9 @@ final class FilterFactory {
 
         // Copy number variation is too vague.
         FEATURE_KEYWORDS_TO_FILTER.add("COPY NUMBER VARIATION");
+
+
+        // TODO All of below needs some further investigation & explanation
         FEATURE_KEYWORDS_TO_FILTER.add("EXPRESSION");
         FEATURE_KEYWORDS_TO_FILTER.add("expression");
         FEATURE_KEYWORDS_TO_FILTER.add("WILDTYPE");
@@ -42,6 +46,7 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("wild-type");
         FEATURE_KEYWORDS_TO_FILTER.add("wildtype");
         FEATURE_KEYWORDS_TO_FILTER.add("Wildtype");
+
         FEATURE_KEYWORDS_TO_FILTER.add("SERUM LEVELS");
 
         FEATURE_KEYWORDS_TO_FILTER.add("3' EXON DELETION");
@@ -107,7 +112,25 @@ final class FilterFactory {
     }
 
     private static void populateFeatureKeysToFilter() {
+        // Variants implying stop lost. They are real but not handled yet in SERVE (TODO DEV-1475)
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VHL", "*214W (c.642A>G)"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "MLH1", "*757L"));
 
+        // Synonymous variant, unlikely to have an impact
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VHL", "R161R (c.481C>A)"));
+
+        // Variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "KIT", "KIT K550_W557del "));
+
+        // Variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine (TODO DEV-1475)
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "BRAF", "R506_K507insVLR"));
+
+        // Variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_K558del"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_W557del"));
     }
 
     private FilterFactory() {

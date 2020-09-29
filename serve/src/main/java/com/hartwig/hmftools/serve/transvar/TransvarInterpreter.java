@@ -193,7 +193,6 @@ class TransvarInterpreter {
 
         // We assume inserts of length 3 are always (inframe) amino acid inserts,
         //  and we know the inserted bases match the proteins inserted.
-        // TODO Not sure why we don't generate events for re-aligned inframes.
         if (insertion.insertedBases().length() == 3) {
             for (String trinucleotide : AminoAcidFunctions.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
                 hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());

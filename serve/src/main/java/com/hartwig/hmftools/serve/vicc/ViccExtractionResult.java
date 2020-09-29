@@ -36,4 +36,6 @@ public abstract class ViccExtractionResult {
     @NotNull
     public abstract Map<Feature, String> signaturesPerFeature();
 
+    @Nullable
+    public abstract ActionableEvidence actionableEvidence();
 }

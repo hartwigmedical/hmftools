@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +39,7 @@ public class ViccFilter {
                 List<Feature> filteredFeatures = Lists.newArrayList();
                 boolean hasFilteredFeatures = false;
                 for (Feature feature : entry.features()) {
-                    if (include(feature)) {
+                    if (include(entry.source(), feature)) {
                         filteredFeatures.add(feature);
                     } else {
                         hasFilteredFeatures = true;
@@ -46,6 +47,7 @@ public class ViccFilter {
                     }
                 }
 
+                // Only exclude VICC entries with no features in case at least one feature has been filtered.
                 if (!filteredFeatures.isEmpty() || !hasFilteredFeatures) {
                     filteredViccEntries.add(ImmutableViccEntry.builder().from(entry).features(filteredFeatures).build());
                 }
@@ -78,7 +80,7 @@ public class ViccFilter {
     }
 
     @VisibleForTesting
-    boolean include(@NotNull Feature feature) {
+    boolean include(@NotNull ViccSource source, @NotNull Feature feature) {
         String featureName = feature.name();
         for (String keywordToFilter : FilterFactory.FEATURE_KEYWORDS_TO_FILTER) {
             if (featureName.contains(keywordToFilter)) {
@@ -88,7 +90,7 @@ public class ViccFilter {
         }
         String gene = feature.geneSymbol();
         if (gene != null) {
-            FilterKey filterKey = new FilterKey(gene, featureName);
+            FilterKey filterKey = new FilterKey(source, gene, featureName);
             if (FilterFactory.FEATURE_KEYS_TO_FILTER.contains(filterKey)) {
                 filteredKeys.add(filterKey);
                 return false;

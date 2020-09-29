@@ -56,7 +56,7 @@ public class ViccTestApplication {
         LOGGER.debug("Configured '{}' as the fusion output TSV", fusionTsv);
         LOGGER.debug("Configured '{}' as the feature type output TSV", featureTypeTsv);
 
-        List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
+        List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(ProteinResolverFactory.dummy());
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 

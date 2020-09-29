@@ -37,10 +37,6 @@ final class CurationFactory {
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "EGFR", "ENST00000275493", "V769_770insASV"),
                 "V769_D770insASV");
 
-        // Variants implying stop lost. They are real but not handled yet in SERVE (TODO DEV-1475)
-        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", "ENST00000256474", "*214W (c.642A>G)"));
-        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "MLH1", "ENST00000231790", "*757L"));
-
         // Variants that don't exist
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "NOTCH1", "ENST00000277541", "S2275FS"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "NOTCH1", "ENST00000277541", "V2444FS"));
@@ -54,9 +50,6 @@ final class CurationFactory {
 
         // Variant only possible through an MNV which spans an intron, and inconsistent with its coding impact.
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "V155C (c.462delA)"));
-
-        // Synonymous variant, unlikely to have an impact
-        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "R161R (c.481C>A)"));
 
         // Variant unlikely to be real as it spans multiple exons
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "VHL", null, "G114dup (c.342dupGGT)"));
@@ -90,10 +83,6 @@ final class CurationFactory {
                 "EGFR K745_E746insIPVAIK ");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.JAX, "KIT", null, "KIT V559del "), "KIT V560del ");
 
-        // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
-        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "KIT", null, "KIT K550_W557del "));
-
         // The below variants in FLT3 are from a paper where an additional R was added in the ref sequence, shifting all AAs by one position.
         // This has been corrected in current live CKB.
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.JAX, "FLT3", null, "FLT3 L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL "));
@@ -118,15 +107,6 @@ final class CurationFactory {
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "KIT", "ENST00000288135", "V559del"), "V560del");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "PTEN", "ENST00000371953", "I32del"), "I33del");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
-
-        // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine (TODO DEV-1475)
-        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "BRAF", "ENST00000288602", "R506_K507insVLR"));
-
-        // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
-        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "KIT", "ENST00000288135", "K550_K558del"));
-        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "KIT", "ENST00000288135", "K550_W557del"));
 
         // Variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "PDGFRA", "ENST00000257290", "E311_K312del"));

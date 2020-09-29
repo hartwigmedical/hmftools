@@ -18,7 +18,7 @@ public final class PatientTumorLocationFunctions {
     }
 
     @Nullable
-    public static PatientTumorLocation findPatientTumorLocationForSample(@NotNull List<PatientTumorLocation> patientTumorLocations,
+    public static PatientTumorLocation findTumorLocationForSample(@NotNull List<PatientTumorLocation> patientTumorLocations,
             @NotNull String sample) {
          String patientIdentifier = toPatientIdentifier(sample);
 
