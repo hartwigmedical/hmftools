@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.serve.vicc.curation.ViccCurator;
+import com.hartwig.hmftools.serve.vicc.filter.ViccFilter;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
@@ -33,16 +34,36 @@ public final class ViccReader {
         List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJson, querySelection);
         LOGGER.info(" Read {} entries", viccEntries.size());
 
+        return filter(curate(viccEntries));
+    }
+
+    @NotNull
+    private static List<ViccEntry> curate(@NotNull List<ViccEntry> entries) {
         ViccCurator curator = new ViccCurator();
 
-        LOGGER.info("Curating {} VICC entries", viccEntries.size());
-        List<ViccEntry> curatedViccEntries = curator.curate(viccEntries);
+        LOGGER.info("Curating {} VICC entries", entries.size());
+        List<ViccEntry> curatedEntries = curator.run(entries);
         LOGGER.info(" Finished VICC curation. {} curated entries remaining. {} entries have been removed",
-                curatedViccEntries.size(),
-                viccEntries.size() - curatedViccEntries.size());
+                curatedEntries.size(),
+                entries.size() - curatedEntries.size());
 
-        curator.reportUnusedBlacklistEntries();
+        curator.reportUnusedCurationEntries();
 
-        return curatedViccEntries;
+        return curatedEntries;
+    }
+
+    @NotNull
+    private static List<ViccEntry> filter(@NotNull List<ViccEntry> entries) {
+        ViccFilter filter = new ViccFilter();
+
+        LOGGER.info("Filtering {} VICC entries", entries.size());
+        List<ViccEntry> filteredEntries = filter.run(entries);
+        LOGGER.info("Finished VICC filtering. {} filtered entries remaining. {} entries have been removed",
+                filteredEntries.size(),
+                entries.size() - filteredEntries.size());
+
+        filter.reportUnusedFilterEntries();
+
+        return filteredEntries;
     }
 }

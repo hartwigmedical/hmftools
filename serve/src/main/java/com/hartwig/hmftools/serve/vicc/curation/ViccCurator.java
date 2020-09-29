@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 public class ViccCurator {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccCurator.class);
-    private static final Set<String> NON_ONCOGENIC_INDICATORS = Sets.newHashSet("Inconclusive", "Likely Neutral");
 
     @NotNull
     private final Set<CurationKey> evaluatedCurationKeys = Sets.newHashSet();
@@ -28,12 +27,12 @@ public class ViccCurator {
     }
 
     @NotNull
-    public List<ViccEntry> curate(@NotNull List<ViccEntry> entries) {
+    public List<ViccEntry> run(@NotNull List<ViccEntry> entries) {
         List<ViccEntry> curatedViccEntries = Lists.newArrayList();
 
         for (ViccEntry entry : entries) {
-            boolean includeEntry = potentiallyOncogenic(entry);
             List<Feature> curatedFeatures = Lists.newArrayList();
+            boolean includeEntry = true;
             for (Feature feature : entry.features()) {
                 Feature curatedFeature = curate(entry, feature);
                 if (curatedFeature != null) {
@@ -42,6 +41,7 @@ public class ViccCurator {
                     includeEntry = false;
                 }
             }
+
             if (includeEntry) {
                 curatedViccEntries.add(ImmutableViccEntry.builder().from(entry).features(curatedFeatures).build());
             }
@@ -49,9 +49,27 @@ public class ViccCurator {
         return curatedViccEntries;
     }
 
-    private static boolean potentiallyOncogenic(@NotNull ViccEntry entry) {
-        String oncogenic = entry.association().oncogenic();
-        return oncogenic == null || !NON_ONCOGENIC_INDICATORS.contains(oncogenic);
+    public void reportUnusedCurationEntries() {
+        int unusedKeyCount = 0;
+        for (CurationKey key : CurationFactory.FEATURE_BLACKLIST) {
+            if (!evaluatedCurationKeys.contains(key)) {
+                unusedKeyCount++;
+                LOGGER.warn("Key '{}' hasn't been used during VICC blacklist curation", key);
+            }
+        }
+
+        for (CurationKey key : CurationFactory.FEATURE_NAME_MAPPINGS.keySet()) {
+            if (!evaluatedCurationKeys.contains(key)) {
+                unusedKeyCount++;
+                LOGGER.warn("Key '{}' hasn't been used during VICC name mapping curation", key);
+            }
+        }
+
+        int totalKeyCount = CurationFactory.FEATURE_BLACKLIST.size() + CurationFactory.FEATURE_NAME_MAPPINGS.keySet().size();
+        LOGGER.debug("Found {} unused VICC curation entries. {} keys have been requested against {} blacklist entries",
+                unusedKeyCount,
+                evaluatedCurationKeys.size(),
+                totalKeyCount);
     }
 
     @VisibleForTesting
@@ -76,40 +94,5 @@ public class ViccCurator {
         }
 
         return feature;
-    }
-
-    public void reportUnusedBlacklistEntries() {
-        int unusedKeyCount = 0;
-        for (CurationKey key : CurationFactory.FEATURE_BLACKLIST) {
-            if (!evaluatedCurationKeys.contains(key)) {
-                unusedKeyCount++;
-                LOGGER.warn("Key '{}' hasn't been used during VICC blacklist curation", key);
-            }
-        }
-
-        for (CurationKey key : CurationFactory.FEATURE_NAME_MAPPINGS.keySet()) {
-            if (!evaluatedCurationKeys.contains(key)) {
-                unusedKeyCount++;
-                LOGGER.warn("Key '{}' hasn't been used during VICC name mapping curation", key);
-            }
-        }
-
-        int totalKeyCount = CurationFactory.FEATURE_BLACKLIST.size() + CurationFactory.FEATURE_NAME_MAPPINGS.keySet().size();
-        LOGGER.debug("Found {} unused VICC curation entries. {} keys have been requested against {} blacklist entries",
-                unusedKeyCount,
-                evaluatedCurationKeys.size(),
-                totalKeyCount);
-    }
-
-    @NotNull
-    @VisibleForTesting
-    Set<CurationKey> unusedCurationKeys() {
-        Set<CurationKey> unusedCurationKeys = Sets.newHashSet();
-
-        unusedCurationKeys.addAll(CurationFactory.FEATURE_BLACKLIST);
-        unusedCurationKeys.addAll(CurationFactory.FEATURE_NAME_MAPPINGS.keySet());
-        unusedCurationKeys.removeAll(evaluatedCurationKeys);
-
-        return unusedCurationKeys;
     }
 }

@@ -5,18 +5,11 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class FeatureTypeExtractor {
-
-    private FeatureTypeExtractor() {
-    }
-
-    private static final Logger LOGGER = LogManager.getLogger(FeatureTypeExtractor.class);
 
     public static final Set<String> AMPLIFICATIONS = Sets.newHashSet("Amplification",
             "amplification",
@@ -89,6 +82,9 @@ public final class FeatureTypeExtractor {
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
+    private FeatureTypeExtractor() {
+    }
+
     @NotNull
     public static FeatureType extractType(@NotNull Feature feature) {
         return extractType(feature.name(),
@@ -147,7 +143,6 @@ public final class FeatureTypeExtractor {
             return FeatureType.GENE_RANGE_CODON;
         }
 
-        LOGGER.warn("No feature type extracted from event!");
         return FeatureType.UNKNOWN;
     }
 

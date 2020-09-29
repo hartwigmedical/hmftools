@@ -20,7 +20,7 @@ public class ViccCuratorTest {
         CurationKey firstOncoKbKey = firstOncoKbMappingKey();
         String firstMappedFeature = CurationFactory.FEATURE_NAME_MAPPINGS.get(firstOncoKbKey);
 
-        ViccEntry entry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
+        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
                 ViccTestFactory.testOncoKbWithTranscript(firstOncoKbKey.transcript()));
 
         Feature feature = ImmutableFeature.builder().geneSymbol(firstOncoKbKey.gene()).name(firstOncoKbKey.featureName()).build();
@@ -31,7 +31,7 @@ public class ViccCuratorTest {
     @Test
     public void canBlacklistFeatures() {
         CurationKey firstOncoKbKey = firstOncoKbBlacklistKey();
-        ViccEntry entry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
+        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
                 ViccTestFactory.testOncoKbWithTranscript(firstOncoKbKey.transcript()));
 
         Feature feature = ImmutableFeature.builder().geneSymbol(firstOncoKbKey.gene()).name(firstOncoKbKey.featureName()).build();
@@ -42,23 +42,20 @@ public class ViccCuratorTest {
     public void canKeepTrackOfFeatures() {
         ViccCurator curator = new ViccCurator();
 
-        ViccEntry entry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB, ViccTestFactory.testOncoKbWithTranscript("any"));
+        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, ViccTestFactory.testOncoKbWithTranscript("any"));
         Feature feature = ImmutableFeature.builder().geneSymbol("any").name("any").build();
 
         assertNotNull(curator.curate(entry, feature));
-        int unusedCurationKeyCount = curator.unusedCurationKeys().size();
 
         CurationKey blacklistKey = firstOncoKbBlacklistKey();
-        ViccEntry blacklistEntry = ViccTestFactory.testViccEntryForSource(ViccSource.ONCOKB,
+        ViccEntry blacklistEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
                 ViccTestFactory.testOncoKbWithTranscript(blacklistKey.transcript()));
 
         Feature blacklistFeature = ImmutableFeature.builder().geneSymbol(blacklistKey.gene()).name(blacklistKey.featureName()).build();
 
         assertNull(curator.curate(blacklistEntry, blacklistFeature));
-        int newUnusedCurationKeyCount = curator.unusedCurationKeys().size();
-        assertEquals(1, unusedCurationKeyCount - newUnusedCurationKeyCount);
 
-        curator.reportUnusedBlacklistEntries();
+        curator.reportUnusedCurationEntries();
     }
 
     @NotNull
