@@ -83,8 +83,11 @@ public class ReadRecord
 
     public static ReadRecord from(final SAMRecord record)
     {
+        final String readId = record.isSecondaryAlignment() ? String.format("%s_%s",
+                record.getReadName(), record.getAttribute("HI")) : record.getReadName();
+
         ReadRecord read = new ReadRecord(
-                record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
+                readId, record.getReferenceName(), record.getStart(), record.getEnd(),
                 record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(),
                 record.getMateReferenceName(), record.getMateAlignmentStart());
 

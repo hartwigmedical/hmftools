@@ -139,7 +139,6 @@ public class TranscriptExpression
         double maxFragPerKb = 0;
         double fragsPerKbTotal = 0;
         double rawFragsPerKbTotal = 0;
-        double minorsTotal = 0;
 
         for(final GeneCollectionSummary summaryData : geneSummaryData)
         {
@@ -154,7 +153,6 @@ public class TranscriptExpression
 
                 if(fragsPerKb < 0.5)
                 {
-                    minorsTotal += fragsPerKb;
                     fragsPerKbTotal += fragsPerKb;
                 }
                 else
@@ -182,8 +180,6 @@ public class TranscriptExpression
             double minFragsPerKbTotal = 0;
 
             // frag total is initially too high so halve it (the new min) and set the max to this value
-            //
-
             while (iterations < maxIterations)
             {
                 double maxAllowedContrib = nextFragsPerKbTotal * MAX_GENE_PERC_CONTRIBUTION;
@@ -221,18 +217,6 @@ public class TranscriptExpression
         return results;
     }
 
-    public static double calcTotalTranscriptExpression(final List<GeneCollectionSummary> geneSummaryData)
-    {
-        double totalFragsPerKb = 0;
-
-        for(final GeneCollectionSummary summaryData : geneSummaryData)
-        {
-            totalFragsPerKb += summaryData.TranscriptResults.stream().mapToDouble(x -> x.fragmentsPerKb()).sum();
-        }
-
-        return totalFragsPerKb;
-    }
-
     public static void setTranscriptsPerMillion(
             final List<GeneCollectionSummary> geneSummaryData, double[] tmpFactors)
     {
@@ -243,8 +227,9 @@ public class TranscriptExpression
             for(TranscriptResult transResult : summaryData.TranscriptResults)
             {
                 double fragsPerKb = transResult.fragmentsPerKb();
-                double rawTpm = fragsPerKb/tmpFactors[RAW_TPM];
-                double adjustedTpm = fragsPerKb/tmpFactors[ADJUSTED_TPM];
+
+                double rawTpm = tmpFactors[RAW_TPM] > 0 ? fragsPerKb/tmpFactors[RAW_TPM] : 0;
+                double adjustedTpm = tmpFactors[ADJUSTED_TPM] > 0 ? fragsPerKb/tmpFactors[ADJUSTED_TPM] : 0;
                 transResult.setTPM(rawTpm, adjustedTpm);
 
                 double[] geneTpm = geneTPMs.get(transResult.Trans.GeneId);
