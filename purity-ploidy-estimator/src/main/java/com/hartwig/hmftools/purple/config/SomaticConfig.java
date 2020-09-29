@@ -37,6 +37,11 @@ public interface SomaticConfig {
     double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
     double MIN_SOMATIC_UNADJUSTED_VAF = 0.1;
 
+    double MIN_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 0.6;
+    double MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 1.4;
+
+
+
     static void addOptions(@NotNull Options options) {
         options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak. Default 50.");
         options.addOption(SOMATIC_MIN_TOTAL, true, "Minimum number of somatic variants required to assist highly diploid fits. Default 300.");
@@ -73,8 +78,12 @@ public interface SomaticConfig {
         return 0.05;
     }
 
+    int minSomaticTotalReadCount();
+
+    int maxSomaticTotalReadCount();
+
     @NotNull
-    static SomaticConfig createSomaticConfig(@NotNull CommandLine cmd) throws ParseException {
+    static SomaticConfig createSomaticConfig(@NotNull CommandLine cmd, @NotNull final AmberData amberData) throws ParseException {
         final Optional<File> file;
         if (cmd.hasOption(SOMATIC_VARIANTS)) {
             final String somaticFilename = cmd.getOptionValue(SOMATIC_VARIANTS);
@@ -90,6 +99,8 @@ public interface SomaticConfig {
 
         return ImmutableSomaticConfig.builder()
                 .file(file)
+                .minSomaticTotalReadCount((int) Math.floor(MIN_SOMATIC_TOTAL_READ_COUNT_PROPORTION * amberData.averageTumorDepth()))
+                .maxSomaticTotalReadCount((int) Math.ceil(MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION * amberData.averageTumorDepth()))
                 .minTotalVariants(defaultIntValue(cmd, SOMATIC_MIN_TOTAL, SOMATIC_MIN_TOTAL_DEFAULT))
                 .minPeakVariants(defaultIntValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT))
                 .minSomaticPurity(defaultValue(cmd, SOMATIC_MIN_PURITY, SOMATIC_MIN_PURITY_DEFAULT))
