@@ -332,7 +332,7 @@ public class ProtectActionability {
     private static PatientTumorLocation extractTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId)
             throws IOException {
         LOGGER.info("Reading primary tumor location from {}", tumorLocationCsv);
-        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecordsCSV(tumorLocationCsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
         return PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sampleId);

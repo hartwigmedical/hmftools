@@ -138,12 +138,11 @@ public final class LoadClinicalData {
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
 
         if (cmd.hasOption(DO_CURATE_TUMOR_LOCATIONS)) {
-            LOGGER.info("Curate tumor locations");
+            LOGGER.info("Writing curated tumor locations");
 
             DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
             DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
             LOGGER.info("Complete");
-
         } else {
             writeClinicalData(dbWriter, lims, sequencedPatientIds, sampleDataPerPatient, patients, treatmentCurator, tumorLocationCurator);
         }
@@ -343,7 +342,6 @@ public final class LoadClinicalData {
     private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Lims lims, @NotNull Set<String> sequencedPatientIds,
             @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull Map<String, Patient> patients,
             @NotNull TreatmentCurator treatmentCurator, @NotNull TumorLocationCurator tumorLocationCurator) {
-
         LOGGER.info("Clearing interpreted clinical tables in database");
         dbAccess.clearClinicalTables();
 
