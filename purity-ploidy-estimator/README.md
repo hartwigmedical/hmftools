@@ -502,7 +502,7 @@ During the smoothing process, regions that are homozygously or heterozygously de
 
 ### 9. Determine a QC Status for the tumor
 
-PURPLE will set QC status in 2 cases: 
+PURPLE will set a FAIL QC status in 2 cases: 
 - FAIL_CONTAMINATION - if measured contamination in the tumor (by Amber) is >10%
 - FAIL_NO_TUMOR - if no evidence of tumor is found in the sample
 
