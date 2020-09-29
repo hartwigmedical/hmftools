@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.util.TranscriptExtractor;
+import com.hartwig.hmftools.vicc.annotation.TranscriptExtractor;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

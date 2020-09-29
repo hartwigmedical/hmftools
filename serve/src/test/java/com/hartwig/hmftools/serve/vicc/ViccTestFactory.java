@@ -31,7 +31,18 @@ public final class ViccTestFactory {
     }
 
     @NotNull
-    public static ViccEntry testViccEntryForSource(@NotNull ViccSource source, @NotNull KbSpecificObject kbSpecificObject) {
+    public static ViccEntry testViccEntryWithOncogenic(@NotNull String oncogenic) {
+        return testViccEntry(ViccSource.ONCOKB, oncogenic, testOncoKb());
+    }
+
+    @NotNull
+    public static ViccEntry testViccEntryWithSourceAndKbObject(@NotNull ViccSource source, @NotNull KbSpecificObject kbSpecificObject) {
+        return testViccEntry(source, Strings.EMPTY, kbSpecificObject);
+    }
+
+    @NotNull
+    public static ViccEntry testViccEntry(@NotNull ViccSource source, @NotNull String oncogenic,
+            @NotNull KbSpecificObject kbSpecificObject) {
         Evidence evidence =
                 ImmutableEvidence.builder().evidenceType(ImmutableEvidenceType.builder().sourceName(Strings.EMPTY).build()).build();
 
@@ -46,10 +57,15 @@ public final class ViccTestFactory {
                 .sourceLink(Strings.EMPTY)
                 .phenotype(phenotype)
                 .description(Strings.EMPTY)
-                .oncogenic(Strings.EMPTY)
+                .oncogenic(oncogenic)
                 .build();
 
         return ImmutableViccEntry.builder().source(source).association(association).kbSpecificObject(kbSpecificObject).build();
+    }
+
+    @NotNull
+    public static OncoKb testOncoKb() {
+        return testOncoKbWithTranscript("any");
     }
 
     @NotNull

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.vicc.fusion;
 
-import com.hartwig.hmftools.vicc.util.FusionEvent;
+import com.hartwig.hmftools.vicc.annotation.FusionEvent;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

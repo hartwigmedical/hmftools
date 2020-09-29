@@ -502,7 +502,7 @@ During the smoothing process, regions that are homozygously or heterozygously de
 
 ### 9. Determine a QC Status for the tumor
 
-PURPLE will set QC status in 2 cases: 
+PURPLE will set a FAIL QC status in 2 cases: 
 - FAIL_CONTAMINATION - if measured contamination in the tumor (by Amber) is >10%
 - FAIL_NO_TUMOR - if no evidence of tumor is found in the sample
 
@@ -558,10 +558,14 @@ To avoid overfitting small amounts of noise in the distribution, we filter out a
 
 ### 11. Driver Catalog
 
-PURPLE automatically assigns a driver likelihood to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that occur in the HMF gene panel.
-If the somatic VCF is SnpEff annotated, a driver likelihood is calculated for any point mutations in the gene panel.  
+PURPLE builds a catalog of drivers based on a configured gene panel.    PURPLE automatically assigns a driver likelihood of 1 to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that are reportable.  If the somatic VCF is SnpEff annotated, a driver likelihood is calculated for any point mutations in the gene panel.
 
 A detailed description of the driver catalog is available [here](./DriverCatalog.md).
+
+Note that addditional restrictions apply on amplification and deletion drivers for samples with QC warnings:
+- If warning = DELETED_GENES or WARN_HIGH_COPY_NUMBER_NOISE, DELs must be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases).
+- If warning = HIGH_CN_WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV.   
+
 
 ## Output
 

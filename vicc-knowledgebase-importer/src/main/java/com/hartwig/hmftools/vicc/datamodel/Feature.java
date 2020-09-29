@@ -2,9 +2,9 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.util.EventAnnotation;
-import com.hartwig.hmftools.vicc.util.EventAnnotationExtractor;
-import com.hartwig.hmftools.vicc.util.ProteinAnnotationExtractor;
+import com.hartwig.hmftools.vicc.annotation.FeatureType;
+import com.hartwig.hmftools.vicc.annotation.FeatureTypeExtractor;
+import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,14 +16,14 @@ public abstract class Feature {
 
     @NotNull
     @Value.Derived
-    public String proteinAnnotation() {
-        return ProteinAnnotationExtractor.toProteinAnnotation(name());
+    public FeatureType type() {
+        return FeatureTypeExtractor.extractType(this);
     }
 
     @NotNull
     @Value.Derived
-    public EventAnnotation eventAnnotation() {
-        return EventAnnotationExtractor.toEventAnnotation(name(), biomarkerType(), provenanceRule(), proteinAnnotation());
+    public String proteinAnnotation() {
+        return ProteinAnnotationExtractor.extractProteinAnnotation(this);
     }
 
     @NotNull

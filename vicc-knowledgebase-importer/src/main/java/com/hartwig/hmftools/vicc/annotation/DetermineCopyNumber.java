@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.util;
+package com.hartwig.hmftools.vicc.annotation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -35,10 +35,10 @@ final class DetermineCopyNumber {
             featureName = featureName.split(" ", 2)[1];
         }
 
-        if (EventAnnotationExtractor.AMPLIFICATIONS.contains(featureName)
-                || EventAnnotationExtractor.AMPLIFICATIONS.contains(biomarkertype)) {
+        if (FeatureTypeExtractor.AMPLIFICATIONS.contains(featureName)
+                || FeatureTypeExtractor.AMPLIFICATIONS.contains(biomarkertype)) {
             return "Amplification";
-        } else if (EventAnnotationExtractor.DELETIONS.contains(featureName) || EventAnnotationExtractor.DELETIONS.contains(biomarkertype)) {
+        } else if (FeatureTypeExtractor.DELETIONS.contains(featureName) || FeatureTypeExtractor.DELETIONS.contains(biomarkertype)) {
             return "Deletion";
         } else {
             return Strings.EMPTY;

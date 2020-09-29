@@ -40,7 +40,7 @@ Non-biallelic frameshift/Splice/Nonsense | No special treatment | driverLikeliho
 
 For point mutations, we first determine a list of variants that are highly likely to be drivers and/or highly unlikely to have occurred as passengers as driver likelihood of 1 as per the table above.
 For the remaining point mutation variants these are only assigned a > 0 driver likelihood where there is a remaining excess of unallocated drivers based on the calculated dNdS rates in that gene across the cohort after applying the above rules. 
-zAny remaining point mutations are assigned a driver likelihood between 0 and 1 using a bayesian statistic to calculate a sample specific likelihood of each gene based on the type of variant observed (missense, nonsense, splice or INDEL) and taking into account the mutational load of the sample.   
+Any remaining point mutations are assigned a driver likelihood between 0 and 1 using a bayesian statistic to calculate a sample specific likelihood of each gene based on the type of variant observed (missense, nonsense, splice or INDEL) and taking into account the mutational load of the sample.   
 
 The principle behind the likelihood method is that the likelihood of a passenger variant occurring in a particular sample should be approximately proportional to the tumor mutational burden and hence variants in samples with lower mutational burden are more likely to be drivers.
 

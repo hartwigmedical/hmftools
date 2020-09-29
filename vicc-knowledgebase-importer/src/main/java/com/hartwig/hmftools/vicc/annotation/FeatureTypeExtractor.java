@@ -1,21 +1,15 @@
-package com.hartwig.hmftools.vicc.util;
+package com.hartwig.hmftools.vicc.annotation;
 
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class EventAnnotationExtractor {
-
-    private EventAnnotationExtractor() {
-    }
-
-    private static final Logger LOGGER = LogManager.getLogger(EventAnnotationExtractor.class);
+public final class FeatureTypeExtractor {
 
     public static final Set<String> AMPLIFICATIONS = Sets.newHashSet("Amplification",
             "amplification",
@@ -88,9 +82,20 @@ public final class EventAnnotationExtractor {
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
+    private FeatureTypeExtractor() {
+    }
+
     @NotNull
-    public static EventAnnotation toEventAnnotation(@NotNull String featureName, @Nullable String biomarkerType,
-            @Nullable String provenanceRule, @NotNull String proteinAnnotation) {
+    public static FeatureType extractType(@NotNull Feature feature) {
+        return extractType(feature.name(),
+                feature.biomarkerType(),
+                feature.provenanceRule(),
+                ProteinAnnotationExtractor.extractProteinAnnotation(feature));
+    }
+
+    @NotNull
+    public static FeatureType extractType(@NotNull String featureName, @Nullable String biomarkerType, @Nullable String provenanceRule,
+            @NotNull String proteinAnnotation) {
         String feature = featureName;
         if (feature.contains(" ") && !feature.equals("Copy Number Loss")) {
             feature = feature.split(" ", 2)[1];
@@ -106,46 +111,42 @@ public final class EventAnnotationExtractor {
         }
 
         if (DetermineHotspot.isHotspot(proteinAnnotation)) {
-            return EventAnnotation.HOTSPOT;
-        } else if (EventAnnotationExtractor.SIGNATURES.contains(feature)) {
-            return EventAnnotation.SIGNATURE;
+            return FeatureType.HOTSPOT;
+        } else if (FeatureTypeExtractor.SIGNATURES.contains(feature)) {
+            return FeatureType.SIGNATURE;
         } else if (DetermineCopyNumber.isAmplification(feature, biomarkerType)) {
-            return EventAnnotation.AMPLIFICATION;
+            return FeatureType.AMPLIFICATION;
         } else if (DetermineCopyNumber.isDeletion(feature, biomarkerType)) {
-            return EventAnnotation.DELETION;
+            return FeatureType.DELETION;
         } else if (DetermineFusion.isFusion(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
-            return EventAnnotation.FUSION_PAIR;
+            return FeatureType.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
-            return EventAnnotation.FUSION_PROMISCUOUS;
+            return FeatureType.FUSION_PROMISCUOUS;
         } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
-            if (EventAnnotationExtractor.GENE_LEVEL.contains(biomarkerType) || EventAnnotationExtractor.GENE_LEVEL.contains(feature)
-                    || EventAnnotationExtractor.GENE_LEVEL.contains(provenanceRule) || EventAnnotationExtractor.GENE_LEVEL.contains(
+            if (FeatureTypeExtractor.GENE_LEVEL.contains(biomarkerType) || FeatureTypeExtractor.GENE_LEVEL.contains(feature)
+                    || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule) || FeatureTypeExtractor.GENE_LEVEL.contains(
                     proteinAnnotation)) {
-                return EventAnnotation.GENE_LEVEL;
+                return FeatureType.GENE_LEVEL;
             }
-        } else if (EventAnnotationExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
-            return EventAnnotation.GENE_RANGE_EXON;
-        } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
-                proteinAnnotation.length() - 1).equals("X") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
-            return EventAnnotation.GENE_RANGE_CODON;
+        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
+            return FeatureType.GENE_RANGE_EXON;
+        } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
+                proteinAnnotation.length() - 1).equals("X") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
+            return FeatureType.GENE_RANGE_CODON;
         } else if (proteinAnnotation.length() >= 1 && isValidSingleCodonRange(proteinAnnotation)) {
-            return EventAnnotation.GENE_RANGE_CODON;
-        } else if (EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
-            return EventAnnotation.GENE_RANGE_CODON;
-        } else if (feature.contains("DEL") && EventAnnotationExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
-            return EventAnnotation.GENE_RANGE_CODON;
+            return FeatureType.GENE_RANGE_CODON;
+        } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
+            return FeatureType.GENE_RANGE_CODON;
+        } else if (feature.contains("DEL") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
+            return FeatureType.GENE_RANGE_CODON;
         } else if (proteinAnnotation.contains("del") && proteinAnnotation.contains("_")) {
-            return EventAnnotation.GENE_RANGE_CODON;
-        } else {
-            LOGGER.warn("No event annotation extracted from event!");
-            return EventAnnotation.UNMAPPED_EVENT;
+            return FeatureType.GENE_RANGE_CODON;
         }
-        return EventAnnotation.UNMAPPED_EVENT;
 
+        return FeatureType.UNKNOWN;
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String feature) {
-
         // Features are expected to look something like V600 (1 char - N digits)
         if (feature.length() < 3) {
             return false;

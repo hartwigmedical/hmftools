@@ -3,9 +3,9 @@ package com.hartwig.hmftools.serve.vicc.range;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.util.EventAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,8 +21,7 @@ public class GeneLevelEventExtractor {
         Map<Feature, String> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-
-            if (feature.eventAnnotation().equals(EventAnnotation.GENE_LEVEL)){
+            if (feature.type() == FeatureType.GENE_LEVEL) {
                 geneLevelEventsPerFeature.put(feature, feature.geneSymbol());
 
             }
@@ -39,7 +38,8 @@ public class GeneLevelEventExtractor {
             //                    || GENE_INACTIVATION.contains(feature.provenanceRule()) || GENE_INACTIVATION.contains(feature.proteinAnnotation())) {
             //                geneLevelEventsPerFeature.put(feature, "loss of " + feature.geneSymbol());
             //            }
-        } return geneLevelEventsPerFeature;
+        }
+        return geneLevelEventsPerFeature;
     }
 
 }

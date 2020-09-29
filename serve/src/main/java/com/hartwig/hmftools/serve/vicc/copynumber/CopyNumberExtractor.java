@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -19,7 +20,6 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTr
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
 import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
-import com.hartwig.hmftools.vicc.util.EventAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,10 +50,10 @@ public class CopyNumberExtractor {
         Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (feature.eventAnnotation().equals(EventAnnotation.AMPLIFICATION)) {
+            if (feature.type() == FeatureType.AMPLIFICATION) {
                 ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "amp", viccEntry.source().display()));
                 uniqueAmps.add(feature.geneSymbol());
-            } else if (feature.eventAnnotation().equals(EventAnnotation.DELETION)) {
+            } else if (feature.type() == FeatureType.DELETION) {
                 ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), "del", viccEntry.source().display()));
                 uniqueDels.add(feature.geneSymbol());
             }

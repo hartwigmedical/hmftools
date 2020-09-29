@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.util;
+package com.hartwig.hmftools.vicc.annotation;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -9,7 +9,7 @@ import org.junit.Test;
 public class DetermineHotspotTest {
 
     @Test
-    public void canAssessWhetherFeatureIsProteinAnnotation() {
+    public void canAssessWhetherProteinAnnotationIsHotspot() {
         assertTrue(DetermineHotspot.isHotspot("K5N"));
         assertTrue(DetermineHotspot.isHotspot("L2230V"));
         assertTrue(DetermineHotspot.isHotspot("V5del"));
@@ -43,6 +43,9 @@ public class DetermineHotspotTest {
 
         // Not a correctly formatted insert (position not clear)
         assertFalse(DetermineHotspot.isHotspot("T599insTT"));
+
+        // Not a correctly formatted insert
+        assertFalse(DetermineHotspot.isHotspot("V600D_K601insFGLAT"));
 
         // Inframe event is too long
         assertFalse(DetermineHotspot.isHotspot("L4_T40del"));

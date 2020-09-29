@@ -39,28 +39,28 @@ public class ViccTestApplication {
         String viccJsonPath;
         String rangesTsv = null;
         String fusionTsv = null;
-        String eventMappingTsv;
+        String featureTypeTsv;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
             rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.tsv";
             fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.tsv";
-            eventMappingTsv = System.getProperty("user.home") + "/tmp/eventMappingVicc.tsv";
+            featureTypeTsv = System.getProperty("user.home") + "/tmp/featureTypesVicc.tsv";
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
-            eventMappingTsv = System.getProperty("user.home") + "/hmf/tmp/eventMappingVicc.tsv";
+            featureTypeTsv = System.getProperty("user.home") + "/hmf/tmp/featureTypesVicc.tsv";
         }
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the ranges output TSV", rangesTsv);
         LOGGER.debug("Configured '{}' as the fusion output TSV", fusionTsv);
-        LOGGER.debug("Configured '{}' as the event mapping output TSV", eventMappingTsv);
+        LOGGER.debug("Configured '{}' as the feature type output TSV", featureTypeTsv);
 
         List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(ProteinResolverFactory.dummy());
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 
-        ViccUtil.writeEventMappingToTsv(eventMappingTsv, resultsPerEntry);
+        ViccUtil.writeFeatureTypesToTsv(featureTypeTsv, resultsPerEntry);
 
         if (rangesTsv != null) {
             writeRanges(rangesTsv, resultsPerEntry);

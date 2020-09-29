@@ -119,7 +119,7 @@ public class ServeHotspotGenerator {
                 hartwigCuratedMap.size());
 
         Map<VariantHotspot, HotspotAnnotation> mergedMap =
-                HotspotFunctions.mergeHotspots(Lists.newArrayList(viccHotspotMap, docmHotspotMap, hartwigCohortMap, hartwigCuratedMap));
+                HotspotFunctions.mergeHotspotMaps(Lists.newArrayList(viccHotspotMap, docmHotspotMap, hartwigCohortMap, hartwigCuratedMap));
 
         if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, mergedMap);
@@ -164,7 +164,7 @@ public class ServeHotspotGenerator {
         DocmExtractor docmExtractor = new DocmExtractor(proteinResolver);
         Map<DocmEntry, List<VariantHotspot>> docmHotspotsPerEntry = docmExtractor.extractFromDocmEntries(curatedDocmEntries);
 
-        return HotspotFunctions.convertHotspots("docm", docmHotspotsPerEntry);
+        return HotspotFunctions.convertHotspotMap("docm", docmHotspotsPerEntry);
     }
 
     @NotNull
@@ -177,7 +177,7 @@ public class ServeHotspotGenerator {
         HartwigExtractor hartwigExtractor = new HartwigExtractor(proteinResolver, addExplicitHotspots);
         Map<HartwigEntry, List<VariantHotspot>> cohortHotspotsPerEntry = hartwigExtractor.extractFromHartwigEntries(hartwigCohortEntries);
 
-        return HotspotFunctions.convertHotspots("hartwig_cohort", cohortHotspotsPerEntry);
+        return HotspotFunctions.convertHotspotMap("hartwig_cohort", cohortHotspotsPerEntry);
     }
 
     @NotNull
@@ -190,7 +190,7 @@ public class ServeHotspotGenerator {
         HartwigExtractor hartwigExtractor = new HartwigExtractor(proteinResolver, addExplicitHotspots);
         Map<HartwigEntry, List<VariantHotspot>> curatedHotspotsPerEntry = hartwigExtractor.extractFromHartwigEntries(hartwigCuratedEntries);
 
-        return HotspotFunctions.convertHotspots("hartwig_curated", curatedHotspotsPerEntry);
+        return HotspotFunctions.convertHotspotMap("hartwig_curated", curatedHotspotsPerEntry);
     }
 
     private static void writeHotspots(@NotNull String hotspotVcf, @NotNull Map<VariantHotspot, HotspotAnnotation> hotspotMap) {

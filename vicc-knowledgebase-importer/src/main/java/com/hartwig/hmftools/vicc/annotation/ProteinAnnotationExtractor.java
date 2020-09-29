@@ -1,8 +1,10 @@
-package com.hartwig.hmftools.vicc.util;
+package com.hartwig.hmftools.vicc.annotation;
 
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -14,7 +16,13 @@ public final class ProteinAnnotationExtractor {
     }
 
     @NotNull
-    public static String toProteinAnnotation(@NotNull String featureName) {
+    public static String extractProteinAnnotation(@NotNull Feature feature) {
+        return extractProteinAnnotation(feature.name());
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String extractProteinAnnotation(@NotNull String featureName) {
         String trimmedName = featureName.trim();
         // Many KBs include the gene in the feature name in some form (eg "EGFR E709K" or "EGFR:E709K").
         // Other KBs put the coding info behind the protein annotation ("V130L (c.388G>C)" rather than the gene in front of it)
