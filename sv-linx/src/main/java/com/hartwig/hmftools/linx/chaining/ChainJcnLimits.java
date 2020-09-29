@@ -22,7 +22,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ChainJcnLimits
 {
-    private Map<String, List<SegmentJcn>> mChrAlleleJCNs;
+    private Map<String,List<SegmentJcn>> mChrAlleleJCNs;
     private double mValidAlleleJcnSegmentPerc;
 
     // referenced state
@@ -42,7 +42,7 @@ public class ChainJcnLimits
     public final Map<String, List<SegmentJcn>> getChrAlleleJCNs() { return mChrAlleleJCNs; }
     public double getValidAlleleJcnSegmentPerc() { return mValidAlleleJcnSegmentPerc; }
 
-    public void initialise(int clusterId, final Map<String, List<SvBreakend>> chrBreakendMap)
+    public void initialise(int clusterId, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         mChrBreakendMap = chrBreakendMap;
         mClusterId = clusterId;

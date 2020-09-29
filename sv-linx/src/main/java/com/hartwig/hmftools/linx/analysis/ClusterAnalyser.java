@@ -356,12 +356,10 @@ public class ClusterAnalyser {
 
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
     {
-        int svCount = cluster.getSvCount();
-
-        if(mConfig.ChainingSvLimit > 0 && svCount > mConfig.ChainingSvLimit)
+        if(mConfig.ChainingSvLimit > 0 && cluster.getSvCount() > mConfig.ChainingSvLimit)
         {
-            LNX_LOGGER.debug("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",
-                    mSampleId, cluster.id(), cluster.getSvCount(), svCount);
+            LNX_LOGGER.debug("sample({}) skipping chaining large cluster({}) with SV count({})",
+                    mSampleId, cluster.id(), cluster.getSvCount());
             return;
         }
 

@@ -40,17 +40,17 @@ public class CnDataLoader
 
     private int mRecordId;
 
-    private DatabaseAccess mDbAccess;
-    private List<StructuralVariantData> mSvDataList;
-    private List<PurpleCopyNumber> mCnRecords;
-    private Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
-    private Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
+    private final DatabaseAccess mDbAccess;
+    private final List<StructuralVariantData> mSvDataList;
+    private final List<PurpleCopyNumber> mCnRecords;
+    private final Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
+    private final Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
     private PurityContext mPurityContext;
 
-    private List<LohEvent> mLohEventData;
-    private List<HomLossEvent> mHomLossData;
-    private Map<String, TelomereCentromereCnData> mChrEndsCNMap; // telemore and centromere CN values
-    private CnJcnCalcs mCnJcnCalcs;
+    private final List<LohEvent> mLohEventData;
+    private final List<HomLossEvent> mHomLossData;
+    private final Map<String,TelomereCentromereCnData> mChrEndsCNMap; // telemore and centromere CN values
+    private final CnJcnCalcs mCnJcnCalcs;
 
     public static final double MIN_LOH_CN = 0.5;
     public static final double TOTAL_CN_LOSS = 0.5;
@@ -120,7 +120,7 @@ public class CnDataLoader
         {
             try
             {
-                mCnRecords = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(mPurpleDataPath, sampleId));
+                mCnRecords.addAll(PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(mPurpleDataPath, sampleId)));
                 mPurityContext = PurityContextFile.read(mPurpleDataPath, sampleId);
             }
             catch(IOException e)
@@ -131,7 +131,7 @@ public class CnDataLoader
         }
         else
         {
-            mCnRecords = mDbAccess.readCopynumbers(sampleId);
+            mCnRecords.addAll(mDbAccess.readCopynumbers(sampleId));
             LNX_LOGGER.debug("sample({}) retrieved {} CN entries", sampleId, mCnRecords.size());
             mPurityContext = mDbAccess.readPurityContext(sampleId);
         }
