@@ -139,7 +139,7 @@ public class ServeHotspotGenerator {
     @NotNull
     private static Map<VariantHotspot, HotspotAnnotation> viccHotspotMap(@NotNull String viccJson,
             @NotNull ProteinResolver proteinResolver) throws IOException {
-        List<ViccEntry> viccEntries = ViccReader.readAndCurate(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
+        List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
 

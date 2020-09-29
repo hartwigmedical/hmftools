@@ -25,7 +25,7 @@ public final class ViccReader {
     }
 
     @NotNull
-    public static List<ViccEntry> readAndCurate(@NotNull String viccJson, @NotNull Set<ViccSource> sourcesToFilterOn,
+    public static List<ViccEntry> readAndCurateRelevantEntries(@NotNull String viccJson, @NotNull Set<ViccSource> sourcesToFilterOn,
             @Nullable Integer maxEntries) throws IOException {
         ViccQuerySelection querySelection =
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sourcesToFilterOn).maxEntriesToInclude(maxEntries).build();
