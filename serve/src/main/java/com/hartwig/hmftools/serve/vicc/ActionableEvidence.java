@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ActionableEvidence {
 
-    // TODO Should possibly turn into List<String> drug() and parse.
     @NotNull
     public abstract String drugs();
 

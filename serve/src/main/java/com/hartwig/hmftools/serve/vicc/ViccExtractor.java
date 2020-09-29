@@ -15,6 +15,8 @@ import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
+import com.hartwig.hmftools.vicc.datamodel.Phenotype;
+import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
@@ -55,8 +57,7 @@ public final class ViccExtractor {
         Map<ViccEntry, ViccExtractionResult> extractionResultsPerEntry = Maps.newHashMap();
         for (ViccEntry entry : viccEntries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
-            Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature =
-                    copyNumberExtractor.extractKnownAmplificationsDeletions(entry);
+            Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = copyNumberExtractor.extractKnownAmplificationsDeletions(entry);
             Map<Feature, FusionAnnotation> fusionsPerFeature = fusionExtractor.extractKnownFusions(entry);
             Map<Feature, String> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(entry);
             Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
@@ -86,7 +87,31 @@ public final class ViccExtractor {
 
     @Nullable
     private static ActionableEvidence extractEvidence(@NotNull ViccEntry entry) {
-        // TODO implement
-        return null;
+        String drugs = entry.association().drugLabels();
+
+        String cancerTypeString = null;
+        String cancerTypeDOID = null;
+        Phenotype phenotype = entry.association().phenotype();
+        if (phenotype != null) {
+            cancerTypeString = phenotype.description();
+            PhenotypeType type = phenotype.type();
+            if (type != null) {
+                cancerTypeDOID = type.id();
+            }
+        }
+        String level = entry.association().evidenceLabel();
+        String direction = entry.association().responseType();
+
+        if (drugs != null && cancerTypeString != null && cancerTypeDOID != null && level != null && direction != null) {
+            return ImmutableActionableEvidence.builder()
+                    .drugs(drugs)
+                    .cancerTypeString(cancerTypeString)
+                    .cancerTypeDOID(cancerTypeDOID)
+                    .level(level)
+                    .direction(direction)
+                    .build();
+        } else {
+            return null;
+        }
     }
 }
