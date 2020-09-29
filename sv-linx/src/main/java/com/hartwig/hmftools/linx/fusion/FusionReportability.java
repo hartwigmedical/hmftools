@@ -17,6 +17,19 @@ import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.SHORT_UNPHASED_DISTANCE_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.CHAIN_LINKS;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.CHAIN_TERMINATED;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.EXON_SKIPPING;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.KNOWN_TYPE;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEG_SPLICE_ACC_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEOEPITOPE;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.NMD;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.SGL_NOT_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_5P_UTR;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_NOT_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_SHORT;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.PRE_GENE_DISTANCE;
 
 import java.util.List;
 
@@ -30,14 +43,14 @@ public class FusionReportability
     private static final List<String> mProteinsRequiredKept = Lists.newArrayList();
     private static final List<String> mProteinsRequiredLost = Lists.newArrayList();
 
-    public static boolean couldBeReportable(GeneFusion fusion)
+    public static ReportableReason determineReportability(GeneFusion fusion)
     {
         if(fusion.neoEpitopeOnly())
-            return false;
+            return NEOEPITOPE;
 
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         if (fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
-            return false;
+            return KNOWN_TYPE;
 
         final Transcript upTrans = fusion.upstreamTrans();
         final Transcript downTrans = fusion.downstreamTrans();
@@ -45,19 +58,19 @@ public class FusionReportability
         if(!fusion.phaseMatched())
         {
             if(fusion.knownType() != KNOWN_PAIR)
-                return false;
+                return UNPHASED_NOT_KNOWN;
 
             if(!upTrans.nonCoding() && !upTrans.preCoding())
-                return false;
+                return UNPHASED_5P_UTR;
 
             if(fusion.sameChromosome() && fusion.distance() <= SHORT_UNPHASED_DISTANCE_KNOWN)
-                return false;
+                return UNPHASED_SHORT;
         }
 
         if(upTrans.gene().type() == SGL || downTrans.gene().type() == SGL)
         {
             if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != IG_KNOWN_PAIR)
-                return false;
+                return SGL_NOT_KNOWN;
         }
 
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
@@ -65,27 +78,27 @@ public class FusionReportability
                 MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
 
         if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
-            return false;
+            return PRE_GENE_DISTANCE;
 
         if(downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
-            return false;
+            return NMD;
 
         if(downTrans.hasNegativePrevSpliceAcceptorDistance())
-            return false;
+            return NEG_SPLICE_ACC_DISTANCE;
 
         if(!permittedExonSkipping(fusion))
-            return false;
+            return EXON_SKIPPING;
 
         if(fusion.isTerminated() && fusion.knownType() != KNOWN_PAIR)
-            return false;
+            return CHAIN_TERMINATED;
 
         if(fusion.getChainLinks() > FUSION_MAX_CHAIN_LINKS)
-            return false;
+            return CHAIN_LINKS;
 
-        return true;
+        return OK;
     }
 
-    public static GeneFusion findTopPriorityFusion(final List<GeneFusion> fusions, boolean requireReportable)
+    public static GeneFusion findTopPriorityFusion(final List<GeneFusion> fusions)
     {
         GeneFusion topFusion = null;
 
@@ -94,9 +107,6 @@ public class FusionReportability
 
         for(final GeneFusion fusion : fusions)
         {
-            if(requireReportable && !couldBeReportable(fusion))
-                continue;
-
             double fusionPriorityScore = calcFusionPriority(fusion);
             fusion.setPriority(fusionPriorityScore);
 
@@ -217,14 +227,18 @@ public class FusionReportability
         if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == IG_KNOWN_PAIR || fusion.knownType() == IG_PROMISCUOUS || fusion.knownType() == EXON_DEL_DUP)
             return true;
 
-        if(fusion.knownExons())
+        if(fusion.isHighImpactPromiscuous())
         {
+            // skipping allowed on the promiscuous gene only
             if(fusion.knownType() == PROMISCUOUS_5 && fusion.getExonsSkipped(false) == 0)
                 return true;
 
             if(fusion.knownType() == PROMISCUOUS_3 && fusion.getExonsSkipped(true) == 0)
                 return true;
         }
+
+        if(fusion.knownExons()) // skipping allowed on either side
+            return true;
 
         // otherwise not allowed
         return fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0;

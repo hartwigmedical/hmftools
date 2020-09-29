@@ -136,7 +136,7 @@ public class FusionWriter
             {
                 mFusionWriter = createBufferedWriter(mOutputDir + "LNX_FUSIONS.csv", false);
 
-                mFusionWriter.write("SampleId,Reportable,KnownType,Phased,KnownExons,ClusterId,ClusterCount,ResolvedType");
+                mFusionWriter.write("SampleId,Reportable,ReportableReason,KnownType,Phased,KnownExons,ClusterId,ClusterCount,ResolvedType");
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
@@ -173,7 +173,7 @@ public class FusionWriter
                     mFusionWriter.write(fieldsStr);
                 }
 
-                mFusionWriter.write(",ProteinsKept,ProteinsLost,PriorityScore,ChainTerminatedUp,ChainTerminatedDown,ChainInfo");
+                mFusionWriter.write(",ProteinsKept,ProteinsLost,PriorityScore,FusionId,ChainTerminatedUp,ChainTerminatedDown,ChainInfo");
                 mFusionWriter.newLine();
             }
         }
@@ -200,8 +200,8 @@ public class FusionWriter
                 return;
             }
 
-            writer.write(String.format("%s,%s,%s",
-                    sampleId, fusion.reportable(), fusion.knownTypeStr()));
+            writer.write(String.format("%s,%s,%s,%s",
+                    sampleId, fusion.reportable(), fusion.reportableReason(), fusion.knownTypeStr()));
 
             writer.write(String.format(",%s,%s,%d,%d,%s",
                     fusion.phaseType(), fusion.knownExons(),
@@ -234,9 +234,9 @@ public class FusionWriter
                         trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
             }
 
-            writer.write(String.format(",%s,%s,%f",
+            writer.write(String.format(",%s,%s,%f,%d",
                         fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
-                        fusion.priority()));
+                        fusion.priority(), fusion.id()));
 
             String chainInfo = String.format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
 

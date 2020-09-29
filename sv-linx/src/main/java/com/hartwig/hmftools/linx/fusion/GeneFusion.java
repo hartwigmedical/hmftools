@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOT
 import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.INFRAME;
 import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.OUT_OF_FRAME;
 import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.SKIPPED_EXONS;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNSET;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
@@ -25,9 +26,11 @@ import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 
 public class GeneFusion
 {
+    private int mId; // optional identifier
     private final Transcript[] mTranscripts;
 
     private boolean mIsReportable;
+    private ReportableReason mReportableReason;
     private boolean mPhaseMatched;
     private int[] mExonsSkipped;
     private KnownFusionType mKnownFusionType;
@@ -47,6 +50,7 @@ public class GeneFusion
         mTranscripts = new Transcript[] { upstreamTrans, downstreamTrans };
 
         mIsReportable = false;
+        mReportableReason = UNSET;
         mKnownFusionType = KnownFusionType.NONE;
         mIsPromiscuous = new boolean[] { false, false };
         mPhaseMatched = phaseMatched;
@@ -58,6 +62,9 @@ public class GeneFusion
         mAnnotations = null;
         mPriority = 0;
     }
+
+    public void setId(final int id) { mId = id; }
+    public int id() { return mId; }
 
     public String name()
     {
@@ -83,6 +90,8 @@ public class GeneFusion
 
     public boolean reportable(){ return mIsReportable; }
     public void setReportable(boolean toggle) { mIsReportable = toggle; }
+    public void setReportableReason(final ReportableReason reason) { mReportableReason = reason; }
+    public ReportableReason reportableReason() { return mReportableReason; }
 
     public boolean neoEpitopeOnly(){ return mNeoEpitopeOnly; }
     public void setNeoEpitopeOnly(boolean toggle) { mNeoEpitopeOnly = toggle; }
@@ -209,8 +218,8 @@ public class GeneFusion
 
     public final String toString()
     {
-        return String.format("%s type(%s) reported(%s) phased(%s) SVs(%d & %d) up(%s:%d:%d exon=%d) down(%s:%d:%d exon=%d)",
-                name(), knownTypeStr(), mIsReportable, mPhaseMatched,
+        return String.format("%d: %s type(%s) reportable(%s reason=%s) phased(%s) SVs(%d & %d) up(%s:%d:%d exon=%d) down(%s:%d:%d exon=%d)",
+                mId, name(), knownTypeStr(), mIsReportable, mReportableReason, mPhaseMatched,
                 mTranscripts[FS_UPSTREAM].gene().id(), mTranscripts[FS_DOWNSTREAM].gene().id(),
                 mTranscripts[FS_UPSTREAM].gene().chromosome(), mTranscripts[FS_UPSTREAM].gene().orientation(),
                 mTranscripts[FS_UPSTREAM].gene().position(), getFusedExon(true),

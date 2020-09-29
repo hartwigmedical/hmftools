@@ -173,7 +173,7 @@ public class FusionTest
         List<GeneFusion> fusions = Lists.newArrayList(fusion1, fusion2);
 
         // 1. phase-matched
-        GeneFusion topFusion = findTopPriorityFusion(fusions, false);
+        GeneFusion topFusion = findTopPriorityFusion(fusions);
         assertEquals(fusion1, topFusion);
 
         // 2. valid chain
@@ -188,7 +188,7 @@ public class FusionTest
         fusion1.setAnnotations(annotations);
 
         fusions = Lists.newArrayList(fusion1, fusion2);
-        topFusion = findTopPriorityFusion(fusions, false);
+        topFusion = findTopPriorityFusion(fusions);
         assertEquals(fusion2, topFusion);
 
         // 3. down protein coding
@@ -200,14 +200,14 @@ public class FusionTest
         fusion2 = new GeneFusion(upTrans1, downTrans2, true);
 
         fusions = Lists.newArrayList(fusion1, fusion2);
-        topFusion = findTopPriorityFusion(fusions, false);
+        topFusion = findTopPriorityFusion(fusions);
         assertEquals(fusion1, topFusion);
 
         // 4. exons skipped
         fusion2 = new GeneFusion(upTrans1, downTrans1, true);
         fusion1.setExonsSkipped(2, 0);
         fusions = Lists.newArrayList(fusion1, fusion2);
-        topFusion = findTopPriorityFusion(fusions, false);
+        topFusion = findTopPriorityFusion(fusions);
         assertEquals(fusion2, topFusion);
 
         // 5. 3P partner canonical
@@ -217,7 +217,7 @@ public class FusionTest
 
         fusion1 = new GeneFusion(upTrans1, downTrans3, true);
         fusions = Lists.newArrayList(fusion1, fusion2);
-        topFusion = findTopPriorityFusion(fusions, false);
+        topFusion = findTopPriorityFusion(fusions);
         assertEquals(fusion2, topFusion);
 
         // 6. 5P partner canonical
@@ -227,7 +227,7 @@ public class FusionTest
 
         fusion1 = new GeneFusion(upTrans2, downTrans1, true);
         fusions = Lists.newArrayList(fusion1, fusion2);
-        topFusion = findTopPriorityFusion(fusions, false);
+        topFusion = findTopPriorityFusion(fusions);
         assertEquals(fusion2, topFusion);
 
         // 7. 5P partner less coding bases
@@ -237,7 +237,7 @@ public class FusionTest
 
         fusion1 = new GeneFusion(upTrans3, downTrans1, true);
         fusions = Lists.newArrayList(fusion1, fusion2);
-        topFusion = findTopPriorityFusion(fusions, false);
+        topFusion = findTopPriorityFusion(fusions);
         assertEquals(fusion2, topFusion);
     }
 

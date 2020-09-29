@@ -18,9 +18,11 @@ import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
-import static com.hartwig.hmftools.linx.fusion.FusionReportability.couldBeReportable;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.validProteinDomains;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.PROTEIN_DOMAINS;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 
 import java.util.List;
 import java.util.Map;
@@ -46,6 +48,7 @@ public class FusionFinder
     private boolean mHasValidConfigData;
 
     private final EnsemblDataCache mGeneTransCache;
+    public int mNextFusionId;
 
     private static boolean mLogInvalidReasons;
 
@@ -55,6 +58,7 @@ public class FusionFinder
 
         mKnownFusionCache = new KnownFusionCache();
         mHasValidConfigData = true;
+        mNextFusionId = 0;
 
         FusionReportability.populateRequiredProteins();
 
@@ -84,6 +88,8 @@ public class FusionFinder
     public static final String INVALID_REASON_ORIENTATION = "Orientation";
     public static final String INVALID_REASON_PHASING = "Unphased";
     public static final String INVALID_REASON_CODING_TYPE = "Coding";
+
+    public void reset() { mNextFusionId = 0; }
 
     public final List<GeneFusion> findFusions(
             final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2, final FusionParameters params)
@@ -137,12 +143,13 @@ public class FusionFinder
 
                     for(final Transcript downstreamTrans : downGene.transcripts())
                     {
-                        GeneFusion geneFusion;
+                        GeneFusion fusion;
 
                         if(knownUnmappable3Pair)
                         {
                             // no further conditions
-                            geneFusion = new GeneFusion(upstreamTrans, downstreamTrans, true);
+                            fusion = new GeneFusion(upstreamTrans, downstreamTrans, true);
+                            fusion.setId(mNextFusionId++);
                         }
                         else
                         {
@@ -155,14 +162,15 @@ public class FusionFinder
                             boolean exonDelDupCandidate = upstreamTrans.StableId.equals(downstreamTrans.StableId)
                                     && mKnownFusionCache.isExonDelDupTrans(upstreamTrans.StableId);
 
-                            geneFusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair, exonDelDupCandidate);
+                            fusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair, exonDelDupCandidate);
                         }
 
-                        if(geneFusion == null)
+                        if(fusion == null)
                             continue;
 
-                        setKnownFusionType(geneFusion);
-                        potentialFusions.add(geneFusion);
+                        fusion.setId(mNextFusionId++);
+                        setKnownFusionType(fusion);
+                        potentialFusions.add(fusion);
                     }
                 }
             }
@@ -500,8 +508,9 @@ public class FusionFinder
             for(final Transcript downTrans : candidateTranscripts)
             {
                 GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
+                fusion.setId(mNextFusionId++);
                 fusion.setKnownType(knownType);
-                    potentialFusions.add(fusion);
+                potentialFusions.add(fusion);
             }
         }
     }
@@ -547,7 +556,10 @@ public class FusionFinder
 
         for(GeneFusion fusion : fusions)
         {
-            if(!couldBeReportable(fusion))
+            ReportableReason reason = determineReportability(fusion);
+            fusion.setReportableReason(reason);
+
+            if(reason != OK)
                 continue;
 
             if(checkProteinDomains(fusion.knownType()))
@@ -557,6 +569,8 @@ public class FusionFinder
 
                 if(validProteinDomains(fusion))
                     candidateReportable.add(fusion);
+                else
+                    fusion.setReportableReason(PROTEIN_DOMAINS);
             }
             else
             {
@@ -566,10 +580,10 @@ public class FusionFinder
 
         if(candidateReportable.isEmpty())
         {
-            return findTopPriorityFusion(fusions, false);
+            return findTopPriorityFusion(fusions);
         }
 
-        GeneFusion reportableFusion = findTopPriorityFusion(candidateReportable, false);
+        GeneFusion reportableFusion = findTopPriorityFusion(candidateReportable);
 
         if(reportableFusion != null)
             reportableFusion.setReportable(true);

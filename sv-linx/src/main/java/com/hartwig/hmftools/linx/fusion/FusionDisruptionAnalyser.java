@@ -14,13 +14,14 @@ import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
-import static com.hartwig.hmftools.linx.fusion.FusionReportability.couldBeReportable;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
@@ -328,6 +329,7 @@ public class FusionDisruptionAnalyser
         mSampleId = sampleId;
 
         mUniqueFusions.clear();
+        mFusionFinder.reset();
         findFusions(svList, clusters);
         mDisruptionFinder.findReportableDisruptions(svList);
 
@@ -436,7 +438,7 @@ public class FusionDisruptionAnalyser
 
             if(mLogReportableOnly)
             {
-                fusions = fusions.stream().filter(x -> couldBeReportable(x)).collect(Collectors.toList());
+                fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
             }
 
             final SvCluster cluster = var.getCluster();
@@ -629,7 +631,7 @@ public class FusionDisruptionAnalyser
 
                 if(mLogReportableOnly)
                 {
-                    fusions = fusions.stream().filter(x -> couldBeReportable(x)).collect(Collectors.toList());
+                    fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
 
                     if(fusions.isEmpty())
                         continue;
@@ -941,61 +943,9 @@ public class FusionDisruptionAnalyser
             }
             else
             {
-                GeneFusion topFusion = findTopPriorityFusion(fusions, false);
+                GeneFusion topFusion = findTopPriorityFusion(fusions);
                 if(topFusion != null)
                     uniqueFusions.add(topFusion);
-            }
-        }
-
-        return uniqueFusions;
-    }
-
-    private final List<GeneFusion> extractUniqueFusionsOld()
-    {
-        // from the list of all potential fusions, find the highest priority fusion
-        // from amongst the those with the same gene-pairing and/or SV Id
-
-        List<GeneFusion> uniqueFusions = Lists.newArrayList();
-        List<String> genePairs = Lists.newArrayList();
-        final Set<Integer> usedSvIds = Sets.newHashSet();
-
-        if(!mLogRepeatedGenePairs)
-            uniqueFusions.stream().forEach(x -> genePairs.add(x.name()));
-
-        for(GeneFusion fusion : mFusions)
-        {
-            // evaluate each unique fusion by gene pair and SV
-            if(genePairs.contains(fusion.name()))
-                continue;
-
-            if(usedSvIds.contains(fusion.upstreamTrans().gene().id()) || usedSvIds.contains(fusion.downstreamTrans().gene().id()))
-                continue;
-
-            // only add viable fusions for upload
-            if(!persistFusion(fusion) || fusion.neoEpitopeOnly())
-                continue;
-
-            // gather up all other candidate fusions for this pairing and take the highest priority
-            List<GeneFusion> similarFusions = Lists.newArrayList(fusion);
-
-            similarFusions.addAll(mFusions.stream()
-                    .filter(x -> persistFusion(x) && !x.neoEpitopeOnly())
-                    .filter(x -> x != fusion)
-                    .filter(x -> !usedSvIds.contains(x.upstreamTrans().gene().id()) && !usedSvIds.contains(x.downstreamTrans().gene().id()))
-                    .filter(x -> x.name().equals(fusion.name()))
-                    .collect(Collectors.toList()));
-
-            if(!mLogRepeatedGenePairs)
-                genePairs.add(fusion.name());
-
-            GeneFusion topFusion = findTopPriorityFusion(similarFusions, false);
-
-            if(topFusion != null)
-            {
-                uniqueFusions.add(topFusion);
-
-                usedSvIds.add(topFusion.upstreamTrans().gene().id());
-                usedSvIds.add(topFusion.downstreamTrans().gene().id());
             }
         }
 
