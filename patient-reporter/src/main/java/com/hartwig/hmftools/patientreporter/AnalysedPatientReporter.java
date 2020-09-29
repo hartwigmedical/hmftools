@@ -76,7 +76,7 @@ class AnalysedPatientReporter {
             @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt,
             @NotNull String circosFile, @Nullable String comments, boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
+                PatientTumorLocationFunctions.findTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);

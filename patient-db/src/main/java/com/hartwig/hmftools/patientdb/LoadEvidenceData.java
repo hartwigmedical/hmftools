@@ -160,7 +160,7 @@ public class LoadEvidenceData {
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sampleId);
+                PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocations, sampleId);
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
         if (patientTumorLocation != null) {

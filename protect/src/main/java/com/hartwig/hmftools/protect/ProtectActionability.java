@@ -335,7 +335,7 @@ public class ProtectActionability {
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecordsCSV(tumorLocationCsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
-        return PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sampleId);
+        return PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocations, sampleId);
     }
 
     @NotNull
