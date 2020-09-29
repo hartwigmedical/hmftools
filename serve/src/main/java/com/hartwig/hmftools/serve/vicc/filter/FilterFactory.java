@@ -12,11 +12,11 @@ final class FilterFactory {
     static final Set<FilterKey> FEATURE_KEYS_TO_FILTER = Sets.newHashSet();
 
     static {
-        populateFeatureNameKeywordsToFilter();
+        populateFeatureKeywordsToFilter();
         populateFeatureKeysToFilter();
     }
 
-    private static void populateFeatureNameKeywordsToFilter() {
+    private static void populateFeatureKeywordsToFilter() {
         // We cannot determine methylation with WGS/WTS
         FEATURE_KEYWORDS_TO_FILTER.add("PROMOTER METHYLATION");
         FEATURE_KEYWORDS_TO_FILTER.add("PROMOTER DEMETHYLATION");
@@ -36,6 +36,9 @@ final class FilterFactory {
 
         // Copy number variation is too vague.
         FEATURE_KEYWORDS_TO_FILTER.add("COPY NUMBER VARIATION");
+
+
+        // TODO All of below needs some further investigation & explanation
         FEATURE_KEYWORDS_TO_FILTER.add("EXPRESSION");
         FEATURE_KEYWORDS_TO_FILTER.add("expression");
         FEATURE_KEYWORDS_TO_FILTER.add("WILDTYPE");
@@ -43,6 +46,7 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("wild-type");
         FEATURE_KEYWORDS_TO_FILTER.add("wildtype");
         FEATURE_KEYWORDS_TO_FILTER.add("Wildtype");
+
         FEATURE_KEYWORDS_TO_FILTER.add("SERUM LEVELS");
 
         FEATURE_KEYWORDS_TO_FILTER.add("3' EXON DELETION");
