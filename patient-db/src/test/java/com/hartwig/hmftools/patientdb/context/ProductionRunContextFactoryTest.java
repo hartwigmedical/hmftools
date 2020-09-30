@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.junit.Test;
 
@@ -20,7 +19,7 @@ public class ProductionRunContextFactoryTest {
         assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory));
     }
 
-    @Test(expected = MalformedFileException.class)
+    @Test(expected = IOException.class)
     public void throwExceptionWhenNoMetaData() throws IOException {
         String runDirectory = RESOURCE_DIR + File.separator + "DoesNotExist";
         assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory));
