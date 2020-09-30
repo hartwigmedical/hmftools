@@ -39,6 +39,11 @@ public class PurpleQCTest {
     }
 
     @Test
+    public void testIgnoreLowPurityIfNoTumor() {
+        assertStatus(builder().purity(0.01).method(FittedPurityMethod.NO_TUMOR), PurpleQCStatus.FAIL_NO_TUMOR);
+    }
+
+    @Test
     public void testContamination() {
         assertStatus(builder().contamination(PurpleQC.MAX_CONTAMINATION), PurpleQCStatus.PASS);
         assertStatus(builder().contamination(PurpleQC.MAX_CONTAMINATION + 0.01), PurpleQCStatus.FAIL_CONTAMINATION);
