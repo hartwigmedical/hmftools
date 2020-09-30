@@ -14,7 +14,6 @@ import org.junit.Test;
 public class PatientTumorLocationFileTest {
 
     private static final String BASE_RESOURCE_DIR = Resources.getResource("clinical").getPath();
-    private static final String TEST_CSV = BASE_RESOURCE_DIR + File.separator + "patient_tumor_locations.csv";
     private static final String TEST_TSV = BASE_RESOURCE_DIR + File.separator + "patient_tumor_locations.tsv";
 
     private static final PatientTumorLocation PATIENT1 = ImmutablePatientTumorLocation.builder()
@@ -29,10 +28,16 @@ public class PatientTumorLocationFileTest {
             .cancerSubtype("Non-Small Cell")
             .build();
 
+    private static final PatientTumorLocation PATIENT3 = ImmutablePatientTumorLocation.builder()
+            .patientIdentifier("patient3")
+            .primaryTumorLocation(Strings.EMPTY)
+            .cancerSubtype(Strings.EMPTY)
+            .build();
+
     @Test
     public void canReadInputTSV() throws IOException {
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.readRecordsTSV(TEST_TSV);
-        assertEquals(2, patientTumorLocations.size());
+        assertEquals(3, patientTumorLocations.size());
 
         PatientTumorLocation patient1 = patientTumorLocations.get(0);
         assertEquals(PATIENT1.patientIdentifier(), patient1.patientIdentifier());
@@ -43,5 +48,10 @@ public class PatientTumorLocationFileTest {
         assertEquals(PATIENT2.patientIdentifier(), patient2.patientIdentifier());
         assertEquals(PATIENT2.primaryTumorLocation(), patient2.primaryTumorLocation());
         assertEquals(PATIENT2.cancerSubtype(), patient2.cancerSubtype());
+
+        PatientTumorLocation patient3 = patientTumorLocations.get(2);
+        assertEquals(PATIENT3.patientIdentifier(), patient3.patientIdentifier());
+        assertEquals(PATIENT3.primaryTumorLocation(), patient3.primaryTumorLocation());
+        assertEquals(PATIENT3.cancerSubtype(), patient3.cancerSubtype());
     }
 }

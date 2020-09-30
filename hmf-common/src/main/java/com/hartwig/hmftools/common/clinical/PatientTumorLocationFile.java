@@ -27,10 +27,11 @@ public final class PatientTumorLocationFile {
         // Skip header
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(TAB_DELIMITER);
+            String primaryTumorLocation = parts.length > 1 ? parts[1] : Strings.EMPTY;
             String cancerSubtype = parts.length > 2 ? parts[2] : Strings.EMPTY;
             patientTumorLocations.add(ImmutablePatientTumorLocation.builder()
                     .patientIdentifier(parts[0])
-                    .primaryTumorLocation(parts[1])
+                    .primaryTumorLocation(primaryTumorLocation)
                     .cancerSubtype(cancerSubtype)
                     .build());
         }
