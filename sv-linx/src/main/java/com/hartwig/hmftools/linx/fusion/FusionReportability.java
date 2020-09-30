@@ -89,8 +89,11 @@ public class FusionReportability
         if(!permittedExonSkipping(fusion))
             return EXON_SKIPPING;
 
-        if(fusion.isTerminated() && fusion.knownType() != KNOWN_PAIR)
-            return CHAIN_TERMINATED;
+        if(fusion.isTerminated())
+        {
+            if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != IG_KNOWN_PAIR && fusion.knownType() != EXON_DEL_DUP)
+                return CHAIN_TERMINATED;
+        }
 
         if(fusion.getChainLinks() > FUSION_MAX_CHAIN_LINKS)
             return CHAIN_LINKS;

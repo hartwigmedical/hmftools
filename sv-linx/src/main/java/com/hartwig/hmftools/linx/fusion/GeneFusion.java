@@ -142,12 +142,6 @@ public class GeneFusion
     public void setHighImpactPromiscuous() { mHighImpactPromiscuous = true; }
     public boolean isHighImpactPromiscuous() { return mHighImpactPromiscuous; }
 
-    public void setExonsSkipped(int exonsUp, int exonsDown)
-    {
-        mExonsSkipped[FS_UPSTREAM] = exonsUp;
-        mExonsSkipped[FS_DOWNSTREAM] = exonsDown;
-    }
-
     public boolean sameChromosome()
     {
         return mTranscripts[FS_UPSTREAM].gene().chromosome().equals(mTranscripts[FS_DOWNSTREAM].gene().chromosome());
@@ -161,6 +155,12 @@ public class GeneFusion
         return abs(mTranscripts[FS_UPSTREAM].gene().position() - mTranscripts[FS_DOWNSTREAM].gene().position());
     }
 
+    public void setExonsSkipped(int exonsUp, int exonsDown)
+    {
+        mExonsSkipped[FS_UPSTREAM] = exonsUp;
+        mExonsSkipped[FS_DOWNSTREAM] = exonsDown;
+    }
+
     public int getExonsSkipped(boolean isUpstream) { return mExonsSkipped[fsIndex(isUpstream)]; }
     public int[] getExonsSkipped() { return mExonsSkipped; }
 
@@ -168,11 +168,13 @@ public class GeneFusion
     {
         if(isUpstream)
         {
-            return max(mTranscripts[FS_UPSTREAM].ExonUpstream - mExonsSkipped[FS_UPSTREAM], 1);
+            return max(mTranscripts[FS_UPSTREAM].nextSpliceExonRank() - mExonsSkipped[FS_UPSTREAM], 1);
+            // return max(mTranscripts[FS_UPSTREAM].ExonUpstream - mExonsSkipped[FS_UPSTREAM], 1);
         }
         else
         {
-            return min(mTranscripts[FS_DOWNSTREAM].ExonDownstream + mExonsSkipped[FS_DOWNSTREAM], mTranscripts[FS_DOWNSTREAM].ExonMax);
+            return min(mTranscripts[FS_DOWNSTREAM].nextSpliceExonRank() + mExonsSkipped[FS_DOWNSTREAM], mTranscripts[FS_DOWNSTREAM].ExonMax);
+            // return min(mTranscripts[FS_DOWNSTREAM].ExonDownstream + mExonsSkipped[FS_DOWNSTREAM], mTranscripts[FS_DOWNSTREAM].ExonMax);
         }
     }
 

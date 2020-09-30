@@ -412,14 +412,11 @@ public class FusionFinder
             }
 
             // moving past an exon into the intron to phase-match is not considered as as skipping an exon
-            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic() && phaseExonsSkippedUp == 1 && phaseExonsSkippedDown == 0)
-            {
+            if(upstreamTrans.isExonic() && phaseExonsSkippedUp == 1)
                 phaseExonsSkippedUp = 0;
-            }
-            else if(!upstreamTrans.isExonic() && downstreamTrans.isExonic() && phaseExonsSkippedUp == 0 && phaseExonsSkippedDown == 1)
-            {
+
+            if(downstreamTrans.isExonic() && phaseExonsSkippedDown == 1)
                 phaseExonsSkippedDown = 0;
-            }
 
             if(!phaseMatched)
             {
@@ -694,8 +691,8 @@ public class FusionFinder
         {
             if(mKnownFusionCache.withinKnownExonRanges(
                     EXON_DEL_DUP, geneFusion.transcripts()[FS_UPSTREAM].StableId,
-                    geneFusion.upstreamTrans().ExonUpstream, geneFusion.getFusedExon(true),
-                    geneFusion.downstreamTrans().ExonDownstream, geneFusion.getFusedExon(false)))
+                    geneFusion.upstreamTrans().nextSpliceExonRank(), geneFusion.getFusedExon(true),
+                    geneFusion.downstreamTrans().nextSpliceExonRank(), geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownType(EXON_DEL_DUP);
                 geneFusion.setKnownExons();
