@@ -227,17 +227,7 @@ public class FusionReportability
         if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == IG_KNOWN_PAIR || fusion.knownType() == IG_PROMISCUOUS || fusion.knownType() == EXON_DEL_DUP)
             return true;
 
-        if(fusion.isHighImpactPromiscuous())
-        {
-            // skipping allowed on the promiscuous gene only
-            if(fusion.knownType() == PROMISCUOUS_5 && fusion.getExonsSkipped(false) == 0)
-                return true;
-
-            if(fusion.knownType() == PROMISCUOUS_3 && fusion.getExonsSkipped(true) == 0)
-                return true;
-        }
-
-        if(fusion.knownExons()) // skipping allowed on either side
+        if(fusion.isHighImpactPromiscuous() || fusion.knownExons())
             return true;
 
         // otherwise not allowed

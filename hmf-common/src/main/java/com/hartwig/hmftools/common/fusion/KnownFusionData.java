@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.common.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KF_LOGGER;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
@@ -28,8 +30,9 @@ public class KnownFusionData
 
     // exon deletion
     private String mSpecificExonsTransName;
-    private int[] mMinFusedExons;
-    private int[] mMaxFusedExons;
+
+    private int[] mFiveExonRange;
+    private int[] mThreeExonRange;
 
     // IG region
     private SvRegion mIgRegion;
@@ -71,8 +74,8 @@ public class KnownFusionData
 
         mHighImpactPromiscuous = false;
         mSpecificExonsTransName = "";
-        mMinFusedExons = new int[FS_PAIR];
-        mMaxFusedExons = new int[FS_PAIR];
+        mFiveExonRange = new int[SE_PAIR];
+        mThreeExonRange = new int[SE_PAIR];
         mIgRegion = null;
         mIgStrand = 0;
         mDownstreamDistance = new int[] {0, 0};
@@ -129,15 +132,15 @@ public class KnownFusionData
         if(!knownExonUpRange.isEmpty())
         {
             final String[] exons = knownExonUpRange.split(ITEM_DELIM);
-            mMinFusedExons[FS_UPSTREAM]= Integer.parseInt(exons[0]);
-            mMaxFusedExons[FS_UPSTREAM]= Integer.parseInt(exons[1]);
+            mFiveExonRange[SE_START]= Integer.parseInt(exons[SE_START]);
+            mFiveExonRange[SE_END]= Integer.parseInt(exons[SE_END]);
         }
 
         if(!knownExonDownRange.isEmpty())
         {
             final String[] exons = knownExonDownRange.split(ITEM_DELIM);
-            mMinFusedExons[FS_DOWNSTREAM]= Integer.parseInt(exons[0]);
-            mMaxFusedExons[FS_DOWNSTREAM]= Integer.parseInt(exons[1]);
+            mThreeExonRange[SE_START]= Integer.parseInt(exons[SE_START]);
+            mThreeExonRange[SE_END]= Integer.parseInt(exons[SE_END]);
         }
     }
 
@@ -191,8 +194,8 @@ public class KnownFusionData
 
     public String specificExonsTransName() { return mSpecificExonsTransName; }
 
-    public int[] minFusedExons() { return mMinFusedExons; }
-    public int[] maxFusedExons() { return mMaxFusedExons; }
+    public int[] fiveGeneExonRange() { return mFiveExonRange; }
+    public int[] threeGeneExonRange() { return mThreeExonRange; }
 
     public SvRegion igRegion() { return mIgRegion; }
 

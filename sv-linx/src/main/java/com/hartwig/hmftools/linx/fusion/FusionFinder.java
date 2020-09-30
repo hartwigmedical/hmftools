@@ -692,9 +692,10 @@ public class FusionFinder
 
         if(upGene.equals(downGene))
         {
-            if(mKnownFusionCache.isKnownExonRange(
+            if(mKnownFusionCache.withinKnownExonRanges(
                     EXON_DEL_DUP, geneFusion.transcripts()[FS_UPSTREAM].StableId,
-                    geneFusion.getFusedExon(true), geneFusion.getFusedExon(false)))
+                    geneFusion.upstreamTrans().ExonUpstream, geneFusion.getFusedExon(true),
+                    geneFusion.downstreamTrans().ExonDownstream, geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownType(EXON_DEL_DUP);
                 geneFusion.setKnownExons();
@@ -711,9 +712,9 @@ public class FusionFinder
             geneFusion.setKnownType(PROMISCUOUS_3);
             geneFusion.isPromiscuous()[FS_DOWNSTREAM] = true;
 
-            if(mKnownFusionCache.isKnownExonRange(
+            if(mKnownFusionCache.withinPromiscuousExonRange(
                     PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWNSTREAM].StableId,
-                    geneFusion.getFusedExon(true), geneFusion.getFusedExon(false)))
+                    geneFusion.downstreamTrans().ExonDownstream, geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownExons();
             }
@@ -725,9 +726,9 @@ public class FusionFinder
             geneFusion.setKnownType(PROMISCUOUS_5);
             geneFusion.isPromiscuous()[FS_UPSTREAM] = true;
 
-            if(mKnownFusionCache.isKnownExonRange(
+            if(mKnownFusionCache.withinPromiscuousExonRange(
                     PROMISCUOUS_5, geneFusion.transcripts()[FS_UPSTREAM].StableId,
-                    geneFusion.getFusedExon(true), geneFusion.getFusedExon(false)))
+                    geneFusion.upstreamTrans().ExonUpstream, geneFusion.getFusedExon(true)))
             {
                 geneFusion.setKnownExons();
             }

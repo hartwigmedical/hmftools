@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +34,8 @@ public class KnownFusionCache
     private final List<KnownFusionData> mData;
     private final Map<KnownFusionType,List<KnownFusionData>> mDataByType;
 
-    private final List<KnownFusionData> mKnownPairData; // cached since so commonly checked
+    // cached since so commonly checked
+    private final List<KnownFusionData> mKnownPairData;
     private final List<KnownFusionData> mIgRegionData;
     private final List<KnownFusionData> mHighImpactPromiscuousData;
 
@@ -107,23 +110,40 @@ public class KnownFusionCache
         return mDataByType.get(EXON_DEL_DUP).stream().anyMatch(x -> x.specificExonsTransName().equals(transName));
     }
 
-    public boolean isKnownExonRange(final KnownFusionType knownType, final String transName, int fusedExonUp, int fusedExonDown)
+    public boolean withinPromiscuousExonRange(final KnownFusionType knownType, final String transName, int breakendExon, int fusedExon)
     {
         for(final KnownFusionData knownData : mDataByType.get(knownType))
         {
             if(!knownData.specificExonsTransName().equals(transName))
                 continue;
 
-            if(knownType == PROMISCUOUS_5 && fusedExonUp >= knownData.minFusedExons()[FS_UPSTREAM]
-            && fusedExonUp <= knownData.maxFusedExons()[FS_UPSTREAM])
-                return true;
+            final int[] knownExonRange = knownType == PROMISCUOUS_5 ? knownData.fiveGeneExonRange() : knownData.threeGeneExonRange();
 
-            if(knownType == PROMISCUOUS_3 && fusedExonDown >= knownData.minFusedExons()[FS_DOWNSTREAM]
-            && fusedExonDown <= knownData.maxFusedExons()[FS_DOWNSTREAM])
-                return true;
+             if(breakendExon >= knownExonRange[SE_START] && breakendExon <= knownExonRange[SE_END]
+             && fusedExon >= knownExonRange[SE_START] && fusedExon <= knownExonRange[SE_END])
+             {
+                 return true;
+             }
+        }
 
-            if(fusedExonUp >= knownData.minFusedExons()[FS_UPSTREAM] && fusedExonUp <= knownData.maxFusedExons()[FS_UPSTREAM]
-            && fusedExonDown >= knownData.minFusedExons()[FS_DOWNSTREAM] && fusedExonDown <= knownData.maxFusedExons()[FS_DOWNSTREAM])
+        return false;
+    }
+
+    public boolean withinKnownExonRanges(
+            final KnownFusionType knownType, final String transName, int breakendExonUp, int fusedExonUp, int breakendExonDown, int fusedExonDown)
+    {
+        for(final KnownFusionData knownData : mDataByType.get(knownType))
+        {
+            if(!knownData.specificExonsTransName().equals(transName))
+                continue;
+
+            final int[] fiveExonRange = knownData.fiveGeneExonRange();
+            final int[] threeExonRange = knownData.threeGeneExonRange();
+
+            if(breakendExonUp >= fiveExonRange[SE_START] && breakendExonUp <= fiveExonRange[SE_END]
+            && fusedExonUp >= fiveExonRange[SE_START] && fusedExonUp <= fiveExonRange[SE_END]
+            && breakendExonDown >= threeExonRange[SE_START] && breakendExonDown <= threeExonRange[SE_END]
+            && fusedExonDown >= threeExonRange[SE_START] && fusedExonDown <= threeExonRange[SE_END])
             {
                 return true;
             }
