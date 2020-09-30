@@ -166,6 +166,11 @@ public class GeneFusion
 
     public int getFusedExon(boolean isUpstream)
     {
+        if(isExonic())
+        {
+            return isUpstream ? mTranscripts[FS_UPSTREAM].ExonUpstream : mTranscripts[FS_DOWNSTREAM].ExonDownstream;
+        }
+
         if(isUpstream)
         {
             return max(mTranscripts[FS_UPSTREAM].nextSpliceExonRank() - mExonsSkipped[FS_UPSTREAM], 1);
@@ -174,6 +179,16 @@ public class GeneFusion
         {
             return min(mTranscripts[FS_DOWNSTREAM].nextSpliceExonRank() + mExonsSkipped[FS_DOWNSTREAM], mTranscripts[FS_DOWNSTREAM].ExonMax);
         }
+    }
+
+    public int getBreakendExon(boolean isUpstream)
+    {
+        if(isExonic())
+        {
+            return isUpstream ? mTranscripts[FS_UPSTREAM].ExonUpstream : mTranscripts[FS_DOWNSTREAM].ExonDownstream;
+        }
+
+        return isUpstream ? mTranscripts[FS_UPSTREAM].nextSpliceExonRank() : mTranscripts[FS_DOWNSTREAM].nextSpliceExonRank();
     }
 
     public boolean isExonic()

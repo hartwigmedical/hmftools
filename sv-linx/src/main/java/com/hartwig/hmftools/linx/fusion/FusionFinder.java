@@ -559,20 +559,7 @@ public class FusionFinder
             if(reason != OK)
                 continue;
 
-            if(checkProteinDomains(fusion.knownType()))
-            {
-                // check impact on protein regions
-                setFusionProteinFeatures(fusion);
-
-                if(validProteinDomains(fusion))
-                    candidateReportable.add(fusion);
-                else
-                    fusion.setReportableReason(PROTEIN_DOMAINS);
-            }
-            else
-            {
-                candidateReportable.add(fusion);
-            }
+            candidateReportable.add(fusion);
         }
 
         if(candidateReportable.isEmpty())
@@ -583,7 +570,22 @@ public class FusionFinder
         GeneFusion reportableFusion = findTopPriorityFusion(candidateReportable);
 
         if(reportableFusion != null)
-            reportableFusion.setReportable(true);
+        {
+            if(checkProteinDomains(reportableFusion.knownType()))
+            {
+                // check impact on protein regions
+                setFusionProteinFeatures(reportableFusion);
+
+                if(validProteinDomains(reportableFusion))
+                    reportableFusion.setReportable(true);
+                else
+                    reportableFusion.setReportableReason(PROTEIN_DOMAINS);
+            }
+            else
+            {
+                reportableFusion.setReportable(true);
+            }
+        }
 
         return reportableFusion;
     }
@@ -688,8 +690,8 @@ public class FusionFinder
         {
             if(mKnownFusionCache.withinKnownExonRanges(
                     EXON_DEL_DUP, geneFusion.transcripts()[FS_UPSTREAM].StableId,
-                    geneFusion.upstreamTrans().nextSpliceExonRank(), geneFusion.getFusedExon(true),
-                    geneFusion.downstreamTrans().nextSpliceExonRank(), geneFusion.getFusedExon(false)))
+                    geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true),
+                    geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownType(EXON_DEL_DUP);
                 geneFusion.setKnownExons();
@@ -708,7 +710,7 @@ public class FusionFinder
 
             if(mKnownFusionCache.withinPromiscuousExonRange(
                     PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWNSTREAM].StableId,
-                    geneFusion.downstreamTrans().ExonDownstream, geneFusion.getFusedExon(false)))
+                    geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownExons();
             }
@@ -722,7 +724,7 @@ public class FusionFinder
 
             if(mKnownFusionCache.withinPromiscuousExonRange(
                     PROMISCUOUS_5, geneFusion.transcripts()[FS_UPSTREAM].StableId,
-                    geneFusion.upstreamTrans().ExonUpstream, geneFusion.getFusedExon(true)))
+                    geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true)))
             {
                 geneFusion.setKnownExons();
             }

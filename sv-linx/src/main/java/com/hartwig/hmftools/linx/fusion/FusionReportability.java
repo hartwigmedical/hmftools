@@ -57,14 +57,21 @@ public class FusionReportability
 
         if(!fusion.phaseMatched())
         {
-            if(fusion.knownType() != KNOWN_PAIR)
-                return UNPHASED_NOT_KNOWN;
+            if(fusion.knownType() == EXON_DEL_DUP && fusion.isExonic())
+            {
+                // currently allowed for specific exon-to-exon fusions
+            }
+            else
+            {
+                if(fusion.knownType() != KNOWN_PAIR)
+                    return UNPHASED_NOT_KNOWN;
 
-            if(!upTrans.nonCoding() && !upTrans.preCoding())
-                return UNPHASED_5P_UTR;
+                if(!upTrans.nonCoding() && !upTrans.preCoding())
+                    return UNPHASED_5P_UTR;
 
-            if(fusion.sameChromosome() && fusion.distance() <= SHORT_UNPHASED_DISTANCE_KNOWN)
-                return UNPHASED_SHORT;
+                if(fusion.sameChromosome() && fusion.distance() <= SHORT_UNPHASED_DISTANCE_KNOWN)
+                    return UNPHASED_SHORT;
+            }
         }
 
         if(upTrans.gene().type() == SGL || downTrans.gene().type() == SGL)
@@ -142,7 +149,7 @@ public class FusionReportability
         double factor = 1000000;
 
         // 0. Known pair
-        if(fusion.knownType() == KNOWN_PAIR)
+        if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == EXON_DEL_DUP)
             fusionPriorityScore += factor;
 
         factor /= 10;
