@@ -57,11 +57,6 @@ public class ExpectedCountsCache
         return geneSetCountsData;
     }
 
-    public void addGeneExpectedRatesData(final String chrId, final ExpectedRatesData expectedRatesData)
-    {
-        mGeneSetExpectedRatesDataMap.put(chrId, expectedRatesData);
-    }
-
     private boolean geneSetCountsDataMatches(final List<String> geneIds, final Set<String> geneTransSet)
     {
         // confirm that the genes in the collection match

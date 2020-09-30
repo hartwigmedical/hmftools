@@ -59,6 +59,7 @@ public class BamFragmentReader implements Callable
     private final ExpectedRatesGenerator mExpRatesGenerator;
     private final GcTranscriptCalculator mTranscriptGcRatios;
     private final ExpectedCountsCache mExpectedCountsCache;
+    private final Map<String,ExpectedRatesData> mGeneSetExpectedRatesDataMap; // cached computed results for this chromosome
 
     private final List<EnsemblGeneData> mGeneDataList;
     private int mCollectionId;
@@ -108,6 +109,7 @@ public class BamFragmentReader implements Callable
         mCurrentTaskType = null;
 
         mExpectedCountsCache = expectedCountsCache;
+        mGeneSetExpectedRatesDataMap = Maps.newHashMap();
 
         mBamFragmentAllocator = new BamFragmentAllocator(mConfig, resultsWriter);
         mBamFragmentAllocator.registerKnownFusionPairs(mGeneTransCache);
@@ -412,11 +414,12 @@ public class BamFragmentReader implements Callable
 
             if (mExpRatesGenerator != null)
             {
+                // generate expected rates data if the cache file hasn't been loaded
                 mExpRatesGenerator.generateExpectedRates(geneCollection);
                 expRatesData = mExpRatesGenerator.getExpectedRatesData();
 
-                if (mConfig.ApplyGcBiasAdjust)
-                    mExpectedCountsCache.addGeneExpectedRatesData(geneCollection.chrId(), expRatesData);
+                if (mConfig.ApplyGcBiasAdjust) // cache the generated data since it will be used again in GC adjustment calcs
+                    mGeneSetExpectedRatesDataMap.put(geneCollection.chrId(), expRatesData);
             }
 
             mExpTransRates.runTranscriptEstimation(geneCollectionSummary, expRatesData);
@@ -514,7 +517,9 @@ public class BamFragmentReader implements Callable
             final double[] gcAdjustments = mTranscriptGcRatios.getGcRatioAdjustments();
             geneSummaryData.applyGcAdjustments(gcAdjustments);
 
-            mExpTransRates.runTranscriptEstimation(geneSummaryData, null);
+            // retrieve any previously computed expected rates
+            final ExpectedRatesData expRatesData = mGeneSetExpectedRatesDataMap.get(geneSummaryData.ChrId);
+            mExpTransRates.runTranscriptEstimation(geneSummaryData, expRatesData);
 
             geneSummaryData.setFitAllocations();
             geneSummaryData.allocateResidualsToGenes();
